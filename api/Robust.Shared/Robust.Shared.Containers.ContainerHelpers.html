@@ -1,0 +1,828 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class ContainerHelpers
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class ContainerHelpers
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Containers.ContainerHelpers">
+  
+  
+  <h1 id="Robust_Shared_Containers_ContainerHelpers" data-uid="Robust.Shared.Containers.ContainerHelpers" class="text-break">Class ContainerHelpers
+  </h1>
+  <div class="markdown level0 summary"><p>Helper functions for the container system.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">ContainerHelpers</span></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Containers.html">Robust.Shared.Containers</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Containers_ContainerHelpers_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static class ContainerHelpers : object</code></pre>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers_AttachParentToContainerOrGrid_Robust_Shared_GameObjects_TransformComponent_Robust_Shared_GameObjects_IEntityManager_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers.AttachParentToContainerOrGrid(Robust.Shared.GameObjects.TransformComponent%2CRobust.Shared.GameObjects.IEntityManager)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L124">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerHelpers_AttachParentToContainerOrGrid_" data-uid="Robust.Shared.Containers.ContainerHelpers.AttachParentToContainerOrGrid*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerHelpers_AttachParentToContainerOrGrid_Robust_Shared_GameObjects_TransformComponent_Robust_Shared_GameObjects_IEntityManager_" data-uid="Robust.Shared.Containers.ContainerHelpers.AttachParentToContainerOrGrid(Robust.Shared.GameObjects.TransformComponent,Robust.Shared.GameObjects.IEntityManager)">AttachParentToContainerOrGrid(TransformComponent, IEntityManager)</h4>
+  <div class="markdown level1 summary"><p><a class="xref" href="Robust.Shared.Containers.SharedContainerSystem.html#Robust_Shared_Containers_SharedContainerSystem_AttachParentToContainerOrGrid_Robust_Shared_GameObjects_TransformComponent_">AttachParentToContainerOrGrid(TransformComponent)</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void AttachParentToContainerOrGrid(this TransformComponent transform, IEntityManager entMan = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></td>
+        <td><span class="parametername">transform</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td><span class="parametername">entMan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers_CleanContainer_Robust_Shared_Containers_BaseContainer_Robust_Shared_GameObjects_IEntityManager_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers.CleanContainer(Robust.Shared.Containers.BaseContainer%2CRobust.Shared.GameObjects.IEntityManager)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L114">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerHelpers_CleanContainer_" data-uid="Robust.Shared.Containers.ContainerHelpers.CleanContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerHelpers_CleanContainer_Robust_Shared_Containers_BaseContainer_Robust_Shared_GameObjects_IEntityManager_" data-uid="Robust.Shared.Containers.ContainerHelpers.CleanContainer(Robust.Shared.Containers.BaseContainer,Robust.Shared.GameObjects.IEntityManager)">CleanContainer(BaseContainer, IEntityManager)</h4>
+  <div class="markdown level1 summary"><p>Attempts to remove and delete all entities in a container.
+<a class="xref" href="Robust.Shared.Containers.SharedContainerSystem.html#Robust_Shared_Containers_SharedContainerSystem_CleanContainer_Robust_Shared_Containers_BaseContainer_">CleanContainer(BaseContainer)</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void CleanContainer(this BaseContainer container, IEntityManager entMan = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Containers.BaseContainer.html">BaseContainer</a></td>
+        <td><span class="parametername">container</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td><span class="parametername">entMan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers_CreateContainer__1_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_GameObjects_IEntityManager_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers.CreateContainer%60%601(Robust.Shared.GameObjects.EntityUid%2CSystem.String%2CRobust.Shared.GameObjects.IEntityManager)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L151">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerHelpers_CreateContainer_" data-uid="Robust.Shared.Containers.ContainerHelpers.CreateContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerHelpers_CreateContainer__1_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_GameObjects_IEntityManager_" data-uid="Robust.Shared.Containers.ContainerHelpers.CreateContainer``1(Robust.Shared.GameObjects.EntityUid,System.String,Robust.Shared.GameObjects.IEntityManager)">CreateContainer&lt;T&gt;(EntityUid, String, IEntityManager)</h4>
+  <div class="markdown level1 summary"><p>Shortcut method to make creation of containers easier.
+Creates a new container on the entity and gives it back to you.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static T CreateContainer&lt;T&gt;(this EntityUid entity, string containerId, IEntityManager entMan = null)
+    where T : BaseContainer</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entity</span></td>
+        <td><p>The entity to create the container for.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">containerId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td><span class="parametername">entMan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td><p>The new container.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers_EmptyContainer_Robust_Shared_Containers_BaseContainer_System_Boolean_System_Nullable_Robust_Shared_Map_EntityCoordinates__System_Boolean_Robust_Shared_GameObjects_IEntityManager_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers.EmptyContainer(Robust.Shared.Containers.BaseContainer%2CSystem.Boolean%2CSystem.Nullable%7BRobust.Shared.Map.EntityCoordinates%7D%2CSystem.Boolean%2CRobust.Shared.GameObjects.IEntityManager)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L102">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerHelpers_EmptyContainer_" data-uid="Robust.Shared.Containers.ContainerHelpers.EmptyContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerHelpers_EmptyContainer_Robust_Shared_Containers_BaseContainer_System_Boolean_System_Nullable_Robust_Shared_Map_EntityCoordinates__System_Boolean_Robust_Shared_GameObjects_IEntityManager_" data-uid="Robust.Shared.Containers.ContainerHelpers.EmptyContainer(Robust.Shared.Containers.BaseContainer,System.Boolean,System.Nullable{Robust.Shared.Map.EntityCoordinates},System.Boolean,Robust.Shared.GameObjects.IEntityManager)">EmptyContainer(BaseContainer, Boolean, Nullable&lt;EntityCoordinates&gt;, Boolean, IEntityManager)</h4>
+  <div class="markdown level1 summary"><p>Attempts to remove all entities in a container.
+<a class="xref" href="Robust.Shared.Containers.SharedContainerSystem.html#Robust_Shared_Containers_SharedContainerSystem_EmptyContainer_Robust_Shared_Containers_BaseContainer_System_Boolean_System_Nullable_Robust_Shared_Map_EntityCoordinates__System_Boolean_">EmptyContainer(BaseContainer, Boolean, Nullable&lt;EntityCoordinates&gt;, Boolean)</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void EmptyContainer(this BaseContainer container, bool force = false, EntityCoordinates? moveTo = null, bool attachToGridOrMap = false, IEntityManager entMan = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Containers.BaseContainer.html">BaseContainer</a></td>
+        <td><span class="parametername">container</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">force</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a>&gt;</td>
+        <td><span class="parametername">moveTo</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">attachToGridOrMap</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td><span class="parametername">entMan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers_EnsureContainer__1_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_GameObjects_IEntityManager_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers.EnsureContainer%60%601(Robust.Shared.GameObjects.EntityUid%2CSystem.String%2CRobust.Shared.GameObjects.IEntityManager)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L160">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerHelpers_EnsureContainer_" data-uid="Robust.Shared.Containers.ContainerHelpers.EnsureContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerHelpers_EnsureContainer__1_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_GameObjects_IEntityManager_" data-uid="Robust.Shared.Containers.ContainerHelpers.EnsureContainer``1(Robust.Shared.GameObjects.EntityUid,System.String,Robust.Shared.GameObjects.IEntityManager)">EnsureContainer&lt;T&gt;(EntityUid, String, IEntityManager)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static T EnsureContainer&lt;T&gt;(this EntityUid entity, string containerId, IEntityManager entMan = null)
+    where T : BaseContainer</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entity</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">containerId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td><span class="parametername">entMan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers_EnsureContainer__1_Robust_Shared_GameObjects_EntityUid_System_String_System_Boolean__Robust_Shared_GameObjects_IEntityManager_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers.EnsureContainer%60%601(Robust.Shared.GameObjects.EntityUid%2CSystem.String%2CSystem.Boolean%40%2CRobust.Shared.GameObjects.IEntityManager)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L168">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerHelpers_EnsureContainer_" data-uid="Robust.Shared.Containers.ContainerHelpers.EnsureContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerHelpers_EnsureContainer__1_Robust_Shared_GameObjects_EntityUid_System_String_System_Boolean__Robust_Shared_GameObjects_IEntityManager_" data-uid="Robust.Shared.Containers.ContainerHelpers.EnsureContainer``1(Robust.Shared.GameObjects.EntityUid,System.String,System.Boolean@,Robust.Shared.GameObjects.IEntityManager)">EnsureContainer&lt;T&gt;(EntityUid, String, out Boolean, IEntityManager)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static T EnsureContainer&lt;T&gt;(this EntityUid entity, string containerId, out bool alreadyExisted, IEntityManager entMan = null)
+    where T : BaseContainer</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entity</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">containerId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">alreadyExisted</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td><span class="parametername">entMan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers_IsInContainer_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_IEntityManager_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers.IsInContainer(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.IEntityManager)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L23">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerHelpers_IsInContainer_" data-uid="Robust.Shared.Containers.ContainerHelpers.IsInContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerHelpers_IsInContainer_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_IEntityManager_" data-uid="Robust.Shared.Containers.ContainerHelpers.IsInContainer(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.IEntityManager)">IsInContainer(EntityUid, IEntityManager)</h4>
+  <div class="markdown level1 summary"><p>Am I inside a container? Only checks the direct parent. To see if the entity, or any parent entity, is
+inside a container, use <see cref="!:ContainerSystem.IsEntityOrParentInContainer"></see></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool IsInContainer(this EntityUid entity, IEntityManager entMan = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entity</span></td>
+        <td><p>Entity that might be inside a container.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td><span class="parametername">entMan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>If the entity is inside of a container.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers_TryGetContainer_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Containers_BaseContainer__Robust_Shared_GameObjects_IEntityManager_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers.TryGetContainer(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.Containers.BaseContainer%40%2CRobust.Shared.GameObjects.IEntityManager)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L56">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerHelpers_TryGetContainer_" data-uid="Robust.Shared.Containers.ContainerHelpers.TryGetContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerHelpers_TryGetContainer_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Containers_BaseContainer__Robust_Shared_GameObjects_IEntityManager_" data-uid="Robust.Shared.Containers.ContainerHelpers.TryGetContainer(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Containers.BaseContainer@,Robust.Shared.GameObjects.IEntityManager)">TryGetContainer(EntityUid, out BaseContainer, IEntityManager)</h4>
+  <div class="markdown level1 summary"><p>Tries to find the container that this entity is inside (if any).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool TryGetContainer(this EntityUid entity, out BaseContainer container, IEntityManager entMan = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entity</span></td>
+        <td><p>Entity that might be inside a container.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Containers.BaseContainer.html">BaseContainer</a></td>
+        <td><span class="parametername">container</span></td>
+        <td><p>The container that this entity is inside of.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td><span class="parametername">entMan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>If a container was found.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers_TryGetContainerMan_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Containers_ContainerManagerComponent__Robust_Shared_GameObjects_IEntityManager_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers.TryGetContainerMan(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.Containers.ContainerManagerComponent%40%2CRobust.Shared.GameObjects.IEntityManager)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L37">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerHelpers_TryGetContainerMan_" data-uid="Robust.Shared.Containers.ContainerHelpers.TryGetContainerMan*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerHelpers_TryGetContainerMan_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Containers_ContainerManagerComponent__Robust_Shared_GameObjects_IEntityManager_" data-uid="Robust.Shared.Containers.ContainerHelpers.TryGetContainerMan(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Containers.ContainerManagerComponent@,Robust.Shared.GameObjects.IEntityManager)">TryGetContainerMan(EntityUid, out ContainerManagerComponent, IEntityManager)</h4>
+  <div class="markdown level1 summary"><p>Tries to find the container manager that this entity is inside (if any).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool TryGetContainerMan(this EntityUid entity, out ContainerManagerComponent manager, IEntityManager entMan = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entity</span></td>
+        <td><p>Entity that might be inside a container.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Containers.ContainerManagerComponent.html">ContainerManagerComponent</a></td>
+        <td><span class="parametername">manager</span></td>
+        <td><p>The container manager that this entity is inside of.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td><span class="parametername">entMan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>If a container manager was found.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers_TryRemoveFromContainer_Robust_Shared_GameObjects_EntityUid_System_Boolean_Robust_Shared_GameObjects_IEntityManager_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers.TryRemoveFromContainer(Robust.Shared.GameObjects.EntityUid%2CSystem.Boolean%2CRobust.Shared.GameObjects.IEntityManager)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L91">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerHelpers_TryRemoveFromContainer_" data-uid="Robust.Shared.Containers.ContainerHelpers.TryRemoveFromContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerHelpers_TryRemoveFromContainer_Robust_Shared_GameObjects_EntityUid_System_Boolean_Robust_Shared_GameObjects_IEntityManager_" data-uid="Robust.Shared.Containers.ContainerHelpers.TryRemoveFromContainer(Robust.Shared.GameObjects.EntityUid,System.Boolean,Robust.Shared.GameObjects.IEntityManager)">TryRemoveFromContainer(EntityUid, Boolean, IEntityManager)</h4>
+  <div class="markdown level1 summary"><p>Attempts to remove an entity from its container, if any.
+<a class="xref" href="Robust.Shared.Containers.SharedContainerSystem.html#Robust_Shared_Containers_SharedContainerSystem_TryRemoveFromContainer_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Boolean__">TryRemoveFromContainer(EntityUid, Boolean, out Boolean)</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool TryRemoveFromContainer(this EntityUid entity, bool force = false, IEntityManager entMan = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entity</span></td>
+        <td><p>Entity that might be inside a container.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">force</span></td>
+        <td><p>Whether to forcibly remove the entity from the container.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td><span class="parametername">entMan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>If the entity could be removed. Also returns false if it wasn't inside a container.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers_TryRemoveFromContainer_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Boolean__Robust_Shared_GameObjects_IEntityManager_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers.TryRemoveFromContainer(Robust.Shared.GameObjects.EntityUid%2CSystem.Boolean%2CSystem.Boolean%40%2CRobust.Shared.GameObjects.IEntityManager)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L77">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerHelpers_TryRemoveFromContainer_" data-uid="Robust.Shared.Containers.ContainerHelpers.TryRemoveFromContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerHelpers_TryRemoveFromContainer_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Boolean__Robust_Shared_GameObjects_IEntityManager_" data-uid="Robust.Shared.Containers.ContainerHelpers.TryRemoveFromContainer(Robust.Shared.GameObjects.EntityUid,System.Boolean,System.Boolean@,Robust.Shared.GameObjects.IEntityManager)">TryRemoveFromContainer(EntityUid, Boolean, out Boolean, IEntityManager)</h4>
+  <div class="markdown level1 summary"><p>Attempts to remove an entity from its container, if any.
+<a class="xref" href="Robust.Shared.Containers.SharedContainerSystem.html#Robust_Shared_Containers_SharedContainerSystem_TryRemoveFromContainer_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Boolean__">TryRemoveFromContainer(EntityUid, Boolean, out Boolean)</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool TryRemoveFromContainer(this EntityUid entity, bool force, out bool wasInContainer, IEntityManager entMan = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entity</span></td>
+        <td><p>Entity that might be inside a container.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">force</span></td>
+        <td><p>Whether to forcibly remove the entity from the container.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">wasInContainer</span></td>
+        <td><p>Whether the entity was actually inside a container or not.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td><span class="parametername">entMan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>If the entity could be removed. Also returns false if it wasn't inside a container.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerHelpers.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerHelpers%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerHelpers.cs/#L14" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

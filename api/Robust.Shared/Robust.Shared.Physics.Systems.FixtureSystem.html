@@ -1,0 +1,801 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class FixtureSystem
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class FixtureSystem
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Physics.Systems.FixtureSystem">
+  
+  
+  <h1 id="Robust_Shared_Physics_Systems_FixtureSystem" data-uid="Robust.Shared.Physics.Systems.FixtureSystem" class="text-break">Class FixtureSystem
+  </h1>
+  <div class="markdown level0 summary"><p>Manages physics fixtures.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.html">EntitySystem</a></div>
+    <div class="level2"><span class="xref">FixtureSystem</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a></div>
+    <div><a class="xref" href="Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a></div>
+    <div><a class="xref" href="Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a></div>
+  </div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Physics.Systems.html">Robust.Shared.Physics.Systems</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Physics_Systems_FixtureSystem_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class FixtureSystem : EntitySystem, IEntitySystem, IEntityEventSubscriber, IPostInjectInit</code></pre>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem_DestroyFixture_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_Physics_Dynamics_Fixture_System_Boolean_Robust_Shared_Physics_Components_PhysicsComponent_Robust_Shared_Physics_FixturesComponent_Robust_Shared_GameObjects_TransformComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem.DestroyFixture(Robust.Shared.GameObjects.EntityUid%2CSystem.String%2CRobust.Shared.Physics.Dynamics.Fixture%2CSystem.Boolean%2CRobust.Shared.Physics.Components.PhysicsComponent%2CRobust.Shared.Physics.FixturesComponent%2CRobust.Shared.GameObjects.TransformComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.cs/#L157">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_FixtureSystem_DestroyFixture_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.DestroyFixture*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_FixtureSystem_DestroyFixture_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_Physics_Dynamics_Fixture_System_Boolean_Robust_Shared_Physics_Components_PhysicsComponent_Robust_Shared_Physics_FixturesComponent_Robust_Shared_GameObjects_TransformComponent_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.DestroyFixture(Robust.Shared.GameObjects.EntityUid,System.String,Robust.Shared.Physics.Dynamics.Fixture,System.Boolean,Robust.Shared.Physics.Components.PhysicsComponent,Robust.Shared.Physics.FixturesComponent,Robust.Shared.GameObjects.TransformComponent)">DestroyFixture(EntityUid, String, Fixture, Boolean, PhysicsComponent, FixturesComponent, TransformComponent)</h4>
+  <div class="markdown level1 summary"><p>Destroys the specified <a class="xref" href="Robust.Shared.Physics.Dynamics.Fixture.html">Fixture</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void DestroyFixture(EntityUid uid, string fixtureId, Fixture fixture, bool updates = true, PhysicsComponent body = null, FixturesComponent manager = null, TransformComponent xform = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">fixtureId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Fixture.html">Fixture</a></td>
+        <td><span class="parametername">fixture</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">updates</span></td>
+        <td><p>Whether to update mass etc. Set false if you're doing a bulk operation</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Components.PhysicsComponent.html">PhysicsComponent</a></td>
+        <td><span class="parametername">body</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.FixturesComponent.html">FixturesComponent</a></td>
+        <td><span class="parametername">manager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></td>
+        <td><span class="parametername">xform</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem_DestroyFixture_Robust_Shared_GameObjects_EntityUid_System_String_System_Boolean_Robust_Shared_Physics_Components_PhysicsComponent_Robust_Shared_Physics_FixturesComponent_Robust_Shared_GameObjects_TransformComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem.DestroyFixture(Robust.Shared.GameObjects.EntityUid%2CSystem.String%2CSystem.Boolean%2CRobust.Shared.Physics.Components.PhysicsComponent%2CRobust.Shared.Physics.FixturesComponent%2CRobust.Shared.GameObjects.TransformComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.cs/#L138">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_FixtureSystem_DestroyFixture_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.DestroyFixture*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_FixtureSystem_DestroyFixture_Robust_Shared_GameObjects_EntityUid_System_String_System_Boolean_Robust_Shared_Physics_Components_PhysicsComponent_Robust_Shared_Physics_FixturesComponent_Robust_Shared_GameObjects_TransformComponent_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.DestroyFixture(Robust.Shared.GameObjects.EntityUid,System.String,System.Boolean,Robust.Shared.Physics.Components.PhysicsComponent,Robust.Shared.Physics.FixturesComponent,Robust.Shared.GameObjects.TransformComponent)">DestroyFixture(EntityUid, String, Boolean, PhysicsComponent, FixturesComponent, TransformComponent)</h4>
+  <div class="markdown level1 summary"><p>Destroys the specified <a class="xref" href="Robust.Shared.Physics.Dynamics.Fixture.html">Fixture</a> attached to the body.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void DestroyFixture(EntityUid uid, string id, bool updates = true, PhysicsComponent body = null, FixturesComponent manager = null, TransformComponent xform = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td><p>The fixture ID</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">updates</span></td>
+        <td><p>Whether to update mass etc. Set false if you're doing a bulk operation</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Components.PhysicsComponent.html">PhysicsComponent</a></td>
+        <td><span class="parametername">body</span></td>
+        <td><p>The specified body</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.FixturesComponent.html">FixturesComponent</a></td>
+        <td><span class="parametername">manager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></td>
+        <td><span class="parametername">xform</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem_FixtureUpdate_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Boolean_Robust_Shared_Physics_FixturesComponent_Robust_Shared_Physics_Components_PhysicsComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem.FixtureUpdate(Robust.Shared.GameObjects.EntityUid%2CSystem.Boolean%2CSystem.Boolean%2CRobust.Shared.Physics.FixturesComponent%2CRobust.Shared.Physics.Components.PhysicsComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.cs/#L325">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_FixtureSystem_FixtureUpdate_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.FixtureUpdate*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_FixtureSystem_FixtureUpdate_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Boolean_Robust_Shared_Physics_FixturesComponent_Robust_Shared_Physics_Components_PhysicsComponent_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.FixtureUpdate(Robust.Shared.GameObjects.EntityUid,System.Boolean,System.Boolean,Robust.Shared.Physics.FixturesComponent,Robust.Shared.Physics.Components.PhysicsComponent)">FixtureUpdate(EntityUid, Boolean, Boolean, FixturesComponent, PhysicsComponent)</h4>
+  <div class="markdown level1 summary"><p>Updates all of the cached physics information on the body derived from fixtures.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void FixtureUpdate(EntityUid uid, bool dirty = true, bool resetMass = true, FixturesComponent manager = null, PhysicsComponent body = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">dirty</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">resetMass</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.FixturesComponent.html">FixturesComponent</a></td>
+        <td><span class="parametername">manager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Components.PhysicsComponent.html">PhysicsComponent</a></td>
+        <td><span class="parametername">body</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem_GetFixtureCount_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Physics_FixturesComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem.GetFixtureCount(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.Physics.FixturesComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.cs/#L365">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_FixtureSystem_GetFixtureCount_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.GetFixtureCount*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_FixtureSystem_GetFixtureCount_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Physics_FixturesComponent_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.GetFixtureCount(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Physics.FixturesComponent)">GetFixtureCount(EntityUid, FixturesComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int GetFixtureCount(EntityUid uid, FixturesComponent manager = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.FixturesComponent.html">FixturesComponent</a></td>
+        <td><span class="parametername">manager</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem_GetFixtureOrNull_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_Physics_FixturesComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem.GetFixtureOrNull(Robust.Shared.GameObjects.EntityUid%2CSystem.String%2CRobust.Shared.Physics.FixturesComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.cs/#L122">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_FixtureSystem_GetFixtureOrNull_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.GetFixtureOrNull*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_FixtureSystem_GetFixtureOrNull_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_Physics_FixturesComponent_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.GetFixtureOrNull(Robust.Shared.GameObjects.EntityUid,System.String,Robust.Shared.Physics.FixturesComponent)">GetFixtureOrNull(EntityUid, String, FixturesComponent)</h4>
+  <div class="markdown level1 summary"><p>Attempts to get the <a class="xref" href="Robust.Shared.Physics.Dynamics.Fixture.html">Fixture</a> with the specified ID for this body.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Fixture GetFixtureOrNull(EntityUid uid, string id, FixturesComponent manager = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.FixturesComponent.html">FixturesComponent</a></td>
+        <td><span class="parametername">manager</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Fixture.html">Fixture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem_GetMassData_Robust_Shared_Physics_Collision_Shapes_IPhysShape_Robust_Shared_Physics_Dynamics_MassData__System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem.GetMassData(Robust.Shared.Physics.Collision.Shapes.IPhysShape%2CRobust.Shared.Physics.Dynamics.MassData%40%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.Shapes.cs/#L150">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_FixtureSystem_GetMassData_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.GetMassData*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_FixtureSystem_GetMassData_Robust_Shared_Physics_Collision_Shapes_IPhysShape_Robust_Shared_Physics_Dynamics_MassData__System_Single_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.GetMassData(Robust.Shared.Physics.Collision.Shapes.IPhysShape,Robust.Shared.Physics.Dynamics.MassData@,System.Single)">GetMassData(IPhysShape, ref MassData, Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void GetMassData(IPhysShape shape, ref MassData data, float density)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Collision.Shapes.IPhysShape.html">IPhysShape</a></td>
+        <td><span class="parametername">shape</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.MassData.html">MassData</a></td>
+        <td><span class="parametername">data</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">density</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem_GetMassData_Robust_Shared_Physics_Collision_Shapes_IPhysShape_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem.GetMassData(Robust.Shared.Physics.Collision.Shapes.IPhysShape%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.Shapes.cs/#L44">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_FixtureSystem_GetMassData_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.GetMassData*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_FixtureSystem_GetMassData_Robust_Shared_Physics_Collision_Shapes_IPhysShape_System_Single_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.GetMassData(Robust.Shared.Physics.Collision.Shapes.IPhysShape,System.Single)">GetMassData(IPhysShape, Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static MassData GetMassData(IPhysShape shape, float density)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Collision.Shapes.IPhysShape.html">IPhysShape</a></td>
+        <td><span class="parametername">shape</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">density</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.MassData.html">MassData</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem_Initialize.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.cs/#L26">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_FixtureSystem_Initialize_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.Initialize*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_FixtureSystem_Initialize" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Initialize()</code></pre>
+  </div>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.html#Robust_Shared_GameObjects_EntitySystem_Initialize">EntitySystem.Initialize()</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem_SetRestitution_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_Physics_Dynamics_Fixture_System_Single_System_Boolean_Robust_Shared_Physics_FixturesComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem.SetRestitution(Robust.Shared.GameObjects.EntityUid%2CSystem.String%2CRobust.Shared.Physics.Dynamics.Fixture%2CSystem.Single%2CSystem.Boolean%2CRobust.Shared.Physics.FixturesComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.cs/#L313">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_FixtureSystem_SetRestitution_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.SetRestitution*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_FixtureSystem_SetRestitution_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_Physics_Dynamics_Fixture_System_Single_System_Boolean_Robust_Shared_Physics_FixturesComponent_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.SetRestitution(Robust.Shared.GameObjects.EntityUid,System.String,Robust.Shared.Physics.Dynamics.Fixture,System.Single,System.Boolean,Robust.Shared.Physics.FixturesComponent)">SetRestitution(EntityUid, String, Fixture, Single, Boolean, FixturesComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetRestitution(EntityUid uid, string fixtureId, Fixture fixture, float value, bool update = true, FixturesComponent manager = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">fixtureId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Fixture.html">Fixture</a></td>
+        <td><span class="parametername">fixture</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">update</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.FixturesComponent.html">FixturesComponent</a></td>
+        <td><span class="parametername">manager</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem_TestPoint_Robust_Shared_Physics_Collision_Shapes_IPhysShape_Robust_Shared_Physics_Transform_Vector2_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem.TestPoint(Robust.Shared.Physics.Collision.Shapes.IPhysShape%2CRobust.Shared.Physics.Transform%2CVector2)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.Shapes.cs/#L15">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_FixtureSystem_TestPoint_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.TestPoint*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_FixtureSystem_TestPoint_Robust_Shared_Physics_Collision_Shapes_IPhysShape_Robust_Shared_Physics_Transform_Vector2_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.TestPoint(Robust.Shared.Physics.Collision.Shapes.IPhysShape,Robust.Shared.Physics.Transform,Vector2)">TestPoint(IPhysShape, Transform, Vector2)</h4>
+  <div class="markdown level1 summary"><p>Tests whether a particular point is contained in the shape.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TestPoint(IPhysShape shape, Transform xform, Vector2 worldPoint)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Collision.Shapes.IPhysShape.html">IPhysShape</a></td>
+        <td><span class="parametername">shape</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Transform.html">Transform</a></td>
+        <td><span class="parametername">xform</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">worldPoint</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem_TryCreateFixture_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Physics_Collision_Shapes_IPhysShape_System_String_System_Single_System_Boolean_System_Int32_System_Int32_System_Single_System_Single_System_Boolean_Robust_Shared_Physics_FixturesComponent_Robust_Shared_Physics_Components_PhysicsComponent_Robust_Shared_GameObjects_TransformComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem.TryCreateFixture(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.Physics.Collision.Shapes.IPhysShape%2CSystem.String%2CSystem.Single%2CSystem.Boolean%2CSystem.Int32%2CSystem.Int32%2CSystem.Single%2CSystem.Single%2CSystem.Boolean%2CRobust.Shared.Physics.FixturesComponent%2CRobust.Shared.Physics.Components.PhysicsComponent%2CRobust.Shared.GameObjects.TransformComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.cs/#L52">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_FixtureSystem_TryCreateFixture_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.TryCreateFixture*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_FixtureSystem_TryCreateFixture_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Physics_Collision_Shapes_IPhysShape_System_String_System_Single_System_Boolean_System_Int32_System_Int32_System_Single_System_Single_System_Boolean_Robust_Shared_Physics_FixturesComponent_Robust_Shared_Physics_Components_PhysicsComponent_Robust_Shared_GameObjects_TransformComponent_" data-uid="Robust.Shared.Physics.Systems.FixtureSystem.TryCreateFixture(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Physics.Collision.Shapes.IPhysShape,System.String,System.Single,System.Boolean,System.Int32,System.Int32,System.Single,System.Single,System.Boolean,Robust.Shared.Physics.FixturesComponent,Robust.Shared.Physics.Components.PhysicsComponent,Robust.Shared.GameObjects.TransformComponent)">TryCreateFixture(EntityUid, IPhysShape, String, Single, Boolean, Int32, Int32, Single, Single, Boolean, FixturesComponent, PhysicsComponent, TransformComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryCreateFixture(EntityUid uid, IPhysShape shape, string id, float density = null, bool hard = true, int collisionLayer = 0, int collisionMask = 0, float friction = null, float restitution = null, bool updates = true, FixturesComponent manager = null, PhysicsComponent body = null, TransformComponent xform = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Collision.Shapes.IPhysShape.html">IPhysShape</a></td>
+        <td><span class="parametername">shape</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">density</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">hard</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">collisionLayer</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">collisionMask</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">friction</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">restitution</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">updates</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.FixturesComponent.html">FixturesComponent</a></td>
+        <td><span class="parametername">manager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Components.PhysicsComponent.html">PhysicsComponent</a></td>
+        <td><span class="parametername">body</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></td>
+        <td><span class="parametername">xform</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_FixtureSystem.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.FixtureSystem%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/FixtureSystem.Shapes.cs/#L10" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,829 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IViewVariablesManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IViewVariablesManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager">
+  
+  
+  <h1 id="Robust_Shared_ViewVariables_IViewVariablesManager" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager" class="text-break">Interface IViewVariablesManager
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.ViewVariables.html">Robust.Shared.ViewVariables</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_ViewVariables_IViewVariablesManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IViewVariablesManager</code></pre>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_GetTypeHandler__1.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.GetTypeHandler%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L50">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_GetTypeHandler_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.GetTypeHandler*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_GetTypeHandler__1" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.GetTypeHandler``1">GetTypeHandler&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"><p>Retrieves the type handler for a given type.
+Creates it if it didn't exist already. Allows you to register custom handlers for a type.
+Type handlers expand the paths available under a certain type on VV.</p>
+<pre><code>/entity/12345/Custom</code></pre>
+<p>In the example above, &quot;Custom&quot; could be a path that the type handler for <a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a> provided.
+It does not exist on the <a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a> declaration, but that does not matter:
+VV treats it the same as a &quot;real&quot; member under that type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ViewVariablesTypeHandler&lt;T&gt; GetTypeHandler&lt;T&gt;()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ViewVariables.ViewVariablesTypeHandler-1.html">ViewVariablesTypeHandler</a>&lt;T&gt;</td>
+        <td><p>The type handler object, which allows you register handlers and paths for the type.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_ViewVariables_IViewVariablesManager_GetTypeHandler__1_seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.ViewVariables.IViewVariablesManager.html#Robust_Shared_ViewVariables_IViewVariablesManager_RegisterDomain_System_String_Robust_Shared_ViewVariables_DomainResolveObject_Robust_Shared_ViewVariables_DomainListPaths_">RegisterDomain(String, DomainResolveObject, DomainListPaths)</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_InvokePath_System_String_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.InvokePath(System.String%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L58">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_InvokePath_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.InvokePath*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_InvokePath_System_String_System_String_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.InvokePath(System.String,System.String)">InvokePath(String, String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">object? InvokePath(string path, string arguments)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">arguments</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_InvokeRemotePath_System_String_System_String_Robust_Shared_Players_ICommonSession_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.InvokeRemotePath(System.String%2CSystem.String%2CRobust.Shared.Players.ICommonSession)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L63">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_InvokeRemotePath_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.InvokeRemotePath*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_InvokeRemotePath_System_String_System_String_Robust_Shared_Players_ICommonSession_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.InvokeRemotePath(System.String,System.String,Robust.Shared.Players.ICommonSession)">InvokeRemotePath(String, String, ICommonSession)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;string?&gt; InvokeRemotePath(string path, string arguments, ICommonSession session = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">arguments</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_ListPath_System_String_Robust_Shared_ViewVariables_VVListPathOptions_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.ListPath(System.String%2CRobust.Shared.ViewVariables.VVListPathOptions)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L59">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_ListPath_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ListPath*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_ListPath_System_String_Robust_Shared_ViewVariables_VVListPathOptions_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ListPath(System.String,Robust.Shared.ViewVariables.VVListPathOptions)">ListPath(String, VVListPathOptions)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;string&gt; ListPath(string path, VVListPathOptions options)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ViewVariables.VVListPathOptions.html">VVListPathOptions</a></td>
+        <td><span class="parametername">options</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_ListRemotePath_System_String_Robust_Shared_ViewVariables_VVListPathOptions_Robust_Shared_Players_ICommonSession_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.ListRemotePath(System.String%2CRobust.Shared.ViewVariables.VVListPathOptions%2CRobust.Shared.Players.ICommonSession)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L64">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_ListRemotePath_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ListRemotePath*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_ListRemotePath_System_String_Robust_Shared_ViewVariables_VVListPathOptions_Robust_Shared_Players_ICommonSession_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ListRemotePath(System.String,Robust.Shared.ViewVariables.VVListPathOptions,Robust.Shared.Players.ICommonSession)">ListRemotePath(String, VVListPathOptions, ICommonSession)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;IEnumerable&lt;string&gt;&gt; ListRemotePath(string path, VVListPathOptions options, ICommonSession session = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ViewVariables.VVListPathOptions.html">VVListPathOptions</a></td>
+        <td><span class="parametername">options</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<span class="xref">IEnumerable</span>&lt;<span class="xref">System.String</span>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_ReadPath_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.ReadPath(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L55">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_ReadPath_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ReadPath*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_ReadPath_System_String_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ReadPath(System.String)">ReadPath(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">object? ReadPath(string path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_ReadPathSerialized_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.ReadPathSerialized(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L56">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_ReadPathSerialized_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ReadPathSerialized*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_ReadPathSerialized_System_String_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ReadPathSerialized(System.String)">ReadPathSerialized(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string? ReadPathSerialized(string path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_ReadRemotePath_System_String_Robust_Shared_Players_ICommonSession_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.ReadRemotePath(System.String%2CRobust.Shared.Players.ICommonSession)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L61">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_ReadRemotePath_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ReadRemotePath*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_ReadRemotePath_System_String_Robust_Shared_Players_ICommonSession_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ReadRemotePath(System.String,Robust.Shared.Players.ICommonSession)">ReadRemotePath(String, ICommonSession)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;string?&gt; ReadRemotePath(string path, ICommonSession session = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_RegisterDomain_System_String_Robust_Shared_ViewVariables_DomainResolveObject_Robust_Shared_ViewVariables_DomainListPaths_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.RegisterDomain(System.String%2CRobust.Shared.ViewVariables.DomainResolveObject%2CRobust.Shared.ViewVariables.DomainListPaths)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L26">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_RegisterDomain_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.RegisterDomain*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_RegisterDomain_System_String_Robust_Shared_ViewVariables_DomainResolveObject_Robust_Shared_ViewVariables_DomainListPaths_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.RegisterDomain(System.String,Robust.Shared.ViewVariables.DomainResolveObject,Robust.Shared.ViewVariables.DomainListPaths)">RegisterDomain(String, DomainResolveObject, DomainListPaths)</h4>
+  <div class="markdown level1 summary"><p>Allows you to register the handlers for a domain.
+Domains are the top-level segments of a VV path.
+They provide ViewVariables with access to any number of objects.
+A proper domain should only handle the next segment of the path.</p>
+<pre><code>/entity/12345</code></pre>
+<p>In the example above, &quot;entity&quot; would be a registered domain
+and &quot;12345&quot; would be an object (entity UID) that is resolved by it.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterDomain(string domain, DomainResolveObject resolveObject, DomainListPaths list)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">domain</span></td>
+        <td><p>The name of the domain to register.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ViewVariables.DomainResolveObject.html">DomainResolveObject</a></td>
+        <td><span class="parametername">resolveObject</span></td>
+        <td><p>The handler for resolving paths.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ViewVariables.DomainListPaths.html">DomainListPaths</a></td>
+        <td><span class="parametername">list</span></td>
+        <td><p>The handler for listing objects under the domain.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_ViewVariables_IViewVariablesManager_RegisterDomain_System_String_Robust_Shared_ViewVariables_DomainResolveObject_Robust_Shared_ViewVariables_DomainListPaths__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.ViewVariables.IViewVariablesManager.html#Robust_Shared_ViewVariables_IViewVariablesManager_UnregisterDomain_System_String_">UnregisterDomain(String)</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_ResolvePath_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.ResolvePath(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L54">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_ResolvePath_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ResolvePath*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_ResolvePath_System_String_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.ResolvePath(System.String)">ResolvePath(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ViewVariablesPath ResolvePath(string path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path to be resolved.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ViewVariables.ViewVariablesPath.html">ViewVariablesPath</a></td>
+        <td><p>An object representing the path, or null if the path couldn't be resolved.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_UnregisterDomain_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.UnregisterDomain(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L34">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_UnregisterDomain_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.UnregisterDomain*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_UnregisterDomain_System_String_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.UnregisterDomain(System.String)">UnregisterDomain(String)</h4>
+  <div class="markdown level1 summary"><p>Unregisters the handlers for a given domain.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool UnregisterDomain(string domain)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">domain</span></td>
+        <td><p>The name of the domain to unregister.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Whether the domain existed and was able to be unregistered or not.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_ViewVariables_IViewVariablesManager_UnregisterDomain_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.ViewVariables.IViewVariablesManager.html#Robust_Shared_ViewVariables_IViewVariablesManager_RegisterDomain_System_String_Robust_Shared_ViewVariables_DomainResolveObject_Robust_Shared_ViewVariables_DomainListPaths_">RegisterDomain(String, DomainResolveObject, DomainListPaths)</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_WritePath_System_String_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.WritePath(System.String%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L57">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_WritePath_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.WritePath*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_WritePath_System_String_System_String_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.WritePath(System.String,System.String)">WritePath(String, String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void WritePath(string path, string value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager_WriteRemotePath_System_String_System_String_Robust_Shared_Players_ICommonSession_.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager.WriteRemotePath(System.String%2CSystem.String%2CRobust.Shared.Players.ICommonSession)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L62">View Source</a>
+  </span>
+  <a id="Robust_Shared_ViewVariables_IViewVariablesManager_WriteRemotePath_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.WriteRemotePath*"></a>
+  <h4 id="Robust_Shared_ViewVariables_IViewVariablesManager_WriteRemotePath_System_String_System_String_Robust_Shared_Players_ICommonSession_" data-uid="Robust.Shared.ViewVariables.IViewVariablesManager.WriteRemotePath(System.String,System.String,Robust.Shared.Players.ICommonSession)">WriteRemotePath(String, String, ICommonSession)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task WriteRemotePath(string path, string value, ICommonSession session = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ViewVariables_IViewVariablesManager.md&amp;value=---%0Auid%3A%20Robust.Shared.ViewVariables.IViewVariablesManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ViewVariables/IViewVariablesManager.cs/#L8" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

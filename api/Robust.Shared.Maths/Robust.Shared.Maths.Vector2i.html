@@ -1,0 +1,1985 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Struct Vector2i
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Struct Vector2i
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Maths.Vector2i">
+  
+  
+  <h1 id="Robust_Shared_Maths_Vector2i" data-uid="Robust.Shared.Maths.Vector2i" class="text-break">Struct Vector2i
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><span class="xref">IEquatable</span>&lt;<a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>&gt;</div>
+    <div><span class="xref">ISpanFormattable</span></div>
+    <div><span class="xref">IAdditionOperators</span>&lt;<a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>, <a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>, <a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>&gt;</div>
+    <div><span class="xref">ISubtractionOperators</span>&lt;<a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>, <a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>, <a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>&gt;</div>
+    <div><span class="xref">IMultiplyOperators</span>&lt;<a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>, <a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>, <a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>&gt;</div>
+    <div><span class="xref">IMultiplyOperators</span>&lt;<a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>, <span class="xref">System.Int32</span>, <a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>&gt;</div>
+    <div><span class="xref">IComparisonOperators</span>&lt;<a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>, <a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a>, <span class="xref">System.Boolean</span>&gt;</div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Maths.html">Robust.Shared.Maths</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.Maths.dll</h6>
+  <h5 id="Robust_Shared_Maths_Vector2i_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public struct Vector2i : IEquatable&lt;Vector2i&gt;, ISpanFormattable, IAdditionOperators&lt;Vector2i, Vector2i, Vector2i&gt;, ISubtractionOperators&lt;Vector2i, Vector2i, Vector2i&gt;, IMultiplyOperators&lt;Vector2i, Vector2i, Vector2i&gt;, IMultiplyOperators&lt;Vector2i, int, Vector2i&gt;, IComparisonOperators&lt;Vector2i, Vector2i, bool&gt;</code></pre>
+  </div>
+  <h3 id="constructors">Constructors
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i__ctor_System_Int32_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.%23ctor(System.Int32%2CSystem.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L45">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i__ctor_" data-uid="Robust.Shared.Maths.Vector2i.#ctor*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i__ctor_System_Int32_System_Int32_" data-uid="Robust.Shared.Maths.Vector2i.#ctor(System.Int32,System.Int32)">Vector2i(Int32, Int32)</h4>
+  <div class="markdown level1 summary"><p>Construct a vector from its coordinates.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector2i(int x, int y)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">x</span></td>
+        <td><p>X coordinate</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">y</span></td>
+        <td><p>Y coordinate</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_Down.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.Down%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L26">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Vector2i_Down" data-uid="Robust.Shared.Maths.Vector2i.Down">Down</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly Vector2i Down</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_Left.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.Left%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L27">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Vector2i_Left" data-uid="Robust.Shared.Maths.Vector2i.Left">Left</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly Vector2i Left</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_One.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.One%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L23">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Vector2i_One" data-uid="Robust.Shared.Maths.Vector2i.One">One</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly Vector2i One</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_Right.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.Right%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L28">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Vector2i_Right" data-uid="Robust.Shared.Maths.Vector2i.Right">Right</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly Vector2i Right</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_Up.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.Up%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L25">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Vector2i_Up" data-uid="Robust.Shared.Maths.Vector2i.Up">Up</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly Vector2i Up</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_X.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.X%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L33">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Vector2i_X" data-uid="Robust.Shared.Maths.Vector2i.X">X</h4>
+  <div class="markdown level1 summary"><p>The X component of the Vector2i.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int X</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_Y.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.Y%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L38">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Vector2i_Y" data-uid="Robust.Shared.Maths.Vector2i.Y">Y</h4>
+  <div class="markdown level1 summary"><p>The Y component of the Vector2i.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int Y</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_Zero.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.Zero%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L22">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Vector2i_Zero" data-uid="Robust.Shared.Maths.Vector2i.Zero">Zero</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly Vector2i Zero</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_Length.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.Length%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L64">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_Length_" data-uid="Robust.Shared.Maths.Vector2i.Length*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_Length" data-uid="Robust.Shared.Maths.Vector2i.Length">Length</h4>
+  <div class="markdown level1 summary"><p>Gets the length (magnitude) of the vector.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float Length { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_LengthSquared.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.LengthSquared%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L73">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_LengthSquared_" data-uid="Robust.Shared.Maths.Vector2i.LengthSquared*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_LengthSquared" data-uid="Robust.Shared.Maths.Vector2i.LengthSquared">LengthSquared</h4>
+  <div class="markdown level1 summary"><p>Gets the squared length of the vector.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float LengthSquared { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_ComponentMax_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.ComponentMax(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L51">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_ComponentMax_" data-uid="Robust.Shared.Maths.Vector2i.ComponentMax*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_ComponentMax_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.ComponentMax(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">ComponentMax(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2i ComponentMax(Vector2i a, Vector2i b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_ComponentMin_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.ComponentMin(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L56">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_ComponentMin_" data-uid="Robust.Shared.Maths.Vector2i.ComponentMin*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_ComponentMin_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.ComponentMin(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">ComponentMin(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2i ComponentMin(Vector2i a, Vector2i b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_Deconstruct_System_Int32__System_Int32__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.Deconstruct(System.Int32%40%2CSystem.Int32%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L177">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_Deconstruct_" data-uid="Robust.Shared.Maths.Vector2i.Deconstruct*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_Deconstruct_System_Int32__System_Int32__" data-uid="Robust.Shared.Maths.Vector2i.Deconstruct(System.Int32@,System.Int32@)">Deconstruct(out Int32, out Int32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Deconstruct(out int x, out int y)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">x</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">y</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_Equals_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.Equals(Robust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L84">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_Equals_" data-uid="Robust.Shared.Maths.Vector2i.Equals*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_Equals_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.Equals(Robust.Shared.Maths.Vector2i)">Equals(Vector2i)</h4>
+  <div class="markdown level1 summary"><p>Compare a vector to another vector and check if they are equal.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Equals(Vector2i other)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">other</span></td>
+        <td><p>Other vector to check.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True if the two vectors are equal.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_Equals_System_Nullable_System_Object__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.Equals(System.Nullable%7BSystem.Object%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L94">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_Equals_" data-uid="Robust.Shared.Maths.Vector2i.Equals*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_Equals_System_Nullable_System_Object__" data-uid="Robust.Shared.Maths.Vector2i.Equals(System.Nullable{System.Object})">Equals(Nullable&lt;Object&gt;)</h4>
+  <div class="markdown level1 summary"><p>Compare a vector to an object and check if they are equal.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override bool Equals(object? obj)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">obj</span></td>
+        <td><p>Other object to check.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True if Object and vector are equal.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_GetHashCode.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.GetHashCode%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L104">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_GetHashCode_" data-uid="Robust.Shared.Maths.Vector2i.GetHashCode*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_GetHashCode" data-uid="Robust.Shared.Maths.Vector2i.GetHashCode">GetHashCode()</h4>
+  <div class="markdown level1 summary"><p>Returns the hash code for this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override int GetHashCode()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><p>A unique hash code for this instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_ToString.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.ToString%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L202">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_ToString_" data-uid="Robust.Shared.Maths.Vector2i.ToString*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_ToString" data-uid="Robust.Shared.Maths.Vector2i.ToString">ToString()</h4>
+  <div class="markdown level1 summary"><p>Returns a string that represents the current Vector2i.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override string ToString()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_ToString_System_Nullable_System_String__System_Nullable_IFormatProvider__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.ToString(System.Nullable%7BSystem.String%7D%2CSystem.Nullable%7BIFormatProvider%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L207">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_ToString_" data-uid="Robust.Shared.Maths.Vector2i.ToString*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_ToString_System_Nullable_System_String__System_Nullable_IFormatProvider__" data-uid="Robust.Shared.Maths.Vector2i.ToString(System.Nullable{System.String},System.Nullable{IFormatProvider})">ToString(Nullable&lt;String&gt;, Nullable&lt;IFormatProvider&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string ToString(string? format, IFormatProvider? formatProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">format</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">IFormatProvider</span>&gt;</td>
+        <td><span class="parametername">formatProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_TryFormat_Span_System_Char__System_Int32__ReadOnlySpan_System_Char__System_Nullable_IFormatProvider__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.TryFormat(Span%7BSystem.Char%7D%2CSystem.Int32%40%2CReadOnlySpan%7BSystem.Char%7D%2CSystem.Nullable%7BIFormatProvider%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L212">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_TryFormat_" data-uid="Robust.Shared.Maths.Vector2i.TryFormat*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_TryFormat_Span_System_Char__System_Int32__ReadOnlySpan_System_Char__System_Nullable_IFormatProvider__" data-uid="Robust.Shared.Maths.Vector2i.TryFormat(Span{System.Char},System.Int32@,ReadOnlySpan{System.Char},System.Nullable{IFormatProvider})">TryFormat(Span&lt;Char&gt;, out Int32, ReadOnlySpan&lt;Char&gt;, Nullable&lt;IFormatProvider&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryFormat(Span&lt;char&gt; destination, out int charsWritten, ReadOnlySpan&lt;char&gt; format, IFormatProvider? provider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Span</span>&lt;<span class="xref">System.Char</span>&gt;</td>
+        <td><span class="parametername">destination</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">charsWritten</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">ReadOnlySpan</span>&lt;<span class="xref">System.Char</span>&gt;</td>
+        <td><span class="parametername">format</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">IFormatProvider</span>&gt;</td>
+        <td><span class="parametername">provider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="operators">Operators
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Addition_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Addition(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L127">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Addition_" data-uid="Robust.Shared.Maths.Vector2i.op_Addition*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Addition_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.op_Addition(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">Addition(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2i operator +(Vector2i a, Vector2i b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Addition_Robust_Shared_Maths_Vector2i_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Addition(Robust.Shared.Maths.Vector2i%2CSystem.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L132">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Addition_" data-uid="Robust.Shared.Maths.Vector2i.op_Addition*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Addition_Robust_Shared_Maths_Vector2i_System_Int32_" data-uid="Robust.Shared.Maths.Vector2i.op_Addition(Robust.Shared.Maths.Vector2i,System.Int32)">Addition(Vector2i, Int32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2i operator +(Vector2i a, int b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Division_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Division(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L152">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Division_" data-uid="Robust.Shared.Maths.Vector2i.op_Division*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Division_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.op_Division(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">Division(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2i operator /(Vector2i a, Vector2i b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Division_Robust_Shared_Maths_Vector2i_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Division(Robust.Shared.Maths.Vector2i%2CSystem.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L157">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Division_" data-uid="Robust.Shared.Maths.Vector2i.op_Division*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Division_Robust_Shared_Maths_Vector2i_System_Int32_" data-uid="Robust.Shared.Maths.Vector2i.op_Division(Robust.Shared.Maths.Vector2i,System.Int32)">Division(Vector2i, Int32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2i operator /(Vector2i a, int scale)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Division_Robust_Shared_Maths_Vector2i_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Division(Robust.Shared.Maths.Vector2i%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L162">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Division_" data-uid="Robust.Shared.Maths.Vector2i.op_Division*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Division_Robust_Shared_Maths_Vector2i_System_Single_" data-uid="Robust.Shared.Maths.Vector2i.op_Division(Robust.Shared.Maths.Vector2i,System.Single)">Division(Vector2i, Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2 operator /(Vector2i a, float scale)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Equality_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Equality(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L167">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Equality_" data-uid="Robust.Shared.Maths.Vector2i.op_Equality*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Equality_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.op_Equality(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">Equality(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator ==(Vector2i a, Vector2i b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Explicit_Vector2__Robust_Shared_Maths_Vector2i.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Explicit(Vector2)~Robust.Shared.Maths.Vector2i%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L188">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Explicit_" data-uid="Robust.Shared.Maths.Vector2i.op_Explicit*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Explicit_Vector2__Robust_Shared_Maths_Vector2i" data-uid="Robust.Shared.Maths.Vector2i.op_Explicit(Vector2)~Robust.Shared.Maths.Vector2i">Explicit(Vector2 to Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static explicit operator Vector2i(Vector2 vector)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">vector</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_GreaterThan_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_GreaterThan(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L224">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_GreaterThan_" data-uid="Robust.Shared.Maths.Vector2i.op_GreaterThan*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_GreaterThan_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.op_GreaterThan(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">GreaterThan(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator&gt;(Vector2i left, Vector2i right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">left</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">right</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_GreaterThanOrEqual_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_GreaterThanOrEqual(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L229">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_GreaterThanOrEqual_" data-uid="Robust.Shared.Maths.Vector2i.op_GreaterThanOrEqual*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_GreaterThanOrEqual_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.op_GreaterThanOrEqual(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">GreaterThanOrEqual(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator &gt;=(Vector2i left, Vector2i right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">left</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">right</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Implicit_Robust_Shared_Maths_Vector2i__Vector2.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Implicit(Robust.Shared.Maths.Vector2i)~Vector2%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L183">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Implicit_" data-uid="Robust.Shared.Maths.Vector2i.op_Implicit*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Implicit_Robust_Shared_Maths_Vector2i__Vector2" data-uid="Robust.Shared.Maths.Vector2i.op_Implicit(Robust.Shared.Maths.Vector2i)~Vector2">Implicit(Vector2i to Vector2)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static implicit operator Vector2(Vector2i vector)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">vector</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Implicit_System_ValueTuple_System_Int32_System_Int32___Robust_Shared_Maths_Vector2i.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Implicit(System.ValueTuple%7BSystem.Int32%2CSystem.Int32%7D)~Robust.Shared.Maths.Vector2i%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L193">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Implicit_" data-uid="Robust.Shared.Maths.Vector2i.op_Implicit*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Implicit_System_ValueTuple_System_Int32_System_Int32___Robust_Shared_Maths_Vector2i" data-uid="Robust.Shared.Maths.Vector2i.op_Implicit(System.ValueTuple{System.Int32,System.Int32})~Robust.Shared.Maths.Vector2i">Implicit((Int32 x, Int32 y) to Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static implicit operator Vector2i((int x, int y) tuple)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">System.Int32</span>, <span class="xref">System.Int32</span>&gt;</td>
+        <td><span class="parametername">tuple</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Inequality_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Inequality(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L172">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Inequality_" data-uid="Robust.Shared.Maths.Vector2i.op_Inequality*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Inequality_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.op_Inequality(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">Inequality(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator !=(Vector2i a, Vector2i b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_LessThan_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_LessThan(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L234">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_LessThan_" data-uid="Robust.Shared.Maths.Vector2i.op_LessThan*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_LessThan_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.op_LessThan(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">LessThan(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator &lt;(Vector2i left, Vector2i right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">left</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">right</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_LessThanOrEqual_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_LessThanOrEqual(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L239">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_LessThanOrEqual_" data-uid="Robust.Shared.Maths.Vector2i.op_LessThanOrEqual*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_LessThanOrEqual_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.op_LessThanOrEqual(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">LessThanOrEqual(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator &lt;=(Vector2i left, Vector2i right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">left</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">right</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Multiply_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Multiply(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L137">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Multiply_" data-uid="Robust.Shared.Maths.Vector2i.op_Multiply*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Multiply_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.op_Multiply(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">Multiply(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2i operator *(Vector2i a, Vector2i b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Multiply_Robust_Shared_Maths_Vector2i_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Multiply(Robust.Shared.Maths.Vector2i%2CSystem.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L142">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Multiply_" data-uid="Robust.Shared.Maths.Vector2i.op_Multiply*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Multiply_Robust_Shared_Maths_Vector2i_System_Int32_" data-uid="Robust.Shared.Maths.Vector2i.op_Multiply(Robust.Shared.Maths.Vector2i,System.Int32)">Multiply(Vector2i, Int32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2i operator *(Vector2i a, int scale)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Multiply_Robust_Shared_Maths_Vector2i_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Multiply(Robust.Shared.Maths.Vector2i%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L147">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Multiply_" data-uid="Robust.Shared.Maths.Vector2i.op_Multiply*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Multiply_Robust_Shared_Maths_Vector2i_System_Single_" data-uid="Robust.Shared.Maths.Vector2i.op_Multiply(Robust.Shared.Maths.Vector2i,System.Single)">Multiply(Vector2i, Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2 operator *(Vector2i a, float scale)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Subtraction_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Subtraction(Robust.Shared.Maths.Vector2i%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L112">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Subtraction_" data-uid="Robust.Shared.Maths.Vector2i.op_Subtraction*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Subtraction_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.op_Subtraction(Robust.Shared.Maths.Vector2i,Robust.Shared.Maths.Vector2i)">Subtraction(Vector2i, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2i operator -(Vector2i a, Vector2i b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_Subtraction_Robust_Shared_Maths_Vector2i_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_Subtraction(Robust.Shared.Maths.Vector2i%2CSystem.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L117">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_Subtraction_" data-uid="Robust.Shared.Maths.Vector2i.op_Subtraction*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_Subtraction_Robust_Shared_Maths_Vector2i_System_Int32_" data-uid="Robust.Shared.Maths.Vector2i.op_Subtraction(Robust.Shared.Maths.Vector2i,System.Int32)">Subtraction(Vector2i, Int32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2i operator -(Vector2i a, int b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i_op_UnaryNegation_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i.op_UnaryNegation(Robust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L122">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Vector2i_op_UnaryNegation_" data-uid="Robust.Shared.Maths.Vector2i.op_UnaryNegation*"></a>
+  <h4 id="Robust_Shared_Maths_Vector2i_op_UnaryNegation_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Shared.Maths.Vector2i.op_UnaryNegation(Robust.Shared.Maths.Vector2i)">UnaryNegation(Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Vector2i operator -(Vector2i a)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <span class="xref">IEquatable&lt;&gt;</span>
+  </div>
+  <div>
+      <span class="xref">ISpanFormattable</span>
+  </div>
+  <div>
+      <span class="xref">IAdditionOperators&lt;, , &gt;</span>
+  </div>
+  <div>
+      <span class="xref">ISubtractionOperators&lt;, , &gt;</span>
+  </div>
+  <div>
+      <span class="xref">IMultiplyOperators&lt;, , &gt;</span>
+  </div>
+  <div>
+      <span class="xref">IMultiplyOperators&lt;, , &gt;</span>
+  </div>
+  <div>
+      <span class="xref">IComparisonOperators&lt;, , &gt;</span>
+  </div>
+  <h3 id="extensionmethods">Extension Methods</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.Maths.DirectionExtensions.html#Robust_Shared_Maths_DirectionExtensions_AsDirectionFlag_Robust_Shared_Maths_Vector2i_">DirectionExtensions.AsDirectionFlag(Vector2i)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Maths.DirectionExtensions.html#Robust_Shared_Maths_DirectionExtensions_AsDirection_Robust_Shared_Maths_Vector2i_">DirectionExtensions.AsDirection(Vector2i)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Maths.DirectionExtensions.html#Robust_Shared_Maths_DirectionExtensions_GetDir_Robust_Shared_Maths_Vector2i_">DirectionExtensions.GetDir(Vector2i)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Maths.DirectionExtensions.html#Robust_Shared_Maths_DirectionExtensions_GetCardinalDir_Robust_Shared_Maths_Vector2i_">DirectionExtensions.GetCardinalDir(Vector2i)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Maths.DirectionExtensions.html#Robust_Shared_Maths_DirectionExtensions_Offset_Robust_Shared_Maths_Vector2i_Robust_Shared_Maths_Direction_">DirectionExtensions.Offset(Vector2i, Direction)</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Vector2i.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Vector2i%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Vector2i.cs/#L10" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1143 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IGameTiming
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IGameTiming
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Timing.IGameTiming">
+  
+  
+  <h1 id="Robust_Shared_Timing_IGameTiming" data-uid="Robust.Shared.Timing.IGameTiming" class="text-break">Interface IGameTiming
+  </h1>
+  <div class="markdown level0 summary"><p>This holds main loop timing information and helper functions.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Timing.html">Robust.Shared.Timing</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Timing_IGameTiming_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IGameTiming</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_ApplyingState.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.ApplyingState%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L152">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_ApplyingState_" data-uid="Robust.Shared.Timing.IGameTiming.ApplyingState*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_ApplyingState" data-uid="Robust.Shared.Timing.IGameTiming.ApplyingState">ApplyingState</h4>
+  <div class="markdown level1 summary"><p>If true, the game is currently in the process of applying a game server-state.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool ApplyingState { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_CurFrame.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.CurFrame%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L68">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_CurFrame_" data-uid="Robust.Shared.Timing.IGameTiming.CurFrame*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_CurFrame" data-uid="Robust.Shared.Timing.IGameTiming.CurFrame">CurFrame</h4>
+  <div class="markdown level1 summary"><p>Current graphics frame since init OpenGL which is taken as frame 1. Useful to set a conditional breakpoint on specific frames, and
+synchronize with OGL debugging tools that capture frames. Depending on the tools used, this frame
+number will vary between 1 frame more or less due to how that tool is counting frames,
+i.e. starting from 0 or 1, having a separate counter, etc. Available in timing debug panel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">uint CurFrame { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_CurTick.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.CurTick%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L78">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_CurTick_" data-uid="Robust.Shared.Timing.IGameTiming.CurTick*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_CurTick" data-uid="Robust.Shared.Timing.IGameTiming.CurTick">CurTick</h4>
+  <div class="markdown level1 summary"><p>The current simulation tick being processed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">GameTick CurTick { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Timing.GameTick.html">GameTick</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_CurTime.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.CurTime%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L26">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_CurTime_" data-uid="Robust.Shared.Timing.IGameTiming.CurTime*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_CurTime" data-uid="Robust.Shared.Timing.IGameTiming.CurTime">CurTime</h4>
+  <div class="markdown level1 summary"><p>The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for
+prediction, and is affected by Paused and TimeScale.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan CurTime { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_FramesPerSecondAvg.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.FramesPerSecondAvg%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L73">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_FramesPerSecondAvg_" data-uid="Robust.Shared.Timing.IGameTiming.FramesPerSecondAvg*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_FramesPerSecondAvg" data-uid="Robust.Shared.Timing.IGameTiming.FramesPerSecondAvg">FramesPerSecondAvg</h4>
+  <div class="markdown level1 summary"><p>Average real FPS over the last 50 frames.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">double FramesPerSecondAvg { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Double</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_FrameTime.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.FrameTime%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L45">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_FrameTime_" data-uid="Robust.Shared.Timing.IGameTiming.FrameTime*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_FrameTime" data-uid="Robust.Shared.Timing.IGameTiming.FrameTime">FrameTime</h4>
+  <div class="markdown level1 summary"><p>The simulated time it took to render the last frame.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan FrameTime { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_InPrediction.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.InPrediction%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L147">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_InPrediction_" data-uid="Robust.Shared.Timing.IGameTiming.InPrediction*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_InPrediction" data-uid="Robust.Shared.Timing.IGameTiming.InPrediction">InPrediction</h4>
+  <div class="markdown level1 summary"><p>True if CurTick is ahead of LastRealTick, and <a class="xref" href="Robust.Shared.Timing.IGameTiming.html#Robust_Shared_Timing_IGameTiming_ApplyingState">ApplyingState</a> is false.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool InPrediction { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_InSimulation.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.InSimulation%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L15">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_InSimulation_" data-uid="Robust.Shared.Timing.IGameTiming.InSimulation*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_InSimulation" data-uid="Robust.Shared.Timing.IGameTiming.InSimulation">InSimulation</h4>
+  <div class="markdown level1 summary"><p>Is program execution inside of the simulation, or rendering?</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool InSimulation { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_IsFirstTimePredicted.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.IsFirstTimePredicted%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L142">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_IsFirstTimePredicted_" data-uid="Robust.Shared.Timing.IGameTiming.IsFirstTimePredicted*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_IsFirstTimePredicted" data-uid="Robust.Shared.Timing.IGameTiming.IsFirstTimePredicted">IsFirstTimePredicted</h4>
+  <div class="markdown level1 summary"><p>Is this the first time CurTick has been predicted?</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsFirstTimePredicted { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_LastTick.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.LastTick%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L84">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_LastTick_" data-uid="Robust.Shared.Timing.IGameTiming.LastTick*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_LastTick" data-uid="Robust.Shared.Timing.IGameTiming.LastTick">LastTick</h4>
+  <div class="markdown level1 summary"><p>Time, relative to <a class="xref" href="Robust.Shared.Timing.IGameTiming.html#Robust_Shared_Timing_IGameTiming_RealTime">RealTime</a>, the last tick started at.
+If we're currently in simulation, that's THIS tick.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan LastTick { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_Paused.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.Paused%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L20">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_Paused_" data-uid="Robust.Shared.Timing.IGameTiming.Paused*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_Paused" data-uid="Robust.Shared.Timing.IGameTiming.Paused">Paused</h4>
+  <div class="markdown level1 summary"><p>Is the simulation currently paused?</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool Paused { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_RealFrameTime.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.RealFrameTime%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L50">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_RealFrameTime_" data-uid="Robust.Shared.Timing.IGameTiming.RealFrameTime*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_RealFrameTime" data-uid="Robust.Shared.Timing.IGameTiming.RealFrameTime">RealFrameTime</h4>
+  <div class="markdown level1 summary"><p>The real time it took to render the last frame.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan RealFrameTime { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_RealFrameTimeAvg.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.RealFrameTimeAvg%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L55">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_RealFrameTimeAvg_" data-uid="Robust.Shared.Timing.IGameTiming.RealFrameTimeAvg*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_RealFrameTimeAvg" data-uid="Robust.Shared.Timing.IGameTiming.RealFrameTimeAvg">RealFrameTimeAvg</h4>
+  <div class="markdown level1 summary"><p>Average real frame time over the last 50 frames.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan RealFrameTimeAvg { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_RealFrameTimeStdDev.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.RealFrameTimeStdDev%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L60">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_RealFrameTimeStdDev_" data-uid="Robust.Shared.Timing.IGameTiming.RealFrameTimeStdDev*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_RealFrameTimeStdDev" data-uid="Robust.Shared.Timing.IGameTiming.RealFrameTimeStdDev">RealFrameTimeStdDev</h4>
+  <div class="markdown level1 summary"><p>Standard Deviation of the frame time over the last 50 frames.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan RealFrameTimeStdDev { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_RealTime.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.RealTime%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L31">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_RealTime_" data-uid="Robust.Shared.Timing.IGameTiming.RealTime*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_RealTime" data-uid="Robust.Shared.Timing.IGameTiming.RealTime">RealTime</h4>
+  <div class="markdown level1 summary"><p>The current real uptime of the simulation. Use this for UI and out of game timing.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan RealTime { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_ServerTime.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.ServerTime%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L40">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_ServerTime_" data-uid="Robust.Shared.Timing.IGameTiming.ServerTime*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_ServerTime" data-uid="Robust.Shared.Timing.IGameTiming.ServerTime">ServerTime</h4>
+  <div class="markdown level1 summary"><p>The <a class="xref" href="Robust.Shared.Timing.IGameTiming.html#Robust_Shared_Timing_IGameTiming_RealTime">RealTime</a> of the server.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan ServerTime { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Timing_IGameTiming_ServerTime_remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>0 if we are the client and we are not connected to a server.
+<a class="xref" href="Robust.Shared.Timing.IGameTiming.html#Robust_Shared_Timing_IGameTiming_RealTime">RealTime</a> if we are the server.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_TickFraction.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.TickFraction%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L111">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_TickFraction_" data-uid="Robust.Shared.Timing.IGameTiming.TickFraction*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_TickFraction" data-uid="Robust.Shared.Timing.IGameTiming.TickFraction">TickFraction</h4>
+  <div class="markdown level1 summary"><p>Fraction of how far into the tick we are. <code>0</code> is 0% and <see cref="!:ushort.MaxValue"></see> is 100%.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual ushort TickFraction { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.UInt16</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_TickPeriod.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.TickPeriod%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L99">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_TickPeriod_" data-uid="Robust.Shared.Timing.IGameTiming.TickPeriod*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_TickPeriod" data-uid="Robust.Shared.Timing.IGameTiming.TickPeriod">TickPeriod</h4>
+  <div class="markdown level1 summary"><p>The length of a tick at the current TickRate. 1/TickRate.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan TickPeriod { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_TickRate.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.TickRate%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L89">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_TickRate_" data-uid="Robust.Shared.Timing.IGameTiming.TickRate*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_TickRate" data-uid="Robust.Shared.Timing.IGameTiming.TickRate">TickRate</h4>
+  <div class="markdown level1 summary"><p>The target ticks/second of the simulation.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">byte TickRate { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_TickRemainder.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.TickRemainder%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L104">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_TickRemainder_" data-uid="Robust.Shared.Timing.IGameTiming.TickRemainder*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_TickRemainder" data-uid="Robust.Shared.Timing.IGameTiming.TickRemainder">TickRemainder</h4>
+  <div class="markdown level1 summary"><p>The remaining time left over after the last tick was ran.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan TickRemainder { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_TickStamp.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.TickStamp%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L154">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_TickStamp_" data-uid="Robust.Shared.Timing.IGameTiming.TickStamp*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_TickStamp" data-uid="Robust.Shared.Timing.IGameTiming.TickStamp">TickStamp</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual string TickStamp { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_TickStampStatic.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.TickStampStatic%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L162">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_TickStampStatic_" data-uid="Robust.Shared.Timing.IGameTiming.TickStampStatic*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_TickStampStatic" data-uid="Robust.Shared.Timing.IGameTiming.TickStampStatic">TickStampStatic</h4>
+  <div class="markdown level1 summary"><p>Statically-accessible version of <a class="xref" href="Robust.Shared.Timing.IGameTiming.html#Robust_Shared_Timing_IGameTiming_TickStamp">TickStamp</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">static string TickStampStatic { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Timing_IGameTiming_TickStampStatic_remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This is intended as a debugging aid, and should not be used in regular committed code.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_TickTimingAdjustment.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.TickTimingAdjustment%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L132">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_TickTimingAdjustment_" data-uid="Robust.Shared.Timing.IGameTiming.TickTimingAdjustment*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_TickTimingAdjustment" data-uid="Robust.Shared.Timing.IGameTiming.TickTimingAdjustment">TickTimingAdjustment</h4>
+  <div class="markdown level1 summary"><p>If the client clock is a little behind or ahead of the server, you can
+use the to adjust the timing of the clock speed. The default value is 0,
+and you can run the clock from -1 (almost stopped) to 1 (almost no delay).
+This has no effect on in-simulation timing, and only changes the speed at which
+the simulation progresses in relation to Real time. Don't mess with this unless
+you know what you are doing. DO NOT TOUCH THIS ON SERVER.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">float TickTimingAdjustment { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_TimeBase.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.TimeBase%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L94">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_TimeBase_" data-uid="Robust.Shared.Timing.IGameTiming.TimeBase*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_TimeBase" data-uid="Robust.Shared.Timing.IGameTiming.TimeBase">TimeBase</h4>
+  <div class="markdown level1 summary"><p>The baseline time value that CurTime is calculated relatively to.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">(TimeSpan, GameTick) TimeBase { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">TimeSpan</span>, <a class="xref" href="Robust.Shared.Timing.GameTick.html">GameTick</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_CalcAdjustedTickPeriod.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.CalcAdjustedTickPeriod%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L106">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_CalcAdjustedTickPeriod_" data-uid="Robust.Shared.Timing.IGameTiming.CalcAdjustedTickPeriod*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_CalcAdjustedTickPeriod" data-uid="Robust.Shared.Timing.IGameTiming.CalcAdjustedTickPeriod">CalcAdjustedTickPeriod()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan CalcAdjustedTickPeriod()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_RealLocalToServer_TimeSpan_.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.RealLocalToServer(TimeSpan)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L172">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_RealLocalToServer_" data-uid="Robust.Shared.Timing.IGameTiming.RealLocalToServer*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_RealLocalToServer_TimeSpan_" data-uid="Robust.Shared.Timing.IGameTiming.RealLocalToServer(TimeSpan)">RealLocalToServer(TimeSpan)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan RealLocalToServer(TimeSpan local)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td><span class="parametername">local</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_RealServerToLocal_TimeSpan_.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.RealServerToLocal(TimeSpan)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L173">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_RealServerToLocal_" data-uid="Robust.Shared.Timing.IGameTiming.RealServerToLocal*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_RealServerToLocal_TimeSpan_" data-uid="Robust.Shared.Timing.IGameTiming.RealServerToLocal(TimeSpan)">RealServerToLocal(TimeSpan)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">TimeSpan RealServerToLocal(TimeSpan server)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td><span class="parametername">server</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TimeSpan</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_ResetSimTime.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.ResetSimTime%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L167">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_ResetSimTime_" data-uid="Robust.Shared.Timing.IGameTiming.ResetSimTime*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_ResetSimTime" data-uid="Robust.Shared.Timing.IGameTiming.ResetSimTime">ResetSimTime()</h4>
+  <div class="markdown level1 summary"><p>Resets the simulation time. This should be called on round restarts.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ResetSimTime()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_ResetSimTime_System_ValueTuple_TimeSpan_Robust_Shared_Timing_GameTick__.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.ResetSimTime(System.ValueTuple%7BTimeSpan%2CRobust.Shared.Timing.GameTick%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L168">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_ResetSimTime_" data-uid="Robust.Shared.Timing.IGameTiming.ResetSimTime*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_ResetSimTime_System_ValueTuple_TimeSpan_Robust_Shared_Timing_GameTick__" data-uid="Robust.Shared.Timing.IGameTiming.ResetSimTime(System.ValueTuple{TimeSpan,Robust.Shared.Timing.GameTick})">ResetSimTime((TimeSpan, GameTick))</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ResetSimTime((TimeSpan, GameTick) timeBase)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">TimeSpan</span>, <a class="xref" href="Robust.Shared.Timing.GameTick.html">GameTick</a>&gt;</td>
+        <td><span class="parametername">timeBase</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_SetTickRateAt_System_Byte_Robust_Shared_Timing_GameTick_.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.SetTickRateAt(System.Byte%2CRobust.Shared.Timing.GameTick)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L170">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_SetTickRateAt_" data-uid="Robust.Shared.Timing.IGameTiming.SetTickRateAt*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_SetTickRateAt_System_Byte_Robust_Shared_Timing_GameTick_" data-uid="Robust.Shared.Timing.IGameTiming.SetTickRateAt(System.Byte,Robust.Shared.Timing.GameTick)">SetTickRateAt(Byte, GameTick)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void SetTickRateAt(byte tickRate, GameTick atTick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">tickRate</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Timing.GameTick.html">GameTick</a></td>
+        <td><span class="parametername">atTick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming_StartFrame.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming.StartFrame%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L137">View Source</a>
+  </span>
+  <a id="Robust_Shared_Timing_IGameTiming_StartFrame_" data-uid="Robust.Shared.Timing.IGameTiming.StartFrame*"></a>
+  <h4 id="Robust_Shared_Timing_IGameTiming_StartFrame" data-uid="Robust.Shared.Timing.IGameTiming.StartFrame">StartFrame()</h4>
+  <div class="markdown level1 summary"><p>Ends the 'lap' of the timer, updating frame time info.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void StartFrame()</code></pre>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Timing_IGameTiming.md&amp;value=---%0Auid%3A%20Robust.Shared.Timing.IGameTiming%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Timing/IGameTiming.cs/#L10" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

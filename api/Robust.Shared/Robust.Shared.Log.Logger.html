@@ -1,0 +1,1385 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class Logger
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class Logger
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Log.Logger">
+  
+  
+  <h1 id="Robust_Shared_Log_Logger" data-uid="Robust.Shared.Log.Logger" class="text-break">Class Logger
+  </h1>
+  <div class="markdown level0 summary"><p>Static logging API front end.
+This is here as a convenience to prevent the need to resolve the manager manually.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">Logger</span></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Log.html">Robust.Shared.Log</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Log_Logger_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static class Logger : object</code></pre>
+  </div>
+  <h5 id="Robust_Shared_Log_Logger_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>This type is simply a proxy to an IoC based <a class="xref" href="Robust.Shared.Log.ILogManager.html">ILogManager</a> and its sawmills.
+As such, no methods or properties will work if IoC has not been initialized yet.</p>
+</div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Debug_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Debug(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L114">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Debug_" data-uid="Robust.Shared.Log.Logger.Debug*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Debug_System_String_" data-uid="Robust.Shared.Log.Logger.Debug(System.String)">Debug(String)</h4>
+  <div class="markdown level1 summary"><p>Log a message as debug.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Debug(string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_Debug_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Debug_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Debug(System.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L107">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Debug_" data-uid="Robust.Shared.Log.Logger.Debug*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Debug_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.Debug(System.String,System.Nullable{System.Object}[])">Debug(String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message as debug, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Debug(string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_Debug_System_String_System_Nullable_System_Object_____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_DebugS_System_String_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.DebugS(System.String%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L100">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_DebugS_" data-uid="Robust.Shared.Log.Logger.DebugS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_DebugS_System_String_System_String_" data-uid="Robust.Shared.Log.Logger.DebugS(System.String,System.String)">DebugS(String, String)</h4>
+  <div class="markdown level1 summary"><p>Log a message as debug.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void DebugS(string sawmill, string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmill</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_DebugS_System_String_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_DebugS_System_String_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.DebugS(System.String%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L93">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_DebugS_" data-uid="Robust.Shared.Log.Logger.DebugS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_DebugS_System_String_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.DebugS(System.String,System.String,System.Nullable{System.Object}[])">DebugS(String, String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message as debug, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void DebugS(string sawmill, string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmill</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_DebugS_System_String_System_String_System_Nullable_System_Object_____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Error_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Error(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L205">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Error_" data-uid="Robust.Shared.Log.Logger.Error*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Error_System_String_" data-uid="Robust.Shared.Log.Logger.Error(System.String)">Error(String)</h4>
+  <div class="markdown level1 summary"><p>Log a message as error.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Error(string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_Error_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Error_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Error(System.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L198">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Error_" data-uid="Robust.Shared.Log.Logger.Error*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Error_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.Error(System.String,System.Nullable{System.Object}[])">Error(String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message as error, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Error(string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_Error_System_String_System_Nullable_System_Object_____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_ErrorS_System_String_Exception_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.ErrorS(System.String%2CException%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L184">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_ErrorS_" data-uid="Robust.Shared.Log.Logger.ErrorS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_ErrorS_System_String_Exception_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.ErrorS(System.String,Exception,System.String,System.Nullable{System.Object}[])">ErrorS(String, Exception, String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message as error, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void ErrorS(string sawmill, Exception exception, string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmill</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Exception</span></td>
+        <td><span class="parametername">exception</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_ErrorS_System_String_Exception_System_String_System_Nullable_System_Object_____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_ErrorS_System_String_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.ErrorS(System.String%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L191">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_ErrorS_" data-uid="Robust.Shared.Log.Logger.ErrorS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_ErrorS_System_String_System_String_" data-uid="Robust.Shared.Log.Logger.ErrorS(System.String,System.String)">ErrorS(String, String)</h4>
+  <div class="markdown level1 summary"><p>Log a message as error.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void ErrorS(string sawmill, string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmill</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_ErrorS_System_String_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_ErrorS_System_String_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.ErrorS(System.String%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L177">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_ErrorS_" data-uid="Robust.Shared.Log.Logger.ErrorS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_ErrorS_System_String_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.ErrorS(System.String,System.String,System.Nullable{System.Object}[])">ErrorS(String, String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message as error, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void ErrorS(string sawmill, string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmill</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_ErrorS_System_String_System_String_System_Nullable_System_Object_____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Fatal_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Fatal(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L233">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Fatal_" data-uid="Robust.Shared.Log.Logger.Fatal*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Fatal_System_String_" data-uid="Robust.Shared.Log.Logger.Fatal(System.String)">Fatal(String)</h4>
+  <div class="markdown level1 summary"><p>Log a message as fatal.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Fatal(string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_Fatal_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Fatal_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Fatal(System.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L226">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Fatal_" data-uid="Robust.Shared.Log.Logger.Fatal*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Fatal_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.Fatal(System.String,System.Nullable{System.Object}[])">Fatal(String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message as fatal, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Fatal(string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_Fatal_System_String_System_Nullable_System_Object_____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_FatalS_System_String_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.FatalS(System.String%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L219">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_FatalS_" data-uid="Robust.Shared.Log.Logger.FatalS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_FatalS_System_String_System_String_" data-uid="Robust.Shared.Log.Logger.FatalS(System.String,System.String)">FatalS(String, String)</h4>
+  <div class="markdown level1 summary"><p>Log a message as fatal.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void FatalS(string sawmill, string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmill</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_FatalS_System_String_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_FatalS_System_String_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.FatalS(System.String%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L212">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_FatalS_" data-uid="Robust.Shared.Log.Logger.FatalS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_FatalS_System_String_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.FatalS(System.String,System.String,System.Nullable{System.Object}[])">FatalS(String, String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message as fatal, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void FatalS(string sawmill, string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmill</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_FatalS_System_String_System_String_System_Nullable_System_Object_____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_GetSawmill_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.GetSawmill(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L30">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_GetSawmill_" data-uid="Robust.Shared.Log.Logger.GetSawmill*"></a>
+  <h4 id="Robust_Shared_Log_Logger_GetSawmill_System_String_" data-uid="Robust.Shared.Log.Logger.GetSawmill(System.String)">GetSawmill(String)</h4>
+  <div class="markdown level1 summary"><p>Gets a sawmill by name. Equivalent to <a class="xref" href="Robust.Shared.Log.ILogManager.html#Robust_Shared_Log_ILogManager_GetSawmill_System_String_">GetSawmill(String)</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static ISawmill GetSawmill(string name)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td><p>The name of the sawmill to get.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Log.ISawmill.html">ISawmill</a></td>
+        <td><p>The sawmill with specified name. Creates a new one if it does not exist.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Info_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Info(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L142">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Info_" data-uid="Robust.Shared.Log.Logger.Info*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Info_System_String_" data-uid="Robust.Shared.Log.Logger.Info(System.String)">Info(String)</h4>
+  <div class="markdown level1 summary"><p>Log a message as info.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Info(string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_Info_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Info_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Info(System.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L135">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Info_" data-uid="Robust.Shared.Log.Logger.Info*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Info_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.Info(System.String,System.Nullable{System.Object}[])">Info(String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message as info, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Info(string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_Info_System_String_System_Nullable_System_Object_____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_InfoS_System_String_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.InfoS(System.String%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L128">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_InfoS_" data-uid="Robust.Shared.Log.Logger.InfoS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_InfoS_System_String_System_String_" data-uid="Robust.Shared.Log.Logger.InfoS(System.String,System.String)">InfoS(String, String)</h4>
+  <div class="markdown level1 summary"><p>Log a message as info.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void InfoS(string sawmill, string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmill</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_InfoS_System_String_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_InfoS_System_String_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.InfoS(System.String%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L121">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_InfoS_" data-uid="Robust.Shared.Log.Logger.InfoS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_InfoS_System_String_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.InfoS(System.String,System.String,System.Nullable{System.Object}[])">InfoS(String, String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message as info, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void InfoS(string sawmill, string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmill</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_InfoS_System_String_System_String_System_Nullable_System_Object_____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_Exception_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Log(Robust.Shared.Log.LogLevel%2CException%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L74">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Log_" data-uid="Robust.Shared.Log.Logger.Log*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_Exception_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.Log(Robust.Shared.Log.LogLevel,Exception,System.String,System.Nullable{System.Object}[])">Log(LogLevel, Exception, String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Log(LogLevel logLevel, Exception exception, string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Log.LogLevel.html">LogLevel</a></td>
+        <td><span class="parametername">logLevel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Exception</span></td>
+        <td><span class="parametername">exception</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Log(Robust.Shared.Log.LogLevel%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L83">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Log_" data-uid="Robust.Shared.Log.Logger.Log*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_" data-uid="Robust.Shared.Log.Logger.Log(Robust.Shared.Log.LogLevel,System.String)">Log(LogLevel, String)</h4>
+  <div class="markdown level1 summary"><p>Log a message.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Log(LogLevel logLevel, string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Log.LogLevel.html">LogLevel</a></td>
+        <td><span class="parametername">logLevel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Log(Robust.Shared.Log.LogLevel%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L68">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Log_" data-uid="Robust.Shared.Log.Logger.Log*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.Log(Robust.Shared.Log.LogLevel,System.String,System.Nullable{System.Object}[])">Log(LogLevel, String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Log(LogLevel logLevel, string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Log.LogLevel.html">LogLevel</a></td>
+        <td><span class="parametername">logLevel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_LogS_Robust_Shared_Log_LogLevel_System_String_System_Nullable_Exception__System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.LogS(Robust.Shared.Log.LogLevel%2CSystem.String%2CSystem.Nullable%7BException%7D%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L48">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_LogS_" data-uid="Robust.Shared.Log.Logger.LogS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_LogS_Robust_Shared_Log_LogLevel_System_String_System_Nullable_Exception__System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.LogS(Robust.Shared.Log.LogLevel,System.String,System.Nullable{Exception},System.String,System.Nullable{System.Object}[])">LogS(LogLevel, String, Nullable&lt;Exception&gt;, String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void LogS(LogLevel logLevel, string sawmillname, Exception? exception, string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Log.LogLevel.html">LogLevel</a></td>
+        <td><span class="parametername">logLevel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmillname</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Exception</span>&gt;</td>
+        <td><span class="parametername">exception</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_LogS_Robust_Shared_Log_LogLevel_System_String_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.LogS(Robust.Shared.Log.LogLevel%2CSystem.String%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L58">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_LogS_" data-uid="Robust.Shared.Log.Logger.LogS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_LogS_Robust_Shared_Log_LogLevel_System_String_System_String_" data-uid="Robust.Shared.Log.Logger.LogS(Robust.Shared.Log.LogLevel,System.String,System.String)">LogS(LogLevel, String, String)</h4>
+  <div class="markdown level1 summary"><p>Log a message.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void LogS(LogLevel logLevel, string sawmillname, string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Log.LogLevel.html">LogLevel</a></td>
+        <td><span class="parametername">logLevel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmillname</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_LogS_Robust_Shared_Log_LogLevel_System_String_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.LogS(Robust.Shared.Log.LogLevel%2CSystem.String%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L38">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_LogS_" data-uid="Robust.Shared.Log.Logger.LogS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_LogS_Robust_Shared_Log_LogLevel_System_String_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.LogS(Robust.Shared.Log.LogLevel,System.String,System.String,System.Nullable{System.Object}[])">LogS(LogLevel, String, String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void LogS(LogLevel logLevel, string sawmillname, string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Log.LogLevel.html">LogLevel</a></td>
+        <td><span class="parametername">logLevel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmillname</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Warning_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Warning(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L170">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Warning_" data-uid="Robust.Shared.Log.Logger.Warning*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Warning_System_String_" data-uid="Robust.Shared.Log.Logger.Warning(System.String)">Warning(String)</h4>
+  <div class="markdown level1 summary"><p>Log a message as warning.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Warning(string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_Warning_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_Warning_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.Warning(System.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L163">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_Warning_" data-uid="Robust.Shared.Log.Logger.Warning*"></a>
+  <h4 id="Robust_Shared_Log_Logger_Warning_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.Warning(System.String,System.Nullable{System.Object}[])">Warning(String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message as warning, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Warning(string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_Warning_System_String_System_Nullable_System_Object_____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_WarningS_System_String_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.WarningS(System.String%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L156">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_WarningS_" data-uid="Robust.Shared.Log.Logger.WarningS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_WarningS_System_String_System_String_" data-uid="Robust.Shared.Log.Logger.WarningS(System.String,System.String)">WarningS(String, String)</h4>
+  <div class="markdown level1 summary"><p>Log a message as warning.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void WarningS(string sawmill, string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmill</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_WarningS_System_String_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger_WarningS_System_String_System_String_System_Nullable_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger.WarningS(System.String%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L149">View Source</a>
+  </span>
+  <a id="Robust_Shared_Log_Logger_WarningS_" data-uid="Robust.Shared.Log.Logger.WarningS*"></a>
+  <h4 id="Robust_Shared_Log_Logger_WarningS_System_String_System_String_System_Nullable_System_Object____" data-uid="Robust.Shared.Log.Logger.WarningS(System.String,System.String,System.Nullable{System.Object}[])">WarningS(String, String, Nullable&lt;Object&gt;[])</h4>
+  <div class="markdown level1 summary"><p>Log a message as warning, taking in a format string and format list using the regular <see cref="!:Format"></see> syntax.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void WarningS(string sawmill, string message, params object? [] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">sawmill</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Log_Logger_WarningS_System_String_System_String_System_Nullable_System_Object_____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.Logger.html#Robust_Shared_Log_Logger_Log_Robust_Shared_Log_LogLevel_System_String_System_Nullable_System_Object____">Log(LogLevel, String, Nullable&lt;Object&gt;[])</a></div>
+  </div>
+  <h3 id="seealso">See Also</h3>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Log.ILogManager.html">ILogManager</a></div>
+      <div><a class="xref" href="Robust.Shared.Log.ISawmill.html">ISawmill</a></div>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Log_Logger.md&amp;value=---%0Auid%3A%20Robust.Shared.Log.Logger%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Log/Logger.cs/#L16" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

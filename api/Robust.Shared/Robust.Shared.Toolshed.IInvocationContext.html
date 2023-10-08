@@ -1,0 +1,711 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IInvocationContext
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IInvocationContext
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Toolshed.IInvocationContext">
+  
+  
+  <h1 id="Robust_Shared_Toolshed_IInvocationContext" data-uid="Robust.Shared.Toolshed.IInvocationContext" class="text-break">Interface IInvocationContext
+  </h1>
+  <div class="markdown level0 summary"><p>A context in which Toolshed commands can be run using <span class="xref">Robust.Shared.Toolshed.ToolshedManager.InvokeCommand(Robust.Shared.Toolshed.IInvocationContext,System.String,System.Object,System.Object@)</span>.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Toolshed.html">Robust.Shared.Toolshed</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IInvocationContext</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_Environment.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.Environment%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L33">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_Environment_" data-uid="Robust.Shared.Toolshed.IInvocationContext.Environment*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_Environment" data-uid="Robust.Shared.Toolshed.IInvocationContext.Environment">Environment</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ToolshedEnvironment Environment { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.ToolshedEnvironment.html">ToolshedEnvironment</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_Session.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.Session%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L38">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_Session_" data-uid="Robust.Shared.Toolshed.IInvocationContext.Session*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_Session" data-uid="Robust.Shared.Toolshed.IInvocationContext.Session">Session</h4>
+  <div class="markdown level1 summary"><p>The session this context is for, if any.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ICommonSession Session { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_Toolshed.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.Toolshed%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L40">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_Toolshed_" data-uid="Robust.Shared.Toolshed.IInvocationContext.Toolshed*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_Toolshed" data-uid="Robust.Shared.Toolshed.IInvocationContext.Toolshed">Toolshed</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ToolshedManager Toolshed { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.ToolshedManager.html">ToolshedManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_Variables.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.Variables%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L126">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_Variables_" data-uid="Robust.Shared.Toolshed.IInvocationContext.Variables*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_Variables" data-uid="Robust.Shared.Toolshed.IInvocationContext.Variables">Variables</h4>
+  <div class="markdown level1 summary"><p>The backing variable storage.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Dictionary&lt;string, object?&gt; Variables { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Dictionary</span>&lt;<span class="xref">System.String</span>, <span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_Variables_remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>You don't have to use this at all.</p>
+</div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_CheckInvokable_Robust_Shared_Toolshed_CommandSpec_Robust_Shared_Toolshed_Errors_IConError__.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.CheckInvokable(Robust.Shared.Toolshed.CommandSpec%2CRobust.Shared.Toolshed.Errors.IConError%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L24">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_CheckInvokable_" data-uid="Robust.Shared.Toolshed.IInvocationContext.CheckInvokable*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_CheckInvokable_Robust_Shared_Toolshed_CommandSpec_Robust_Shared_Toolshed_Errors_IConError__" data-uid="Robust.Shared.Toolshed.IInvocationContext.CheckInvokable(Robust.Shared.Toolshed.CommandSpec,Robust.Shared.Toolshed.Errors.IConError@)">CheckInvokable(CommandSpec, out IConError)</h4>
+  <div class="markdown level1 summary"><p>Test if the given command spec can be invoked in this context.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual bool CheckInvokable(CommandSpec command, out IConError error)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Robust.Shared.Toolshed.CommandSpec</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>Command to test.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.Errors.IConError.html">IConError</a></td>
+        <td><span class="parametername">error</span></td>
+        <td><p>An error to report, if any.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Whether or not the given command can be invoked</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_CheckInvokable_Robust_Shared_Toolshed_CommandSpec_Robust_Shared_Toolshed_Errors_IConError___remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>THIS IS A SECURITY BOUNDARY.
+If you want to avoid players being able to just reboot your server, you should probably implement this!
+The default implementation defers to the active permission controller.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_ClearErrors.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.ClearErrors%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L118">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_ClearErrors_" data-uid="Robust.Shared.Toolshed.IInvocationContext.ClearErrors*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_ClearErrors" data-uid="Robust.Shared.Toolshed.IInvocationContext.ClearErrors">ClearErrors()</h4>
+  <div class="markdown level1 summary"><p>Clears the list of unobserved errors.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ClearErrors()</code></pre>
+  </div>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_ClearErrors_remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>After calling this, assuming atomicity (no threads), GetErrors() MUST be empty in order for an IInvocationContext to be compliant.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_GetErrors.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.GetErrors%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L110">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_GetErrors_" data-uid="Robust.Shared.Toolshed.IInvocationContext.GetErrors*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_GetErrors" data-uid="Robust.Shared.Toolshed.IInvocationContext.GetErrors">GetErrors()</h4>
+  <div class="markdown level1 summary"><p>Gets the list of unobserved errors.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;IConError&gt; GetErrors()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Toolshed.Errors.IConError.html">IConError</a>&gt;</td>
+        <td><p>An enumerable of console errors.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_GetErrors_remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This is not required to contain anything, may contain errors you did not ReportError(), and may not contain errors you did ReportError().</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_GetVars.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.GetVars%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L159">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_GetVars_" data-uid="Robust.Shared.Toolshed.IInvocationContext.GetVars*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_GetVars" data-uid="Robust.Shared.Toolshed.IInvocationContext.GetVars">GetVars()</h4>
+  <div class="markdown level1 summary"><p>Provides a list of all variables that have been written to at some point.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual IEnumerable&lt;string&gt; GetVars()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><p>List of all variables.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_ReadVar_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.ReadVar(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L136">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_ReadVar_" data-uid="Robust.Shared.Toolshed.IInvocationContext.ReadVar*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_ReadVar_System_String_" data-uid="Robust.Shared.Toolshed.IInvocationContext.ReadVar(System.String)">ReadVar(String)</h4>
+  <div class="markdown level1 summary"><p>Reads the given variable from the context.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual object? ReadVar(string name)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td><p>The name of the variable.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><p>The contents of the variable.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_ReadVar_System_String__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This may behave arbitrarily, but it's advised it behave somewhat sanely.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_ReportError_Robust_Shared_Toolshed_Errors_IConError_.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.ReportError(Robust.Shared.Toolshed.Errors.IConError)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L101">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_ReportError_" data-uid="Robust.Shared.Toolshed.IInvocationContext.ReportError*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_ReportError_Robust_Shared_Toolshed_Errors_IConError_" data-uid="Robust.Shared.Toolshed.IInvocationContext.ReportError(Robust.Shared.Toolshed.Errors.IConError)">ReportError(IConError)</h4>
+  <div class="markdown level1 summary"><p>Reports the given error to the context.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ReportError(IConError err)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.Errors.IConError.html">IConError</a></td>
+        <td><span class="parametername">err</span></td>
+        <td><p>Error to report.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_ReportError_Robust_Shared_Toolshed_Errors_IConError__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This may have arbitrary side effects. Usually, it'll push the error to some list you can retrieve with GetErrors().</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_WriteError_Robust_Shared_Toolshed_Errors_IConError_.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.WriteError(Robust.Shared.Toolshed.Errors.IConError)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L89">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_WriteError_" data-uid="Robust.Shared.Toolshed.IInvocationContext.WriteError*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_WriteError_Robust_Shared_Toolshed_Errors_IConError_" data-uid="Robust.Shared.Toolshed.IInvocationContext.WriteError(Robust.Shared.Toolshed.Errors.IConError)">WriteError(IConError)</h4>
+  <div class="markdown level1 summary"><p>Writes the given error to the context's output.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual void WriteError(IConError error)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.Errors.IConError.html">IConError</a></td>
+        <td><span class="parametername">error</span></td>
+        <td><p>The error to write out.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_WriteError_Robust_Shared_Toolshed_Errors_IConError__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This can be stubbed safely, there's no requirement that the side effects of this function be observable.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_WriteLine_Robust_Shared_Utility_FormattedMessage_.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.WriteLine(Robust.Shared.Utility.FormattedMessage)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L58">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_WriteLine_" data-uid="Robust.Shared.Toolshed.IInvocationContext.WriteLine*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_WriteLine_Robust_Shared_Utility_FormattedMessage_" data-uid="Robust.Shared.Toolshed.IInvocationContext.WriteLine(Robust.Shared.Utility.FormattedMessage)">WriteLine(FormattedMessage)</h4>
+  <div class="markdown level1 summary"><p>Writes a formatted message to this context's output.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual void WriteLine(FormattedMessage line)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.FormattedMessage.html">FormattedMessage</a></td>
+        <td><span class="parametername">line</span></td>
+        <td><p>The formatted message to print.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_WriteLine_Robust_Shared_Utility_FormattedMessage__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This can be stubbed safely, there's no requirement that the side effects of this function be observable.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_WriteLine_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.WriteLine(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L49">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_WriteLine_" data-uid="Robust.Shared.Toolshed.IInvocationContext.WriteLine*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_WriteLine_System_String_" data-uid="Robust.Shared.Toolshed.IInvocationContext.WriteLine(System.String)">WriteLine(String)</h4>
+  <div class="markdown level1 summary"><p>Writes a line to this context's output.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void WriteLine(string line)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">line</span></td>
+        <td><p>The text to print.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_WriteLine_System_String__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This can be stubbed safely, there's no requirement that the side effects of this function be observable.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_WriteMarkup_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.WriteMarkup(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L77">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_WriteMarkup_" data-uid="Robust.Shared.Toolshed.IInvocationContext.WriteMarkup*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_WriteMarkup_System_String_" data-uid="Robust.Shared.Toolshed.IInvocationContext.WriteMarkup(System.String)">WriteMarkup(String)</h4>
+  <div class="markdown level1 summary"><p>Writes the given markup to this context's output.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual void WriteMarkup(string markup)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">markup</span></td>
+        <td><p>The markup to print.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_WriteMarkup_System_String__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This can be stubbed safely, there's no requirement that the side effects of this function be observable.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext_WriteVar_System_String_System_Nullable_System_Object__.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext.WriteVar(System.String%2CSystem.Nullable%7BSystem.Object%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L150">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_IInvocationContext_WriteVar_" data-uid="Robust.Shared.Toolshed.IInvocationContext.WriteVar*"></a>
+  <h4 id="Robust_Shared_Toolshed_IInvocationContext_WriteVar_System_String_System_Nullable_System_Object__" data-uid="Robust.Shared.Toolshed.IInvocationContext.WriteVar(System.String,System.Nullable{System.Object})">WriteVar(String, Nullable&lt;Object&gt;)</h4>
+  <div class="markdown level1 summary"><p>Writes the given variable to the context.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual void WriteVar(string name, object? value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td><p>The name of the variable.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">value</span></td>
+        <td><p>The contents of the variable.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_IInvocationContext_WriteVar_System_String_System_Nullable_System_Object___remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>Writes may be ignored or manipulated.</p>
+</div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_IInvocationContext.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.IInvocationContext%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/IInvocationContext.cs/#L11" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

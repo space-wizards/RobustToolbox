@@ -1,0 +1,1256 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class ComponentTreeSystem&lt;TTreeComp, TComp&gt;
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class ComponentTreeSystem&lt;TTreeComp, TComp&gt;
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2">
+  
+  
+  <h1 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2" class="text-break">Class ComponentTreeSystem&lt;TTreeComp, TComp&gt;
+  </h1>
+  <div class="markdown level0 summary"><p>Keeps track of <a class="xref" href="Robust.Shared.Physics.DynamicTree-1.html">DynamicTree&lt;T&gt;</a>s for various rendering-related components.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.html">EntitySystem</a></div>
+    <div class="level2"><span class="xref">ComponentTreeSystem&lt;TTreeComp, TComp&gt;</span></div>
+      <div class="level3"><a class="xref" href="Robust.Shared.GameObjects.OccluderSystem.html">OccluderSystem</a></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a></div>
+    <div><a class="xref" href="Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a></div>
+    <div><a class="xref" href="Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a></div>
+  </div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.ComponentTrees.html">Robust.Shared.ComponentTrees</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class ComponentTreeSystem&lt;TTreeComp, TComp&gt; : EntitySystem, IEntitySystem, IEntityEventSubscriber, IPostInjectInit where TTreeComp : Component, IComponentTreeComponent&lt;TComp&gt;, new()
+    where TComp : Component, IComponentTreeEntry&lt;TComp&gt;, new()</code></pre>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TTreeComp</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="parametername">TComp</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_XformSystem.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.XformSystem%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L25">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_XformSystem" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.XformSystem">XformSystem</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected readonly SharedTransformSystem XformSystem</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.SharedTransformSystem.html">SharedTransformSystem</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_DoFrameUpdate.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.DoFrameUpdate%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L34">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_DoFrameUpdate_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.DoFrameUpdate*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_DoFrameUpdate" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.DoFrameUpdate">DoFrameUpdate</h4>
+  <div class="markdown level1 summary"><p>If true, this system will update the tree positions every frame update. See also <a class="xref" href="Robust.Shared.ComponentTrees.ComponentTreeSystem-2.html#Robust_Shared_ComponentTrees_ComponentTreeSystem_2_DoTickUpdate">DoTickUpdate</a>. Some systems may need to do both.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected abstract bool DoFrameUpdate { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_DoTickUpdate.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.DoTickUpdate%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L39">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_DoTickUpdate_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.DoTickUpdate*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_DoTickUpdate" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.DoTickUpdate">DoTickUpdate</h4>
+  <div class="markdown level1 summary"><p>If true, this system will update the tree positions every tick update. See also <a class="xref" href="Robust.Shared.ComponentTrees.ComponentTreeSystem-2.html#Robust_Shared_ComponentTrees_ComponentTreeSystem_2_DoFrameUpdate">DoFrameUpdate</a>. Some systems may need to do both.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected abstract bool DoTickUpdate { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_InitialCapacity.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.InitialCapacity%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L44">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_InitialCapacity_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.InitialCapacity*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_InitialCapacity" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.InitialCapacity">InitialCapacity</h4>
+  <div class="markdown level1 summary"><p>Initial tree capacity. Note that client-side trees will remove entities as they leave PVS range.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual int InitialCapacity { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_Recursive.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.Recursive%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L50">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_Recursive_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.Recursive*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_Recursive" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.Recursive">Recursive</h4>
+  <div class="markdown level1 summary"><p>If true, this tree requires all children to be recursively updated whenever ANY entity moves. If false, this
+will only update when an entity with the given component moves.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected abstract bool Recursive { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_ExtractAabb_Robust_Shared_Physics_ComponentTreeEntry__1___.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.ExtractAabb(Robust.Shared.Physics.ComponentTreeEntry%7B%601%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L229">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_ExtractAabb_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.ExtractAabb*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_ExtractAabb_Robust_Shared_Physics_ComponentTreeEntry__1___" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.ExtractAabb(Robust.Shared.Physics.ComponentTreeEntry{`1}@)">ExtractAabb(ComponentTreeEntry&lt;TComp&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual Box2 ExtractAabb(in ComponentTreeEntry&lt;TComp&gt; entry)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.ComponentTreeEntry-1.html">ComponentTreeEntry</a>&lt;TComp&gt;</td>
+        <td><span class="parametername">entry</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2.html">Box2</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_ExtractAabb_Robust_Shared_Physics_ComponentTreeEntry__1___Vector2_Robust_Shared_Maths_Angle_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.ExtractAabb(Robust.Shared.Physics.ComponentTreeEntry%7B%601%7D%40%2CVector2%2CRobust.Shared.Maths.Angle)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L242">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_ExtractAabb_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.ExtractAabb*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_ExtractAabb_Robust_Shared_Physics_ComponentTreeEntry__1___Vector2_Robust_Shared_Maths_Angle_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.ExtractAabb(Robust.Shared.Physics.ComponentTreeEntry{`1}@,Vector2,Robust.Shared.Maths.Angle)">ExtractAabb(ComponentTreeEntry&lt;TComp&gt;, Vector2, Angle)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected abstract Box2 ExtractAabb(in ComponentTreeEntry&lt;TComp&gt; entry, Vector2 pos, Angle rot)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.ComponentTreeEntry-1.html">ComponentTreeEntry</a>&lt;TComp&gt;</td>
+        <td><span class="parametername">entry</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">pos</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a></td>
+        <td><span class="parametername">rot</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2.html">Box2</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_FrameUpdate_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.FrameUpdate(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L149">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_FrameUpdate_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.FrameUpdate*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_FrameUpdate_System_Single_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.FrameUpdate(System.Single)">FrameUpdate(Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void FrameUpdate(float frameTime)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">frameTime</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.html#Robust_Shared_GameObjects_EntitySystem_FrameUpdate_System_Single_">EntitySystem.FrameUpdate(Single)</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_GetIntersectingTrees_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.GetIntersectingTrees(Robust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L249">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_GetIntersectingTrees_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.GetIntersectingTrees*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_GetIntersectingTrees_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.GetIntersectingTrees(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2)">GetIntersectingTrees(MapId, Box2)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;(EntityUid Uid, TTreeComp Comp)&gt; GetIntersectingTrees(MapId mapId, Box2 worldAABB)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2.html">Box2</a></td>
+        <td><span class="parametername">worldAABB</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">System.ValueTuple</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>, TTreeComp&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_GetIntersectingTrees_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.GetIntersectingTrees(Robust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2Rotated)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L246">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_GetIntersectingTrees_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.GetIntersectingTrees*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_GetIntersectingTrees_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.GetIntersectingTrees(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2Rotated)">GetIntersectingTrees(MapId, Box2Rotated)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;(EntityUid, TTreeComp)&gt; GetIntersectingTrees(MapId mapId, Box2Rotated worldBounds)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2Rotated.html">Box2Rotated</a></td>
+        <td><span class="parametername">worldBounds</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">System.ValueTuple</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>, TTreeComp&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_Initialize.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L52">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_Initialize_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.Initialize*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_Initialize" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Initialize()</code></pre>
+  </div>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.html#Robust_Shared_GameObjects_EntitySystem_Initialize">EntitySystem.Initialize()</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_IntersectRayWithPredicate__1_Robust_Shared_Map_MapId_Robust_Shared_Physics_Ray__System_Single___0_Func_Robust_Shared_GameObjects_EntityUid___0_System_Boolean__System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.IntersectRayWithPredicate%60%601(Robust.Shared.Map.MapId%2CRobust.Shared.Physics.Ray%40%2CSystem.Single%2C%60%600%2CFunc%7BRobust.Shared.GameObjects.EntityUid%2C%60%600%2CSystem.Boolean%7D%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L328">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_IntersectRayWithPredicate_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.IntersectRayWithPredicate*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_IntersectRayWithPredicate__1_Robust_Shared_Map_MapId_Robust_Shared_Physics_Ray__System_Single___0_Func_Robust_Shared_GameObjects_EntityUid___0_System_Boolean__System_Boolean_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.IntersectRayWithPredicate``1(Robust.Shared.Map.MapId,Robust.Shared.Physics.Ray@,System.Single,``0,Func{Robust.Shared.GameObjects.EntityUid,``0,System.Boolean},System.Boolean)">IntersectRayWithPredicate&lt;TState&gt;(MapId, Ray, Single, TState, Func&lt;EntityUid, TState, Boolean&gt;, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;RayCastResults&gt; IntersectRayWithPredicate&lt;TState&gt;(MapId mapId, in Ray ray, float maxLength, TState state, Func&lt;EntityUid, TState, bool&gt; predicate, bool returnOnFirstHit = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Ray.html">Ray</a></td>
+        <td><span class="parametername">ray</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">maxLength</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">TState</span></td>
+        <td><span class="parametername">state</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Func</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>, TState, <span class="xref">System.Boolean</span>&gt;</td>
+        <td><span class="parametername">predicate</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">returnOnFirstHit</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">List</span>&lt;<a class="xref" href="Robust.Shared.Physics.RayCastResults.html">RayCastResults</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TState</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnCompRemoved_Robust_Shared_GameObjects_EntityUid__1_Robust_Shared_GameObjects_ComponentRemove_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.OnCompRemoved(Robust.Shared.GameObjects.EntityUid%2C%601%2CRobust.Shared.GameObjects.ComponentRemove)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L102">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnCompRemoved_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.OnCompRemoved*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnCompRemoved_Robust_Shared_GameObjects_EntityUid__1_Robust_Shared_GameObjects_ComponentRemove_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.OnCompRemoved(Robust.Shared.GameObjects.EntityUid,`1,Robust.Shared.GameObjects.ComponentRemove)">OnCompRemoved(EntityUid, TComp, ComponentRemove)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual void OnCompRemoved(EntityUid uid, TComp component, ComponentRemove args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">TComp</span></td>
+        <td><span class="parametername">component</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRemove.html">ComponentRemove</a></td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnCompStartup_Robust_Shared_GameObjects_EntityUid__1_Robust_Shared_GameObjects_ComponentStartup_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.OnCompStartup(Robust.Shared.GameObjects.EntityUid%2C%601%2CRobust.Shared.GameObjects.ComponentStartup)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L99">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnCompStartup_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.OnCompStartup*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnCompStartup_Robust_Shared_GameObjects_EntityUid__1_Robust_Shared_GameObjects_ComponentStartup_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.OnCompStartup(Robust.Shared.GameObjects.EntityUid,`1,Robust.Shared.GameObjects.ComponentStartup)">OnCompStartup(EntityUid, TComp, ComponentStartup)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual void OnCompStartup(EntityUid uid, TComp component, ComponentStartup args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">TComp</span></td>
+        <td><span class="parametername">component</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentStartup.html">ComponentStartup</a></td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnTerminating_Robust_Shared_GameObjects_EntityUid__0_Robust_Shared_GameObjects_EntityTerminatingEvent__.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.OnTerminating(Robust.Shared.GameObjects.EntityUid%2C%600%2CRobust.Shared.GameObjects.EntityTerminatingEvent%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L123">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnTerminating_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.OnTerminating*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnTerminating_Robust_Shared_GameObjects_EntityUid__0_Robust_Shared_GameObjects_EntityTerminatingEvent__" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.OnTerminating(Robust.Shared.GameObjects.EntityUid,`0,Robust.Shared.GameObjects.EntityTerminatingEvent@)">OnTerminating(EntityUid, TTreeComp, ref EntityTerminatingEvent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual void OnTerminating(EntityUid uid, TTreeComp component, ref EntityTerminatingEvent args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">TTreeComp</span></td>
+        <td><span class="parametername">component</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityTerminatingEvent.html">EntityTerminatingEvent</a></td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnTreeAdd_Robust_Shared_GameObjects_EntityUid__0_Robust_Shared_GameObjects_ComponentAdd_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.OnTreeAdd(Robust.Shared.GameObjects.EntityUid%2C%600%2CRobust.Shared.GameObjects.ComponentAdd)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L105">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnTreeAdd_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.OnTreeAdd*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnTreeAdd_Robust_Shared_GameObjects_EntityUid__0_Robust_Shared_GameObjects_ComponentAdd_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.OnTreeAdd(Robust.Shared.GameObjects.EntityUid,`0,Robust.Shared.GameObjects.ComponentAdd)">OnTreeAdd(EntityUid, TTreeComp, ComponentAdd)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual void OnTreeAdd(EntityUid uid, TTreeComp component, ComponentAdd args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">TTreeComp</span></td>
+        <td><span class="parametername">component</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Robust.Shared.GameObjects.ComponentAdd</span></td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnTreeRemove_Robust_Shared_GameObjects_EntityUid__0_Robust_Shared_GameObjects_ComponentRemove_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.OnTreeRemove(Robust.Shared.GameObjects.EntityUid%2C%600%2CRobust.Shared.GameObjects.ComponentRemove)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L110">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnTreeRemove_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.OnTreeRemove*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_OnTreeRemove_Robust_Shared_GameObjects_EntityUid__0_Robust_Shared_GameObjects_ComponentRemove_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.OnTreeRemove(Robust.Shared.GameObjects.EntityUid,`0,Robust.Shared.GameObjects.ComponentRemove)">OnTreeRemove(EntityUid, TTreeComp, ComponentRemove)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual void OnTreeRemove(EntityUid uid, TTreeComp component, ComponentRemove args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">TTreeComp</span></td>
+        <td><span class="parametername">component</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRemove.html">ComponentRemove</a></td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.QueryAabb(Robust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L284">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.QueryAabb*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2_System_Boolean_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.QueryAabb(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2,System.Boolean)">QueryAabb(MapId, Box2, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public HashSet&lt;ComponentTreeEntry&lt;TComp&gt;&gt; QueryAabb(MapId mapId, Box2 worldBounds, bool approx = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2.html">Box2</a></td>
+        <td><span class="parametername">worldBounds</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">approx</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">HashSet</span>&lt;<a class="xref" href="Robust.Shared.Physics.ComponentTreeEntry-1.html">ComponentTreeEntry</a>&lt;TComp&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.QueryAabb(Robust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2Rotated%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L287">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.QueryAabb*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated_System_Boolean_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.QueryAabb(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2Rotated,System.Boolean)">QueryAabb(MapId, Box2Rotated, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public HashSet&lt;ComponentTreeEntry&lt;TComp&gt;&gt; QueryAabb(MapId mapId, Box2Rotated worldBounds, bool approx = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2Rotated.html">Box2Rotated</a></td>
+        <td><span class="parametername">worldBounds</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">approx</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">HashSet</span>&lt;<a class="xref" href="Robust.Shared.Physics.ComponentTreeEntry-1.html">ComponentTreeEntry</a>&lt;TComp&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb__1___0__Robust_Shared_Physics_DynamicTree_Robust_Shared_Physics_ComponentTreeEntry__1___QueryCallbackDelegate___0__Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.QueryAabb%60%601(%60%600%40%2CRobust.Shared.Physics.DynamicTree%7BRobust.Shared.Physics.ComponentTreeEntry%7B%601%7D%7D.QueryCallbackDelegate%7B%60%600%7D%2CRobust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L304">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.QueryAabb*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb__1___0__Robust_Shared_Physics_DynamicTree_Robust_Shared_Physics_ComponentTreeEntry__1___QueryCallbackDelegate___0__Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2_System_Boolean_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.QueryAabb``1(``0@,Robust.Shared.Physics.DynamicTree{Robust.Shared.Physics.ComponentTreeEntry{`1}}.QueryCallbackDelegate{``0},Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2,System.Boolean)">QueryAabb&lt;TState&gt;(ref TState, DynamicTree&lt;ComponentTreeEntry&lt;TComp&gt;&gt;.QueryCallbackDelegate&lt;TState&gt;, MapId, Box2, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void QueryAabb&lt;TState&gt;(ref TState state, DynamicTree&lt;ComponentTreeEntry&lt;TComp&gt;&gt;.QueryCallbackDelegate&lt;TState&gt; callback, MapId mapId, Box2 worldBounds, bool approx = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TState</span></td>
+        <td><span class="parametername">state</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.DynamicTree-1.QueryCallbackDelegate-1.html">DynamicTree.QueryCallbackDelegate</a>&lt;TState&gt;</td>
+        <td><span class="parametername">callback</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2.html">Box2</a></td>
+        <td><span class="parametername">worldBounds</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">approx</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TState</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb__1___0__Robust_Shared_Physics_DynamicTree_Robust_Shared_Physics_ComponentTreeEntry__1___QueryCallbackDelegate___0__Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.QueryAabb%60%601(%60%600%40%2CRobust.Shared.Physics.DynamicTree%7BRobust.Shared.Physics.ComponentTreeEntry%7B%601%7D%7D.QueryCallbackDelegate%7B%60%600%7D%2CRobust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2Rotated%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L314">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.QueryAabb*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueryAabb__1___0__Robust_Shared_Physics_DynamicTree_Robust_Shared_Physics_ComponentTreeEntry__1___QueryCallbackDelegate___0__Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated_System_Boolean_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.QueryAabb``1(``0@,Robust.Shared.Physics.DynamicTree{Robust.Shared.Physics.ComponentTreeEntry{`1}}.QueryCallbackDelegate{``0},Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2Rotated,System.Boolean)">QueryAabb&lt;TState&gt;(ref TState, DynamicTree&lt;ComponentTreeEntry&lt;TComp&gt;&gt;.QueryCallbackDelegate&lt;TState&gt;, MapId, Box2Rotated, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void QueryAabb&lt;TState&gt;(ref TState state, DynamicTree&lt;ComponentTreeEntry&lt;TComp&gt;&gt;.QueryCallbackDelegate&lt;TState&gt; callback, MapId mapId, Box2Rotated worldBounds, bool approx = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TState</span></td>
+        <td><span class="parametername">state</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.DynamicTree-1.QueryCallbackDelegate-1.html">DynamicTree.QueryCallbackDelegate</a>&lt;TState&gt;</td>
+        <td><span class="parametername">callback</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2Rotated.html">Box2Rotated</a></td>
+        <td><span class="parametername">worldBounds</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">approx</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TState</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueueTreeUpdate_Robust_Shared_GameObjects_EntityUid__1_Robust_Shared_GameObjects_TransformComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.QueueTreeUpdate(Robust.Shared.GameObjects.EntityUid%2C%601%2CRobust.Shared.GameObjects.TransformComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L88">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueueTreeUpdate_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.QueueTreeUpdate*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_QueueTreeUpdate_Robust_Shared_GameObjects_EntityUid__1_Robust_Shared_GameObjects_TransformComponent_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.QueueTreeUpdate(Robust.Shared.GameObjects.EntityUid,`1,Robust.Shared.GameObjects.TransformComponent)">QueueTreeUpdate(EntityUid, TComp, TransformComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void QueueTreeUpdate(EntityUid uid, TComp component, TransformComponent xform = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">TComp</span></td>
+        <td><span class="parametername">component</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></td>
+        <td><span class="parametername">xform</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_Update_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.Update(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L143">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_Update_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.Update*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_Update_System_Single_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.Update(System.Single)">Update(Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Update(float frameTime)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">frameTime</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.html#Robust_Shared_GameObjects_EntitySystem_Update_System_Single_">EntitySystem.Update(Single)</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2_UpdateTreePositions.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602.UpdateTreePositions%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L159">View Source</a>
+  </span>
+  <a id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_UpdateTreePositions_" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.UpdateTreePositions*"></a>
+  <h4 id="Robust_Shared_ComponentTrees_ComponentTreeSystem_2_UpdateTreePositions" data-uid="Robust.Shared.ComponentTrees.ComponentTreeSystem`2.UpdateTreePositions">UpdateTreePositions()</h4>
+  <div class="markdown level1 summary"><p>Processes any pending position updates. Note that this should generally always get run before directly
+querying a tree.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void UpdateTreePositions()</code></pre>
+  </div>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ComponentTrees_ComponentTreeSystem_2.md&amp;value=---%0Auid%3A%20Robust.Shared.ComponentTrees.ComponentTreeSystem%602%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ComponentTrees/ComponentTreeSystem.cs/#L19" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

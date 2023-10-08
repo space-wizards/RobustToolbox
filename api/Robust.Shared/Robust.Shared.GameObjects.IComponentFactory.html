@@ -1,0 +1,1832 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IComponentFactory
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IComponentFactory
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.GameObjects.IComponentFactory">
+  
+  
+  <h1 id="Robust_Shared_GameObjects_IComponentFactory" data-uid="Robust.Shared.GameObjects.IComponentFactory" class="text-break">Interface IComponentFactory
+  </h1>
+  <div class="markdown level0 summary"><p>Handles the registration and spawning of components.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.GameObjects.html">Robust.Shared.GameObjects</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_GameObjects_IComponentFactory_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IComponentFactory</code></pre>
+  </div>
+  <h5 id="Robust_Shared_GameObjects_IComponentFactory_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>
+When referring to component names, this is the name the component has been registered as,
+and what&apos;s used in prototypes. However, most commonly the type is referred through by an interface.
+</p>
+<p>
+Before a component can be spawned, it must be registered so things such as name, networking ID, type, etc...
+are known to the factory.
+Components are registered into a registry.
+The relevant methods for writing to this registry are <see cref="!:RegisterReference"></see>.
+The data is exposed for reading through <a class="xref" href="Robust.Shared.GameObjects.IComponentFactory.html#Robust_Shared_GameObjects_IComponentFactory_GetRegistration_System_String_System_Boolean_">GetRegistration(String, Boolean)</a> and its overloads.
+This data is returned in the form of a <see cref="!:IComponentRegistration"></see>, which represents one component&apos;s registration.
+</p>
+</div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_AllRegisteredTypes.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.AllRegisteredTypes%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L60">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_AllRegisteredTypes_" data-uid="Robust.Shared.GameObjects.IComponentFactory.AllRegisteredTypes*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_AllRegisteredTypes" data-uid="Robust.Shared.GameObjects.IComponentFactory.AllRegisteredTypes">AllRegisteredTypes</h4>
+  <div class="markdown level1 summary"><p>All IComponent types that are currently registered to this factory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;Type&gt; AllRegisteredTypes { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_NetworkedComponents.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.NetworkedComponents%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L70">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_NetworkedComponents_" data-uid="Robust.Shared.GameObjects.IComponentFactory.NetworkedComponents*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_NetworkedComponents" data-uid="Robust.Shared.GameObjects.IComponentFactory.NetworkedComponents">NetworkedComponents</h4>
+  <div class="markdown level1 summary"><p>The subset of all registered components that are networked, so that they can be
+referenced between the client and the server.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IReadOnlyList&lt;ComponentRegistration&gt;? NetworkedComponents { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">IReadOnlyList</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_GameObjects_IComponentFactory_NetworkedComponents_remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This will be null if the network Ids have not been generated yet.</p>
+</div>
+  <h5 id="Robust_Shared_GameObjects_IComponentFactory_NetworkedComponents_seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.GameObjects.IComponentFactory.html#Robust_Shared_GameObjects_IComponentFactory_GenerateNetIds">GenerateNetIds()</a></div>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_DoAutoRegistrations.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.DoAutoRegistrations%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L271">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_DoAutoRegistrations_" data-uid="Robust.Shared.GameObjects.IComponentFactory.DoAutoRegistrations*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_DoAutoRegistrations" data-uid="Robust.Shared.GameObjects.IComponentFactory.DoAutoRegistrations">DoAutoRegistrations()</h4>
+  <div class="markdown level1 summary"><p>Automatically create registrations for all components with a <a class="xref" href="Robust.Shared.GameObjects.RegisterComponentAttribute.html">RegisterComponentAttribute</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void DoAutoRegistrations()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GenerateNetIds.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GenerateNetIds%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L274">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GenerateNetIds_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GenerateNetIds*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GenerateNetIds" data-uid="Robust.Shared.GameObjects.IComponentFactory.GenerateNetIds">GenerateNetIds()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void GenerateNetIds()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetAllRefTypes.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetAllRefTypes%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L273">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetAllRefTypes_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetAllRefTypes*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetAllRefTypes" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetAllRefTypes">GetAllRefTypes()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;CompIdx&gt; GetAllRefTypes()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.CompIdx.html">CompIdx</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetComponent_Robust_Shared_GameObjects_CompIdx_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetComponent(Robust.Shared.GameObjects.CompIdx)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L109">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetComponent_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetComponent_Robust_Shared_GameObjects_CompIdx_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent(Robust.Shared.GameObjects.CompIdx)">GetComponent(CompIdx)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IComponent GetComponent(CompIdx componentType)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.CompIdx.html">CompIdx</a></td>
+        <td><span class="parametername">componentType</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetComponent_Robust_Shared_GameObjects_ComponentRegistration_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetComponent(Robust.Shared.GameObjects.ComponentRegistration)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L125">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetComponent_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetComponent_Robust_Shared_GameObjects_ComponentRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent(Robust.Shared.GameObjects.ComponentRegistration)">GetComponent(ComponentRegistration)</h4>
+  <div class="markdown level1 summary"><p>Gets a new component instantiated from the specified component registration.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IComponent GetComponent(ComponentRegistration reg)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td><span class="parametername">reg</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a></td>
+        <td><p>A Component</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetComponent_System_String_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetComponent(System.String%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L136">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetComponent_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetComponent_System_String_System_Boolean_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent(System.String,System.Boolean)">GetComponent(String, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Gets a new component instantiated of the specified <see cref="!:IComponent.Name"></see>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IComponent GetComponent(string componentName, bool ignoreCase = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">componentName</span></td>
+        <td><p>name of component to make</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">ignoreCase</span></td>
+        <td><p>Whether or not to ignore casing on <see cref="!:componentName"></see></p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a></td>
+        <td><p>A Component</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.UnknownComponentException.html">UnknownComponentException</a></td>
+        <td><p>Thrown if no component exists with the given name <see cref="!:componentName"></see>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetComponent_System_UInt16_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetComponent(System.UInt16)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L146">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetComponent_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetComponent_System_UInt16_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent(System.UInt16)">GetComponent(UInt16)</h4>
+  <div class="markdown level1 summary"><p>Gets a new component instantiated of the specified network ID.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IComponent GetComponent(ushort netId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.UInt16</span></td>
+        <td><span class="parametername">netId</span></td>
+        <td><p>net id of component to make</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a></td>
+        <td><p>A Component</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.UnknownComponentException.html">UnknownComponentException</a></td>
+        <td><p>Thrown if no component exists with the given id <see cref="!:netId"></see>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetComponent_Type_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetComponent(Type)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L107">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetComponent_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetComponent_Type_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent(Type)">GetComponent(Type)</h4>
+  <div class="markdown level1 summary"><p>Gets a new component instantiated of the specified type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IComponent GetComponent(Type componentType)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">componentType</span></td>
+        <td><p>type of component to make</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a></td>
+        <td><p>A Component</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetComponent__1.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetComponent%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L119">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetComponent_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetComponent__1" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponent``1">GetComponent&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"><p>Gets a new component instantiated of the specified type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">T GetComponent&lt;T&gt;()
+    where T : IComponent, new()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td><p>A Component</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td><p>The type of component to make.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetComponentAvailability_System_String_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetComponentAvailability(System.String%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L78">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetComponentAvailability_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponentAvailability*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetComponentAvailability_System_String_System_Boolean_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponentAvailability(System.String,System.Boolean)">GetComponentAvailability(String, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Get whether a component is available right now.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">componentName</span></td>
+        <td><p>The name of the component to check.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">ignoreCase</span></td>
+        <td><p>Whether or not to ignore casing on <see cref="!:componentName"></see></p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentAvailability.html">ComponentAvailability</a></td>
+        <td><p>The availability of the component.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetComponentName_System_UInt16_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetComponentName(System.UInt16)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L167">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetComponentName_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponentName*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetComponentName_System_UInt16_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponentName(System.UInt16)">GetComponentName(UInt16)</h4>
+  <div class="markdown level1 summary"><p>Gets the name of a component, throwing an exception if it does not exist.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetComponentName(ushort netID)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.UInt16</span></td>
+        <td><span class="parametername">netID</span></td>
+        <td><p>The network ID corresponding to the component.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><p>The registered name of the component</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.UnknownComponentException.html">UnknownComponentException</a></td>
+        <td><p>Thrown if no component with id <see cref="!:netID"></see> exists.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetComponentName_Type_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetComponentName(Type)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L156">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetComponentName_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponentName*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetComponentName_Type_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetComponentName(Type)">GetComponentName(Type)</h4>
+  <div class="markdown level1 summary"><p>Gets the name of a component, throwing an exception if it does not exist.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetComponentName(Type componentType)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">componentType</span></td>
+        <td><p>The type of the component</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><p>The registered name of the component</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.UnknownComponentException.html">UnknownComponentException</a></td>
+        <td><p>Thrown if no component exists with the given type <see cref="!:componentType"></see>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetHash_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetHash(System.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L282">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetHash_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetHash*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetHash_System_Boolean_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetHash(System.Boolean)">GetHash(Boolean)</h4>
+  <div class="markdown level1 summary"><p>Gets a hash of all the registered components.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">byte[] GetHash(bool networkedOnly)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">networkedOnly</span></td>
+        <td><p>Whether to include all components or only networked ones.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span>[]</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetRegistration_Robust_Shared_GameObjects_CompIdx_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetRegistration(Robust.Shared.GameObjects.CompIdx)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L220">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration_Robust_Shared_GameObjects_CompIdx_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration(Robust.Shared.GameObjects.CompIdx)">GetRegistration(CompIdx)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ComponentRegistration GetRegistration(CompIdx idx)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.CompIdx.html">CompIdx</a></td>
+        <td><span class="parametername">idx</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetRegistration_Robust_Shared_GameObjects_IComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetRegistration(Robust.Shared.GameObjects.IComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L218">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration_Robust_Shared_GameObjects_IComponent_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration(Robust.Shared.GameObjects.IComponent)">GetRegistration(IComponent)</h4>
+  <div class="markdown level1 summary"><p>Gets the registration of a component, throwing an exception if
+it does not exist.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ComponentRegistration GetRegistration(IComponent component)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a></td>
+        <td><span class="parametername">component</span></td>
+        <td><p>An instance of the component.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.UnknownComponentException.html">UnknownComponentException</a></td>
+        <td><p>Thrown if no registration exists for component <see cref="!:component"></see>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetRegistration_System_String_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetRegistration(System.String%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L178">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration_System_String_System_Boolean_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration(System.String,System.Boolean)">GetRegistration(String, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Gets the registration belonging to a component, throwing an exception if it does not exist.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ComponentRegistration GetRegistration(string componentName, bool ignoreCase = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">componentName</span></td>
+        <td><p>The name of the component.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">ignoreCase</span></td>
+        <td><p>Whether or not to ignore casing on <see cref="!:componentName"></see></p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.UnknownComponentException.html">UnknownComponentException</a></td>
+        <td><p>Thrown if no component exists with the given name <see cref="!:componentName"></see>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetRegistration_System_UInt16_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetRegistration(System.UInt16)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L207">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration_System_UInt16_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration(System.UInt16)">GetRegistration(UInt16)</h4>
+  <div class="markdown level1 summary"><p>Gets the registration belonging to a component, throwing an
+exception if it does not exist.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ComponentRegistration GetRegistration(ushort netID)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.UInt16</span></td>
+        <td><span class="parametername">netID</span></td>
+        <td><p>The network ID corresponding to the component.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.UnknownComponentException.html">UnknownComponentException</a></td>
+        <td><p>Thrown if no component with id <see cref="!:netID"></see> exists.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetRegistration_Type_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetRegistration(Type)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L187">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration_Type_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration(Type)">GetRegistration(Type)</h4>
+  <div class="markdown level1 summary"><p>Gets the registration belonging to a component, throwing an exception if it does not exist.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ComponentRegistration GetRegistration(Type reference)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">reference</span></td>
+        <td><p>The type of the component to lookup.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.UnknownComponentException.html">UnknownComponentException</a></td>
+        <td><p>Thrown if no component exists of type <see cref="!:reference"></see>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_GetRegistration__1.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.GetRegistration%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L196">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_GetRegistration__1" data-uid="Robust.Shared.GameObjects.IComponentFactory.GetRegistration``1">GetRegistration&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"><p>Gets the registration belonging to a component, throwing an exception if it does not exist.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ComponentRegistration GetRegistration&lt;T&gt;()
+    where T : IComponent, new()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td><p>A type referencing the component.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.UnknownComponentException.html">UnknownComponentException</a></td>
+        <td><p>Thrown if no component of type <see cref="!:T"></see> exists.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_IdxToType_Robust_Shared_GameObjects_CompIdx_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.IdxToType(Robust.Shared.GameObjects.CompIdx)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L276">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_IdxToType_" data-uid="Robust.Shared.GameObjects.IComponentFactory.IdxToType*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_IdxToType_Robust_Shared_GameObjects_CompIdx_" data-uid="Robust.Shared.GameObjects.IComponentFactory.IdxToType(Robust.Shared.GameObjects.CompIdx)">IdxToType(CompIdx)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Type IdxToType(CompIdx idx)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.CompIdx.html">CompIdx</a></td>
+        <td><span class="parametername">idx</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_IgnoreMissingComponents_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.IgnoreMissingComponents(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L97">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_IgnoreMissingComponents_" data-uid="Robust.Shared.GameObjects.IComponentFactory.IgnoreMissingComponents*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_IgnoreMissingComponents_System_String_" data-uid="Robust.Shared.GameObjects.IComponentFactory.IgnoreMissingComponents(System.String)">IgnoreMissingComponents(String)</h4>
+  <div class="markdown level1 summary"><p>Disables throwing on missing components. Missing components will instead be treated as ignored.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void IgnoreMissingComponents(string postfix = &quot;&quot;)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">postfix</span></td>
+        <td><p>If provided, will only ignore components ending with the postfix.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_IsIgnored_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.IsIgnored(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L225">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_IsIgnored_" data-uid="Robust.Shared.GameObjects.IComponentFactory.IsIgnored*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_IsIgnored_System_String_" data-uid="Robust.Shared.GameObjects.IComponentFactory.IsIgnored(System.String)">IsIgnored(String)</h4>
+  <div class="markdown level1 summary"><p>Returns true if the given component name has been registered as ignored.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsIgnored(string componentName)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">componentName</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_RegisterClass__1_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.RegisterClass%60%601(System.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L84">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_RegisterClass_" data-uid="Robust.Shared.GameObjects.IComponentFactory.RegisterClass*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_RegisterClass__1_System_Boolean_" data-uid="Robust.Shared.GameObjects.IComponentFactory.RegisterClass``1(System.Boolean)">RegisterClass&lt;T&gt;(Boolean)</h4>
+  <div class="markdown level1 summary"><p>Registers a component class with the factory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterClass&lt;T&gt;(bool overwrite = false)
+    where T : IComponent, new()</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">overwrite</span></td>
+        <td><p>If the component already exists, will this replace it?</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_RegisterIgnore_System_String_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.RegisterIgnore(System.String%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L91">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_RegisterIgnore_" data-uid="Robust.Shared.GameObjects.IComponentFactory.RegisterIgnore*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_RegisterIgnore_System_String_System_Boolean_" data-uid="Robust.Shared.GameObjects.IComponentFactory.RegisterIgnore(System.String,System.Boolean)">RegisterIgnore(String, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Registers a component name as being ignored.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterIgnore(string name, bool overwrite = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td><p>The name to be ignored.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">overwrite</span></td>
+        <td><p>Whether to override existing settings instead of throwing an exception in the case of duplicates.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_Robust_Shared_GameObjects_IComponent_Robust_Shared_GameObjects_ComponentRegistration__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration(Robust.Shared.GameObjects.IComponent%2CRobust.Shared.GameObjects.ComponentRegistration%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L266">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_Robust_Shared_GameObjects_IComponent_Robust_Shared_GameObjects_ComponentRegistration__" data-uid="Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration(Robust.Shared.GameObjects.IComponent,Robust.Shared.GameObjects.ComponentRegistration@)">TryGetRegistration(IComponent, out ComponentRegistration)</h4>
+  <div class="markdown level1 summary"><p>Tries to get the registration of a component.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetRegistration(IComponent component, out ComponentRegistration registration)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a></td>
+        <td><span class="parametername">component</span></td>
+        <td><p>An instance of the component.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td><span class="parametername">registration</span></td>
+        <td><p>The registration if found, null otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>true it found, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_System_String_Robust_Shared_GameObjects_ComponentRegistration__System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration(System.String%2CRobust.Shared.GameObjects.ComponentRegistration%40%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L234">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_System_String_Robust_Shared_GameObjects_ComponentRegistration__System_Boolean_" data-uid="Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration(System.String,Robust.Shared.GameObjects.ComponentRegistration@,System.Boolean)">TryGetRegistration(String, out ComponentRegistration, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Tries to get the registration belonging to a component.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetRegistration(string componentName, out ComponentRegistration registration, bool ignoreCase = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">componentName</span></td>
+        <td><p>The name of the component.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td><span class="parametername">registration</span></td>
+        <td><p>The registration if found, null otherwise.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">ignoreCase</span></td>
+        <td><p>Whether or not to ignore casing on <see cref="!:componentName"></see></p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>true it found, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_System_UInt16_Robust_Shared_GameObjects_ComponentRegistration__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration(System.UInt16%2CRobust.Shared.GameObjects.ComponentRegistration%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L258">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_System_UInt16_Robust_Shared_GameObjects_ComponentRegistration__" data-uid="Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration(System.UInt16,Robust.Shared.GameObjects.ComponentRegistration@)">TryGetRegistration(UInt16, out ComponentRegistration)</h4>
+  <div class="markdown level1 summary"><p>Tries to get the registration belonging to a component.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetRegistration(ushort netID, out ComponentRegistration registration)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.UInt16</span></td>
+        <td><span class="parametername">netID</span></td>
+        <td><p>The network ID corresponding to the component.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td><span class="parametername">registration</span></td>
+        <td><p>The registration if found, null otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>true it found, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_Type_Robust_Shared_GameObjects_ComponentRegistration__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration(Type%2CRobust.Shared.GameObjects.ComponentRegistration%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L242">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_Type_Robust_Shared_GameObjects_ComponentRegistration__" data-uid="Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration(Type,Robust.Shared.GameObjects.ComponentRegistration@)">TryGetRegistration(Type, out ComponentRegistration)</h4>
+  <div class="markdown level1 summary"><p>Tries to get the registration belonging to a component.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetRegistration(Type reference, out ComponentRegistration registration)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">reference</span></td>
+        <td><p>A reference corresponding to the component to look up.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td><span class="parametername">registration</span></td>
+        <td><p>The registration if found, null otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>true it found, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration__1_Robust_Shared_GameObjects_ComponentRegistration__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration%60%601(Robust.Shared.GameObjects.ComponentRegistration%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L250">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration_" data-uid="Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration*"></a>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_TryGetRegistration__1_Robust_Shared_GameObjects_ComponentRegistration__" data-uid="Robust.Shared.GameObjects.IComponentFactory.TryGetRegistration``1(Robust.Shared.GameObjects.ComponentRegistration@)">TryGetRegistration&lt;T&gt;(out ComponentRegistration)</h4>
+  <div class="markdown level1 summary"><p>Tries to get the registration belonging to a component.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetRegistration&lt;T&gt;(out ComponentRegistration registration)
+    where T : IComponent, new()</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></td>
+        <td><span class="parametername">registration</span></td>
+        <td><p>The registration if found, null otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>true it found, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td><p>A type referencing the component.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="events">Events
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_ComponentAdded.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.ComponentAdded%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L54">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_ComponentAdded" data-uid="Robust.Shared.GameObjects.IComponentFactory.ComponentAdded">ComponentAdded</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action&lt;ComponentRegistration&gt; ComponentAdded</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Action</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory_ComponentIgnoreAdded.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory.ComponentIgnoreAdded%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L55">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_GameObjects_IComponentFactory_ComponentIgnoreAdded" data-uid="Robust.Shared.GameObjects.IComponentFactory.ComponentIgnoreAdded">ComponentIgnoreAdded</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action&lt;string&gt; ComponentIgnoreAdded</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Action</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="seealso">See Also</h3>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a></div>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_IComponentFactory.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.IComponentFactory%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/IComponentFactory.cs/#L52" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

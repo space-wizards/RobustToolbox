@@ -1,0 +1,901 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface INetManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface INetManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Network.INetManager">
+  
+  
+  <h1 id="Robust_Shared_Network_INetManager" data-uid="Robust.Shared.Network.INetManager" class="text-break">Interface INetManager
+  </h1>
+  <div class="markdown level0 summary"><p>A network server that listens for connections, relays packets, and manages channels.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Network.html">Robust.Shared.Network</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Network_INetManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface INetManager</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_ChannelCount.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.ChannelCount%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L45">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_ChannelCount_" data-uid="Robust.Shared.Network.INetManager.ChannelCount*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_ChannelCount" data-uid="Robust.Shared.Network.INetManager.ChannelCount">ChannelCount</h4>
+  <div class="markdown level1 summary"><p>The number of connected NetChannels on this peer.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">int ChannelCount { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_Channels.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.Channels%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L40">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_Channels_" data-uid="Robust.Shared.Network.INetManager.Channels*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_Channels" data-uid="Robust.Shared.Network.INetManager.Channels">Channels</h4>
+  <div class="markdown level1 summary"><p>All of the current connected NetChannels on this peer.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;INetChannel&gt; Channels { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Network.INetChannel.html">INetChannel</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_IsClient.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.IsClient%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L20">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_IsClient_" data-uid="Robust.Shared.Network.INetManager.IsClient*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_IsClient" data-uid="Robust.Shared.Network.INetManager.IsClient">IsClient</h4>
+  <div class="markdown level1 summary"><p>Is this a client, or a server?</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsClient { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_IsConnected.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.IsConnected%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L30">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_IsConnected_" data-uid="Robust.Shared.Network.INetManager.IsConnected*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_IsConnected" data-uid="Robust.Shared.Network.INetManager.IsConnected">IsConnected</h4>
+  <div class="markdown level1 summary"><p>Is there at least one open NetChannel?</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsConnected { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_IsRunning.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.IsRunning%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L25">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_IsRunning_" data-uid="Robust.Shared.Network.INetManager.IsRunning*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_IsRunning" data-uid="Robust.Shared.Network.INetManager.IsRunning">IsRunning</h4>
+  <div class="markdown level1 summary"><p>Has networking been started?</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsRunning { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_IsServer.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.IsServer%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L15">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_IsServer_" data-uid="Robust.Shared.Network.INetManager.IsServer*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_IsServer" data-uid="Robust.Shared.Network.INetManager.IsServer">IsServer</h4>
+  <div class="markdown level1 summary"><p>Is this a server, or a client?</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsServer { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_MessageBandwidthUsage.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.MessageBandwidthUsage%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L52">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_MessageBandwidthUsage_" data-uid="Robust.Shared.Network.INetManager.MessageBandwidthUsage*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_MessageBandwidthUsage" data-uid="Robust.Shared.Network.INetManager.MessageBandwidthUsage">MessageBandwidthUsage</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IReadOnlyDictionary&lt;Type, long&gt; MessageBandwidthUsage { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IReadOnlyDictionary</span>&lt;<span class="xref">Type</span>, <span class="xref">System.Int64</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_Port.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.Port%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L50">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_Port_" data-uid="Robust.Shared.Network.INetManager.Port*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_Port" data-uid="Robust.Shared.Network.INetManager.Port">Port</h4>
+  <div class="markdown level1 summary"><p>The port that the peer is listening on.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">int Port { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_Statistics.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.Statistics%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L35">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_Statistics_" data-uid="Robust.Shared.Network.INetManager.Statistics*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_Statistics" data-uid="Robust.Shared.Network.INetManager.Statistics">Statistics</h4>
+  <div class="markdown level1 summary"><p>Network traffic statistics for the local NetChannel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">NetworkStats Statistics { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Network.NetworkStats.html">NetworkStats</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_ClientSendMessage_Robust_Shared_Network_NetMessage_.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.ClientSendMessage(Robust.Shared.Network.NetMessage)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L102">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_ClientSendMessage_" data-uid="Robust.Shared.Network.INetManager.ClientSendMessage*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_ClientSendMessage_Robust_Shared_Network_NetMessage_" data-uid="Robust.Shared.Network.INetManager.ClientSendMessage(Robust.Shared.Network.NetMessage)">ClientSendMessage(NetMessage)</h4>
+  <div class="markdown level1 summary"><p>Sends a message to the server. Make sure to Initialize(true) and Connect() to a server before calling this.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ClientSendMessage(NetMessage message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Network.NetMessage.html">NetMessage</a></td>
+        <td><span class="parametername">message</span></td>
+        <td><p>Message to send.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_CreateNetMessage__1.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.CreateNetMessage%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L141">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_CreateNetMessage_" data-uid="Robust.Shared.Network.INetManager.CreateNetMessage*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_CreateNetMessage__1" data-uid="Robust.Shared.Network.INetManager.CreateNetMessage``1">CreateNetMessage&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"><p>Creates a new NetMessage to be sent.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">T CreateNetMessage&lt;T&gt;()
+    where T : NetMessage, new()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td><p>Instance of the NetMessage.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td><p>Type of NetMessage to send.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Network_INetManager_CreateNetMessage__1_remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This function is thread safe.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_Initialize_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.Initialize(System.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L60">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_Initialize_" data-uid="Robust.Shared.Network.INetManager.Initialize*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_Initialize_System_Boolean_" data-uid="Robust.Shared.Network.INetManager.Initialize(System.Boolean)">Initialize(Boolean)</h4>
+  <div class="markdown level1 summary"><p>Initializes the server, and starts listening for connections.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Initialize(bool isServer)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">isServer</span></td>
+        <td><p>Is this a server, or a client?</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_ProcessPackets.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.ProcessPackets%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L76">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_ProcessPackets_" data-uid="Robust.Shared.Network.INetManager.ProcessPackets*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_ProcessPackets" data-uid="Robust.Shared.Network.INetManager.ProcessPackets">ProcessPackets()</h4>
+  <div class="markdown level1 summary"><p>Process all queued packets. Should be called often.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ProcessPackets()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_RegisterNetMessage__1_Robust_Shared_Network_ProcessMessage___0__Robust_Shared_Network_NetMessageAccept_.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.RegisterNetMessage%60%601(Robust.Shared.Network.ProcessMessage%7B%60%600%7D%2CRobust.Shared.Network.NetMessageAccept)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L129">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_RegisterNetMessage_" data-uid="Robust.Shared.Network.INetManager.RegisterNetMessage*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_RegisterNetMessage__1_Robust_Shared_Network_ProcessMessage___0__Robust_Shared_Network_NetMessageAccept_" data-uid="Robust.Shared.Network.INetManager.RegisterNetMessage``1(Robust.Shared.Network.ProcessMessage{``0},Robust.Shared.Network.NetMessageAccept)">RegisterNetMessage&lt;T&gt;(ProcessMessage&lt;T&gt;, NetMessageAccept)</h4>
+  <div class="markdown level1 summary"><p>Registers a NetMessage to be sent or received.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterNetMessage&lt;T&gt;(ProcessMessage&lt;T&gt; rxCallback = null, NetMessageAccept accept = default(NetMessageAccept))
+    where T : NetMessage, new()</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Network.ProcessMessage-1.html">ProcessMessage</a>&lt;T&gt;</td>
+        <td><span class="parametername">rxCallback</span></td>
+        <td><p>Callback function to process the received message.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Network.NetMessageAccept.html">NetMessageAccept</a></td>
+        <td><span class="parametername">accept</span></td>
+        <td><p>The side of the network this message is accepted on.
+If we are not on the side specified, the receive callback will not be registered even if provided.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td><p>Type to register.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_ResetBandwidthMetrics.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.ResetBandwidthMetrics%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L54">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_ResetBandwidthMetrics_" data-uid="Robust.Shared.Network.INetManager.ResetBandwidthMetrics*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_ResetBandwidthMetrics" data-uid="Robust.Shared.Network.INetManager.ResetBandwidthMetrics">ResetBandwidthMetrics()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ResetBandwidthMetrics()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_ServerSendMessage_Robust_Shared_Network_NetMessage_Robust_Shared_Network_INetChannel_.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.ServerSendMessage(Robust.Shared.Network.NetMessage%2CRobust.Shared.Network.INetChannel)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L89">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_ServerSendMessage_" data-uid="Robust.Shared.Network.INetManager.ServerSendMessage*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_ServerSendMessage_Robust_Shared_Network_NetMessage_Robust_Shared_Network_INetChannel_" data-uid="Robust.Shared.Network.INetManager.ServerSendMessage(Robust.Shared.Network.NetMessage,Robust.Shared.Network.INetChannel)">ServerSendMessage(NetMessage, INetChannel)</h4>
+  <div class="markdown level1 summary"><p>Sends a message to a single channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ServerSendMessage(NetMessage message, INetChannel recipient)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Network.NetMessage.html">NetMessage</a></td>
+        <td><span class="parametername">message</span></td>
+        <td><p>Message to send.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Network.INetChannel.html">INetChannel</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>Channel to send the message over.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_ServerSendToAll_Robust_Shared_Network_NetMessage_.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.ServerSendToAll(Robust.Shared.Network.NetMessage)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L82">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_ServerSendToAll_" data-uid="Robust.Shared.Network.INetManager.ServerSendToAll*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_ServerSendToAll_Robust_Shared_Network_NetMessage_" data-uid="Robust.Shared.Network.INetManager.ServerSendToAll(Robust.Shared.Network.NetMessage)">ServerSendToAll(NetMessage)</h4>
+  <div class="markdown level1 summary"><p>Broadcasts a message to every connected channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ServerSendToAll(NetMessage message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Network.NetMessage.html">NetMessage</a></td>
+        <td><span class="parametername">message</span></td>
+        <td><p>The message to broadcast.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_ServerSendToMany_Robust_Shared_Network_NetMessage_List_Robust_Shared_Network_INetChannel__.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.ServerSendToMany(Robust.Shared.Network.NetMessage%2CList%7BRobust.Shared.Network.INetChannel%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L96">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_ServerSendToMany_" data-uid="Robust.Shared.Network.INetManager.ServerSendToMany*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_ServerSendToMany_Robust_Shared_Network_NetMessage_List_Robust_Shared_Network_INetChannel__" data-uid="Robust.Shared.Network.INetManager.ServerSendToMany(Robust.Shared.Network.NetMessage,List{Robust.Shared.Network.INetChannel})">ServerSendToMany(NetMessage, List&lt;INetChannel&gt;)</h4>
+  <div class="markdown level1 summary"><p>Sends a message to a collection of channels.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ServerSendToMany(NetMessage message, List&lt;INetChannel&gt; recipients)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Network.NetMessage.html">NetMessage</a></td>
+        <td><span class="parametername">message</span></td>
+        <td><p>Message to send.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">List</span>&lt;<a class="xref" href="Robust.Shared.Network.INetChannel.html">INetChannel</a>&gt;</td>
+        <td><span class="parametername">recipients</span></td>
+        <td><p>Channels to send the message over.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_Shutdown_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.Shutdown(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L71">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_Shutdown_" data-uid="Robust.Shared.Network.INetManager.Shutdown*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_Shutdown_System_String_" data-uid="Robust.Shared.Network.INetManager.Shutdown(System.String)">Shutdown(String)</h4>
+  <div class="markdown level1 summary"><p>Shuts down this peer, disconnecting all channels.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Shutdown(string reason)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">reason</span></td>
+        <td><p>String describing why the peer was shut down.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_StartServer.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.StartServer%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L65">View Source</a>
+  </span>
+  <a id="Robust_Shared_Network_INetManager_StartServer_" data-uid="Robust.Shared.Network.INetManager.StartServer*"></a>
+  <h4 id="Robust_Shared_Network_INetManager_StartServer" data-uid="Robust.Shared.Network.INetManager.StartServer">StartServer()</h4>
+  <div class="markdown level1 summary"><p>Starts the server running and listening on the port.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void StartServer()</code></pre>
+  </div>
+  <h3 id="events">Events
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_Connected.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.Connected%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L112">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Network_INetManager_Connected" data-uid="Robust.Shared.Network.INetManager.Connected">Connected</h4>
+  <div class="markdown level1 summary"><p>A client has just connected to the server.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event EventHandler&lt;NetChannelArgs&gt; Connected</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">EventHandler</span>&lt;<a class="xref" href="Robust.Shared.Network.NetChannelArgs.html">NetChannelArgs</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_Connecting.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.Connecting%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L107">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Network_INetManager_Connecting" data-uid="Robust.Shared.Network.INetManager.Connecting">Connecting</h4>
+  <div class="markdown level1 summary"><p>An incoming connection is being received.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Func&lt;NetConnectingArgs, Task&gt; Connecting</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Func</span>&lt;<a class="xref" href="Robust.Shared.Network.NetConnectingArgs.html">NetConnectingArgs</a>, <span class="xref">Task</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager_Disconnect.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager.Disconnect%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L117">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Network_INetManager_Disconnect" data-uid="Robust.Shared.Network.INetManager.Disconnect">Disconnect</h4>
+  <div class="markdown level1 summary"><p>A client has just disconnected from the server.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event EventHandler&lt;NetDisconnectedArgs&gt; Disconnect</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">EventHandler</span>&lt;<a class="xref" href="Robust.Shared.Network.NetDisconnectedArgs.html">NetDisconnectedArgs</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Network_INetManager.md&amp;value=---%0Auid%3A%20Robust.Shared.Network.INetManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Network/INetManager.cs/#L10" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

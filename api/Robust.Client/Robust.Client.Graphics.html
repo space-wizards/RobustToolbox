@@ -1,0 +1,334 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Namespace Robust.Client.Graphics
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Namespace Robust.Client.Graphics
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Client.Graphics">
+  
+  <h1 id="Robust_Client_Graphics" data-uid="Robust.Client.Graphics" class="text-break">Namespace Robust.Client.Graphics
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="markdown level0 remarks"></div>
+    <h3 id="classes">Classes
+  </h3>
+      <h4><a class="xref" href="Robust.Client.Graphics.AtlasTexture.html">AtlasTexture</a></h4>
+      <section><p>Represents a sub region of another texture.
+This can be a useful optimization in many cases.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.CurrentEyeChangedEvent.html">CurrentEyeChangedEvent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.DrawingHandleBase.html">DrawingHandleBase</a></h4>
+      <section><p>Used for doing direct drawing without sprite components, existing GUI controls, etc...</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.DrawingHandleScreen.html">DrawingHandleScreen</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.DrawingHandleWorld.html">DrawingHandleWorld</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.DummyFont.html">DummyFont</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.EyeManager.html">EyeManager</a></h4>
+      <section><p>Keeps a reference to the current eye (camera) that the client is seeing though, and provides
+utility functions for the current eye.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.FixedEye.html">FixedEye</a></h4>
+      <section><p>A fixed eye is an eye which is fixed to one point, its position.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.Font.html">Font</a></h4>
+      <section><p>A generic font for rendering of text.
+Does not contain properties such as size. Those are specific to children such as <a class="xref" href="Robust.Client.Graphics.VectorFont.html">VectorFont</a></p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.LightManager.html">LightManager</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.Overlay.html">Overlay</a></h4>
+      <section><p>An overlay is used for fullscreen drawing in the game. This can range from drawing parallax to a full screen shader.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.OwnedTexture.html">OwnedTexture</a></h4>
+      <section><p>Represents a mutable texture that can be modified and deleted.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.RSI.html">RSI</a></h4>
+      <section><p>Type to handle Robust Station Image (RSI) files.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.RSI.State.html">RSI.State</a></h4>
+      <section><p>Represents a single icon state inside an RSI.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.ShaderInstance.html">ShaderInstance</a></h4>
+      <section><p>A shader instance is a wrapper around a shader that can be used for rendering.
+It can contain extra, mutable parameters depending on the shader backing it.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.ShaderPrototype.html">ShaderPrototype</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.StackedFont.html">StackedFont</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.StyleBox.html">StyleBox</a></h4>
+      <section><p>This is for drawing modestly fancy boxes using minimal code.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.StyleBoxEmpty.html">StyleBoxEmpty</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.StyleBoxFlat.html">StyleBoxFlat</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.StyleBoxTexture.html">StyleBoxTexture</a></h4>
+      <section><p>Style box based on a 9-patch texture. An image is
+divided into up to nine regions by splitting the
+image along each <code>PatchMargin.</code> The corner pieces
+will be drawn once, at their original size, while
+the <code>Mode</code> controls the (up to five) central pieces
+which can be either stretched or tiled to fill up
+the space the box is being drawn in.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></h4>
+      <section><p>Contains a texture used for drawing things.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.VectorFont.html">VectorFont</a></h4>
+      <section><p>Font type that renders vector fonts such as OTF and TTF fonts from a <a class="xref" href="Robust.Client.ResourceManagement.FontResource.html">FontResource</a></p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.WindowCreateParameters.html">WindowCreateParameters</a></h4>
+      <section></section>
+    <h3 id="structs">Structs
+  </h3>
+      <h4><a class="xref" href="Robust.Client.Graphics.CharMetrics.html">CharMetrics</a></h4>
+      <section><p>Metrics for a single glyph in a font.
+Refer to <a href="https://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html">https://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html</a> for more information.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.DrawVertexUV2D.html">DrawVertexUV2D</a></h4>
+      <section><p>2D Vertex that contains both position and UV coordinates.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.DrawVertexUV2DColor.html">DrawVertexUV2DColor</a></h4>
+      <section><p>2D Vertex that contains position and UV coordinates, and a modulation colour (Linear!!!)
+NOTE: This is directly cast into Clyde Vertex2D!!!!</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.OpenGLVersion.html">OpenGLVersion</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.OverlayDrawArgs.html">OverlayDrawArgs</a></h4>
+      <section><p>Parameters passed to <a class="xref" href="Robust.Client.Graphics.Overlay.html#Robust_Client_Graphics_Overlay_Draw_Robust_Client_Graphics_OverlayDrawArgs__">Draw(OverlayDrawArgs)</a>.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.RenderTargetFormatParameters.html">RenderTargetFormatParameters</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.RSI.StateId.html">RSI.StateId</a></h4>
+      <section><p>Represents an ID used to reference states in an RSI.
+Kept around as a simple wrapper around the state Name, to avoid breaking existing code.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.StencilParameters.html">StencilParameters</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.VideoMode.html">VideoMode</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.WindowContentScaleEventArgs.html">WindowContentScaleEventArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.WindowDestroyedEventArgs.html">WindowDestroyedEventArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.WindowFocusedEventArgs.html">WindowFocusedEventArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.WindowRequestClosedEventArgs.html">WindowRequestClosedEventArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.WindowResizedEventArgs.html">WindowResizedEventArgs</a></h4>
+      <section></section>
+    <h3 id="interfaces">Interfaces
+  </h3>
+      <h4><a class="xref" href="Robust.Client.Graphics.IClyde.html">IClyde</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IClydeAudio.html">IClydeAudio</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IClydeAudioSource.html">IClydeAudioSource</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IClydeBufferedAudioSource.html">IClydeBufferedAudioSource</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IClydeMonitor.html">IClydeMonitor</a></h4>
+      <section><p>Represents a connected monitor on the user's system.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IClydeViewport.html">IClydeViewport</a></h4>
+      <section><p>A viewport is an API for rendering a section of the game map centered around an eye,
+complete with lighting, FOV and grid rendering.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IClydeWindow.html">IClydeWindow</a></h4>
+      <section><p>Represents a single operating system window.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IClydeWindowInternal.html">IClydeWindowInternal</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.ICursor.html">ICursor</a></h4>
+      <section><p>Represents a handle to a cursor object.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IDirectionalTextureProvider.html">IDirectionalTextureProvider</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IEyeManager.html">IEyeManager</a></h4>
+      <section><p>Keeps a reference to the current eye (camera) that the client is seeing though, and provides
+utility functions for the current eye.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IFontManager.html">IFontManager</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.ILightManager.html">ILightManager</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IOverlayManager.html">IOverlayManager</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IRenderTarget.html">IRenderTarget</a></h4>
+      <section><p>Represents something that can be rendered to.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IRenderTexture.html">IRenderTexture</a></h4>
+      <section><p>A render target that renders into a texture that can be re-used later.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.IRsiStateLike.html">IRsiStateLike</a></h4>
+      <section></section>
+    <h3 id="enums">Enums
+  </h3>
+      <h4><a class="xref" href="Robust.Client.Graphics.DrawPrimitiveTopology.html">DrawPrimitiveTopology</a></h4>
+      <section><p>Determines the type of primitives drawn and how they are laid out from vertices.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.OSWindowStyles.html">OSWindowStyles</a></h4>
+      <section><p>Specifies window styling options for an OS window.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.RenderTargetColorFormat.html">RenderTargetColorFormat</a></h4>
+      <section><p>Formats for the color component of a render target.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.ScreenshotType.html">ScreenshotType</a></h4>
+      <section><p>Types of screenshots to take, at various stages of the render pipeline.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.StandardCursorShape.html">StandardCursorShape</a></h4>
+      <section><p>OS-standard cursor shapes.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.StencilFunc.html">StencilFunc</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.StencilOp.html">StencilOp</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.StyleBox.Margin.html">StyleBox.Margin</a></h4>
+      <section><p>Describes margins of a style box.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.StyleBoxTexture.StretchMode.html">StyleBoxTexture.StretchMode</a></h4>
+      <section><p>Specifies how to stretch the sides and center of the style box.</p>
+</section>
+      <h4><a class="xref" href="Robust.Client.Graphics.WindowMode.html">WindowMode</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Client.Graphics.WindowStartupLocation.html">WindowStartupLocation</a></h4>
+      <section><p>Controls where a window is initially placed when created.</p>
+</section>
+    <h3 id="delegates">Delegates
+  </h3>
+      <h4><a class="xref" href="Robust.Client.Graphics.CopyPixelsDelegate-1.html">CopyPixelsDelegate&lt;T&gt;</a></h4>
+      <section></section>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

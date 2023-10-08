@@ -1,0 +1,1115 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IConsoleHost
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IConsoleHost
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Console.IConsoleHost">
+  
+  
+  <h1 id="Robust_Shared_Console_IConsoleHost" data-uid="Robust.Shared.Console.IConsoleHost" class="text-break">Interface IConsoleHost
+  </h1>
+  <div class="markdown level0 summary"><p>The console host exists as a singleton subsystem that provides all of the features of the console API.
+It will register console commands, spawn console shells and execute command strings.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Console.html">Robust.Shared.Console</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Console_IConsoleHost_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IConsoleHost</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_AvailableCommands.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.AvailableCommands%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L53">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_AvailableCommands_" data-uid="Robust.Shared.Console.IConsoleHost.AvailableCommands*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_AvailableCommands" data-uid="Robust.Shared.Console.IConsoleHost.AvailableCommands">AvailableCommands</h4>
+  <div class="markdown level1 summary"><p>A map of (commandName -&gt; ICommand) of every registered command in the shell.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IReadOnlyDictionary&lt;string, IConsoleCommand&gt; AvailableCommands { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IReadOnlyDictionary</span>&lt;<span class="xref">System.String</span>, <a class="xref" href="Robust.Shared.Console.IConsoleCommand.html">IConsoleCommand</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_IsClient.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.IsClient%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L38">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_IsClient_" data-uid="Robust.Shared.Console.IConsoleHost.IsClient*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_IsClient" data-uid="Robust.Shared.Console.IConsoleHost.IsClient">IsClient</h4>
+  <div class="markdown level1 summary"><p>Is the shell running on the client?</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual bool IsClient { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_IsServer.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.IsServer%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L43">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_IsServer_" data-uid="Robust.Shared.Console.IConsoleHost.IsServer*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_IsServer" data-uid="Robust.Shared.Console.IConsoleHost.IsServer">IsServer</h4>
+  <div class="markdown level1 summary"><p>Is the shell running on the server?</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsServer { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_LocalShell.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.LocalShell%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L48">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_LocalShell_" data-uid="Robust.Shared.Console.IConsoleHost.LocalShell*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_LocalShell" data-uid="Robust.Shared.Console.IConsoleHost.LocalShell">LocalShell</h4>
+  <div class="markdown level1 summary"><p>The local shell of the peer that is always available.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IConsoleShell LocalShell { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.IConsoleShell.html">IConsoleShell</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_AppendCommand_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.AppendCommand(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L209">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_AppendCommand_" data-uid="Robust.Shared.Console.IConsoleHost.AppendCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_AppendCommand_System_String_" data-uid="Robust.Shared.Console.IConsoleHost.AppendCommand(System.String)">AppendCommand(String)</h4>
+  <div class="markdown level1 summary"><p>Appends a command into the end of the command buffer on the local shell.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void AppendCommand(string command)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>Command string to execute.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Console_IConsoleHost_AppendCommand_System_String__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This command will be ran <em>sometime</em> in the future, depending on how many waits are in the buffer.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_ClearLocalConsole.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.ClearLocalConsole%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L268">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_ClearLocalConsole_" data-uid="Robust.Shared.Console.IConsoleHost.ClearLocalConsole*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_ClearLocalConsole" data-uid="Robust.Shared.Console.IConsoleHost.ClearLocalConsole">ClearLocalConsole()</h4>
+  <div class="markdown level1 summary"><p>Removes all text from the local console.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ClearLocalConsole()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_CommandBufferExecute.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.CommandBufferExecute%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L224">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_CommandBufferExecute_" data-uid="Robust.Shared.Console.IConsoleHost.CommandBufferExecute*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_CommandBufferExecute" data-uid="Robust.Shared.Console.IConsoleHost.CommandBufferExecute">CommandBufferExecute()</h4>
+  <div class="markdown level1 summary"><p>Processes any contents of the command buffer on the local shell. This needs to be called regularly (once a tick),
+inside the simulation. Pausing the server should prevent the buffer from being processed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void CommandBufferExecute()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_ExecuteCommand_Robust_Shared_Players_ICommonSession_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.ExecuteCommand(Robust.Shared.Players.ICommonSession%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L233">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_ExecuteCommand_" data-uid="Robust.Shared.Console.IConsoleHost.ExecuteCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_ExecuteCommand_Robust_Shared_Players_ICommonSession_System_String_" data-uid="Robust.Shared.Console.IConsoleHost.ExecuteCommand(Robust.Shared.Players.ICommonSession,System.String)">ExecuteCommand(ICommonSession, String)</h4>
+  <div class="markdown level1 summary"><p>Executes a command string on this specific session shell. If the command does not exist, the command will be forwarded
+to the
+remote shell.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ExecuteCommand(ICommonSession session, string command)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td><p>Session of the client to execute the command.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>command line string to execute.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_ExecuteCommand_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.ExecuteCommand(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L200">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_ExecuteCommand_" data-uid="Robust.Shared.Console.IConsoleHost.ExecuteCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_ExecuteCommand_System_String_" data-uid="Robust.Shared.Console.IConsoleHost.ExecuteCommand(System.String)">ExecuteCommand(String)</h4>
+  <div class="markdown level1 summary"><p>Execute a command string immediately on the local shell, bypassing the command buffer completely.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ExecuteCommand(string command)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>Command string to execute.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_GetSessionShell_Robust_Shared_Players_ICommonSession_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.GetSessionShell(Robust.Shared.Players.ICommonSession)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L194">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_GetSessionShell_" data-uid="Robust.Shared.Console.IConsoleHost.GetSessionShell*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_GetSessionShell_Robust_Shared_Players_ICommonSession_" data-uid="Robust.Shared.Console.IConsoleHost.GetSessionShell(Robust.Shared.Players.ICommonSession)">GetSessionShell(ICommonSession)</h4>
+  <div class="markdown level1 summary"><p>Returns the console shell for a given active session.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IConsoleShell GetSessionShell(ICommonSession session)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td><p>Session to get the shell of.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.IConsoleShell.html">IConsoleShell</a></td>
+        <td><p>Shell of the specified session.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Console_IConsoleHost_GetSessionShell_Robust_Shared_Players_ICommonSession__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>On the client this will always return the local shell, on the server this will return the shell of the active
+session.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_InsertCommand_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.InsertCommand(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L218">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_InsertCommand_" data-uid="Robust.Shared.Console.IConsoleHost.InsertCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_InsertCommand_System_String_" data-uid="Robust.Shared.Console.IConsoleHost.InsertCommand(System.String)">InsertCommand(String)</h4>
+  <div class="markdown level1 summary"><p>Inserts a command into the front of the command buffer on the local shell.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void InsertCommand(string command)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>Command string to execute.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Console_IConsoleHost_InsertCommand_System_String__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This command will preempt the next command executed in the command buffer.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_LoadConsoleCommands.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.LoadConsoleCommands%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L65">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_LoadConsoleCommands_" data-uid="Robust.Shared.Console.IConsoleHost.LoadConsoleCommands*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_LoadConsoleCommands" data-uid="Robust.Shared.Console.IConsoleHost.LoadConsoleCommands">LoadConsoleCommands()</h4>
+  <div class="markdown level1 summary"><p>Scans all loaded assemblies for console commands and registers them. This will NOT sync with connected clients, and
+should only be used during server initialization.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void LoadConsoleCommands()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_Robust_Shared_Console_ConCommandCallback_Robust_Shared_Console_ConCommandCompletionAsyncCallback_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String%2CRobust.Shared.Console.ConCommandCallback%2CRobust.Shared.Console.ConCommandCompletionAsyncCallback%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L171">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_RegisterCommand_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_Robust_Shared_Console_ConCommandCallback_Robust_Shared_Console_ConCommandCompletionAsyncCallback_System_Boolean_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String,Robust.Shared.Console.ConCommandCallback,Robust.Shared.Console.ConCommandCompletionAsyncCallback,System.Boolean)">RegisterCommand(String, ConCommandCallback, ConCommandCompletionAsyncCallback, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterCommand(string command, ConCommandCallback callback, ConCommandCompletionAsyncCallback completionCallback, bool requireServerOrSingleplayer = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.ConCommandCallback.html">ConCommandCallback</a></td>
+        <td><span class="parametername">callback</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.ConCommandCompletionAsyncCallback.html">ConCommandCompletionAsyncCallback</a></td>
+        <td><span class="parametername">completionCallback</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">requireServerOrSingleplayer</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_Robust_Shared_Console_ConCommandCallback_Robust_Shared_Console_ConCommandCompletionCallback_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String%2CRobust.Shared.Console.ConCommandCallback%2CRobust.Shared.Console.ConCommandCompletionCallback%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L153">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_RegisterCommand_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_Robust_Shared_Console_ConCommandCallback_Robust_Shared_Console_ConCommandCompletionCallback_System_Boolean_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String,Robust.Shared.Console.ConCommandCallback,Robust.Shared.Console.ConCommandCompletionCallback,System.Boolean)">RegisterCommand(String, ConCommandCallback, ConCommandCompletionCallback, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterCommand(string command, ConCommandCallback callback, ConCommandCompletionCallback completionCallback, bool requireServerOrSingleplayer = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.ConCommandCallback.html">ConCommandCallback</a></td>
+        <td><span class="parametername">callback</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.ConCommandCompletionCallback.html">ConCommandCompletionCallback</a></td>
+        <td><span class="parametername">completionCallback</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">requireServerOrSingleplayer</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_Robust_Shared_Console_ConCommandCallback_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String%2CRobust.Shared.Console.ConCommandCallback%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L136">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_RegisterCommand_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_Robust_Shared_Console_ConCommandCallback_System_Boolean_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String,Robust.Shared.Console.ConCommandCallback,System.Boolean)">RegisterCommand(String, ConCommandCallback, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterCommand(string command, ConCommandCallback callback, bool requireServerOrSingleplayer = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.ConCommandCallback.html">ConCommandCallback</a></td>
+        <td><span class="parametername">callback</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">requireServerOrSingleplayer</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_System_String_System_String_Robust_Shared_Console_ConCommandCallback_Robust_Shared_Console_ConCommandCompletionAsyncCallback_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String%2CSystem.String%2CSystem.String%2CRobust.Shared.Console.ConCommandCallback%2CRobust.Shared.Console.ConCommandCompletionAsyncCallback%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L119">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_RegisterCommand_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_System_String_System_String_Robust_Shared_Console_ConCommandCallback_Robust_Shared_Console_ConCommandCompletionAsyncCallback_System_Boolean_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String,System.String,System.String,Robust.Shared.Console.ConCommandCallback,Robust.Shared.Console.ConCommandCompletionAsyncCallback,System.Boolean)">RegisterCommand(String, String, String, ConCommandCallback, ConCommandCompletionAsyncCallback, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Registers a console command into the console system. This is an alternative to
+creating an <a class="xref" href="Robust.Shared.Console.IConsoleCommand.html">IConsoleCommand</a> class.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterCommand(string command, string description, string help, ConCommandCallback callback, ConCommandCompletionAsyncCallback completionCallback, bool requireServerOrSingleplayer = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>A string as identifier for this command.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">description</span></td>
+        <td><p>Short one sentence description of the command.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">help</span></td>
+        <td><p>Command format string.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.ConCommandCallback.html">ConCommandCallback</a></td>
+        <td><span class="parametername">callback</span></td>
+        <td><p>Callback to invoke when this command is executed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.ConCommandCompletionAsyncCallback.html">ConCommandCompletionAsyncCallback</a></td>
+        <td><span class="parametername">completionCallback</span></td>
+        <td><p>Callback to fetch completions with (async variant).</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">requireServerOrSingleplayer</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_System_String_System_String_Robust_Shared_Console_ConCommandCallback_Robust_Shared_Console_ConCommandCompletionCallback_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String%2CSystem.String%2CSystem.String%2CRobust.Shared.Console.ConCommandCallback%2CRobust.Shared.Console.ConCommandCompletionCallback%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L98">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_RegisterCommand_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_System_String_System_String_Robust_Shared_Console_ConCommandCallback_Robust_Shared_Console_ConCommandCompletionCallback_System_Boolean_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String,System.String,System.String,Robust.Shared.Console.ConCommandCallback,Robust.Shared.Console.ConCommandCompletionCallback,System.Boolean)">RegisterCommand(String, String, String, ConCommandCallback, ConCommandCompletionCallback, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Registers a console command into the console system. This is an alternative to
+creating an <a class="xref" href="Robust.Shared.Console.IConsoleCommand.html">IConsoleCommand</a> class.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterCommand(string command, string description, string help, ConCommandCallback callback, ConCommandCompletionCallback completionCallback, bool requireServerOrSingleplayer = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>A string as identifier for this command.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">description</span></td>
+        <td><p>Short one sentence description of the command.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">help</span></td>
+        <td><p>Command format string.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.ConCommandCallback.html">ConCommandCallback</a></td>
+        <td><span class="parametername">callback</span></td>
+        <td><p>Callback to invoke when this command is executed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.ConCommandCompletionCallback.html">ConCommandCompletionCallback</a></td>
+        <td><span class="parametername">completionCallback</span></td>
+        <td><p>Callback to fetch completions with.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">requireServerOrSingleplayer</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_System_String_System_String_Robust_Shared_Console_ConCommandCallback_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String%2CSystem.String%2CSystem.String%2CRobust.Shared.Console.ConCommandCallback%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L78">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_RegisterCommand_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_RegisterCommand_System_String_System_String_System_String_Robust_Shared_Console_ConCommandCallback_System_Boolean_" data-uid="Robust.Shared.Console.IConsoleHost.RegisterCommand(System.String,System.String,System.String,Robust.Shared.Console.ConCommandCallback,System.Boolean)">RegisterCommand(String, String, String, ConCommandCallback, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Registers a console command into the console system. This is an alternative to
+creating an <a class="xref" href="Robust.Shared.Console.IConsoleCommand.html">IConsoleCommand</a> class.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterCommand(string command, string description, string help, ConCommandCallback callback, bool requireServerOrSingleplayer = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>A string as identifier for this command.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">description</span></td>
+        <td><p>Short one sentence description of the command.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">help</span></td>
+        <td><p>Command format string.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.ConCommandCallback.html">ConCommandCallback</a></td>
+        <td><span class="parametername">callback</span></td>
+        <td><p>Callback to invoke when this command is executed.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">requireServerOrSingleplayer</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_RemoteExecuteCommand_Robust_Shared_Players_ICommonSession_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.RemoteExecuteCommand(Robust.Shared.Players.ICommonSession%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L241">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_RemoteExecuteCommand_" data-uid="Robust.Shared.Console.IConsoleHost.RemoteExecuteCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_RemoteExecuteCommand_Robust_Shared_Players_ICommonSession_System_String_" data-uid="Robust.Shared.Console.IConsoleHost.RemoteExecuteCommand(Robust.Shared.Players.ICommonSession,System.String)">RemoteExecuteCommand(ICommonSession, String)</h4>
+  <div class="markdown level1 summary"><p>Executes the command string on the remote peer. This is mainly used to forward commands from the client to the server.
+If there is no remote peer (this is a local shell), this function does nothing.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RemoteExecuteCommand(ICommonSession session, string command)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td><p>Session of the remote peer to execute the command on.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>Command line string to execute at the remote endpoint.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_UnregisterCommand_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.UnregisterCommand(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L183">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_UnregisterCommand_" data-uid="Robust.Shared.Console.IConsoleHost.UnregisterCommand*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_UnregisterCommand_System_String_" data-uid="Robust.Shared.Console.IConsoleHost.UnregisterCommand(System.String)">UnregisterCommand(String)</h4>
+  <div class="markdown level1 summary"><p>Unregisters a console command that has been registered previously with <see cref="!:RegisterCommand(string,string,string,Robust.Shared.Console.ConCommandCallback)"></see>.
+If the specified command was registered automatically or isn't registered at all, the method will throw.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void UnregisterCommand(string command)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>The string identifier for the command.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_WriteError_Robust_Shared_Players_ICommonSession_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.WriteError(Robust.Shared.Players.ICommonSession%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L263">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_WriteError_" data-uid="Robust.Shared.Console.IConsoleHost.WriteError*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_WriteError_Robust_Shared_Players_ICommonSession_System_String_" data-uid="Robust.Shared.Console.IConsoleHost.WriteError(Robust.Shared.Players.ICommonSession,System.String)">WriteError(ICommonSession, String)</h4>
+  <div class="markdown level1 summary"><p>Sends a foreground colored text string to the remote session.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void WriteError(ICommonSession session, string text)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td><p>Remote session to send the text message to. If this is null, the text is sent to the local
+console.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">text</span></td>
+        <td><p>Text message to send.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_WriteLine_Robust_Shared_Players_ICommonSession_Robust_Shared_Utility_FormattedMessage_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.WriteLine(Robust.Shared.Players.ICommonSession%2CRobust.Shared.Utility.FormattedMessage)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L253">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_WriteLine_" data-uid="Robust.Shared.Console.IConsoleHost.WriteLine*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_WriteLine_Robust_Shared_Players_ICommonSession_Robust_Shared_Utility_FormattedMessage_" data-uid="Robust.Shared.Console.IConsoleHost.WriteLine(Robust.Shared.Players.ICommonSession,Robust.Shared.Utility.FormattedMessage)">WriteLine(ICommonSession, FormattedMessage)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void WriteLine(ICommonSession session, FormattedMessage msg)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.FormattedMessage.html">FormattedMessage</a></td>
+        <td><span class="parametername">msg</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_WriteLine_Robust_Shared_Players_ICommonSession_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.WriteLine(Robust.Shared.Players.ICommonSession%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L251">View Source</a>
+  </span>
+  <a id="Robust_Shared_Console_IConsoleHost_WriteLine_" data-uid="Robust.Shared.Console.IConsoleHost.WriteLine*"></a>
+  <h4 id="Robust_Shared_Console_IConsoleHost_WriteLine_Robust_Shared_Players_ICommonSession_System_String_" data-uid="Robust.Shared.Console.IConsoleHost.WriteLine(Robust.Shared.Players.ICommonSession,System.String)">WriteLine(ICommonSession, String)</h4>
+  <div class="markdown level1 summary"><p>Sends a text string to the remote session.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void WriteLine(ICommonSession session, string text)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td><p>Remote session to send the text message to. If this is null, the text is sent to the local
+console.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">text</span></td>
+        <td><p>Text message to send.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="events">Events
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_AnyCommandExecuted.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.AnyCommandExecuted%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L58">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Console_IConsoleHost_AnyCommandExecuted" data-uid="Robust.Shared.Console.IConsoleHost.AnyCommandExecuted">AnyCommandExecuted</h4>
+  <div class="markdown level1 summary"><p>Invoked before any console command is executed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event ConAnyCommandCallback AnyCommandExecuted</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.ConAnyCommandCallback.html">ConAnyCommandCallback</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost_ClearText.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost.ClearText%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L59">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Console_IConsoleHost_ClearText" data-uid="Robust.Shared.Console.IConsoleHost.ClearText">ClearText</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event EventHandler ClearText</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">EventHandler</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Console_IConsoleHost.md&amp;value=---%0Auid%3A%20Robust.Shared.Console.IConsoleHost%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Console/IConsoleHost.cs/#L33" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1120 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class PlacementManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class PlacementManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Client.Placement.PlacementManager">
+  
+  
+  <h1 id="Robust_Client_Placement_PlacementManager" data-uid="Robust.Client.Placement.PlacementManager" class="text-break">Class PlacementManager
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">PlacementManager</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Client.Placement.IPlacementManager.html">IPlacementManager</a></div>
+    <div><span class="xref">IDisposable</span></div>
+    <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Client.Placement.html">Robust.Client.Placement</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Client.dll</h6>
+  <h5 id="Robust_Client_Placement_PlacementManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class PlacementManager : object, IPlacementManager, IDisposable, IEntityEventSubscriber</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_ColliderAABB.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.ColliderAABB%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L159">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_ColliderAABB_" data-uid="Robust.Client.Placement.PlacementManager.ColliderAABB*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_ColliderAABB" data-uid="Robust.Client.Placement.PlacementManager.ColliderAABB">ColliderAABB</h4>
+  <div class="markdown level1 summary"><p>The box which certain placement modes collision checks will be done against</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Box2 ColliderAABB { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2.html">Box2</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_CurrentMode.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.CurrentMode%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L124">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_CurrentMode_" data-uid="Robust.Client.Placement.PlacementManager.CurrentMode*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_CurrentMode" data-uid="Robust.Client.Placement.PlacementManager.CurrentMode">CurrentMode</h4>
+  <div class="markdown level1 summary"><p>Which of the placement orientations we are trying to place with</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PlacementMode CurrentMode { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Placement.PlacementMode.html">PlacementMode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_CurrentPermission.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.CurrentPermission%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L126">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_CurrentPermission_" data-uid="Robust.Client.Placement.PlacementManager.CurrentPermission*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_CurrentPermission" data-uid="Robust.Client.Placement.PlacementManager.CurrentPermission">CurrentPermission</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PlacementInformation CurrentPermission { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Enums.PlacementInformation.html">PlacementInformation</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_CurrentPlacementOverlayEntity.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.CurrentPlacementOverlayEntity%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L109">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_CurrentPlacementOverlayEntity_" data-uid="Robust.Client.Placement.PlacementManager.CurrentPlacementOverlayEntity*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_CurrentPlacementOverlayEntity" data-uid="Robust.Client.Placement.PlacementManager.CurrentPlacementOverlayEntity">CurrentPlacementOverlayEntity</h4>
+  <div class="markdown level1 summary"><p>The entity for placement overlay.
+Colour of this gets swapped around in PlacementMode.
+This entity needs to stay in nullspace.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public EntityUid? CurrentPlacementOverlayEntity { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_CurrentPrototype.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.CurrentPrototype%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L135">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_CurrentPrototype_" data-uid="Robust.Client.Placement.PlacementManager.CurrentPrototype*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_CurrentPrototype" data-uid="Robust.Client.Placement.PlacementManager.CurrentPrototype">CurrentPrototype</h4>
+  <div class="markdown level1 summary"><p>The prototype of the entity we are going to spawn on click</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public EntityPrototype CurrentPrototype { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Prototypes.EntityPrototype.html">EntityPrototype</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_CurrentTextures.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.CurrentTextures%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L115">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_CurrentTextures_" data-uid="Robust.Client.Placement.PlacementManager.CurrentTextures*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_CurrentTextures" data-uid="Robust.Client.Placement.PlacementManager.CurrentTextures">CurrentTextures</h4>
+  <div class="markdown level1 summary"><p>A BAD way to explicitly control the icons used!!!
+Need to fix Content for this</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;IDirectionalTextureProvider&gt;? CurrentTextures { set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">List</span>&lt;<a class="xref" href="Robust.Client.Graphics.IDirectionalTextureProvider.html">IDirectionalTextureProvider</a>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_Direction.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.Direction%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L168">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_Direction_" data-uid="Robust.Client.Placement.PlacementManager.Direction*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_Direction" data-uid="Robust.Client.Placement.PlacementManager.Direction">Direction</h4>
+  <div class="markdown level1 summary"><p>The direction to spawn the entity in (presently exposed for EntitySpawnWindow UI)</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Direction Direction { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Direction.html">Direction</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_Eraser.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.Eraser%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L90">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_Eraser_" data-uid="Robust.Client.Placement.PlacementManager.Eraser*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_Eraser" data-uid="Robust.Client.Placement.PlacementManager.Eraser">Eraser</h4>
+  <div class="markdown level1 summary"><p>Determines whether we are using the mode to delete an entity on click</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Eraser { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_EraserRect.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.EraserRect%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L97">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_EraserRect_" data-uid="Robust.Client.Placement.PlacementManager.EraserRect*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_EraserRect" data-uid="Robust.Client.Placement.PlacementManager.EraserRect">EraserRect</h4>
+  <div class="markdown level1 summary"><p>Holds the selection rectangle for the eraser</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Box2? EraserRect { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2.html">Box2</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_Hijack.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.Hijack%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L128">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_Hijack_" data-uid="Robust.Client.Placement.PlacementManager.Hijack*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_Hijack" data-uid="Robust.Client.Placement.PlacementManager.Hijack">Hijack</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PlacementHijack Hijack { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Placement.PlacementHijack.html">PlacementHijack</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_IsActive.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.IsActive%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L77">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_IsActive_" data-uid="Robust.Client.Placement.PlacementManager.IsActive*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_IsActive" data-uid="Robust.Client.Placement.PlacementManager.IsActive">IsActive</h4>
+  <div class="markdown level1 summary"><p>Whether the placement manager is currently in a mode where it accepts actions</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsActive { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_PlacementOffset.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.PlacementOffset%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L151">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_PlacementOffset_" data-uid="Robust.Client.Placement.PlacementManager.PlacementOffset*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_PlacementOffset" data-uid="Robust.Client.Placement.PlacementManager.PlacementOffset">PlacementOffset</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector2i PlacementOffset { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_PlacementType.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.PlacementType%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L67">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_PlacementType_" data-uid="Robust.Client.Placement.PlacementManager.PlacementType*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_PlacementType" data-uid="Robust.Client.Placement.PlacementManager.PlacementType">PlacementType</h4>
+  <div class="markdown level1 summary"><p>Allows various types of placement as singular, line, or grid placement where placement mode allows this type of placement</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PlacementManager.PlacementTypes PlacementType { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Placement.PlacementManager.PlacementTypes.html">PlacementManager.PlacementTypes</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_Replacement.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.Replacement%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L92">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_Replacement_" data-uid="Robust.Client.Placement.PlacementManager.Replacement*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_Replacement" data-uid="Robust.Client.Placement.PlacementManager.Replacement">Replacement</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Replacement { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_StartPoint.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.StartPoint%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L72">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_StartPoint_" data-uid="Robust.Client.Placement.PlacementManager.StartPoint*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_StartPoint" data-uid="Robust.Client.Placement.PlacementManager.StartPoint">StartPoint</h4>
+  <div class="markdown level1 summary"><p>Holds the anchor that we can try to spawn in a line or a grid from</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public EntityCoordinates StartPoint { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_BeginHijackedPlacing_Robust_Shared_Enums_PlacementInformation_Robust_Client_Placement_PlacementHijack_.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.BeginHijackedPlacing(Robust.Shared.Enums.PlacementInformation%2CRobust.Client.Placement.PlacementHijack)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L472">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_BeginHijackedPlacing_" data-uid="Robust.Client.Placement.PlacementManager.BeginHijackedPlacing*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_BeginHijackedPlacing_Robust_Shared_Enums_PlacementInformation_Robust_Client_Placement_PlacementHijack_" data-uid="Robust.Client.Placement.PlacementManager.BeginHijackedPlacing(Robust.Shared.Enums.PlacementInformation,Robust.Client.Placement.PlacementHijack)">BeginHijackedPlacing(PlacementInformation, PlacementHijack)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void BeginHijackedPlacing(PlacementInformation info, PlacementHijack hijack = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Enums.PlacementInformation.html">PlacementInformation</a></td>
+        <td><span class="parametername">info</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Placement.PlacementHijack.html">PlacementHijack</a></td>
+        <td><span class="parametername">hijack</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_BeginPlacing_Robust_Shared_Enums_PlacementInformation_Robust_Client_Placement_PlacementHijack_.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.BeginPlacing(Robust.Shared.Enums.PlacementInformation%2CRobust.Client.Placement.PlacementHijack)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L467">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_BeginPlacing_" data-uid="Robust.Client.Placement.PlacementManager.BeginPlacing*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_BeginPlacing_Robust_Shared_Enums_PlacementInformation_Robust_Client_Placement_PlacementHijack_" data-uid="Robust.Client.Placement.PlacementManager.BeginPlacing(Robust.Shared.Enums.PlacementInformation,Robust.Client.Placement.PlacementHijack)">BeginPlacing(PlacementInformation, PlacementHijack)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void BeginPlacing(PlacementInformation info, PlacementHijack hijack = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Enums.PlacementInformation.html">PlacementInformation</a></td>
+        <td><span class="parametername">info</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Placement.PlacementHijack.html">PlacementHijack</a></td>
+        <td><span class="parametername">hijack</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_Clear.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.Clear%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L349">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_Clear_" data-uid="Robust.Client.Placement.PlacementManager.Clear*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_Clear" data-uid="Robust.Client.Placement.PlacementManager.Clear">Clear()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Clear()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_Dispose.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.Dispose%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L322">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_Dispose_" data-uid="Robust.Client.Placement.PlacementManager.Dispose*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_Dispose" data-uid="Robust.Client.Placement.PlacementManager.Dispose">Dispose()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Dispose()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_FrameUpdate_Robust_Shared_Timing_FrameEventArgs_.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.FrameUpdate(Robust.Shared.Timing.FrameEventArgs)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L543">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_FrameUpdate_" data-uid="Robust.Client.Placement.PlacementManager.FrameUpdate*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_FrameUpdate_Robust_Shared_Timing_FrameEventArgs_" data-uid="Robust.Client.Placement.PlacementManager.FrameUpdate(Robust.Shared.Timing.FrameEventArgs)">FrameUpdate(FrameEventArgs)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void FrameUpdate(FrameEventArgs e)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Timing.FrameEventArgs.html">FrameEventArgs</a></td>
+        <td><span class="parametername">e</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_HandleDeletion_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.HandleDeletion(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L426">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_HandleDeletion_" data-uid="Robust.Client.Placement.PlacementManager.HandleDeletion*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_HandleDeletion_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Client.Placement.PlacementManager.HandleDeletion(Robust.Shared.GameObjects.EntityUid)">HandleDeletion(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void HandleDeletion(EntityUid entity)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entity</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_HandleDeletion_Robust_Shared_Map_EntityCoordinates_.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.HandleDeletion(Robust.Shared.Map.EntityCoordinates)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L417">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_HandleDeletion_" data-uid="Robust.Client.Placement.PlacementManager.HandleDeletion*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_HandleDeletion_Robust_Shared_Map_EntityCoordinates_" data-uid="Robust.Client.Placement.PlacementManager.HandleDeletion(Robust.Shared.Map.EntityCoordinates)">HandleDeletion(EntityCoordinates)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool HandleDeletion(EntityCoordinates coordinates)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td><span class="parametername">coordinates</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_HandlePlacement.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.HandlePlacement%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L387">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_HandlePlacement_" data-uid="Robust.Client.Placement.PlacementManager.HandlePlacement*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_HandlePlacement" data-uid="Robust.Client.Placement.PlacementManager.HandlePlacement">HandlePlacement()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void HandlePlacement()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_HandleRectDeletion_Robust_Shared_Map_EntityCoordinates_Robust_Shared_Maths_Box2_.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.HandleRectDeletion(Robust.Shared.Map.EntityCoordinates%2CRobust.Shared.Maths.Box2)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L437">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_HandleRectDeletion_" data-uid="Robust.Client.Placement.PlacementManager.HandleRectDeletion*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_HandleRectDeletion_Robust_Shared_Map_EntityCoordinates_Robust_Shared_Maths_Box2_" data-uid="Robust.Client.Placement.PlacementManager.HandleRectDeletion(Robust.Shared.Map.EntityCoordinates,Robust.Shared.Maths.Box2)">HandleRectDeletion(EntityCoordinates, Box2)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void HandleRectDeletion(EntityCoordinates start, Box2 rect)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td><span class="parametername">start</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2.html">Box2</a></td>
+        <td><span class="parametername">rect</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_Initialize.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L184">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_Initialize_" data-uid="Robust.Client.Placement.PlacementManager.Initialize*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_Initialize" data-uid="Robust.Client.Placement.PlacementManager.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Initialize()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_PreparePlacementSprite_Robust_Client_GameObjects_SpriteComponent_.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.PreparePlacementSprite(Robust.Client.GameObjects.SpriteComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L704">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_PreparePlacementSprite_" data-uid="Robust.Client.Placement.PlacementManager.PreparePlacementSprite*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_PreparePlacementSprite_Robust_Client_GameObjects_SpriteComponent_" data-uid="Robust.Client.Placement.PlacementManager.PreparePlacementSprite(Robust.Client.GameObjects.SpriteComponent)">PreparePlacementSprite(SpriteComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void PreparePlacementSprite(SpriteComponent sprite)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.GameObjects.SpriteComponent.html">SpriteComponent</a></td>
+        <td><span class="parametername">sprite</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_PreparePlacementTexList_System_Nullable_List_Robust_Client_Graphics_IDirectionalTextureProvider___System_Boolean_Robust_Shared_Prototypes_EntityPrototype_.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.PreparePlacementTexList(System.Nullable%7BList%7BRobust.Client.Graphics.IDirectionalTextureProvider%7D%7D%2CSystem.Boolean%2CRobust.Shared.Prototypes.EntityPrototype)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L710">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_PreparePlacementTexList_" data-uid="Robust.Client.Placement.PlacementManager.PreparePlacementTexList*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_PreparePlacementTexList_System_Nullable_List_Robust_Client_Graphics_IDirectionalTextureProvider___System_Boolean_Robust_Shared_Prototypes_EntityPrototype_" data-uid="Robust.Client.Placement.PlacementManager.PreparePlacementTexList(System.Nullable{List{Robust.Client.Graphics.IDirectionalTextureProvider}},System.Boolean,Robust.Shared.Prototypes.EntityPrototype)">PreparePlacementTexList(Nullable&lt;List&lt;IDirectionalTextureProvider&gt;&gt;, Boolean, EntityPrototype)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void PreparePlacementTexList(List&lt;IDirectionalTextureProvider&gt;? texs, bool noRot, EntityPrototype prototype)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">List</span>&lt;<a class="xref" href="Robust.Client.Graphics.IDirectionalTextureProvider.html">IDirectionalTextureProvider</a>&gt;&gt;</td>
+        <td><span class="parametername">texs</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">noRot</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Prototypes.EntityPrototype.html">EntityPrototype</a></td>
+        <td><span class="parametername">prototype</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_Rotate.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.Rotate%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L365">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_Rotate_" data-uid="Robust.Client.Placement.PlacementManager.Rotate*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_Rotate" data-uid="Robust.Client.Placement.PlacementManager.Rotate">Rotate()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Rotate()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_ToggleEraser.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.ToggleEraser%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L446">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_ToggleEraser_" data-uid="Robust.Client.Placement.PlacementManager.ToggleEraser*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_ToggleEraser" data-uid="Robust.Client.Placement.PlacementManager.ToggleEraser">ToggleEraser()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ToggleEraser()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_ToggleEraserHijacked_Robust_Client_Placement_PlacementHijack_.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.ToggleEraserHijacked(Robust.Client.Placement.PlacementHijack)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L456">View Source</a>
+  </span>
+  <a id="Robust_Client_Placement_PlacementManager_ToggleEraserHijacked_" data-uid="Robust.Client.Placement.PlacementManager.ToggleEraserHijacked*"></a>
+  <h4 id="Robust_Client_Placement_PlacementManager_ToggleEraserHijacked_Robust_Client_Placement_PlacementHijack_" data-uid="Robust.Client.Placement.PlacementManager.ToggleEraserHijacked(Robust.Client.Placement.PlacementHijack)">ToggleEraserHijacked(PlacementHijack)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ToggleEraserHijacked(PlacementHijack hijack)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Placement.PlacementHijack.html">PlacementHijack</a></td>
+        <td><span class="parametername">hijack</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="events">Events
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_DirectionChanged.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.DirectionChanged%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L179">View Source</a>
+  </span>
+  <h4 id="Robust_Client_Placement_PlacementManager_DirectionChanged" data-uid="Robust.Client.Placement.PlacementManager.DirectionChanged">DirectionChanged</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public event EventHandler? DirectionChanged</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">EventHandler</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager_PlacementChanged.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager.PlacementChanged%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementManager.cs/#L347">View Source</a>
+  </span>
+  <h4 id="Robust_Client_Placement_PlacementManager_PlacementChanged" data-uid="Robust.Client.Placement.PlacementManager.PlacementChanged">PlacementChanged</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public event EventHandler? PlacementChanged</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">EventHandler</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Client.Placement.IPlacementManager.html">IPlacementManager</a>
+  </div>
+  <div>
+      <span class="xref">IDisposable</span>
+  </div>
+  <div>
+      <a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Placement_PlacementManager.md&amp;value=---%0Auid%3A%20Robust.Client.Placement.PlacementManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Placement/PlacementOverlay.cs/#L7" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

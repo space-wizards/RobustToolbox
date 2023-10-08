@@ -1,0 +1,2633 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IPrototypeManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IPrototypeManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Prototypes.IPrototypeManager">
+  
+  
+  <h1 id="Robust_Shared_Prototypes_IPrototypeManager" data-uid="Robust.Shared.Prototypes.IPrototypeManager" class="text-break">Interface IPrototypeManager
+  </h1>
+  <div class="markdown level0 summary"><p>Handle storage and loading of YAML prototypes.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Prototypes.html">Robust.Shared.Prototypes</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Prototypes_IPrototypeManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IPrototypeManager</code></pre>
+  </div>
+  <h5 id="Robust_Shared_Prototypes_IPrototypeManager_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>Terminology:
+&quot;Kinds&quot; are the types of prototypes there are, like <a class="xref" href="Robust.Shared.Prototypes.EntityPrototype.html">EntityPrototype</a>.
+&quot;Prototypes&quot; are simply filled-in prototypes from YAML.</p>
+</div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_Clear.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.Clear%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L275">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_Clear_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Clear*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_Clear" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Clear">Clear()</h4>
+  <div class="markdown level1 summary"><p>Clear out all prototypes and reset to a blank slate.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Clear()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_Count__1.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.Count%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L35">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_Count_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Count*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_Count__1" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Count``1">Count&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"><p>Returns the count of the specified prototype.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">int Count&lt;T&gt;()
+    where T : class, IPrototype</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_EnumerateParents_Type_System_String_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.EnumerateParents(Type%2CSystem.String%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L70">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_EnumerateParents_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumerateParents*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_EnumerateParents_Type_System_String_System_Boolean_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumerateParents(Type,System.String,System.Boolean)">EnumerateParents(Type, String, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Returns an <see cref="!:IEnumerable&lt;T>"></see> of parents of a prototype of a certain kind.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;IPrototype&gt; EnumerateParents(Type kind, string id, bool includeSelf = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">kind</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">includeSelf</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_EnumerateParents__1_System_String_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.EnumerateParents%60%601(System.String%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L64">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_EnumerateParents_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumerateParents*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_EnumerateParents__1_System_String_System_Boolean_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumerateParents``1(System.String,System.Boolean)">EnumerateParents&lt;T&gt;(String, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Returns an <see cref="!:IEnumerable&lt;T>"></see> of all parents of a prototype of a certain kind.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;T&gt; EnumerateParents&lt;T&gt;(string kind, bool includeSelf = false)
+    where T : class, IPrototype, IInheritingPrototype</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">kind</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">includeSelf</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;T&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypeKinds.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypeKinds%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L75">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypeKinds_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypeKinds*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypeKinds" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypeKinds">EnumeratePrototypeKinds()</h4>
+  <div class="markdown level1 summary"><p>Returns all of the registered prototype kinds.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;Type&gt; EnumeratePrototypeKinds()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypes_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypes(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L59">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypes_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypes*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypes_System_String_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypes(System.String)">EnumeratePrototypes(String)</h4>
+  <div class="markdown level1 summary"><p>Return an <see cref="!:IEnumerable&lt;T>"></see> of all prototypes of a certain kind.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;IPrototype&gt; EnumeratePrototypes(string variant)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">variant</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypes_Type_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypes(Type)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L51">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypes_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypes*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypes_Type_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypes(Type)">EnumeratePrototypes(Type)</h4>
+  <div class="markdown level1 summary"><p>Return an <see cref="!:IEnumerable&lt;T>"></see> of all prototypes of a certain kind.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;IPrototype&gt; EnumeratePrototypes(Type kind)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">kind</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypes__1.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypes%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L43">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypes_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypes*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_EnumeratePrototypes__1" data-uid="Robust.Shared.Prototypes.IPrototypeManager.EnumeratePrototypes``1">EnumeratePrototypes&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"><p>Return an <see cref="!:IEnumerable&lt;T>"></see> of all prototypes of a certain kind.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;T&gt; EnumeratePrototypes&lt;T&gt;()
+    where T : class, IPrototype</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;T&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_GetKindType_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.GetKindType(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L192">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_GetKindType_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.GetKindType*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_GetKindType_System_String_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.GetKindType(System.String)">GetKindType(String)</h4>
+  <div class="markdown level1 summary"><p>Returns the Type for a prototype kind.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Type GetKindType(string kind)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">kind</span></td>
+        <td><p>Identifier for the prototype kind.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><p>The specified prototype Type.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_GetPrototypeKinds.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.GetPrototypeKinds%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L30">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_GetPrototypeKinds_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.GetPrototypeKinds*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_GetPrototypeKinds" data-uid="Robust.Shared.Prototypes.IPrototypeManager.GetPrototypeKinds">GetPrototypeKinds()</h4>
+  <div class="markdown level1 summary"><p>Returns an <see cref="!:IEnumerable&lt;T>"></see> of all registered prototype kinds by their ID.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;string&gt; GetPrototypeKinds()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_GetVariantType_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.GetVariantType(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L138">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_GetVariantType_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.GetVariantType*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_GetVariantType_System_String_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.GetVariantType(System.String)">GetVariantType(String)</h4>
+  <div class="markdown level1 summary"><p>Returns the Type for a prototype variant.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Type GetVariantType(string variant)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">variant</span></td>
+        <td><p>Identifier for the prototype variant.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><p>The specified prototype Type.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_HasIndex_Robust_Shared_Prototypes_EntProtoId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.HasIndex(Robust.Shared.Prototypes.EntProtoId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L105">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_HasIndex_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasIndex*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_HasIndex_Robust_Shared_Prototypes_EntProtoId_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasIndex(Robust.Shared.Prototypes.EntProtoId)">HasIndex(EntProtoId)</h4>
+  <div class="markdown level1 summary"><p>Returns whether a prototype of type <code data-dev-comment-type="typeparamref" class="typeparamref">T</code> with the specified <param name="id"> exists.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool HasIndex(EntProtoId id)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Robust.Shared.Prototypes.EntProtoId</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_HasIndex__1_Robust_Shared_Prototypes_ProtoId___0__.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.HasIndex%60%601(Robust.Shared.Prototypes.ProtoId%7B%60%600%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L108">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_HasIndex_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasIndex*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_HasIndex__1_Robust_Shared_Prototypes_ProtoId___0__" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasIndex``1(Robust.Shared.Prototypes.ProtoId{``0})">HasIndex&lt;T&gt;(ProtoId&lt;T&gt;)</h4>
+  <div class="markdown level1 summary"><p>Returns whether a prototype of type <code data-dev-comment-type="typeparamref" class="typeparamref">T</code> with the specified <param name="id"> exists.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool HasIndex&lt;T&gt;(ProtoId&lt;T&gt; id)
+    where T : class, IPrototype</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Robust.Shared.Prototypes.ProtoId</span>&lt;T&gt;</td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_HasIndex__1_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.HasIndex%60%601(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L102">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_HasIndex_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasIndex*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_HasIndex__1_System_String_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasIndex``1(System.String)">HasIndex&lt;T&gt;(String)</h4>
+  <div class="markdown level1 summary"><p>Returns whether a prototype of type <code data-dev-comment-type="typeparamref" class="typeparamref">T</code> with the specified <param name="id"> exists.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool HasIndex&lt;T&gt;(string id)
+    where T : class, IPrototype</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_HasKind_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.HasKind(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L182">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_HasKind_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasKind*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_HasKind_System_String_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasKind(System.String)">HasKind(String)</h4>
+  <div class="markdown level1 summary"><p>Returns whether a prototype kind <param name="kind"> exists.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool HasKind(string kind)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">kind</span></td>
+        <td><p>Identifier for the prototype kind.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Whether the prototype kind exists.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_HasMapping__1_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.HasMapping%60%601(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L119">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_HasMapping_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasMapping*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_HasMapping__1_System_String_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasMapping``1(System.String)">HasMapping&lt;T&gt;(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool HasMapping&lt;T&gt;(string id)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_HasVariant_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.HasVariant(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L127">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_HasVariant_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasVariant*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_HasVariant_System_String_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.HasVariant(System.String)">HasVariant(String)</h4>
+  <div class="markdown level1 summary"><p>Returns whether a prototype variant <param name="variant"> exists.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool HasVariant(string variant)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">variant</span></td>
+        <td><p>Identifier for the prototype variant.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Whether the prototype variant exists.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_Index_Robust_Shared_Prototypes_EntProtoId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.Index(Robust.Shared.Prototypes.EntProtoId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L86">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_Index_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Index*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_Index_Robust_Shared_Prototypes_EntProtoId_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Index(Robust.Shared.Prototypes.EntProtoId)">Index(EntProtoId)</h4>
+  <div class="markdown level1 summary"><p>Index for a <a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a> by ID.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">EntityPrototype Index(EntProtoId id)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Robust.Shared.Prototypes.EntProtoId</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Prototypes.EntityPrototype.html">EntityPrototype</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_Index_Type_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.Index(Type%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L97">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_Index_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Index*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_Index_Type_System_String_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Index(Type,System.String)">Index(Type, String)</h4>
+  <div class="markdown level1 summary"><p>Index for a <a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a> by ID.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IPrototype Index(Type kind, string id)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">kind</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_Index__1_Robust_Shared_Prototypes_ProtoId___0__.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.Index%60%601(Robust.Shared.Prototypes.ProtoId%7B%60%600%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L89">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_Index_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Index*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_Index__1_Robust_Shared_Prototypes_ProtoId___0__" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Index``1(Robust.Shared.Prototypes.ProtoId{``0})">Index&lt;T&gt;(ProtoId&lt;T&gt;)</h4>
+  <div class="markdown level1 summary"><p>Index for a <a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a> by ID.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">T Index&lt;T&gt;(ProtoId&lt;T&gt; id)
+    where T : class, IPrototype</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Robust.Shared.Prototypes.ProtoId</span>&lt;T&gt;</td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_Index__1_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.Index%60%601(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L83">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_Index_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Index*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_Index__1_System_String_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Index``1(System.String)">Index&lt;T&gt;(String)</h4>
+  <div class="markdown level1 summary"><p>Index for a <a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a> by ID.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">T Index&lt;T&gt;(string id)
+    where T : class, IPrototype</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_Initialize.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L25">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_Initialize_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Initialize*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_Initialize" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Initialize()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_LoadDefaultPrototypes_System_Nullable_Dictionary_Type_HashSet_System_String____.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.LoadDefaultPrototypes(System.Nullable%7BDictionary%7BType%2CHashSet%7BSystem.String%7D%7D%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L291">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_LoadDefaultPrototypes_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.LoadDefaultPrototypes*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_LoadDefaultPrototypes_System_Nullable_Dictionary_Type_HashSet_System_String____" data-uid="Robust.Shared.Prototypes.IPrototypeManager.LoadDefaultPrototypes(System.Nullable{Dictionary{Type,HashSet{System.String}}})">LoadDefaultPrototypes(Nullable&lt;Dictionary&lt;Type, HashSet&lt;String&gt;&gt;&gt;)</h4>
+  <div class="markdown level1 summary"><p>Loads prototypes from the default directories.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void LoadDefaultPrototypes(Dictionary&lt;Type, HashSet&lt;string&gt;&gt;? loaded = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Dictionary</span>&lt;<span class="xref">Type</span>, <span class="xref">HashSet</span>&lt;<span class="xref">System.String</span>&gt;&gt;&gt;</td>
+        <td><span class="parametername">loaded</span></td>
+        <td><p>Dictionary that will be filled with all the loaded prototypes.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_LoadDirectory_Robust_Shared_Utility_ResPath_System_Boolean_System_Nullable_Dictionary_Type_HashSet_System_String____.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.LoadDirectory(Robust.Shared.Utility.ResPath%2CSystem.Boolean%2CSystem.Nullable%7BDictionary%7BType%2CHashSet%7BSystem.String%7D%7D%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L229">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_LoadDirectory_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.LoadDirectory*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_LoadDirectory_Robust_Shared_Utility_ResPath_System_Boolean_System_Nullable_Dictionary_Type_HashSet_System_String____" data-uid="Robust.Shared.Prototypes.IPrototypeManager.LoadDirectory(Robust.Shared.Utility.ResPath,System.Boolean,System.Nullable{Dictionary{Type,HashSet{System.String}}})">LoadDirectory(ResPath, Boolean, Nullable&lt;Dictionary&lt;Type, HashSet&lt;String&gt;&gt;&gt;)</h4>
+  <div class="markdown level1 summary"><p>Load prototypes from files in a directory, recursively.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void LoadDirectory(ResPath path, bool overwrite = false, Dictionary&lt;Type, HashSet&lt;string&gt;&gt;? changed = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">overwrite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Dictionary</span>&lt;<span class="xref">Type</span>, <span class="xref">HashSet</span>&lt;<span class="xref">System.String</span>&gt;&gt;&gt;</td>
+        <td><span class="parametername">changed</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_LoadFromStream_TextReader_System_Boolean_System_Nullable_Dictionary_Type_HashSet_System_String____.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.LoadFromStream(TextReader%2CSystem.Boolean%2CSystem.Nullable%7BDictionary%7BType%2CHashSet%7BSystem.String%7D%7D%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L266">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_LoadFromStream_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.LoadFromStream*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_LoadFromStream_TextReader_System_Boolean_System_Nullable_Dictionary_Type_HashSet_System_String____" data-uid="Robust.Shared.Prototypes.IPrototypeManager.LoadFromStream(TextReader,System.Boolean,System.Nullable{Dictionary{Type,HashSet{System.String}}})">LoadFromStream(TextReader, Boolean, Nullable&lt;Dictionary&lt;Type, HashSet&lt;String&gt;&gt;&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary&lt;Type, HashSet&lt;string&gt;&gt;? changed = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TextReader</span></td>
+        <td><span class="parametername">stream</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">overwrite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Dictionary</span>&lt;<span class="xref">Type</span>, <span class="xref">HashSet</span>&lt;<span class="xref">System.String</span>&gt;&gt;&gt;</td>
+        <td><span class="parametername">changed</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_LoadString_System_String_System_Boolean_System_Nullable_Dictionary_Type_HashSet_System_String____.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.LoadString(System.String%2CSystem.Boolean%2CSystem.Nullable%7BDictionary%7BType%2CHashSet%7BSystem.String%7D%7D%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L268">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_LoadString_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.LoadString*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_LoadString_System_String_System_Boolean_System_Nullable_Dictionary_Type_HashSet_System_String____" data-uid="Robust.Shared.Prototypes.IPrototypeManager.LoadString(System.String,System.Boolean,System.Nullable{Dictionary{Type,HashSet{System.String}}})">LoadString(String, Boolean, Nullable&lt;Dictionary&lt;Type, HashSet&lt;String&gt;&gt;&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void LoadString(string str, bool overwrite = false, Dictionary&lt;Type, HashSet&lt;string&gt;&gt;? changed = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">str</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">overwrite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Dictionary</span>&lt;<span class="xref">Type</span>, <span class="xref">HashSet</span>&lt;<span class="xref">System.String</span>&gt;&gt;&gt;</td>
+        <td><span class="parametername">changed</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_RegisterIgnore_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.RegisterIgnore(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L308">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_RegisterIgnore_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.RegisterIgnore*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_RegisterIgnore_System_String_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.RegisterIgnore(System.String)">RegisterIgnore(String)</h4>
+  <div class="markdown level1 summary"><p>Registers a specific prototype name to be ignored.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterIgnore(string name)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_RegisterKind_Type_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.RegisterKind(Type)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L325">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_RegisterKind_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.RegisterKind*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_RegisterKind_Type_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.RegisterKind(Type)">RegisterKind(Type)</h4>
+  <div class="markdown level1 summary"><p>Loads a single prototype kind into the manager.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterKind(Type kind)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">kind</span></td>
+        <td><p>The type of the prototype kind that implements <a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a>. This type also
+requires a <a class="xref" href="Robust.Shared.Prototypes.PrototypeAttribute.html">PrototypeAttribute</a> with a non-empty class string.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_RegisterType_Type_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.RegisterType(Type)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L315">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_RegisterType_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.RegisterType*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_RegisterType_Type_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.RegisterType(Type)">RegisterType(Type)</h4>
+  <div class="markdown level1 summary"><p>Loads a single prototype class type into the manager.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterType(Type protoClass)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">protoClass</span></td>
+        <td><p>A prototype class type that implements IPrototype. This type also
+requires a <a class="xref" href="Robust.Shared.Prototypes.PrototypeAttribute.html">PrototypeAttribute</a> with a non-empty class string.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_ReloadPrototypeKinds.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.ReloadPrototypeKinds%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L280">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_ReloadPrototypeKinds_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ReloadPrototypeKinds*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_ReloadPrototypeKinds" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ReloadPrototypeKinds">ReloadPrototypeKinds()</h4>
+  <div class="markdown level1 summary"><p>Calls <a class="xref" href="Robust.Shared.Prototypes.IPrototypeManager.html#Robust_Shared_Prototypes_IPrototypeManager_Clear">Clear()</a> and then rediscovers all prototype kinds.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ReloadPrototypeKinds()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_ReloadPrototypes_Dictionary_Type_HashSet_System_String___System_Nullable_Dictionary_Type_HashSet_System_String____.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.ReloadPrototypes(Dictionary%7BType%2CHashSet%7BSystem.String%7D%7D%2CSystem.Nullable%7BDictionary%7BType%2CHashSet%7BSystem.String%7D%7D%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L302">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_ReloadPrototypes_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ReloadPrototypes*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_ReloadPrototypes_Dictionary_Type_HashSet_System_String___System_Nullable_Dictionary_Type_HashSet_System_String____" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ReloadPrototypes(Dictionary{Type,HashSet{System.String}},System.Nullable{Dictionary{Type,HashSet{System.String}}})">ReloadPrototypes(Dictionary&lt;Type, HashSet&lt;String&gt;&gt;, Nullable&lt;Dictionary&lt;Type, HashSet&lt;String&gt;&gt;&gt;)</h4>
+  <div class="markdown level1 summary"><p>Invokes <a class="xref" href="Robust.Shared.Prototypes.IPrototypeManager.html#Robust_Shared_Prototypes_IPrototypeManager_PrototypesReloaded">PrototypesReloaded</a> with information about the modified prototypes.
+When built with development tools, this will also push inheritance for reloaded prototypes/</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ReloadPrototypes(Dictionary&lt;Type, HashSet&lt;string&gt;&gt; modified, Dictionary&lt;Type, HashSet&lt;string&gt;&gt;? removed = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Dictionary</span>&lt;<span class="xref">Type</span>, <span class="xref">HashSet</span>&lt;<span class="xref">System.String</span>&gt;&gt;</td>
+        <td><span class="parametername">modified</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Dictionary</span>&lt;<span class="xref">Type</span>, <span class="xref">HashSet</span>&lt;<span class="xref">System.String</span>&gt;&gt;&gt;</td>
+        <td><span class="parametername">removed</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_RemoveString_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.RemoveString(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L270">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_RemoveString_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.RemoveString*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_RemoveString_System_String_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.RemoveString(System.String)">RemoveString(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RemoveString(string prototypes)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">prototypes</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_Reset.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.Reset%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L285">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_Reset_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Reset*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_Reset" data-uid="Robust.Shared.Prototypes.IPrototypeManager.Reset">Reset()</h4>
+  <div class="markdown level1 summary"><p>Calls <a class="xref" href="Robust.Shared.Prototypes.IPrototypeManager.html#Robust_Shared_Prototypes_IPrototypeManager_ReloadPrototypeKinds">ReloadPrototypeKinds()</a> and then loads prototypes from the default directories.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Reset()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_ResolveResults.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.ResolveResults%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L296">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_ResolveResults_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ResolveResults*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_ResolveResults" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ResolveResults">ResolveResults()</h4>
+  <div class="markdown level1 summary"><p>Syncs all inter-prototype data. Call this when operations adding new prototypes are done.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ResolveResults()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryGetKindFrom_Robust_Shared_Prototypes_IPrototype_System_Nullable_System_String___.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryGetKindFrom(Robust.Shared.Prototypes.IPrototype%2CSystem.Nullable%7BSystem.String%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L216">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryGetKindFrom_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetKindFrom*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryGetKindFrom_Robust_Shared_Prototypes_IPrototype_System_Nullable_System_String___" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetKindFrom(Robust.Shared.Prototypes.IPrototype,System.Nullable{System.String}@)">TryGetKindFrom(IPrototype, out Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"><p>Attempts to get a prototype's kind.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetKindFrom(IPrototype prototype, out string? kind)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a></td>
+        <td><span class="parametername">prototype</span></td>
+        <td><p>The prototype in question.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">kind</span></td>
+        <td><p>Identifier for the prototype kind, or null.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Whether the prototype kind was successfully retrieved.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryGetKindFrom_Type_System_Nullable_System_String___.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryGetKindFrom(Type%2CSystem.Nullable%7BSystem.String%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L208">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryGetKindFrom_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetKindFrom*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryGetKindFrom_Type_System_Nullable_System_String___" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetKindFrom(Type,System.Nullable{System.String}@)">TryGetKindFrom(Type, out Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"><p>Attempts to get a prototype's kind.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetKindFrom(Type type, out string? kind)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">type</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">kind</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryGetKindFrom__1_System_Nullable_System_String___.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryGetKindFrom%60%601(System.Nullable%7BSystem.String%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L224">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryGetKindFrom_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetKindFrom*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryGetKindFrom__1_System_Nullable_System_String___" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetKindFrom``1(System.Nullable{System.String}@)">TryGetKindFrom&lt;T&gt;(out Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"><p>Attempts to get a prototype's kind.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetKindFrom&lt;T&gt;(out string? kind)
+    where T : class, IPrototype</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">kind</span></td>
+        <td><p>Identifier for the prototype kind, or null.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Whether the prototype kind was successfully retrieved.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td><p>The prototype in question.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryGetKindType_System_String_System_Nullable_Type___.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryGetKindType(System.String%2CSystem.Nullable%7BType%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L200">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryGetKindType_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetKindType*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryGetKindType_System_String_System_Nullable_Type___" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetKindType(System.String,System.Nullable{Type}@)">TryGetKindType(String, out Nullable&lt;Type&gt;)</h4>
+  <div class="markdown level1 summary"><p>Attempts to get the Type for a prototype kind.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetKindType(string kind, out Type? prototype)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">kind</span></td>
+        <td><p>Identifier for the prototype kind.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td><span class="parametername">prototype</span></td>
+        <td><p>The specified prototype Type, or null.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Whether the prototype type was found and <see cref="!:prototype"></see> isn't null.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryGetMapping_Type_System_String_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryGetMapping(Type%2CSystem.String%2CRobust.Shared.Serialization.Markdown.Mapping.MappingDataNode%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L120">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryGetMapping_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetMapping*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryGetMapping_Type_System_String_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetMapping(Type,System.String,Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode@)">TryGetMapping(Type, String, out MappingDataNode)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetMapping(Type kind, string id, out MappingDataNode mappings)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">kind</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a></td>
+        <td><span class="parametername">mappings</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantFrom_Robust_Shared_Prototypes_IPrototype_System_Nullable_System_String___.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantFrom(Robust.Shared.Prototypes.IPrototype%2CSystem.Nullable%7BSystem.String%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L165">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantFrom_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantFrom*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantFrom_Robust_Shared_Prototypes_IPrototype_System_Nullable_System_String___" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantFrom(Robust.Shared.Prototypes.IPrototype,System.Nullable{System.String}@)">TryGetVariantFrom(IPrototype, out Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"><p>Attempts to get a prototype's variant.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetVariantFrom(IPrototype prototype, out string? variant)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a></td>
+        <td><span class="parametername">prototype</span></td>
+        <td><p>The prototype in question.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">variant</span></td>
+        <td><p>Identifier for the prototype variant, or null.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Whether the prototype variant was successfully retrieved.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantFrom_Type_System_Nullable_System_String___.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantFrom(Type%2CSystem.Nullable%7BSystem.String%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L156">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantFrom_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantFrom*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantFrom_Type_System_Nullable_System_String___" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantFrom(Type,System.Nullable{System.String}@)">TryGetVariantFrom(Type, out Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"><p>Attempts to get a prototype's variant.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetVariantFrom(Type type, out string? variant)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">type</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">variant</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantFrom__1_System_Nullable_System_String___.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantFrom%60%601(System.Nullable%7BSystem.String%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L174">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantFrom_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantFrom*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantFrom__1_System_Nullable_System_String___" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantFrom``1(System.Nullable{System.String}@)">TryGetVariantFrom&lt;T&gt;(out Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"><p>Attempts to get a prototype's variant.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetVariantFrom&lt;T&gt;(out string? variant)
+    where T : class, IPrototype</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">variant</span></td>
+        <td><p>Identifier for the prototype variant, or null.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Whether the prototype variant was successfully retrieved.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td><p>The prototype in question.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantType_System_String_System_Nullable_Type___.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantType(System.String%2CSystem.Nullable%7BType%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L147">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantType_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantType*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryGetVariantType_System_String_System_Nullable_Type___" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryGetVariantType(System.String,System.Nullable{Type}@)">TryGetVariantType(String, out Nullable&lt;Type&gt;)</h4>
+  <div class="markdown level1 summary"><p>Attempts to get the Type for a prototype variant.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetVariantType(string variant, out Type? prototype)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">variant</span></td>
+        <td><p>Identifier for the prototype variant.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td><span class="parametername">prototype</span></td>
+        <td><p>The specified prototype Type, or null.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Whether the prototype type was found and <see cref="!:prototype"></see> isn't null.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryIndex_Robust_Shared_Prototypes_EntProtoId_Robust_Shared_Prototypes_EntityPrototype__.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryIndex(Robust.Shared.Prototypes.EntProtoId%2CRobust.Shared.Prototypes.EntityPrototype%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L114">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryIndex_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryIndex*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryIndex_Robust_Shared_Prototypes_EntProtoId_Robust_Shared_Prototypes_EntityPrototype__" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryIndex(Robust.Shared.Prototypes.EntProtoId,Robust.Shared.Prototypes.EntityPrototype@)">TryIndex(EntProtoId, out EntityPrototype)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryIndex(EntProtoId id, out EntityPrototype prototype)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Robust.Shared.Prototypes.EntProtoId</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Prototypes.EntityPrototype.html">EntityPrototype</a></td>
+        <td><span class="parametername">prototype</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryIndex_Type_System_String_Robust_Shared_Prototypes_IPrototype__.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryIndex(Type%2CSystem.String%2CRobust.Shared.Prototypes.IPrototype%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L111">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryIndex_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryIndex*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryIndex_Type_System_String_Robust_Shared_Prototypes_IPrototype__" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryIndex(Type,System.String,Robust.Shared.Prototypes.IPrototype@)">TryIndex(Type, String, out IPrototype)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryIndex(Type kind, string id, out IPrototype prototype)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">kind</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Prototypes.IPrototype.html">IPrototype</a></td>
+        <td><span class="parametername">prototype</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryIndex__1_Robust_Shared_Prototypes_ProtoId___0____0__.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryIndex%60%601(Robust.Shared.Prototypes.ProtoId%7B%60%600%7D%2C%60%600%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L117">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryIndex_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryIndex*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryIndex__1_Robust_Shared_Prototypes_ProtoId___0____0__" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryIndex``1(Robust.Shared.Prototypes.ProtoId{``0},``0@)">TryIndex&lt;T&gt;(ProtoId&lt;T&gt;, out T)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryIndex&lt;T&gt;(ProtoId&lt;T&gt; id, out T prototype)
+    where T : class, IPrototype</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Robust.Shared.Prototypes.ProtoId</span>&lt;T&gt;</td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td><span class="parametername">prototype</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_TryIndex__1_System_String___0__.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.TryIndex%60%601(System.String%2C%60%600%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L110">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_TryIndex_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryIndex*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_TryIndex__1_System_String___0__" data-uid="Robust.Shared.Prototypes.IPrototypeManager.TryIndex``1(System.String,``0@)">TryIndex&lt;T&gt;(String, out T)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryIndex&lt;T&gt;(string id, out T prototype)
+    where T : class, IPrototype</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td><span class="parametername">prototype</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_ValidateAllPrototypesSerializable_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.ValidateAllPrototypesSerializable(Robust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L264">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_ValidateAllPrototypesSerializable_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ValidateAllPrototypesSerializable*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_ValidateAllPrototypesSerializable_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ValidateAllPrototypesSerializable(Robust.Shared.Serialization.Manager.ISerializationContext)">ValidateAllPrototypesSerializable(ISerializationContext)</h4>
+  <div class="markdown level1 summary"><p>This method will serialize all loaded prototypes into yaml and then validate them. This can be used to ensure
+that hard coded default values for data-fields all pass the normal yaml validation steps.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Dictionary&lt;Type, Dictionary&lt;string, HashSet&lt;ErrorNode&gt;&gt;&gt; ValidateAllPrototypesSerializable(ISerializationContext ctx)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">ctx</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Dictionary</span>&lt;<span class="xref">Type</span>, <span class="xref">Dictionary</span>&lt;<span class="xref">System.String</span>, <span class="xref">HashSet</span>&lt;<a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ErrorNode.html">ErrorNode</a>&gt;&gt;&gt;</td>
+        <td><p>Returns a collection of yaml validation errors, sorted by prototype kind id. The outer dictionary is
+empty, everything was successfully validated.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_ValidateDirectory_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.ValidateDirectory(Robust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L236">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_ValidateDirectory_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ValidateDirectory*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_ValidateDirectory_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ValidateDirectory(Robust.Shared.Utility.ResPath)">ValidateDirectory(ResPath)</h4>
+  <div class="markdown level1 summary"><p>Validate all prototypes defined in yaml files contained in the given directory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Dictionary&lt;string, HashSet&lt;ErrorNode&gt;&gt; ValidateDirectory(ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The directory containing the yaml files that need validating.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Dictionary</span>&lt;<span class="xref">System.String</span>, <span class="xref">HashSet</span>&lt;<a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ErrorNode.html">ErrorNode</a>&gt;&gt;</td>
+        <td><p>A dictionary containing sets of errors for each file that failed validation.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_ValidateDirectory_Robust_Shared_Utility_ResPath_Dictionary_Type_HashSet_System_String____.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.ValidateDirectory(Robust.Shared.Utility.ResPath%2CDictionary%7BType%2CHashSet%7BSystem.String%7D%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L244">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_ValidateDirectory_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ValidateDirectory*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_ValidateDirectory_Robust_Shared_Utility_ResPath_Dictionary_Type_HashSet_System_String____" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ValidateDirectory(Robust.Shared.Utility.ResPath,Dictionary{Type,HashSet{System.String}}@)">ValidateDirectory(ResPath, out Dictionary&lt;Type, HashSet&lt;String&gt;&gt;)</h4>
+  <div class="markdown level1 summary"><p>Validate all prototypes defined in yaml files contained in the given directory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Dictionary&lt;string, HashSet&lt;ErrorNode&gt;&gt; ValidateDirectory(ResPath path, out Dictionary&lt;Type, HashSet&lt;string&gt;&gt; prototypes)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The directory containing the yaml files that need validating.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Dictionary</span>&lt;<span class="xref">Type</span>, <span class="xref">HashSet</span>&lt;<span class="xref">System.String</span>&gt;&gt;</td>
+        <td><span class="parametername">prototypes</span></td>
+        <td><p>The prototypes ids that were present in the directory.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Dictionary</span>&lt;<span class="xref">System.String</span>, <span class="xref">HashSet</span>&lt;<a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ErrorNode.html">ErrorNode</a>&gt;&gt;</td>
+        <td><p>A dictionary containing sets of errors for each file that failed validation.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_ValidateFields_Dictionary_Type_HashSet_System_String___.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.ValidateFields(Dictionary%7BType%2CHashSet%7BSystem.String%7D%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L256">View Source</a>
+  </span>
+  <a id="Robust_Shared_Prototypes_IPrototypeManager_ValidateFields_" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ValidateFields*"></a>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_ValidateFields_Dictionary_Type_HashSet_System_String___" data-uid="Robust.Shared.Prototypes.IPrototypeManager.ValidateFields(Dictionary{Type,HashSet{System.String}})">ValidateFields(Dictionary&lt;Type, HashSet&lt;String&gt;&gt;)</h4>
+  <div class="markdown level1 summary"><p>This method uses reflection to validate that prototype id fields correspond to valid prototypes.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">List&lt;string&gt; ValidateFields(Dictionary&lt;Type, HashSet&lt;string&gt;&gt; prototypes)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Dictionary</span>&lt;<span class="xref">Type</span>, <span class="xref">HashSet</span>&lt;<span class="xref">System.String</span>&gt;&gt;</td>
+        <td><span class="parametername">prototypes</span></td>
+        <td><p>A collection prototypes to use for validation. Any prototype not in this collection
+will be considered invalid.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">List</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Prototypes_IPrototypeManager_ValidateFields_Dictionary_Type_HashSet_System_String____remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This will validate any field that has either a <a class="xref" href="Robust.Shared.Serialization.Manager.Attributes.ValidatePrototypeIdAttribute-1.html">ValidatePrototypeIdAttribute&lt;T&gt;</a> attribute, or a
+<a class="xref" href="Robust.Shared.Serialization.Manager.Attributes.DataFieldAttribute.html">DataFieldAttribute</a> with a <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.PrototypeIdSerializer-1.html">PrototypeIdSerializer&lt;TPrototype&gt;</a> serializer.</p>
+</div>
+  <h3 id="events">Events
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager_PrototypesReloaded.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager.PrototypesReloaded%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L333">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Prototypes_IPrototypeManager_PrototypesReloaded" data-uid="Robust.Shared.Prototypes.IPrototypeManager.PrototypesReloaded">PrototypesReloaded</h4>
+  <div class="markdown level1 summary"><p>Fired when prototype are reloaded. The event args contain the modified and removed prototypes.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action&lt;PrototypesReloadedEventArgs&gt; PrototypesReloaded</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Action</span>&lt;<span class="xref">PrototypesReloadedEventArgs</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Prototypes_IPrototypeManager_PrototypesReloaded_remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This does NOT fire on initial prototype load.</p>
+</div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Prototypes_IPrototypeManager.md&amp;value=---%0Auid%3A%20Robust.Shared.Prototypes.IPrototypeManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Prototypes/IPrototypeManager.cs/#L23" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1396 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class Rope
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class Rope
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Utility.Rope">
+  
+  
+  <h1 id="Robust_Shared_Utility_Rope" data-uid="Robust.Shared.Utility.Rope" class="text-break">Class Rope
+  </h1>
+  <div class="markdown level0 summary"><p>A binary tree data structure for efficient storage of large mutable text.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">Rope</span></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Utility.html">Robust.Shared.Utility</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Utility_Rope_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static class Rope : object</code></pre>
+  </div>
+  <h5 id="Robust_Shared_Utility_Rope_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>
+<a href="https://en.wikipedia.org/wiki/Rope_(data_structure)">Read the Wikipedia article, nerd</a>
+Also read the original paper, it&apos;s useful too.
+</p>
+<p>
+Like strings, ropes are immutable and all &quot;mutating&quot; operations return new copies.
+</p>
+<p>
+All indexing functions use <span class="xref">langword_csharp_long</span> indices.
+While individual rope leaves cannot be larger than an <span class="xref">langword_csharp_int</span>, ropes with many leaves may exceed that.
+</p>
+</div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_CalcTotalLength_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.CalcTotalLength(Robust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L43">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_CalcTotalLength_" data-uid="Robust.Shared.Utility.Rope.CalcTotalLength*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_CalcTotalLength_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.CalcTotalLength(Robust.Shared.Utility.Rope.Node)">CalcTotalLength(Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Calculate the total text length of the rope given.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static long CalcTotalLength(Rope.Node node)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_Rope_CalcTotalLength_Robust_Shared_Utility_Rope_Node__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>For a balanced tree, this is O(log n).</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_Collapse_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.Collapse(Robust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L438">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_Collapse_" data-uid="Robust.Shared.Utility.Rope.Collapse*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_Collapse_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.Collapse(Robust.Shared.Utility.Rope.Node)">Collapse(Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Collapse the rope into a single string instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static string Collapse(Rope.Node rope)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">rope</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_CollapseSubstring_Robust_Shared_Utility_Rope_Node_Range_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.CollapseSubstring(Robust.Shared.Utility.Rope.Node%2CRange)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L460">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_CollapseSubstring_" data-uid="Robust.Shared.Utility.Rope.CollapseSubstring*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_CollapseSubstring_Robust_Shared_Utility_Rope_Node_Range_" data-uid="Robust.Shared.Utility.Rope.CollapseSubstring(Robust.Shared.Utility.Rope.Node,Range)">CollapseSubstring(Rope.Node, Range)</h4>
+  <div class="markdown level1 summary"><p>Collapse a substring of a rope into a single string instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static string CollapseSubstring(Rope.Node rope, Range range)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">rope</span></td>
+        <td><p>The rope to collapse part of.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Range</span></td>
+        <td><span class="parametername">range</span></td>
+        <td><p>The range of the substring to collapse.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_CollectLeaves_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.CollectLeaves(Robust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L58">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_CollectLeaves_" data-uid="Robust.Shared.Utility.Rope.CollectLeaves*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_CollectLeaves_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.CollectLeaves(Robust.Shared.Utility.Rope.Node)">CollectLeaves(Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Enumerate all leaves in the rope from left to right.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static IEnumerable&lt;Rope.Leaf&gt; CollectLeaves(Rope.Node node)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Utility.Rope.Leaf.html">Rope.Leaf</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_CollectLeavesReverse_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.CollectLeavesReverse(Robust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L90">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_CollectLeavesReverse_" data-uid="Robust.Shared.Utility.Rope.CollectLeavesReverse*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_CollectLeavesReverse_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.CollectLeavesReverse(Robust.Shared.Utility.Rope.Node)">CollectLeavesReverse(Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Enumerate all leaves in the rope from right to left.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static IEnumerable&lt;Rope.Leaf&gt; CollectLeavesReverse(Rope.Node node)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Utility.Rope.Leaf.html">Rope.Leaf</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_Concat_Robust_Shared_Utility_Rope_Node_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.Concat(Robust.Shared.Utility.Rope.Node%2CRobust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L306">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_Concat_" data-uid="Robust.Shared.Utility.Rope.Concat*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_Concat_Robust_Shared_Utility_Rope_Node_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.Concat(Robust.Shared.Utility.Rope.Node,Robust.Shared.Utility.Rope.Node)">Concat(Rope.Node, Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Create a new rope concatenating two given ropes.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Rope.Node Concat(Rope.Node left, Rope.Node right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">left</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">right</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_Concat_Robust_Shared_Utility_Rope_Node_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.Concat(Robust.Shared.Utility.Rope.Node%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L315">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_Concat_" data-uid="Robust.Shared.Utility.Rope.Concat*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_Concat_Robust_Shared_Utility_Rope_Node_System_String_" data-uid="Robust.Shared.Utility.Rope.Concat(Robust.Shared.Utility.Rope.Node,System.String)">Concat(Rope.Node, String)</h4>
+  <div class="markdown level1 summary"><p>Create a new rope concatenating a rope and a string.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Rope.Node Concat(Rope.Node left, string right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">left</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">right</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_Concat_System_String_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.Concat(System.String%2CRobust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L324">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_Concat_" data-uid="Robust.Shared.Utility.Rope.Concat*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_Concat_System_String_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.Concat(System.String,Robust.Shared.Utility.Rope.Node)">Concat(String, Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Create a new rope concatenating a string with a rope.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Rope.Node Concat(string left, Rope.Node right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">left</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">right</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_Delete_Robust_Shared_Utility_Rope_Node_System_Int64_System_Int64_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.Delete(Robust.Shared.Utility.Rope.Node%2CSystem.Int64%2CSystem.Int64)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L377">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_Delete_" data-uid="Robust.Shared.Utility.Rope.Delete*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_Delete_Robust_Shared_Utility_Rope_Node_System_Int64_System_Int64_" data-uid="Robust.Shared.Utility.Rope.Delete(Robust.Shared.Utility.Rope.Node,System.Int64,System.Int64)">Delete(Rope.Node, Int64, Int64)</h4>
+  <div class="markdown level1 summary"><p>Create a new rope with a slice of text removed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Rope.Node Delete(Rope.Node rope, long start, long length)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">rope</span></td>
+        <td><p>The rope to copy.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">start</span></td>
+        <td><p>The position to start removing chars at.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">length</span></td>
+        <td><p>How many chars to remove.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_EnumerateRunes_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.EnumerateRunes(Robust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L122">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_EnumerateRunes_" data-uid="Robust.Shared.Utility.Rope.EnumerateRunes*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_EnumerateRunes_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.EnumerateRunes(Robust.Shared.Utility.Rope.Node)">EnumerateRunes(Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Enumerate all text runes in the rope from left to right.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static IEnumerable&lt;Rune&gt; EnumerateRunes(Rope.Node node)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Rune</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_EnumerateRunes_Robust_Shared_Utility_Rope_Node_System_Int64_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.EnumerateRunes(Robust.Shared.Utility.Rope.Node%2CSystem.Int64)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L136">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_EnumerateRunes_" data-uid="Robust.Shared.Utility.Rope.EnumerateRunes*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_EnumerateRunes_Robust_Shared_Utility_Rope_Node_System_Int64_" data-uid="Robust.Shared.Utility.Rope.EnumerateRunes(Robust.Shared.Utility.Rope.Node,System.Int64)">EnumerateRunes(Rope.Node, Int64)</h4>
+  <div class="markdown level1 summary"><p>Enumerate all text runes in the rope from left to right, starting at the specified position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static IEnumerable&lt;Rune&gt; EnumerateRunes(Rope.Node node, long startPos)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">startPos</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Rune</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_EnumerateRunesReverse_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.EnumerateRunesReverse(Robust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L188">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_EnumerateRunesReverse_" data-uid="Robust.Shared.Utility.Rope.EnumerateRunesReverse*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_EnumerateRunesReverse_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.EnumerateRunesReverse(Robust.Shared.Utility.Rope.Node)">EnumerateRunesReverse(Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Enumerate all the runes in the rope, from right to left.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static IEnumerable&lt;Rune&gt; EnumerateRunesReverse(Rope.Node node)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Rune</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_EnumerateRunesReverse_Robust_Shared_Utility_Rope_Node_System_Int64_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.EnumerateRunesReverse(Robust.Shared.Utility.Rope.Node%2CSystem.Int64)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L203">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_EnumerateRunesReverse_" data-uid="Robust.Shared.Utility.Rope.EnumerateRunesReverse*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_EnumerateRunesReverse_Robust_Shared_Utility_Rope_Node_System_Int64_" data-uid="Robust.Shared.Utility.Rope.EnumerateRunesReverse(Robust.Shared.Utility.Rope.Node,System.Int64)">EnumerateRunesReverse(Rope.Node, Int64)</h4>
+  <div class="markdown level1 summary"><p>Enumerate all text runes in the rope from right to left, starting at the specified position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static IEnumerable&lt;Rune&gt; EnumerateRunesReverse(Rope.Node node, long endPos)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">endPos</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Rune</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_Index_Robust_Shared_Utility_Rope_Node_System_Int64_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.Index(Robust.Shared.Utility.Rope.Node%2CSystem.Int64)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L267">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_Index_" data-uid="Robust.Shared.Utility.Rope.Index*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_Index_Robust_Shared_Utility_Rope_Node_System_Int64_" data-uid="Robust.Shared.Utility.Rope.Index(Robust.Shared.Utility.Rope.Node,System.Int64)">Index(Rope.Node, Int64)</h4>
+  <div class="markdown level1 summary"><p>Get a <span class="xref">langword_csharp_char</span> at the specified index in the rope.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static char Index(Rope.Node rope, long index)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">rope</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">index</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Char</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_Rope_Index_Robust_Shared_Utility_Rope_Node_System_Int64__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>For a balanced tree, this is O(log n).</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_Insert_Robust_Shared_Utility_Rope_Node_System_Int64_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.Insert(Robust.Shared.Utility.Rope.Node%2CSystem.Int64%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L296">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_Insert_" data-uid="Robust.Shared.Utility.Rope.Insert*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_Insert_Robust_Shared_Utility_Rope_Node_System_Int64_System_String_" data-uid="Robust.Shared.Utility.Rope.Insert(Robust.Shared.Utility.Rope.Node,System.Int64,System.String)">Insert(Rope.Node, Int64, String)</h4>
+  <div class="markdown level1 summary"><p>Create a new rope with text spliced in at an index.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Rope.Node Insert(Rope.Node rope, long index, string value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">rope</span></td>
+        <td><p>The rope to splice text into.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">index</span></td>
+        <td><p>The position the inserted text should start at.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">value</span></td>
+        <td><p>The text to insert.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><p>The new rope containing the spliced data.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_IsBalanced_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.IsBalanced(Robust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L223">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_IsBalanced_" data-uid="Robust.Shared.Utility.Rope.IsBalanced*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_IsBalanced_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.IsBalanced(Robust.Shared.Utility.Rope.Node)">IsBalanced(Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Check whether the given rope is sufficiently balanced to avoid bad performance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool IsBalanced(Rope.Node node)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_IsNullOrEmpty_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.IsNullOrEmpty(Robust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L495">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_IsNullOrEmpty_" data-uid="Robust.Shared.Utility.Rope.IsNullOrEmpty*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_IsNullOrEmpty_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.IsNullOrEmpty(Robust.Shared.Utility.Rope.Node)">IsNullOrEmpty(Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Returns true if the given rope is either null or empty (length 0).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool IsNullOrEmpty(Rope.Node rope)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">rope</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_Rebalance_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.Rebalance(Robust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L239">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_Rebalance_" data-uid="Robust.Shared.Utility.Rope.Rebalance*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_Rebalance_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.Rebalance(Robust.Shared.Utility.Rope.Node)">Rebalance(Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Ensure the rope is balanced to ensure decent performance on various operations.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Rope.Node Rebalance(Rope.Node node)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_Rope_Rebalance_Robust_Shared_Utility_Rope_Node__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>If the rope is already balanced, this method does nothing.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_ReplaceSubstring_Robust_Shared_Utility_Rope_Node_System_Int64_System_Int64_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.ReplaceSubstring(Robust.Shared.Utility.Rope.Node%2CSystem.Int64%2CSystem.Int64%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L393">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_ReplaceSubstring_" data-uid="Robust.Shared.Utility.Rope.ReplaceSubstring*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_ReplaceSubstring_Robust_Shared_Utility_Rope_Node_System_Int64_System_Int64_System_String_" data-uid="Robust.Shared.Utility.Rope.ReplaceSubstring(Robust.Shared.Utility.Rope.Node,System.Int64,System.Int64,System.String)">ReplaceSubstring(Rope.Node, Int64, Int64, String)</h4>
+  <div class="markdown level1 summary"><p>Create a new rope with a given slice of text replaced with a new string.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Rope.Node ReplaceSubstring(Rope.Node rope, long start, long length, string text)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">rope</span></td>
+        <td><p>The rope to copy.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">start</span></td>
+        <td><p>The position to start removing characters at, and insert the new text at.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">length</span></td>
+        <td><p>How many characters from the original rope to remove.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">text</span></td>
+        <td><p>The new text to insert at the start position.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_RuneShiftLeft_System_Int64_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.RuneShiftLeft(System.Int64%2CRobust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L470">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_RuneShiftLeft_" data-uid="Robust.Shared.Utility.Rope.RuneShiftLeft*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_RuneShiftLeft_System_Int64_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.RuneShiftLeft(System.Int64,Robust.Shared.Utility.Rope.Node)">RuneShiftLeft(Int64, Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Offset a cursor position in a rope to the left, skipping over the middle of surrogate pairs.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static long RuneShiftLeft(long index, Rope.Node rope)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">index</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">rope</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_RuneShiftRight_System_Int64_Robust_Shared_Utility_Rope_Node_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.RuneShiftRight(System.Int64%2CRobust.Shared.Utility.Rope.Node)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L483">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_RuneShiftRight_" data-uid="Robust.Shared.Utility.Rope.RuneShiftRight*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_RuneShiftRight_System_Int64_Robust_Shared_Utility_Rope_Node_" data-uid="Robust.Shared.Utility.Rope.RuneShiftRight(System.Int64,Robust.Shared.Utility.Rope.Node)">RuneShiftRight(Int64, Rope.Node)</h4>
+  <div class="markdown level1 summary"><p>Offset a cursor position in a rope to the right, skipping over the middle of surrogate pairs.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static long RuneShiftRight(long index, Rope.Node rope)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">index</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">rope</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_Split_Robust_Shared_Utility_Rope_Node_System_Int64_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.Split(Robust.Shared.Utility.Rope.Node%2CSystem.Int64)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L333">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_Split_" data-uid="Robust.Shared.Utility.Rope.Split*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_Split_Robust_Shared_Utility_Rope_Node_System_Int64_" data-uid="Robust.Shared.Utility.Rope.Split(Robust.Shared.Utility.Rope.Node,System.Int64)">Split(Rope.Node, Int64)</h4>
+  <div class="markdown level1 summary"><p>Return two new ropes split from the given rope at a specified index.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static (Rope.Node left, Rope.Node right) Split(Rope.Node rope, long index)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">rope</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">index</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a>, <a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope_TryGetRuneAt_Robust_Shared_Utility_Rope_Node_System_Int64_Rune__.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope.TryGetRuneAt(Robust.Shared.Utility.Rope.Node%2CSystem.Int64%2CRune%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L406">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_Rope_TryGetRuneAt_" data-uid="Robust.Shared.Utility.Rope.TryGetRuneAt*"></a>
+  <h4 id="Robust_Shared_Utility_Rope_TryGetRuneAt_Robust_Shared_Utility_Rope_Node_System_Int64_Rune__" data-uid="Robust.Shared.Utility.Rope.TryGetRuneAt(Robust.Shared.Utility.Rope.Node,System.Int64,Rune@)">TryGetRuneAt(Rope.Node, Int64, out Rune)</h4>
+  <div class="markdown level1 summary"><p>Try to fetch a <see cref="!:Rune"></see> at a certain position in the rune.
+Fails if the given position is inside a surrogate pair.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool TryGetRuneAt(Rope.Node rope, long index, out Rune value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.Rope.Node.html">Rope.Node</a></td>
+        <td><span class="parametername">rope</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int64</span></td>
+        <td><span class="parametername">index</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Rune</span></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_Rope.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.Rope%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/TextRope.cs/#L27" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

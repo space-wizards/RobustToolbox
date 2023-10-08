@@ -1,0 +1,698 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class WritableDirProviderExt
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class WritableDirProviderExt
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt">
+  
+  
+  <h1 id="Robust_Shared_ContentPack_WritableDirProviderExt" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt" class="text-break">Class WritableDirProviderExt
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">WritableDirProviderExt</span></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.ContentPack.html">Robust.Shared.ContentPack</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_ContentPack_WritableDirProviderExt_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static class WritableDirProviderExt : object</code></pre>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_WritableDirProviderExt_AppendAllText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_ReadOnlySpan_System_Char__.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.WritableDirProviderExt.AppendAllText(Robust.Shared.ContentPack.IWritableDirProvider%2CRobust.Shared.Utility.ResPath%2CReadOnlySpan%7BSystem.Char%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/WritableDirProviderExt.cs/#L71">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_WritableDirProviderExt_AppendAllText_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.AppendAllText*"></a>
+  <h4 id="Robust_Shared_ContentPack_WritableDirProviderExt_AppendAllText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_ReadOnlySpan_System_Char__" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.AppendAllText(Robust.Shared.ContentPack.IWritableDirProvider,Robust.Shared.Utility.ResPath,ReadOnlySpan{System.Char})">AppendAllText(IWritableDirProvider, ResPath, ReadOnlySpan&lt;Char&gt;)</h4>
+  <div class="markdown level1 summary"><p>Appends a string to the end of a file. If the file does not
+exist, creates it.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void AppendAllText(this IWritableDirProvider provider, ResPath path, ReadOnlySpan&lt;char&gt; content)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IWritableDirProvider.html">IWritableDirProvider</a></td>
+        <td><span class="parametername">provider</span></td>
+        <td><p>The writable directory provider</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>Path of file to append to.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">ReadOnlySpan</span>&lt;<span class="xref">System.Char</span>&gt;</td>
+        <td><span class="parametername">content</span></td>
+        <td><p>String to append.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_WritableDirProviderExt_OpenRead_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.WritableDirProviderExt.OpenRead(Robust.Shared.ContentPack.IWritableDirProvider%2CRobust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/WritableDirProviderExt.cs/#L21">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_WritableDirProviderExt_OpenRead_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.OpenRead*"></a>
+  <h4 id="Robust_Shared_ContentPack_WritableDirProviderExt_OpenRead_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.OpenRead(Robust.Shared.ContentPack.IWritableDirProvider,Robust.Shared.Utility.ResPath)">OpenRead(IWritableDirProvider, ResPath)</h4>
+  <div class="markdown level1 summary"><p>Opens a file for reading.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Stream OpenRead(this IWritableDirProvider provider, ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IWritableDirProvider.html">IWritableDirProvider</a></td>
+        <td><span class="parametername">provider</span></td>
+        <td><p>The writable directory provider</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path of the file to open.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Stream</span></td>
+        <td><p>A valid file stream.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_WritableDirProviderExt_OpenText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.WritableDirProviderExt.OpenText(Robust.Shared.ContentPack.IWritableDirProvider%2CRobust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/WritableDirProviderExt.cs/#L35">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_WritableDirProviderExt_OpenText_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.OpenText*"></a>
+  <h4 id="Robust_Shared_ContentPack_WritableDirProviderExt_OpenText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.OpenText(Robust.Shared.ContentPack.IWritableDirProvider,Robust.Shared.Utility.ResPath)">OpenText(IWritableDirProvider, ResPath)</h4>
+  <div class="markdown level1 summary"><p>Opens a file for reading.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static StreamReader OpenText(this IWritableDirProvider provider, ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IWritableDirProvider.html">IWritableDirProvider</a></td>
+        <td><span class="parametername">provider</span></td>
+        <td><p>The writable directory provider</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path of the file to open.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">StreamReader</span></td>
+        <td><p>A valid stream reader.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_WritableDirProviderExt_OpenWrite_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.WritableDirProviderExt.OpenWrite(Robust.Shared.ContentPack.IWritableDirProvider%2CRobust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/WritableDirProviderExt.cs/#L47">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_WritableDirProviderExt_OpenWrite_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.OpenWrite*"></a>
+  <h4 id="Robust_Shared_ContentPack_WritableDirProviderExt_OpenWrite_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.OpenWrite(Robust.Shared.ContentPack.IWritableDirProvider,Robust.Shared.Utility.ResPath)">OpenWrite(IWritableDirProvider, ResPath)</h4>
+  <div class="markdown level1 summary"><p>Opens a file for writing. If the file already exists, it will be overwritten.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Stream OpenWrite(this IWritableDirProvider provider, ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IWritableDirProvider.html">IWritableDirProvider</a></td>
+        <td><span class="parametername">provider</span></td>
+        <td><p>The writable directory provider</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path of the file to open.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Stream</span></td>
+        <td><p>A valid file stream.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_WritableDirProviderExt_OpenWriteText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.WritableDirProviderExt.OpenWriteText(Robust.Shared.ContentPack.IWritableDirProvider%2CRobust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/WritableDirProviderExt.cs/#L58">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_WritableDirProviderExt_OpenWriteText_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.OpenWriteText*"></a>
+  <h4 id="Robust_Shared_ContentPack_WritableDirProviderExt_OpenWriteText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.OpenWriteText(Robust.Shared.ContentPack.IWritableDirProvider,Robust.Shared.Utility.ResPath)">OpenWriteText(IWritableDirProvider, ResPath)</h4>
+  <div class="markdown level1 summary"><p>Opens a file for writing. If the file already exists, it will be overwritten.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static StreamWriter OpenWriteText(this IWritableDirProvider provider, ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IWritableDirProvider.html">IWritableDirProvider</a></td>
+        <td><span class="parametername">provider</span></td>
+        <td><p>The writable directory provider</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path of the file to open.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">StreamWriter</span></td>
+        <td><p>A valid file stream writer.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_WritableDirProviderExt_ReadAllBytes_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.WritableDirProviderExt.ReadAllBytes(Robust.Shared.ContentPack.IWritableDirProvider%2CRobust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/WritableDirProviderExt.cs/#L119">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_WritableDirProviderExt_ReadAllBytes_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.ReadAllBytes*"></a>
+  <h4 id="Robust_Shared_ContentPack_WritableDirProviderExt_ReadAllBytes_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.ReadAllBytes(Robust.Shared.ContentPack.IWritableDirProvider,Robust.Shared.Utility.ResPath)">ReadAllBytes(IWritableDirProvider, ResPath)</h4>
+  <div class="markdown level1 summary"><p>Reads the entire contents of a path to a byte array.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static byte[] ReadAllBytes(this IWritableDirProvider provider, ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IWritableDirProvider.html">IWritableDirProvider</a></td>
+        <td><span class="parametername">provider</span></td>
+        <td><p>The writable directory to look for the path in.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path to read the contents from.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span>[]</td>
+        <td><p>The contents of the path as a byte array.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_WritableDirProviderExt_ReadAllText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.WritableDirProviderExt.ReadAllText(Robust.Shared.ContentPack.IWritableDirProvider%2CRobust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/WritableDirProviderExt.cs/#L85">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_WritableDirProviderExt_ReadAllText_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.ReadAllText*"></a>
+  <h4 id="Robust_Shared_ContentPack_WritableDirProviderExt_ReadAllText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.ReadAllText(Robust.Shared.ContentPack.IWritableDirProvider,Robust.Shared.Utility.ResPath)">ReadAllText(IWritableDirProvider, ResPath)</h4>
+  <div class="markdown level1 summary"><p>Reads the entire contents of a file to a string.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static string ReadAllText(this IWritableDirProvider provider, ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IWritableDirProvider.html">IWritableDirProvider</a></td>
+        <td><span class="parametername">provider</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>File to read.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><p>String of the file contents</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_WritableDirProviderExt_TryReadAllText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_System_Nullable_System_String___.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.WritableDirProviderExt.TryReadAllText(Robust.Shared.ContentPack.IWritableDirProvider%2CRobust.Shared.Utility.ResPath%2CSystem.Nullable%7BSystem.String%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/WritableDirProviderExt.cs/#L99">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_WritableDirProviderExt_TryReadAllText_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.TryReadAllText*"></a>
+  <h4 id="Robust_Shared_ContentPack_WritableDirProviderExt_TryReadAllText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_System_Nullable_System_String___" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.TryReadAllText(Robust.Shared.ContentPack.IWritableDirProvider,Robust.Shared.Utility.ResPath,System.Nullable{System.String}@)">TryReadAllText(IWritableDirProvider, ResPath, out Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"><p>Reads the entire contents of a path to a string.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool TryReadAllText(this IWritableDirProvider provider, ResPath path, out string? text)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IWritableDirProvider.html">IWritableDirProvider</a></td>
+        <td><span class="parametername">provider</span></td>
+        <td><p>The writable directory to look for the path in.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path to read the contents from.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">text</span></td>
+        <td><p>The content read from the path, or null if the path did not exist.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>true if path was successfully read; otherwise, false.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_WritableDirProviderExt_WriteAllBytes_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_ReadOnlySpan_System_Byte__.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.WritableDirProviderExt.WriteAllBytes(Robust.Shared.ContentPack.IWritableDirProvider%2CRobust.Shared.Utility.ResPath%2CReadOnlySpan%7BSystem.Byte%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/WritableDirProviderExt.cs/#L148">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_WritableDirProviderExt_WriteAllBytes_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.WriteAllBytes*"></a>
+  <h4 id="Robust_Shared_ContentPack_WritableDirProviderExt_WriteAllBytes_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_ReadOnlySpan_System_Byte__" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.WriteAllBytes(Robust.Shared.ContentPack.IWritableDirProvider,Robust.Shared.Utility.ResPath,ReadOnlySpan{System.Byte})">WriteAllBytes(IWritableDirProvider, ResPath, ReadOnlySpan&lt;Byte&gt;)</h4>
+  <div class="markdown level1 summary"><p>Writes the sequence of bytes to a file. If the file exists, its existing contents will
+be replaced.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void WriteAllBytes(this IWritableDirProvider provider, ResPath path, ReadOnlySpan&lt;byte&gt; content)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IWritableDirProvider.html">IWritableDirProvider</a></td>
+        <td><span class="parametername">provider</span></td>
+        <td><p>The writable directory provider</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>Path of the file to write to.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">ReadOnlySpan</span>&lt;<span class="xref">System.Byte</span>&gt;</td>
+        <td><span class="parametername">content</span></td>
+        <td><p>Bytes to write to the file.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_WritableDirProviderExt_WriteAllText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_ReadOnlySpan_System_Char__.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.WritableDirProviderExt.WriteAllText(Robust.Shared.ContentPack.IWritableDirProvider%2CRobust.Shared.Utility.ResPath%2CReadOnlySpan%7BSystem.Char%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/WritableDirProviderExt.cs/#L134">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_WritableDirProviderExt_WriteAllText_" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.WriteAllText*"></a>
+  <h4 id="Robust_Shared_ContentPack_WritableDirProviderExt_WriteAllText_Robust_Shared_ContentPack_IWritableDirProvider_Robust_Shared_Utility_ResPath_ReadOnlySpan_System_Char__" data-uid="Robust.Shared.ContentPack.WritableDirProviderExt.WriteAllText(Robust.Shared.ContentPack.IWritableDirProvider,Robust.Shared.Utility.ResPath,ReadOnlySpan{System.Char})">WriteAllText(IWritableDirProvider, ResPath, ReadOnlySpan&lt;Char&gt;)</h4>
+  <div class="markdown level1 summary"><p>Writes the content string to a file. If the file exists, its existing contents will
+be replaced.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void WriteAllText(this IWritableDirProvider provider, ResPath path, ReadOnlySpan&lt;char&gt; content)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IWritableDirProvider.html">IWritableDirProvider</a></td>
+        <td><span class="parametername">provider</span></td>
+        <td><p>The writable directory provider</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>Path of the file to write to.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">ReadOnlySpan</span>&lt;<span class="xref">System.Char</span>&gt;</td>
+        <td><span class="parametername">content</span></td>
+        <td><p>String contents of the file.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_WritableDirProviderExt.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.WritableDirProviderExt%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/WritableDirProviderExt.cs/#L9" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

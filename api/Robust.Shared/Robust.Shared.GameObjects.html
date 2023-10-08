@@ -1,0 +1,551 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Namespace Robust.Shared.GameObjects
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Namespace Robust.Shared.GameObjects
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.GameObjects">
+  
+  <h1 id="Robust_Shared_GameObjects" data-uid="Robust.Shared.GameObjects" class="text-break">Namespace Robust.Shared.GameObjects
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="markdown level0 remarks"></div>
+    <h3 id="classes">Classes
+  </h3>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ActiveUserInterfaceComponent.html">ActiveUserInterfaceComponent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.AppearanceComponent.html">AppearanceComponent</a></h4>
+      <section><p>The appearance component allows game logic to be more detached from the actual visuals of an entity such as 2D
+sprites, 3D, particles, lights...
+It does this with a &quot;data&quot; system. Basically, code writes data to the component, and the component will use
+prototype-based configuration to change the actual visuals.
+The data works using a simple key/value system. It is recommended to use enum keys to prevent errors.
+Visualization works client side with derivatives of the <see cref="!:Robust.Client.GameObjects.VisualizerSystem">VisualizerSystem</see> class and corresponding components.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.AppearanceComponentState.html">AppearanceComponentState</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.AudioMessage.html">AudioMessage</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.BaseBoundUserInterfaceEvent.html">BaseBoundUserInterfaceEvent</a></h4>
+      <section><p>Abstract class for all BUI events.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.BaseLocalBoundUserInterfaceEvent.html">BaseLocalBoundUserInterfaceEvent</a></h4>
+      <section><p>Abstract class for local BUI events.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.BoundUIClosedEvent.html">BoundUIClosedEvent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.BoundUIOpenedEvent.html">BoundUIOpenedEvent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.BoundUserInterface.html">BoundUserInterface</a></h4>
+      <section><p>An abstract class to override to implement bound user interfaces.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.BoundUserInterfaceMessage.html">BoundUserInterfaceMessage</a></h4>
+      <section><p>Abstract class for networked BUI events.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.BoundUserInterfaceMessageAttempt.html">BoundUserInterfaceMessageAttempt</a></h4>
+      <section><p>Raised whenever the server receives a BUI message from a client relating to a UI that requires input
+validation.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.BoundUserInterfaceState.html">BoundUserInterfaceState</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ByRefEventAttribute.html">ByRefEventAttribute</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.CancellableEntityEventArgs.html">CancellableEntityEventArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ChunkSplitDebugMessage.html">ChunkSplitDebugMessage</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.CollideOnAnchorComponent.html">CollideOnAnchorComponent</a></h4>
+      <section><p>A component that toggles collision on an entity being toggled.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.CollideOnAnchorSystem.html">CollideOnAnchorSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.CollisionWakeComponent.html">CollisionWakeComponent</a></h4>
+      <section><p>An optimisation component for stuff that should be set as collidable when it's awake and non-collidable when asleep.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.CollisionWakeComponent.CollisionWakeState.html">CollisionWakeComponent.CollisionWakeState</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.CollisionWakeSystem.html">CollisionWakeSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.Component.html">Component</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentExt.html">ComponentExt</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentInit.html">ComponentInit</a></h4>
+      <section><p>Raised when all of the entity's other components have been added and are available,
+But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentProtoNameAttribute.html">ComponentProtoNameAttribute</a></h4>
+      <section><p>Defines Name that this component is represented with in prototypes.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistration.html">ComponentRegistration</a></h4>
+      <section><p>Represents a component registered into a <a class="xref" href="Robust.Shared.GameObjects.IComponentFactory.html">IComponentFactory</a>.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentRegistrationLockException.html">ComponentRegistrationLockException</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentRemove.html">ComponentRemove</a></h4>
+      <section><p>The component has been removed from the entity. This is the last function
+that is called before the component is freed.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentShutdown.html">ComponentShutdown</a></h4>
+      <section><p>Shuts down the component. The is called Automatically by OnRemove. This can be called multiple times during
+the component's life, and at any time.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentStartup.html">ComponentStartup</a></h4>
+      <section><p>Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
+This can be called multiple times during the component's life, and at any time.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentState.html">ComponentState</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.DebugExceptionInitializeComponent.html">DebugExceptionInitializeComponent</a></h4>
+      <section><p>Throws an exception in <see cref="!:Initialize"></see>.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.DebugExceptionOnAddComponent.html">DebugExceptionOnAddComponent</a></h4>
+      <section><p>Throws an exception in <see cref="!:OnAdd"></see>.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.DebugExceptionStartupComponent.html">DebugExceptionStartupComponent</a></h4>
+      <section><p>Throws an exception in <see cref="!:Startup"></see>.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.DebugExceptionSystem.html">DebugExceptionSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.DrawDepth.html">DrawDepth</a></h4>
+      <section><p>Tag type for defining the representation of rendering draw depth in
+terms of named constants in the content. To understand more about the
+point of this type, see the <a class="xref" href="Robust.Shared.Serialization.ConstantsForAttribute.html">ConstantsForAttribute</a>.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityCreationException.html">EntityCreationException</a></h4>
+      <section><p>Thrown if an entity fails to be created due to an exception inside a component.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityEventArgs.html">EntityEventArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityLookupSystem.html">EntityLookupSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityManager.html">EntityManager</a></h4>
+      <section><p>Holds a collection of entities and the components attached to them.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityManagerExt.html">EntityManagerExt</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityState.html">EntityState</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.html">EntitySystem</a></h4>
+      <section><p>A subsystem that acts on all components of a type at once.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.Subscriptions.html">EntitySystem.Subscriptions</a></h4>
+      <section><p>API class to allow registering on an EntitySystem's behalf.
+Intended to support creation of boilerplate-reduction-methods
+that need to subscribe stuff on an entity system.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntitySystemManager.html">EntitySystemManager</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EventBusExt.html">EventBusExt</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EyeComponent.html">EyeComponent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.GridAddEvent.html">GridAddEvent</a></h4>
+      <section><p>Raised whenever a grid is Added</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.GridFixtureChangeEvent.html">GridFixtureChangeEvent</a></h4>
+      <section><p>Event raised after a grids fixtures have changed, but before <a class="xref" href="Robust.Shared.Physics.Systems.FixtureSystem.html#Robust_Shared_Physics_Systems_FixtureSystem_FixtureUpdate_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Boolean_Robust_Shared_Physics_FixturesComponent_Robust_Shared_Physics_Components_PhysicsComponent_">FixtureUpdate(EntityUid, Boolean, Boolean, FixturesComponent, PhysicsComponent)</a> is called.
+Allows content to modify some fixture properties, like density.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.GridInitializeEvent.html">GridInitializeEvent</a></h4>
+      <section><p>Raised whenever a grid is being initialized.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.GridModifiedEvent.html">GridModifiedEvent</a></h4>
+      <section><p>Arguments for when a one or more tiles on a grid are modified at once.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.GridRemovalEvent.html">GridRemovalEvent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.GridStartupEvent.html">GridStartupEvent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.HandledEntityEventArgs.html">HandledEntityEventArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.InvalidComponentNameException.html">InvalidComponentNameException</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.MapChangedEvent.html">MapChangedEvent</a></h4>
+      <section><p>Arguments for when a map is created or deleted.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.MapInitEvent.html">MapInitEvent</a></h4>
+      <section><p>Raised directed on an entity when the map is initialized.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.MetaDataComponent.html">MetaDataComponent</a></h4>
+      <section><p>Contains meta data about this entity that isn't component specific.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.MetaDataComponentState.html">MetaDataComponentState</a></h4>
+      <section><p>Serialized state of a <a class="xref" href="Robust.Shared.GameObjects.MetaDataComponent.html">MetaDataComponent</a>.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.MetaDataSystem.html">MetaDataSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.OccluderComponent.html">OccluderComponent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.OccluderComponent.OccluderComponentState.html">OccluderComponent.OccluderComponentState</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.OccluderSystem.html">OccluderSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.OccluderTreeComponent.html">OccluderTreeComponent</a></h4>
+      <section><p>Stores the relevant occluder children of this entity.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.PlacementReplacementComponent.html">PlacementReplacementComponent</a></h4>
+      <section><p>If an entity with this component is placed on top of another anchored entity with this component and the same key it will replace it.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.PlayAudioEntityMessage.html">PlayAudioEntityMessage</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.PlayAudioGlobalMessage.html">PlayAudioGlobalMessage</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.PlayAudioPositionalMessage.html">PlayAudioPositionalMessage</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></h4>
+      <section><p>Represents an entity-bound interface that can be opened by multiple players at once.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.PointLightComponentState.html">PointLightComponentState</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.PointLightToggleEvent.html">PointLightToggleEvent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.PrototypeData.html">PrototypeData</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.PrototypeLayerData.html">PrototypeLayerData</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.RegisterComponentAttribute.html">RegisterComponentAttribute</a></h4>
+      <section><p>Marks a component as being automatically registered by <a class="xref" href="Robust.Shared.GameObjects.IComponentFactory.html#Robust_Shared_GameObjects_IComponentFactory_DoAutoRegistrations">DoAutoRegistrations()</a></p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.RequestGridNodesMessage.html">RequestGridNodesMessage</a></h4>
+      <section><p>Raised by a client who wants to receive gridsplitnode messages.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ScaleVisualsComponent.html">ScaleVisualsComponent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ServerBoundUserInterfaceMessage.html">ServerBoundUserInterfaceMessage</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SharedAppearanceSystem.html">SharedAppearanceSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SharedAudioSystem.html">SharedAudioSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SharedDebugPhysicsSystem.html">SharedDebugPhysicsSystem</a></h4>
+      <section><p>Only reason this exists is so we can avoid the message allocation when not needed.
+It's only useful for debugging and is kind of a perf sink.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SharedEyeSystem.html">SharedEyeSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SharedGridFixtureSystem.html">SharedGridFixtureSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SharedInputSystem.html">SharedInputSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SharedMapSystem.html">SharedMapSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SharedPointLightComponent.html">SharedPointLightComponent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SharedPointLightSystem.html">SharedPointLightSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SharedTransformSystem.html">SharedTransformSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SharedUserInterfaceSystem.html">SharedUserInterfaceSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.StopAudioMessageClient.html">StopAudioMessageClient</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.StopGridNodesMessage.html">StopGridNodesMessage</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SyncSpriteComponent.html">SyncSpriteComponent</a></h4>
+      <section><p>Synchronise the auto-animated layers of the sprite to real time;
+this is useful if you require multiple entities to have synchronised animations.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.SystemChangedArgs.html">SystemChangedArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.TimerComponent.html">TimerComponent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.TimerExtensions.html">TimerExtensions</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.TimerSystem.html">TimerSystem</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></h4>
+      <section><p>Stores the position and orientation of the entity.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.UnknownComponentException.html">UnknownComponentException</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.VisibilityMaskLayer.html">VisibilityMaskLayer</a></h4>
+      <section><p>Single layer used for Eye visiblity. Controls what entities they are allowed to see.</p>
+</section>
+    <h3 id="structs">Structs
+  </h3>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.AddedComponentEventArgs.html">AddedComponentEventArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.AllEntityQueryEnumerator-1.html">AllEntityQueryEnumerator&lt;TComp1&gt;</a></h4>
+      <section><p>Returns all matching components, paused or not.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.AllEntityQueryEnumerator-2.html">AllEntityQueryEnumerator&lt;TComp1, TComp2&gt;</a></h4>
+      <section><p>Returns all matching components, paused or not.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.AllEntityQueryEnumerator-3.html">AllEntityQueryEnumerator&lt;TComp1, TComp2, TComp3&gt;</a></h4>
+      <section><p>Returns all matching components, paused or not.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.AllEntityQueryEnumerator-4.html">AllEntityQueryEnumerator&lt;TComp1, TComp2, TComp3, TComp4&gt;</a></h4>
+      <section><p>Returns all matching components, paused or not.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.AnchorStateChangedEvent.html">AnchorStateChangedEvent</a></h4>
+      <section><p>Raised when the Anchor state of the transform is changed.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.CompIdx.html">CompIdx</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentEventArgs.html">ComponentEventArgs</a></h4>
+      <section><p>Arguments for an event related to a component.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.DeletedComponentEventArgs.html">DeletedComponentEventArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityManager.CompInitializeHandle-1.html">EntityManager.CompInitializeHandle&lt;T&gt;</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityQuery-1.html">EntityQuery&lt;TComp1&gt;</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityQueryEnumerator-1.html">EntityQueryEnumerator&lt;TComp1&gt;</a></h4>
+      <section><p>Returns all matching unpaused components.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityQueryEnumerator-2.html">EntityQueryEnumerator&lt;TComp1, TComp2&gt;</a></h4>
+      <section><p>Returns all matching unpaused components.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityQueryEnumerator-3.html">EntityQueryEnumerator&lt;TComp1, TComp2, TComp3&gt;</a></h4>
+      <section><p>Returns all matching unpaused components.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityQueryEnumerator-4.html">EntityQueryEnumerator&lt;TComp1, TComp2, TComp3, TComp4&gt;</a></h4>
+      <section><p>Returns all matching unpaused components.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntitySessionEventArgs.html">EntitySessionEventArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityTerminatingEvent.html">EntityTerminatingEvent</a></h4>
+      <section><p>The children of this entity are about to be deleted.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></h4>
+      <section><p>This type contains a network identification number of an entity.
+This can be used by the EntityManager to access an entity</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntParentChangedMessage.html">EntParentChangedMessage</a></h4>
+      <section><p>Raised when an entity parent is changed.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.MetaFlagRemoveAttemptEvent.html">MetaFlagRemoveAttemptEvent</a></h4>
+      <section><p>Raised if <a class="xref" href="Robust.Shared.GameObjects.MetaDataSystem.html">MetaDataSystem</a> is trying to remove a particular flag.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.MoveEvent.html">MoveEvent</a></h4>
+      <section><p>Raised whenever an entity translates or rotates relative to their parent.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.NetComponentEnumerable.html">NetComponentEnumerable</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.NetComponentEnumerator.html">NetComponentEnumerator</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.NetEntity.html">NetEntity</a></h4>
+      <section><p>Network identifier for entities; used by client and server to refer to the same entity where their local <a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a> may differ.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ReAnchorEvent.html">ReAnchorEvent</a></h4>
+      <section><p>Raised when an entity is re-anchored to another grid.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.RemovedComponentEventArgs.html">RemovedComponentEventArgs</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.TransformChildrenEnumerator.html">TransformChildrenEnumerator</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.TransformStartupEvent.html">TransformStartupEvent</a></h4>
+      <section></section>
+    <h3 id="interfaces">Interfaces
+  </h3>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IBroadcastEventBus.html">IBroadcastEventBus</a></h4>
+      <section><p>Provides a central event bus that EntitySystems can subscribe to. This is the main way that
+EntitySystems communicate with each other.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IComponentDebug.html">IComponentDebug</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IComponentDeltaState.html">IComponentDeltaState</a></h4>
+      <section><p>Interface for components that support delta-states.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IComponentFactory.html">IComponentFactory</a></h4>
+      <section><p>Handles the registration and spawning of components.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IDirectedEventBus.html">IDirectedEventBus</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></h4>
+      <section><p>Holds a collection of entities and the components attached to them.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IEntityNetworkManager.html">IEntityNetworkManager</a></h4>
+      <section><p>Manages the sending and receiving of network messages between the server and client(s).</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a></h4>
+      <section><p>A subsystem that acts on all components of a type at once.
+Entity systems are similar to TGstation13 subsystems.
+They have a set of entities to run over and run every once in a while.
+They get managed by an <a class="xref" href="Robust.Shared.GameObjects.IEntitySystemManager.html">IEntitySystemManager</a>.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IEntitySystemManager.html">IEntitySystemManager</a></h4>
+      <section><p>Like SS13's master controller. It controls <a class="xref" href="Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a> instances.
+These instances have set of rules for which components they can run over.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.IEventBus.html">IEventBus</a></h4>
+      <section></section>
+    <h3 id="enums">Enums
+  </h3>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentAvailability.html">ComponentAvailability</a></h4>
+      <section><p>Used by <a class="xref" href="Robust.Shared.Prototypes.EntityPrototype.html">EntityPrototype</a> to determine whether a component is available.
+This distinction is important because prototypes are shared across client and server, but the two might have different components.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentLifeStage.html">ComponentLifeStage</a></h4>
+      <section><p>The life stages of an ECS component.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityLifeStage.html">EntityLifeStage</a></h4>
+      <section><p>The life stages of an ECS Entity.</p>
+</section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityMessageType.html">EntityMessageType</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EventSource.html">EventSource</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.LayerRenderingStrategy.html">LayerRenderingStrategy</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.LookupFlags.html">LookupFlags</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.MetaDataFlags.html">MetaDataFlags</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.OccluderComponent.OccluderDir.html">OccluderComponent.OccluderDir</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ScaleVisuals.html">ScaleVisuals</a></h4>
+      <section></section>
+    <h3 id="delegates">Delegates
+  </h3>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentEventHandler-2.html">ComponentEventHandler&lt;TComp, TEvent&gt;</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentEventRefHandler-2.html">ComponentEventRefHandler&lt;TComp, TEvent&gt;</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.ComponentQueryCallback-1.html">ComponentQueryCallback&lt;T&gt;</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityEventHandler-1.html">EntityEventHandler&lt;T&gt;</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityEventRefHandler-1.html">EntityEventRefHandler&lt;T&gt;</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntitySessionEventHandler-1.html">EntitySessionEventHandler&lt;T&gt;</a></h4>
+      <section></section>
+      <h4><a class="xref" href="Robust.Shared.GameObjects.EntityUidQueryCallback.html">EntityUidQueryCallback</a></h4>
+      <section></section>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

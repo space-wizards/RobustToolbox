@@ -1,0 +1,1945 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class SharedAudioSystem
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class SharedAudioSystem
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.GameObjects.SharedAudioSystem">
+  
+  
+  <h1 id="Robust_Shared_GameObjects_SharedAudioSystem" data-uid="Robust.Shared.GameObjects.SharedAudioSystem" class="text-break">Class SharedAudioSystem
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.html">EntitySystem</a></div>
+    <div class="level2"><span class="xref">SharedAudioSystem</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a></div>
+    <div><a class="xref" href="Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a></div>
+    <div><a class="xref" href="Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a></div>
+  </div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.GameObjects.html">Robust.Shared.GameObjects</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_GameObjects_SharedAudioSystem_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class SharedAudioSystem : EntitySystem, IEntitySystem, IEntityEventSubscriber, IPostInjectInit</code></pre>
+  </div>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_CfgManager.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.CfgManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L13">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_CfgManager" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.CfgManager">CfgManager</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected readonly IConfigurationManager CfgManager</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Configuration.IConfigurationManager.html">IConfigurationManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_DefaultSoundRange.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.DefaultSoundRange%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L23">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_DefaultSoundRange" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.DefaultSoundRange">DefaultSoundRange</h4>
+  <div class="markdown level1 summary"><p>Default max range at which the sound can be heard.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public const float DefaultSoundRange = null</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayerManager.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayerManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L17">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayerManager" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayerManager">PlayerManager</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected readonly ISharedPlayerManager PlayerManager</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ISharedPlayerManager.html">ISharedPlayerManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_RandMan.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.RandMan%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L16">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_RandMan" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.RandMan">RandMan</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected readonly IRobustRandom RandMan</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Random.IRobustRandom.html">IRobustRandom</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_OcclusionCollisionMask.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.OcclusionCollisionMask%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L28">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_OcclusionCollisionMask_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.OcclusionCollisionMask*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_OcclusionCollisionMask" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.OcclusionCollisionMask">OcclusionCollisionMask</h4>
+  <div class="markdown level1 summary"><p>Used in the PAS to designate the physics collision mask of occluders.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int OcclusionCollisionMask { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_GetFallbackCoordinates_Robust_Shared_Map_MapCoordinates_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.GetFallbackCoordinates(Robust.Shared.Map.MapCoordinates)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L293">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_GetFallbackCoordinates_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.GetFallbackCoordinates*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_GetFallbackCoordinates_Robust_Shared_Map_MapCoordinates_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.GetFallbackCoordinates(Robust.Shared.Map.MapCoordinates)">GetFallbackCoordinates(MapCoordinates)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected EntityCoordinates GetFallbackCoordinates(MapCoordinates mapCoordinates)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapCoordinates.html">MapCoordinates</a></td>
+        <td><span class="parametername">mapCoordinates</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_GetSound_Robust_Shared_Audio_SoundSpecifier_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.GetSound(Robust.Shared.Audio.SoundSpecifier)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L30">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_GetSound_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.GetSound*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_GetSound_Robust_Shared_Audio_SoundSpecifier_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.GetSound(Robust.Shared.Audio.SoundSpecifier)">GetSound(SoundSpecifier)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string GetSound(SoundSpecifier specifier)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">specifier</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_Play_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Player_Filter_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.Play(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.Player.Filter%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Boolean%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L144">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_Play_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.Play*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_Play_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Player_Filter_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.Play(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.Player.Filter,Robust.Shared.GameObjects.EntityUid,System.Boolean,System.Nullable{Robust.Shared.Audio.AudioParams})">Play(SoundSpecifier, Filter, EntityUid, Boolean, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file following an entity.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream Play(SoundSpecifier sound, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Player.Filter.html">Filter</a></td>
+        <td><span class="parametername">playerFilter</span></td>
+        <td><p>The set of players that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td><p>The UID of the entity &quot;emitting&quot; the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">recordReplay</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_Play_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Player_Filter_Robust_Shared_Map_EntityCoordinates_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.Play(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.Player.Filter%2CRobust.Shared.Map.EntityCoordinates%2CSystem.Boolean%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L264">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_Play_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.Play*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_Play_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Player_Filter_Robust_Shared_Map_EntityCoordinates_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.Play(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.Player.Filter,Robust.Shared.Map.EntityCoordinates,System.Boolean,System.Nullable{Robust.Shared.Audio.AudioParams})">Play(SoundSpecifier, Filter, EntityCoordinates, Boolean, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file at a static position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream Play(SoundSpecifier sound, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Player.Filter.html">Filter</a></td>
+        <td><span class="parametername">playerFilter</span></td>
+        <td><p>The set of players that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td><span class="parametername">coordinates</span></td>
+        <td><p>The coordinates at which to play the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">recordReplay</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_Play_System_String_Robust_Shared_Player_Filter_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.Play(System.String%2CRobust.Shared.Player.Filter%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Boolean%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L116">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_Play_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.Play*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_Play_System_String_Robust_Shared_Player_Filter_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.Play(System.String,Robust.Shared.Player.Filter,Robust.Shared.GameObjects.EntityUid,System.Boolean,System.Nullable{Robust.Shared.Audio.AudioParams})">Play(String, Filter, EntityUid, Boolean, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file following an entity.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract IPlayingAudioStream Play(string filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">filename</span></td>
+        <td><p>The resource path to the OGG Vorbis file to play.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Player.Filter.html">Filter</a></td>
+        <td><span class="parametername">playerFilter</span></td>
+        <td><p>The set of players that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td><p>The UID of the entity &quot;emitting&quot; the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">recordReplay</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_Play_System_String_Robust_Shared_Player_Filter_Robust_Shared_Map_EntityCoordinates_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.Play(System.String%2CRobust.Shared.Player.Filter%2CRobust.Shared.Map.EntityCoordinates%2CSystem.Boolean%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L236">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_Play_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.Play*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_Play_System_String_Robust_Shared_Player_Filter_Robust_Shared_Map_EntityCoordinates_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.Play(System.String,Robust.Shared.Player.Filter,Robust.Shared.Map.EntityCoordinates,System.Boolean,System.Nullable{Robust.Shared.Audio.AudioParams})">Play(String, Filter, EntityCoordinates, Boolean, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file at a static position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract IPlayingAudioStream Play(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">filename</span></td>
+        <td><p>The resource path to the OGG Vorbis file to play.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Player.Filter.html">Filter</a></td>
+        <td><span class="parametername">playerFilter</span></td>
+        <td><p>The set of players that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td><span class="parametername">coordinates</span></td>
+        <td><p>The coordinates at which to play the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">recordReplay</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L168">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.EntityUid,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayEntity(SoundSpecifier, EntityUid, EntityUid, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file following an entity.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream PlayEntity(SoundSpecifier sound, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td><p>The UID of the entity &quot;emitting&quot; the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.Players.ICommonSession%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L156">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.Players.ICommonSession,Robust.Shared.GameObjects.EntityUid,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayEntity(SoundSpecifier, ICommonSession, EntityUid, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file following an entity.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream PlayEntity(SoundSpecifier sound, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td><p>The UID of the entity &quot;emitting&quot; the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_System_String_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity(System.String%2CRobust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L134">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_System_String_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity(System.String,Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.EntityUid,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayEntity(String, EntityUid, EntityUid, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file following an entity.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract IPlayingAudioStream PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">filename</span></td>
+        <td><p>The resource path to the OGG Vorbis file to play.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td><p>The UID of the entity &quot;emitting&quot; the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_System_String_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity(System.String%2CRobust.Shared.Players.ICommonSession%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L125">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayEntity_System_String_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayEntity(System.String,Robust.Shared.Players.ICommonSession,Robust.Shared.GameObjects.EntityUid,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayEntity(String, ICommonSession, EntityUid, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file following an entity.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract IPlayingAudioStream PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">filename</span></td>
+        <td><p>The resource path to the OGG Vorbis file to play.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td><p>The UID of the entity &quot;emitting&quot; the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L103">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.GameObjects.EntityUid,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayGlobal(SoundSpecifier, EntityUid, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file globally, without position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream PlayGlobal(SoundSpecifier sound, EntityUid recipient, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Player_Filter_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.Player.Filter%2CSystem.Boolean%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L65">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Player_Filter_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.Player.Filter,System.Boolean,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayGlobal(SoundSpecifier, Filter, Boolean, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file globally, without position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream PlayGlobal(SoundSpecifier sound, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Player.Filter.html">Filter</a></td>
+        <td><span class="parametername">playerFilter</span></td>
+        <td><p>The set of players that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">recordReplay</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Players_ICommonSession_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.Players.ICommonSession%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L84">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Players_ICommonSession_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.Players.ICommonSession,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayGlobal(SoundSpecifier, ICommonSession, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file globally, without position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream PlayGlobal(SoundSpecifier sound, ICommonSession recipient, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_System_String_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(System.String%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L95">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_System_String_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(System.String,Robust.Shared.GameObjects.EntityUid,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayGlobal(String, EntityUid, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file globally, without position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract IPlayingAudioStream PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">filename</span></td>
+        <td><p>The resource path to the OGG Vorbis file to play.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_System_String_Robust_Shared_Player_Filter_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(System.String%2CRobust.Shared.Player.Filter%2CSystem.Boolean%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L56">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_System_String_Robust_Shared_Player_Filter_System_Boolean_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(System.String,Robust.Shared.Player.Filter,System.Boolean,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayGlobal(String, Filter, Boolean, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file globally, without position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract IPlayingAudioStream PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">filename</span></td>
+        <td><p>The resource path to the OGG Vorbis file to play.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Player.Filter.html">Filter</a></td>
+        <td><span class="parametername">playerFilter</span></td>
+        <td><p>The set of players that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">recordReplay</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_System_String_Robust_Shared_Players_ICommonSession_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(System.String%2CRobust.Shared.Players.ICommonSession%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L76">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayGlobal_System_String_Robust_Shared_Players_ICommonSession_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayGlobal(System.String,Robust.Shared.Players.ICommonSession,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayGlobal(String, ICommonSession, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file globally, without position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract IPlayingAudioStream PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">filename</span></td>
+        <td><p>The resource path to the OGG Vorbis file to play.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayPredicted_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_GameObjects_EntityUid__System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayPredicted(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BRobust.Shared.GameObjects.EntityUid%7D%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L215">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayPredicted_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayPredicted*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayPredicted_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_GameObjects_EntityUid__System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayPredicted(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.GameObjects.EntityUid,System.Nullable{Robust.Shared.GameObjects.EntityUid},System.Nullable{Robust.Shared.Audio.AudioParams})">PlayPredicted(SoundSpecifier, EntityUid, Nullable&lt;EntityUid&gt;, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Plays a predicted sound following an entity. The server will send the sound to every player in PVS range,
+unless that player is attached to the &quot;user&quot; entity that initiated the sound. The client-side system plays
+this sound as normal</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract IPlayingAudioStream PlayPredicted(SoundSpecifier sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">source</span></td>
+        <td><p>The UID of the entity &quot;emitting&quot; the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</td>
+        <td><span class="parametername">user</span></td>
+        <td><p>The UID of the user that initiated this sound. This is usually some player's controlled entity.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayPredicted_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_GameObjects_EntityUid__System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayPredicted(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.Map.EntityCoordinates%2CSystem.Nullable%7BRobust.Shared.GameObjects.EntityUid%7D%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L226">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayPredicted_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayPredicted*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayPredicted_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_GameObjects_EntityUid__System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayPredicted(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.Map.EntityCoordinates,System.Nullable{Robust.Shared.GameObjects.EntityUid},System.Nullable{Robust.Shared.Audio.AudioParams})">PlayPredicted(SoundSpecifier, EntityCoordinates, Nullable&lt;EntityUid&gt;, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Plays a predicted sound following an EntityCoordinates. The server will send the sound to every player in PVS range,
+unless that player is attached to the &quot;user&quot; entity that initiated the sound. The client-side system plays
+this sound as normal</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract IPlayingAudioStream PlayPredicted(SoundSpecifier sound, EntityCoordinates coordinates, EntityUid? user, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td><span class="parametername">coordinates</span></td>
+        <td><p>The entitycoordinates &quot;emitting&quot; the audio</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</td>
+        <td><span class="parametername">user</span></td>
+        <td><p>The UID of the user that initiated this sound. This is usually some player's controlled entity.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayPvs_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayPvs(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L179">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayPvs_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayPvs*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayPvs_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayPvs(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.GameObjects.EntityUid,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayPvs(SoundSpecifier, EntityUid, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file following an entity for every entity in PVS range.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream PlayPvs(SoundSpecifier sound, EntityUid uid, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td><p>The UID of the entity &quot;emitting&quot; the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayPvs_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayPvs(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.Map.EntityCoordinates%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L190">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayPvs_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayPvs*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayPvs_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayPvs(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.Map.EntityCoordinates,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayPvs(SoundSpecifier, EntityCoordinates, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file at the specified EntityCoordinates for every entity in PVS range.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream PlayPvs(SoundSpecifier sound, EntityCoordinates coordinates, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td><span class="parametername">coordinates</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayPvs_System_String_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayPvs(System.String%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L201">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayPvs_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayPvs*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayPvs_System_String_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayPvs(System.String,Robust.Shared.GameObjects.EntityUid,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayPvs(String, EntityUid, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file following an entity for every entity in PVS range.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream PlayPvs(string filename, EntityUid uid, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">filename</span></td>
+        <td><p>The resource path to the OGG Vorbis file to play.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td><p>The UID of the entity &quot;emitting&quot; the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.GameObjects.EntityUid%2CRobust.Shared.Map.EntityCoordinates%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L288">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.GameObjects.EntityUid,Robust.Shared.Map.EntityCoordinates,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayStatic(SoundSpecifier, EntityUid, EntityCoordinates, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file at a static position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream PlayStatic(SoundSpecifier sound, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td><span class="parametername">coordinates</span></td>
+        <td><p>The coordinates at which to play the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Players_ICommonSession_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic(Robust.Shared.Audio.SoundSpecifier%2CRobust.Shared.Players.ICommonSession%2CRobust.Shared.Map.EntityCoordinates%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L276">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_Robust_Shared_Audio_SoundSpecifier_Robust_Shared_Players_ICommonSession_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic(Robust.Shared.Audio.SoundSpecifier,Robust.Shared.Players.ICommonSession,Robust.Shared.Map.EntityCoordinates,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayStatic(SoundSpecifier, ICommonSession, EntityCoordinates, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file at a static position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPlayingAudioStream PlayStatic(SoundSpecifier sound, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.SoundSpecifier.html">SoundSpecifier</a></td>
+        <td><span class="parametername">sound</span></td>
+        <td><p>The sound specifier that points the audio file(s) that should be played.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td><span class="parametername">coordinates</span></td>
+        <td><p>The coordinates at which to play the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_System_String_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic(System.String%2CRobust.Shared.GameObjects.EntityUid%2CRobust.Shared.Map.EntityCoordinates%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L254">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_System_String_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic(System.String,Robust.Shared.GameObjects.EntityUid,Robust.Shared.Map.EntityCoordinates,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayStatic(String, EntityUid, EntityCoordinates, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file at a static position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract IPlayingAudioStream PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">filename</span></td>
+        <td><p>The resource path to the OGG Vorbis file to play.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td><span class="parametername">coordinates</span></td>
+        <td><p>The coordinates at which to play the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_System_String_Robust_Shared_Players_ICommonSession_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_Audio_AudioParams__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic(System.String%2CRobust.Shared.Players.ICommonSession%2CRobust.Shared.Map.EntityCoordinates%2CSystem.Nullable%7BRobust.Shared.Audio.AudioParams%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L245">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic*"></a>
+  <h4 id="Robust_Shared_GameObjects_SharedAudioSystem_PlayStatic_System_String_Robust_Shared_Players_ICommonSession_Robust_Shared_Map_EntityCoordinates_System_Nullable_Robust_Shared_Audio_AudioParams__" data-uid="Robust.Shared.GameObjects.SharedAudioSystem.PlayStatic(System.String,Robust.Shared.Players.ICommonSession,Robust.Shared.Map.EntityCoordinates,System.Nullable{Robust.Shared.Audio.AudioParams})">PlayStatic(String, ICommonSession, EntityCoordinates, Nullable&lt;AudioParams&gt;)</h4>
+  <div class="markdown level1 summary"><p>Play an audio file at a static position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract IPlayingAudioStream PlayStatic(string filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">filename</span></td>
+        <td><p>The resource path to the OGG Vorbis file to play.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">recipient</span></td>
+        <td><p>The player that will hear the sound.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td><span class="parametername">coordinates</span></td>
+        <td><p>The coordinates at which to play the audio.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Audio.AudioParams.html">AudioParams</a>&gt;</td>
+        <td><span class="parametername">audioParams</span></td>
+        <td><p>Audio parameters to apply when playing the sound.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.IPlayingAudioStream.html">IPlayingAudioStream</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_SharedAudioSystem.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.SharedAudioSystem%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Systems/SharedAudioSystem.cs/#L11" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

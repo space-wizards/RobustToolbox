@@ -1,0 +1,377 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface ICommandBindRegistry
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface ICommandBindRegistry
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry">
+  
+  
+  <h1 id="Robust_Shared_Input_Binding_ICommandBindRegistry" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry" class="text-break">Interface ICommandBindRegistry
+  </h1>
+  <div class="markdown level0 summary"><p>Allows registering bindings so that they will receive and handle inputs. Each set of bindings
+is registered to a particular owner Type, which is typically a system or a manager.</p>
+<p>This association of bindings with owner types allows allows the bindings to declare
+dependencies on each other - for example to ensure that one system's handlers will always
+fire after another system's handlers. This also allows easy unregistering of all bindings
+for a given system / manager.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Input.Binding.html">Robust.Shared.Input.Binding</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Input_Binding_ICommandBindRegistry_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface ICommandBindRegistry</code></pre>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_Binding_ICommandBindRegistry_GetHandlers_Robust_Shared_Input_BoundKeyFunction_.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.Binding.ICommandBindRegistry.GetHandlers(Robust.Shared.Input.BoundKeyFunction)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/Binding/ICommandBindRegistry.cs/#L41">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_Binding_ICommandBindRegistry_GetHandlers_" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry.GetHandlers*"></a>
+  <h4 id="Robust_Shared_Input_Binding_ICommandBindRegistry_GetHandlers_Robust_Shared_Input_BoundKeyFunction_" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry.GetHandlers(Robust.Shared.Input.BoundKeyFunction)">GetHandlers(BoundKeyFunction)</h4>
+  <div class="markdown level1 summary"><p>Gets the command handlers bound to the indicated function, in the order
+in which they should be fired based on the dependency graph. Empty enumerable
+if no handlers are bound.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;InputCmdHandler&gt; GetHandlers(BoundKeyFunction function)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Input.BoundKeyFunction.html">BoundKeyFunction</a></td>
+        <td><span class="parametername">function</span></td>
+        <td><p>Key function to get the input handlers of.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Input.Binding.InputCmdHandler.html">InputCmdHandler</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_Binding_ICommandBindRegistry_Register_Robust_Shared_Input_Binding_CommandBinds_Type_.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.Binding.ICommandBindRegistry.Register(Robust.Shared.Input.Binding.CommandBinds%2CType)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/Binding/ICommandBindRegistry.cs/#L33">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_Binding_ICommandBindRegistry_Register_" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry.Register*"></a>
+  <h4 id="Robust_Shared_Input_Binding_ICommandBindRegistry_Register_Robust_Shared_Input_Binding_CommandBinds_Type_" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry.Register(Robust.Shared.Input.Binding.CommandBinds,Type)">Register(CommandBinds, Type)</h4>
+  <div class="markdown level1 summary"><p>Registers the indicated bindings, under the given type.
+The handlers in the bindings will receive input events.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Register(CommandBinds commandBinds, Type owner)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Input.Binding.CommandBinds.html">CommandBinds</a></td>
+        <td><span class="parametername">commandBinds</span></td>
+        <td><p>Bindings to register.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">owner</span></td>
+        <td><p>type that owns these bindings, typically a system / manager,
+should usually be typeof(this) - same type as the calling class.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_Binding_ICommandBindRegistry_Register__1_Robust_Shared_Input_Binding_CommandBinds_.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.Binding.ICommandBindRegistry.Register%60%601(Robust.Shared.Input.Binding.CommandBinds)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/Binding/ICommandBindRegistry.cs/#L24">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_Binding_ICommandBindRegistry_Register_" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry.Register*"></a>
+  <h4 id="Robust_Shared_Input_Binding_ICommandBindRegistry_Register__1_Robust_Shared_Input_Binding_CommandBinds_" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry.Register``1(Robust.Shared.Input.Binding.CommandBinds)">Register&lt;TOwner&gt;(CommandBinds)</h4>
+  <div class="markdown level1 summary"><p>CO
+Registers the indicated bindings, under the given owner type.
+The handlers in the bindings will receive input events.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Register&lt;TOwner&gt;(CommandBinds commandBinds)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Input.Binding.CommandBinds.html">CommandBinds</a></td>
+        <td><span class="parametername">commandBinds</span></td>
+        <td><p>Bindings to register.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TOwner</span></td>
+        <td><p>type that owns these bindings, typically a system / manager,
+should usually be typeof(this) - same type as the calling class.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_Binding_ICommandBindRegistry_Unregister_Type_.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.Binding.ICommandBindRegistry.Unregister(Type)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/Binding/ICommandBindRegistry.cs/#L49">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_Binding_ICommandBindRegistry_Unregister_" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry.Unregister*"></a>
+  <h4 id="Robust_Shared_Input_Binding_ICommandBindRegistry_Unregister_Type_" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry.Unregister(Type)">Unregister(Type)</h4>
+  <div class="markdown level1 summary"><p>Unregisters all bindings currently registered under indicated type so they will
+no longer receive / handle inputs.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Unregister(Type owner)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">owner</span></td>
+        <td><p>owner type whose bindings should be unregistered, typically a system / manager,
+should usually be typeof(this) - same type as the calling class.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_Binding_ICommandBindRegistry_Unregister__1.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.Binding.ICommandBindRegistry.Unregister%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/Binding/ICommandBindRegistry.cs/#L57">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_Binding_ICommandBindRegistry_Unregister_" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry.Unregister*"></a>
+  <h4 id="Robust_Shared_Input_Binding_ICommandBindRegistry_Unregister__1" data-uid="Robust.Shared.Input.Binding.ICommandBindRegistry.Unregister``1">Unregister&lt;TOwner&gt;()</h4>
+  <div class="markdown level1 summary"><p>Unregisters all bindings currently registered under indicated type so they will
+no longer receive / handle inputs.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Unregister&lt;TOwner&gt;()</code></pre>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TOwner</span></td>
+        <td><p>owner type whose bindings should be unregistered, typically a system / manager,
+should usually be typeof(this) - same type as the calling class.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_Binding_ICommandBindRegistry.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.Binding.ICommandBindRegistry%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/Binding/ICommandBindRegistry.cs/#L15" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

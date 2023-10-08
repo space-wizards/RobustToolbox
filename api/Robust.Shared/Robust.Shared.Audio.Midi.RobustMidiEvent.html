@@ -1,0 +1,1545 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Struct RobustMidiEvent
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Struct RobustMidiEvent
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent">
+  
+  
+  <h1 id="Robust_Shared_Audio_Midi_RobustMidiEvent" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent" class="text-break">Struct RobustMidiEvent
+  </h1>
+  <div class="markdown level0 summary"><p>This class is a lightweight data representation of a Midi Event.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Audio.Midi.html">Robust.Shared.Audio.Midi</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Audio_Midi_RobustMidiEvent_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public struct RobustMidiEvent</code></pre>
+  </div>
+  <h3 id="constructors">Constructors
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent__ctor_Robust_Shared_Audio_Midi_RobustMidiEvent_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.%23ctor(Robust.Shared.Audio.Midi.RobustMidiEvent%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L59">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent__ctor_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.#ctor*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent__ctor_Robust_Shared_Audio_Midi_RobustMidiEvent_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.#ctor(Robust.Shared.Audio.Midi.RobustMidiEvent,System.UInt32)">RobustMidiEvent(RobustMidiEvent, UInt32)</h4>
+  <div class="markdown level1 summary"><p>Clones another event but with a different tick value.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public RobustMidiEvent(RobustMidiEvent ev, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td><span class="parametername">ev</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent__ctor_System_Byte_System_Byte_System_Byte_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.%23ctor(System.Byte%2CSystem.Byte%2CSystem.Byte%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L48">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent__ctor_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.#ctor*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent__ctor_System_Byte_System_Byte_System_Byte_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.#ctor(System.Byte,System.Byte,System.Byte,System.UInt32)">RobustMidiEvent(Byte, Byte, Byte, UInt32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public RobustMidiEvent(byte status, byte data1, byte data2, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">status</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">data1</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">data2</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Data1.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Data1%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L23">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Data1" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Data1">Data1</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public readonly byte Data1</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Data2.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Data2%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L24">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Data2" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Data2">Data2</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public readonly byte Data2</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_MaxChannels.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.MaxChannels%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L13">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_MaxChannels" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.MaxChannels">MaxChannels</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public const int MaxChannels = null</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_PercussionChannel.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.PercussionChannel%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L14">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_PercussionChannel" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.PercussionChannel">PercussionChannel</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public const int PercussionChannel = null</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Status.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Status%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L21">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Status" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Status">Status</h4>
+  <div class="markdown level1 summary"><p>Byte that stores both Command Type and Channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public readonly byte Status</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Tick.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Tick%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L29">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Tick" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Tick">Tick</h4>
+  <div class="markdown level1 summary"><p>Sequencer tick to schedule this event at.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public readonly uint Tick</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Channel.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Channel%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L35">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_Channel_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Channel*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Channel" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Channel">Channel</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int Channel { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Command.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Command%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L36">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_Command_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Command*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Command" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Command">Command</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int Command { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Control.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Control%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L40">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_Control_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Control*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Control" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Control">Control</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public byte Control { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Key.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Key%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L38">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_Key_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Key*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Key" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Key">Key</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public byte Key { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_MidiCommand.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.MidiCommand%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L37">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_MidiCommand_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.MidiCommand*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_MidiCommand" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.MidiCommand">MidiCommand</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public RobustMidiCommand MidiCommand { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiCommand.html">RobustMidiCommand</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Pitch.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Pitch%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L42">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_Pitch_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Pitch*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Pitch" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Pitch">Pitch</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int Pitch { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Pressure.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Pressure%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L43">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_Pressure_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Pressure*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Pressure" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Pressure">Pressure</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public byte Pressure { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Program.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Program%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L44">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_Program_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Program*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Program" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Program">Program</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public byte Program { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Value.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Value%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L41">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_Value_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Value*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Value" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Value">Value</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public byte Value { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_Velocity.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.Velocity%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L39">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_Velocity_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Velocity*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_Velocity" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.Velocity">Velocity</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public byte Velocity { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_AfterTouch_System_Byte_System_Byte_System_Byte_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.AfterTouch(System.Byte%2CSystem.Byte%2CSystem.Byte%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L99">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_AfterTouch_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.AfterTouch*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_AfterTouch_System_Byte_System_Byte_System_Byte_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.AfterTouch(System.Byte,System.Byte,System.Byte,System.UInt32)">AfterTouch(Byte, Byte, Byte, UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns an event to change the velocity on an active note on a given channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent AfterTouch(byte channel, byte key, byte value, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">key</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_AllNotesOff_System_Byte_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.AllNotesOff(System.Byte%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L135">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_AllNotesOff_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.AllNotesOff*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_AllNotesOff_System_Byte_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.AllNotesOff(System.Byte,System.UInt32)">AllNotesOff(Byte, UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns an event to turn all notes off on a given channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent AllNotesOff(byte channel, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_BankSelect_System_Byte_System_Byte_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.BankSelect(System.Byte%2CSystem.Byte%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L129">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_BankSelect_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.BankSelect*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_BankSelect_System_Byte_System_Byte_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.BankSelect(System.Byte,System.Byte,System.UInt32)">BankSelect(Byte, Byte, UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns an event to select the bank on a given channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent BankSelect(byte channel, byte bank, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">bank</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_ChannelPressure_System_Byte_System_Byte_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.ChannelPressure(System.Byte%2CSystem.Byte%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L117">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_ChannelPressure_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.ChannelPressure*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_ChannelPressure_System_Byte_System_Byte_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.ChannelPressure(System.Byte,System.Byte,System.UInt32)">ChannelPressure(Byte, Byte, UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns an event to change the note pressure on a given channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent ChannelPressure(byte channel, byte pressure, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">pressure</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_ControlChange_System_Byte_System_Byte_System_Byte_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.ControlChange(System.Byte%2CSystem.Byte%2CSystem.Byte%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L105">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_ControlChange_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.ControlChange*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_ControlChange_System_Byte_System_Byte_System_Byte_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.ControlChange(System.Byte,System.Byte,System.Byte,System.UInt32)">ControlChange(Byte, Byte, Byte, UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns an event to change a specific controller value on a given channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent ControlChange(byte channel, byte control, byte value, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">control</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_MakeStatus_System_Byte_Robust_Shared_Audio_Midi_RobustMidiCommand_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.MakeStatus(System.Byte%2CRobust.Shared.Audio.Midi.RobustMidiCommand)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L81">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_MakeStatus_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.MakeStatus*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_MakeStatus_System_Byte_Robust_Shared_Audio_Midi_RobustMidiCommand_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.MakeStatus(System.Byte,Robust.Shared.Audio.Midi.RobustMidiCommand)">MakeStatus(Byte, RobustMidiCommand)</h4>
+  <div class="markdown level1 summary"><p>Returns a status byte given a channel byte and a command type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static byte MakeStatus(byte channel, RobustMidiCommand command)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiCommand.html">RobustMidiCommand</a></td>
+        <td><span class="parametername">command</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_MakeStatus_System_Byte_System_Byte_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.MakeStatus(System.Byte%2CSystem.Byte)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L75">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_MakeStatus_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.MakeStatus*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_MakeStatus_System_Byte_System_Byte_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.MakeStatus(System.Byte,System.Byte)">MakeStatus(Byte, Byte)</h4>
+  <div class="markdown level1 summary"><p>Returns a status byte given a channel byte and a command type byte.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static byte MakeStatus(byte channel, byte command)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">command</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_NoteOff_System_Byte_System_Byte_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.NoteOff(System.Byte%2CSystem.Byte%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L87">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_NoteOff_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.NoteOff*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_NoteOff_System_Byte_System_Byte_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.NoteOff(System.Byte,System.Byte,System.UInt32)">NoteOff(Byte, Byte, UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns an event to turn off a note on a given channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent NoteOff(byte channel, byte key, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">key</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_NoteOn_System_Byte_System_Byte_System_Byte_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.NoteOn(System.Byte%2CSystem.Byte%2CSystem.Byte%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L93">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_NoteOn_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.NoteOn*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_NoteOn_System_Byte_System_Byte_System_Byte_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.NoteOn(System.Byte,System.Byte,System.Byte,System.UInt32)">NoteOn(Byte, Byte, Byte, UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns an event to turn on a note on a given channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent NoteOn(byte channel, byte key, byte velocity, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">key</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">velocity</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_PitchBend_System_Byte_System_UInt16_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.PitchBend(System.Byte%2CSystem.UInt16%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L123">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_PitchBend_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.PitchBend*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_PitchBend_System_Byte_System_UInt16_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.PitchBend(System.Byte,System.UInt16,System.UInt32)">PitchBend(Byte, UInt16, UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns an event to bend the pitch on a given channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent PitchBend(byte channel, ushort pitch, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt16</span></td>
+        <td><span class="parametername">pitch</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_ProgramChange_System_Byte_System_Byte_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.ProgramChange(System.Byte%2CSystem.Byte%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L111">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_ProgramChange_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.ProgramChange*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_ProgramChange_System_Byte_System_Byte_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.ProgramChange(System.Byte,System.Byte,System.UInt32)">ProgramChange(Byte, Byte, UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns an event to change the program on a given channel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent ProgramChange(byte channel, byte program, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">program</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_ResetAllControllers_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.ResetAllControllers(System.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L141">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_ResetAllControllers_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.ResetAllControllers*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_ResetAllControllers_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.ResetAllControllers(System.UInt32)">ResetAllControllers(UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns an event to reset all controllers.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent ResetAllControllers(uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_SystemMessage_System_Byte_System_Byte_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.SystemMessage(System.Byte%2CSystem.Byte%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L147">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_SystemMessage_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.SystemMessage*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_SystemMessage_System_Byte_System_Byte_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.SystemMessage(System.Byte,System.Byte,System.UInt32)">SystemMessage(Byte, Byte, UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns a system message event.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent SystemMessage(byte channel, byte control, uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Byte</span></td>
+        <td><span class="parametername">control</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_SystemReset_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.SystemReset(System.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L153">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_SystemReset_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.SystemReset*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_SystemReset_System_UInt32_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.SystemReset(System.UInt32)">SystemReset(UInt32)</h4>
+  <div class="markdown level1 summary"><p>Creates and returns a system reset event.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static RobustMidiEvent SystemReset(uint tick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">tick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Audio.Midi.RobustMidiEvent.html">RobustMidiEvent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent_ToString.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent.ToString%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L67">View Source</a>
+  </span>
+  <a id="Robust_Shared_Audio_Midi_RobustMidiEvent_ToString_" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.ToString*"></a>
+  <h4 id="Robust_Shared_Audio_Midi_RobustMidiEvent_ToString" data-uid="Robust.Shared.Audio.Midi.RobustMidiEvent.ToString">ToString()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override string ToString()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Audio_Midi_RobustMidiEvent.md&amp;value=---%0Auid%3A%20Robust.Shared.Audio.Midi.RobustMidiEvent%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Audio/Midi/RobustMidiEvent.cs/#L10" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

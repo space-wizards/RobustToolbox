@@ -1,0 +1,755 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class ToolshedManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class ToolshedManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Toolshed.ToolshedManager">
+  
+  
+  <h1 id="Robust_Shared_Toolshed_ToolshedManager" data-uid="Robust.Shared.Toolshed.ToolshedManager" class="text-break">Class ToolshedManager
+  </h1>
+  <div class="markdown level0 summary"><p>The overarching controller for Toolshed, providing invocation, reflection, commands, parsing, and other tools used by the language.
+<a href="https://docs.spacestation14.io/">External documentation</a> has a more in-depth look.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">ToolshedManager</span></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Toolshed.html">Robust.Shared.Toolshed</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Toolshed_ToolshedManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class ToolshedManager : object</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_ToolshedManager_ActivePermissionController.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.ToolshedManager.ActivePermissionController%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/ToolshedManager.Permissions.cs/#L17">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_ToolshedManager_ActivePermissionController_" data-uid="Robust.Shared.Toolshed.ToolshedManager.ActivePermissionController*"></a>
+  <h4 id="Robust_Shared_Toolshed_ToolshedManager_ActivePermissionController" data-uid="Robust.Shared.Toolshed.ToolshedManager.ActivePermissionController">ActivePermissionController</h4>
+  <div class="markdown level1 summary"><p>The active permission controller, if any.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPermissionController ActivePermissionController { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.IPermissionController.html">IPermissionController</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_ToolshedManager_ActivePermissionController_remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>Invocation contexts can entirely ignore this, though it's bad form to do so if they have a session on hand.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_ToolshedManager_DefaultEnvironment.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.ToolshedManager.DefaultEnvironment%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/ToolshedManager.Permissions.cs/#L19">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_ToolshedManager_DefaultEnvironment_" data-uid="Robust.Shared.Toolshed.ToolshedManager.DefaultEnvironment*"></a>
+  <h4 id="Robust_Shared_Toolshed_ToolshedManager_DefaultEnvironment" data-uid="Robust.Shared.Toolshed.ToolshedManager.DefaultEnvironment">DefaultEnvironment</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ToolshedEnvironment DefaultEnvironment { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.ToolshedEnvironment.html">ToolshedEnvironment</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_ToolshedManager_Initialize.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.ToolshedManager.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/ToolshedManager.cs/#L40">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_ToolshedManager_Initialize_" data-uid="Robust.Shared.Toolshed.ToolshedManager.Initialize*"></a>
+  <h4 id="Robust_Shared_Toolshed_ToolshedManager_Initialize" data-uid="Robust.Shared.Toolshed.ToolshedManager.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"><p>If you're not an engine developer, you probably shouldn't call this.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Initialize()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_Robust_Shared_Console_IConsoleShell_System_String_System_Nullable_System_Object__System_Nullable_System_Object___Robust_Shared_Toolshed_IInvocationContext__.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.ToolshedManager.InvokeCommand(Robust.Shared.Console.IConsoleShell%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%2CSystem.Nullable%7BSystem.Object%7D%40%2CRobust.Shared.Toolshed.IInvocationContext%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/ToolshedManager.cs/#L97">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_" data-uid="Robust.Shared.Toolshed.ToolshedManager.InvokeCommand*"></a>
+  <h4 id="Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_Robust_Shared_Console_IConsoleShell_System_String_System_Nullable_System_Object__System_Nullable_System_Object___Robust_Shared_Toolshed_IInvocationContext__" data-uid="Robust.Shared.Toolshed.ToolshedManager.InvokeCommand(Robust.Shared.Console.IConsoleShell,System.String,System.Nullable{System.Object},System.Nullable{System.Object}@,Robust.Shared.Toolshed.IInvocationContext@)">InvokeCommand(IConsoleShell, String, Nullable&lt;Object&gt;, out Nullable&lt;Object&gt;, out IInvocationContext)</h4>
+  <div class="markdown level1 summary"><p>Invokes a command as the given user.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool InvokeCommand(IConsoleShell session, string command, object? input, out object? result, out IInvocationContext ctx)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Console.IConsoleShell.html">IConsoleShell</a></td>
+        <td><span class="parametername">session</span></td>
+        <td><p>User to run as.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>Command to invoke.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">input</span></td>
+        <td><p>An input value to use, if any.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">result</span></td>
+        <td><p>The resulting value, if any.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.IInvocationContext.html">IInvocationContext</a></td>
+        <td><span class="parametername">ctx</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Invocation success.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_Robust_Shared_Console_IConsoleShell_System_String_System_Nullable_System_Object__System_Nullable_System_Object___Robust_Shared_Toolshed_IInvocationContext___remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This will use the same IInvocationContext as the one used by the user for debug console commands.</p>
+</div>
+  <h5 id="Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_Robust_Shared_Console_IConsoleShell_System_String_System_Nullable_System_Object__System_Nullable_System_Object___Robust_Shared_Toolshed_IInvocationContext___examples">Examples</h5>
+  <pre><code>        ToolshedManager toolshed = ...;
+        IConsoleShell ctx = ...;
+        // Now run some user provided command and get a result!
+        toolshed.InvokeCommand(ctx, userCommand, &quot;my input value&quot;, out var result);</code></pre>
+
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_Robust_Shared_Players_ICommonSession_System_String_System_Nullable_System_Object__System_Nullable_System_Object___.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.ToolshedManager.InvokeCommand(Robust.Shared.Players.ICommonSession%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%2CSystem.Nullable%7BSystem.Object%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/ToolshedManager.cs/#L66">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_" data-uid="Robust.Shared.Toolshed.ToolshedManager.InvokeCommand*"></a>
+  <h4 id="Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_Robust_Shared_Players_ICommonSession_System_String_System_Nullable_System_Object__System_Nullable_System_Object___" data-uid="Robust.Shared.Toolshed.ToolshedManager.InvokeCommand(Robust.Shared.Players.ICommonSession,System.String,System.Nullable{System.Object},System.Nullable{System.Object}@)">InvokeCommand(ICommonSession, String, Nullable&lt;Object&gt;, out Nullable&lt;Object&gt;)</h4>
+  <div class="markdown level1 summary"><p>Invokes a command as the given user.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool InvokeCommand(ICommonSession session, string command, object? input, out object? result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td><p>User to run as.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>Command to invoke.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">input</span></td>
+        <td><p>An input value to use, if any.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">result</span></td>
+        <td><p>The resulting value, if any.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Invocation success.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_Robust_Shared_Players_ICommonSession_System_String_System_Nullable_System_Object__System_Nullable_System_Object____remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This will use the same IInvocationContext as the one used by the user for debug console commands.</p>
+</div>
+  <h5 id="Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_Robust_Shared_Players_ICommonSession_System_String_System_Nullable_System_Object__System_Nullable_System_Object____examples">Examples</h5>
+  <pre><code>        ToolshedManager toolshed = ...;
+        ICommonSession ctx = ...;
+        // Now run some user provided command and get a result!
+        toolshed.InvokeCommand(ctx, userCommand, &quot;my input value&quot;, out var result);</code></pre>
+
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_Robust_Shared_Toolshed_IInvocationContext_System_String_System_Nullable_System_Object__System_Nullable_System_Object___.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.ToolshedManager.InvokeCommand(Robust.Shared.Toolshed.IInvocationContext%2CSystem.String%2CSystem.Nullable%7BSystem.Object%7D%2CSystem.Nullable%7BSystem.Object%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/ToolshedManager.cs/#L127">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_" data-uid="Robust.Shared.Toolshed.ToolshedManager.InvokeCommand*"></a>
+  <h4 id="Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_Robust_Shared_Toolshed_IInvocationContext_System_String_System_Nullable_System_Object__System_Nullable_System_Object___" data-uid="Robust.Shared.Toolshed.ToolshedManager.InvokeCommand(Robust.Shared.Toolshed.IInvocationContext,System.String,System.Nullable{System.Object},System.Nullable{System.Object}@)">InvokeCommand(IInvocationContext, String, Nullable&lt;Object&gt;, out Nullable&lt;Object&gt;)</h4>
+  <div class="markdown level1 summary"><p>Invokes a command with the given context.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool InvokeCommand(IInvocationContext ctx, string command, object? input, out object? result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.IInvocationContext.html">IInvocationContext</a></td>
+        <td><span class="parametername">ctx</span></td>
+        <td><p>The context to run in.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">command</span></td>
+        <td><p>Command to invoke.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">input</span></td>
+        <td><p>An input value to use, if any.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">result</span></td>
+        <td><p>The resulting value, if any.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Invocation success.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_ToolshedManager_InvokeCommand_Robust_Shared_Toolshed_IInvocationContext_System_String_System_Nullable_System_Object__System_Nullable_System_Object____examples">Examples</h5>
+  <pre><code>        ToolshedManager toolshed = ...;
+        IInvocationContext ctx = ...;
+        // Now run some user provided command and get a result!
+        toolshed.InvokeCommand(ctx, userCommand, &quot;my input value&quot;, out var result);</code></pre>
+
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_ToolshedManager_PrettyPrintType_System_Nullable_System_Object__System_Nullable_IEnumerable___System_Boolean_System_Nullable_System_Int32__.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.ToolshedManager.PrettyPrintType(System.Nullable%7BSystem.Object%7D%2CSystem.Nullable%7BIEnumerable%7D%40%2CSystem.Boolean%2CSystem.Nullable%7BSystem.Int32%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/ToolshedManager.PrettyPrint.cs/#L23">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_ToolshedManager_PrettyPrintType_" data-uid="Robust.Shared.Toolshed.ToolshedManager.PrettyPrintType*"></a>
+  <h4 id="Robust_Shared_Toolshed_ToolshedManager_PrettyPrintType_System_Nullable_System_Object__System_Nullable_IEnumerable___System_Boolean_System_Nullable_System_Int32__" data-uid="Robust.Shared.Toolshed.ToolshedManager.PrettyPrintType(System.Nullable{System.Object},System.Nullable{IEnumerable}@,System.Boolean,System.Nullable{System.Int32})">PrettyPrintType(Nullable&lt;Object&gt;, out Nullable&lt;IEnumerable&gt;, Boolean, Nullable&lt;Int32&gt;)</h4>
+  <div class="markdown level1 summary"><p>Pretty prints a value for use in the console.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string PrettyPrintType(object? value, out IEnumerable? more, bool moreUsed = false, int? maxOutput = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">value</span></td>
+        <td><p>Value to pretty print.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">IEnumerable</span>&gt;</td>
+        <td><span class="parametername">more</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">moreUsed</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Int32</span>&gt;</td>
+        <td><span class="parametername">maxOutput</span></td>
+        <td><p>The maximum number of values that can be output in a list.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><p>The stringified value.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Toolshed_ToolshedManager_PrettyPrintType_System_Nullable_System_Object__System_Nullable_IEnumerable___System_Boolean_System_Nullable_System_Int32___remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This returns markup.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_ToolshedManager_TryAutocomplete_Robust_Shared_Toolshed_Syntax_ParserContext_Type_System_Nullable_System_String__.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.ToolshedManager.TryAutocomplete(Robust.Shared.Toolshed.Syntax.ParserContext%2CType%2CSystem.Nullable%7BSystem.String%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/ToolshedManager.Parsing.cs/#L138">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_ToolshedManager_TryAutocomplete_" data-uid="Robust.Shared.Toolshed.ToolshedManager.TryAutocomplete*"></a>
+  <h4 id="Robust_Shared_Toolshed_ToolshedManager_TryAutocomplete_Robust_Shared_Toolshed_Syntax_ParserContext_Type_System_Nullable_System_String__" data-uid="Robust.Shared.Toolshed.ToolshedManager.TryAutocomplete(Robust.Shared.Toolshed.Syntax.ParserContext,Type,System.Nullable{System.String})">TryAutocomplete(ParserContext, Type, Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"><p>iunno man it does autocomplete what more do u want</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ValueTask&lt;(CompletionResult? , IConError)&gt; TryAutocomplete(ParserContext parserContext, Type t, string? argName)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.Syntax.ParserContext.html">ParserContext</a></td>
+        <td><span class="parametername">parserContext</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">t</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">argName</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">ValueTask</span>&lt;<span class="xref">System.ValueTuple</span>&lt;<span class="xref">System.Nullable</span>&lt;<span class="xref">CompletionResult</span>&gt;, <a class="xref" href="Robust.Shared.Toolshed.Errors.IConError.html">IConError</a>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_ToolshedManager_TryParse_Robust_Shared_Toolshed_Syntax_ParserContext_Type_System_Nullable_System_Object___Robust_Shared_Toolshed_Errors_IConError__.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.ToolshedManager.TryParse(Robust.Shared.Toolshed.Syntax.ParserContext%2CType%2CSystem.Nullable%7BSystem.Object%7D%40%2CRobust.Shared.Toolshed.Errors.IConError%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/ToolshedManager.Parsing.cs/#L158">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_ToolshedManager_TryParse_" data-uid="Robust.Shared.Toolshed.ToolshedManager.TryParse*"></a>
+  <h4 id="Robust_Shared_Toolshed_ToolshedManager_TryParse_Robust_Shared_Toolshed_Syntax_ParserContext_Type_System_Nullable_System_Object___Robust_Shared_Toolshed_Errors_IConError__" data-uid="Robust.Shared.Toolshed.ToolshedManager.TryParse(Robust.Shared.Toolshed.Syntax.ParserContext,Type,System.Nullable{System.Object}@,Robust.Shared.Toolshed.Errors.IConError@)">TryParse(ParserContext, Type, out Nullable&lt;Object&gt;, out IConError)</h4>
+  <div class="markdown level1 summary"><p>Attempts to parse the given type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryParse(ParserContext parserContext, Type t, out object? parsed, out IConError error)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.Syntax.ParserContext.html">ParserContext</a></td>
+        <td><span class="parametername">parserContext</span></td>
+        <td><p>The input to parse from.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">t</span></td>
+        <td><p>The type to parse from the input.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">parsed</span></td>
+        <td><p>The parsed value, if any.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.Errors.IConError.html">IConError</a></td>
+        <td><span class="parametername">error</span></td>
+        <td><p>A console error, if any, that can be reported to explain the parsing failure.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Success.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_ToolshedManager_TryParse__1_Robust_Shared_Toolshed_Syntax_ParserContext___0__Robust_Shared_Toolshed_Errors_IConError__.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.ToolshedManager.TryParse%60%601(Robust.Shared.Toolshed.Syntax.ParserContext%2C%60%600%40%2CRobust.Shared.Toolshed.Errors.IConError%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/ToolshedManager.Parsing.cs/#L125">View Source</a>
+  </span>
+  <a id="Robust_Shared_Toolshed_ToolshedManager_TryParse_" data-uid="Robust.Shared.Toolshed.ToolshedManager.TryParse*"></a>
+  <h4 id="Robust_Shared_Toolshed_ToolshedManager_TryParse__1_Robust_Shared_Toolshed_Syntax_ParserContext___0__Robust_Shared_Toolshed_Errors_IConError__" data-uid="Robust.Shared.Toolshed.ToolshedManager.TryParse``1(Robust.Shared.Toolshed.Syntax.ParserContext,``0@,Robust.Shared.Toolshed.Errors.IConError@)">TryParse&lt;T&gt;(ParserContext, out T, out IConError)</h4>
+  <div class="markdown level1 summary"><p>Attempts to parse the given type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryParse&lt;T&gt;(ParserContext parserContext, out T parsed, out IConError error)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.Syntax.ParserContext.html">ParserContext</a></td>
+        <td><span class="parametername">parserContext</span></td>
+        <td><p>The input to parse from.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td><span class="parametername">parsed</span></td>
+        <td><p>The parsed value, if any.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Toolshed.Errors.IConError.html">IConError</a></td>
+        <td><span class="parametername">error</span></td>
+        <td><p>A console error, if any, that can be reported to explain the parsing failure.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Success.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td><p>The type to parse from the input.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="seealso">See Also</h3>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Toolshed.ToolshedCommand.html">ToolshedCommand</a></div>
+      <div><a class="xref" href="Robust.Shared.Toolshed.IInvocationContext.html">IInvocationContext</a></div>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Toolshed_ToolshedManager.md&amp;value=---%0Auid%3A%20Robust.Shared.Toolshed.ToolshedManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Toolshed/ToolshedManager.Types.cs/#L10" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,649 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface ILocalizationManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface ILocalizationManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Localization.ILocalizationManager">
+  
+  
+  <h1 id="Robust_Shared_Localization_ILocalizationManager" data-uid="Robust.Shared.Localization.ILocalizationManager" class="text-break">Interface ILocalizationManager
+  </h1>
+  <div class="markdown level0 summary"><p>Provides facilities to obtain language appropriate in-game text.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Localization.html">Robust.Shared.Localization</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Localization_ILocalizationManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface ILocalizationManager</code></pre>
+  </div>
+  <h5 id="Robust_Shared_Localization_ILocalizationManager_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>
+Translation is handled using Project Fluent (https://www.projectfluent.org/)
+You pass a Fluent &apos;identifier&apos; as a string and the localization manager will fetch the message
+matching that identifier from the currently loaded language&apos;s Fluent files.
+</p>
+</div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager_DefaultCulture.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager.DefaultCulture%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L67">View Source</a>
+  </span>
+  <a id="Robust_Shared_Localization_ILocalizationManager_DefaultCulture_" data-uid="Robust.Shared.Localization.ILocalizationManager.DefaultCulture*"></a>
+  <h4 id="Robust_Shared_Localization_ILocalizationManager_DefaultCulture" data-uid="Robust.Shared.Localization.ILocalizationManager.DefaultCulture">DefaultCulture</h4>
+  <div class="markdown level1 summary"><p>Default culture used by other methods when no culture is explicitly specified.
+Changing this also changes the current thread's culture.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">CultureInfo? DefaultCulture { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">CultureInfo</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager_AddFunction_CultureInfo_System_String_Robust_Shared_Localization_LocFunction_.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager.AddFunction(CultureInfo%2CSystem.String%2CRobust.Shared.Localization.LocFunction)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L91">View Source</a>
+  </span>
+  <a id="Robust_Shared_Localization_ILocalizationManager_AddFunction_" data-uid="Robust.Shared.Localization.ILocalizationManager.AddFunction*"></a>
+  <h4 id="Robust_Shared_Localization_ILocalizationManager_AddFunction_CultureInfo_System_String_Robust_Shared_Localization_LocFunction_" data-uid="Robust.Shared.Localization.ILocalizationManager.AddFunction(CultureInfo,System.String,Robust.Shared.Localization.LocFunction)">AddFunction(CultureInfo, String, LocFunction)</h4>
+  <div class="markdown level1 summary"><p>Add a function that can be called from Fluent localizations.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void AddFunction(CultureInfo culture, string name, LocFunction function)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">CultureInfo</span></td>
+        <td><span class="parametername">culture</span></td>
+        <td><p>The culture to add the function instance for.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td><p>The name of the function.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Localization.LocFunction.html">LocFunction</a></td>
+        <td><span class="parametername">function</span></td>
+        <td><p>The function itself.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager_GetEntityData_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager.GetEntityData(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L96">View Source</a>
+  </span>
+  <a id="Robust_Shared_Localization_ILocalizationManager_GetEntityData_" data-uid="Robust.Shared.Localization.ILocalizationManager.GetEntityData*"></a>
+  <h4 id="Robust_Shared_Localization_ILocalizationManager_GetEntityData_System_String_" data-uid="Robust.Shared.Localization.ILocalizationManager.GetEntityData(System.String)">GetEntityData(String)</h4>
+  <div class="markdown level1 summary"><p>Gets localization data for an entity prototype.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">EntityLocData GetEntityData(string prototypeId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">prototypeId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">EntityLocData</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager_GetString_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager.GetString(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L31">View Source</a>
+  </span>
+  <a id="Robust_Shared_Localization_ILocalizationManager_GetString_" data-uid="Robust.Shared.Localization.ILocalizationManager.GetString*"></a>
+  <h4 id="Robust_Shared_Localization_ILocalizationManager_GetString_System_String_" data-uid="Robust.Shared.Localization.ILocalizationManager.GetString(System.String)">GetString(String)</h4>
+  <div class="markdown level1 summary"><p>Gets a language appropriate string represented by the supplied messageId.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetString(string messageId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">messageId</span></td>
+        <td><p>Unique Identifier for a translated message.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><p>The language appropriate message if available, otherwise the messageId is returned.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager_GetString_System_String_System_ValueTuple_System_String_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager.GetString(System.String%2CSystem.ValueTuple%7BSystem.String%2CSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L52">View Source</a>
+  </span>
+  <a id="Robust_Shared_Localization_ILocalizationManager_GetString_" data-uid="Robust.Shared.Localization.ILocalizationManager.GetString*"></a>
+  <h4 id="Robust_Shared_Localization_ILocalizationManager_GetString_System_String_System_ValueTuple_System_String_System_Object____" data-uid="Robust.Shared.Localization.ILocalizationManager.GetString(System.String,System.ValueTuple{System.String,System.Object}[])">GetString(String, (String, Object)[])</h4>
+  <div class="markdown level1 summary"><p>Version of <a class="xref" href="Robust.Shared.Localization.ILocalizationManager.html#Robust_Shared_Localization_ILocalizationManager_GetString_System_String_">GetString(String)</a> that supports arguments.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetString(string messageId, params (string, object)[] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">messageId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">System.String</span>, <span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager_HasString_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager.HasString(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L38">View Source</a>
+  </span>
+  <a id="Robust_Shared_Localization_ILocalizationManager_HasString_" data-uid="Robust.Shared.Localization.ILocalizationManager.HasString*"></a>
+  <h4 id="Robust_Shared_Localization_ILocalizationManager_HasString_System_String_" data-uid="Robust.Shared.Localization.ILocalizationManager.HasString(System.String)">HasString(String)</h4>
+  <div class="markdown level1 summary"><p>Checks if the specified id has been registered, without checking its arguments.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool HasString(string messageId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">messageId</span></td>
+        <td><p>Unique Identifier for a translated message.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>true if it exists, even if it requires any parameters to be passed.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager_LoadCulture_CultureInfo_.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager.LoadCulture(CultureInfo)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L73">View Source</a>
+  </span>
+  <a id="Robust_Shared_Localization_ILocalizationManager_LoadCulture_" data-uid="Robust.Shared.Localization.ILocalizationManager.LoadCulture*"></a>
+  <h4 id="Robust_Shared_Localization_ILocalizationManager_LoadCulture_CultureInfo_" data-uid="Robust.Shared.Localization.ILocalizationManager.LoadCulture(CultureInfo)">LoadCulture(CultureInfo)</h4>
+  <div class="markdown level1 summary"><p>Load data for a culture.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void LoadCulture(CultureInfo culture)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">CultureInfo</span></td>
+        <td><span class="parametername">culture</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager_ReloadLocalizations.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager.ReloadLocalizations%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L83">View Source</a>
+  </span>
+  <a id="Robust_Shared_Localization_ILocalizationManager_ReloadLocalizations_" data-uid="Robust.Shared.Localization.ILocalizationManager.ReloadLocalizations*"></a>
+  <h4 id="Robust_Shared_Localization_ILocalizationManager_ReloadLocalizations" data-uid="Robust.Shared.Localization.ILocalizationManager.ReloadLocalizations">ReloadLocalizations()</h4>
+  <div class="markdown level1 summary"><p>Immediately reload ALL localizations from resources.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ReloadLocalizations()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager_SetFallbackCluture_CultureInfo_.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager.SetFallbackCluture(CultureInfo)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L78">View Source</a>
+  </span>
+  <a id="Robust_Shared_Localization_ILocalizationManager_SetFallbackCluture_" data-uid="Robust.Shared.Localization.ILocalizationManager.SetFallbackCluture*"></a>
+  <h4 id="Robust_Shared_Localization_ILocalizationManager_SetFallbackCluture_CultureInfo_" data-uid="Robust.Shared.Localization.ILocalizationManager.SetFallbackCluture(CultureInfo)">SetFallbackCluture(CultureInfo)</h4>
+  <div class="markdown level1 summary"><p>Sets culture to be used in the absence of the main one.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void SetFallbackCluture(CultureInfo culture)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">CultureInfo</span></td>
+        <td><span class="parametername">culture</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager_TryGetString_System_String_System_Nullable_System_String___.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager.TryGetString(System.String%2CSystem.Nullable%7BSystem.String%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L47">View Source</a>
+  </span>
+  <a id="Robust_Shared_Localization_ILocalizationManager_TryGetString_" data-uid="Robust.Shared.Localization.ILocalizationManager.TryGetString*"></a>
+  <h4 id="Robust_Shared_Localization_ILocalizationManager_TryGetString_System_String_System_Nullable_System_String___" data-uid="Robust.Shared.Localization.ILocalizationManager.TryGetString(System.String,System.Nullable{System.String}@)">TryGetString(String, out Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"><p>Try- version of <a class="xref" href="Robust.Shared.Localization.ILocalizationManager.html#Robust_Shared_Localization_ILocalizationManager_GetString_System_String_">GetString(String)</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetString(string messageId, out string? value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">messageId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Localization_ILocalizationManager_TryGetString_System_String_System_Nullable_System_String____remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>Does not log a warning if the message does not exist.
+Does however log errors if any occur while formatting.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager_TryGetString_System_String_System_Nullable_System_String___System_ValueTuple_System_String_System_Object____.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager.TryGetString(System.String%2CSystem.Nullable%7BSystem.String%7D%40%2CSystem.ValueTuple%7BSystem.String%2CSystem.Object%7D%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L61">View Source</a>
+  </span>
+  <a id="Robust_Shared_Localization_ILocalizationManager_TryGetString_" data-uid="Robust.Shared.Localization.ILocalizationManager.TryGetString*"></a>
+  <h4 id="Robust_Shared_Localization_ILocalizationManager_TryGetString_System_String_System_Nullable_System_String___System_ValueTuple_System_String_System_Object____" data-uid="Robust.Shared.Localization.ILocalizationManager.TryGetString(System.String,System.Nullable{System.String}@,System.ValueTuple{System.String,System.Object}[])">TryGetString(String, out Nullable&lt;String&gt;, (String, Object)[])</h4>
+  <div class="markdown level1 summary"><p>Try- version of <a class="xref" href="Robust.Shared.Localization.ILocalizationManager.html#Robust_Shared_Localization_ILocalizationManager_GetString_System_String_">GetString(String)</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetString(string messageId, out string? value, params (string, object)[] keyArgs)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">messageId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">System.String</span>, <span class="xref">System.Object</span>&gt;[]</td>
+        <td><span class="parametername">keyArgs</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Localization_ILocalizationManager_TryGetString_System_String_System_Nullable_System_String___System_ValueTuple_System_String_System_Object_____remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>Does not log a warning if the message does not exist.
+Does however log errors if any occur while formatting.</p>
+</div>
+  <h3 id="seealso">See Also</h3>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Localization.Loc.html">Loc</a></div>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Localization_ILocalizationManager.md&amp;value=---%0Auid%3A%20Robust.Shared.Localization.ILocalizationManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Localization/ILocalizationManager.cs/#L21" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1735 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class SpriteSpecifierSerializer
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class SpriteSpecifierSerializer
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer">
+  
+  
+  <h1 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer" class="text-break">Class SpriteSpecifierSerializer
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">SpriteSpecifierSerializer</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>, <a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier-1.html">ITypeCopier</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier-1.html">ITypeCopier</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a>&gt;</div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Implementations.html">Robust.Shared.Serialization.TypeSerializers.Implementations</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class SpriteSpecifierSerializer : object, ITypeSerializer&lt;SpriteSpecifier.Texture, ValueDataNode&gt;, ITypeReaderWriter&lt;SpriteSpecifier.Texture, ValueDataNode&gt;, ITypeReader&lt;SpriteSpecifier.Texture, ValueDataNode&gt;, ITypeValidator&lt;SpriteSpecifier.Texture, ValueDataNode&gt;, BaseSerializerInterfaces.ITypeNodeInterface&lt;SpriteSpecifier.Texture, ValueDataNode&gt;, ITypeWriter&lt;SpriteSpecifier.Texture&gt;, ITypeSerializer&lt;SpriteSpecifier.EntityPrototype, ValueDataNode&gt;, ITypeReaderWriter&lt;SpriteSpecifier.EntityPrototype, ValueDataNode&gt;, ITypeReader&lt;SpriteSpecifier.EntityPrototype, ValueDataNode&gt;, ITypeValidator&lt;SpriteSpecifier.EntityPrototype, ValueDataNode&gt;, BaseSerializerInterfaces.ITypeNodeInterface&lt;SpriteSpecifier.EntityPrototype, ValueDataNode&gt;, ITypeWriter&lt;SpriteSpecifier.EntityPrototype&gt;, ITypeSerializer&lt;SpriteSpecifier.Rsi, MappingDataNode&gt;, ITypeReaderWriter&lt;SpriteSpecifier.Rsi, MappingDataNode&gt;, ITypeReader&lt;SpriteSpecifier.Rsi, MappingDataNode&gt;, ITypeValidator&lt;SpriteSpecifier.Rsi, MappingDataNode&gt;, BaseSerializerInterfaces.ITypeNodeInterface&lt;SpriteSpecifier.Rsi, MappingDataNode&gt;, ITypeWriter&lt;SpriteSpecifier.Rsi&gt;, ITypeSerializer&lt;SpriteSpecifier, MappingDataNode&gt;, ITypeReaderWriter&lt;SpriteSpecifier, MappingDataNode&gt;, ITypeReader&lt;SpriteSpecifier, MappingDataNode&gt;, ITypeValidator&lt;SpriteSpecifier, MappingDataNode&gt;, BaseSerializerInterfaces.ITypeNodeInterface&lt;SpriteSpecifier, MappingDataNode&gt;, ITypeSerializer&lt;SpriteSpecifier, ValueDataNode&gt;, ITypeReaderWriter&lt;SpriteSpecifier, ValueDataNode&gt;, ITypeReader&lt;SpriteSpecifier, ValueDataNode&gt;, ITypeValidator&lt;SpriteSpecifier, ValueDataNode&gt;, BaseSerializerInterfaces.ITypeNodeInterface&lt;SpriteSpecifier, ValueDataNode&gt;, ITypeWriter&lt;SpriteSpecifier&gt;, ITypeCopyCreator&lt;SpriteSpecifier&gt;, BaseSerializerInterfaces.ITypeInterface&lt;SpriteSpecifier&gt;, ITypeCopyCreator&lt;SpriteSpecifier.Rsi&gt;, ITypeCopyCreator&lt;SpriteSpecifier.Texture&gt;, ITypeCopyCreator&lt;SpriteSpecifier.EntityPrototype&gt;, BaseSerializerInterfaces.ITypeInterface&lt;SpriteSpecifier.EntityPrototype&gt;, ITypeCopier&lt;SpriteSpecifier.Rsi&gt;, BaseSerializerInterfaces.ITypeInterface&lt;SpriteSpecifier.Rsi&gt;, ITypeCopier&lt;SpriteSpecifier.Texture&gt;, BaseSerializerInterfaces.ITypeInterface&lt;SpriteSpecifier.Texture&gt;</code></pre>
+  </div>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_TextureRoot.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.TextureRoot%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L30">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_TextureRoot" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.TextureRoot">TextureRoot</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly ResPath TextureRoot</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CopyTo_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_Utility_SpriteSpecifier_Rsi__Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CopyTo(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Utility.SpriteSpecifier.Rsi%2CRobust.Shared.Utility.SpriteSpecifier.Rsi%40%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L229">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CopyTo_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CopyTo*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CopyTo_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_Utility_SpriteSpecifier_Rsi__Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CopyTo(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Utility.SpriteSpecifier.Rsi,Robust.Shared.Utility.SpriteSpecifier.Rsi@,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext)">CopyTo(ISerializationManager, SpriteSpecifier.Rsi, ref SpriteSpecifier.Rsi, IDependencyCollection, SerializationHookContext, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void CopyTo(ISerializationManager serializationManager, SpriteSpecifier.Rsi source, ref SpriteSpecifier.Rsi target, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a></td>
+        <td><span class="parametername">source</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a></td>
+        <td><span class="parametername">target</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CopyTo_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_Utility_SpriteSpecifier_Texture__Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CopyTo(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Utility.SpriteSpecifier.Texture%2CRobust.Shared.Utility.SpriteSpecifier.Texture%40%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L238">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CopyTo_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CopyTo*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CopyTo_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_Utility_SpriteSpecifier_Texture__Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CopyTo(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Utility.SpriteSpecifier.Texture,Robust.Shared.Utility.SpriteSpecifier.Texture@,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext)">CopyTo(ISerializationManager, SpriteSpecifier.Texture, ref SpriteSpecifier.Texture, IDependencyCollection, SerializationHookContext, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void CopyTo(ISerializationManager serializationManager, SpriteSpecifier.Texture source, ref SpriteSpecifier.Texture target, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a></td>
+        <td><span class="parametername">source</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a></td>
+        <td><span class="parametername">target</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Utility.SpriteSpecifier%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L211">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Utility.SpriteSpecifier,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext)">CreateCopy(ISerializationManager, SpriteSpecifier, IDependencyCollection, SerializationHookContext, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public SpriteSpecifier CreateCopy(ISerializationManager serializationManager, SpriteSpecifier source, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a></td>
+        <td><span class="parametername">source</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Utility.SpriteSpecifier.EntityPrototype%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L180">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Utility.SpriteSpecifier.EntityPrototype,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext)">CreateCopy(ISerializationManager, SpriteSpecifier.EntityPrototype, IDependencyCollection, SerializationHookContext, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public SpriteSpecifier.EntityPrototype CreateCopy(ISerializationManager serializationManager, SpriteSpecifier.EntityPrototype source, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a></td>
+        <td><span class="parametername">source</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Utility.SpriteSpecifier.Rsi%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L186">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Utility.SpriteSpecifier.Rsi,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext)">CreateCopy(ISerializationManager, SpriteSpecifier.Rsi, IDependencyCollection, SerializationHookContext, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public SpriteSpecifier.Rsi CreateCopy(ISerializationManager serializationManager, SpriteSpecifier.Rsi source, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a></td>
+        <td><span class="parametername">source</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Utility.SpriteSpecifier.Texture%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L174">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Utility.SpriteSpecifier.Texture,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext)">CreateCopy(ISerializationManager, SpriteSpecifier.Texture, IDependencyCollection, SerializationHookContext, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public SpriteSpecifier.Texture CreateCopy(ISerializationManager serializationManager, SpriteSpecifier.Texture source, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a></td>
+        <td><span class="parametername">source</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_ValidateRsi_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.ValidateRsi(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Mapping.MappingDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L143">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_ValidateRsi_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.ValidateRsi*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_ValidateRsi_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.ValidateRsi(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.Manager.ISerializationContext)">ValidateRsi(ISerializationManager, MappingDataNode, IDependencyCollection, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract ValidationNode ValidateRsi(ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies, ISerializationContext context)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ValidationNode.html">ValidationNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Utility.SpriteSpecifier%2CRobust.Shared.IoC.IDependencyCollection%2CSystem.Boolean%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L192">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Utility.SpriteSpecifier,Robust.Shared.IoC.IDependencyCollection,System.Boolean,Robust.Shared.Serialization.Manager.ISerializationContext)">Write(ISerializationManager, SpriteSpecifier, IDependencyCollection, Boolean, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier value, IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">alwaysWrite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.DataNode.html">DataNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype_Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Utility.SpriteSpecifier.EntityPrototype%2CRobust.Shared.IoC.IDependencyCollection%2CSystem.Boolean%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L155">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype_Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Utility.SpriteSpecifier.EntityPrototype,Robust.Shared.IoC.IDependencyCollection,System.Boolean,Robust.Shared.Serialization.Manager.ISerializationContext)">Write(ISerializationManager, SpriteSpecifier.EntityPrototype, IDependencyCollection, Boolean, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier.EntityPrototype value, IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">alwaysWrite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.DataNode.html">DataNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Utility.SpriteSpecifier.Rsi%2CRobust.Shared.IoC.IDependencyCollection%2CSystem.Boolean%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L164">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Utility.SpriteSpecifier.Rsi,Robust.Shared.IoC.IDependencyCollection,System.Boolean,Robust.Shared.Serialization.Manager.ISerializationContext)">Write(ISerializationManager, SpriteSpecifier.Rsi, IDependencyCollection, Boolean, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier.Rsi value, IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">alwaysWrite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.DataNode.html">DataNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Utility.SpriteSpecifier.Texture%2CRobust.Shared.IoC.IDependencyCollection%2CSystem.Boolean%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L148">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Write_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Write(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Utility.SpriteSpecifier.Texture,Robust.Shared.IoC.IDependencyCollection,System.Boolean,Robust.Shared.Serialization.Manager.ISerializationContext)">Write(ISerializationManager, SpriteSpecifier.Texture, IDependencyCollection, Boolean, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier.Texture value, IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">alwaysWrite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.DataNode.html">DataNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="eii">Explicit Interface Implementations
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype__.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeReader%7BRobust%23Shared%23Utility%23SpriteSpecifier%23EntityPrototype%2CRobust%23Shared%23Serialization%23Markdown%23Value%23ValueDataNode%7D%23Read(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Value.ValueDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext%2CRobust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate%7BRobust.Shared.Utility.SpriteSpecifier.EntityPrototype%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L51">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Read_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{Robust#Shared#Utility#SpriteSpecifier#EntityPrototype,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Read*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype__" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{Robust#Shared#Utility#SpriteSpecifier#EntityPrototype,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Read(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Value.ValueDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext,Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate{Robust.Shared.Utility.SpriteSpecifier.EntityPrototype})">ITypeReader&lt;SpriteSpecifier.EntityPrototype, ValueDataNode&gt;.Read(ISerializationManager, ValueDataNode, IDependencyCollection, SerializationHookContext, ISerializationContext, ISerializationManager.InstantiationDelegate&lt;SpriteSpecifier.EntityPrototype&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SpriteSpecifier.EntityPrototype ITypeReader&lt;SpriteSpecifier.EntityPrototype, ValueDataNode&gt;.Read(ISerializationManager serializationManager, ValueDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context, ISerializationManager.InstantiationDelegate&lt;SpriteSpecifier.EntityPrototype&gt; instanceProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate-1.html">ISerializationManager.InstantiationDelegate</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a>&gt;</td>
+        <td><span class="parametername">instanceProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.EntityPrototype.html">SpriteSpecifier.EntityPrototype</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_Robust_Shared_Utility_SpriteSpecifier_Rsi__.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeReader%7BRobust%23Shared%23Utility%23SpriteSpecifier%23Rsi%2CRobust%23Shared%23Serialization%23Markdown%23Mapping%23MappingDataNode%7D%23Read(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Mapping.MappingDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext%2CRobust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate%7BRobust.Shared.Utility.SpriteSpecifier.Rsi%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L60">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Read_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{Robust#Shared#Utility#SpriteSpecifier#Rsi,Robust#Shared#Serialization#Markdown#Mapping#MappingDataNode}#Read*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_Robust_Shared_Utility_SpriteSpecifier_Rsi__" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{Robust#Shared#Utility#SpriteSpecifier#Rsi,Robust#Shared#Serialization#Markdown#Mapping#MappingDataNode}#Read(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext,Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate{Robust.Shared.Utility.SpriteSpecifier.Rsi})">ITypeReader&lt;SpriteSpecifier.Rsi, MappingDataNode&gt;.Read(ISerializationManager, MappingDataNode, IDependencyCollection, SerializationHookContext, ISerializationContext, ISerializationManager.InstantiationDelegate&lt;SpriteSpecifier.Rsi&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SpriteSpecifier.Rsi ITypeReader&lt;SpriteSpecifier.Rsi, MappingDataNode&gt;.Read(ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context, ISerializationManager.InstantiationDelegate&lt;SpriteSpecifier.Rsi&gt; instanceProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate-1.html">ISerializationManager.InstantiationDelegate</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a>&gt;</td>
+        <td><span class="parametername">instanceProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_Robust_Shared_Utility_SpriteSpecifier_Texture__.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeReader%7BRobust%23Shared%23Utility%23SpriteSpecifier%23Texture%2CRobust%23Shared%23Serialization%23Markdown%23Value%23ValueDataNode%7D%23Read(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Value.ValueDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext%2CRobust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate%7BRobust.Shared.Utility.SpriteSpecifier.Texture%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L32">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Read_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{Robust#Shared#Utility#SpriteSpecifier#Texture,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Read*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_Robust_Shared_Utility_SpriteSpecifier_Texture__" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{Robust#Shared#Utility#SpriteSpecifier#Texture,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Read(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Value.ValueDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext,Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate{Robust.Shared.Utility.SpriteSpecifier.Texture})">ITypeReader&lt;SpriteSpecifier.Texture, ValueDataNode&gt;.Read(ISerializationManager, ValueDataNode, IDependencyCollection, SerializationHookContext, ISerializationContext, ISerializationManager.InstantiationDelegate&lt;SpriteSpecifier.Texture&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SpriteSpecifier.Texture ITypeReader&lt;SpriteSpecifier.Texture, ValueDataNode&gt;.Read(ISerializationManager serializationManager, ValueDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context, ISerializationManager.InstantiationDelegate&lt;SpriteSpecifier.Texture&gt; instanceProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate-1.html">ISerializationManager.InstantiationDelegate</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a>&gt;</td>
+        <td><span class="parametername">instanceProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.Texture.html">SpriteSpecifier.Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_Robust_Shared_Utility_SpriteSpecifier__.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeReader%7BRobust%23Shared%23Utility%23SpriteSpecifier%2CRobust%23Shared%23Serialization%23Markdown%23Mapping%23MappingDataNode%7D%23Read(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Mapping.MappingDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext%2CRobust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate%7BRobust.Shared.Utility.SpriteSpecifier%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L80">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Read_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{Robust#Shared#Utility#SpriteSpecifier,Robust#Shared#Serialization#Markdown#Mapping#MappingDataNode}#Read*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_Robust_Shared_Utility_SpriteSpecifier__" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{Robust#Shared#Utility#SpriteSpecifier,Robust#Shared#Serialization#Markdown#Mapping#MappingDataNode}#Read(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext,Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate{Robust.Shared.Utility.SpriteSpecifier})">ITypeReader&lt;SpriteSpecifier, MappingDataNode&gt;.Read(ISerializationManager, MappingDataNode, IDependencyCollection, SerializationHookContext, ISerializationContext, ISerializationManager.InstantiationDelegate&lt;SpriteSpecifier&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SpriteSpecifier ITypeReader&lt;SpriteSpecifier, MappingDataNode&gt;.Read(ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context, ISerializationManager.InstantiationDelegate&lt;SpriteSpecifier&gt; instanceProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate-1.html">ISerializationManager.InstantiationDelegate</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>&gt;</td>
+        <td><span class="parametername">instanceProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_Robust_Shared_Utility_SpriteSpecifier__.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeReader%7BRobust%23Shared%23Utility%23SpriteSpecifier%2CRobust%23Shared%23Serialization%23Markdown%23Value%23ValueDataNode%7D%23Read(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Value.ValueDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext%2CRobust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate%7BRobust.Shared.Utility.SpriteSpecifier%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L42">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Read_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{Robust#Shared#Utility#SpriteSpecifier,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Read*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_Robust_Shared_Utility_SpriteSpecifier__" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{Robust#Shared#Utility#SpriteSpecifier,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Read(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Value.ValueDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext,Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate{Robust.Shared.Utility.SpriteSpecifier})">ITypeReader&lt;SpriteSpecifier, ValueDataNode&gt;.Read(ISerializationManager, ValueDataNode, IDependencyCollection, SerializationHookContext, ISerializationContext, ISerializationManager.InstantiationDelegate&lt;SpriteSpecifier&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SpriteSpecifier ITypeReader&lt;SpriteSpecifier, ValueDataNode&gt;.Read(ISerializationManager serializationManager, ValueDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context, ISerializationManager.InstantiationDelegate&lt;SpriteSpecifier&gt; instanceProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate-1.html">ISerializationManager.InstantiationDelegate</a>&lt;<a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a>&gt;</td>
+        <td><span class="parametername">instanceProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeValidator%7BRobust%23Shared%23Utility%23SpriteSpecifier%23EntityPrototype%2CRobust%23Shared%23Serialization%23Markdown%23Value%23ValueDataNode%7D%23Validate(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Value.ValueDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L100">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Validate_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{Robust#Shared#Utility#SpriteSpecifier#EntityPrototype,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Validate*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_EntityPrototype_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{Robust#Shared#Utility#SpriteSpecifier#EntityPrototype,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Validate(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Value.ValueDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.Manager.ISerializationContext)">ITypeValidator&lt;SpriteSpecifier.EntityPrototype, ValueDataNode&gt;.Validate(ISerializationManager, ValueDataNode, IDependencyCollection, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ValidationNode ITypeValidator&lt;SpriteSpecifier.EntityPrototype, ValueDataNode&gt;.Validate(ISerializationManager serializationManager, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext context)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ValidationNode.html">ValidationNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeValidator%7BRobust%23Shared%23Utility%23SpriteSpecifier%23Rsi%2CRobust%23Shared%23Serialization%23Markdown%23Mapping%23MappingDataNode%7D%23Validate(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Mapping.MappingDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L134">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Validate_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{Robust#Shared#Utility#SpriteSpecifier#Rsi,Robust#Shared#Serialization#Markdown#Mapping#MappingDataNode}#Validate*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Rsi_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{Robust#Shared#Utility#SpriteSpecifier#Rsi,Robust#Shared#Serialization#Markdown#Mapping#MappingDataNode}#Validate(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.Manager.ISerializationContext)">ITypeValidator&lt;SpriteSpecifier.Rsi, MappingDataNode&gt;.Validate(ISerializationManager, MappingDataNode, IDependencyCollection, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ValidationNode ITypeValidator&lt;SpriteSpecifier.Rsi, MappingDataNode&gt;.Validate(ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies, ISerializationContext context)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ValidationNode.html">ValidationNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeValidator%7BRobust%23Shared%23Utility%23SpriteSpecifier%23Texture%2CRobust%23Shared%23Serialization%23Markdown%23Value%23ValueDataNode%7D%23Validate(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Value.ValueDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L110">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Validate_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{Robust#Shared#Utility#SpriteSpecifier#Texture,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Validate*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Texture_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{Robust#Shared#Utility#SpriteSpecifier#Texture,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Validate(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Value.ValueDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.Manager.ISerializationContext)">ITypeValidator&lt;SpriteSpecifier.Texture, ValueDataNode&gt;.Validate(ISerializationManager, ValueDataNode, IDependencyCollection, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ValidationNode ITypeValidator&lt;SpriteSpecifier.Texture, ValueDataNode&gt;.Validate(ISerializationManager serializationManager, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext context)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ValidationNode.html">ValidationNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeValidator%7BRobust%23Shared%23Utility%23SpriteSpecifier%2CRobust%23Shared%23Serialization%23Markdown%23Mapping%23MappingDataNode%7D%23Validate(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Mapping.MappingDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L118">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Validate_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{Robust#Shared#Utility#SpriteSpecifier,Robust#Shared#Serialization#Markdown#Mapping#MappingDataNode}#Validate*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Mapping_MappingDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{Robust#Shared#Utility#SpriteSpecifier,Robust#Shared#Serialization#Markdown#Mapping#MappingDataNode}#Validate(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.Manager.ISerializationContext)">ITypeValidator&lt;SpriteSpecifier, MappingDataNode&gt;.Validate(ISerializationManager, MappingDataNode, IDependencyCollection, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ValidationNode ITypeValidator&lt;SpriteSpecifier, MappingDataNode&gt;.Validate(ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies, ISerializationContext context)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode.html">MappingDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ValidationNode.html">ValidationNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeValidator%7BRobust%23Shared%23Utility%23SpriteSpecifier%2CRobust%23Shared%23Serialization%23Markdown%23Value%23ValueDataNode%7D%23Validate(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Value.ValueDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L92">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Validate_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{Robust#Shared#Utility#SpriteSpecifier,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Validate*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_Robust_Shared_Utility_SpriteSpecifier_Robust_Shared_Serialization_Markdown_Value_ValueDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Value_ValueDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{Robust#Shared#Utility#SpriteSpecifier,Robust#Shared#Serialization#Markdown#Value#ValueDataNode}#Validate(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Value.ValueDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.Manager.ISerializationContext)">ITypeValidator&lt;SpriteSpecifier, ValueDataNode&gt;.Validate(ISerializationManager, ValueDataNode, IDependencyCollection, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ValidationNode ITypeValidator&lt;SpriteSpecifier, ValueDataNode&gt;.Validate(ISerializationManager serializationManager, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext context)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Value.ValueDataNode.html">ValueDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ValidationNode.html">ValidationNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier-1.html">ITypeCopier&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier-1.html">ITypeCopier&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface&lt;TType&gt;</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_SpriteSpecifierSerializer.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/SpriteSpecifierSerializer.cs/#L15" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

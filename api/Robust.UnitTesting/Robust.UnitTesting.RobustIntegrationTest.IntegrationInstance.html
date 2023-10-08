@@ -1,0 +1,1175 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class RobustIntegrationTest.IntegrationInstance
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class RobustIntegrationTest.IntegrationInstance
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance">
+  
+  
+  <h1 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance" class="text-break">Class RobustIntegrationTest.IntegrationInstance
+  </h1>
+  <div class="markdown level0 summary"><p>Provides control over a running instance of the client or server.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">RobustIntegrationTest.IntegrationInstance</span></div>
+      <div class="level2"><a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.ClientIntegrationInstance.html">RobustIntegrationTest.ClientIntegrationInstance</a></div>
+      <div class="level2"><a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.ServerIntegrationInstance.html">RobustIntegrationTest.ServerIntegrationInstance</a></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.UnitTesting.html">Robust.UnitTesting</a></h6>
+  <h6><strong>Assembly</strong>: Robust.UnitTesting.dll</h6>
+  <h5 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class IntegrationInstance : IDisposable</code></pre>
+  </div>
+  <h5 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>The instance executes in another thread.
+As such, sending commands to it purely queues them to be ran asynchronously.
+To ensure that the instance is idle, i.e. not executing code and finished all queued commands,
+you can use <a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.html#Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitIdleAsync_System_Boolean_CancellationToken_">WaitIdleAsync(Boolean, CancellationToken)</a>.
+This method must be used before trying to access any state like <a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.html#Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ResolveDependency__1">ResolveDependency&lt;T&gt;()</a>,
+to prevent race conditions.</p>
+</div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_CfgMan.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.CfgMan%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L269">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_CfgMan_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.CfgMan*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_CfgMan" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.CfgMan">CfgMan</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IConfigurationManager CfgMan { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Configuration.IConfigurationManager.html">IConfigurationManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ConsoleHost.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ConsoleHost%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L273">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ConsoleHost_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ConsoleHost*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ConsoleHost" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ConsoleHost">ConsoleHost</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IConsoleHost ConsoleHost { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Console.IConsoleHost.html">IConsoleHost</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_EntMan.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.EntMan%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L267">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_EntMan_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.EntMan*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_EntMan" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.EntMan">EntMan</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEntityManager EntMan { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_InstanceDependencyCollection.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.InstanceDependencyCollection%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L263">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_InstanceDependencyCollection_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.InstanceDependencyCollection*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_InstanceDependencyCollection" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.InstanceDependencyCollection">InstanceDependencyCollection</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IDependencyCollection InstanceDependencyCollection { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_IsAlive.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.IsAlive%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L313">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_IsAlive_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.IsAlive*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_IsAlive" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.IsAlive">IsAlive</h4>
+  <div class="markdown level1 summary"><p>Whether the instance is still alive.
+&quot;Alive&quot; indicates that it is able to receive and process commands.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsAlive { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_MapMan.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.MapMan%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L272">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_MapMan_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.MapMan*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_MapMan" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.MapMan">MapMan</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IMapManager MapMan { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.IMapManager.html">IMapManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Options.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Options%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L265">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Options_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Options*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Options" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Options">Options</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public virtual RobustIntegrationTest.IntegrationOptions Options { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.IntegrationOptions.html">RobustIntegrationTest.IntegrationOptions</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_PlayerMan.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.PlayerMan%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L270">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_PlayerMan_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.PlayerMan*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_PlayerMan" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.PlayerMan">PlayerMan</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ISharedPlayerManager PlayerMan { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Players.ISharedPlayerManager.html">ISharedPlayerManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ProtoMan.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ProtoMan%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L268">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ProtoMan_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ProtoMan*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ProtoMan" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ProtoMan">ProtoMan</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IPrototypeManager ProtoMan { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Prototypes.IPrototypeManager.html">IPrototypeManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_TestsRan.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.TestsRan%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L347">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_TestsRan_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.TestsRan*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_TestsRan" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.TestsRan">TestsRan</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;string&gt; TestsRan { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">List</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Timing.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Timing%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L271">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Timing_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Timing*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Timing" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Timing">Timing</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IGameTiming Timing { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Timing.IGameTiming.html">IGameTiming</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_UnhandledException.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.UnhandledException%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L333">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_UnhandledException_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.UnhandledException*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_UnhandledException" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.UnhandledException">UnhandledException</h4>
+  <div class="markdown level1 summary"><p>If the server</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Exception? UnhandledException { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Exception</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Assert_Action_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Assert(Action)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L572">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Assert_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Assert*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Assert_Action_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Assert(Action)">Assert(Action)</h4>
+  <div class="markdown level1 summary"><p>Queue for a delegate to be ran inside the main loop of the instance,
+rethrowing any exceptions in <a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.html#Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitIdleAsync_System_Boolean_CancellationToken_">WaitIdleAsync(Boolean, CancellationToken)</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Assert(Action assertion)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Action</span></td>
+        <td><span class="parametername">assertion</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Assert_Action__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>Exceptions raised inside this callback will be rethrown by <a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.html#Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitIdleAsync_System_Boolean_CancellationToken_">WaitIdleAsync(Boolean, CancellationToken)</a>.
+This makes it ideal for NUnit assertions,
+since rethrowing the NUnit assertion directly provides less noise.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Dispose.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Dispose%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L585">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Dispose_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Dispose*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Dispose" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Dispose">Dispose()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Dispose()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ExecuteCommand_System_String_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ExecuteCommand(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L301">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ExecuteCommand_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ExecuteCommand*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ExecuteCommand_System_String_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ExecuteCommand(System.String)">ExecuteCommand(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task ExecuteCommand(string cmd)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">cmd</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_LoadExtraPrototypes_Robust_Shared_IoC_IDependencyCollection_Robust_UnitTesting_RobustIntegrationTest_IntegrationOptions_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.LoadExtraPrototypes(Robust.Shared.IoC.IDependencyCollection%2CRobust.UnitTesting.RobustIntegrationTest.IntegrationOptions)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L590">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_LoadExtraPrototypes_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.LoadExtraPrototypes*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_LoadExtraPrototypes_Robust_Shared_IoC_IDependencyCollection_Robust_UnitTesting_RobustIntegrationTest_IntegrationOptions_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.LoadExtraPrototypes(Robust.Shared.IoC.IDependencyCollection,Robust.UnitTesting.RobustIntegrationTest.IntegrationOptions)">LoadExtraPrototypes(IDependencyCollection, RobustIntegrationTest.IntegrationOptions)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected void LoadExtraPrototypes(IDependencyCollection deps, RobustIntegrationTest.IntegrationOptions options)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">deps</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.IntegrationOptions.html">RobustIntegrationTest.IntegrationOptions</a></td>
+        <td><span class="parametername">options</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_MetaData_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.MetaData(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L296">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_MetaData_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.MetaData*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_MetaData_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.MetaData(Robust.Shared.GameObjects.EntityUid)">MetaData(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public MetaDataComponent MetaData(EntityUid uid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.MetaDataComponent.html">MetaDataComponent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Post_Action_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Post(Action)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L550">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Post_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Post*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Post_Action_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Post(Action)">Post(Action)</h4>
+  <div class="markdown level1 summary"><p>Queue for a delegate to be ran inside the main loop of the instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Post(Action post)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Action</span></td>
+        <td><span class="parametername">post</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Post_Action__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>Do not run NUnit assertions inside <a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.html#Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Post_Action_">Post(Action)</a>. Use <a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.html#Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Assert_Action_">Assert(Action)</a> instead.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ResolveDependency__1.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ResolveDependency%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L380">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ResolveDependency_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ResolveDependency*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ResolveDependency__1" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ResolveDependency``1">ResolveDependency&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"><p>Resolve a dependency inside the instance.
+This works identical to <a class="xref" href="../Robust.Shared/Robust.Shared.IoC.IoCManager.html#Robust_Shared_IoC_IoCManager_Resolve__1">Resolve&lt;T&gt;()</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public T ResolveDependency&lt;T&gt;()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ResolveIoC_Robust_Shared_IoC_IDependencyCollection_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ResolveIoC(Robust.Shared.IoC.IDependencyCollection)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L275">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ResolveIoC_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ResolveIoC*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_ResolveIoC_Robust_Shared_IoC_IDependencyCollection_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.ResolveIoC(Robust.Shared.IoC.IDependencyCollection)">ResolveIoC(IDependencyCollection)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual void ResolveIoC(IDependencyCollection deps)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">deps</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_RunTicks_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.RunTicks(System.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L516">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_RunTicks_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.RunTicks*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_RunTicks_System_Int32_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.RunTicks(System.Int32)">RunTicks(Int32)</h4>
+  <div class="markdown level1 summary"><p>Queue for the server to run n ticks.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void RunTicks(int ticks)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">ticks</span></td>
+        <td><p>The amount of ticks to run.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Stop.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Stop%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L535">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Stop_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Stop*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Stop" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Stop">Stop()</h4>
+  <div class="markdown level1 summary"><p>Queue for the server to be stopped.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Stop()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_System__1.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.System%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L286">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_System_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.System*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_System__1" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.System``1">System&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public T System&lt;T&gt;()
+    where T : IEntitySystem</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Transform_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Transform(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L291">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Transform_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Transform*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_Transform_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.Transform(Robust.Shared.GameObjects.EntityUid)">Transform(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public TransformComponent Transform(EntityUid uid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitAssertion_Action_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitAssertion(Action)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L579">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitAssertion_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitAssertion*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitAssertion_Action_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitAssertion(Action)">WaitAssertion(Action)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task WaitAssertion(Action assertion)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Action</span></td>
+        <td><span class="parametername">assertion</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitIdleAsync_System_Boolean_CancellationToken_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitIdleAsync(System.Boolean%2CCancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L402">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitIdleAsync_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitIdleAsync*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitIdleAsync_System_Boolean_CancellationToken_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitIdleAsync(System.Boolean,CancellationToken)">WaitIdleAsync(Boolean, CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Wait for the instance to go idle, either through finishing all commands or shutting down/crashing.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">throwOnUnhandled</span></td>
+        <td><p>If true, throw an exception if the server dies on an unhandled exception.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitPost_Action_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitPost(Action)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L557">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitPost_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitPost*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitPost_Action_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitPost(Action)">WaitPost(Action)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task WaitPost(Action post)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Action</span></td>
+        <td><span class="parametername">post</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitRunTicks_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitRunTicks(System.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L526">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitRunTicks_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitRunTicks*"></a>
+  <h4 id="Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitRunTicks_System_Int32_" data-uid="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.WaitRunTicks(System.Int32)">WaitRunTicks(Int32)</h4>
+  <div class="markdown level1 summary"><p><a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.html#Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_RunTicks_System_Int32_">RunTicks(Int32)</a> followed by <a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance.html#Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance_WaitIdleAsync_System_Boolean_CancellationToken_">WaitIdleAsync(Boolean, CancellationToken)</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task WaitRunTicks(int ticks)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">ticks</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_RobustIntegrationTest_IntegrationInstance.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.RobustIntegrationTest.IntegrationInstance%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/RobustIntegrationTest.cs/#L243" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

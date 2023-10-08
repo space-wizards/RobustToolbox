@@ -1,0 +1,1527 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Struct ResPath
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Struct ResPath
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Utility.ResPath">
+  
+  
+  <h1 id="Robust_Shared_Utility_ResPath" data-uid="Robust.Shared.Utility.ResPath" class="text-break">Struct ResPath
+  </h1>
+  <div class="markdown level0 summary"><p>Provides object-oriented path manipulation for resource paths.
+ResPath are immutable, and separator is always <code>/</code></p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><span class="xref">IEquatable</span>&lt;<a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>&gt;</div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Utility.html">Robust.Shared.Utility</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Utility_ResPath_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public struct ResPath : IEquatable&lt;ResPath&gt;</code></pre>
+  </div>
+  <h3 id="constructors">Constructors
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath__ctor.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.%23ctor%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L73">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath__ctor_" data-uid="Robust.Shared.Utility.ResPath.#ctor*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath__ctor" data-uid="Robust.Shared.Utility.ResPath.#ctor">ResPath()</h4>
+  <div class="markdown level1 summary"><p>Needed for serv3</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ResPath()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath__ctor_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.%23ctor(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L65">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath__ctor_" data-uid="Robust.Shared.Utility.ResPath.#ctor*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath__ctor_System_String_" data-uid="Robust.Shared.Utility.ResPath.#ctor(System.String)">ResPath(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ResPath(string canonPath)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">canonPath</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_CanonPath.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.CanonPath%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L63">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Utility_ResPath_CanonPath" data-uid="Robust.Shared.Utility.ResPath.CanonPath">CanonPath</h4>
+  <div class="markdown level1 summary"><p>Internal system independent path. It uses <code>/</code> internally as
+separator and will translate to it on creation.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public readonly string CanonPath</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_Empty.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.Empty%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L57">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Utility_ResPath_Empty" data-uid="Robust.Shared.Utility.ResPath.Empty">Empty</h4>
+  <div class="markdown level1 summary"><p>&quot;&quot; (empty) as a static.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly ResPath Empty</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_Root.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.Root%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L52">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Utility_ResPath_Root" data-uid="Robust.Shared.Utility.ResPath.Root">Root</h4>
+  <div class="markdown level1 summary"><p>&quot;/&quot; (root) as a static.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly ResPath Root</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_Self.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.Self%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L47">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Utility_ResPath_Self" data-uid="Robust.Shared.Utility.ResPath.Self">Self</h4>
+  <div class="markdown level1 summary"><p>&quot;.&quot; as a static.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly ResPath Self</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_Separator.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.Separator%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L36">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Utility_ResPath_Separator" data-uid="Robust.Shared.Utility.ResPath.Separator">Separator</h4>
+  <div class="markdown level1 summary"><p>Normalized separator character. Chosen because <code>/</code> is illegal path
+character on Linux and Windows.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public const char Separator = null</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Char</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_SeparatorStr.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.SeparatorStr%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L42">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Utility_ResPath_SeparatorStr" data-uid="Robust.Shared.Utility.ResPath.SeparatorStr">SeparatorStr</h4>
+  <div class="markdown level1 summary"><p>Normalized separator string. Chosen because <code>/</code> is illegal path
+character on Linux and Windows.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public const string SeparatorStr = null</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_SystemSeparator.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.SystemSeparator%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L28">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Utility_ResPath_SystemSeparator" data-uid="Robust.Shared.Utility.ResPath.SystemSeparator">SystemSeparator</h4>
+  <div class="markdown level1 summary"><p>The separator for the file system of the system we are compiling to.
+Backslash on Windows, forward slash on sane systems.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public const char SystemSeparator = null</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Char</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_SystemSeparatorStr.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.SystemSeparatorStr%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L29">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Utility_ResPath_SystemSeparatorStr" data-uid="Robust.Shared.Utility.ResPath.SystemSeparatorStr">SystemSeparatorStr</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public const string SystemSeparatorStr = null</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_Directory.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.Directory%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L95">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_Directory_" data-uid="Robust.Shared.Utility.ResPath.Directory*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_Directory" data-uid="Robust.Shared.Utility.ResPath.Directory">Directory</h4>
+  <div class="markdown level1 summary"><p>Returns the parent directory that this file resides in
+as a <a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>.
+If path points to folder, it will return parent directory</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ResPath Directory { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_ResPath_Directory_examples">Examples</h5>
+  <pre><code>    // Directory property of a directory resourcePath.
+    Assert.AreEqual(&quot;/foo&quot;, new ResPath(&quot;/foo/bar&quot;).Directory.ToString());
+    // Directory of a file resourcePath.
+    Assert.AreEqual(&quot;/foo&quot;, new ResPath(&quot;/foo/x.txt&quot;).Directory.ToString());</code></pre>
+
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_Extension.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.Extension%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L133">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_Extension_" data-uid="Robust.Shared.Utility.ResPath.Extension*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_Extension" data-uid="Robust.Shared.Utility.ResPath.Extension">Extension</h4>
+  <div class="markdown level1 summary"><p>Returns the file extension of <a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>, if any as string.
+Returns &quot;&quot; if there is no file extension. (Hidden) Files starting
+with period (&quot;.&quot;) are counted as files with no extension.
+The extension returned does NOT include a period.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string Extension { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_ResPath_Extension_examples">Examples</h5>
+  <pre><code>    // file with normal extension
+    var picPath = new ResPath(&quot;/a/b/c.png&quot;);
+    Assert.AreEqual(&quot;png&quot;, picPath.Extension);
+    // hidden file starting with `.`
+    var gitignore = new ResPath(&quot;/a/b/.gitignore&quot;);
+    Assert.AreEqual(&quot;&quot;, gitignore.Extension);</code></pre>
+
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_Filename.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.Filename%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L193">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_Filename_" data-uid="Robust.Shared.Utility.ResPath.Filename*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_Filename" data-uid="Robust.Shared.Utility.ResPath.Filename">Filename</h4>
+  <div class="markdown level1 summary"><p>Returns the file name (folders are files) for given path,
+or &quot;.&quot; if path is empty.
+If last segment divided of a path (e.g. <code>/foo/bar/baz.png</code>) divided by separator (e.g <code>/</code>)
+is considered a filename (e.g. <code>baz.png</code>).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string Filename { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_ResPath_Filename_examples">Examples</h5>
+  <pre><code>    // file
+    Assert.AreEqual(&quot;c.png&quot;, new ResPath(&quot;/a/b/c.png&quot;).Filename);
+    // folder
+    Assert.AreEqual(&quot;foo&quot;, new ResPath(&quot;/foo&quot;).Filename);
+    // empty
+    Assert.AreEqual(&quot;.&quot;, new ResPath(&quot;&quot;).Filename);</code></pre>
+
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_FilenameWithoutExtension.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.FilenameWithoutExtension%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L164">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_FilenameWithoutExtension_" data-uid="Robust.Shared.Utility.ResPath.FilenameWithoutExtension*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_FilenameWithoutExtension" data-uid="Robust.Shared.Utility.ResPath.FilenameWithoutExtension">FilenameWithoutExtension</h4>
+  <div class="markdown level1 summary"><p>Returns the file name part of a <a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>, as string.
+In essence reverse of <a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_Extension">Extension</a>.
+If last segment divided of a path (e.g. <code>/foo/bar/baz.png</code>) divided by separator (e.g <code>/</code>)
+is considered a filename (e.g. <code>baz.png</code>). In that segment part before period is
+considered filename (e.g. <code>baz</code>, unless file start with period, then whole segment
+is filename without extension.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string FilenameWithoutExtension { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_ResPath_FilenameWithoutExtension_examples">Examples</h5>
+  <pre><code>    // file with normal extension
+    var picPath = new ResPath(&quot;/a/b/foo.png&quot;);
+    Assert.AreEqual(&quot;foo&quot;, picPath.FilenameWithoutExtension());
+    // hidden file starting with `.`
+    var gitignore = new ResPath(&quot;/a/b/.gitignore&quot;);
+    Assert.AreEqual(&quot;.gitignore&quot;, gitignore.FilenameWithoutExtension());</code></pre>
+
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_IsRelative.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.IsRelative%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L376">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_IsRelative_" data-uid="Robust.Shared.Utility.ResPath.IsRelative*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_IsRelative" data-uid="Robust.Shared.Utility.ResPath.IsRelative">IsRelative</h4>
+  <div class="markdown level1 summary"><p>Returns true if the path is not rooted.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsRelative { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_ResPath_IsRelative_seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_IsRooted">IsRooted</a></div>
+      <div><a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_ToRelativePath">ToRelativePath()</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_IsRooted.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.IsRooted%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L369">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_IsRooted_" data-uid="Robust.Shared.Utility.ResPath.IsRooted*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_IsRooted" data-uid="Robust.Shared.Utility.ResPath.IsRooted">IsRooted</h4>
+  <div class="markdown level1 summary"><p>Returns true if the path is rooted/absolute (starts with the separator).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsRooted { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_ResPath_IsRooted_seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_IsRelative">IsRelative</a></div>
+      <div><a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_ToRootedPath">ToRootedPath()</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_IsSelf.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.IsSelf%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L80">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_IsSelf_" data-uid="Robust.Shared.Utility.ResPath.IsSelf*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_IsSelf" data-uid="Robust.Shared.Utility.ResPath.IsSelf">IsSelf</h4>
+  <div class="markdown level1 summary"><p>Returns true if the path is equal to &quot;.&quot;</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsSelf { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_ChangeSeparator_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.ChangeSeparator(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L493">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_ChangeSeparator_" data-uid="Robust.Shared.Utility.ResPath.ChangeSeparator*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_ChangeSeparator_System_String_" data-uid="Robust.Shared.Utility.ResPath.ChangeSeparator(System.String)">ChangeSeparator(String)</h4>
+  <div class="markdown level1 summary"><p>Turns the path into a relative path with system-specific separator.
+For usage in disk I/O.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string ChangeSeparator(string newSeparator)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">newSeparator</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_Equals_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.Equals(Robust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L225">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_Equals_" data-uid="Robust.Shared.Utility.ResPath.Equals*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_Equals_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.Utility.ResPath.Equals(Robust.Shared.Utility.ResPath)">Equals(ResPath)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Equals(ResPath other)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">other</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_Equals_System_Nullable_System_Object__.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.Equals(System.Nullable%7BSystem.Object%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L231">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_Equals_" data-uid="Robust.Shared.Utility.ResPath.Equals*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_Equals_System_Nullable_System_Object__" data-uid="Robust.Shared.Utility.ResPath.Equals(System.Nullable{System.Object})">Equals(Nullable&lt;Object&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override bool Equals(object? obj)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">obj</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_FromRelativeSystemPath_System_String_System_Char_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.FromRelativeSystemPath(System.String%2CSystem.Char)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L481">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_FromRelativeSystemPath_" data-uid="Robust.Shared.Utility.ResPath.FromRelativeSystemPath*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_FromRelativeSystemPath_System_String_System_Char_" data-uid="Robust.Shared.Utility.ResPath.FromRelativeSystemPath(System.String,System.Char)">FromRelativeSystemPath(String, Char)</h4>
+  <div class="markdown level1 summary"><p>Converts a system path into a resource path.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static ResPath FromRelativeSystemPath(string path, char newSeparator = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Char</span></td>
+        <td><span class="parametername">newSeparator</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_GetHashCode.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.GetHashCode%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L237">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_GetHashCode_" data-uid="Robust.Shared.Utility.ResPath.GetHashCode*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_GetHashCode" data-uid="Robust.Shared.Utility.ResPath.GetHashCode">GetHashCode()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override int GetHashCode()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_RelativeTo_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.RelativeTo(Robust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L391">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_RelativeTo_" data-uid="Robust.Shared.Utility.ResPath.RelativeTo*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_RelativeTo_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.Utility.ResPath.RelativeTo(Robust.Shared.Utility.ResPath)">RelativeTo(ResPath)</h4>
+  <div class="markdown level1 summary"><p>Returns the path of how this instance is &quot;relative&quot; to <code data-dev-comment-type="paramref" class="paramref">basePath</code>,
+such that <code>basePath/result == this</code>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ResPath RelativeTo(ResPath basePath)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">basePath</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_ResPath_RelativeTo_Robust_Shared_Utility_ResPath__examples">Examples</h5>
+  <pre><code>var path1 = new ResPath(&quot;/a/b/c&quot;);
+var path2 = new ResPath(&quot;/a&quot;);
+Console.WriteLine(path1.RelativeTo(path2)); // prints &quot;b/c&quot;.</code></pre>
+
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_ToRelativePath.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.ToRelativePath%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L455">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_ToRelativePath_" data-uid="Robust.Shared.Utility.ResPath.ToRelativePath*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_ToRelativePath" data-uid="Robust.Shared.Utility.ResPath.ToRelativePath">ToRelativePath()</h4>
+  <div class="markdown level1 summary"><p>Turns the path into a relative path by removing the root separator, if any.
+Does nothing if the path is already relative.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ResPath ToRelativePath()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_ResPath_ToRelativePath_seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_IsRelative">IsRelative</a></div>
+      <div><a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_ToRootedPath">ToRootedPath()</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_ToRelativeSystemPath.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.ToRelativeSystemPath%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L473">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_ToRelativeSystemPath_" data-uid="Robust.Shared.Utility.ResPath.ToRelativeSystemPath*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_ToRelativeSystemPath" data-uid="Robust.Shared.Utility.ResPath.ToRelativeSystemPath">ToRelativeSystemPath()</h4>
+  <div class="markdown level1 summary"><p>Turns the path into a relative path with system-specific separator.
+For usage in disk I/O.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string ToRelativeSystemPath()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_ToRootedPath.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.ToRootedPath%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L442">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_ToRootedPath_" data-uid="Robust.Shared.Utility.ResPath.ToRootedPath*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_ToRootedPath" data-uid="Robust.Shared.Utility.ResPath.ToRootedPath">ToRootedPath()</h4>
+  <div class="markdown level1 summary"><p>Turns the path into a rooted path by prepending it with the separator.
+Does nothing if the path is already rooted.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ResPath ToRootedPath()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Utility_ResPath_ToRootedPath_seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_IsRooted">IsRooted</a></div>
+      <div><a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_ToRelativePath">ToRelativePath()</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_ToString.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.ToString%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L219">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_ToString_" data-uid="Robust.Shared.Utility.ResPath.ToString*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_ToString" data-uid="Robust.Shared.Utility.ResPath.ToString">ToString()</h4>
+  <div class="markdown level1 summary"><p>Converts this element to String</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override string ToString()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><p>System independent representation of path</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_TryRelativeTo_Robust_Shared_Utility_ResPath_System_Nullable_Robust_Shared_Utility_ResPath___.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.TryRelativeTo(Robust.Shared.Utility.ResPath%2CSystem.Nullable%7BRobust.Shared.Utility.ResPath%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L408">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_TryRelativeTo_" data-uid="Robust.Shared.Utility.ResPath.TryRelativeTo*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_TryRelativeTo_Robust_Shared_Utility_ResPath_System_Nullable_Robust_Shared_Utility_ResPath___" data-uid="Robust.Shared.Utility.ResPath.TryRelativeTo(Robust.Shared.Utility.ResPath,System.Nullable{Robust.Shared.Utility.ResPath}@)">TryRelativeTo(ResPath, out Nullable&lt;ResPath&gt;)</h4>
+  <div class="markdown level1 summary"><p>Try pattern version of <a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_RelativeTo_Robust_Shared_Utility_ResPath_">RelativeTo(ResPath)</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryRelativeTo(ResPath basePath, out ResPath? relative)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">basePath</span></td>
+        <td><p>The base path which we can be made relative to.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>&gt;</td>
+        <td><span class="parametername">relative</span></td>
+        <td><p>The path of how we are relative to <code data-dev-comment-type="paramref" class="paramref">basePath</code>, if at all.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True if we are relative to <code data-dev-comment-type="paramref" class="paramref">basePath</code>, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_WithExtension_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.WithExtension(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L315">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_WithExtension_" data-uid="Robust.Shared.Utility.ResPath.WithExtension*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_WithExtension_System_String_" data-uid="Robust.Shared.Utility.ResPath.WithExtension(System.String)">WithExtension(String)</h4>
+  <div class="markdown level1 summary"><p>Return a copy of this resource path with the file extension changed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ResPath WithExtension(string newExtension)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">newExtension</span></td>
+        <td><p>The new file extension.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_WithName_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.WithName(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L340">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_WithName_" data-uid="Robust.Shared.Utility.ResPath.WithName*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_WithName_System_String_" data-uid="Robust.Shared.Utility.ResPath.WithName(System.String)">WithName(String)</h4>
+  <div class="markdown level1 summary"><p>Return a copy of this resource path with the file name changed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ResPath WithName(string name)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td><p>The new file name.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="operators">Operators
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_op_Division_Robust_Shared_Utility_ResPath_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.op_Division(Robust.Shared.Utility.ResPath%2CRobust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L265">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_op_Division_" data-uid="Robust.Shared.Utility.ResPath.op_Division*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_op_Division_Robust_Shared_Utility_ResPath_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.Utility.ResPath.op_Division(Robust.Shared.Utility.ResPath,Robust.Shared.Utility.ResPath)">Division(ResPath, ResPath)</h4>
+  <div class="markdown level1 summary"><p>Joins two resource paths together, with separator in between.
+If the second path is absolute (i.e. rooted), the first path is completely ignored.
+<a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_IsRooted">IsRooted</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static ResPath operator /(ResPath left, ResPath right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">left</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">right</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_op_Division_Robust_Shared_Utility_ResPath_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.op_Division(Robust.Shared.Utility.ResPath%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L296">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_op_Division_" data-uid="Robust.Shared.Utility.ResPath.op_Division*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_op_Division_Robust_Shared_Utility_ResPath_System_String_" data-uid="Robust.Shared.Utility.ResPath.op_Division(Robust.Shared.Utility.ResPath,System.String)">Division(ResPath, String)</h4>
+  <div class="markdown level1 summary"><p>Joins resource and string path together, by converting string to <a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>
+If the second path is absolute (i.e. rooted), the first path is completely ignored.
+<a class="xref" href="Robust.Shared.Utility.ResPath.html#Robust_Shared_Utility_ResPath_IsRooted">IsRooted</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static ResPath operator /(ResPath left, string right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">left</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">right</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_op_Equality_Robust_Shared_Utility_ResPath_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.op_Equality(Robust.Shared.Utility.ResPath%2CRobust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L243">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_op_Equality_" data-uid="Robust.Shared.Utility.ResPath.op_Equality*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_op_Equality_Robust_Shared_Utility_ResPath_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.Utility.ResPath.op_Equality(Robust.Shared.Utility.ResPath,Robust.Shared.Utility.ResPath)">Equality(ResPath, ResPath)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator ==(ResPath left, ResPath right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">left</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">right</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath_op_Inequality_Robust_Shared_Utility_ResPath_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath.op_Inequality(Robust.Shared.Utility.ResPath%2CRobust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L248">View Source</a>
+  </span>
+  <a id="Robust_Shared_Utility_ResPath_op_Inequality_" data-uid="Robust.Shared.Utility.ResPath.op_Inequality*"></a>
+  <h4 id="Robust_Shared_Utility_ResPath_op_Inequality_Robust_Shared_Utility_ResPath_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.Utility.ResPath.op_Inequality(Robust.Shared.Utility.ResPath,Robust.Shared.Utility.ResPath)">Inequality(ResPath, ResPath)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator !=(ResPath left, ResPath right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">left</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">right</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <span class="xref">IEquatable&lt;&gt;</span>
+  </div>
+  <h3 id="extensionmethods">Extension Methods</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.Utility.ResPathUtil.html#Robust_Shared_Utility_ResPathUtil_Clean_Robust_Shared_Utility_ResPath_">ResPathUtil.Clean(ResPath)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Utility.ResPathUtil.html#Robust_Shared_Utility_ResPathUtil_EnumerateSegments_Robust_Shared_Utility_ResPath_">ResPathUtil.EnumerateSegments(ResPath)</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Utility_ResPath.md&amp;value=---%0Auid%3A%20Robust.Shared.Utility.ResPath%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Utility/ResPath.cs/#L16" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

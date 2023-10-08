@@ -1,0 +1,762 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class SpriteSystem
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class SpriteSystem
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Client.GameObjects.SpriteSystem">
+  
+  
+  <h1 id="Robust_Client_GameObjects_SpriteSystem" data-uid="Robust.Client.GameObjects.SpriteSystem" class="text-break">Class SpriteSystem
+  </h1>
+  <div class="markdown level0 summary"><p>Updates the layer animation for every visible sprite.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntitySystem.html">EntitySystem</a></div>
+    <div class="level2"><span class="xref">SpriteSystem</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a></div>
+    <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a></div>
+    <div><a class="xref" href="../Robust.Shared/Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a></div>
+  </div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Client.GameObjects.html">Robust.Client.GameObjects</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Client.dll</h6>
+  <h5 id="Robust_Client_GameObjects_SpriteSystem_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class SpriteSystem : EntitySystem, IEntitySystem, IEntityEventSubscriber, IPostInjectInit</code></pre>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_ForceUpdate_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.ForceUpdate(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.cs/#L182">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_ForceUpdate_" data-uid="Robust.Client.GameObjects.SpriteSystem.ForceUpdate*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_ForceUpdate_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Client.GameObjects.SpriteSystem.ForceUpdate(Robust.Shared.GameObjects.EntityUid)">ForceUpdate(EntityUid)</h4>
+  <div class="markdown level1 summary"><p>Force update of the sprite component next frame</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ForceUpdate(EntityUid uid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_Frame0_Robust_Shared_Prototypes_EntityPrototype_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.Frame0(Robust.Shared.Prototypes.EntityPrototype)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Specifier.cs/#L19">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_Frame0_" data-uid="Robust.Client.GameObjects.SpriteSystem.Frame0*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_Frame0_Robust_Shared_Prototypes_EntityPrototype_" data-uid="Robust.Client.GameObjects.SpriteSystem.Frame0(Robust.Shared.Prototypes.EntityPrototype)">Frame0(EntityPrototype)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Texture Frame0(EntityPrototype prototype)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Prototypes.EntityPrototype.html">EntityPrototype</a></td>
+        <td><span class="parametername">prototype</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_Frame0_Robust_Shared_Utility_SpriteSpecifier_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.Frame0(Robust.Shared.Utility.SpriteSpecifier)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Specifier.cs/#L24">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_Frame0_" data-uid="Robust.Client.GameObjects.SpriteSystem.Frame0*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_Frame0_Robust_Shared_Utility_SpriteSpecifier_" data-uid="Robust.Client.GameObjects.SpriteSystem.Frame0(Robust.Shared.Utility.SpriteSpecifier)">Frame0(SpriteSpecifier)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Texture Frame0(SpriteSpecifier specifier)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a></td>
+        <td><span class="parametername">specifier</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_FrameUpdate_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.FrameUpdate(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.cs/#L123">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_FrameUpdate_" data-uid="Robust.Client.GameObjects.SpriteSystem.FrameUpdate*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_FrameUpdate_System_Single_" data-uid="Robust.Client.GameObjects.SpriteSystem.FrameUpdate(System.Single)">FrameUpdate(Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void FrameUpdate(float frameTime)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">frameTime</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntitySystem.html#Robust_Shared_GameObjects_EntitySystem_FrameUpdate_System_Single_">EntitySystem.FrameUpdate(Single)</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_GetFallbackState.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.GetFallbackState%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Specifier.cs/#L104">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_GetFallbackState_" data-uid="Robust.Client.GameObjects.SpriteSystem.GetFallbackState*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_GetFallbackState" data-uid="Robust.Client.GameObjects.SpriteSystem.GetFallbackState">GetFallbackState()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public RSI.State GetFallbackState()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.RSI.State.html">RSI.State</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_GetIcon_Robust_Client_GameObjects_IconComponent_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.GetIcon(Robust.Client.GameObjects.IconComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Specifier.cs/#L47">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_GetIcon_" data-uid="Robust.Client.GameObjects.SpriteSystem.GetIcon*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_GetIcon_Robust_Client_GameObjects_IconComponent_" data-uid="Robust.Client.GameObjects.SpriteSystem.GetIcon(Robust.Client.GameObjects.IconComponent)">GetIcon(IconComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Texture GetIcon(IconComponent icon)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.GameObjects.IconComponent.html">IconComponent</a></td>
+        <td><span class="parametername">icon</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_GetPrototypeIcon_Robust_Shared_Prototypes_EntityPrototype_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.GetPrototypeIcon(Robust.Shared.Prototypes.EntityPrototype)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Specifier.cs/#L80">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_GetPrototypeIcon_" data-uid="Robust.Client.GameObjects.SpriteSystem.GetPrototypeIcon*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_GetPrototypeIcon_Robust_Shared_Prototypes_EntityPrototype_" data-uid="Robust.Client.GameObjects.SpriteSystem.GetPrototypeIcon(Robust.Shared.Prototypes.EntityPrototype)">GetPrototypeIcon(EntityPrototype)</h4>
+  <div class="markdown level1 summary"><p>Returns an icon for a given <a class="xref" href="../Robust.Shared/Robust.Shared.Prototypes.EntityPrototype.html">EntityPrototype</a> ID, or a fallback in case of an error.
+This method does NOT cache the result.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IRsiStateLike GetPrototypeIcon(EntityPrototype prototype)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Prototypes.EntityPrototype.html">EntityPrototype</a></td>
+        <td><span class="parametername">prototype</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.IRsiStateLike.html">IRsiStateLike</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_GetPrototypeIcon_System_String_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.GetPrototypeIcon(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Specifier.cs/#L56">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_GetPrototypeIcon_" data-uid="Robust.Client.GameObjects.SpriteSystem.GetPrototypeIcon*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_GetPrototypeIcon_System_String_" data-uid="Robust.Client.GameObjects.SpriteSystem.GetPrototypeIcon(System.String)">GetPrototypeIcon(String)</h4>
+  <div class="markdown level1 summary"><p>Returns an icon for a given <a class="xref" href="../Robust.Shared/Robust.Shared.Prototypes.EntityPrototype.html">EntityPrototype</a> ID, or a fallback in case of an error.
+This method caches the result based on the prototype identifier.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IRsiStateLike GetPrototypeIcon(string prototype)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">prototype</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.IRsiStateLike.html">IRsiStateLike</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_GetState_Robust_Shared_Utility_SpriteSpecifier_Rsi_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.GetState(Robust.Shared.Utility.SpriteSpecifier.Rsi)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Specifier.cs/#L110">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_GetState_" data-uid="Robust.Client.GameObjects.SpriteSystem.GetState*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_GetState_Robust_Shared_Utility_SpriteSpecifier_Rsi_" data-uid="Robust.Client.GameObjects.SpriteSystem.GetState(Robust.Shared.Utility.SpriteSpecifier.Rsi)">GetState(SpriteSpecifier.Rsi)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public RSI.State GetState(SpriteSpecifier.Rsi rsiSpecifier)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Utility.SpriteSpecifier.Rsi.html">SpriteSpecifier.Rsi</a></td>
+        <td><span class="parametername">rsiSpecifier</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.RSI.State.html">RSI.State</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_Initialize.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.cs/#L51">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_Initialize_" data-uid="Robust.Client.GameObjects.SpriteSystem.Initialize*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_Initialize" data-uid="Robust.Client.GameObjects.SpriteSystem.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Initialize()</code></pre>
+  </div>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntitySystem.html#Robust_Shared_GameObjects_EntitySystem_Initialize">EntitySystem.Initialize()</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_QueueUpdateInert_Robust_Shared_GameObjects_EntityUid_Robust_Client_GameObjects_SpriteComponent_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.QueueUpdateInert(Robust.Shared.GameObjects.EntityUid%2CRobust.Client.GameObjects.SpriteComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.cs/#L86">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_QueueUpdateInert_" data-uid="Robust.Client.GameObjects.SpriteSystem.QueueUpdateInert*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_QueueUpdateInert_Robust_Shared_GameObjects_EntityUid_Robust_Client_GameObjects_SpriteComponent_" data-uid="Robust.Client.GameObjects.SpriteSystem.QueueUpdateInert(Robust.Shared.GameObjects.EntityUid,Robust.Client.GameObjects.SpriteComponent)">QueueUpdateInert(EntityUid, SpriteComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void QueueUpdateInert(EntityUid uid, SpriteComponent sprite)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Client.GameObjects.SpriteComponent.html">SpriteComponent</a></td>
+        <td><span class="parametername">sprite</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_RsiStateLike_Robust_Shared_Utility_SpriteSpecifier_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.RsiStateLike(Robust.Shared.Utility.SpriteSpecifier)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Specifier.cs/#L29">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_RsiStateLike_" data-uid="Robust.Client.GameObjects.SpriteSystem.RsiStateLike*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_RsiStateLike_Robust_Shared_Utility_SpriteSpecifier_" data-uid="Robust.Client.GameObjects.SpriteSystem.RsiStateLike(Robust.Shared.Utility.SpriteSpecifier)">RsiStateLike(SpriteSpecifier)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IRsiStateLike RsiStateLike(SpriteSpecifier specifier)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Utility.SpriteSpecifier.html">SpriteSpecifier</a></td>
+        <td><span class="parametername">specifier</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.IRsiStateLike.html">IRsiStateLike</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_SetAutoAnimateSync_Robust_Client_GameObjects_SpriteComponent_Robust_Client_GameObjects_SpriteComponent_Layer_System_Double_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.SetAutoAnimateSync(Robust.Client.GameObjects.SpriteComponent%2CRobust.Client.GameObjects.SpriteComponent.Layer%2CSystem.Double)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Component.cs/#L24">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_SetAutoAnimateSync_" data-uid="Robust.Client.GameObjects.SpriteSystem.SetAutoAnimateSync*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_SetAutoAnimateSync_Robust_Client_GameObjects_SpriteComponent_Robust_Client_GameObjects_SpriteComponent_Layer_System_Double_" data-uid="Robust.Client.GameObjects.SpriteSystem.SetAutoAnimateSync(Robust.Client.GameObjects.SpriteComponent,Robust.Client.GameObjects.SpriteComponent.Layer,System.Double)">SetAutoAnimateSync(SpriteComponent, SpriteComponent.Layer, Double)</h4>
+  <div class="markdown level1 summary"><p>Resets the layer's animation to align with a given time (in seconds).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetAutoAnimateSync(SpriteComponent sprite, SpriteComponent.Layer layer, double time)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.GameObjects.SpriteComponent.html">SpriteComponent</a></td>
+        <td><span class="parametername">sprite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Client.GameObjects.SpriteComponent.Layer.html">SpriteComponent.Layer</a></td>
+        <td><span class="parametername">layer</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Double</span></td>
+        <td><span class="parametername">time</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_SetAutoAnimateSync_Robust_Client_GameObjects_SpriteComponent_System_Double_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.SetAutoAnimateSync(Robust.Client.GameObjects.SpriteComponent%2CSystem.Double)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Component.cs/#L10">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_SetAutoAnimateSync_" data-uid="Robust.Client.GameObjects.SpriteSystem.SetAutoAnimateSync*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_SetAutoAnimateSync_Robust_Client_GameObjects_SpriteComponent_System_Double_" data-uid="Robust.Client.GameObjects.SpriteSystem.SetAutoAnimateSync(Robust.Client.GameObjects.SpriteComponent,System.Double)">SetAutoAnimateSync(SpriteComponent, Double)</h4>
+  <div class="markdown level1 summary"><p>Resets the sprite's animated layers to align with a given time (in seconds).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetAutoAnimateSync(SpriteComponent sprite, double time)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.GameObjects.SpriteComponent.html">SpriteComponent</a></td>
+        <td><span class="parametername">sprite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Double</span></td>
+        <td><span class="parametername">time</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem_Shutdown.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem.Shutdown%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.cs/#L71">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_SpriteSystem_Shutdown_" data-uid="Robust.Client.GameObjects.SpriteSystem.Shutdown*"></a>
+  <h4 id="Robust_Client_GameObjects_SpriteSystem_Shutdown" data-uid="Robust.Client.GameObjects.SpriteSystem.Shutdown">Shutdown()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Shutdown()</code></pre>
+  </div>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntitySystem.html#Robust_Shared_GameObjects_EntitySystem_Shutdown">EntitySystem.Shutdown()</a></div>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a>
+  </div>
+  <div>
+      <a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a>
+  </div>
+  <div>
+      <a class="xref" href="../Robust.Shared/Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_SpriteSystem.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.SpriteSystem%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Specifier.cs/#L15" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

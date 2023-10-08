@@ -1,0 +1,907 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class Texture
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class Texture
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Client.Graphics.Texture">
+  
+  
+  <h1 id="Robust_Client_Graphics_Texture" data-uid="Robust.Client.Graphics.Texture" class="text-break">Class Texture
+  </h1>
+  <div class="markdown level0 summary"><p>Contains a texture used for drawing things.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">Texture</span></div>
+      <div class="level2"><a class="xref" href="Robust.Client.Graphics.AtlasTexture.html">AtlasTexture</a></div>
+      <div class="level2"><a class="xref" href="Robust.Client.Graphics.OwnedTexture.html">OwnedTexture</a></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Client.Graphics.IRsiStateLike.html">IRsiStateLike</a></div>
+    <div><a class="xref" href="Robust.Client.Graphics.IDirectionalTextureProvider.html">IDirectionalTextureProvider</a></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Client.Graphics.html">Robust.Client.Graphics</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Client.dll</h6>
+  <h5 id="Robust_Client_Graphics_Texture_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class Texture : object, IRsiStateLike, IDirectionalTextureProvider</code></pre>
+  </div>
+  <h3 id="constructors">Constructors
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture__ctor_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.%23ctor(Robust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L37">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture__ctor_" data-uid="Robust.Client.Graphics.Texture.#ctor*"></a>
+  <h4 id="Robust_Client_Graphics_Texture__ctor_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Client.Graphics.Texture.#ctor(Robust.Shared.Maths.Vector2i)">Texture(Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected Texture(Vector2i size)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">size</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Black.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Black%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L77">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Black_" data-uid="Robust.Client.Graphics.Texture.Black*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Black" data-uid="Robust.Client.Graphics.Texture.Black">Black</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Texture Black { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Height.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Height%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L28">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Height_" data-uid="Robust.Client.Graphics.Texture.Height*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Height" data-uid="Robust.Client.Graphics.Texture.Height">Height</h4>
+  <div class="markdown level1 summary"><p>The height of the texture, in pixels.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int Height { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Item_System_Int32_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Item(System.Int32%2CSystem.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L35">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Item_" data-uid="Robust.Client.Graphics.Texture.Item*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Item_System_Int32_System_Int32_" data-uid="Robust.Client.Graphics.Texture.Item(System.Int32,System.Int32)">Item[Int32, Int32]</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Color this[int x, int y] { get; }</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">x</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">y</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Color.html">Color</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Size.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Size%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L33">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Size_" data-uid="Robust.Client.Graphics.Texture.Size*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Size" data-uid="Robust.Client.Graphics.Texture.Size">Size</h4>
+  <div class="markdown level1 summary"><p>The size of the texture, in pixels.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector2i Size { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Transparent.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Transparent%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L71">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Transparent_" data-uid="Robust.Client.Graphics.Texture.Transparent*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Transparent" data-uid="Robust.Client.Graphics.Texture.Transparent">Transparent</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Texture Transparent { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_White.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.White%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L74">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_White_" data-uid="Robust.Client.Graphics.Texture.White*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_White" data-uid="Robust.Client.Graphics.Texture.White">White</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Texture White { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Width.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Width%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L23">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Width_" data-uid="Robust.Client.Graphics.Texture.Width*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Width" data-uid="Robust.Client.Graphics.Texture.Width">Width</h4>
+  <div class="markdown level1 summary"><p>The width of the texture, in pixels.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int Width { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_GetPixel_System_Int32_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.GetPixel(System.Int32%2CSystem.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L69">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_GetPixel_" data-uid="Robust.Client.Graphics.Texture.GetPixel*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_GetPixel_System_Int32_System_Int32_" data-uid="Robust.Client.Graphics.Texture.GetPixel(System.Int32,System.Int32)">GetPixel(Int32, Int32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract Color GetPixel(int x, int y)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">x</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">y</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Color.html">Color</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_LoadFromImage__1_Image___0__System_Nullable_System_String__System_Nullable_Robust_Shared_Graphics_TextureLoadParameters__.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.LoadFromImage%60%601(Image%7B%60%600%7D%2CSystem.Nullable%7BSystem.String%7D%2CSystem.Nullable%7BRobust.Shared.Graphics.TextureLoadParameters%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L90">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_LoadFromImage_" data-uid="Robust.Client.Graphics.Texture.LoadFromImage*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_LoadFromImage__1_Image___0__System_Nullable_System_String__System_Nullable_Robust_Shared_Graphics_TextureLoadParameters__" data-uid="Robust.Client.Graphics.Texture.LoadFromImage``1(Image{``0},System.Nullable{System.String},System.Nullable{Robust.Shared.Graphics.TextureLoadParameters})">LoadFromImage&lt;T&gt;(Image&lt;T&gt;, Nullable&lt;String&gt;, Nullable&lt;TextureLoadParameters&gt;)</h4>
+  <div class="markdown level1 summary"><p>Loads a new texture an existing image.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Texture LoadFromImage&lt;T&gt;(Image&lt;T&gt; image, string? name = null, TextureLoadParameters? loadParameters = null)
+    where T : struct, IPixel&lt;T&gt;</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Image</span>&lt;T&gt;</td>
+        <td><span class="parametername">image</span></td>
+        <td><p>The image to load.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">name</span></td>
+        <td><p>The &quot;name&quot; of this texture. This can be referred to later to aid debugging.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="../Robust.Shared/Robust.Shared.Graphics.TextureLoadParameters.html">TextureLoadParameters</a>&gt;</td>
+        <td><span class="parametername">loadParameters</span></td>
+        <td><p>Parameters that influence the loading of textures.
+Defaults to <see cref="!:Robust.Client.Graphics.TextureLoadParameters.Default"></see> if <code>null</code>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td><p>The type of pixels of the image. At the moment, images must be <see cref="!:Rgba32"></see>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_LoadFromPNGStream_Stream_System_Nullable_System_String__System_Nullable_Robust_Shared_Graphics_TextureLoadParameters__.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.LoadFromPNGStream(Stream%2CSystem.Nullable%7BSystem.String%7D%2CSystem.Nullable%7BRobust.Shared.Graphics.TextureLoadParameters%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L106">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_LoadFromPNGStream_" data-uid="Robust.Client.Graphics.Texture.LoadFromPNGStream*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_LoadFromPNGStream_Stream_System_Nullable_System_String__System_Nullable_Robust_Shared_Graphics_TextureLoadParameters__" data-uid="Robust.Client.Graphics.Texture.LoadFromPNGStream(Stream,System.Nullable{System.String},System.Nullable{Robust.Shared.Graphics.TextureLoadParameters})">LoadFromPNGStream(Stream, Nullable&lt;String&gt;, Nullable&lt;TextureLoadParameters&gt;)</h4>
+  <div class="markdown level1 summary"><p>Loads an image from a stream containing PNG data.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Texture LoadFromPNGStream(Stream stream, string? name = null, TextureLoadParameters? loadParameters = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Stream</span></td>
+        <td><span class="parametername">stream</span></td>
+        <td><p>The stream to load the image from.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">name</span></td>
+        <td><p>The &quot;name&quot; of this texture. This can be referred to later to aid debugging.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="../Robust.Shared/Robust.Shared.Graphics.TextureLoadParameters.html">TextureLoadParameters</a>&gt;</td>
+        <td><span class="parametername">loadParameters</span></td>
+        <td><p>Parameters that influence the loading of textures.
+Defaults to <see cref="!:Robust.Client.Graphics.TextureLoadParameters.Default"></see> if <code>null</code>.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="eii">Explicit Interface Implementations
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Robust_Client_Graphics_IDirectionalTextureProvider_Default.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Robust%23Client%23Graphics%23IDirectionalTextureProvider%23Default%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L42">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IDirectionalTextureProvider_Default_" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IDirectionalTextureProvider#Default*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IDirectionalTextureProvider_Default" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IDirectionalTextureProvider#Default">IDirectionalTextureProvider.Default</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Texture IDirectionalTextureProvider.Default { get; }</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Robust_Client_Graphics_IDirectionalTextureProvider_TextureFor_Robust_Shared_Maths_Direction_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Robust%23Client%23Graphics%23IDirectionalTextureProvider%23TextureFor(Robust.Shared.Maths.Direction)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L44">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IDirectionalTextureProvider_TextureFor_" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IDirectionalTextureProvider#TextureFor*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IDirectionalTextureProvider_TextureFor_Robust_Shared_Maths_Direction_" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IDirectionalTextureProvider#TextureFor(Robust.Shared.Maths.Direction)">IDirectionalTextureProvider.TextureFor(Direction)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Texture IDirectionalTextureProvider.TextureFor(Direction dir)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Direction.html">Direction</a></td>
+        <td><span class="parametername">dir</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_AnimationFrameCount.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Robust%23Client%23Graphics%23IRsiStateLike%23AnimationFrameCount%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L51">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_AnimationFrameCount_" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IRsiStateLike#AnimationFrameCount*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_AnimationFrameCount" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IRsiStateLike#AnimationFrameCount">IRsiStateLike.AnimationFrameCount</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">int IRsiStateLike.AnimationFrameCount { get; }</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_GetDelay_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Robust%23Client%23Graphics%23IRsiStateLike%23GetDelay(System.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L53">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_GetDelay_" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IRsiStateLike#GetDelay*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_GetDelay_System_Int32_" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IRsiStateLike#GetDelay(System.Int32)">IRsiStateLike.GetDelay(Int32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">float IRsiStateLike.GetDelay(int frame)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">frame</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_GetFrame_Robust_Shared_Graphics_RSI_RsiDirection_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Robust%23Client%23Graphics%23IRsiStateLike%23GetFrame(Robust.Shared.Graphics.RSI.RsiDirection%2CSystem.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L61">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_GetFrame_" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IRsiStateLike#GetFrame*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_GetFrame_Robust_Shared_Graphics_RSI_RsiDirection_System_Int32_" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IRsiStateLike#GetFrame(Robust.Shared.Graphics.RSI.RsiDirection,System.Int32)">IRsiStateLike.GetFrame(RsiDirection, Int32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Texture IRsiStateLike.GetFrame(RsiDirection dir, int frame)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Graphics.RSI.RsiDirection.html">RsiDirection</a></td>
+        <td><span class="parametername">dir</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">frame</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_IsAnimated.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Robust%23Client%23Graphics%23IRsiStateLike%23IsAnimated%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L50">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_IsAnimated_" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IRsiStateLike#IsAnimated*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_IsAnimated" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IRsiStateLike#IsAnimated">IRsiStateLike.IsAnimated</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IRsiStateLike.IsAnimated { get; }</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_RsiDirections.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture.Robust%23Client%23Graphics%23IRsiStateLike%23RsiDirections%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L49">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_RsiDirections_" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IRsiStateLike#RsiDirections*"></a>
+  <h4 id="Robust_Client_Graphics_Texture_Robust_Client_Graphics_IRsiStateLike_RsiDirections" data-uid="Robust.Client.Graphics.Texture.Robust#Client#Graphics#IRsiStateLike#RsiDirections">IRsiStateLike.RsiDirections</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">RsiDirectionType IRsiStateLike.RsiDirections { get; }</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Graphics.RSI.RsiDirectionType.html">RsiDirectionType</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Client.Graphics.IRsiStateLike.html">IRsiStateLike</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Client.Graphics.IDirectionalTextureProvider.html">IDirectionalTextureProvider</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Texture.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Texture%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Texture.cs/#L17" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

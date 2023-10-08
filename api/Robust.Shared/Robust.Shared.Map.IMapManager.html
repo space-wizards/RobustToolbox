@@ -1,0 +1,2011 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IMapManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IMapManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Map.IMapManager">
+  
+  
+  <h1 id="Robust_Shared_Map_IMapManager" data-uid="Robust.Shared.Map.IMapManager" class="text-break">Interface IMapManager
+  </h1>
+  <div class="markdown level0 summary"><p>This manages all of the grids in the world.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Map.html">Robust.Shared.Map</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Map_IMapManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IMapManager</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_SuppressOnTileChanged.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.SuppressOnTileChanged%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L28">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_SuppressOnTileChanged_" data-uid="Robust.Shared.Map.IMapManager.SuppressOnTileChanged*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_SuppressOnTileChanged" data-uid="Robust.Shared.Map.IMapManager.SuppressOnTileChanged">SuppressOnTileChanged</h4>
+  <div class="markdown level1 summary"><p>Should the OnTileChanged event be suppressed? This is useful for initially loading the map
+so that you don't spam an event for each of the million station tiles.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool SuppressOnTileChanged { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_AddUninitializedMap_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.AddUninitializedMap(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L176">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_AddUninitializedMap_" data-uid="Robust.Shared.Map.IMapManager.AddUninitializedMap*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_AddUninitializedMap_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.AddUninitializedMap(Robust.Shared.Map.MapId)">AddUninitializedMap(MapId)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void AddUninitializedMap(MapId mapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_CreateGrid_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.CreateGrid(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L89">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_CreateGrid_" data-uid="Robust.Shared.Map.IMapManager.CreateGrid*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_CreateGrid_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.CreateGrid(Robust.Shared.Map.MapId)">CreateGrid(MapId)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">MapGridComponent CreateGrid(MapId currentMapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">currentMapId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_CreateGrid_Robust_Shared_Map_MapId_Robust_Shared_Map_GridCreateOptions__.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.CreateGrid(Robust.Shared.Map.MapId%2CRobust.Shared.Map.GridCreateOptions%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L88">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_CreateGrid_" data-uid="Robust.Shared.Map.IMapManager.CreateGrid*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_CreateGrid_Robust_Shared_Map_MapId_Robust_Shared_Map_GridCreateOptions__" data-uid="Robust.Shared.Map.IMapManager.CreateGrid(Robust.Shared.Map.MapId,Robust.Shared.Map.GridCreateOptions@)">CreateGrid(MapId, GridCreateOptions)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">MapGridComponent CreateGrid(MapId currentMapId, in GridCreateOptions options)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">currentMapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.GridCreateOptions.html">GridCreateOptions</a></td>
+        <td><span class="parametername">options</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_CreateGrid_Robust_Shared_Map_MapId_System_UInt16_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.CreateGrid(Robust.Shared.Map.MapId%2CSystem.UInt16)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L87">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_CreateGrid_" data-uid="Robust.Shared.Map.IMapManager.CreateGrid*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_CreateGrid_Robust_Shared_Map_MapId_System_UInt16_" data-uid="Robust.Shared.Map.IMapManager.CreateGrid(Robust.Shared.Map.MapId,System.UInt16)">CreateGrid(MapId, UInt16)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">currentMapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt16</span></td>
+        <td><span class="parametername">chunkSize</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_CreateMap_System_Nullable_Robust_Shared_Map_MapId__.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.CreateMap(System.Nullable%7BRobust.Shared.Map.MapId%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L50">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_CreateMap_" data-uid="Robust.Shared.Map.IMapManager.CreateMap*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_CreateMap_System_Nullable_Robust_Shared_Map_MapId__" data-uid="Robust.Shared.Map.IMapManager.CreateMap(System.Nullable{Robust.Shared.Map.MapId})">CreateMap(Nullable&lt;MapId&gt;)</h4>
+  <div class="markdown level1 summary"><p>Creates a new map.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">MapId CreateMap(MapId? mapId = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a>&gt;</td>
+        <td><span class="parametername">mapId</span></td>
+        <td><p>If provided, the new map will use this ID. If not provided, a new ID will be selected automatically.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><p>The new map.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_CreateNewMapEntity_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.CreateNewMapEntity(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L63">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_CreateNewMapEntity_" data-uid="Robust.Shared.Map.IMapManager.CreateNewMapEntity*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_CreateNewMapEntity_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.CreateNewMapEntity(Robust.Shared.Map.MapId)">CreateNewMapEntity(MapId)</h4>
+  <div class="markdown level1 summary"><p>Creates a new entity, then sets it as the map entity.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">EntityUid CreateNewMapEntity(MapId mapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><p>Newly created entity.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_DeleteGrid_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.DeleteGrid(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L156">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_DeleteGrid_" data-uid="Robust.Shared.Map.IMapManager.DeleteGrid*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_DeleteGrid_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Shared.Map.IMapManager.DeleteGrid(Robust.Shared.GameObjects.EntityUid)">DeleteGrid(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void DeleteGrid(EntityUid euid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">euid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_DeleteMap_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.DeleteMap(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L84">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_DeleteMap_" data-uid="Robust.Shared.Map.IMapManager.DeleteMap*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_DeleteMap_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.DeleteMap(Robust.Shared.Map.MapId)">DeleteMap(MapId)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void DeleteMap(MapId mapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_DoMapInitialize_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.DoMapInitialize(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L173">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_DoMapInitialize_" data-uid="Robust.Shared.Map.IMapManager.DoMapInitialize*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_DoMapInitialize_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.DoMapInitialize(Robust.Shared.Map.MapId)">DoMapInitialize(MapId)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void DoMapInitialize(MapId mapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_FindGridsIntersecting_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2_Robust_Shared_Map_GridCallback_System_Boolean_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.FindGridsIntersecting(Robust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2%2CRobust.Shared.Map.GridCallback%2CSystem.Boolean%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L130">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_FindGridsIntersecting_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_FindGridsIntersecting_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2_Robust_Shared_Map_GridCallback_System_Boolean_System_Boolean_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2,Robust.Shared.Map.GridCallback,System.Boolean,System.Boolean)">FindGridsIntersecting(MapId, Box2, GridCallback, Boolean, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = false, bool includeMap = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2.html">Box2</a></td>
+        <td><span class="parametername">worldAABB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.GridCallback.html">GridCallback</a></td>
+        <td><span class="parametername">callback</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">approx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">includeMap</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_FindGridsIntersecting_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2_System_Boolean_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.FindGridsIntersecting(Robust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2%2CSystem.Boolean%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L146">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_FindGridsIntersecting_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_FindGridsIntersecting_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2_System_Boolean_System_Boolean_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2,System.Boolean,System.Boolean)">FindGridsIntersecting(MapId, Box2, Boolean, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Returns the grids intersecting this AABB.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;MapGridComponent&gt; FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false, bool includeMap = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td><p>The relevant MapID</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2.html">Box2</a></td>
+        <td><span class="parametername">worldAabb</span></td>
+        <td><p>The AABB to intersect</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">approx</span></td>
+        <td><p>Set to false if you wish to accurately get the grid bounds per-tile.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">includeMap</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_FindGridsIntersecting_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated_Robust_Shared_Map_GridCallback_System_Boolean_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.FindGridsIntersecting(Robust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2Rotated%2CRobust.Shared.Map.GridCallback%2CSystem.Boolean%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L134">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_FindGridsIntersecting_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_FindGridsIntersecting_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated_Robust_Shared_Map_GridCallback_System_Boolean_System_Boolean_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2Rotated,Robust.Shared.Map.GridCallback,System.Boolean,System.Boolean)">FindGridsIntersecting(MapId, Box2Rotated, GridCallback, Boolean, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false, bool includeMap = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2Rotated.html">Box2Rotated</a></td>
+        <td><span class="parametername">worldBounds</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.GridCallback.html">GridCallback</a></td>
+        <td><span class="parametername">callback</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">approx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">includeMap</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_FindGridsIntersecting_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated_System_Boolean_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.FindGridsIntersecting(Robust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2Rotated%2CSystem.Boolean%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L154">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_FindGridsIntersecting_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_FindGridsIntersecting_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated_System_Boolean_System_Boolean_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2Rotated,System.Boolean,System.Boolean)">FindGridsIntersecting(MapId, Box2Rotated, Boolean, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Returns the grids intersecting this AABB.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;MapGridComponent&gt; FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false, bool includeMap = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td><p>The relevant MapID</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2Rotated.html">Box2Rotated</a></td>
+        <td><span class="parametername">worldArea</span></td>
+        <td><p>The AABB to intersect</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">approx</span></td>
+        <td><p>Set to false if you wish to accurately get the grid bounds per-tile.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">includeMap</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_FindGridsIntersecting__1_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2___0__Robust_Shared_Map_GridCallback___0__System_Boolean_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.FindGridsIntersecting%60%601(Robust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2%2C%60%600%40%2CRobust.Shared.Map.GridCallback%7B%60%600%7D%2CSystem.Boolean%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L132">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_FindGridsIntersecting_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_FindGridsIntersecting__1_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2___0__Robust_Shared_Map_GridCallback___0__System_Boolean_System_Boolean_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting``1(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2,``0@,Robust.Shared.Map.GridCallback{``0},System.Boolean,System.Boolean)">FindGridsIntersecting&lt;TState&gt;(MapId, Box2, ref TState, GridCallback&lt;TState&gt;, Boolean, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void FindGridsIntersecting&lt;TState&gt;(MapId mapId, Box2 worldAABB, ref TState state, GridCallback&lt;TState&gt; callback, bool approx = false, bool includeMap = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2.html">Box2</a></td>
+        <td><span class="parametername">worldAABB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">TState</span></td>
+        <td><span class="parametername">state</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.GridCallback-1.html">GridCallback</a>&lt;TState&gt;</td>
+        <td><span class="parametername">callback</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">approx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">includeMap</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TState</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_FindGridsIntersecting__1_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated___0__Robust_Shared_Map_GridCallback___0__System_Boolean_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.FindGridsIntersecting%60%601(Robust.Shared.Map.MapId%2CRobust.Shared.Maths.Box2Rotated%2C%60%600%40%2CRobust.Shared.Map.GridCallback%7B%60%600%7D%2CSystem.Boolean%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L136">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_FindGridsIntersecting_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_FindGridsIntersecting__1_Robust_Shared_Map_MapId_Robust_Shared_Maths_Box2Rotated___0__Robust_Shared_Map_GridCallback___0__System_Boolean_System_Boolean_" data-uid="Robust.Shared.Map.IMapManager.FindGridsIntersecting``1(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2Rotated,``0@,Robust.Shared.Map.GridCallback{``0},System.Boolean,System.Boolean)">FindGridsIntersecting&lt;TState&gt;(MapId, Box2Rotated, ref TState, GridCallback&lt;TState&gt;, Boolean, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void FindGridsIntersecting&lt;TState&gt;(MapId mapId, Box2Rotated worldBounds, ref TState state, GridCallback&lt;TState&gt; callback, bool approx = false, bool includeMap = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Box2Rotated.html">Box2Rotated</a></td>
+        <td><span class="parametername">worldBounds</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">TState</span></td>
+        <td><span class="parametername">state</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.GridCallback-1.html">GridCallback</a>&lt;TState&gt;</td>
+        <td><span class="parametername">callback</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">approx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">includeMap</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TState</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_GetAllGrids.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.GetAllGrids%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L21">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_GetAllGrids_" data-uid="Robust.Shared.Map.IMapManager.GetAllGrids*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_GetAllGrids" data-uid="Robust.Shared.Map.IMapManager.GetAllGrids">GetAllGrids()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;MapGridComponent&gt; GetAllGrids()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_GetAllMapGrids_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.GetAllMapGrids(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L93">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_GetAllMapGrids_" data-uid="Robust.Shared.Map.IMapManager.GetAllMapGrids*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_GetAllMapGrids_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.GetAllMapGrids(Robust.Shared.Map.MapId)">GetAllMapGrids(MapId)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;MapGridComponent&gt; GetAllMapGrids(MapId mapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_GetAllMapIds.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.GetAllMapIds%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L82">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_GetAllMapIds_" data-uid="Robust.Shared.Map.IMapManager.GetAllMapIds*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_GetAllMapIds" data-uid="Robust.Shared.Map.IMapManager.GetAllMapIds">GetAllMapIds()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;MapId&gt; GetAllMapIds()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_GetGrid_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.GetGrid(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L90">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_GetGrid_" data-uid="Robust.Shared.Map.IMapManager.GetGrid*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_GetGrid_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Shared.Map.IMapManager.GetGrid(Robust.Shared.GameObjects.EntityUid)">GetGrid(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">MapGridComponent GetGrid(EntityUid gridId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">gridId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_GetGridComp_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.GetGridComp(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L165">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_GetGridComp_" data-uid="Robust.Shared.Map.IMapManager.GetGridComp*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_GetGridComp_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Shared.Map.IMapManager.GetGridComp(Robust.Shared.GameObjects.EntityUid)">GetGridComp(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">MapGridComponent GetGridComp(EntityUid euid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">euid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_GetMapEntityId_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.GetMapEntityId(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L75">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_GetMapEntityId_" data-uid="Robust.Shared.Map.IMapManager.GetMapEntityId*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_GetMapEntityId_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.GetMapEntityId(Robust.Shared.Map.MapId)">GetMapEntityId(MapId)</h4>
+  <div class="markdown level1 summary"><p>Returns the map entity ID for a given map.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">EntityUid GetMapEntityId(MapId mapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_GetMapEntityIdOrThrow_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.GetMapEntityIdOrThrow(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L80">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_GetMapEntityIdOrThrow_" data-uid="Robust.Shared.Map.IMapManager.GetMapEntityIdOrThrow*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_GetMapEntityIdOrThrow_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.GetMapEntityIdOrThrow(Robust.Shared.Map.MapId)">GetMapEntityIdOrThrow(MapId)</h4>
+  <div class="markdown level1 summary"><p>Replaces GetMapEntity()'s throw-on-failure semantics.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">EntityUid GetMapEntityIdOrThrow(MapId mapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_GridExists_System_Nullable_Robust_Shared_GameObjects_EntityUid__.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.GridExists(System.Nullable%7BRobust.Shared.GameObjects.EntityUid%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L92">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_GridExists_" data-uid="Robust.Shared.Map.IMapManager.GridExists*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_GridExists_System_Nullable_Robust_Shared_GameObjects_EntityUid__" data-uid="Robust.Shared.Map.IMapManager.GridExists(System.Nullable{Robust.Shared.GameObjects.EntityUid})">GridExists(Nullable&lt;EntityUid&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool GridExists(EntityUid? euid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</td>
+        <td><span class="parametername">euid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_HasMapEntity_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.HasMapEntity(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L158">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_HasMapEntity_" data-uid="Robust.Shared.Map.IMapManager.HasMapEntity*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_HasMapEntity_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.HasMapEntity(Robust.Shared.Map.MapId)">HasMapEntity(MapId)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool HasMapEntity(MapId mapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_Initialize.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L33">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_Initialize_" data-uid="Robust.Shared.Map.IMapManager.Initialize*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_Initialize" data-uid="Robust.Shared.Map.IMapManager.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"><p>Starts up the map system.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Initialize()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_IsGrid_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.IsGrid(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L160">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_IsGrid_" data-uid="Robust.Shared.Map.IMapManager.IsGrid*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_IsGrid_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Shared.Map.IMapManager.IsGrid(Robust.Shared.GameObjects.EntityUid)">IsGrid(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsGrid(EntityUid uid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_IsMap_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.IsMap(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L161">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_IsMap_" data-uid="Robust.Shared.Map.IMapManager.IsMap*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_IsMap_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Shared.Map.IMapManager.IsMap(Robust.Shared.GameObjects.EntityUid)">IsMap(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsMap(EntityUid uid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_IsMapInitialized_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.IsMapInitialized(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L181">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_IsMapInitialized_" data-uid="Robust.Shared.Map.IMapManager.IsMapInitialized*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_IsMapInitialized_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.IsMapInitialized(Robust.Shared.Map.MapId)">IsMapInitialized(MapId)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsMapInitialized(MapId mapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_IsMapPaused_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.IsMapPaused(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L178">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_IsMapPaused_" data-uid="Robust.Shared.Map.IMapManager.IsMapPaused*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_IsMapPaused_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.IsMapPaused(Robust.Shared.Map.MapId)">IsMapPaused(MapId)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsMapPaused(MapId mapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_MapExists_Robust_Shared_Map_MapId_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.MapExists(Robust.Shared.Map.MapId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L57">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_MapExists_" data-uid="Robust.Shared.Map.IMapManager.MapExists*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_MapExists_Robust_Shared_Map_MapId_" data-uid="Robust.Shared.Map.IMapManager.MapExists(Robust.Shared.Map.MapId)">MapExists(MapId)</h4>
+  <div class="markdown level1 summary"><p>Check whether a map with specified ID exists.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool MapExists(MapId mapId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td><p>The map ID to check existence of.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True if the map exists, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_NextMapId.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.NextMapId%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L163">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_NextMapId_" data-uid="Robust.Shared.Map.IMapManager.NextMapId*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_NextMapId" data-uid="Robust.Shared.Map.IMapManager.NextMapId">NextMapId()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">MapId NextMapId()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_Restart.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.Restart%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L38">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_Restart_" data-uid="Robust.Shared.Map.IMapManager.Restart*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_Restart" data-uid="Robust.Shared.Map.IMapManager.Restart">Restart()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Restart()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_SetMapEntity_Robust_Shared_Map_MapId_Robust_Shared_GameObjects_EntityUid_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.SetMapEntity(Robust.Shared.Map.MapId%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L70">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_SetMapEntity_" data-uid="Robust.Shared.Map.IMapManager.SetMapEntity*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_SetMapEntity_Robust_Shared_Map_MapId_Robust_Shared_GameObjects_EntityUid_System_Boolean_" data-uid="Robust.Shared.Map.IMapManager.SetMapEntity(Robust.Shared.Map.MapId,Robust.Shared.GameObjects.EntityUid,System.Boolean)">SetMapEntity(MapId, EntityUid, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Sets the MapEntity(root node) for a given map. If an entity is already set, it will be deleted
+before the new one is set.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void SetMapEntity(MapId mapId, EntityUid newMapEntityId, bool updateChildren = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">newMapEntityId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">updateChildren</span></td>
+        <td><p>Should we re-parent children from the old map to the new one, or delete them.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_SetMapPaused_Robust_Shared_Map_MapId_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.SetMapPaused(Robust.Shared.Map.MapId%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L171">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_SetMapPaused_" data-uid="Robust.Shared.Map.IMapManager.SetMapPaused*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_SetMapPaused_Robust_Shared_Map_MapId_System_Boolean_" data-uid="Robust.Shared.Map.IMapManager.SetMapPaused(Robust.Shared.Map.MapId,System.Boolean)">SetMapPaused(MapId, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void SetMapPaused(MapId mapId, bool paused)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">paused</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_Shutdown.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.Shutdown%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L35">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_Shutdown_" data-uid="Robust.Shared.Map.IMapManager.Shutdown*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_Shutdown" data-uid="Robust.Shared.Map.IMapManager.Shutdown">Shutdown()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Shutdown()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_Startup.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.Startup%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L36">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_Startup_" data-uid="Robust.Shared.Map.IMapManager.Startup*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_Startup" data-uid="Robust.Shared.Map.IMapManager.Startup">Startup()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Startup()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_TryFindGridAt_Robust_Shared_Map_MapCoordinates_Robust_Shared_GameObjects_EntityUid__Robust_Shared_Map_Components_MapGridComponent__.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.TryFindGridAt(Robust.Shared.Map.MapCoordinates%2CRobust.Shared.GameObjects.EntityUid%40%2CRobust.Shared.Map.Components.MapGridComponent%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L128">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_TryFindGridAt_" data-uid="Robust.Shared.Map.IMapManager.TryFindGridAt*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_TryFindGridAt_Robust_Shared_Map_MapCoordinates_Robust_Shared_GameObjects_EntityUid__Robust_Shared_Map_Components_MapGridComponent__" data-uid="Robust.Shared.Map.IMapManager.TryFindGridAt(Robust.Shared.Map.MapCoordinates,Robust.Shared.GameObjects.EntityUid@,Robust.Shared.Map.Components.MapGridComponent@)">TryFindGridAt(MapCoordinates, out EntityUid, out MapGridComponent)</h4>
+  <div class="markdown level1 summary"><p>Attempts to find the map grid under the map location.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryFindGridAt(MapCoordinates mapCoordinates, out EntityUid uid, out MapGridComponent grid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapCoordinates.html">MapCoordinates</a></td>
+        <td><span class="parametername">mapCoordinates</span></td>
+        <td><p>Location on the map to check for a grid.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a></td>
+        <td><span class="parametername">grid</span></td>
+        <td><p>Grid that was found, if any.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Returns true when a grid was found under the location.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Map_IMapManager_TryFindGridAt_Robust_Shared_Map_MapCoordinates_Robust_Shared_GameObjects_EntityUid__Robust_Shared_Map_Components_MapGridComponent___remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This method will never return the map's default grid.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_TryFindGridAt_Robust_Shared_Map_MapId_Vector2_Robust_Shared_GameObjects_EntityQuery_Robust_Shared_GameObjects_TransformComponent__Robust_Shared_GameObjects_EntityUid__Robust_Shared_Map_Components_MapGridComponent__.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.TryFindGridAt(Robust.Shared.Map.MapId%2CVector2%2CRobust.Shared.GameObjects.EntityQuery%7BRobust.Shared.GameObjects.TransformComponent%7D%2CRobust.Shared.GameObjects.EntityUid%40%2CRobust.Shared.Map.Components.MapGridComponent%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L117">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_TryFindGridAt_" data-uid="Robust.Shared.Map.IMapManager.TryFindGridAt*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_TryFindGridAt_Robust_Shared_Map_MapId_Vector2_Robust_Shared_GameObjects_EntityQuery_Robust_Shared_GameObjects_TransformComponent__Robust_Shared_GameObjects_EntityUid__Robust_Shared_Map_Components_MapGridComponent__" data-uid="Robust.Shared.Map.IMapManager.TryFindGridAt(Robust.Shared.Map.MapId,Vector2,Robust.Shared.GameObjects.EntityQuery{Robust.Shared.GameObjects.TransformComponent},Robust.Shared.GameObjects.EntityUid@,Robust.Shared.Map.Components.MapGridComponent@)">TryFindGridAt(MapId, Vector2, EntityQuery&lt;TransformComponent&gt;, out EntityUid, out MapGridComponent)</h4>
+  <div class="markdown level1 summary"><p>Attempts to find the map grid under the map location.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryFindGridAt(MapId mapId, Vector2 worldPos, EntityQuery&lt;TransformComponent&gt; query, out EntityUid uid, out MapGridComponent grid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td><p>Map to search.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">worldPos</span></td>
+        <td><p>Location on the map to check for a grid.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityQuery-1.html">EntityQuery</a>&lt;<a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a>&gt;</td>
+        <td><span class="parametername">query</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a></td>
+        <td><span class="parametername">grid</span></td>
+        <td><p>Grid that was found, if any.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Returns true when a grid was found under the location.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Map_IMapManager_TryFindGridAt_Robust_Shared_Map_MapId_Vector2_Robust_Shared_GameObjects_EntityQuery_Robust_Shared_GameObjects_TransformComponent__Robust_Shared_GameObjects_EntityUid__Robust_Shared_Map_Components_MapGridComponent___remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This method will never return the map's default grid.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_TryFindGridAt_Robust_Shared_Map_MapId_Vector2_Robust_Shared_GameObjects_EntityUid__Robust_Shared_Map_Components_MapGridComponent__.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.TryFindGridAt(Robust.Shared.Map.MapId%2CVector2%2CRobust.Shared.GameObjects.EntityUid%40%2CRobust.Shared.Map.Components.MapGridComponent%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L105">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_TryFindGridAt_" data-uid="Robust.Shared.Map.IMapManager.TryFindGridAt*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_TryFindGridAt_Robust_Shared_Map_MapId_Vector2_Robust_Shared_GameObjects_EntityUid__Robust_Shared_Map_Components_MapGridComponent__" data-uid="Robust.Shared.Map.IMapManager.TryFindGridAt(Robust.Shared.Map.MapId,Vector2,Robust.Shared.GameObjects.EntityUid@,Robust.Shared.Map.Components.MapGridComponent@)">TryFindGridAt(MapId, Vector2, out EntityUid, out MapGridComponent)</h4>
+  <div class="markdown level1 summary"><p>Attempts to find the map grid under the map location.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryFindGridAt(MapId mapId, Vector2 worldPos, out EntityUid uid, out MapGridComponent grid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td><span class="parametername">mapId</span></td>
+        <td><p>Map to search.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">worldPos</span></td>
+        <td><p>Location on the map to check for a grid.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a></td>
+        <td><span class="parametername">grid</span></td>
+        <td><p>Grid that was found, if any.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>Returns true when a grid was found under the location.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Map_IMapManager_TryFindGridAt_Robust_Shared_Map_MapId_Vector2_Robust_Shared_GameObjects_EntityUid__Robust_Shared_Map_Components_MapGridComponent___remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This method will never return the map's default grid.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager_TryGetGrid_System_Nullable_Robust_Shared_GameObjects_EntityUid__Robust_Shared_Map_Components_MapGridComponent__.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager.TryGetGrid(System.Nullable%7BRobust.Shared.GameObjects.EntityUid%7D%2CRobust.Shared.Map.Components.MapGridComponent%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L91">View Source</a>
+  </span>
+  <a id="Robust_Shared_Map_IMapManager_TryGetGrid_" data-uid="Robust.Shared.Map.IMapManager.TryGetGrid*"></a>
+  <h4 id="Robust_Shared_Map_IMapManager_TryGetGrid_System_Nullable_Robust_Shared_GameObjects_EntityUid__Robust_Shared_Map_Components_MapGridComponent__" data-uid="Robust.Shared.Map.IMapManager.TryGetGrid(System.Nullable{Robust.Shared.GameObjects.EntityUid},Robust.Shared.Map.Components.MapGridComponent@)">TryGetGrid(Nullable&lt;EntityUid&gt;, out MapGridComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetGrid(EntityUid? euid, out MapGridComponent grid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</td>
+        <td><span class="parametername">euid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.Components.MapGridComponent.html">MapGridComponent</a></td>
+        <td><span class="parametername">grid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Map_IMapManager.md&amp;value=---%0Auid%3A%20Robust.Shared.Map.IMapManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Map/IMapManager.cs/#L19" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

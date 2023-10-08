@@ -1,0 +1,987 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Struct EntityUid
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Struct EntityUid
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.GameObjects.EntityUid">
+  
+  
+  <h1 id="Robust_Shared_GameObjects_EntityUid" data-uid="Robust.Shared.GameObjects.EntityUid" class="text-break">Struct EntityUid
+  </h1>
+  <div class="markdown level0 summary"><p>This type contains a network identification number of an entity.
+This can be used by the EntityManager to access an entity</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><span class="xref">IEquatable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</div>
+    <div><span class="xref">IComparable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</div>
+    <div><span class="xref">ISpanFormattable</span></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.GameObjects.html">Robust.Shared.GameObjects</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_GameObjects_EntityUid_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public struct EntityUid : IEquatable&lt;EntityUid&gt;, IComparable&lt;EntityUid&gt;, ISpanFormattable</code></pre>
+  </div>
+  <h3 id="constructors">Constructors
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid__ctor_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.%23ctor(System.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L34">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid__ctor_" data-uid="Robust.Shared.GameObjects.EntityUid.#ctor*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid__ctor_System_Int32_" data-uid="Robust.Shared.GameObjects.EntityUid.#ctor(System.Int32)">EntityUid(Int32)</h4>
+  <div class="markdown level1 summary"><p>Creates an instance of this structure, with the given network ID.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public EntityUid(int id)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_FirstUid.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.FirstUid%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L29">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_FirstUid" data-uid="Robust.Shared.GameObjects.EntityUid.FirstUid">FirstUid</h4>
+  <div class="markdown level1 summary"><p>The first entity UID the entityManager should use when the manager is initialized.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly EntityUid FirstUid</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_Id.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.Id%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L19">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_Id" data-uid="Robust.Shared.GameObjects.EntityUid.Id">Id</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public readonly int Id</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_Invalid.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.Invalid%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L24">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_Invalid" data-uid="Robust.Shared.GameObjects.EntityUid.Invalid">Invalid</h4>
+  <div class="markdown level1 summary"><p>An Invalid entity UID you can compare against.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly EntityUid Invalid</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_Valid.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.Valid%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L39">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_Valid_" data-uid="Robust.Shared.GameObjects.EntityUid.Valid*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_Valid" data-uid="Robust.Shared.GameObjects.EntityUid.Valid">Valid</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Valid { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_CompareTo_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.CompareTo(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L138">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_CompareTo_" data-uid="Robust.Shared.GameObjects.EntityUid.CompareTo*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_CompareTo_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Shared.GameObjects.EntityUid.CompareTo(Robust.Shared.GameObjects.EntityUid)">CompareTo(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int CompareTo(EntityUid other)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">other</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_Equals_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.Equals(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L74">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_Equals_" data-uid="Robust.Shared.GameObjects.EntityUid.Equals*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_Equals_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Shared.GameObjects.EntityUid.Equals(Robust.Shared.GameObjects.EntityUid)">Equals(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Equals(EntityUid other)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">other</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_Equals_System_Nullable_System_Object__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.Equals(System.Nullable%7BSystem.Object%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L80">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_Equals_" data-uid="Robust.Shared.GameObjects.EntityUid.Equals*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_Equals_System_Nullable_System_Object__" data-uid="Robust.Shared.GameObjects.EntityUid.Equals(System.Nullable{System.Object})">Equals(Nullable&lt;Object&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override bool Equals(object? obj)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">obj</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_GetHashCode.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.GetHashCode%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L87">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_GetHashCode_" data-uid="Robust.Shared.GameObjects.EntityUid.GetHashCode*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_GetHashCode" data-uid="Robust.Shared.GameObjects.EntityUid.GetHashCode">GetHashCode()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override int GetHashCode()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_IsValid.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.IsValid%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L67">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_IsValid_" data-uid="Robust.Shared.GameObjects.EntityUid.IsValid*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_IsValid" data-uid="Robust.Shared.GameObjects.EntityUid.IsValid">IsValid()</h4>
+  <div class="markdown level1 summary"><p>Checks if the ID value is valid. Does not check if it identifies
+a valid Entity.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsValid()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_Parse_ReadOnlySpan_System_Char__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.Parse(ReadOnlySpan%7BSystem.Char%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L44">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_Parse_" data-uid="Robust.Shared.GameObjects.EntityUid.Parse*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_Parse_ReadOnlySpan_System_Char__" data-uid="Robust.Shared.GameObjects.EntityUid.Parse(ReadOnlySpan{System.Char})">Parse(ReadOnlySpan&lt;Char&gt;)</h4>
+  <div class="markdown level1 summary"><p>Creates an entity UID by parsing a string number.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static EntityUid Parse(ReadOnlySpan&lt;char&gt; uid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">ReadOnlySpan</span>&lt;<span class="xref">System.Char</span>&gt;</td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_ToString.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.ToString%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L118">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_ToString_" data-uid="Robust.Shared.GameObjects.EntityUid.ToString*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_ToString" data-uid="Robust.Shared.GameObjects.EntityUid.ToString">ToString()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override string ToString()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_ToString_System_Nullable_System_String__System_Nullable_IFormatProvider__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.ToString(System.Nullable%7BSystem.String%7D%2CSystem.Nullable%7BIFormatProvider%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L123">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_ToString_" data-uid="Robust.Shared.GameObjects.EntityUid.ToString*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_ToString_System_Nullable_System_String__System_Nullable_IFormatProvider__" data-uid="Robust.Shared.GameObjects.EntityUid.ToString(System.Nullable{System.String},System.Nullable{IFormatProvider})">ToString(Nullable&lt;String&gt;, Nullable&lt;IFormatProvider&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string ToString(string? format, IFormatProvider? formatProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">format</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">IFormatProvider</span>&gt;</td>
+        <td><span class="parametername">formatProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_TryFormat_Span_System_Char__System_Int32__ReadOnlySpan_System_Char__System_Nullable_IFormatProvider__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.TryFormat(Span%7BSystem.Char%7D%2CSystem.Int32%40%2CReadOnlySpan%7BSystem.Char%7D%2CSystem.Nullable%7BIFormatProvider%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L128">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_TryFormat_" data-uid="Robust.Shared.GameObjects.EntityUid.TryFormat*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_TryFormat_Span_System_Char__System_Int32__ReadOnlySpan_System_Char__System_Nullable_IFormatProvider__" data-uid="Robust.Shared.GameObjects.EntityUid.TryFormat(Span{System.Char},System.Int32@,ReadOnlySpan{System.Char},System.Nullable{IFormatProvider})">TryFormat(Span&lt;Char&gt;, out Int32, ReadOnlySpan&lt;Char&gt;, Nullable&lt;IFormatProvider&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryFormat(Span&lt;char&gt; destination, out int charsWritten, ReadOnlySpan&lt;char&gt; format, IFormatProvider? provider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Span</span>&lt;<span class="xref">System.Char</span>&gt;</td>
+        <td><span class="parametername">destination</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">charsWritten</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">ReadOnlySpan</span>&lt;<span class="xref">System.Char</span>&gt;</td>
+        <td><span class="parametername">format</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">IFormatProvider</span>&gt;</td>
+        <td><span class="parametername">provider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_TryParse_ReadOnlySpan_System_Char__Robust_Shared_GameObjects_EntityUid__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.TryParse(ReadOnlySpan%7BSystem.Char%7D%2CRobust.Shared.GameObjects.EntityUid%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L49">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_TryParse_" data-uid="Robust.Shared.GameObjects.EntityUid.TryParse*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_TryParse_ReadOnlySpan_System_Char__Robust_Shared_GameObjects_EntityUid__" data-uid="Robust.Shared.GameObjects.EntityUid.TryParse(ReadOnlySpan{System.Char},Robust.Shared.GameObjects.EntityUid@)">TryParse(ReadOnlySpan&lt;Char&gt;, out EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool TryParse(ReadOnlySpan&lt;char&gt; uid, out EntityUid entityUid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">ReadOnlySpan</span>&lt;<span class="xref">System.Char</span>&gt;</td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entityUid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="operators">Operators
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_op_Equality_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.op_Equality(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L95">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_op_Equality_" data-uid="Robust.Shared.GameObjects.EntityUid.op_Equality*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_op_Equality_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Shared.GameObjects.EntityUid.op_Equality(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.EntityUid)">Equality(EntityUid, EntityUid)</h4>
+  <div class="markdown level1 summary"><p>Check for equality by value between two objects.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator ==(EntityUid a, EntityUid b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_op_Explicit_Robust_Shared_GameObjects_EntityUid__System_Int32.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.op_Explicit(Robust.Shared.GameObjects.EntityUid)~System.Int32%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L112">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_op_Explicit_" data-uid="Robust.Shared.GameObjects.EntityUid.op_Explicit*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_op_Explicit_Robust_Shared_GameObjects_EntityUid__System_Int32" data-uid="Robust.Shared.GameObjects.EntityUid.op_Explicit(Robust.Shared.GameObjects.EntityUid)~System.Int32">Explicit(EntityUid to Int32)</h4>
+  <div class="markdown level1 summary"><p>Explicit conversion of EntityId to int. This should only be used in special
+cases like serialization. Do NOT use this in content.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static explicit operator int (EntityUid self)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">self</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid_op_Inequality_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid.op_Inequality(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L103">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_EntityUid_op_Inequality_" data-uid="Robust.Shared.GameObjects.EntityUid.op_Inequality*"></a>
+  <h4 id="Robust_Shared_GameObjects_EntityUid_op_Inequality_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Shared.GameObjects.EntityUid.op_Inequality(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.EntityUid)">Inequality(EntityUid, EntityUid)</h4>
+  <div class="markdown level1 summary"><p>Check for inequality by value between two objects.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator !=(EntityUid a, EntityUid b)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">a</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">b</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <span class="xref">IEquatable&lt;&gt;</span>
+  </div>
+  <div>
+      <span class="xref">IComparable&lt;&gt;</span>
+  </div>
+  <div>
+      <span class="xref">ISpanFormattable</span>
+  </div>
+  <h3 id="extensionmethods">Extension Methods</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.Containers.ContainerHelpers.html#Robust_Shared_Containers_ContainerHelpers_IsInContainer_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_IEntityManager_">ContainerHelpers.IsInContainer(EntityUid, IEntityManager)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Containers.ContainerHelpers.html#Robust_Shared_Containers_ContainerHelpers_TryGetContainerMan_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Containers_ContainerManagerComponent__Robust_Shared_GameObjects_IEntityManager_">ContainerHelpers.TryGetContainerMan(EntityUid, out ContainerManagerComponent, IEntityManager)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Containers.ContainerHelpers.html#Robust_Shared_Containers_ContainerHelpers_TryGetContainer_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Containers_BaseContainer__Robust_Shared_GameObjects_IEntityManager_">ContainerHelpers.TryGetContainer(EntityUid, out BaseContainer, IEntityManager)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Containers.ContainerHelpers.html#Robust_Shared_Containers_ContainerHelpers_TryRemoveFromContainer_Robust_Shared_GameObjects_EntityUid_System_Boolean_System_Boolean__Robust_Shared_GameObjects_IEntityManager_">ContainerHelpers.TryRemoveFromContainer(EntityUid, Boolean, out Boolean, IEntityManager)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Containers.ContainerHelpers.html#Robust_Shared_Containers_ContainerHelpers_TryRemoveFromContainer_Robust_Shared_GameObjects_EntityUid_System_Boolean_Robust_Shared_GameObjects_IEntityManager_">ContainerHelpers.TryRemoveFromContainer(EntityUid, Boolean, IEntityManager)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Containers.ContainerHelpers.html#Robust_Shared_Containers_ContainerHelpers_CreateContainer__1_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_GameObjects_IEntityManager_">ContainerHelpers.CreateContainer&lt;T&gt;(EntityUid, String, IEntityManager)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Containers.ContainerHelpers.html#Robust_Shared_Containers_ContainerHelpers_EnsureContainer__1_Robust_Shared_GameObjects_EntityUid_System_String_Robust_Shared_GameObjects_IEntityManager_">ContainerHelpers.EnsureContainer&lt;T&gt;(EntityUid, String, IEntityManager)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Containers.ContainerHelpers.html#Robust_Shared_Containers_ContainerHelpers_EnsureContainer__1_Robust_Shared_GameObjects_EntityUid_System_String_System_Boolean__Robust_Shared_GameObjects_IEntityManager_">ContainerHelpers.EnsureContainer&lt;T&gt;(EntityUid, String, out Boolean, IEntityManager)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.ComponentExt.html#Robust_Shared_GameObjects_ComponentExt_EnsureComponent__1_Robust_Shared_GameObjects_EntityUid_">ComponentExt.EnsureComponent&lt;T&gt;(EntityUid)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.ComponentExt.html#Robust_Shared_GameObjects_ComponentExt_EnsureComponentWarn__1_Robust_Shared_GameObjects_EntityUid_System_Nullable_System_String__">ComponentExt.EnsureComponentWarn&lt;T&gt;(EntityUid, Nullable&lt;String&gt;)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.TimerExtensions.html#Robust_Shared_GameObjects_TimerExtensions_AddTimer_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Timing_Timer_CancellationToken_">TimerExtensions.AddTimer(EntityUid, Timer, CancellationToken)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.TimerExtensions.html#Robust_Shared_GameObjects_TimerExtensions_DelayTask_Robust_Shared_GameObjects_EntityUid_System_Int32_CancellationToken_">TimerExtensions.DelayTask(EntityUid, Int32, CancellationToken)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.TimerExtensions.html#Robust_Shared_GameObjects_TimerExtensions_DelayTask_Robust_Shared_GameObjects_EntityUid_TimeSpan_CancellationToken_">TimerExtensions.DelayTask(EntityUid, TimeSpan, CancellationToken)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.TimerExtensions.html#Robust_Shared_GameObjects_TimerExtensions_SpawnTimer_Robust_Shared_GameObjects_EntityUid_System_Int32_Action_CancellationToken_">TimerExtensions.SpawnTimer(EntityUid, Int32, Action, CancellationToken)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.TimerExtensions.html#Robust_Shared_GameObjects_TimerExtensions_SpawnTimer_Robust_Shared_GameObjects_EntityUid_TimeSpan_Action_CancellationToken_">TimerExtensions.SpawnTimer(EntityUid, TimeSpan, Action, CancellationToken)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.TimerExtensions.html#Robust_Shared_GameObjects_TimerExtensions_SpawnRepeatingTimer_Robust_Shared_GameObjects_EntityUid_System_Int32_Action_CancellationToken_">TimerExtensions.SpawnRepeatingTimer(EntityUid, Int32, Action, CancellationToken)</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.TimerExtensions.html#Robust_Shared_GameObjects_TimerExtensions_SpawnRepeatingTimer_Robust_Shared_GameObjects_EntityUid_TimeSpan_Action_CancellationToken_">TimerExtensions.SpawnRepeatingTimer(EntityUid, TimeSpan, Action, CancellationToken)</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_EntityUid.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.EntityUid%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/EntityUid.cs/#L16" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

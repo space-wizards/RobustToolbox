@@ -1,0 +1,915 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class ClientEntityManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class ClientEntityManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Client.GameObjects.ClientEntityManager">
+  
+  
+  <h1 id="Robust_Client_GameObjects_ClientEntityManager" data-uid="Robust.Client.GameObjects.ClientEntityManager" class="text-break">Class ClientEntityManager
+  </h1>
+  <div class="markdown level0 summary"><p>Manager for entities -- controls things like template loading and instantiation</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityManager.html">EntityManager</a></div>
+    <div class="level2"><span class="xref">ClientEntityManager</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Client.GameObjects.IClientEntityManager.html">IClientEntityManager</a></div>
+    <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></div>
+    <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityNetworkManager.html">IEntityNetworkManager</a></div>
+  </div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Client.GameObjects.html">Robust.Client.GameObjects</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Client.dll</h6>
+  <h5 id="Robust_Client_GameObjects_ClientEntityManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class ClientEntityManager : EntityManager, IClientEntityManagerInternal, IClientEntityManager, IEntityManager, IEntityNetworkManager</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_EntityNetManager.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.EntityNetManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L125">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_EntityNetManager_" data-uid="Robust.Client.GameObjects.ClientEntityManager.EntityNetManager*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_EntityNetManager" data-uid="Robust.Client.GameObjects.ClientEntityManager.EntityNetManager">EntityNetManager</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override IEntityNetworkManager EntityNetManager { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityNetworkManager.html">IEntityNetworkManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityManager.html#Robust_Shared_GameObjects_EntityManager_EntityNetManager">EntityManager.EntityNetManager</a></div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_Dirty_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_Component_Robust_Shared_GameObjects_MetaDataComponent_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.Dirty(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.Component%2CRobust.Shared.GameObjects.MetaDataComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L89">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_Dirty_" data-uid="Robust.Client.GameObjects.ClientEntityManager.Dirty*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_Dirty_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_Component_Robust_Shared_GameObjects_MetaDataComponent_" data-uid="Robust.Client.GameObjects.ClientEntityManager.Dirty(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.Component,Robust.Shared.GameObjects.MetaDataComponent)">Dirty(EntityUid, Component, MetaDataComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Dirty(EntityUid uid, Component component, MetaDataComponent meta = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.Component.html">Component</a></td>
+        <td><span class="parametername">component</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.MetaDataComponent.html">MetaDataComponent</a></td>
+        <td><span class="parametername">meta</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityManager.html#Robust_Shared_GameObjects_EntityManager_Dirty_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_Component_Robust_Shared_GameObjects_MetaDataComponent_">EntityManager.Dirty(EntityUid, Component, MetaDataComponent)</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_DirtyEntity_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_MetaDataComponent_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.DirtyEntity(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.MetaDataComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L62">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_DirtyEntity_" data-uid="Robust.Client.GameObjects.ClientEntityManager.DirtyEntity*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_DirtyEntity_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_MetaDataComponent_" data-uid="Robust.Client.GameObjects.ClientEntityManager.DirtyEntity(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.MetaDataComponent)">DirtyEntity(EntityUid, MetaDataComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void DirtyEntity(EntityUid uid, MetaDataComponent meta = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.MetaDataComponent.html">MetaDataComponent</a></td>
+        <td><span class="parametername">meta</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityManager.html#Robust_Shared_GameObjects_EntityManager_DirtyEntity_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_MetaDataComponent_">EntityManager.DirtyEntity(EntityUid, MetaDataComponent)</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_DispatchReceivedNetworkMsg_Robust_Shared_GameObjects_EntityEventArgs_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.DispatchReceivedNetworkMsg(Robust.Shared.GameObjects.EntityEventArgs)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L207">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_DispatchReceivedNetworkMsg_" data-uid="Robust.Client.GameObjects.ClientEntityManager.DispatchReceivedNetworkMsg*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_DispatchReceivedNetworkMsg_Robust_Shared_GameObjects_EntityEventArgs_" data-uid="Robust.Client.GameObjects.ClientEntityManager.DispatchReceivedNetworkMsg(Robust.Shared.GameObjects.EntityEventArgs)">DispatchReceivedNetworkMsg(EntityEventArgs)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void DispatchReceivedNetworkMsg(EntityEventArgs msg)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityEventArgs.html">EntityEventArgs</a></td>
+        <td><span class="parametername">msg</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_EnsureCoordinates__1_Robust_Shared_Map_NetCoordinates_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.EnsureCoordinates%60%601(Robust.Shared.Map.NetCoordinates%2CRobust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.Network.cs/#L48">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_EnsureCoordinates_" data-uid="Robust.Client.GameObjects.ClientEntityManager.EnsureCoordinates*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_EnsureCoordinates__1_Robust_Shared_Map_NetCoordinates_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Client.GameObjects.ClientEntityManager.EnsureCoordinates``1(Robust.Shared.Map.NetCoordinates,Robust.Shared.GameObjects.EntityUid)">EnsureCoordinates&lt;T&gt;(NetCoordinates, EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override EntityCoordinates EnsureCoordinates&lt;T&gt;(NetCoordinates netCoordinates, EntityUid callerEntity)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.NetCoordinates.html">NetCoordinates</a></td>
+        <td><span class="parametername">netCoordinates</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">callerEntity</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityManager.html#Robust_Shared_GameObjects_EntityManager_EnsureCoordinates__1_Robust_Shared_Map_NetCoordinates_Robust_Shared_GameObjects_EntityUid_">EntityManager.EnsureCoordinates&lt;T&gt;(NetCoordinates, EntityUid)</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_EnsureEntity__1_Robust_Shared_GameObjects_NetEntity_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.EnsureEntity%60%601(Robust.Shared.GameObjects.NetEntity%2CRobust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.Network.cs/#L29">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_EnsureEntity_" data-uid="Robust.Client.GameObjects.ClientEntityManager.EnsureEntity*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_EnsureEntity__1_Robust_Shared_GameObjects_NetEntity_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Client.GameObjects.ClientEntityManager.EnsureEntity``1(Robust.Shared.GameObjects.NetEntity,Robust.Shared.GameObjects.EntityUid)">EnsureEntity&lt;T&gt;(NetEntity, EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override EntityUid EnsureEntity&lt;T&gt;(NetEntity nEntity, EntityUid callerEntity)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.NetEntity.html">NetEntity</a></td>
+        <td><span class="parametername">nEntity</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">callerEntity</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityManager.html#Robust_Shared_GameObjects_EntityManager_EnsureEntity__1_Robust_Shared_GameObjects_NetEntity_Robust_Shared_GameObjects_EntityUid_">EntityManager.EnsureEntity&lt;T&gt;(NetEntity, EntityUid)</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_FlushEntities.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.FlushEntities%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L37">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_FlushEntities_" data-uid="Robust.Client.GameObjects.ClientEntityManager.FlushEntities*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_FlushEntities" data-uid="Robust.Client.GameObjects.ClientEntityManager.FlushEntities">FlushEntities()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void FlushEntities()</code></pre>
+  </div>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityManager.html#Robust_Shared_GameObjects_EntityManager_FlushEntities">EntityManager.FlushEntities()</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_GenerateNetEntity.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.GenerateNetEntity%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.Network.cs/#L11">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_GenerateNetEntity_" data-uid="Robust.Client.GameObjects.ClientEntityManager.GenerateNetEntity*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_GenerateNetEntity" data-uid="Robust.Client.GameObjects.ClientEntityManager.GenerateNetEntity">GenerateNetEntity()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected override NetEntity GenerateNetEntity()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.NetEntity.html">NetEntity</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityManager.html#Robust_Shared_GameObjects_EntityManager_GenerateNetEntity">EntityManager.GenerateNetEntity()</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_Initialize.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L29">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_Initialize_" data-uid="Robust.Client.GameObjects.ClientEntityManager.Initialize*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_Initialize" data-uid="Robust.Client.GameObjects.ClientEntityManager.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Initialize()</code></pre>
+  </div>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityManager.html#Robust_Shared_GameObjects_EntityManager_Initialize">EntityManager.Initialize()</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_IsClientSide_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_MetaDataComponent_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.IsClientSide(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.MetaDataComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.Network.cs/#L20">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_IsClientSide_" data-uid="Robust.Client.GameObjects.ClientEntityManager.IsClientSide*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_IsClientSide_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_MetaDataComponent_" data-uid="Robust.Client.GameObjects.ClientEntityManager.IsClientSide(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.MetaDataComponent)">IsClientSide(EntityUid, MetaDataComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override bool IsClientSide(EntityUid uid, MetaDataComponent metadata = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.MetaDataComponent.html">MetaDataComponent</a></td>
+        <td><span class="parametername">metadata</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityManager.html#Robust_Shared_GameObjects_EntityManager_IsClientSide_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_MetaDataComponent_">EntityManager.IsClientSide(EntityUid, MetaDataComponent)</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_QueueDeleteEntity_System_Nullable_Robust_Shared_GameObjects_EntityUid__.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.QueueDeleteEntity(System.Nullable%7BRobust.Shared.GameObjects.EntityUid%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L69">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_QueueDeleteEntity_" data-uid="Robust.Client.GameObjects.ClientEntityManager.QueueDeleteEntity*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_QueueDeleteEntity_System_Nullable_Robust_Shared_GameObjects_EntityUid__" data-uid="Robust.Client.GameObjects.ClientEntityManager.QueueDeleteEntity(System.Nullable{Robust.Shared.GameObjects.EntityUid})">QueueDeleteEntity(Nullable&lt;EntityUid&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void QueueDeleteEntity(EntityUid? uid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_RaisePredictiveEvent__1___0_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.RaisePredictiveEvent%60%601(%60%600)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L108">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_RaisePredictiveEvent_" data-uid="Robust.Client.GameObjects.ClientEntityManager.RaisePredictiveEvent*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_RaisePredictiveEvent__1___0_" data-uid="Robust.Client.GameObjects.ClientEntityManager.RaisePredictiveEvent``1(``0)">RaisePredictiveEvent&lt;T&gt;(T)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void RaisePredictiveEvent&lt;T&gt;(T msg)
+    where T : EntityEventArgs</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td><span class="parametername">msg</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><span class="xref">Robust.Shared.GameObjects.EntityManager.RaisePredictiveEvent&lt;T&gt;(T)</span></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_SendSystemNetworkMessage_Robust_Shared_GameObjects_EntityEventArgs_Robust_Shared_Network_INetChannel_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.SendSystemNetworkMessage(Robust.Shared.GameObjects.EntityEventArgs%2CRobust.Shared.Network.INetChannel)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L172">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_SendSystemNetworkMessage_" data-uid="Robust.Client.GameObjects.ClientEntityManager.SendSystemNetworkMessage*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_SendSystemNetworkMessage_Robust_Shared_GameObjects_EntityEventArgs_Robust_Shared_Network_INetChannel_" data-uid="Robust.Client.GameObjects.ClientEntityManager.SendSystemNetworkMessage(Robust.Shared.GameObjects.EntityEventArgs,Robust.Shared.Network.INetChannel)">SendSystemNetworkMessage(EntityEventArgs, INetChannel)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel channel)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityEventArgs.html">EntityEventArgs</a></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Network.INetChannel.html">INetChannel</a></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_SendSystemNetworkMessage_Robust_Shared_GameObjects_EntityEventArgs_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.SendSystemNetworkMessage(Robust.Shared.GameObjects.EntityEventArgs%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L155">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_SendSystemNetworkMessage_" data-uid="Robust.Client.GameObjects.ClientEntityManager.SendSystemNetworkMessage*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_SendSystemNetworkMessage_Robust_Shared_GameObjects_EntityEventArgs_System_Boolean_" data-uid="Robust.Client.GameObjects.ClientEntityManager.SendSystemNetworkMessage(Robust.Shared.GameObjects.EntityEventArgs,System.Boolean)">SendSystemNetworkMessage(EntityEventArgs, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityEventArgs.html">EntityEventArgs</a></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">recordReplay</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_SendSystemNetworkMessage_Robust_Shared_GameObjects_EntityEventArgs_System_UInt32_.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.SendSystemNetworkMessage(Robust.Shared.GameObjects.EntityEventArgs%2CSystem.UInt32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L160">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_SendSystemNetworkMessage_" data-uid="Robust.Client.GameObjects.ClientEntityManager.SendSystemNetworkMessage*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_SendSystemNetworkMessage_Robust_Shared_GameObjects_EntityEventArgs_System_UInt32_" data-uid="Robust.Client.GameObjects.ClientEntityManager.SendSystemNetworkMessage(Robust.Shared.GameObjects.EntityEventArgs,System.UInt32)">SendSystemNetworkMessage(EntityEventArgs, UInt32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityEventArgs.html">EntityEventArgs</a></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.UInt32</span></td>
+        <td><span class="parametername">sequence</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_SetupNetworking.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.SetupNetworking%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L134">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_SetupNetworking_" data-uid="Robust.Client.GameObjects.ClientEntityManager.SetupNetworking*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_SetupNetworking" data-uid="Robust.Client.GameObjects.ClientEntityManager.SetupNetworking">SetupNetworking()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetupNetworking()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_TickUpdate_System_Single_System_Boolean_System_Nullable_Histogram__.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.TickUpdate(System.Single%2CSystem.Boolean%2CSystem.Nullable%7BHistogram%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L139">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_TickUpdate_" data-uid="Robust.Client.GameObjects.ClientEntityManager.TickUpdate*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_TickUpdate_System_Single_System_Boolean_System_Nullable_Histogram__" data-uid="Robust.Client.GameObjects.ClientEntityManager.TickUpdate(System.Single,System.Boolean,System.Nullable{Histogram})">TickUpdate(Single, Boolean, Nullable&lt;Histogram&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">frameTime</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">noPredictions</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Histogram</span>&gt;</td>
+        <td><span class="parametername">histogram</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_ToPrettyString_System_Nullable_Robust_Shared_GameObjects_EntityUid__.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.ToPrettyString(System.Nullable%7BRobust.Shared.GameObjects.EntityUid%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L96">View Source</a>
+  </span>
+  <a id="Robust_Client_GameObjects_ClientEntityManager_ToPrettyString_" data-uid="Robust.Client.GameObjects.ClientEntityManager.ToPrettyString*"></a>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_ToPrettyString_System_Nullable_Robust_Shared_GameObjects_EntityUid__" data-uid="Robust.Client.GameObjects.ClientEntityManager.ToPrettyString(System.Nullable{Robust.Shared.GameObjects.EntityUid})">ToPrettyString(Nullable&lt;EntityUid&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override EntityStringRepresentation? ToPrettyString(EntityUid? uid)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Robust.Shared.GameObjects.EntityStringRepresentation</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="events">Events
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager_ReceivedSystemMessage.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager.ReceivedSystemMessage%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.cs/#L128">View Source</a>
+  </span>
+  <h4 id="Robust_Client_GameObjects_ClientEntityManager_ReceivedSystemMessage" data-uid="Robust.Client.GameObjects.ClientEntityManager.ReceivedSystemMessage">ReceivedSystemMessage</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public event EventHandler&lt;object&gt;? ReceivedSystemMessage</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">EventHandler</span>&lt;<span class="xref">System.Object</span>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Client.GameObjects.IClientEntityManager.html">IClientEntityManager</a>
+  </div>
+  <div>
+      <a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a>
+  </div>
+  <div>
+      <a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityNetworkManager.html">IEntityNetworkManager</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_GameObjects_ClientEntityManager.md&amp;value=---%0Auid%3A%20Robust.Client.GameObjects.ClientEntityManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/GameObjects/ClientEntityManager.Network.cs/#L9" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

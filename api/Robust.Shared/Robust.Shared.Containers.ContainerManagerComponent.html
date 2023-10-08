@@ -1,0 +1,659 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class ContainerManagerComponent
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class ContainerManagerComponent
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Containers.ContainerManagerComponent">
+  
+  
+  <h1 id="Robust_Shared_Containers_ContainerManagerComponent" data-uid="Robust.Shared.Containers.ContainerManagerComponent" class="text-break">Class ContainerManagerComponent
+  </h1>
+  <div class="markdown level0 summary"><p>Holds data about a set of entity containers on this entity.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><a class="xref" href="Robust.Shared.GameObjects.Component.html">Component</a></div>
+    <div class="level2"><span class="xref">ContainerManagerComponent</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a></div>
+    <div><a class="xref" href="Robust.Shared.Serialization.ISerializationHooks.html">ISerializationHooks</a></div>
+  </div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Containers.html">Robust.Shared.Containers</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Containers_ContainerManagerComponent_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class ContainerManagerComponent : Component, IComponent, ISerializationHooks</code></pre>
+  </div>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent_Containers.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent.Containers%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L28">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Containers_ContainerManagerComponent_Containers" data-uid="Robust.Shared.Containers.ContainerManagerComponent.Containers">Containers</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Dictionary&lt;string, BaseContainer&gt; Containers</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Dictionary</span>&lt;<span class="xref">System.String</span>, <a class="xref" href="Robust.Shared.Containers.BaseContainer.html">BaseContainer</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent_ContainsEntity_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent.ContainsEntity(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L105">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerManagerComponent_ContainsEntity_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.ContainsEntity*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerManagerComponent_ContainsEntity_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.ContainsEntity(Robust.Shared.GameObjects.EntityUid)">ContainsEntity(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool ContainsEntity(EntityUid entity)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entity</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent_GetAllContainers.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent.GetAllContainers%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L133">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerManagerComponent_GetAllContainers_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.GetAllContainers*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerManagerComponent_GetAllContainers" data-uid="Robust.Shared.Containers.ContainerManagerComponent.GetAllContainers">GetAllContainers()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ContainerManagerComponent.AllContainersEnumerable GetAllContainers()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Containers.ContainerManagerComponent.AllContainersEnumerable.html">ContainerManagerComponent.AllContainersEnumerable</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent_GetContainer_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent.GetContainer(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L69">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerManagerComponent_GetContainer_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.GetContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerManagerComponent_GetContainer_System_String_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.GetContainer(System.String)">GetContainer(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public BaseContainer GetContainer(string id)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Containers.BaseContainer.html">BaseContainer</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent_HasContainer_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent.HasContainer(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L75">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerManagerComponent_HasContainer_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.HasContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerManagerComponent_HasContainer_System_String_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.HasContainer(System.String)">HasContainer(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool HasContainer(string id)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent_MakeContainer__1_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent.MakeContainer%60%601(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L55">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerManagerComponent_MakeContainer_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.MakeContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerManagerComponent_MakeContainer__1_System_String_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.MakeContainer``1(System.String)">MakeContainer&lt;T&gt;(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public T MakeContainer&lt;T&gt;(string id)
+    where T : BaseContainer</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent_OnRemove.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent.OnRemove%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L42">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerManagerComponent_OnRemove_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.OnRemove*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerManagerComponent_OnRemove" data-uid="Robust.Shared.Containers.ContainerManagerComponent.OnRemove">OnRemove()</h4>
+  <div class="markdown level1 summary"><p>Called when the component is removed from an entity.
+Shuts down the component.
+The component has already been marked as deleted in the component manager.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected override void OnRemove()</code></pre>
+  </div>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="Robust.Shared.GameObjects.Component.html#Robust_Shared_GameObjects_Component_OnRemove">Component.OnRemove()</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent_Remove_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_TransformComponent_Robust_Shared_GameObjects_MetaDataComponent_System_Boolean_System_Boolean_System_Nullable_Robust_Shared_Map_EntityCoordinates__System_Nullable_Robust_Shared_Maths_Angle__.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent.Remove(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.TransformComponent%2CRobust.Shared.GameObjects.MetaDataComponent%2CSystem.Boolean%2CSystem.Boolean%2CSystem.Nullable%7BRobust.Shared.Map.EntityCoordinates%7D%2CSystem.Nullable%7BRobust.Shared.Maths.Angle%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L116">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerManagerComponent_Remove_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.Remove*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerManagerComponent_Remove_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_TransformComponent_Robust_Shared_GameObjects_MetaDataComponent_System_Boolean_System_Boolean_System_Nullable_Robust_Shared_Map_EntityCoordinates__System_Nullable_Robust_Shared_Maths_Angle__" data-uid="Robust.Shared.Containers.ContainerManagerComponent.Remove(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.TransformComponent,Robust.Shared.GameObjects.MetaDataComponent,System.Boolean,System.Boolean,System.Nullable{Robust.Shared.Map.EntityCoordinates},System.Nullable{Robust.Shared.Maths.Angle})">Remove(EntityUid, TransformComponent, MetaDataComponent, Boolean, Boolean, Nullable&lt;EntityCoordinates&gt;, Nullable&lt;Angle&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Remove(EntityUid toremove, TransformComponent xform = null, MetaDataComponent meta = null, bool reparent = true, bool force = false, EntityCoordinates? destination = null, Angle? localRotation = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">toremove</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></td>
+        <td><span class="parametername">xform</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.MetaDataComponent.html">MetaDataComponent</a></td>
+        <td><span class="parametername">meta</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">reparent</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">force</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a>&gt;</td>
+        <td><span class="parametername">destination</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a>&gt;</td>
+        <td><span class="parametername">localRotation</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent_TryGetContainer_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Containers_BaseContainer__.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent.TryGetContainer(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.Containers.BaseContainer%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L89">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerManagerComponent_TryGetContainer_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.TryGetContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerManagerComponent_TryGetContainer_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Containers_BaseContainer__" data-uid="Robust.Shared.Containers.ContainerManagerComponent.TryGetContainer(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Containers.BaseContainer@)">TryGetContainer(EntityUid, out BaseContainer)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryGetContainer(EntityUid entity, out BaseContainer container)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">entity</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Containers.BaseContainer.html">BaseContainer</a></td>
+        <td><span class="parametername">container</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent_TryGetContainer_System_String_Robust_Shared_Containers_BaseContainer__.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent.TryGetContainer(System.String%2CRobust.Shared.Containers.BaseContainer%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L81">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerManagerComponent_TryGetContainer_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.TryGetContainer*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerManagerComponent_TryGetContainer_System_String_Robust_Shared_Containers_BaseContainer__" data-uid="Robust.Shared.Containers.ContainerManagerComponent.TryGetContainer(System.String,Robust.Shared.Containers.BaseContainer@)">TryGetContainer(String, out BaseContainer)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryGetContainer(string id, out BaseContainer container)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Containers.BaseContainer.html">BaseContainer</a></td>
+        <td><span class="parametername">container</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="eii">Explicit Interface Implementations
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent_Robust_Shared_Serialization_ISerializationHooks_AfterDeserialization.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent.Robust%23Shared%23Serialization%23ISerializationHooks%23AfterDeserialization%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L30">View Source</a>
+  </span>
+  <a id="Robust_Shared_Containers_ContainerManagerComponent_Robust_Shared_Serialization_ISerializationHooks_AfterDeserialization_" data-uid="Robust.Shared.Containers.ContainerManagerComponent.Robust#Shared#Serialization#ISerializationHooks#AfterDeserialization*"></a>
+  <h4 id="Robust_Shared_Containers_ContainerManagerComponent_Robust_Shared_Serialization_ISerializationHooks_AfterDeserialization" data-uid="Robust.Shared.Containers.ContainerManagerComponent.Robust#Shared#Serialization#ISerializationHooks#AfterDeserialization">ISerializationHooks.AfterDeserialization()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ISerializationHooks.AfterDeserialization()</code></pre>
+  </div>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.ISerializationHooks.html">ISerializationHooks</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Containers_ContainerManagerComponent.md&amp;value=---%0Auid%3A%20Robust.Shared.Containers.ContainerManagerComponent%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Containers/ContainerManagerComponent.cs/#L19" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

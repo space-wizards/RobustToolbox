@@ -1,0 +1,1201 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IDependencyCollection
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IDependencyCollection
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.IoC.IDependencyCollection">
+  
+  
+  <h1 id="Robust_Shared_IoC_IDependencyCollection" data-uid="Robust.Shared.IoC.IDependencyCollection" class="text-break">Interface IDependencyCollection
+  </h1>
+  <div class="markdown level0 summary"><p>The IoCManager handles Dependency Injection in the project.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.IoC.html">Robust.Shared.IoC</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_IoC_IDependencyCollection_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IDependencyCollection</code></pre>
+  </div>
+  <h5 id="Robust_Shared_IoC_IDependencyCollection_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>
+Dependency Injection is a concept where instead of saying &quot;I need the <code>EntityManager</code>&quot;,
+you say &quot;I need something that implements <code>IEntityManager</code>&quot;.
+This decouples the various systems into swappable components that have standardized interfaces.
+</p>
+<p>
+This is useful for a couple of things.
+Firstly, it allows the shared code to request the client or server code implicitly, without hacks.
+Secondly, it&apos;s very useful for unit tests as we can replace components to test things.
+</p>
+<p>
+To use the IoCManager, it first needs some types registered through <a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html#Robust_Shared_IoC_IDependencyCollection_Register__2_System_Boolean_">Register&lt;TInterface, TImplementation&gt;(Boolean)</a>.
+These implementations can then be fetched with <a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html#Robust_Shared_IoC_IDependencyCollection_Resolve__1">Resolve&lt;T&gt;()</a>, or through field injection with <a class="xref" href="Robust.Shared.IoC.DependencyAttribute.html">DependencyAttribute</a>.
+</p>
+<p>
+This type is thread safe: registration and <a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html#Robust_Shared_IoC_IDependencyCollection_BuildGraph">BuildGraph()</a> can run concurrently with resolves.
+</p>
+</div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_BuildGraph.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.BuildGraph%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L198">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_BuildGraph_" data-uid="Robust.Shared.IoC.IDependencyCollection.BuildGraph*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_BuildGraph" data-uid="Robust.Shared.IoC.IDependencyCollection.BuildGraph">BuildGraph()</h4>
+  <div class="markdown level1 summary"><p>Initializes the object graph by building every object and resolving all dependencies.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void BuildGraph()</code></pre>
+  </div>
+  <h5 id="Robust_Shared_IoC_IDependencyCollection_BuildGraph_seealso">See Also</h5>
+  <div class="seealso">
+      <div><span class="xref">Robust.Shared.IoC.DependencyCollection.InjectDependencies(System.Object,System.Boolean)</span></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_Clear.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.Clear%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L139">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_Clear_" data-uid="Robust.Shared.IoC.IDependencyCollection.Clear*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_Clear" data-uid="Robust.Shared.IoC.IDependencyCollection.Clear">Clear()</h4>
+  <div class="markdown level1 summary"><p>Clear all services and types.
+Use this between unit tests and on program shutdown.
+If a service implements <see cref="!:IDisposable"></see>, <see cref="!:IDisposable.Dispose"></see> will be called on it.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Clear()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_FromParent_Robust_Shared_IoC_IDependencyCollection_.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.FromParent(Robust.Shared.IoC.IDependencyCollection)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L36">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_FromParent_" data-uid="Robust.Shared.IoC.IDependencyCollection.FromParent*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_FromParent_Robust_Shared_IoC_IDependencyCollection_" data-uid="Robust.Shared.IoC.IDependencyCollection.FromParent(Robust.Shared.IoC.IDependencyCollection)">FromParent(IDependencyCollection)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IDependencyCollection FromParent(IDependencyCollection parentCollection)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">parentCollection</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_GetRegisteredTypes.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.GetRegisteredTypes%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L41">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_GetRegisteredTypes_" data-uid="Robust.Shared.IoC.IDependencyCollection.GetRegisteredTypes*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_GetRegisteredTypes" data-uid="Robust.Shared.IoC.IDependencyCollection.GetRegisteredTypes">GetRegisteredTypes()</h4>
+  <div class="markdown level1 summary"><p>Enumerates over all registered types.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;Type&gt; GetRegisteredTypes()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_InjectDependencies_System_Object_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.InjectDependencies(System.Object%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L213">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_InjectDependencies_" data-uid="Robust.Shared.IoC.IDependencyCollection.InjectDependencies*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_InjectDependencies_System_Object_System_Boolean_" data-uid="Robust.Shared.IoC.IDependencyCollection.InjectDependencies(System.Object,System.Boolean)">InjectDependencies(Object, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Injects dependencies into all fields with <a class="xref" href="Robust.Shared.IoC.DependencyAttribute.html">DependencyAttribute</a> on the provided object.
+This is useful for objects that are not IoC created, and want to avoid tons of IoC.Resolve() calls.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void InjectDependencies(object obj, bool oneOff = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Object</span></td>
+        <td><span class="parametername">obj</span></td>
+        <td><p>The object to inject into.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">oneOff</span></td>
+        <td><p>If true, this object type is not expected to be injected commonly.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_IoC_IDependencyCollection_InjectDependencies_System_Object_System_Boolean__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This does NOT initialize IPostInjectInit objects!</p>
+</div>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.Exceptions.UnregisteredDependencyException.html">UnregisteredDependencyException</a></td>
+        <td><p>Thrown if a dependency field on the object is not registered.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_IoC_IDependencyCollection_InjectDependencies_System_Object_System_Boolean__seealso">See Also</h5>
+  <div class="seealso">
+      <div><span class="xref">Robust.Shared.IoC.DependencyCollection.BuildGraph</span></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_Register_Type_Robust_Shared_IoC_DependencyFactoryDelegate_System_Object__System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.Register(Type%2CRobust.Shared.IoC.DependencyFactoryDelegate%7BSystem.Object%7D%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L90">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_Register_" data-uid="Robust.Shared.IoC.IDependencyCollection.Register*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_Register_Type_Robust_Shared_IoC_DependencyFactoryDelegate_System_Object__System_Boolean_" data-uid="Robust.Shared.IoC.IDependencyCollection.Register(Type,Robust.Shared.IoC.DependencyFactoryDelegate{System.Object},System.Boolean)">Register(Type, DependencyFactoryDelegate&lt;Object&gt;, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Registers a simple implementation without an interface.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Register(Type implementation, DependencyFactoryDelegate&lt;object&gt; factory = null, bool overwrite = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">implementation</span></td>
+        <td><p>The type that will be resolvable.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.DependencyFactoryDelegate-1.html">DependencyFactoryDelegate</a>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">factory</span></td>
+        <td><p>A factory method to construct the instance of the implementation.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">overwrite</span></td>
+        <td><p>If true, do not throw an <see cref="!:InvalidOperationException"></see> if an interface is already registered,
+replace the current implementation instead.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_Register_Type_Type_Robust_Shared_IoC_DependencyFactoryDelegate_System_Object__System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.Register(Type%2CType%2CRobust.Shared.IoC.DependencyFactoryDelegate%7BSystem.Object%7D%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L102">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_Register_" data-uid="Robust.Shared.IoC.IDependencyCollection.Register*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_Register_Type_Type_Robust_Shared_IoC_DependencyFactoryDelegate_System_Object__System_Boolean_" data-uid="Robust.Shared.IoC.IDependencyCollection.Register(Type,Type,Robust.Shared.IoC.DependencyFactoryDelegate{System.Object},System.Boolean)">Register(Type, Type, DependencyFactoryDelegate&lt;Object&gt;, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Registers a simple implementation without an interface.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Register(Type interfaceType, Type implementation, DependencyFactoryDelegate&lt;object&gt; factory = null, bool overwrite = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">interfaceType</span></td>
+        <td><p>The type that will be resolvable.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">implementation</span></td>
+        <td><p>The type that will be resolvable.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.DependencyFactoryDelegate-1.html">DependencyFactoryDelegate</a>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">factory</span></td>
+        <td><p>A factory method to construct the instance of the implementation.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">overwrite</span></td>
+        <td><p>If true, do not throw an <see cref="!:InvalidOperationException"></see> if an interface is already registered,
+replace the current implementation instead.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_Register__2_Robust_Shared_IoC_DependencyFactoryDelegate___1__System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.Register%60%602(Robust.Shared.IoC.DependencyFactoryDelegate%7B%60%601%7D%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L76">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_Register_" data-uid="Robust.Shared.IoC.IDependencyCollection.Register*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_Register__2_Robust_Shared_IoC_DependencyFactoryDelegate___1__System_Boolean_" data-uid="Robust.Shared.IoC.IDependencyCollection.Register``2(Robust.Shared.IoC.DependencyFactoryDelegate{``1},System.Boolean)">Register&lt;TInterface, TImplementation&gt;(DependencyFactoryDelegate&lt;TImplementation&gt;, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Registers an interface to an implementation, to make it accessible to <span class="xref">Robust.Shared.IoC.DependencyCollection.Resolve``1</span>
+<a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html#Robust_Shared_IoC_IDependencyCollection_BuildGraph">BuildGraph()</a> MUST be called after this method to make the new interface available.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Register&lt;TInterface, TImplementation&gt;(DependencyFactoryDelegate&lt;TImplementation&gt; factory, bool overwrite = false)
+    where TInterface : class where TImplementation : class, TInterface</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.DependencyFactoryDelegate-1.html">DependencyFactoryDelegate</a>&lt;TImplementation&gt;</td>
+        <td><span class="parametername">factory</span></td>
+        <td><p>A factory method to construct the instance of the implementation.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">overwrite</span></td>
+        <td><p>If true, do not throw an <see cref="!:InvalidOperationException"></see> if an interface is already registered,
+replace the current implementation instead.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TInterface</span></td>
+        <td><p>The type that will be resolvable.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="parametername">TImplementation</span></td>
+        <td><p>The type that will be constructed as implementation.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_Register__2_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.Register%60%602(System.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L57">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_Register_" data-uid="Robust.Shared.IoC.IDependencyCollection.Register*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_Register__2_System_Boolean_" data-uid="Robust.Shared.IoC.IDependencyCollection.Register``2(System.Boolean)">Register&lt;TInterface, TImplementation&gt;(Boolean)</h4>
+  <div class="markdown level1 summary"><p>Registers an interface to an implementation, to make it accessible to <span class="xref">Robust.Shared.IoC.DependencyCollection.Resolve``1</span>
+<a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html#Robust_Shared_IoC_IDependencyCollection_BuildGraph">BuildGraph()</a> MUST be called after this method to make the new interface available.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Register&lt;TInterface, TImplementation&gt;(bool overwrite = false)
+    where TInterface : class where TImplementation : class, TInterface</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">overwrite</span></td>
+        <td><p>If true, do not throw an <see cref="!:InvalidOperationException"></see> if an interface is already registered,
+replace the current implementation instead.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TInterface</span></td>
+        <td><p>The type that will be resolvable.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="parametername">TImplementation</span></td>
+        <td><p>The type that will be constructed as implementation.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_RegisterInstance_Type_System_Object_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.RegisterInstance(Type%2CSystem.Object%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L132">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_RegisterInstance_" data-uid="Robust.Shared.IoC.IDependencyCollection.RegisterInstance*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_RegisterInstance_Type_System_Object_System_Boolean_" data-uid="Robust.Shared.IoC.IDependencyCollection.RegisterInstance(Type,System.Object,System.Boolean)">RegisterInstance(Type, Object, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Registers an interface to an existing instance of an implementation,
+making it accessible to <a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html#Robust_Shared_IoC_IDependencyCollection_Resolve__1">Resolve&lt;T&gt;()</a>.
+Unlike <a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html#Robust_Shared_IoC_IDependencyCollection_Register__2_System_Boolean_">Register&lt;TInterface, TImplementation&gt;(Boolean)</a>,
+<a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html#Robust_Shared_IoC_IDependencyCollection_BuildGraph">BuildGraph()</a> does not need to be called after registering an instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterInstance(Type type, object implementation, bool overwrite = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">type</span></td>
+        <td><p>The type that will be resolvable.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Object</span></td>
+        <td><span class="parametername">implementation</span></td>
+        <td><p>The existing instance to use as the implementation.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">overwrite</span></td>
+        <td><p>If true, do not throw an <see cref="!:InvalidOperationException"></see> if an interface is already registered,
+replace the current implementation instead.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_RegisterInstance__1_System_Object_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.RegisterInstance%60%601(System.Object%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L118">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_RegisterInstance_" data-uid="Robust.Shared.IoC.IDependencyCollection.RegisterInstance*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_RegisterInstance__1_System_Object_System_Boolean_" data-uid="Robust.Shared.IoC.IDependencyCollection.RegisterInstance``1(System.Object,System.Boolean)">RegisterInstance&lt;TInterface&gt;(Object, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Registers an interface to an existing instance of an implementation,
+making it accessible to <a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html#Robust_Shared_IoC_IDependencyCollection_Resolve__1">Resolve&lt;T&gt;()</a>.
+Unlike <a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html#Robust_Shared_IoC_IDependencyCollection_Register__2_System_Boolean_">Register&lt;TInterface, TImplementation&gt;(Boolean)</a>,
+<a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html#Robust_Shared_IoC_IDependencyCollection_BuildGraph">BuildGraph()</a> does not need to be called after registering an instance
+if deferredInject is false.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RegisterInstance&lt;TInterface&gt;(object implementation, bool overwrite = false)
+    where TInterface : class</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Object</span></td>
+        <td><span class="parametername">implementation</span></td>
+        <td><p>The existing instance to use as the implementation.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">overwrite</span></td>
+        <td><p>If true, do not throw an <see cref="!:InvalidOperationException"></see> if an interface is already registered,
+replace the current implementation instead.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TInterface</span></td>
+        <td><p>The type that will be resolvable.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_Resolve__1.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.Resolve%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L149">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_Resolve_" data-uid="Robust.Shared.IoC.IDependencyCollection.Resolve*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_Resolve__1" data-uid="Robust.Shared.IoC.IDependencyCollection.Resolve``1">Resolve&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"><p>Resolve a dependency manually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">T Resolve&lt;T&gt;()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.Exceptions.UnregisteredTypeException.html">UnregisteredTypeException</a></td>
+        <td><p>Thrown if the interface is not registered.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_Resolve__1___0__.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.Resolve%60%601(%60%600%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L153">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_Resolve_" data-uid="Robust.Shared.IoC.IDependencyCollection.Resolve*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_Resolve__1___0__" data-uid="Robust.Shared.IoC.IDependencyCollection.Resolve``1(``0@)">Resolve&lt;T&gt;(ref T)</h4>
+  <div class="markdown level1 summary"><p>Resolve a dependency manually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Resolve&lt;T&gt;(ref T instance)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td><span class="parametername">instance</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.Exceptions.UnregisteredTypeException.html">UnregisteredTypeException</a></td>
+        <td><p>Thrown if the interface is not registered.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_Resolve__2___0____1__.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.Resolve%60%602(%60%600%40%2C%60%601%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L159">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_Resolve_" data-uid="Robust.Shared.IoC.IDependencyCollection.Resolve*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_Resolve__2___0____1__" data-uid="Robust.Shared.IoC.IDependencyCollection.Resolve``2(``0@,``1@)">Resolve&lt;T1, T2&gt;(ref T1, ref T2)</h4>
+  <div class="markdown level1 summary"><p>Resolve two dependencies manually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Resolve&lt;T1, T2&gt;(ref T1 instance1, ref T2 instance2)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T1</span></td>
+        <td><span class="parametername">instance1</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">T2</span></td>
+        <td><span class="parametername">instance2</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T1</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="parametername">T2</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_Resolve__3___0____1____2__.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.Resolve%60%603(%60%600%40%2C%60%601%40%2C%60%602%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L165">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_Resolve_" data-uid="Robust.Shared.IoC.IDependencyCollection.Resolve*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_Resolve__3___0____1____2__" data-uid="Robust.Shared.IoC.IDependencyCollection.Resolve``3(``0@,``1@,``2@)">Resolve&lt;T1, T2, T3&gt;(ref T1, ref T2, ref T3)</h4>
+  <div class="markdown level1 summary"><p>Resolve three dependencies manually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Resolve&lt;T1, T2, T3&gt;(ref T1 instance1, ref T2 instance2, ref T3 instance3)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T1</span></td>
+        <td><span class="parametername">instance1</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">T2</span></td>
+        <td><span class="parametername">instance2</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">T3</span></td>
+        <td><span class="parametername">instance3</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T1</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="parametername">T2</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="parametername">T3</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_Resolve__4___0____1____2____3__.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.Resolve%60%604(%60%600%40%2C%60%601%40%2C%60%602%40%2C%60%603%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L171">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_Resolve_" data-uid="Robust.Shared.IoC.IDependencyCollection.Resolve*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_Resolve__4___0____1____2____3__" data-uid="Robust.Shared.IoC.IDependencyCollection.Resolve``4(``0@,``1@,``2@,``3@)">Resolve&lt;T1, T2, T3, T4&gt;(ref T1, ref T2, ref T3, ref T4)</h4>
+  <div class="markdown level1 summary"><p>Resolve four dependencies manually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Resolve&lt;T1, T2, T3, T4&gt;(ref T1 instance1, ref T2 instance2, ref T3 instance3, ref T4 instance4)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T1</span></td>
+        <td><span class="parametername">instance1</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">T2</span></td>
+        <td><span class="parametername">instance2</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">T3</span></td>
+        <td><span class="parametername">instance3</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">T4</span></td>
+        <td><span class="parametername">instance4</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T1</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="parametername">T2</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="parametername">T3</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="parametername">T4</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_ResolveType_Type_.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.ResolveType(Type)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L181">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_ResolveType_" data-uid="Robust.Shared.IoC.IDependencyCollection.ResolveType*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_ResolveType_Type_" data-uid="Robust.Shared.IoC.IDependencyCollection.ResolveType(Type)">ResolveType(Type)</h4>
+  <div class="markdown level1 summary"><p>Resolve a dependency manually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">object ResolveType(Type type)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">type</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Object</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.Exceptions.UnregisteredTypeException.html">UnregisteredTypeException</a></td>
+        <td><p>Thrown if the interface is not registered.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_TryResolveType_Type_System_Object__.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.TryResolveType(Type%2CSystem.Object%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L192">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_TryResolveType_" data-uid="Robust.Shared.IoC.IDependencyCollection.TryResolveType*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_TryResolveType_Type_System_Object__" data-uid="Robust.Shared.IoC.IDependencyCollection.TryResolveType(Type,System.Object@)">TryResolveType(Type, out Object)</h4>
+  <div class="markdown level1 summary"><p>Resolve a dependency manually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryResolveType(Type objectType, out object instance)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">objectType</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Object</span></td>
+        <td><span class="parametername">instance</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection_TryResolveType__1___0__.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection.TryResolveType%60%601(%60%600%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L187">View Source</a>
+  </span>
+  <a id="Robust_Shared_IoC_IDependencyCollection_TryResolveType_" data-uid="Robust.Shared.IoC.IDependencyCollection.TryResolveType*"></a>
+  <h4 id="Robust_Shared_IoC_IDependencyCollection_TryResolveType__1___0__" data-uid="Robust.Shared.IoC.IDependencyCollection.TryResolveType``1(``0@)">TryResolveType&lt;T&gt;(out T)</h4>
+  <div class="markdown level1 summary"><p>Resolve a dependency manually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryResolveType&lt;T&gt;(out T instance)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">T</span></td>
+        <td><span class="parametername">instance</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="extensionmethods">Extension Methods</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.IoC.DependencyCollectionExt.html#Robust_Shared_IoC_DependencyCollectionExt_Register__1_Robust_Shared_IoC_IDependencyCollection_">DependencyCollectionExt.Register&lt;T&gt;(IDependencyCollection)</a>
+  </div>
+  <h3 id="seealso">See Also</h3>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Reflection.IReflectionManager.html">IReflectionManager</a></div>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_IoC_IDependencyCollection.md&amp;value=---%0Auid%3A%20Robust.Shared.IoC.IDependencyCollection%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/IoC/IDependencyCollection.cs/#L34" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

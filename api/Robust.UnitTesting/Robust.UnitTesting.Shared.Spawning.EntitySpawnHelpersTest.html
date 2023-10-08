@@ -1,0 +1,665 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class EntitySpawnHelpersTest
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class EntitySpawnHelpersTest
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest">
+  
+  
+  <h1 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest" class="text-break">Class EntitySpawnHelpersTest
+  </h1>
+  <div class="markdown level0 summary"><p>This test checks that the various <a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a> spawn helpers (e.g.,
+<a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityManager.html#Robust_Shared_GameObjects_IEntityManager_TrySpawnNextTo_System_Nullable_System_String__Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_GameObjects_EntityUid___Robust_Shared_GameObjects_TransformComponent_Robust_Shared_Prototypes_ComponentRegistry_">TrySpawnNextTo(Nullable&lt;String&gt;, EntityUid, out Nullable&lt;EntityUid&gt;, TransformComponent, ComponentRegistry)</a>) work as intended.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.html">RobustIntegrationTest</a></div>
+    <div class="level2"><span class="xref">EntitySpawnHelpersTest</span></div>
+      <div class="level3"><a class="xref" href="Robust.UnitTesting.Shared.Spawning.SpawnInContainerOrDropTest.html">SpawnInContainerOrDropTest</a></div>
+      <div class="level3"><a class="xref" href="Robust.UnitTesting.Shared.Spawning.SpawnNextToOrDropTest.html">SpawnNextToOrDropTest</a></div>
+      <div class="level3"><a class="xref" href="Robust.UnitTesting.Shared.Spawning.TrySpawnInContainerTest.html">TrySpawnInContainerTest</a></div>
+      <div class="level3"><a class="xref" href="Robust.UnitTesting.Shared.Spawning.TrySpawnNextToTest.html">TrySpawnNextToTest</a></div>
+  </div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.UnitTesting.Shared.Spawning.html">Robust.UnitTesting.Shared.Spawning</a></h6>
+  <h6><strong>Assembly</strong>: Robust.UnitTesting.dll</h6>
+  <h5 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class EntitySpawnHelpersTest : RobustIntegrationTest</code></pre>
+  </div>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_ChildA.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.ChildA%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L30">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_ChildA" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.ChildA">ChildA</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected EntityUid ChildA</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_ChildB.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.ChildB%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L31">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_ChildB" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.ChildB">ChildB</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected EntityUid ChildB</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Container.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Container%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L25">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Container" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Container">Container</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected SharedContainerSystem Container</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Containers.SharedContainerSystem.html">SharedContainerSystem</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_EntMan.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.EntMan%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L22">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_EntMan" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.EntMan">EntMan</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected IEntityManager EntMan</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_GrandChildA.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.GrandChildA%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L32">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_GrandChildA" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.GrandChildA">GrandChildA</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected EntityUid GrandChildA</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_GrandChildB.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.GrandChildB%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L33">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_GrandChildB" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.GrandChildB">GrandChildB</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected EntityUid GrandChildB</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_GrandChildBPos.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.GrandChildBPos%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L38">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_GrandChildBPos" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.GrandChildBPos">GrandChildBPos</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected EntityCoordinates GrandChildBPos</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_GreatGrandChildA.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.GreatGrandChildA%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L34">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_GreatGrandChildA" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.GreatGrandChildA">GreatGrandChildA</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected EntityUid GreatGrandChildA</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_GreatGrandChildB.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.GreatGrandChildB%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L35">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_GreatGrandChildB" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.GreatGrandChildB">GreatGrandChildB</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected EntityUid GreatGrandChildB</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Map.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Map%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L27">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Map" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Map">Map</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected EntityUid Map</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_MapId.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.MapId%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L28">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_MapId" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.MapId">MapId</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected MapId MapId</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_MapMan.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.MapMan%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L23">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_MapMan" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.MapMan">MapMan</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected IMapManager MapMan</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.IMapManager.html">IMapManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Parent.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Parent%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L29">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Parent" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Parent">Parent</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected EntityUid Parent</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_ParentPos.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.ParentPos%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L37">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_ParentPos" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.ParentPos">ParentPos</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected EntityCoordinates ParentPos</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Server.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Server%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L21">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Server" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Server">Server</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected RobustIntegrationTest.ServerIntegrationInstance Server</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.UnitTesting.RobustIntegrationTest.ServerIntegrationInstance.html">RobustIntegrationTest.ServerIntegrationInstance</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Xforms.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Xforms%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L24">View Source</a>
+  </span>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Xforms" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Xforms">Xforms</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected SharedTransformSystem Xforms</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.SharedTransformSystem.html">SharedTransformSystem</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Setup.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Setup%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L40">View Source</a>
+  </span>
+  <a id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Setup_" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Setup*"></a>
+  <h4 id="Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest_Setup" data-uid="Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest.Setup">Setup()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected Task Setup()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_UnitTesting_Shared_Spawning_EntitySpawnHelpersTest.md&amp;value=---%0Auid%3A%20Robust.UnitTesting.Shared.Spawning.EntitySpawnHelpersTest%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.UnitTesting/Shared/Spawning/EntitySpawnHelpersTest.cs/#L17" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

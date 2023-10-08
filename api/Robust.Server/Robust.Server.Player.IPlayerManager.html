@@ -1,0 +1,1129 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IPlayerManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IPlayerManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Server.Player.IPlayerManager">
+  
+  
+  <h1 id="Robust_Server_Player_IPlayerManager" data-uid="Robust.Server.Player.IPlayerManager" class="text-break">Interface IPlayerManager
+  </h1>
+  <div class="markdown level0 summary"><p>Manages each players session when connected to the server.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Server.Player.html">Robust.Server.Player</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Server.dll</h6>
+  <h5 id="Robust_Server_Player_IPlayerManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IPlayerManager : ISharedPlayerManager</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_KeyMap.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.KeyMap%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L20">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_KeyMap_" data-uid="Robust.Server.Player.IPlayerManager.KeyMap*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_KeyMap" data-uid="Robust.Server.Player.IPlayerManager.KeyMap">KeyMap</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">BoundKeyMap KeyMap { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyMap.html">BoundKeyMap</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_ServerSessions.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.ServerSessions%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L25">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_ServerSessions_" data-uid="Robust.Server.Player.IPlayerManager.ServerSessions*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_ServerSessions" data-uid="Robust.Server.Player.IPlayerManager.ServerSessions">ServerSessions</h4>
+  <div class="markdown level1 summary"><p>Same as the common sessions, but the server version.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;IPlayerSession&gt; ServerSessions { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_DetachAll.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.DetachAll%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L76">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_DetachAll_" data-uid="Robust.Server.Player.IPlayerManager.DetachAll*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_DetachAll" data-uid="Robust.Server.Player.IPlayerManager.DetachAll">DetachAll()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void DetachAll()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_GetAllPlayerData.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.GetAllPlayerData%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L73">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_GetAllPlayerData_" data-uid="Robust.Server.Player.IPlayerManager.GetAllPlayerData*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_GetAllPlayerData" data-uid="Robust.Server.Player.IPlayerManager.GetAllPlayerData">GetAllPlayerData()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;IPlayerData&gt; GetAllPlayerData()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="../Robust.Shared/Robust.Shared.Player.IPlayerData.html">IPlayerData</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_GetAllPlayers.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.GetAllPlayers%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L84">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_GetAllPlayers_" data-uid="Robust.Server.Player.IPlayerManager.GetAllPlayers*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_GetAllPlayers" data-uid="Robust.Server.Player.IPlayerManager.GetAllPlayers">GetAllPlayers()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">List&lt;IPlayerSession&gt; GetAllPlayers()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">List</span>&lt;<a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_GetPlayerData_Robust_Shared_Network_NetUserId_.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.GetPlayerData(Robust.Shared.Network.NetUserId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L59">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_GetPlayerData_" data-uid="Robust.Server.Player.IPlayerManager.GetPlayerData*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_GetPlayerData_Robust_Shared_Network_NetUserId_" data-uid="Robust.Server.Player.IPlayerManager.GetPlayerData(Robust.Shared.Network.NetUserId)">GetPlayerData(NetUserId)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IPlayerData GetPlayerData(NetUserId userId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Network.NetUserId.html">NetUserId</a></td>
+        <td><span class="parametername">userId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Player.IPlayerData.html">IPlayerData</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_GetPlayersBy_Func_Robust_Server_Player_IPlayerSession_System_Boolean__.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.GetPlayersBy(Func%7BRobust.Server.Player.IPlayerSession%2CSystem.Boolean%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L82">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_GetPlayersBy_" data-uid="Robust.Server.Player.IPlayerManager.GetPlayersBy*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_GetPlayersBy_Func_Robust_Server_Player_IPlayerSession_System_Boolean__" data-uid="Robust.Server.Player.IPlayerManager.GetPlayersBy(Func{Robust.Server.Player.IPlayerSession,System.Boolean})">GetPlayersBy(Func&lt;IPlayerSession, Boolean&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">List&lt;IPlayerSession&gt; GetPlayersBy(Func&lt;IPlayerSession, bool&gt; predicate)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Func</span>&lt;<a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a>, <span class="xref">System.Boolean</span>&gt;</td>
+        <td><span class="parametername">predicate</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">List</span>&lt;<a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_GetPlayersInRange_Robust_Shared_Map_EntityCoordinates_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.GetPlayersInRange(Robust.Shared.Map.EntityCoordinates%2CSystem.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L80">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_GetPlayersInRange_" data-uid="Robust.Server.Player.IPlayerManager.GetPlayersInRange*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_GetPlayersInRange_Robust_Shared_Map_EntityCoordinates_System_Int32_" data-uid="Robust.Server.Player.IPlayerManager.GetPlayersInRange(Robust.Shared.Map.EntityCoordinates,System.Int32)">GetPlayersInRange(EntityCoordinates, Int32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">List&lt;IPlayerSession&gt; GetPlayersInRange(EntityCoordinates worldPos, int range)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td><span class="parametername">worldPos</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">range</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">List</span>&lt;<a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_GetPlayersInRange_Robust_Shared_Map_MapCoordinates_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.GetPlayersInRange(Robust.Shared.Map.MapCoordinates%2CSystem.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L78">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_GetPlayersInRange_" data-uid="Robust.Server.Player.IPlayerManager.GetPlayersInRange*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_GetPlayersInRange_Robust_Shared_Map_MapCoordinates_System_Int32_" data-uid="Robust.Server.Player.IPlayerManager.GetPlayersInRange(Robust.Shared.Map.MapCoordinates,System.Int32)">GetPlayersInRange(MapCoordinates, Int32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">List&lt;IPlayerSession&gt; GetPlayersInRange(MapCoordinates worldPos, int range)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.MapCoordinates.html">MapCoordinates</a></td>
+        <td><span class="parametername">worldPos</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">range</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">List</span>&lt;<a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_GetPlayerStates_Robust_Shared_Timing_GameTick_.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.GetPlayerStates(Robust.Shared.Timing.GameTick)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L86">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_GetPlayerStates_" data-uid="Robust.Server.Player.IPlayerManager.GetPlayerStates*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_GetPlayerStates_Robust_Shared_Timing_GameTick_" data-uid="Robust.Server.Player.IPlayerManager.GetPlayerStates(Robust.Shared.Timing.GameTick)">GetPlayerStates(GameTick)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">List&lt;PlayerState&gt;? GetPlayerStates(GameTick fromTick)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Timing.GameTick.html">GameTick</a></td>
+        <td><span class="parametername">fromTick</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">List</span>&lt;<a class="xref" href="../Robust.Shared/Robust.Shared.GameStates.PlayerState.html">PlayerState</a>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_GetSessionByChannel_Robust_Shared_Network_INetChannel_.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.GetSessionByChannel(Robust.Shared.Network.INetChannel)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L48">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_GetSessionByChannel_" data-uid="Robust.Server.Player.IPlayerManager.GetSessionByChannel*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_GetSessionByChannel_Robust_Shared_Network_INetChannel_" data-uid="Robust.Server.Player.IPlayerManager.GetSessionByChannel(Robust.Shared.Network.INetChannel)">GetSessionByChannel(INetChannel)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IPlayerSession GetSessionByChannel(INetChannel channel)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Network.INetChannel.html">INetChannel</a></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_GetSessionByUserId_Robust_Shared_Network_NetUserId_.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.GetSessionByUserId(Robust.Shared.Network.NetUserId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L46">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_GetSessionByUserId_" data-uid="Robust.Server.Player.IPlayerManager.GetSessionByUserId*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_GetSessionByUserId_Robust_Shared_Network_NetUserId_" data-uid="Robust.Server.Player.IPlayerManager.GetSessionByUserId(Robust.Shared.Network.NetUserId)">GetSessionByUserId(NetUserId)</h4>
+  <div class="markdown level1 summary"><p>Returns the client session of the networkId.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IPlayerSession GetSessionByUserId(NetUserId index)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Network.NetUserId.html">NetUserId</a></td>
+        <td><span class="parametername">index</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_HasPlayerData_Robust_Shared_Network_NetUserId_.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.HasPlayerData(Robust.Shared.Network.NetUserId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L62">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_HasPlayerData_" data-uid="Robust.Server.Player.IPlayerManager.HasPlayerData*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_HasPlayerData_Robust_Shared_Network_NetUserId_" data-uid="Robust.Server.Player.IPlayerManager.HasPlayerData(Robust.Shared.Network.NetUserId)">HasPlayerData(NetUserId)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool HasPlayerData(NetUserId userId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Network.NetUserId.html">NetUserId</a></td>
+        <td><span class="parametername">userId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_Initialize_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.Initialize(System.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L36">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_Initialize_" data-uid="Robust.Server.Player.IPlayerManager.Initialize*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_Initialize_System_Int32_" data-uid="Robust.Server.Player.IPlayerManager.Initialize(System.Int32)">Initialize(Int32)</h4>
+  <div class="markdown level1 summary"><p>Initializes the manager.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Initialize(int maxPlayers)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">maxPlayers</span></td>
+        <td><p>Maximum number of players that can connect to this server at one time.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_Shutdown.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.Shutdown%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L38">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_Shutdown_" data-uid="Robust.Server.Player.IPlayerManager.Shutdown*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_Shutdown" data-uid="Robust.Server.Player.IPlayerManager.Shutdown">Shutdown()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Shutdown()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_TryGetPlayerData_Robust_Shared_Network_NetUserId_Robust_Shared_Player_IPlayerData__.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.TryGetPlayerData(Robust.Shared.Network.NetUserId%2CRobust.Shared.Player.IPlayerData%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L60">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_TryGetPlayerData_" data-uid="Robust.Server.Player.IPlayerManager.TryGetPlayerData*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_TryGetPlayerData_Robust_Shared_Network_NetUserId_Robust_Shared_Player_IPlayerData__" data-uid="Robust.Server.Player.IPlayerManager.TryGetPlayerData(Robust.Shared.Network.NetUserId,Robust.Shared.Player.IPlayerData@)">TryGetPlayerData(NetUserId, out IPlayerData)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetPlayerData(NetUserId userId, out IPlayerData data)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Network.NetUserId.html">NetUserId</a></td>
+        <td><span class="parametername">userId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Player.IPlayerData.html">IPlayerData</a></td>
+        <td><span class="parametername">data</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_TryGetPlayerDataByUsername_System_String_Robust_Shared_Player_IPlayerData__.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.TryGetPlayerDataByUsername(System.String%2CRobust.Shared.Player.IPlayerData%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L61">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_TryGetPlayerDataByUsername_" data-uid="Robust.Server.Player.IPlayerManager.TryGetPlayerDataByUsername*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_TryGetPlayerDataByUsername_System_String_Robust_Shared_Player_IPlayerData__" data-uid="Robust.Server.Player.IPlayerManager.TryGetPlayerDataByUsername(System.String,Robust.Shared.Player.IPlayerData@)">TryGetPlayerDataByUsername(String, out IPlayerData)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetPlayerDataByUsername(string userName, out IPlayerData data)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">userName</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Player.IPlayerData.html">IPlayerData</a></td>
+        <td><span class="parametername">data</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_TryGetSessionByChannel_Robust_Shared_Network_INetChannel_Robust_Server_Player_IPlayerSession__.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.TryGetSessionByChannel(Robust.Shared.Network.INetChannel%2CRobust.Server.Player.IPlayerSession%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L50">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_TryGetSessionByChannel_" data-uid="Robust.Server.Player.IPlayerManager.TryGetSessionByChannel*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_TryGetSessionByChannel_Robust_Shared_Network_INetChannel_Robust_Server_Player_IPlayerSession__" data-uid="Robust.Server.Player.IPlayerManager.TryGetSessionByChannel(Robust.Shared.Network.INetChannel,Robust.Server.Player.IPlayerSession@)">TryGetSessionByChannel(INetChannel, out IPlayerSession)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetSessionByChannel(INetChannel channel, out IPlayerSession session)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Network.INetChannel.html">INetChannel</a></td>
+        <td><span class="parametername">channel</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_TryGetSessionById_Robust_Shared_Network_NetUserId_Robust_Server_Player_IPlayerSession__.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.TryGetSessionById(Robust.Shared.Network.NetUserId%2CRobust.Server.Player.IPlayerSession%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L52">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_TryGetSessionById_" data-uid="Robust.Server.Player.IPlayerManager.TryGetSessionById*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_TryGetSessionById_Robust_Shared_Network_NetUserId_Robust_Server_Player_IPlayerSession__" data-uid="Robust.Server.Player.IPlayerManager.TryGetSessionById(Robust.Shared.Network.NetUserId,Robust.Server.Player.IPlayerSession@)">TryGetSessionById(NetUserId, out IPlayerSession)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetSessionById(NetUserId userId, out IPlayerSession session)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Network.NetUserId.html">NetUserId</a></td>
+        <td><span class="parametername">userId</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_TryGetSessionByUsername_System_String_Robust_Server_Player_IPlayerSession__.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.TryGetSessionByUsername(System.String%2CRobust.Server.Player.IPlayerSession%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L40">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_TryGetSessionByUsername_" data-uid="Robust.Server.Player.IPlayerManager.TryGetSessionByUsername*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_TryGetSessionByUsername_System_String_Robust_Server_Player_IPlayerSession__" data-uid="Robust.Server.Player.IPlayerManager.TryGetSessionByUsername(System.String,Robust.Server.Player.IPlayerSession@)">TryGetSessionByUsername(String, out IPlayerSession)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetSessionByUsername(string username, out IPlayerSession session)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">username</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_TryGetUserId_System_String_Robust_Shared_Network_NetUserId__.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.TryGetUserId(System.String%2CRobust.Shared.Network.NetUserId%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L71">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_TryGetUserId_" data-uid="Robust.Server.Player.IPlayerManager.TryGetUserId*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_TryGetUserId_System_String_Robust_Shared_Network_NetUserId__" data-uid="Robust.Server.Player.IPlayerManager.TryGetUserId(System.String,Robust.Shared.Network.NetUserId@)">TryGetUserId(String, out NetUserId)</h4>
+  <div class="markdown level1 summary"><p>Tries to get the user ID of the user with the specified username.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetUserId(string userName, out NetUserId userId)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">userName</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Network.NetUserId.html">NetUserId</a></td>
+        <td><span class="parametername">userId</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Server_Player_IPlayerManager_TryGetUserId_System_String_Robust_Shared_Network_NetUserId___remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This only works if this user has already connected once before during this server run.
+It does still work if the user has since disconnected.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_ValidSessionId_Robust_Shared_Network_NetUserId_.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.ValidSessionId(Robust.Shared.Network.NetUserId)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L57">View Source</a>
+  </span>
+  <a id="Robust_Server_Player_IPlayerManager_ValidSessionId_" data-uid="Robust.Server.Player.IPlayerManager.ValidSessionId*"></a>
+  <h4 id="Robust_Server_Player_IPlayerManager_ValidSessionId_Robust_Shared_Network_NetUserId_" data-uid="Robust.Server.Player.IPlayerManager.ValidSessionId(Robust.Shared.Network.NetUserId)">ValidSessionId(NetUserId)</h4>
+  <div class="markdown level1 summary"><p>Checks to see if a PlayerIndex is a valid session.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool ValidSessionId(NetUserId index)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Network.NetUserId.html">NetUserId</a></td>
+        <td><span class="parametername">index</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="events">Events
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager_PlayerStatusChanged.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager.PlayerStatusChanged%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L30">View Source</a>
+  </span>
+  <h4 id="Robust_Server_Player_IPlayerManager_PlayerStatusChanged" data-uid="Robust.Server.Player.IPlayerManager.PlayerStatusChanged">PlayerStatusChanged</h4>
+  <div class="markdown level1 summary"><p>Raised when the <a class="xref" href="../Robust.Shared/Robust.Shared.Enums.SessionStatus.html">SessionStatus</a> of a <a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a> is changed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event EventHandler&lt;SessionStatusEventArgs&gt; PlayerStatusChanged</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">EventHandler</span>&lt;<a class="xref" href="Robust.Server.Player.SessionStatusEventArgs.html">SessionStatusEventArgs</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_Player_IPlayerManager.md&amp;value=---%0Auid%3A%20Robust.Server.Player.IPlayerManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/Player/IPlayerManager.cs/#L18" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

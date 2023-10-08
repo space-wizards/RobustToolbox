@@ -1,0 +1,611 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class GridContainer
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class GridContainer
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Client.UserInterface.Controls.GridContainer">
+  
+  
+  <h1 id="Robust_Client_UserInterface_Controls_GridContainer" data-uid="Robust.Client.UserInterface.Controls.GridContainer" class="text-break">Class GridContainer
+  </h1>
+  <div class="markdown level0 summary"><p>A container that lays out its children in a grid. Can define specific count of
+rows or specific count of columns (not both), and will grow to fill in additional rows/columns within
+that limit. Alternatively, can define a maximum width or height, and grid will
+lay out elements (aligned in a grid pattern, not floated) within the defined limit.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><a class="xref" href="Robust.Client.UserInterface.Control.html">Control</a></div>
+    <div class="level2"><a class="xref" href="Robust.Client.UserInterface.Controls.Container.html">Container</a></div>
+    <div class="level3"><span class="xref">GridContainer</span></div>
+  </div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Client.UserInterface.Controls.html">Robust.Client.UserInterface.Controls</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Client.dll</h6>
+  <h5 id="Robust_Client_UserInterface_Controls_GridContainer_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class GridContainer : Container</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_Columns.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.Columns%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L68">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_Columns_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.Columns*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_Columns" data-uid="Robust.Client.UserInterface.Controls.GridContainer.Columns">Columns</h4>
+  <div class="markdown level1 summary"><p>The number of columns to organize the children into. Setting this puts this grid
+into LimitMode.LimitColumns and LimitType.Count - items will be added to fill up the entire row, up to the defined
+limit of columns, and then create a second row.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int Columns { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><p>specified limit if LimitMode.LimitColums, otherwise the number
+of columns being used for the current amount of children.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_ExpandBackwards.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.ExpandBackwards%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L47">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_ExpandBackwards_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.ExpandBackwards*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_ExpandBackwards" data-uid="Robust.Client.UserInterface.Controls.GridContainer.ExpandBackwards">ExpandBackwards</h4>
+  <div class="markdown level1 summary"><p>The &quot;normal&quot; direction of expansion when the defined row or column limit is met
+is right (for row-limited) and down (for column-limited),
+this inverts that so the container expands in the opposite direction as elements are added.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool ExpandBackwards { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_HSeparationOverride.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.HSeparationOverride%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L143">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_HSeparationOverride_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.HSeparationOverride*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_HSeparationOverride" data-uid="Robust.Client.UserInterface.Controls.GridContainer.HSeparationOverride">HSeparationOverride</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int? HSeparationOverride { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Int32</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_LimitedDimension.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.LimitedDimension%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L30">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_LimitedDimension_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.LimitedDimension*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_LimitedDimension" data-uid="Robust.Client.UserInterface.Controls.GridContainer.LimitedDimension">LimitedDimension</h4>
+  <div class="markdown level1 summary"><p>Indicates whether row or column count has been specified, and thus
+how items will fill them out as they are added.
+This is set depending on whether you have specified Columns or Rows.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Dimension LimitedDimension { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.UserInterface.Controls.Dimension.html">Dimension</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_LimitType.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.LimitType%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L40">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_LimitType_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.LimitType*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_LimitType" data-uid="Robust.Client.UserInterface.Controls.GridContainer.LimitType">LimitType</h4>
+  <div class="markdown level1 summary"><p>Indicates whether we are limiting based on an explicit number of rows or columns, or limiting
+based on a defined max width or height.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public LimitType LimitType { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.UserInterface.Controls.LimitType.html">LimitType</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_MaxGridHeight.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.MaxGridHeight%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L127">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_MaxGridHeight_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.MaxGridHeight*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_MaxGridHeight" data-uid="Robust.Client.UserInterface.Controls.GridContainer.MaxGridHeight">MaxGridHeight</h4>
+  <div class="markdown level1 summary"><p>The max height (in virtual pixels) the grid  of elements can have. This dynamically determines
+the number of rows based on the size of the elements. Setting this puts this grid
+into LimitMode.LimitRows and LimitType.Size - items will be added to fill up the entire column, up to the defined
+height, and then create a second column.</p>
+<p>In the presence of unevenly-sized children,
+columns will still have the same amount elements - the items are laid out in a grid pattern such
+that they are all aligned, the height and width of each &quot;cell&quot; being determined by
+the greatest min height and min width among the elements. In the presence of expanding elements,
+their pre-expanded size will be used to determine the layout, then the elements expand within
+the defined Control.Size</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float MaxGridHeight { set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_MaxGridWidth.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.MaxGridWidth%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L106">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_MaxGridWidth_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.MaxGridWidth*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_MaxGridWidth" data-uid="Robust.Client.UserInterface.Controls.GridContainer.MaxGridWidth">MaxGridWidth</h4>
+  <div class="markdown level1 summary"><p>The max width (in virtual pixels) the grid of elements can have. This dynamically determines
+the number of columns based on the size of the elements. Setting this puts this grid
+into LimitMode.LimitColumns and LimitType.Size. Items will be added to fill up the entire row, up to the defined
+width, and then create a second row.</p>
+<p>In the presence of unevenly-sized children,
+rows will still have the same amount elements - the items are laid out in a grid pattern such
+that they are all aligned, the height and width of each &quot;cell&quot; being determined by
+the greatest min height and min width among the elements. In the presence of expanding elements,
+their pre-expanded size will be used to determine the cell layout, then the elements expand within
+the defined Control.Size</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float MaxGridWidth { set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_Rows.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.Rows%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L84">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_Rows_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.Rows*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_Rows" data-uid="Robust.Client.UserInterface.Controls.GridContainer.Rows">Rows</h4>
+  <div class="markdown level1 summary"><p>The number of rows to organize the children into. Setting this puts this grid
+into LimitMode.LimitRows and LimitType.Count - items will be added to fill up the entire column, up to the defined
+limit of rows, and then create a second column.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int Rows { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><p>specified limit if LimitMode.LimitRows, otherwise the number
+of rows being used for the current number of children.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_UnlimitedDimension.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.UnlimitedDimension%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L34">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_UnlimitedDimension_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.UnlimitedDimension*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_UnlimitedDimension" data-uid="Robust.Client.UserInterface.Controls.GridContainer.UnlimitedDimension">UnlimitedDimension</h4>
+  <div class="markdown level1 summary"><p>Opposite dimension of LimitedDimension</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Dimension UnlimitedDimension { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.UserInterface.Controls.Dimension.html">Dimension</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_VSeparationOverride.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.VSeparationOverride%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L134">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_VSeparationOverride_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.VSeparationOverride*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_VSeparationOverride" data-uid="Robust.Client.UserInterface.Controls.GridContainer.VSeparationOverride">VSeparationOverride</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int? VSeparationOverride { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Int32</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_ArrangeOverride_Vector2_.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.ArrangeOverride(Vector2)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L358">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_ArrangeOverride_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.ArrangeOverride*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_ArrangeOverride_Vector2_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.ArrangeOverride(Vector2)">ArrangeOverride(Vector2)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected override Vector2 ArrangeOverride(Vector2 finalSize)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">finalSize</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="Robust.Client.UserInterface.Control.html#Robust_Client_UserInterface_Control_ArrangeOverride_Vector2_">Control.ArrangeOverride(Vector2)</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer_MeasureOverride_Vector2_.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer.MeasureOverride(Vector2)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L275">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controls_GridContainer_MeasureOverride_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.MeasureOverride*"></a>
+  <h4 id="Robust_Client_UserInterface_Controls_GridContainer_MeasureOverride_Vector2_" data-uid="Robust.Client.UserInterface.Controls.GridContainer.MeasureOverride(Vector2)">MeasureOverride(Vector2)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected override Vector2 MeasureOverride(Vector2 availableSize)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">availableSize</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="Robust.Client.UserInterface.Control.html#Robust_Client_UserInterface_Control_MeasureOverride_Vector2_">Control.MeasureOverride(Vector2)</a></div>
+  <h3 id="extensionmethods">Extension Methods</h3>
+  <div>
+      <a class="xref" href="Robust.Client.UserInterface.LogicalExtensions.html#Robust_Client_UserInterface_LogicalExtensions_GetSelfAndLogicalAncestors_Robust_Client_UserInterface_Control_">LogicalExtensions.GetSelfAndLogicalAncestors(Control)</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controls_GridContainer.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controls.GridContainer%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controls/GridContainer.cs/#L14" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

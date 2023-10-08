@@ -1,0 +1,1202 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class SharedJointSystem
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class SharedJointSystem
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem">
+  
+  
+  <h1 id="Robust_Shared_Physics_Systems_SharedJointSystem" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem" class="text-break">Class SharedJointSystem
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.html">EntitySystem</a></div>
+    <div class="level2"><span class="xref">SharedJointSystem</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a></div>
+    <div><a class="xref" href="Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a></div>
+    <div><a class="xref" href="Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a></div>
+  </div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Physics.Systems.html">Robust.Shared.Physics.Systems</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Physics_Systems_SharedJointSystem_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class SharedJointSystem : EntitySystem, IEntitySystem, IEntityEventSubscriber, IPostInjectInit</code></pre>
+  </div>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_AddedJoints.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.AddedJoints%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L30">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_AddedJoints" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.AddedJoints">AddedJoints</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected readonly HashSet&lt;Joint&gt; AddedJoints</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">HashSet</span>&lt;<a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.Joint.html">Joint</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_ToRemove.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.ToRemove%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L31">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_ToRemove" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.ToRemove">ToRemove</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected readonly List&lt;Joint&gt; ToRemove</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">List</span>&lt;<a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.Joint.html">Joint</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_AddJoint_Robust_Shared_Physics_Dynamics_Joints_Joint_Robust_Shared_Physics_Components_PhysicsComponent_Robust_Shared_Physics_Components_PhysicsComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.AddJoint(Robust.Shared.Physics.Dynamics.Joints.Joint%2CRobust.Shared.Physics.Components.PhysicsComponent%2CRobust.Shared.Physics.Components.PhysicsComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L397">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_AddJoint_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.AddJoint*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_AddJoint_Robust_Shared_Physics_Dynamics_Joints_Joint_Robust_Shared_Physics_Components_PhysicsComponent_Robust_Shared_Physics_Components_PhysicsComponent_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.AddJoint(Robust.Shared.Physics.Dynamics.Joints.Joint,Robust.Shared.Physics.Components.PhysicsComponent,Robust.Shared.Physics.Components.PhysicsComponent)">AddJoint(Joint, PhysicsComponent, PhysicsComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected void AddJoint(Joint joint, PhysicsComponent bodyA = null, PhysicsComponent bodyB = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.Joint.html">Joint</a></td>
+        <td><span class="parametername">joint</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Components.PhysicsComponent.html">PhysicsComponent</a></td>
+        <td><span class="parametername">bodyA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Components.PhysicsComponent.html">PhysicsComponent</a></td>
+        <td><span class="parametername">bodyB</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_AngularStiffness_System_Single_System_Single_Robust_Shared_Physics_Components_PhysicsComponent_Robust_Shared_Physics_Components_PhysicsComponent_System_Single__System_Single__.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.AngularStiffness(System.Single%2CSystem.Single%2CRobust.Shared.Physics.Components.PhysicsComponent%2CRobust.Shared.Physics.Components.PhysicsComponent%2CSystem.Single%40%2CSystem.Single%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L366">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_AngularStiffness_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.AngularStiffness*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_AngularStiffness_System_Single_System_Single_Robust_Shared_Physics_Components_PhysicsComponent_Robust_Shared_Physics_Components_PhysicsComponent_System_Single__System_Single__" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.AngularStiffness(System.Single,System.Single,Robust.Shared.Physics.Components.PhysicsComponent,Robust.Shared.Physics.Components.PhysicsComponent,System.Single@,System.Single@)">AngularStiffness(Single, Single, PhysicsComponent, PhysicsComponent, out Single, out Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void AngularStiffness(float frequencyHertz, float dampingRatio, PhysicsComponent bodyA, PhysicsComponent bodyB, out float stiffness, out float damping)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">frequencyHertz</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">dampingRatio</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Components.PhysicsComponent.html">PhysicsComponent</a></td>
+        <td><span class="parametername">bodyA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Components.PhysicsComponent.html">PhysicsComponent</a></td>
+        <td><span class="parametername">bodyB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">stiffness</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">damping</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_ClearJoints_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Physics_JointComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.ClearJoints(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.Physics.JointComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L470">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_ClearJoints_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.ClearJoints*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_ClearJoints_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Physics_JointComponent_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.ClearJoints(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Physics.JointComponent)">ClearJoints(EntityUid, JointComponent)</h4>
+  <div class="markdown level1 summary"><p>Clears any joints for this entity, excluding relayed joints.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ClearJoints(EntityUid uid, JointComponent component = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.JointComponent.html">JointComponent</a></td>
+        <td><span class="parametername">component</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_ClearJoints_Robust_Shared_Physics_JointComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.ClearJoints(Robust.Shared.Physics.JointComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L498">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_ClearJoints_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.ClearJoints*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_ClearJoints_Robust_Shared_Physics_JointComponent_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.ClearJoints(Robust.Shared.Physics.JointComponent)">ClearJoints(JointComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ClearJoints(JointComponent joint)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.JointComponent.html">JointComponent</a></td>
+        <td><span class="parametername">joint</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_CreateDistanceJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_Vector2__System_Nullable_Vector2__System_Nullable_System_String__Robust_Shared_GameObjects_TransformComponent_Robust_Shared_GameObjects_TransformComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.CreateDistanceJoint(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BVector2%7D%2CSystem.Nullable%7BVector2%7D%2CSystem.Nullable%7BSystem.String%7D%2CRobust.Shared.GameObjects.TransformComponent%2CRobust.Shared.GameObjects.TransformComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L222">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_CreateDistanceJoint_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreateDistanceJoint*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_CreateDistanceJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_Vector2__System_Nullable_Vector2__System_Nullable_System_String__Robust_Shared_GameObjects_TransformComponent_Robust_Shared_GameObjects_TransformComponent_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreateDistanceJoint(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.EntityUid,System.Nullable{Vector2},System.Nullable{Vector2},System.Nullable{System.String},Robust.Shared.GameObjects.TransformComponent,Robust.Shared.GameObjects.TransformComponent)">CreateDistanceJoint(EntityUid, EntityUid, Nullable&lt;Vector2&gt;, Nullable&lt;Vector2&gt;, Nullable&lt;String&gt;, TransformComponent, TransformComponent)</h4>
+  <div class="markdown level1 summary"><p>Create a DistanceJoint between 2 bodies. This should be called content-side whenever you need one.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DistanceJoint CreateDistanceJoint(EntityUid bodyA, EntityUid bodyB, Vector2? anchorA = null, Vector2? anchorB = null, string? id = null, TransformComponent xformA = null, TransformComponent xformB = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Vector2</span>&gt;</td>
+        <td><span class="parametername">anchorA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Vector2</span>&gt;</td>
+        <td><span class="parametername">anchorB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></td>
+        <td><span class="parametername">xformA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></td>
+        <td><span class="parametername">xformB</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.DistanceJoint.html">DistanceJoint</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_CreateMouseJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_Vector2__System_Nullable_Vector2__System_Nullable_System_String__.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.CreateMouseJoint(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BVector2%7D%2CSystem.Nullable%7BVector2%7D%2CSystem.Nullable%7BSystem.String%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L252">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_CreateMouseJoint_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreateMouseJoint*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_CreateMouseJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_Vector2__System_Nullable_Vector2__System_Nullable_System_String__" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreateMouseJoint(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.EntityUid,System.Nullable{Vector2},System.Nullable{Vector2},System.Nullable{System.String})">CreateMouseJoint(EntityUid, EntityUid, Nullable&lt;Vector2&gt;, Nullable&lt;Vector2&gt;, Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"><p>Create a MouseJoint between 2 bodies. This should be called content-side whenever you need one.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public MouseJoint CreateMouseJoint(EntityUid bodyA, EntityUid bodyB, Vector2? anchorA = null, Vector2? anchorB = null, string? id = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Vector2</span>&gt;</td>
+        <td><span class="parametername">anchorA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Vector2</span>&gt;</td>
+        <td><span class="parametername">anchorB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.MouseJoint.html">MouseJoint</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_CreatePrismaticJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_System_String__.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.CreatePrismaticJoint(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BSystem.String%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L265">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_CreatePrismaticJoint_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreatePrismaticJoint*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_CreatePrismaticJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_System_String__" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreatePrismaticJoint(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.EntityUid,System.Nullable{System.String})">CreatePrismaticJoint(EntityUid, EntityUid, Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PrismaticJoint CreatePrismaticJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.PrismaticJoint.html">PrismaticJoint</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_CreatePrismaticJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_Vector2_Vector2_Vector2_System_Single_System_Nullable_System_String__.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.CreatePrismaticJoint(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.EntityUid%2CVector2%2CVector2%2CVector2%2CSystem.Single%2CSystem.Nullable%7BSystem.String%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L275">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_CreatePrismaticJoint_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreatePrismaticJoint*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_CreatePrismaticJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_Vector2_Vector2_Vector2_System_Single_System_Nullable_System_String__" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreatePrismaticJoint(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.EntityUid,Vector2,Vector2,Vector2,System.Single,System.Nullable{System.String})">CreatePrismaticJoint(EntityUid, EntityUid, Vector2, Vector2, Vector2, Single, Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PrismaticJoint CreatePrismaticJoint(EntityUid bodyA, EntityUid bodyB, Vector2 anchorA, Vector2 anchorB, Vector2 worldAxis, float referenceAngle, string? id = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">anchorA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">anchorB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">worldAxis</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">referenceAngle</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.PrismaticJoint.html">PrismaticJoint</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_CreateRevoluteJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_System_String__.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.CreateRevoluteJoint(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BSystem.String%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L293">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_CreateRevoluteJoint_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreateRevoluteJoint*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_CreateRevoluteJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_System_String__" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreateRevoluteJoint(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.EntityUid,System.Nullable{System.String})">CreateRevoluteJoint(EntityUid, EntityUid, Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public RevoluteJoint CreateRevoluteJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.RevoluteJoint.html">RevoluteJoint</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_CreateWeldJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_System_String__.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.CreateWeldJoint(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BSystem.String%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L320">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_CreateWeldJoint_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreateWeldJoint*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_CreateWeldJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_System_String__" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.CreateWeldJoint(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.EntityUid,System.Nullable{System.String})">CreateWeldJoint(EntityUid, EntityUid, Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public WeldJoint CreateWeldJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.WeldJoint.html">WeldJoint</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_GetOrCreateWeldJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_System_String__.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.GetOrCreateWeldJoint(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BSystem.String%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L303">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_GetOrCreateWeldJoint_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.GetOrCreateWeldJoint*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_GetOrCreateWeldJoint_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_EntityUid_System_Nullable_System_String__" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.GetOrCreateWeldJoint(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.EntityUid,System.Nullable{System.String})">GetOrCreateWeldJoint(EntityUid, EntityUid, Nullable&lt;String&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public WeldJoint GetOrCreateWeldJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">bodyB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.WeldJoint.html">WeldJoint</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_Initialize.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L33">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_Initialize_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.Initialize*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_Initialize" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Initialize()</code></pre>
+  </div>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.html#Robust_Shared_GameObjects_EntitySystem_Initialize">EntitySystem.Initialize()</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_LinearStiffness_System_Single_System_Single_System_Single_System_Single_System_Single__System_Single__.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.LinearStiffness(System.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%40%2CSystem.Single%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L340">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_LinearStiffness_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.LinearStiffness*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_LinearStiffness_System_Single_System_Single_System_Single_System_Single_System_Single__System_Single__" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.LinearStiffness(System.Single,System.Single,System.Single,System.Single,System.Single@,System.Single@)">LinearStiffness(Single, Single, Single, Single, out Single, out Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void LinearStiffness(float frequencyHertz, float dampingRatio, float massA, float massB, out float stiffness, out float damping)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">frequencyHertz</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">dampingRatio</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">massA</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">massB</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">stiffness</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">damping</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_RecursiveClearJoints_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_TransformComponent_Robust_Shared_Physics_JointComponent_Robust_Shared_Physics_Components_JointRelayTargetComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.RecursiveClearJoints(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.TransformComponent%2CRobust.Shared.Physics.JointComponent%2CRobust.Shared.Physics.Components.JointRelayTargetComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L439">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_RecursiveClearJoints_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.RecursiveClearJoints*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_RecursiveClearJoints_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_TransformComponent_Robust_Shared_Physics_JointComponent_Robust_Shared_Physics_Components_JointRelayTargetComponent_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.RecursiveClearJoints(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.TransformComponent,Robust.Shared.Physics.JointComponent,Robust.Shared.Physics.Components.JointRelayTargetComponent)">RecursiveClearJoints(EntityUid, TransformComponent, JointComponent, JointRelayTargetComponent)</h4>
+  <div class="markdown level1 summary"><p>Removes joints on this entity and anything relaying to it.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void RecursiveClearJoints(EntityUid uid, TransformComponent xform = null, JointComponent component = null, JointRelayTargetComponent relay = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></td>
+        <td><span class="parametername">xform</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.JointComponent.html">JointComponent</a></td>
+        <td><span class="parametername">component</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Components.JointRelayTargetComponent.html">JointRelayTargetComponent</a></td>
+        <td><span class="parametername">relay</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_RefreshRelay_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Physics_JointComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.RefreshRelay(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.Physics.JointComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.Relay.cs/#L65">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_RefreshRelay_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.RefreshRelay*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_RefreshRelay_Robust_Shared_GameObjects_EntityUid_Robust_Shared_Physics_JointComponent_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.RefreshRelay(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Physics.JointComponent)">RefreshRelay(EntityUid, JointComponent)</h4>
+  <div class="markdown level1 summary"><p>Refreshes the joint relay for this entity, prefering its containing container or nothing.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void RefreshRelay(EntityUid uid, JointComponent component = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.JointComponent.html">JointComponent</a></td>
+        <td><span class="parametername">component</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_RefreshRelay_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_GameObjects_EntityUid__Robust_Shared_Physics_JointComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.RefreshRelay(Robust.Shared.GameObjects.EntityUid%2CSystem.Nullable%7BRobust.Shared.GameObjects.EntityUid%7D%2CRobust.Shared.Physics.JointComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.Relay.cs/#L83">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_RefreshRelay_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.RefreshRelay*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_RefreshRelay_Robust_Shared_GameObjects_EntityUid_System_Nullable_Robust_Shared_GameObjects_EntityUid__Robust_Shared_Physics_JointComponent_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.RefreshRelay(Robust.Shared.GameObjects.EntityUid,System.Nullable{Robust.Shared.GameObjects.EntityUid},Robust.Shared.Physics.JointComponent)">RefreshRelay(EntityUid, Nullable&lt;EntityUid&gt;, JointComponent)</h4>
+  <div class="markdown level1 summary"><p>Refreshes the joint relay for this entity.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void RefreshRelay(EntityUid uid, EntityUid? relay, JointComponent component = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</td>
+        <td><span class="parametername">relay</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.JointComponent.html">JointComponent</a></td>
+        <td><span class="parametername">component</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_RemoveJoint_Robust_Shared_GameObjects_EntityUid_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.RemoveJoint(Robust.Shared.GameObjects.EntityUid%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L504">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_RemoveJoint_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.RemoveJoint*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_RemoveJoint_Robust_Shared_GameObjects_EntityUid_System_String_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.RemoveJoint(Robust.Shared.GameObjects.EntityUid,System.String)">RemoveJoint(EntityUid, String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void RemoveJoint(EntityUid uid, string id)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">id</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_RemoveJoint_Robust_Shared_Physics_Dynamics_Joints_Joint_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.RemoveJoint(Robust.Shared.Physics.Dynamics.Joints.Joint)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L515">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_RemoveJoint_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.RemoveJoint*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_RemoveJoint_Robust_Shared_Physics_Dynamics_Joints_Joint_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.RemoveJoint(Robust.Shared.Physics.Dynamics.Joints.Joint)">RemoveJoint(Joint)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void RemoveJoint(Joint joint)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.Joint.html">Joint</a></td>
+        <td><span class="parametername">joint</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_SetEnabled_Robust_Shared_Physics_Dynamics_Joints_Joint_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.SetEnabled(Robust.Shared.Physics.Dynamics.Joints.Joint%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L97">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_SetEnabled_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.SetEnabled*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_SetEnabled_Robust_Shared_Physics_Dynamics_Joints_Joint_System_Boolean_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.SetEnabled(Robust.Shared.Physics.Dynamics.Joints.Joint,System.Boolean)">SetEnabled(Joint, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetEnabled(Joint joint, bool value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Physics.Dynamics.Joints.Joint.html">Joint</a></td>
+        <td><span class="parametername">joint</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem_Update_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem.Update(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.cs/#L105">View Source</a>
+  </span>
+  <a id="Robust_Shared_Physics_Systems_SharedJointSystem_Update_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.Update*"></a>
+  <h4 id="Robust_Shared_Physics_Systems_SharedJointSystem_Update_System_Single_" data-uid="Robust.Shared.Physics.Systems.SharedJointSystem.Update(System.Single)">Update(Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Update(float frameTime)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">frameTime</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="Robust.Shared.GameObjects.EntitySystem.html#Robust_Shared_GameObjects_EntitySystem_Update_System_Single_">EntitySystem.Update(Single)</a></div>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Physics_Systems_SharedJointSystem.md&amp;value=---%0Auid%3A%20Robust.Shared.Physics.Systems.SharedJointSystem%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Physics/Systems/SharedJointSystem.Relay.cs/#L12" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1371 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class ListSerializers&lt;T&gt;
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class ListSerializers&lt;T&gt;
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1">
+  
+  
+  <h1 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1" class="text-break">Class ListSerializers&lt;T&gt;
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">ListSerializers&lt;T&gt;</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer</a>&lt;<span class="xref">List</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter</a>&lt;<span class="xref">List</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader</a>&lt;<span class="xref">List</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator</a>&lt;<span class="xref">List</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface</a>&lt;<span class="xref">List</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter</a>&lt;<span class="xref">List</span>&lt;T&gt;&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer</a>&lt;<span class="xref">IReadOnlyList</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter</a>&lt;<span class="xref">IReadOnlyList</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader</a>&lt;<span class="xref">IReadOnlyList</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator</a>&lt;<span class="xref">IReadOnlyList</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface</a>&lt;<span class="xref">IReadOnlyList</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter</a>&lt;<span class="xref">IReadOnlyList</span>&lt;T&gt;&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer</a>&lt;<span class="xref">IReadOnlyCollection</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter</a>&lt;<span class="xref">IReadOnlyCollection</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader</a>&lt;<span class="xref">IReadOnlyCollection</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator</a>&lt;<span class="xref">IReadOnlyCollection</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface</a>&lt;<span class="xref">IReadOnlyCollection</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter</a>&lt;<span class="xref">IReadOnlyCollection</span>&lt;T&gt;&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer</a>&lt;<span class="xref">ImmutableList</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter</a>&lt;<span class="xref">ImmutableList</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader</a>&lt;<span class="xref">ImmutableList</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator</a>&lt;<span class="xref">ImmutableList</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface</a>&lt;<span class="xref">ImmutableList</span>&lt;T&gt;, <a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a>&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter</a>&lt;<span class="xref">ImmutableList</span>&lt;T&gt;&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier-1.html">ITypeCopier</a>&lt;<span class="xref">List</span>&lt;T&gt;&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface</a>&lt;<span class="xref">List</span>&lt;T&gt;&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator</a>&lt;<span class="xref">IReadOnlyList</span>&lt;T&gt;&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface</a>&lt;<span class="xref">IReadOnlyList</span>&lt;T&gt;&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator</a>&lt;<span class="xref">IReadOnlyCollection</span>&lt;T&gt;&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface</a>&lt;<span class="xref">IReadOnlyCollection</span>&lt;T&gt;&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator</a>&lt;<span class="xref">ImmutableList</span>&lt;T&gt;&gt;</div>
+    <div><a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface</a>&lt;<span class="xref">ImmutableList</span>&lt;T&gt;&gt;</div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.html">Robust.Shared.Serialization.TypeSerializers.Implementations.Generic</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class ListSerializers&lt;T&gt; : object, ITypeSerializer&lt;List&lt;T&gt;, SequenceDataNode&gt;, ITypeReaderWriter&lt;List&lt;T&gt;, SequenceDataNode&gt;, ITypeReader&lt;List&lt;T&gt;, SequenceDataNode&gt;, ITypeValidator&lt;List&lt;T&gt;, SequenceDataNode&gt;, BaseSerializerInterfaces.ITypeNodeInterface&lt;List&lt;T&gt;, SequenceDataNode&gt;, ITypeWriter&lt;List&lt;T&gt;&gt;, ITypeSerializer&lt;IReadOnlyList&lt;T&gt;, SequenceDataNode&gt;, ITypeReaderWriter&lt;IReadOnlyList&lt;T&gt;, SequenceDataNode&gt;, ITypeReader&lt;IReadOnlyList&lt;T&gt;, SequenceDataNode&gt;, ITypeValidator&lt;IReadOnlyList&lt;T&gt;, SequenceDataNode&gt;, BaseSerializerInterfaces.ITypeNodeInterface&lt;IReadOnlyList&lt;T&gt;, SequenceDataNode&gt;, ITypeWriter&lt;IReadOnlyList&lt;T&gt;&gt;, ITypeSerializer&lt;IReadOnlyCollection&lt;T&gt;, SequenceDataNode&gt;, ITypeReaderWriter&lt;IReadOnlyCollection&lt;T&gt;, SequenceDataNode&gt;, ITypeReader&lt;IReadOnlyCollection&lt;T&gt;, SequenceDataNode&gt;, ITypeValidator&lt;IReadOnlyCollection&lt;T&gt;, SequenceDataNode&gt;, BaseSerializerInterfaces.ITypeNodeInterface&lt;IReadOnlyCollection&lt;T&gt;, SequenceDataNode&gt;, ITypeWriter&lt;IReadOnlyCollection&lt;T&gt;&gt;, ITypeSerializer&lt;ImmutableList&lt;T&gt;, SequenceDataNode&gt;, ITypeReaderWriter&lt;ImmutableList&lt;T&gt;, SequenceDataNode&gt;, ITypeReader&lt;ImmutableList&lt;T&gt;, SequenceDataNode&gt;, ITypeValidator&lt;ImmutableList&lt;T&gt;, SequenceDataNode&gt;, BaseSerializerInterfaces.ITypeNodeInterface&lt;ImmutableList&lt;T&gt;, SequenceDataNode&gt;, ITypeWriter&lt;ImmutableList&lt;T&gt;&gt;, ITypeCopier&lt;List&lt;T&gt;&gt;, BaseSerializerInterfaces.ITypeInterface&lt;List&lt;T&gt;&gt;, ITypeCopyCreator&lt;IReadOnlyList&lt;T&gt;&gt;, BaseSerializerInterfaces.ITypeInterface&lt;IReadOnlyList&lt;T&gt;&gt;, ITypeCopyCreator&lt;IReadOnlyCollection&lt;T&gt;&gt;, BaseSerializerInterfaces.ITypeInterface&lt;IReadOnlyCollection&lt;T&gt;&gt;, ITypeCopyCreator&lt;ImmutableList&lt;T&gt;&gt;, BaseSerializerInterfaces.ITypeInterface&lt;ImmutableList&lt;T&gt;&gt;</code></pre>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CopyTo_Robust_Shared_Serialization_Manager_ISerializationManager_List__0__List__0___Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.CopyTo(Robust.Shared.Serialization.Manager.ISerializationManager%2CList%7B%600%7D%2CList%7B%600%7D%40%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L181">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CopyTo_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.CopyTo*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CopyTo_Robust_Shared_Serialization_Manager_ISerializationManager_List__0__List__0___Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.CopyTo(Robust.Shared.Serialization.Manager.ISerializationManager,List{`0},List{`0}@,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext)">CopyTo(ISerializationManager, List&lt;T&gt;, ref List&lt;T&gt;, IDependencyCollection, SerializationHookContext, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void CopyTo(ISerializationManager serializationManager, List&lt;T&gt; source, ref List&lt;T&gt; target, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">List</span>&lt;T&gt;</td>
+        <td><span class="parametername">source</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">List</span>&lt;T&gt;</td>
+        <td><span class="parametername">target</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_ImmutableList__0__Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager%2CImmutableList%7B%600%7D%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L223">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CreateCopy_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.CreateCopy*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_ImmutableList__0__Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager,ImmutableList{`0},Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext)">CreateCopy(ISerializationManager, ImmutableList&lt;T&gt;, IDependencyCollection, SerializationHookContext, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ImmutableList&lt;T&gt; CreateCopy(ISerializationManager serializationManager, ImmutableList&lt;T&gt; source, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">ImmutableList</span>&lt;T&gt;</td>
+        <td><span class="parametername">source</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">ImmutableList</span>&lt;T&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_IReadOnlyCollection__0__Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager%2CIReadOnlyCollection%7B%600%7D%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L210">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CreateCopy_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.CreateCopy*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_IReadOnlyCollection__0__Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager,IReadOnlyCollection{`0},Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext)">CreateCopy(ISerializationManager, IReadOnlyCollection&lt;T&gt;, IDependencyCollection, SerializationHookContext, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IReadOnlyCollection&lt;T&gt; CreateCopy(ISerializationManager serializationManager, IReadOnlyCollection&lt;T&gt; source, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">IReadOnlyCollection</span>&lt;T&gt;</td>
+        <td><span class="parametername">source</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IReadOnlyCollection</span>&lt;T&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_IReadOnlyList__0__Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager%2CIReadOnlyList%7B%600%7D%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L197">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CreateCopy_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.CreateCopy*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_CreateCopy_Robust_Shared_Serialization_Manager_ISerializationManager_IReadOnlyList__0__Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.CreateCopy(Robust.Shared.Serialization.Manager.ISerializationManager,IReadOnlyList{`0},Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext)">CreateCopy(ISerializationManager, IReadOnlyList&lt;T&gt;, IDependencyCollection, SerializationHookContext, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IReadOnlyList&lt;T&gt; CreateCopy(ISerializationManager serializationManager, IReadOnlyList&lt;T&gt; source, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">IReadOnlyList</span>&lt;T&gt;</td>
+        <td><span class="parametername">source</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IReadOnlyList</span>&lt;T&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_Robust_Shared_Serialization_Manager_ISerializationManager_ImmutableList__0__Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Write(Robust.Shared.Serialization.Manager.ISerializationManager%2CImmutableList%7B%600%7D%2CRobust.Shared.IoC.IDependencyCollection%2CSystem.Boolean%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L39">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Write*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_Robust_Shared_Serialization_Manager_ISerializationManager_ImmutableList__0__Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Write(Robust.Shared.Serialization.Manager.ISerializationManager,ImmutableList{`0},Robust.Shared.IoC.IDependencyCollection,System.Boolean,Robust.Shared.Serialization.Manager.ISerializationContext)">Write(ISerializationManager, ImmutableList&lt;T&gt;, IDependencyCollection, Boolean, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DataNode Write(ISerializationManager serializationManager, ImmutableList&lt;T&gt; value, IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">ImmutableList</span>&lt;T&gt;</td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">alwaysWrite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.DataNode.html">DataNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_Robust_Shared_Serialization_Manager_ISerializationManager_IReadOnlyCollection__0__Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Write(Robust.Shared.Serialization.Manager.ISerializationManager%2CIReadOnlyCollection%7B%600%7D%2CRobust.Shared.IoC.IDependencyCollection%2CSystem.Boolean%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L54">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Write*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_Robust_Shared_Serialization_Manager_ISerializationManager_IReadOnlyCollection__0__Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Write(Robust.Shared.Serialization.Manager.ISerializationManager,IReadOnlyCollection{`0},Robust.Shared.IoC.IDependencyCollection,System.Boolean,Robust.Shared.Serialization.Manager.ISerializationContext)">Write(ISerializationManager, IReadOnlyCollection&lt;T&gt;, IDependencyCollection, Boolean, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DataNode Write(ISerializationManager serializationManager, IReadOnlyCollection&lt;T&gt; value, IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">IReadOnlyCollection</span>&lt;T&gt;</td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">alwaysWrite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.DataNode.html">DataNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_Robust_Shared_Serialization_Manager_ISerializationManager_IReadOnlyList__0__Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Write(Robust.Shared.Serialization.Manager.ISerializationManager%2CIReadOnlyList%7B%600%7D%2CRobust.Shared.IoC.IDependencyCollection%2CSystem.Boolean%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L62">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Write*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_Robust_Shared_Serialization_Manager_ISerializationManager_IReadOnlyList__0__Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Write(Robust.Shared.Serialization.Manager.ISerializationManager,IReadOnlyList{`0},Robust.Shared.IoC.IDependencyCollection,System.Boolean,Robust.Shared.Serialization.Manager.ISerializationContext)">Write(ISerializationManager, IReadOnlyList&lt;T&gt;, IDependencyCollection, Boolean, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DataNode Write(ISerializationManager serializationManager, IReadOnlyList&lt;T&gt; value, IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">IReadOnlyList</span>&lt;T&gt;</td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">alwaysWrite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.DataNode.html">DataNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_Robust_Shared_Serialization_Manager_ISerializationManager_List__0__Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Write(Robust.Shared.Serialization.Manager.ISerializationManager%2CList%7B%600%7D%2CRobust.Shared.IoC.IDependencyCollection%2CSystem.Boolean%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L47">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Write*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Write_Robust_Shared_Serialization_Manager_ISerializationManager_List__0__Robust_Shared_IoC_IDependencyCollection_System_Boolean_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Write(Robust.Shared.Serialization.Manager.ISerializationManager,List{`0},Robust.Shared.IoC.IDependencyCollection,System.Boolean,Robust.Shared.Serialization.Manager.ISerializationContext)">Write(ISerializationManager, List&lt;T&gt;, IDependencyCollection, Boolean, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DataNode Write(ISerializationManager serializationManager, List&lt;T&gt; value, IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext context = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">List</span>&lt;T&gt;</td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">alwaysWrite</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.DataNode.html">DataNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="eii">Explicit Interface Implementations
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_ImmutableList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_ImmutableList__0___.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeReader%7BImmutableList%7BT%7D%2CRobust%23Shared%23Serialization%23Markdown%23Sequence%23SequenceDataNode%7D%23Read(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Sequence.SequenceDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext%2CRobust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate%7BImmutableList%7B%600%7D%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L162">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_ImmutableList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{ImmutableList{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Read*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_ImmutableList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_ImmutableList__0___" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{ImmutableList{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Read(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext,Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate{ImmutableList{`0}})">ITypeReader&lt;ImmutableList&lt;T&gt;, SequenceDataNode&gt;.Read(ISerializationManager, SequenceDataNode, IDependencyCollection, SerializationHookContext, ISerializationContext, ISerializationManager.InstantiationDelegate&lt;ImmutableList&lt;T&gt;&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ImmutableList&lt;T&gt; ITypeReader&lt;ImmutableList&lt;T&gt;, SequenceDataNode&gt;.Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context, ISerializationManager.InstantiationDelegate&lt;ImmutableList&lt;T&gt;&gt; instanceProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate-1.html">ISerializationManager.InstantiationDelegate</a>&lt;<span class="xref">ImmutableList</span>&lt;T&gt;&gt;</td>
+        <td><span class="parametername">instanceProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">ImmutableList</span>&lt;T&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_IReadOnlyCollection_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_IReadOnlyCollection__0___.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeReader%7BIReadOnlyCollection%7BT%7D%2CRobust%23Shared%23Serialization%23Markdown%23Sequence%23SequenceDataNode%7D%23Read(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Sequence.SequenceDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext%2CRobust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate%7BIReadOnlyCollection%7B%600%7D%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L143">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_IReadOnlyCollection_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{IReadOnlyCollection{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Read*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_IReadOnlyCollection_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_IReadOnlyCollection__0___" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{IReadOnlyCollection{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Read(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext,Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate{IReadOnlyCollection{`0}})">ITypeReader&lt;IReadOnlyCollection&lt;T&gt;, SequenceDataNode&gt;.Read(ISerializationManager, SequenceDataNode, IDependencyCollection, SerializationHookContext, ISerializationContext, ISerializationManager.InstantiationDelegate&lt;IReadOnlyCollection&lt;T&gt;&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IReadOnlyCollection&lt;T&gt; ITypeReader&lt;IReadOnlyCollection&lt;T&gt;, SequenceDataNode&gt;.Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context, ISerializationManager.InstantiationDelegate&lt;IReadOnlyCollection&lt;T&gt;&gt; instanceProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate-1.html">ISerializationManager.InstantiationDelegate</a>&lt;<span class="xref">IReadOnlyCollection</span>&lt;T&gt;&gt;</td>
+        <td><span class="parametername">instanceProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IReadOnlyCollection</span>&lt;T&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_IReadOnlyList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_IReadOnlyList__0___.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeReader%7BIReadOnlyList%7BT%7D%2CRobust%23Shared%23Serialization%23Markdown%23Sequence%23SequenceDataNode%7D%23Read(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Sequence.SequenceDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext%2CRobust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate%7BIReadOnlyList%7B%600%7D%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L124">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_IReadOnlyList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{IReadOnlyList{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Read*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_IReadOnlyList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_IReadOnlyList__0___" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{IReadOnlyList{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Read(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext,Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate{IReadOnlyList{`0}})">ITypeReader&lt;IReadOnlyList&lt;T&gt;, SequenceDataNode&gt;.Read(ISerializationManager, SequenceDataNode, IDependencyCollection, SerializationHookContext, ISerializationContext, ISerializationManager.InstantiationDelegate&lt;IReadOnlyList&lt;T&gt;&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IReadOnlyList&lt;T&gt; ITypeReader&lt;IReadOnlyList&lt;T&gt;, SequenceDataNode&gt;.Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context, ISerializationManager.InstantiationDelegate&lt;IReadOnlyList&lt;T&gt;&gt; instanceProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate-1.html">ISerializationManager.InstantiationDelegate</a>&lt;<span class="xref">IReadOnlyList</span>&lt;T&gt;&gt;</td>
+        <td><span class="parametername">instanceProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IReadOnlyList</span>&lt;T&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_List_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_List__0___.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeReader%7BList%7BT%7D%2CRobust%23Shared%23Serialization%23Markdown%23Sequence%23SequenceDataNode%7D%23Read(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Sequence.SequenceDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.SerializationHookContext%2CRobust.Shared.Serialization.Manager.ISerializationContext%2CRobust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate%7BList%7B%600%7D%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L70">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_List_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{List{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Read*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeReader_List_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Read_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_SerializationHookContext_Robust_Shared_Serialization_Manager_ISerializationContext_Robust_Shared_Serialization_Manager_ISerializationManager_InstantiationDelegate_List__0___" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeReader{List{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Read(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.SerializationHookContext,Robust.Shared.Serialization.Manager.ISerializationContext,Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate{List{`0}})">ITypeReader&lt;List&lt;T&gt;, SequenceDataNode&gt;.Read(ISerializationManager, SequenceDataNode, IDependencyCollection, SerializationHookContext, ISerializationContext, ISerializationManager.InstantiationDelegate&lt;List&lt;T&gt;&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">List&lt;T&gt; ITypeReader&lt;List&lt;T&gt;, SequenceDataNode&gt;.Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext context, ISerializationManager.InstantiationDelegate&lt;List&lt;T&gt;&gt; instanceProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.SerializationHookContext.html">SerializationHookContext</a></td>
+        <td><span class="parametername">hookCtx</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.InstantiationDelegate-1.html">ISerializationManager.InstantiationDelegate</a>&lt;<span class="xref">List</span>&lt;T&gt;&gt;</td>
+        <td><span class="parametername">instanceProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">List</span>&lt;T&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_ImmutableList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeValidator%7BImmutableList%7BT%7D%2CRobust%23Shared%23Serialization%23Markdown%23Sequence%23SequenceDataNode%7D%23Validate(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Sequence.SequenceDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L86">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_ImmutableList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{ImmutableList{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Validate*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_ImmutableList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{ImmutableList{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Validate(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.Manager.ISerializationContext)">ITypeValidator&lt;ImmutableList&lt;T&gt;, SequenceDataNode&gt;.Validate(ISerializationManager, SequenceDataNode, IDependencyCollection, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ValidationNode ITypeValidator&lt;ImmutableList&lt;T&gt;, SequenceDataNode&gt;.Validate(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext context)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ValidationNode.html">ValidationNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_IReadOnlyCollection_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeValidator%7BIReadOnlyCollection%7BT%7D%2CRobust%23Shared%23Serialization%23Markdown%23Sequence%23SequenceDataNode%7D%23Validate(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Sequence.SequenceDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L93">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_IReadOnlyCollection_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{IReadOnlyCollection{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Validate*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_IReadOnlyCollection_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{IReadOnlyCollection{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Validate(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.Manager.ISerializationContext)">ITypeValidator&lt;IReadOnlyCollection&lt;T&gt;, SequenceDataNode&gt;.Validate(ISerializationManager, SequenceDataNode, IDependencyCollection, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ValidationNode ITypeValidator&lt;IReadOnlyCollection&lt;T&gt;, SequenceDataNode&gt;.Validate(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext context)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ValidationNode.html">ValidationNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_IReadOnlyList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeValidator%7BIReadOnlyList%7BT%7D%2CRobust%23Shared%23Serialization%23Markdown%23Sequence%23SequenceDataNode%7D%23Validate(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Sequence.SequenceDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L100">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_IReadOnlyList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{IReadOnlyList{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Validate*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_IReadOnlyList_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{IReadOnlyList{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Validate(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.Manager.ISerializationContext)">ITypeValidator&lt;IReadOnlyList&lt;T&gt;, SequenceDataNode&gt;.Validate(ISerializationManager, SequenceDataNode, IDependencyCollection, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ValidationNode ITypeValidator&lt;IReadOnlyList&lt;T&gt;, SequenceDataNode&gt;.Validate(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext context)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ValidationNode.html">ValidationNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_List_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601.Robust%23Shared%23Serialization%23TypeSerializers%23Interfaces%23ITypeValidator%7BList%7BT%7D%2CRobust%23Shared%23Serialization%23Markdown%23Sequence%23SequenceDataNode%7D%23Validate(Robust.Shared.Serialization.Manager.ISerializationManager%2CRobust.Shared.Serialization.Markdown.Sequence.SequenceDataNode%2CRobust.Shared.IoC.IDependencyCollection%2CRobust.Shared.Serialization.Manager.ISerializationContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L107">View Source</a>
+  </span>
+  <a id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_List_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{List{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Validate*"></a>
+  <h4 id="Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1_Robust_Shared_Serialization_TypeSerializers_Interfaces_ITypeValidator_List_T__Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode__Validate_Robust_Shared_Serialization_Manager_ISerializationManager_Robust_Shared_Serialization_Markdown_Sequence_SequenceDataNode_Robust_Shared_IoC_IDependencyCollection_Robust_Shared_Serialization_Manager_ISerializationContext_" data-uid="Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers`1.Robust#Shared#Serialization#TypeSerializers#Interfaces#ITypeValidator{List{T},Robust#Shared#Serialization#Markdown#Sequence#SequenceDataNode}#Validate(Robust.Shared.Serialization.Manager.ISerializationManager,Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode,Robust.Shared.IoC.IDependencyCollection,Robust.Shared.Serialization.Manager.ISerializationContext)">ITypeValidator&lt;List&lt;T&gt;, SequenceDataNode&gt;.Validate(ISerializationManager, SequenceDataNode, IDependencyCollection, ISerializationContext)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ValidationNode ITypeValidator&lt;List&lt;T&gt;, SequenceDataNode&gt;.Validate(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext context)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationManager.html">ISerializationManager</a></td>
+        <td><span class="parametername">serializationManager</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode.html">SequenceDataNode</a></td>
+        <td><span class="parametername">node</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.IoC.IDependencyCollection.html">IDependencyCollection</a></td>
+        <td><span class="parametername">dependencies</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Manager.ISerializationContext.html">ISerializationContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Serialization.Markdown.Validation.ValidationNode.html">ValidationNode</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeSerializer-2.html">ITypeSerializer&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReaderWriter-2.html">ITypeReaderWriter&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader-2.html">ITypeReader&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator-2.html">ITypeValidator&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeNodeInterface-2.html">BaseSerializerInterfaces.ITypeNodeInterface&lt;TType, TNode&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter-1.html">ITypeWriter&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier-1.html">ITypeCopier&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator-1.html">ITypeCopyCreator&lt;TType&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.Serialization.TypeSerializers.Interfaces.BaseSerializerInterfaces.ITypeInterface-1.html">BaseSerializerInterfaces.ITypeInterface&lt;TType&gt;</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Serialization_TypeSerializers_Implementations_Generic_ListSerializers_1.md&amp;value=---%0Auid%3A%20Robust.Shared.Serialization.TypeSerializers.Implementations.Generic.ListSerializers%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Serialization/TypeSerializers/Implementations/Generic/ListSerializers.cs/#L15" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

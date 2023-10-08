@@ -1,0 +1,617 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class Font
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class Font
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Client.Graphics.Font">
+  
+  
+  <h1 id="Robust_Client_Graphics_Font" data-uid="Robust.Client.Graphics.Font" class="text-break">Class Font
+  </h1>
+  <div class="markdown level0 summary"><p>A generic font for rendering of text.
+Does not contain properties such as size. Those are specific to children such as <a class="xref" href="Robust.Client.Graphics.VectorFont.html">VectorFont</a></p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">Font</span></div>
+      <div class="level2"><a class="xref" href="Robust.Client.Graphics.DummyFont.html">DummyFont</a></div>
+      <div class="level2"><a class="xref" href="Robust.Client.Graphics.StackedFont.html">StackedFont</a></div>
+      <div class="level2"><a class="xref" href="Robust.Client.Graphics.VectorFont.html">VectorFont</a></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Client.Graphics.html">Robust.Client.Graphics</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Client.dll</h6>
+  <h5 id="Robust_Client_Graphics_Font_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class Font : object</code></pre>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Font_DrawChar_Robust_Client_Graphics_DrawingHandleScreen_Rune_Vector2_System_Single_Robust_Shared_Maths_Color_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Font.DrawChar(Robust.Client.Graphics.DrawingHandleScreen%2CRune%2CVector2%2CSystem.Single%2CRobust.Shared.Maths.Color%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Font.cs/#L55">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Font_DrawChar_" data-uid="Robust.Client.Graphics.Font.DrawChar*"></a>
+  <h4 id="Robust_Client_Graphics_Font_DrawChar_Robust_Client_Graphics_DrawingHandleScreen_Rune_Vector2_System_Single_Robust_Shared_Maths_Color_System_Boolean_" data-uid="Robust.Client.Graphics.Font.DrawChar(Robust.Client.Graphics.DrawingHandleScreen,Rune,Vector2,System.Single,Robust.Shared.Maths.Color,System.Boolean)">DrawChar(DrawingHandleScreen, Rune, Vector2, Single, Color, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Draw a character at a certain baseline position on screen.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.DrawingHandleScreen.html">DrawingHandleScreen</a></td>
+        <td><span class="parametername">handle</span></td>
+        <td><p>The drawing handle to draw to.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Rune</span></td>
+        <td><span class="parametername">rune</span></td>
+        <td><p>The Unicode code point to draw.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">baseline</span></td>
+        <td><p>The baseline from which to draw the character.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td><p>DPI scale factor to render the font at.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Color.html">Color</a></td>
+        <td><span class="parametername">color</span></td>
+        <td><p>The color of the character to draw.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">fallback</span></td>
+        <td><p>If the character is not available, render &quot;�&quot; instead.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><p>How much to advance the cursor to draw the next character.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Font_GetAscent_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Font.GetAscent(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Font.cs/#L19">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Font_GetAscent_" data-uid="Robust.Client.Graphics.Font.GetAscent*"></a>
+  <h4 id="Robust_Client_Graphics_Font_GetAscent_System_Single_" data-uid="Robust.Client.Graphics.Font.GetAscent(System.Single)">GetAscent(Single)</h4>
+  <div class="markdown level1 summary"><p>The maximum amount a glyph goes above the baseline, in pixels.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract int GetAscent(float scale)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Font_GetCharMetrics_Rune_System_Single_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Font.GetCharMetrics(Rune%2CSystem.Single%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Font.cs/#L73">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Font_GetCharMetrics_" data-uid="Robust.Client.Graphics.Font.GetCharMetrics*"></a>
+  <h4 id="Robust_Client_Graphics_Font_GetCharMetrics_Rune_System_Single_System_Boolean_" data-uid="Robust.Client.Graphics.Font.GetCharMetrics(Rune,System.Single,System.Boolean)">GetCharMetrics(Rune, Single, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Gets metrics describing the dimensions and positioning of a single glyph in the font.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Rune</span></td>
+        <td><span class="parametername">rune</span></td>
+        <td><p>The unicode codepoint to fetch the glyph metrics for.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td><p>DPI scale factor to render the font at.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">fallback</span></td>
+        <td><p>If the character is not available, return data for &quot;�&quot; instead.
+This can still fail if the font does not define � itself.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Client.Graphics.CharMetrics.html">CharMetrics</a>&gt;</td>
+        <td><p><code>null</code> if this font does not have a glyph for the specified character,
+otherwise the metrics you asked for.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Client_Graphics_Font_GetCharMetrics_Rune_System_Single_System_Boolean__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Client.Graphics.Font.html#Robust_Client_Graphics_Font_TryGetCharMetrics_Rune_System_Single_Robust_Client_Graphics_CharMetrics__System_Boolean_">TryGetCharMetrics(Rune, Single, out CharMetrics, Boolean)</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Font_GetDescent_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Font.GetDescent(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Font.cs/#L29">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Font_GetDescent_" data-uid="Robust.Client.Graphics.Font.GetDescent*"></a>
+  <h4 id="Robust_Client_Graphics_Font_GetDescent_System_Single_" data-uid="Robust.Client.Graphics.Font.GetDescent(System.Single)">GetDescent(Single)</h4>
+  <div class="markdown level1 summary"><p>The maximum amount a glyph drops below the baseline, in pixels.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract int GetDescent(float scale)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Font_GetHeight_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Font.GetHeight(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Font.cs/#L24">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Font_GetHeight_" data-uid="Robust.Client.Graphics.Font.GetHeight*"></a>
+  <h4 id="Robust_Client_Graphics_Font_GetHeight_System_Single_" data-uid="Robust.Client.Graphics.Font.GetHeight(System.Single)">GetHeight(Single)</h4>
+  <div class="markdown level1 summary"><p>The maximum glyph height of a line of text in pixels, not relative to the baseline.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract int GetHeight(float scale)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Font_GetLineHeight_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Font.GetLineHeight(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Font.cs/#L35">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Font_GetLineHeight_" data-uid="Robust.Client.Graphics.Font.GetLineHeight*"></a>
+  <h4 id="Robust_Client_Graphics_Font_GetLineHeight_System_Single_" data-uid="Robust.Client.Graphics.Font.GetLineHeight(System.Single)">GetLineHeight(Single)</h4>
+  <div class="markdown level1 summary"><p>The distance between the baselines of two consecutive lines, in pixels.
+Basically, if you encounter a new line, this is how much you need to move down the cursor.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract int GetLineHeight(float scale)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Font_GetLineSeparation_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Font.GetLineSeparation(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Font.cs/#L40">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Font_GetLineSeparation_" data-uid="Robust.Client.Graphics.Font.GetLineSeparation*"></a>
+  <h4 id="Robust_Client_Graphics_Font_GetLineSeparation_System_Single_" data-uid="Robust.Client.Graphics.Font.GetLineSeparation(System.Single)">GetLineSeparation(Single)</h4>
+  <div class="markdown level1 summary"><p>The distance between the edges of two consecutive lines, in pixels.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int GetLineSeparation(float scale)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Font_TryGetCharMetrics_Rune_System_Single_Robust_Client_Graphics_CharMetrics__System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Font.TryGetCharMetrics(Rune%2CSystem.Single%2CRobust.Client.Graphics.CharMetrics%40%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Font.cs/#L78">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_Font_TryGetCharMetrics_" data-uid="Robust.Client.Graphics.Font.TryGetCharMetrics*"></a>
+  <h4 id="Robust_Client_Graphics_Font_TryGetCharMetrics_Rune_System_Single_Robust_Client_Graphics_CharMetrics__System_Boolean_" data-uid="Robust.Client.Graphics.Font.TryGetCharMetrics(Rune,System.Single,Robust.Client.Graphics.CharMetrics@,System.Boolean)">TryGetCharMetrics(Rune, Single, out CharMetrics, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Try-pattern version of <a class="xref" href="Robust.Client.Graphics.Font.html#Robust_Client_Graphics_Font_GetCharMetrics_Rune_System_Single_System_Boolean_">GetCharMetrics(Rune, Single, Boolean)</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryGetCharMetrics(Rune rune, float scale, out CharMetrics metrics, bool fallback = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Rune</span></td>
+        <td><span class="parametername">rune</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.CharMetrics.html">CharMetrics</a></td>
+        <td><span class="parametername">metrics</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">fallback</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_Font.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.Font%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Font.cs/#L14" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

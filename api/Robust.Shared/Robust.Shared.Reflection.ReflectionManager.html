@@ -1,0 +1,911 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class ReflectionManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class ReflectionManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Reflection.ReflectionManager">
+  
+  
+  <h1 id="Robust_Shared_Reflection_ReflectionManager" data-uid="Robust.Shared.Reflection.ReflectionManager" class="text-break">Class ReflectionManager
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">ReflectionManager</span></div>
+      <div class="level2"><a class="xref" href="../Robust.UnitTesting/Robust.UnitTesting.Shared.Reflection.ReflectionManagerTest.html">ReflectionManagerTest</a></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Shared.Reflection.IReflectionManager.html">IReflectionManager</a></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Reflection.html">Robust.Shared.Reflection</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Reflection_ReflectionManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class ReflectionManager : object, IReflectionManager</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_Assemblies.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.Assemblies%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L32">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_Assemblies_" data-uid="Robust.Shared.Reflection.ReflectionManager.Assemblies*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_Assemblies" data-uid="Robust.Shared.Reflection.ReflectionManager.Assemblies">Assemblies</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IReadOnlyList&lt;Assembly&gt; Assemblies { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IReadOnlyList</span>&lt;<span class="xref">Assembly</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_TypePrefixes.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.TypePrefixes%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L26">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_TypePrefixes_" data-uid="Robust.Shared.Reflection.ReflectionManager.TypePrefixes*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_TypePrefixes" data-uid="Robust.Shared.Reflection.ReflectionManager.TypePrefixes">TypePrefixes</h4>
+  <div class="markdown level1 summary"><p>Enumerable over prefixes that are added to the type provided to <a class="xref" href="Robust.Shared.Reflection.ReflectionManager.html#Robust_Shared_Reflection_ReflectionManager_GetType_System_String_">GetType(String)</a>
+if the type can't be found in any assemblies.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected abstract IEnumerable&lt;string&gt; TypePrefixes { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Reflection_ReflectionManager_TypePrefixes_remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>First prefix should probably be <pre><code>&quot;&quot;</code></pre>.</p>
+</div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_FindAllTypes.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.FindAllTypes%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L214">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_FindAllTypes_" data-uid="Robust.Shared.Reflection.ReflectionManager.FindAllTypes*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_FindAllTypes" data-uid="Robust.Shared.Reflection.ReflectionManager.FindAllTypes">FindAllTypes()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;Type&gt; FindAllTypes()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_FindTypesWithAttribute_Type_.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.FindTypesWithAttribute(Type)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L208">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_FindTypesWithAttribute_" data-uid="Robust.Shared.Reflection.ReflectionManager.FindTypesWithAttribute*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_FindTypesWithAttribute_Type_" data-uid="Robust.Shared.Reflection.ReflectionManager.FindTypesWithAttribute(Type)">FindTypesWithAttribute(Type)</h4>
+  <div class="markdown level1 summary"><p>Finds all Types in all Assemblies that have a specific Attribute.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;Type&gt; FindTypesWithAttribute(Type attributeType)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">attributeType</span></td>
+        <td><p>Attribute to search for.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td><p>Enumeration of all types with the specified attribute.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_FindTypesWithAttribute__1.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.FindTypesWithAttribute%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L202">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_FindTypesWithAttribute_" data-uid="Robust.Shared.Reflection.ReflectionManager.FindTypesWithAttribute*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_FindTypesWithAttribute__1" data-uid="Robust.Shared.Reflection.ReflectionManager.FindTypesWithAttribute``1">FindTypesWithAttribute&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"><p>Finds all Types in all Assemblies that have a specific Attribute.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;Type&gt; FindTypesWithAttribute&lt;T&gt;()
+    where T : Attribute</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td><p>Enumeration of all types with the specified attribute.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td><p>Attribute to search for.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_GetAllChildren_Type_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.GetAllChildren(Type%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L59">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_GetAllChildren_" data-uid="Robust.Shared.Reflection.ReflectionManager.GetAllChildren*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_GetAllChildren_Type_System_Boolean_" data-uid="Robust.Shared.Reflection.ReflectionManager.GetAllChildren(Type,System.Boolean)">GetAllChildren(Type, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Gets all known types that are assignable to the given type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;Type&gt; GetAllChildren(Type baseType, bool inclusive = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">baseType</span></td>
+        <td><p>The base type to search for.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">inclusive</span></td>
+        <td><p>When <pre><code>true</code></pre>, include <code data-dev-comment-type="typeparamref" class="typeparamref">T</code> in the
+returned results if it is a known type.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td><p>An enumerable over all the types. Order is in no way guaranteed.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_GetAllChildren__1_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.GetAllChildren%60%601(System.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L53">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_GetAllChildren_" data-uid="Robust.Shared.Reflection.ReflectionManager.GetAllChildren*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_GetAllChildren__1_System_Boolean_" data-uid="Robust.Shared.Reflection.ReflectionManager.GetAllChildren``1(System.Boolean)">GetAllChildren&lt;T&gt;(Boolean)</h4>
+  <div class="markdown level1 summary"><p>Gets all known types that are assignable to <code data-dev-comment-type="typeparamref" class="typeparamref">T</code>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;Type&gt; GetAllChildren&lt;T&gt;(bool inclusive = false)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">inclusive</span></td>
+        <td><p>When <pre><code>true</code></pre>, include <code data-dev-comment-type="typeparamref" class="typeparamref">T</code> in the returned results
+if it is a known type.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td><p>An enumerable over all the types. Order is in no way guaranteed.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_GetEnumReference_Enum_.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.GetEnumReference(Enum)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L221">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_GetEnumReference_" data-uid="Robust.Shared.Reflection.ReflectionManager.GetEnumReference*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_GetEnumReference_Enum_" data-uid="Robust.Shared.Reflection.ReflectionManager.GetEnumReference(Enum)">GetEnumReference(Enum)</h4>
+  <div class="markdown level1 summary"><p>Turns an enum into a string that can be resolved back into an enum via <see cref="!:TryParseEnumReference(string, out Enum?)"></see>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string GetEnumReference(Enum enum)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">enum</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_GetType_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.GetType(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L116">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_GetType_" data-uid="Robust.Shared.Reflection.ReflectionManager.GetType*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_GetType_System_String_" data-uid="Robust.Shared.Reflection.ReflectionManager.GetType(System.String)">GetType(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Type? GetType(string name)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_Reflection_ReflectionManager_GetType_System_String__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.Reflection.ReflectionManager.html#Robust_Shared_Reflection_ReflectionManager_TypePrefixes">TypePrefixes</a></div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_Initialize.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L47">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_Initialize_" data-uid="Robust.Shared.Reflection.ReflectionManager.Initialize*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_Initialize" data-uid="Robust.Shared.Reflection.ReflectionManager.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Initialize()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_LoadAssemblies_Assembly___.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.LoadAssemblies(Assembly%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L106">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_LoadAssemblies_" data-uid="Robust.Shared.Reflection.ReflectionManager.LoadAssemblies*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_LoadAssemblies_Assembly___" data-uid="Robust.Shared.Reflection.ReflectionManager.LoadAssemblies(Assembly[])">LoadAssemblies(Assembly[])</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void LoadAssemblies(params Assembly[] args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Assembly</span>[]</td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_LoadAssemblies_IEnumerable_Assembly__.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.LoadAssemblies(IEnumerable%7BAssembly%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L108">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_LoadAssemblies_" data-uid="Robust.Shared.Reflection.ReflectionManager.LoadAssemblies*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_LoadAssemblies_IEnumerable_Assembly__" data-uid="Robust.Shared.Reflection.ReflectionManager.LoadAssemblies(IEnumerable{Assembly})">LoadAssemblies(IEnumerable&lt;Assembly&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void LoadAssemblies(IEnumerable&lt;Assembly&gt; assemblies)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">Assembly</span>&gt;</td>
+        <td><span class="parametername">assemblies</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_LooseGetType_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.LooseGetType(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L137">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_LooseGetType_" data-uid="Robust.Shared.Reflection.ReflectionManager.LooseGetType*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_LooseGetType_System_String_" data-uid="Robust.Shared.Reflection.ReflectionManager.LooseGetType(System.String)">LooseGetType(String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Type LooseGetType(string name)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_TryLooseGetType_System_String_System_Nullable_Type___.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.TryLooseGetType(System.String%2CSystem.Nullable%7BType%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L147">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_TryLooseGetType_" data-uid="Robust.Shared.Reflection.ReflectionManager.TryLooseGetType*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_TryLooseGetType_System_String_System_Nullable_Type___" data-uid="Robust.Shared.Reflection.ReflectionManager.TryLooseGetType(System.String,System.Nullable{Type}@)">TryLooseGetType(String, out Nullable&lt;Type&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryLooseGetType(string name, out Type? type)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td><span class="parametername">type</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_TryParseEnumReference_System_String_System_Nullable_Enum___System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.TryParseEnumReference(System.String%2CSystem.Nullable%7BEnum%7D%40%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L260">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_TryParseEnumReference_" data-uid="Robust.Shared.Reflection.ReflectionManager.TryParseEnumReference*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_TryParseEnumReference_System_String_System_Nullable_Enum___System_Boolean_" data-uid="Robust.Shared.Reflection.ReflectionManager.TryParseEnumReference(System.String,System.Nullable{Enum}@,System.Boolean)">TryParseEnumReference(String, out Nullable&lt;Enum&gt;, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Tries to parse an enum in the form &quot;enum.PowerStorageAppearance.Charge&quot;, for use in prototyping.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryParseEnumReference(string reference, out Enum? enum, bool shouldThrow = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">reference</span></td>
+        <td><p>The string enum reference, including the &quot;enum.&quot; prefix.
+If this prefix does not exist, it is assumed to not be a reference and ignored.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Enum</span>&gt;</td>
+        <td><span class="parametername">enum</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">shouldThrow</span></td>
+        <td><p>If true, the function will throw an exception if the given string is an invalid enum reference</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True if the string was an enum reference that parsed correctly, false if it was not a reference.
+Note that if it was a reference and it could not be resolved, the function throws a <see cref="!:ArgumentException"></see> instead.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_YamlTypeTagLookup_Type_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.YamlTypeTagLookup(Type%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L314">View Source</a>
+  </span>
+  <a id="Robust_Shared_Reflection_ReflectionManager_YamlTypeTagLookup_" data-uid="Robust.Shared.Reflection.ReflectionManager.YamlTypeTagLookup*"></a>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_YamlTypeTagLookup_Type_System_String_" data-uid="Robust.Shared.Reflection.ReflectionManager.YamlTypeTagLookup(Type,System.String)">YamlTypeTagLookup(Type, String)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Type? YamlTypeTagLookup(Type baseType, string typeName)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Type</span></td>
+        <td><span class="parametername">baseType</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">typeName</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Type</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="events">Events
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager_OnAssemblyAdded.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager.OnAssemblyAdded%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L30">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Reflection_ReflectionManager_OnAssemblyAdded" data-uid="Robust.Shared.Reflection.ReflectionManager.OnAssemblyAdded">OnAssemblyAdded</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public event EventHandler&lt;ReflectionUpdateEventArgs&gt;? OnAssemblyAdded</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">EventHandler</span>&lt;<a class="xref" href="Robust.Shared.Reflection.ReflectionUpdateEventArgs.html">ReflectionUpdateEventArgs</a>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.Reflection.IReflectionManager.html">IReflectionManager</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Reflection_ReflectionManager.md&amp;value=---%0Auid%3A%20Robust.Shared.Reflection.ReflectionManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Reflection/ReflectionManager.cs/#L15" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

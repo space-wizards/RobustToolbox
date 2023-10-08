@@ -1,0 +1,589 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IInputContextContainer
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IInputContextContainer
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Input.IInputContextContainer">
+  
+  
+  <h1 id="Robust_Shared_Input_IInputContextContainer" data-uid="Robust.Shared.Input.IInputContextContainer" class="text-break">Interface IInputContextContainer
+  </h1>
+  <div class="markdown level0 summary"><p>Contains a set of created <span class="xref">Robust.Shared.Input.InputCmdContext</span>s.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Input.html">Robust.Shared.Input</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_Input_IInputContextContainer_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IInputContextContainer</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_IInputContextContainer_ActiveContext.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.IInputContextContainer.ActiveContext%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/InputContextContainer.cs/#L15">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_IInputContextContainer_ActiveContext_" data-uid="Robust.Shared.Input.IInputContextContainer.ActiveContext*"></a>
+  <h4 id="Robust_Shared_Input_IInputContextContainer_ActiveContext" data-uid="Robust.Shared.Input.IInputContextContainer.ActiveContext">ActiveContext</h4>
+  <div class="markdown level1 summary"><p>The current &quot;active&quot; context that should be used for filtering key binds.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IInputCmdContext ActiveContext { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Input.IInputCmdContext.html">IInputCmdContext</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_IInputContextContainer_DeferringEnabled.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.IInputContextContainer.DeferringEnabled%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/InputContextContainer.cs/#L20">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_IInputContextContainer_DeferringEnabled_" data-uid="Robust.Shared.Input.IInputContextContainer.DeferringEnabled*"></a>
+  <h4 id="Robust_Shared_Input_IInputContextContainer_DeferringEnabled" data-uid="Robust.Shared.Input.IInputContextContainer.DeferringEnabled">DeferringEnabled</h4>
+  <div class="markdown level1 summary"><p>Puts context switches 'on hold'. When set to false, the last deferred context switch is executed, if any.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool DeferringEnabled { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_IInputContextContainer_Exists_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.IInputContextContainer.Exists(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/InputContextContainer.cs/#L48">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_IInputContextContainer_Exists_" data-uid="Robust.Shared.Input.IInputContextContainer.Exists*"></a>
+  <h4 id="Robust_Shared_Input_IInputContextContainer_Exists_System_String_" data-uid="Robust.Shared.Input.IInputContextContainer.Exists(System.String)">Exists(String)</h4>
+  <div class="markdown level1 summary"><p>Checks if a context with a unique name exists in the set.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool Exists(string uniqueName)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">uniqueName</span></td>
+        <td><p>Unique Name to search for.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>If a context exists with the given unique name in the set.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_IInputContextContainer_GetContext_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.IInputContextContainer.GetContext(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/InputContextContainer.cs/#L55">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_IInputContextContainer_GetContext_" data-uid="Robust.Shared.Input.IInputContextContainer.GetContext*"></a>
+  <h4 id="Robust_Shared_Input_IInputContextContainer_GetContext_System_String_" data-uid="Robust.Shared.Input.IInputContextContainer.GetContext(System.String)">GetContext(String)</h4>
+  <div class="markdown level1 summary"><p>Returns the context with the given unique name from the set.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IInputCmdContext GetContext(string uniqueName)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">uniqueName</span></td>
+        <td><p>Unique name of the context to search for.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Input.IInputCmdContext.html">IInputCmdContext</a></td>
+        <td><p>Context with the given unique name in the set.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_IInputContextContainer_New_System_String_Robust_Shared_Input_IInputCmdContext_.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.IInputContextContainer.New(System.String%2CRobust.Shared.Input.IInputCmdContext)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/InputContextContainer.cs/#L41">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_IInputContextContainer_New_" data-uid="Robust.Shared.Input.IInputContextContainer.New*"></a>
+  <h4 id="Robust_Shared_Input_IInputContextContainer_New_System_String_Robust_Shared_Input_IInputCmdContext_" data-uid="Robust.Shared.Input.IInputContextContainer.New(System.String,Robust.Shared.Input.IInputCmdContext)">New(String, IInputCmdContext)</h4>
+  <div class="markdown level1 summary"><p>Adds a new unique context to the set.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IInputCmdContext New(string uniqueName, IInputCmdContext parent)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">uniqueName</span></td>
+        <td><p>Unique name of the new context.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Input.IInputCmdContext.html">IInputCmdContext</a></td>
+        <td><span class="parametername">parent</span></td>
+        <td><p>Context to set, as the parent context, of the newly created context.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Input.IInputCmdContext.html">IInputCmdContext</a></td>
+        <td><p>Instance of the newly created context.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_IInputContextContainer_New_System_String_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.IInputContextContainer.New(System.String%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/InputContextContainer.cs/#L33">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_IInputContextContainer_New_" data-uid="Robust.Shared.Input.IInputContextContainer.New*"></a>
+  <h4 id="Robust_Shared_Input_IInputContextContainer_New_System_String_System_String_" data-uid="Robust.Shared.Input.IInputContextContainer.New(System.String,System.String)">New(String, String)</h4>
+  <div class="markdown level1 summary"><p>Adds a new unique context to the set.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IInputCmdContext New(string uniqueName, string parentName)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">uniqueName</span></td>
+        <td><p>Unique name of the new context.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">parentName</span></td>
+        <td><p>Unique name of the parent context. Tee parent context must already exist in the set.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Input.IInputCmdContext.html">IInputCmdContext</a></td>
+        <td><p>Instance of the newly created context.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_IInputContextContainer_Remove_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.IInputContextContainer.Remove(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/InputContextContainer.cs/#L69">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_IInputContextContainer_Remove_" data-uid="Robust.Shared.Input.IInputContextContainer.Remove*"></a>
+  <h4 id="Robust_Shared_Input_IInputContextContainer_Remove_System_String_" data-uid="Robust.Shared.Input.IInputContextContainer.Remove(System.String)">Remove(String)</h4>
+  <div class="markdown level1 summary"><p>Removes the context with the given unique name.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Remove(string uniqueName)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">uniqueName</span></td>
+        <td><p>Unique name of context to remove.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_IInputContextContainer_SetActiveContext_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.IInputContextContainer.SetActiveContext(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/InputContextContainer.cs/#L76">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_IInputContextContainer_SetActiveContext_" data-uid="Robust.Shared.Input.IInputContextContainer.SetActiveContext*"></a>
+  <h4 id="Robust_Shared_Input_IInputContextContainer_SetActiveContext_System_String_" data-uid="Robust.Shared.Input.IInputContextContainer.SetActiveContext(System.String)">SetActiveContext(String)</h4>
+  <div class="markdown level1 summary"><p>Sets the context with the given unique name as the Active context.
+This <em>may</em> be deferred if during input handling, and if multiple context switches are deferred, only the last 'counts'.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void SetActiveContext(string uniqueName)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">uniqueName</span></td>
+        <td><p>Unique name of the context to set as active.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_IInputContextContainer_TryGetContext_System_String_Robust_Shared_Input_IInputCmdContext__.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.IInputContextContainer.TryGetContext(System.String%2CRobust.Shared.Input.IInputCmdContext%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/InputContextContainer.cs/#L63">View Source</a>
+  </span>
+  <a id="Robust_Shared_Input_IInputContextContainer_TryGetContext_" data-uid="Robust.Shared.Input.IInputContextContainer.TryGetContext*"></a>
+  <h4 id="Robust_Shared_Input_IInputContextContainer_TryGetContext_System_String_Robust_Shared_Input_IInputCmdContext__" data-uid="Robust.Shared.Input.IInputContextContainer.TryGetContext(System.String,Robust.Shared.Input.IInputCmdContext@)">TryGetContext(String, out IInputCmdContext)</h4>
+  <div class="markdown level1 summary"><p>Tries to find a context with a given unique name.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetContext(string uniqueName, out IInputCmdContext context)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">uniqueName</span></td>
+        <td><p>Unique name of the context to search for.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Input.IInputCmdContext.html">IInputCmdContext</a></td>
+        <td><span class="parametername">context</span></td>
+        <td><p>The context with the given unique name (if any).</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>If a context with a given unique name exists in the set.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="events">Events
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_IInputContextContainer_ContextChanged.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.IInputContextContainer.ContextChanged%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/InputContextContainer.cs/#L25">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Input_IInputContextContainer_ContextChanged" data-uid="Robust.Shared.Input.IInputContextContainer.ContextChanged">ContextChanged</h4>
+  <div class="markdown level1 summary"><p>This event is raised when ever the Active Context is changed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event EventHandler&lt;ContextChangedEventArgs&gt; ContextChanged</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">EventHandler</span>&lt;<a class="xref" href="Robust.Shared.Input.ContextChangedEventArgs.html">ContextChangedEventArgs</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Input_IInputContextContainer.md&amp;value=---%0Auid%3A%20Robust.Shared.Input.IInputContextContainer%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/Input/InputContextContainer.cs/#L10" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

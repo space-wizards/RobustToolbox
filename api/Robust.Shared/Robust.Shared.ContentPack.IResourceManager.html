@@ -1,0 +1,1088 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IResourceManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IResourceManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.ContentPack.IResourceManager">
+  
+  
+  <h1 id="Robust_Shared_ContentPack_IResourceManager" data-uid="Robust.Shared.ContentPack.IResourceManager" class="text-break">Interface IResourceManager
+  </h1>
+  <div class="markdown level0 summary"><p>Virtual file system for all disk resources.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.ContentPack.html">Robust.Shared.ContentPack</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_ContentPack_IResourceManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IResourceManager</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_UserData.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.UserData%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L19">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_UserData_" data-uid="Robust.Shared.ContentPack.IResourceManager.UserData*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_UserData" data-uid="Robust.Shared.ContentPack.IResourceManager.UserData">UserData</h4>
+  <div class="markdown level1 summary"><p>Provides access to the writable user data folder.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IWritableDirProvider UserData { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IWritableDirProvider.html">IWritableDirProvider</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_AddRoot_Robust_Shared_Utility_ResPath_Robust_Shared_ContentPack_IContentRoot_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.AddRoot(Robust.Shared.Utility.ResPath%2CRobust.Shared.ContentPack.IContentRoot)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L26">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_AddRoot_" data-uid="Robust.Shared.ContentPack.IResourceManager.AddRoot*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_AddRoot_Robust_Shared_Utility_ResPath_Robust_Shared_ContentPack_IContentRoot_" data-uid="Robust.Shared.ContentPack.IResourceManager.AddRoot(Robust.Shared.Utility.ResPath,Robust.Shared.ContentPack.IContentRoot)">AddRoot(ResPath, IContentRoot)</h4>
+  <div class="markdown level1 summary"><p>Provides a way to mount a <a class="xref" href="Robust.Shared.ContentPack.IContentRoot.html">IContentRoot</a> implementation to the VFS.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void AddRoot(ResPath prefix, IContentRoot loader)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">prefix</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.ContentPack.IContentRoot.html">IContentRoot</a></td>
+        <td><span class="parametername">loader</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFileExists_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFileExists(Robust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L56">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFileExists_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileExists*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFileExists_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileExists(Robust.Shared.Utility.ResPath)">ContentFileExists(ResPath)</h4>
+  <div class="markdown level1 summary"><p>Check if a file exists in any of the mounted content roots.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool ContentFileExists(ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path of the file to check.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True if the file exists, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFileExists_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFileExists(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L65">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFileExists_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileExists*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFileExists_System_String_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileExists(System.String)">ContentFileExists(String)</h4>
+  <div class="markdown level1 summary"><p>Check if a file exists in any of the mounted content roots.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool ContentFileExists(string path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path of the file to check.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True if the file exists, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFileRead_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFileRead(Robust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L37">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFileRead_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileRead*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFileRead_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileRead(Robust.Shared.Utility.ResPath)">ContentFileRead(ResPath)</h4>
+  <div class="markdown level1 summary"><p>Read a file from the mounted content roots.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Stream ContentFileRead(ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path to the file in the VFS. Must be rooted.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Stream</span></td>
+        <td><p>The memory stream of the file.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_ContentPack_IResourceManager_ContentFileRead_Robust_Shared_Utility_ResPath__seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.ContentPack.ResourceManagerExt.html#Robust_Shared_ContentPack_ResourceManagerExt_ContentFileReadOrNull_Robust_Shared_ContentPack_IResourceManager_Robust_Shared_Utility_ResPath_">ContentFileReadOrNull</a>(<a class="xref" href="Robust.Shared.ContentPack.IResourceManager.html">IResourceManager</a>, <a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>)</div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFileRead_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFileRead(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L47">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFileRead_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileRead*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFileRead_System_String_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileRead(System.String)">ContentFileRead(String)</h4>
+  <div class="markdown level1 summary"><p>Read a file from the mounted content roots.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Stream ContentFileRead(string path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path to the file in the VFS. Must be rooted.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Stream</span></td>
+        <td><p>The memory stream of the file.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFileReadAllText_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFileReadAllText(Robust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L157">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadAllText_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadAllText*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadAllText_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadAllText(Robust.Shared.Utility.ResPath)">ContentFileReadAllText(ResPath)</h4>
+  <div class="markdown level1 summary"><p>Read a file from the mounted content paths to a string.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual string ContentFileReadAllText(ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>Path of the file to read.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFileReadAllText_Robust_Shared_Utility_ResPath_Encoding_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFileReadAllText(Robust.Shared.Utility.ResPath%2CEncoding)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L167">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadAllText_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadAllText*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadAllText_Robust_Shared_Utility_ResPath_Encoding_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadAllText(Robust.Shared.Utility.ResPath,Encoding)">ContentFileReadAllText(ResPath, Encoding)</h4>
+  <div class="markdown level1 summary"><p>Read a file from the mounted content paths to a string.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual string ContentFileReadAllText(ResPath path, Encoding encoding)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>Path of the file to read.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">Encoding</span></td>
+        <td><span class="parametername">encoding</span></td>
+        <td><p>Text encoding to use when reading.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFileReadAllText_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFileReadAllText(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L148">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadAllText_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadAllText*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadAllText_System_String_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadAllText(System.String)">ContentFileReadAllText(String)</h4>
+  <div class="markdown level1 summary"><p>Read a file from the mounted content paths to a string.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual string ContentFileReadAllText(string path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>Path of the file to read.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFileReadText_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFileReadText(Robust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L185">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadText_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadText*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadText_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadText(Robust.Shared.Utility.ResPath)">ContentFileReadText(ResPath)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual StreamReader ContentFileReadText(ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">StreamReader</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFileReadText_Robust_Shared_Utility_ResPath_Encoding_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFileReadText(Robust.Shared.Utility.ResPath%2CEncoding)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L190">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadText_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadText*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadText_Robust_Shared_Utility_ResPath_Encoding_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadText(Robust.Shared.Utility.ResPath,Encoding)">ContentFileReadText(ResPath, Encoding)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual StreamReader ContentFileReadText(ResPath path, Encoding encoding)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Encoding</span></td>
+        <td><span class="parametername">encoding</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">StreamReader</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFileReadYaml_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFileReadYaml(Robust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L175">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadYaml_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadYaml*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFileReadYaml_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFileReadYaml(Robust.Shared.Utility.ResPath)">ContentFileReadYaml(ResPath)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual YamlStream ContentFileReadYaml(ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">YamlStream</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFindFiles_System_Nullable_Robust_Shared_Utility_ResPath__.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFindFiles(System.Nullable%7BRobust.Shared.Utility.ResPath%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L98">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFindFiles_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFindFiles*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFindFiles_System_Nullable_Robust_Shared_Utility_ResPath__" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFindFiles(System.Nullable{Robust.Shared.Utility.ResPath})">ContentFindFiles(Nullable&lt;ResPath&gt;)</h4>
+  <div class="markdown level1 summary"><p>Recursively finds all files in a directory and all sub directories.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;ResPath&gt; ContentFindFiles(ResPath? path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>&gt;</td>
+        <td><span class="parametername">path</span></td>
+        <td><p>Directory to search inside of.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>&gt;</td>
+        <td><p>Enumeration of all absolute file paths of the files found.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_ContentPack_IResourceManager_ContentFindFiles_System_Nullable_Robust_Shared_Utility_ResPath___remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>If the directory does not exist, an empty enumerable is returned.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFindFiles_System_String_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFindFiles(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L124">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFindFiles_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFindFiles*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFindFiles_System_String_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFindFiles(System.String)">ContentFindFiles(String)</h4>
+  <div class="markdown level1 summary"><p>Recursively finds all files in a directory and all sub directories.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;ResPath&gt; ContentFindFiles(string path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>Directory to search inside of.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>&gt;</td>
+        <td><p>Enumeration of all absolute file paths of the files found.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_ContentPack_IResourceManager_ContentFindFiles_System_String__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>If the directory does not exist, an empty enumerable is returned.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentFindRelativeFiles_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentFindRelativeFiles(Robust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L100">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentFindRelativeFiles_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFindRelativeFiles*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentFindRelativeFiles_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentFindRelativeFiles(Robust.Shared.Utility.ResPath)">ContentFindRelativeFiles(ResPath)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">virtual IEnumerable&lt;ResPath&gt; ContentFindRelativeFiles(ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_ContentGetDirectoryEntries_Robust_Shared_Utility_ResPath_.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.ContentGetDirectoryEntries(Robust.Shared.Utility.ResPath)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L136">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_ContentGetDirectoryEntries_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentGetDirectoryEntries*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_ContentGetDirectoryEntries_Robust_Shared_Utility_ResPath_" data-uid="Robust.Shared.ContentPack.IResourceManager.ContentGetDirectoryEntries(Robust.Shared.Utility.ResPath)">ContentGetDirectoryEntries(ResPath)</h4>
+  <div class="markdown level1 summary"><p>Gets entries in a content directory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;string&gt; ContentGetDirectoryEntries(ResPath path)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a></td>
+        <td><span class="parametername">path</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><p>A sequence of entry names. If the entry name ends in a slash, it's a directory.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_ContentPack_IResourceManager_ContentGetDirectoryEntries_Robust_Shared_Utility_ResPath__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This is not a performant API; the VFS does not work natively with these kinds of directory entries.
+This is intended for development tools such as console command completions,
+not for general-purpose resource management.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_GetContentRoots.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.GetContentRoots%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L142">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_GetContentRoots_" data-uid="Robust.Shared.ContentPack.IResourceManager.GetContentRoots*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_GetContentRoots" data-uid="Robust.Shared.ContentPack.IResourceManager.GetContentRoots">GetContentRoots()</h4>
+  <div class="markdown level1 summary"><p>Returns a list of paths to all top-level content directories</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;ResPath&gt; GetContentRoots()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_TryContentFileRead_System_Nullable_Robust_Shared_Utility_ResPath__System_Nullable_Stream___.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.TryContentFileRead(System.Nullable%7BRobust.Shared.Utility.ResPath%7D%2CSystem.Nullable%7BStream%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L76">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_TryContentFileRead_" data-uid="Robust.Shared.ContentPack.IResourceManager.TryContentFileRead*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_TryContentFileRead_System_Nullable_Robust_Shared_Utility_ResPath__System_Nullable_Stream___" data-uid="Robust.Shared.ContentPack.IResourceManager.TryContentFileRead(System.Nullable{Robust.Shared.Utility.ResPath},System.Nullable{Stream}@)">TryContentFileRead(Nullable&lt;ResPath&gt;, out Nullable&lt;Stream&gt;)</h4>
+  <div class="markdown level1 summary"><p>Try to read a file from the mounted content roots.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryContentFileRead(ResPath? path, out Stream? fileStream)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>&gt;</td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path of the file to try to read.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Stream</span>&gt;</td>
+        <td><span class="parametername">fileStream</span></td>
+        <td><p>The memory stream of the file's contents. Null if the file could not be loaded.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True if the file could be loaded, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Shared_ContentPack_IResourceManager_TryContentFileRead_System_Nullable_Robust_Shared_Utility_ResPath__System_Nullable_Stream____seealso">See Also</h5>
+  <div class="seealso">
+      <div><a class="xref" href="Robust.Shared.ContentPack.ResourceManagerExt.html#Robust_Shared_ContentPack_ResourceManagerExt_ContentFileReadOrNull_Robust_Shared_ContentPack_IResourceManager_Robust_Shared_Utility_ResPath_">ContentFileReadOrNull</a>(<a class="xref" href="Robust.Shared.ContentPack.IResourceManager.html">IResourceManager</a>, <a class="xref" href="Robust.Shared.Utility.ResPath.html">ResPath</a>)</div>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager_TryContentFileRead_System_String_System_Nullable_Stream___.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager.TryContentFileRead(System.String%2CSystem.Nullable%7BStream%7D%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L86">View Source</a>
+  </span>
+  <a id="Robust_Shared_ContentPack_IResourceManager_TryContentFileRead_" data-uid="Robust.Shared.ContentPack.IResourceManager.TryContentFileRead*"></a>
+  <h4 id="Robust_Shared_ContentPack_IResourceManager_TryContentFileRead_System_String_System_Nullable_Stream___" data-uid="Robust.Shared.ContentPack.IResourceManager.TryContentFileRead(System.String,System.Nullable{Stream}@)">TryContentFileRead(String, out Nullable&lt;Stream&gt;)</h4>
+  <div class="markdown level1 summary"><p>Try to read a file from the mounted content roots.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryContentFileRead(string path, out Stream? fileStream)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">path</span></td>
+        <td><p>The path of the file to try to read.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Stream</span>&gt;</td>
+        <td><span class="parametername">fileStream</span></td>
+        <td><p>The memory stream of the file's contents. Null if the file could not be loaded.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True if the file could be loaded, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="extensionmethods">Extension Methods</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.ContentPack.ResourceManagerExt.html#Robust_Shared_ContentPack_ResourceManagerExt_ContentFileReadOrNull_Robust_Shared_ContentPack_IResourceManager_Robust_Shared_Utility_ResPath_">ResourceManagerExt.ContentFileReadOrNull(IResourceManager, ResPath)</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_ContentPack_IResourceManager.md&amp;value=---%0Auid%3A%20Robust.Shared.ContentPack.IResourceManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/ContentPack/IResourceManager.cs/#L14" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

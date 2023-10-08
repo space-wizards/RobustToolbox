@@ -1,0 +1,1360 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class TransformComponent
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class TransformComponent
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.GameObjects.TransformComponent">
+  
+  
+  <h1 id="Robust_Shared_GameObjects_TransformComponent" data-uid="Robust.Shared.GameObjects.TransformComponent" class="text-break">Class TransformComponent
+  </h1>
+  <div class="markdown level0 summary"><p>Stores the position and orientation of the entity.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><a class="xref" href="Robust.Shared.GameObjects.Component.html">Component</a></div>
+    <div class="level2"><span class="xref">TransformComponent</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="Robust.Shared.GameObjects.IComponentDebug.html">IComponentDebug</a></div>
+    <div><a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a></div>
+  </div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.GameObjects.html">Robust.Shared.GameObjects</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.dll</h6>
+  <h5 id="Robust_Shared_GameObjects_TransformComponent_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class TransformComponent : Component, IComponentDebug, IComponent</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_Anchored.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.Anchored%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L351">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_Anchored_" data-uid="Robust.Shared.GameObjects.TransformComponent.Anchored*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_Anchored" data-uid="Robust.Shared.GameObjects.TransformComponent.Anchored">Anchored</h4>
+  <div class="markdown level1 summary"><p>Is this transform anchored to a grid tile?</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Anchored { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_ChildCount.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.ChildCount%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L398">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_ChildCount_" data-uid="Robust.Shared.GameObjects.TransformComponent.ChildCount*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_ChildCount" data-uid="Robust.Shared.GameObjects.TransformComponent.ChildCount">ChildCount</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int ChildCount { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_ChildEntities.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.ChildEntities%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L394">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_ChildEntities_" data-uid="Robust.Shared.GameObjects.TransformComponent.ChildEntities*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_ChildEntities" data-uid="Robust.Shared.GameObjects.TransformComponent.ChildEntities">ChildEntities</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;EntityUid&gt; ChildEntities { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_ChildEnumerator.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.ChildEnumerator%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L396">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_ChildEnumerator_" data-uid="Robust.Shared.GameObjects.TransformComponent.ChildEnumerator*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_ChildEnumerator" data-uid="Robust.Shared.GameObjects.TransformComponent.ChildEnumerator">ChildEnumerator</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public TransformChildrenEnumerator ChildEnumerator { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.TransformChildrenEnumerator.html">TransformChildrenEnumerator</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_Children.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.Children%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L377">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_Children_" data-uid="Robust.Shared.GameObjects.TransformComponent.Children*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_Children" data-uid="Robust.Shared.GameObjects.TransformComponent.Children">Children</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;TransformComponent&gt; Children { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_Coordinates.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.Coordinates%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L298">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_Coordinates_" data-uid="Robust.Shared.GameObjects.TransformComponent.Coordinates*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_Coordinates" data-uid="Robust.Shared.GameObjects.TransformComponent.Coordinates">Coordinates</h4>
+  <div class="markdown level1 summary"><p>Position offset of this entity relative to its parent.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public EntityCoordinates Coordinates { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.EntityCoordinates.html">EntityCoordinates</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_GridUid.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.GridUid%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L113">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_GridUid_" data-uid="Robust.Shared.GameObjects.TransformComponent.GridUid*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_GridUid" data-uid="Robust.Shared.GameObjects.TransformComponent.GridUid">GridUid</h4>
+  <div class="markdown level1 summary"><p>The EntityUid of the grid which this object is on, if any.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public EntityUid? GridUid { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_InvLocalMatrix.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.InvLocalMatrix%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L64">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_InvLocalMatrix_" data-uid="Robust.Shared.GameObjects.TransformComponent.InvLocalMatrix*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_InvLocalMatrix" data-uid="Robust.Shared.GameObjects.TransformComponent.InvLocalMatrix">InvLocalMatrix</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Matrix3 InvLocalMatrix { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_InvWorldMatrix.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.InvWorldMatrix%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L236">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_InvWorldMatrix_" data-uid="Robust.Shared.GameObjects.TransformComponent.InvWorldMatrix*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_InvWorldMatrix" data-uid="Robust.Shared.GameObjects.TransformComponent.InvWorldMatrix">InvWorldMatrix</h4>
+  <div class="markdown level1 summary"><p>Matrix for transforming points from world to local space.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Matrix3 InvWorldMatrix { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_LocalMatrix.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.LocalMatrix%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L55">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_LocalMatrix_" data-uid="Robust.Shared.GameObjects.TransformComponent.LocalMatrix*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_LocalMatrix" data-uid="Robust.Shared.GameObjects.TransformComponent.LocalMatrix">LocalMatrix</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Matrix3 LocalMatrix { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_LocalPosition.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.LocalPosition%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L321">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_LocalPosition_" data-uid="Robust.Shared.GameObjects.TransformComponent.LocalPosition*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_LocalPosition" data-uid="Robust.Shared.GameObjects.TransformComponent.LocalPosition">LocalPosition</h4>
+  <div class="markdown level1 summary"><p>Local offset of this entity relative to its parent
+(<see cref="!:Parent"></see> if it's not null, to <a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html#Robust_Shared_GameObjects_TransformComponent_GridUid">GridUid</a> otherwise).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector2 LocalPosition { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_LocalRotation.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.LocalRotation%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L139">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_LocalRotation_" data-uid="Robust.Shared.GameObjects.TransformComponent.LocalRotation*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_LocalRotation" data-uid="Robust.Shared.GameObjects.TransformComponent.LocalRotation">LocalRotation</h4>
+  <div class="markdown level1 summary"><p>Current rotation offset of the entity.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Angle LocalRotation { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_MapID.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.MapID%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L98">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_MapID_" data-uid="Robust.Shared.GameObjects.TransformComponent.MapID*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_MapID" data-uid="Robust.Shared.GameObjects.TransformComponent.MapID">MapID</h4>
+  <div class="markdown level1 summary"><p>Returns the index of the map which this object is on</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public MapId MapID { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapId.html">MapId</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_MapPosition.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.MapPosition%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L314">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_MapPosition_" data-uid="Robust.Shared.GameObjects.TransformComponent.MapPosition*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_MapPosition" data-uid="Robust.Shared.GameObjects.TransformComponent.MapPosition">MapPosition</h4>
+  <div class="markdown level1 summary"><p>Current position offset of the entity relative to the world.
+This is effectively a more complete version of <a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html#Robust_Shared_GameObjects_TransformComponent_WorldPosition">WorldPosition</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public MapCoordinates MapPosition { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Map.MapCoordinates.html">MapCoordinates</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_MapUid.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.MapUid%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L108">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_MapUid_" data-uid="Robust.Shared.GameObjects.TransformComponent.MapUid*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_MapUid" data-uid="Robust.Shared.GameObjects.TransformComponent.MapUid">MapUid</h4>
+  <div class="markdown level1 summary"><p>The EntityUid of the map which this object is on, if any.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public EntityUid? MapUid { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_NextPosition.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.NextPosition%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L76">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_NextPosition_" data-uid="Robust.Shared.GameObjects.TransformComponent.NextPosition*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_NextPosition" data-uid="Robust.Shared.GameObjects.TransformComponent.NextPosition">NextPosition</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector2? NextPosition { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Vector2</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_NextRotation.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.NextRotation%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L79">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_NextRotation_" data-uid="Robust.Shared.GameObjects.TransformComponent.NextRotation*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_NextRotation" data-uid="Robust.Shared.GameObjects.TransformComponent.NextRotation">NextRotation</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Angle? NextRotation { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_NoLocalRotation.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.NoLocalRotation%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L122">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_NoLocalRotation_" data-uid="Robust.Shared.GameObjects.TransformComponent.NoLocalRotation*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_NoLocalRotation" data-uid="Robust.Shared.GameObjects.TransformComponent.NoLocalRotation">NoLocalRotation</h4>
+  <div class="markdown level1 summary"><p>Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool NoLocalRotation { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_ParentUid.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.ParentUid%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L205">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_ParentUid_" data-uid="Robust.Shared.GameObjects.TransformComponent.ParentUid*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_ParentUid" data-uid="Robust.Shared.GameObjects.TransformComponent.ParentUid">ParentUid</h4>
+  <div class="markdown level1 summary"><p>The UID of the parent entity that this entity is attached to.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public EntityUid ParentUid { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_PrevPosition.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.PrevPosition%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L82">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_PrevPosition_" data-uid="Robust.Shared.GameObjects.TransformComponent.PrevPosition*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_PrevPosition" data-uid="Robust.Shared.GameObjects.TransformComponent.PrevPosition">PrevPosition</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector2 PrevPosition { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_PrevRotation.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.PrevRotation%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L85">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_PrevRotation_" data-uid="Robust.Shared.GameObjects.TransformComponent.PrevRotation*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_PrevRotation" data-uid="Robust.Shared.GameObjects.TransformComponent.PrevRotation">PrevRotation</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Angle PrevRotation { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_WorldMatrix.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.WorldMatrix%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L210">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_WorldMatrix_" data-uid="Robust.Shared.GameObjects.TransformComponent.WorldMatrix*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_WorldMatrix" data-uid="Robust.Shared.GameObjects.TransformComponent.WorldMatrix">WorldMatrix</h4>
+  <div class="markdown level1 summary"><p>Matrix for transforming points from local to world space.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Matrix3 WorldMatrix { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_WorldPosition.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.WorldPosition%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L263">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_WorldPosition_" data-uid="Robust.Shared.GameObjects.TransformComponent.WorldPosition*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_WorldPosition" data-uid="Robust.Shared.GameObjects.TransformComponent.WorldPosition">WorldPosition</h4>
+  <div class="markdown level1 summary"><p>Current position offset of the entity relative to the world.
+Can de-parent from its parent if the parent is a grid.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector2 WorldPosition { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_WorldRotation.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.WorldRotation%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L168">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_WorldRotation_" data-uid="Robust.Shared.GameObjects.TransformComponent.WorldRotation*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_WorldRotation" data-uid="Robust.Shared.GameObjects.TransformComponent.WorldRotation">WorldRotation</h4>
+  <div class="markdown level1 summary"><p>Current world rotation of the entity.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Angle WorldRotation { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_AttachParent_Robust_Shared_GameObjects_EntityUid_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.AttachParent(Robust.Shared.GameObjects.EntityUid)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L468">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_AttachParent_" data-uid="Robust.Shared.GameObjects.TransformComponent.AttachParent*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_AttachParent_Robust_Shared_GameObjects_EntityUid_" data-uid="Robust.Shared.GameObjects.TransformComponent.AttachParent(Robust.Shared.GameObjects.EntityUid)">AttachParent(EntityUid)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void AttachParent(EntityUid parent)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">parent</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_AttachParent_Robust_Shared_GameObjects_TransformComponent_.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.AttachParent(Robust.Shared.GameObjects.TransformComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L415">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_AttachParent_" data-uid="Robust.Shared.GameObjects.TransformComponent.AttachParent*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_AttachParent_Robust_Shared_GameObjects_TransformComponent_" data-uid="Robust.Shared.GameObjects.TransformComponent.AttachParent(Robust.Shared.GameObjects.TransformComponent)">AttachParent(TransformComponent)</h4>
+  <div class="markdown level1 summary"><p>Sets another entity as the parent entity, maintaining world position.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void AttachParent(TransformComponent newParent)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a></td>
+        <td><span class="parametername">newParent</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_AttachToGridOrMap.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.AttachToGridOrMap%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L405">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_AttachToGridOrMap_" data-uid="Robust.Shared.GameObjects.TransformComponent.AttachToGridOrMap*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_AttachToGridOrMap" data-uid="Robust.Shared.GameObjects.TransformComponent.AttachToGridOrMap">AttachToGridOrMap()</h4>
+  <div class="markdown level1 summary"><p>Detaches this entity from its parent.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void AttachToGridOrMap()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_GetDebugString.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.GetDebugString%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L606">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_GetDebugString_" data-uid="Robust.Shared.GameObjects.TransformComponent.GetDebugString*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_GetDebugString" data-uid="Robust.Shared.GameObjects.TransformComponent.GetDebugString">GetDebugString()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string GetDebugString()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotation.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotation%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L477">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotation_" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotation*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotation" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotation">GetWorldPositionRotation()</h4>
+  <div class="markdown level1 summary"><p>Get the WorldPosition and WorldRotation of this entity faster than each individually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">Vector2</span>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotation_Robust_Shared_GameObjects_EntityQuery_Robust_Shared_GameObjects_TransformComponent__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotation(Robust.Shared.GameObjects.EntityQuery%7BRobust.Shared.GameObjects.TransformComponent%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L486">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotation_" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotation*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotation_Robust_Shared_GameObjects_EntityQuery_Robust_Shared_GameObjects_TransformComponent__" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotation(Robust.Shared.GameObjects.EntityQuery{Robust.Shared.GameObjects.TransformComponent})">GetWorldPositionRotation(EntityQuery&lt;TransformComponent&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(EntityQuery&lt;TransformComponent&gt; xforms)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityQuery-1.html">EntityQuery</a>&lt;<a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a>&gt;</td>
+        <td><span class="parametername">xforms</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">Vector2</span>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationInvMatrix.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationInvMatrix%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L532">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationInvMatrix_" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationInvMatrix*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationInvMatrix" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationInvMatrix">GetWorldPositionRotationInvMatrix()</h4>
+  <div class="markdown level1 summary"><p>Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">Vector2</span>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationInvMatrix_Robust_Shared_GameObjects_EntityQuery_Robust_Shared_GameObjects_TransformComponent__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationInvMatrix(Robust.Shared.GameObjects.EntityQuery%7BRobust.Shared.GameObjects.TransformComponent%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L542">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationInvMatrix_" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationInvMatrix*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationInvMatrix_Robust_Shared_GameObjects_EntityQuery_Robust_Shared_GameObjects_TransformComponent__" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationInvMatrix(Robust.Shared.GameObjects.EntityQuery{Robust.Shared.GameObjects.TransformComponent})">GetWorldPositionRotationInvMatrix(EntityQuery&lt;TransformComponent&gt;)</h4>
+  <div class="markdown level1 summary"><p>Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityQuery&lt;TransformComponent&gt; xformQuery)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityQuery-1.html">EntityQuery</a>&lt;<a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a>&gt;</td>
+        <td><span class="parametername">xformQuery</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">Vector2</span>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrix.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrix%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L522">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrix_" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrix*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrix" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrix">GetWorldPositionRotationMatrix()</h4>
+  <div class="markdown level1 summary"><p>Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix) GetWorldPositionRotationMatrix()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">Vector2</span>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrix_Robust_Shared_GameObjects_EntityQuery_Robust_Shared_GameObjects_TransformComponent__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrix(Robust.Shared.GameObjects.EntityQuery%7BRobust.Shared.GameObjects.TransformComponent%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L496">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrix_" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrix*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrix_Robust_Shared_GameObjects_EntityQuery_Robust_Shared_GameObjects_TransformComponent__" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrix(Robust.Shared.GameObjects.EntityQuery{Robust.Shared.GameObjects.TransformComponent})">GetWorldPositionRotationMatrix(EntityQuery&lt;TransformComponent&gt;)</h4>
+  <div class="markdown level1 summary"><p>Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix) GetWorldPositionRotationMatrix(EntityQuery&lt;TransformComponent&gt; xforms)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityQuery-1.html">EntityQuery</a>&lt;<a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a>&gt;</td>
+        <td><span class="parametername">xforms</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">Vector2</span>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrixWithInv.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrixWithInv%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L552">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrixWithInv_" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrixWithInv*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrixWithInv" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrixWithInv">GetWorldPositionRotationMatrixWithInv()</h4>
+  <div class="markdown level1 summary"><p>Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">Vector2</span>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrixWithInv_Robust_Shared_GameObjects_EntityQuery_Robust_Shared_GameObjects_TransformComponent__.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrixWithInv(Robust.Shared.GameObjects.EntityQuery%7BRobust.Shared.GameObjects.TransformComponent%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L562">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrixWithInv_" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrixWithInv*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_GetWorldPositionRotationMatrixWithInv_Robust_Shared_GameObjects_EntityQuery_Robust_Shared_GameObjects_TransformComponent__" data-uid="Robust.Shared.GameObjects.TransformComponent.GetWorldPositionRotationMatrixWithInv(Robust.Shared.GameObjects.EntityQuery{Robust.Shared.GameObjects.TransformComponent})">GetWorldPositionRotationMatrixWithInv(EntityQuery&lt;TransformComponent&gt;)</h4>
+  <div class="markdown level1 summary"><p>Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv(EntityQuery&lt;TransformComponent&gt; xformQuery)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.GameObjects.EntityQuery-1.html">EntityQuery</a>&lt;<a class="xref" href="Robust.Shared.GameObjects.TransformComponent.html">TransformComponent</a>&gt;</td>
+        <td><span class="parametername">xformQuery</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.ValueTuple</span>&lt;<span class="xref">Vector2</span>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Angle.html">Angle</a>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a>, <a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent_RebuildMatrices.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent.RebuildMatrices%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L592">View Source</a>
+  </span>
+  <a id="Robust_Shared_GameObjects_TransformComponent_RebuildMatrices_" data-uid="Robust.Shared.GameObjects.TransformComponent.RebuildMatrices*"></a>
+  <h4 id="Robust_Shared_GameObjects_TransformComponent_RebuildMatrices" data-uid="Robust.Shared.GameObjects.TransformComponent.RebuildMatrices">RebuildMatrices()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void RebuildMatrices()</code></pre>
+  </div>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.IComponentDebug.html">IComponentDebug</a>
+  </div>
+  <div>
+      <a class="xref" href="Robust.Shared.GameObjects.IComponent.html">IComponent</a>
+  </div>
+  <h3 id="extensionmethods">Extension Methods</h3>
+  <div>
+      <a class="xref" href="Robust.Shared.Containers.ContainerHelpers.html#Robust_Shared_Containers_ContainerHelpers_AttachParentToContainerOrGrid_Robust_Shared_GameObjects_TransformComponent_Robust_Shared_GameObjects_IEntityManager_">ContainerHelpers.AttachParentToContainerOrGrid(TransformComponent, IEntityManager)</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_GameObjects_TransformComponent.md&amp;value=---%0Auid%3A%20Robust.Shared.GameObjects.TransformComponent%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared/GameObjects/Components/Transform/TransformComponent.cs/#L22" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

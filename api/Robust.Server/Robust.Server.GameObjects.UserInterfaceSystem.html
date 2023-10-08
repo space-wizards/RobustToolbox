@@ -1,0 +1,1531 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class UserInterfaceSystem
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class UserInterfaceSystem
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Server.GameObjects.UserInterfaceSystem">
+  
+  
+  <h1 id="Robust_Server_GameObjects_UserInterfaceSystem" data-uid="Robust.Server.GameObjects.UserInterfaceSystem" class="text-break">Class UserInterfaceSystem
+  </h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntitySystem.html">EntitySystem</a></div>
+    <div class="level2"><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.SharedUserInterfaceSystem.html">SharedUserInterfaceSystem</a></div>
+    <div class="level3"><span class="xref">UserInterfaceSystem</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a></div>
+    <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a></div>
+    <div><a class="xref" href="../Robust.Shared/Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a></div>
+  </div>
+  <div class="inheritedMembers">
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Server.GameObjects.html">Robust.Server.GameObjects</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Server.dll</h6>
+  <h5 id="Robust_Server_GameObjects_UserInterfaceSystem_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class UserInterfaceSystem : SharedUserInterfaceSystem, IEntitySystem, IEntityEventSubscriber, IPostInjectInit</code></pre>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_CloseAll_Robust_Shared_GameObjects_PlayerBoundUserInterface_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.CloseAll(Robust.Shared.GameObjects.PlayerBoundUserInterface)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L389">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_CloseAll_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.CloseAll*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_CloseAll_Robust_Shared_GameObjects_PlayerBoundUserInterface_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.CloseAll(Robust.Shared.GameObjects.PlayerBoundUserInterface)">CloseAll(PlayerBoundUserInterface)</h4>
+  <div class="markdown level1 summary"><p>Closes this interface for any clients that have it open.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void CloseAll(PlayerBoundUserInterface bui)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></td>
+        <td><span class="parametername">bui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_CloseShared_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_ActiveUserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.CloseShared(Robust.Shared.GameObjects.PlayerBoundUserInterface%2CRobust.Shared.Players.ICommonSession%2CRobust.Shared.GameObjects.ActiveUserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L343">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_CloseShared_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.CloseShared*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_CloseShared_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_ActiveUserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.CloseShared(Robust.Shared.GameObjects.PlayerBoundUserInterface,Robust.Shared.Players.ICommonSession,Robust.Shared.GameObjects.ActiveUserInterfaceComponent)">CloseShared(PlayerBoundUserInterface, ICommonSession, ActiveUserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected override void CloseShared(PlayerBoundUserInterface bui, ICommonSession session, ActiveUserInterfaceComponent activeUis = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></td>
+        <td><span class="parametername">bui</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.ActiveUserInterfaceComponent.html">ActiveUserInterfaceComponent</a></td>
+        <td><span class="parametername">activeUis</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.SharedUserInterfaceSystem.html#Robust_Shared_GameObjects_SharedUserInterfaceSystem_CloseShared_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_ActiveUserInterfaceComponent_">SharedUserInterfaceSystem.CloseShared(PlayerBoundUserInterface, ICommonSession, ActiveUserInterfaceComponent)</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_CloseUi_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_ActiveUserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.CloseUi(Robust.Shared.GameObjects.PlayerBoundUserInterface%2CRobust.Shared.Players.ICommonSession%2CRobust.Shared.GameObjects.ActiveUserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L333">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_CloseUi_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.CloseUi*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_CloseUi_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_ActiveUserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.CloseUi(Robust.Shared.GameObjects.PlayerBoundUserInterface,Robust.Shared.Players.ICommonSession,Robust.Shared.GameObjects.ActiveUserInterfaceComponent)">CloseUi(PlayerBoundUserInterface, ICommonSession, ActiveUserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"><p>Close this interface for a specific client.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool CloseUi(PlayerBoundUserInterface bui, ICommonSession session, ActiveUserInterfaceComponent activeUis = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></td>
+        <td><span class="parametername">bui</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.ActiveUserInterfaceComponent.html">ActiveUserInterfaceComponent</a></td>
+        <td><span class="parametername">activeUis</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_GetAllUIsForSession_Robust_Shared_Players_ICommonSession_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.GetAllUIsForSession(Robust.Shared.Players.ICommonSession)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L182">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_GetAllUIsForSession_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.GetAllUIsForSession*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_GetAllUIsForSession_Robust_Shared_Players_ICommonSession_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.GetAllUIsForSession(Robust.Shared.Players.ICommonSession)">GetAllUIsForSession(ICommonSession)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;PlayerBoundUserInterface&gt;? GetAllUIsForSession(ICommonSession session)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">List</span>&lt;<a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_GetUi_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.GetUi(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L157">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_GetUi_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.GetUi*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_GetUi_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.GetUi(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Shared.GameObjects.UserInterfaceComponent)">GetUi(EntityUid, Enum, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PlayerBoundUserInterface GetUi(EntityUid uid, Enum uiKey, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_GetUiOrNull_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.GetUiOrNull(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L165">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_GetUiOrNull_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.GetUiOrNull*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_GetUiOrNull_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.GetUiOrNull(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Shared.GameObjects.UserInterfaceComponent)">GetUiOrNull(EntityUid, Enum, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PlayerBoundUserInterface GetUiOrNull(EntityUid uid, Enum uiKey, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_HasUi_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.HasUi(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L149">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_HasUi_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.HasUi*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_HasUi_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.HasUi(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Shared.GameObjects.UserInterfaceComponent)">HasUi(EntityUid, Enum, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool HasUi(EntityUid uid, Enum uiKey, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_Initialize.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L27">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_Initialize_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.Initialize*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_Initialize" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Initialize()</code></pre>
+  </div>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.SharedUserInterfaceSystem.html#Robust_Shared_GameObjects_SharedUserInterfaceSystem_Initialize">SharedUserInterfaceSystem.Initialize()</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_IsUiOpen_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.IsUiOpen(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L189">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_IsUiOpen_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.IsUiOpen*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_IsUiOpen_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.IsUiOpen(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Shared.GameObjects.UserInterfaceComponent)">IsUiOpen(EntityUid, Enum, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsUiOpen(EntityUid uid, Enum uiKey, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_OpenUi_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_Players_ICommonSession_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.OpenUi(Robust.Shared.GameObjects.PlayerBoundUserInterface%2CRobust.Shared.Players.ICommonSession)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L298">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_OpenUi_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.OpenUi*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_OpenUi_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_Players_ICommonSession_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.OpenUi(Robust.Shared.GameObjects.PlayerBoundUserInterface,Robust.Shared.Players.ICommonSession)">OpenUi(PlayerBoundUserInterface, ICommonSession)</h4>
+  <div class="markdown level1 summary"><p>Opens this interface for a specific client.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool OpenUi(PlayerBoundUserInterface bui, ICommonSession session)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></td>
+        <td><span class="parametername">bui</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_SendUiMessage_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_GameObjects_BoundUserInterfaceMessage_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.SendUiMessage(Robust.Shared.GameObjects.PlayerBoundUserInterface%2CRobust.Shared.GameObjects.BoundUserInterfaceMessage)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L416">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_SendUiMessage_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.SendUiMessage*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_SendUiMessage_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_GameObjects_BoundUserInterfaceMessage_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.SendUiMessage(Robust.Shared.GameObjects.PlayerBoundUserInterface,Robust.Shared.GameObjects.BoundUserInterfaceMessage)">SendUiMessage(PlayerBoundUserInterface, BoundUserInterfaceMessage)</h4>
+  <div class="markdown level1 summary"><p>Send a BUI message to all connected player sessions.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SendUiMessage(PlayerBoundUserInterface bui, BoundUserInterfaceMessage message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></td>
+        <td><span class="parametername">bui</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.BoundUserInterfaceMessage.html">BoundUserInterfaceMessage</a></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_SessionHasOpenUi_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Server_Player_IPlayerSession_Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.SessionHasOpenUi(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Server.Player.IPlayerSession%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L197">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_SessionHasOpenUi_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.SessionHasOpenUi*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_SessionHasOpenUi_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Server_Player_IPlayerSession_Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.SessionHasOpenUi(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Server.Player.IPlayerSession,Robust.Shared.GameObjects.UserInterfaceComponent)">SessionHasOpenUi(EntityUid, Enum, IPlayerSession, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool SessionHasOpenUi(EntityUid uid, Enum uiKey, IPlayerSession session, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_SetUiState_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_GameObjects_BoundUserInterfaceState_Robust_Shared_Players_ICommonSession_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.SetUiState(Robust.Shared.GameObjects.PlayerBoundUserInterface%2CRobust.Shared.GameObjects.BoundUserInterfaceState%2CRobust.Shared.Players.ICommonSession%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L245">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_SetUiState_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.SetUiState*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_SetUiState_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_GameObjects_BoundUserInterfaceState_Robust_Shared_Players_ICommonSession_System_Boolean_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.SetUiState(Robust.Shared.GameObjects.PlayerBoundUserInterface,Robust.Shared.GameObjects.BoundUserInterfaceState,Robust.Shared.Players.ICommonSession,System.Boolean)">SetUiState(PlayerBoundUserInterface, BoundUserInterfaceState, ICommonSession, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Sets a state. This can be used for stateful UI updating.
+This state is sent to all clients, and automatically sent to all new clients when they open the UI.
+Pretty much how NanoUI did it back in ye olde BYOND.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetUiState(PlayerBoundUserInterface bui, BoundUserInterfaceState state, ICommonSession session = null, bool clearOverrides = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></td>
+        <td><span class="parametername">bui</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.BoundUserInterfaceState.html">BoundUserInterfaceState</a></td>
+        <td><span class="parametername">state</span></td>
+        <td><p>The state object that will be sent to all current and future client.
+This can be null.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td><p>The player session to send this new state to.
+Set to null for sending it to every subscribed player session.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">clearOverrides</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_Shutdown.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.Shutdown%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L37">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_Shutdown_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.Shutdown*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_Shutdown" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.Shutdown">Shutdown()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Shutdown()</code></pre>
+  </div>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntitySystem.html#Robust_Shared_GameObjects_EntitySystem_Shutdown">EntitySystem.Shutdown()</a></div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_ToggleUi_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_Players_ICommonSession_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.ToggleUi(Robust.Shared.GameObjects.PlayerBoundUserInterface%2CRobust.Shared.Players.ICommonSession)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L277">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_ToggleUi_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.ToggleUi*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_ToggleUi_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_Players_ICommonSession_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.ToggleUi(Robust.Shared.GameObjects.PlayerBoundUserInterface,Robust.Shared.Players.ICommonSession)">ToggleUi(PlayerBoundUserInterface, ICommonSession)</h4>
+  <div class="markdown level1 summary"><p>Switches between closed and open for a specific client.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ToggleUi(PlayerBoundUserInterface bui, ICommonSession session)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></td>
+        <td><span class="parametername">bui</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_TryClose_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Server_Player_IPlayerSession_Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.TryClose(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Server.Player.IPlayerSession%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L322">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_TryClose_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryClose*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_TryClose_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Server_Player_IPlayerSession_Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryClose(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Server.Player.IPlayerSession,Robust.Shared.GameObjects.UserInterfaceComponent)">TryClose(EntityUid, Enum, IPlayerSession, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryClose(EntityUid uid, Enum uiKey, IPlayerSession session, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_TryCloseAll_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.TryCloseAll(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L377">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_TryCloseAll_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryCloseAll*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_TryCloseAll_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryCloseAll(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Shared.GameObjects.UserInterfaceComponent)">TryCloseAll(EntityUid, Enum, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"><p>Closes this specific interface for any clients that have it open.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryCloseAll(EntityUid uid, Enum uiKey, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_TryCloseAll_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_ActiveUserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.TryCloseAll(Robust.Shared.GameObjects.EntityUid%2CRobust.Shared.GameObjects.ActiveUserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L361">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_TryCloseAll_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryCloseAll*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_TryCloseAll_Robust_Shared_GameObjects_EntityUid_Robust_Shared_GameObjects_ActiveUserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryCloseAll(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.ActiveUserInterfaceComponent)">TryCloseAll(EntityUid, ActiveUserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"><p>Closes this all interface for any clients that have any open.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryCloseAll(EntityUid uid, ActiveUserInterfaceComponent aui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.ActiveUserInterfaceComponent.html">ActiveUserInterfaceComponent</a></td>
+        <td><span class="parametername">aui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_TryGetUi_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_PlayerBoundUserInterface__Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.TryGetUi(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Shared.GameObjects.PlayerBoundUserInterface%40%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L171">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_TryGetUi_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryGetUi*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_TryGetUi_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_PlayerBoundUserInterface__Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryGetUi(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Shared.GameObjects.PlayerBoundUserInterface@,Robust.Shared.GameObjects.UserInterfaceComponent)">TryGetUi(EntityUid, Enum, out PlayerBoundUserInterface, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryGetUi(EntityUid uid, Enum uiKey, out PlayerBoundUserInterface bui, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></td>
+        <td><span class="parametername">bui</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_TryOpen_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Server_Player_IPlayerSession_Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.TryOpen(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Server.Player.IPlayerSession%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L287">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_TryOpen_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryOpen*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_TryOpen_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Server_Player_IPlayerSession_Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryOpen(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Server.Player.IPlayerSession,Robust.Shared.GameObjects.UserInterfaceComponent)">TryOpen(EntityUid, Enum, IPlayerSession, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryOpen(EntityUid uid, Enum uiKey, IPlayerSession session, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_TrySendUiMessage_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_BoundUserInterfaceMessage_Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.TrySendUiMessage(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Shared.GameObjects.BoundUserInterfaceMessage%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L404">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_TrySendUiMessage_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TrySendUiMessage*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_TrySendUiMessage_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_BoundUserInterfaceMessage_Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TrySendUiMessage(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Shared.GameObjects.BoundUserInterfaceMessage,Robust.Shared.GameObjects.UserInterfaceComponent)">TrySendUiMessage(EntityUid, Enum, BoundUserInterfaceMessage, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"><p>Send a BUI message to all connected player sessions.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TrySendUiMessage(EntityUid uid, Enum uiKey, BoundUserInterfaceMessage message, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.BoundUserInterfaceMessage.html">BoundUserInterfaceMessage</a></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_TrySendUiMessage_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_BoundUserInterfaceMessage_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.TrySendUiMessage(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Shared.GameObjects.BoundUserInterfaceMessage%2CRobust.Shared.Players.ICommonSession%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L428">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_TrySendUiMessage_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TrySendUiMessage*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_TrySendUiMessage_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_BoundUserInterfaceMessage_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TrySendUiMessage(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Shared.GameObjects.BoundUserInterfaceMessage,Robust.Shared.Players.ICommonSession,Robust.Shared.GameObjects.UserInterfaceComponent)">TrySendUiMessage(EntityUid, Enum, BoundUserInterfaceMessage, ICommonSession, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"><p>Send a BUI message to a specific player session.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TrySendUiMessage(EntityUid uid, Enum uiKey, BoundUserInterfaceMessage message, ICommonSession session, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.BoundUserInterfaceMessage.html">BoundUserInterfaceMessage</a></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_TrySendUiMessage_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_GameObjects_BoundUserInterfaceMessage_Robust_Shared_Players_ICommonSession_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.TrySendUiMessage(Robust.Shared.GameObjects.PlayerBoundUserInterface%2CRobust.Shared.GameObjects.BoundUserInterfaceMessage%2CRobust.Shared.Players.ICommonSession)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L439">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_TrySendUiMessage_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TrySendUiMessage*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_TrySendUiMessage_Robust_Shared_GameObjects_PlayerBoundUserInterface_Robust_Shared_GameObjects_BoundUserInterfaceMessage_Robust_Shared_Players_ICommonSession_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TrySendUiMessage(Robust.Shared.GameObjects.PlayerBoundUserInterface,Robust.Shared.GameObjects.BoundUserInterfaceMessage,Robust.Shared.Players.ICommonSession)">TrySendUiMessage(PlayerBoundUserInterface, BoundUserInterfaceMessage, ICommonSession)</h4>
+  <div class="markdown level1 summary"><p>Send a BUI message to a specific player session.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TrySendUiMessage(PlayerBoundUserInterface bui, BoundUserInterfaceMessage message, ICommonSession session)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.PlayerBoundUserInterface.html">PlayerBoundUserInterface</a></td>
+        <td><span class="parametername">bui</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.BoundUserInterfaceMessage.html">BoundUserInterfaceMessage</a></td>
+        <td><span class="parametername">message</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_TrySetUiState_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_BoundUserInterfaceState_Robust_Server_Player_IPlayerSession_Robust_Shared_GameObjects_UserInterfaceComponent_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.TrySetUiState(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Shared.GameObjects.BoundUserInterfaceState%2CRobust.Server.Player.IPlayerSession%2CRobust.Shared.GameObjects.UserInterfaceComponent%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L218">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_TrySetUiState_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TrySetUiState*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_TrySetUiState_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_GameObjects_BoundUserInterfaceState_Robust_Server_Player_IPlayerSession_Robust_Shared_GameObjects_UserInterfaceComponent_System_Boolean_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TrySetUiState(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Shared.GameObjects.BoundUserInterfaceState,Robust.Server.Player.IPlayerSession,Robust.Shared.GameObjects.UserInterfaceComponent,System.Boolean)">TrySetUiState(EntityUid, Enum, BoundUserInterfaceState, IPlayerSession, UserInterfaceComponent, Boolean)</h4>
+  <div class="markdown level1 summary"><p>Sets a state. This can be used for stateful UI updating.
+This state is sent to all clients, and automatically sent to all new clients when they open the UI.
+Pretty much how NanoUI did it back in ye olde BYOND.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TrySetUiState(EntityUid uid, Enum uiKey, BoundUserInterfaceState state, IPlayerSession session = null, UserInterfaceComponent ui = null, bool clearOverrides = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.BoundUserInterfaceState.html">BoundUserInterfaceState</a></td>
+        <td><span class="parametername">state</span></td>
+        <td><p>The state object that will be sent to all current and future client.
+This can be null.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Server.Player.IPlayerSession.html">IPlayerSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td><p>The player session to send this new state to.
+Set to null for sending it to every subscribed player session.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">clearOverrides</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_TryToggleUi_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_UserInterfaceComponent_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.TryToggleUi(Robust.Shared.GameObjects.EntityUid%2CEnum%2CRobust.Shared.Players.ICommonSession%2CRobust.Shared.GameObjects.UserInterfaceComponent)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L265">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_TryToggleUi_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryToggleUi*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_TryToggleUi_Robust_Shared_GameObjects_EntityUid_Enum_Robust_Shared_Players_ICommonSession_Robust_Shared_GameObjects_UserInterfaceComponent_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.TryToggleUi(Robust.Shared.GameObjects.EntityUid,Enum,Robust.Shared.Players.ICommonSession,Robust.Shared.GameObjects.UserInterfaceComponent)">TryToggleUi(EntityUid, Enum, ICommonSession, UserInterfaceComponent)</h4>
+  <div class="markdown level1 summary"><p>Switches between closed and open for a specific client.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryToggleUi(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent ui = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityUid.html">EntityUid</a></td>
+        <td><span class="parametername">uid</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Enum</span></td>
+        <td><span class="parametername">uiKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Players.ICommonSession.html">ICommonSession</a></td>
+        <td><span class="parametername">session</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.UserInterfaceComponent.html">UserInterfaceComponent</a></td>
+        <td><span class="parametername">ui</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem_Update_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem.Update(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L59">View Source</a>
+  </span>
+  <a id="Robust_Server_GameObjects_UserInterfaceSystem_Update_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.Update*"></a>
+  <h4 id="Robust_Server_GameObjects_UserInterfaceSystem_Update_System_Single_" data-uid="Robust.Server.GameObjects.UserInterfaceSystem.Update(System.Single)">Update(Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override void Update(float frameTime)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">frameTime</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="overrides">Overrides</h5>
+  <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntitySystem.html#Robust_Shared_GameObjects_EntitySystem_Update_System_Single_">EntitySystem.Update(Single)</a></div>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntitySystem.html">IEntitySystem</a>
+  </div>
+  <div>
+      <a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a>
+  </div>
+  <div>
+      <a class="xref" href="../Robust.Shared/Robust.Shared.IoC.IPostInjectInit.html">IPostInjectInit</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Server_GameObjects_UserInterfaceSystem.md&amp;value=---%0Auid%3A%20Robust.Server.GameObjects.UserInterfaceSystem%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Server/GameObjects/EntitySystems/UserInterfaceSystem.cs/#L15" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1247 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IInputManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IInputManager
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Client.Input.IInputManager">
+  
+  
+  <h1 id="Robust_Client_Input_IInputManager" data-uid="Robust.Client.Input.IInputManager" class="text-break">Interface IInputManager
+  </h1>
+  <div class="markdown level0 summary"><p>Manages key bindings, input commands and other misc. input systems.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Client.Input.html">Robust.Client.Input</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Client.dll</h6>
+  <h5 id="Robust_Client_Input_IInputManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IInputManager</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_AllBindings.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.AllBindings%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L100">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_AllBindings_" data-uid="Robust.Client.Input.IInputManager.AllBindings*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_AllBindings" data-uid="Robust.Client.Input.IInputManager.AllBindings">AllBindings</h4>
+  <div class="markdown level1 summary"><p>Gets all the key bindings currently registered into the manager.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;IKeyBinding&gt; AllBindings { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="Robust.Client.Input.IKeyBinding.html">IKeyBinding</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_Contexts.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.Contexts%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L35">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_Contexts_" data-uid="Robust.Client.Input.IInputManager.Contexts*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_Contexts" data-uid="Robust.Client.Input.IInputManager.Contexts">Contexts</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IInputContextContainer Contexts { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.IInputContextContainer.html">IInputContextContainer</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_DownKeyFunctions.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.DownKeyFunctions%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L84">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_DownKeyFunctions_" data-uid="Robust.Client.Input.IInputManager.DownKeyFunctions*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_DownKeyFunctions" data-uid="Robust.Client.Input.IInputManager.DownKeyFunctions">DownKeyFunctions</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerable&lt;BoundKeyFunction&gt; DownKeyFunctions { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IEnumerable</span>&lt;<a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyFunction.html">BoundKeyFunction</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_Enabled.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.Enabled%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L16">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_Enabled_" data-uid="Robust.Client.Input.IInputManager.Enabled*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_Enabled" data-uid="Robust.Client.Input.IInputManager.Enabled">Enabled</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool Enabled { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_MouseScreenPosition.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.MouseScreenPosition%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L31">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_MouseScreenPosition_" data-uid="Robust.Client.Input.IInputManager.MouseScreenPosition*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_MouseScreenPosition" data-uid="Robust.Client.Input.IInputManager.MouseScreenPosition">MouseScreenPosition</h4>
+  <div class="markdown level1 summary"><p>The position and window of the mouse.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ScreenCoordinates MouseScreenPosition { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Map.ScreenCoordinates.html">ScreenCoordinates</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_NetworkBindMap.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.NetworkBindMap%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L33">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_NetworkBindMap_" data-uid="Robust.Client.Input.IInputManager.NetworkBindMap*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_NetworkBindMap" data-uid="Robust.Client.Input.IInputManager.NetworkBindMap">NetworkBindMap</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">BoundKeyMap NetworkBindMap { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyMap.html">BoundKeyMap</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_GetInputCommand_Robust_Shared_Input_BoundKeyFunction_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.GetInputCommand(Robust.Shared.Input.BoundKeyFunction)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L70">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_GetInputCommand_" data-uid="Robust.Client.Input.IInputManager.GetInputCommand*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_GetInputCommand_Robust_Shared_Input_BoundKeyFunction_" data-uid="Robust.Client.Input.IInputManager.GetInputCommand(Robust.Shared.Input.BoundKeyFunction)">GetInputCommand(BoundKeyFunction)</h4>
+  <div class="markdown level1 summary"><p>Returns the input command bound to a key function.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">InputCmdHandler GetInputCommand(BoundKeyFunction function)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyFunction.html">BoundKeyFunction</a></td>
+        <td><span class="parametername">function</span></td>
+        <td><p>The key function to find the bound input command for.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.Binding.InputCmdHandler.html">InputCmdHandler</a></td>
+        <td><p>An input command, if any. Null if no command is set.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_GetKeyBinding_Robust_Shared_Input_BoundKeyFunction_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.GetKeyBinding(Robust.Shared.Input.BoundKeyFunction)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L58">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_GetKeyBinding_" data-uid="Robust.Client.Input.IInputManager.GetKeyBinding*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_GetKeyBinding_Robust_Shared_Input_BoundKeyFunction_" data-uid="Robust.Client.Input.IInputManager.GetKeyBinding(Robust.Shared.Input.BoundKeyFunction)">GetKeyBinding(BoundKeyFunction)</h4>
+  <div class="markdown level1 summary"><p>Gets a key binding according to the function it is bound to.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IKeyBinding GetKeyBinding(BoundKeyFunction function)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyFunction.html">BoundKeyFunction</a></td>
+        <td><span class="parametername">function</span></td>
+        <td><p>The function the key binding is bound to.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Input.IKeyBinding.html">IKeyBinding</a></td>
+        <td><p>The key binding.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Client_Input_IInputManager_GetKeyBinding_Robust_Shared_Input_BoundKeyFunction__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>Which keybind is returned if there are multiple for a key function is unspecified.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_GetKeyBindings_Robust_Shared_Input_BoundKeyFunction_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.GetKeyBindings(Robust.Shared.Input.BoundKeyFunction)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L119">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_GetKeyBindings_" data-uid="Robust.Client.Input.IInputManager.GetKeyBindings*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_GetKeyBindings_Robust_Shared_Input_BoundKeyFunction_" data-uid="Robust.Client.Input.IInputManager.GetKeyBindings(Robust.Shared.Input.BoundKeyFunction)">GetKeyBindings(BoundKeyFunction)</h4>
+  <div class="markdown level1 summary"><p>Gets all the keybinds bound to a specific function.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IReadOnlyList&lt;IKeyBinding&gt; GetKeyBindings(BoundKeyFunction function)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyFunction.html">BoundKeyFunction</a></td>
+        <td><span class="parametername">function</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">IReadOnlyList</span>&lt;<a class="xref" href="Robust.Client.Input.IKeyBinding.html">IKeyBinding</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_GetKeyFunctionButtonString_Robust_Shared_Input_BoundKeyFunction_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.GetKeyFunctionButtonString(Robust.Shared.Input.BoundKeyFunction)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L95">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_GetKeyFunctionButtonString_" data-uid="Robust.Client.Input.IInputManager.GetKeyFunctionButtonString*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_GetKeyFunctionButtonString_Robust_Shared_Input_BoundKeyFunction_" data-uid="Robust.Client.Input.IInputManager.GetKeyFunctionButtonString(Robust.Shared.Input.BoundKeyFunction)">GetKeyFunctionButtonString(BoundKeyFunction)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetKeyFunctionButtonString(BoundKeyFunction function)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyFunction.html">BoundKeyFunction</a></td>
+        <td><span class="parametername">function</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_GetKeyName_Robust_Client_Input_Keyboard_Key_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.GetKeyName(Robust.Client.Input.Keyboard.Key)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L89">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_GetKeyName_" data-uid="Robust.Client.Input.IInputManager.GetKeyName*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_GetKeyName_Robust_Client_Input_Keyboard_Key_" data-uid="Robust.Client.Input.IInputManager.GetKeyName(Robust.Client.Input.Keyboard.Key)">GetKeyName(Keyboard.Key)</h4>
+  <div class="markdown level1 summary"><p>Gets the name of the key on the keyboard, based on the current input method and language.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetKeyName(Keyboard.Key key)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Input.Keyboard.Key.html">Keyboard.Key</a></td>
+        <td><span class="parametername">key</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_Initialize.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L37">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_Initialize_" data-uid="Robust.Client.Input.IInputManager.Initialize*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_Initialize" data-uid="Robust.Client.Input.IInputManager.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void Initialize()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_InputModeChanged.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.InputModeChanged%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L136">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_InputModeChanged_" data-uid="Robust.Client.Input.IInputManager.InputModeChanged*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_InputModeChanged" data-uid="Robust.Client.Input.IInputManager.InputModeChanged">InputModeChanged()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void InputModeChanged()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_IsKeyDown_Robust_Client_Input_Keyboard_Key_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.IsKeyDown(Robust.Client.Input.Keyboard.Key)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L134">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_IsKeyDown_" data-uid="Robust.Client.Input.IInputManager.IsKeyDown*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_IsKeyDown_Robust_Client_Input_Keyboard_Key_" data-uid="Robust.Client.Input.IInputManager.IsKeyDown(Robust.Client.Input.Keyboard.Key)">IsKeyDown(Keyboard.Key)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsKeyDown(Keyboard.Key key)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Input.Keyboard.Key.html">Keyboard.Key</a></td>
+        <td><span class="parametername">key</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_IsKeyFunctionModified_Robust_Shared_Input_BoundKeyFunction_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.IsKeyFunctionModified(Robust.Shared.Input.BoundKeyFunction)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L132">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_IsKeyFunctionModified_" data-uid="Robust.Client.Input.IInputManager.IsKeyFunctionModified*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_IsKeyFunctionModified_Robust_Shared_Input_BoundKeyFunction_" data-uid="Robust.Client.Input.IInputManager.IsKeyFunctionModified(Robust.Shared.Input.BoundKeyFunction)">IsKeyFunctionModified(BoundKeyFunction)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool IsKeyFunctionModified(BoundKeyFunction function)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyFunction.html">BoundKeyFunction</a></td>
+        <td><span class="parametername">function</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_KeyDown_Robust_Client_Input_KeyEventArgs_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.KeyDown(Robust.Client.Input.KeyEventArgs)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L40">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_KeyDown_" data-uid="Robust.Client.Input.IInputManager.KeyDown*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_KeyDown_Robust_Client_Input_KeyEventArgs_" data-uid="Robust.Client.Input.IInputManager.KeyDown(Robust.Client.Input.KeyEventArgs)">KeyDown(KeyEventArgs)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void KeyDown(KeyEventArgs e)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Input.KeyEventArgs.html">KeyEventArgs</a></td>
+        <td><span class="parametername">e</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_KeyUp_Robust_Client_Input_KeyEventArgs_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.KeyUp(Robust.Client.Input.KeyEventArgs)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L41">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_KeyUp_" data-uid="Robust.Client.Input.IInputManager.KeyUp*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_KeyUp_Robust_Client_Input_KeyEventArgs_" data-uid="Robust.Client.Input.IInputManager.KeyUp(Robust.Client.Input.KeyEventArgs)">KeyUp(KeyEventArgs)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void KeyUp(KeyEventArgs e)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Input.KeyEventArgs.html">KeyEventArgs</a></td>
+        <td><span class="parametername">e</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_RegisterBinding_Robust_Client_Input_KeyBindingRegistration__System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.RegisterBinding(Robust.Client.Input.KeyBindingRegistration%40%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L43">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_RegisterBinding_" data-uid="Robust.Client.Input.IInputManager.RegisterBinding*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_RegisterBinding_Robust_Client_Input_KeyBindingRegistration__System_Boolean_" data-uid="Robust.Client.Input.IInputManager.RegisterBinding(Robust.Client.Input.KeyBindingRegistration@,System.Boolean)">RegisterBinding(KeyBindingRegistration, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Input.KeyBindingRegistration.html">KeyBindingRegistration</a></td>
+        <td><span class="parametername">reg</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">markModified</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Input.IKeyBinding.html">IKeyBinding</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_RemoveBinding_Robust_Client_Input_IKeyBinding_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.RemoveBinding(Robust.Client.Input.IKeyBinding%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L45">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_RemoveBinding_" data-uid="Robust.Client.Input.IInputManager.RemoveBinding*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_RemoveBinding_Robust_Client_Input_IKeyBinding_System_Boolean_" data-uid="Robust.Client.Input.IInputManager.RemoveBinding(Robust.Client.Input.IKeyBinding,System.Boolean)">RemoveBinding(IKeyBinding, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void RemoveBinding(IKeyBinding binding, bool markModified = true)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Input.IKeyBinding.html">IKeyBinding</a></td>
+        <td><span class="parametername">binding</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">markModified</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_ResetAllBindings.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.ResetAllBindings%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L130">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_ResetAllBindings_" data-uid="Robust.Client.Input.IInputManager.ResetAllBindings*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_ResetAllBindings" data-uid="Robust.Client.Input.IInputManager.ResetAllBindings">ResetAllBindings()</h4>
+  <div class="markdown level1 summary"><p>Resets ALL the keybinds to the defaults from the resource files.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ResetAllBindings()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_ResetBindingsFor_Robust_Shared_Input_BoundKeyFunction_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.ResetBindingsFor(Robust.Shared.Input.BoundKeyFunction)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L125">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_ResetBindingsFor_" data-uid="Robust.Client.Input.IInputManager.ResetBindingsFor*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_ResetBindingsFor_Robust_Shared_Input_BoundKeyFunction_" data-uid="Robust.Client.Input.IInputManager.ResetBindingsFor(Robust.Shared.Input.BoundKeyFunction)">ResetBindingsFor(BoundKeyFunction)</h4>
+  <div class="markdown level1 summary"><p>Resets the bindings for a specific BoundKeyFunction to the defaults from the resource files.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ResetBindingsFor(BoundKeyFunction function)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyFunction.html">BoundKeyFunction</a></td>
+        <td><span class="parametername">function</span></td>
+        <td><p>The key function to reset the bindings for.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_SaveToUserData.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.SaveToUserData%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L38">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_SaveToUserData_" data-uid="Robust.Client.Input.IInputManager.SaveToUserData*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_SaveToUserData" data-uid="Robust.Client.Input.IInputManager.SaveToUserData">SaveToUserData()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void SaveToUserData()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_SetInputCommand_Robust_Shared_Input_BoundKeyFunction_Robust_Shared_Input_Binding_InputCmdHandler_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.SetInputCommand(Robust.Shared.Input.BoundKeyFunction%2CRobust.Shared.Input.Binding.InputCmdHandler)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L72">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_SetInputCommand_" data-uid="Robust.Client.Input.IInputManager.SetInputCommand*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_SetInputCommand_Robust_Shared_Input_BoundKeyFunction_Robust_Shared_Input_Binding_InputCmdHandler_" data-uid="Robust.Client.Input.IInputManager.SetInputCommand(Robust.Shared.Input.BoundKeyFunction,Robust.Shared.Input.Binding.InputCmdHandler)">SetInputCommand(BoundKeyFunction, InputCmdHandler)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyFunction.html">BoundKeyFunction</a></td>
+        <td><span class="parametername">function</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.Binding.InputCmdHandler.html">InputCmdHandler</a></td>
+        <td><span class="parametername">cmdHandler</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_TryGetKeyBinding_Robust_Shared_Input_BoundKeyFunction_Robust_Client_Input_IKeyBinding__.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.TryGetKeyBinding(Robust.Shared.Input.BoundKeyFunction%2CRobust.Client.Input.IKeyBinding%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L63">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_TryGetKeyBinding_" data-uid="Robust.Client.Input.IInputManager.TryGetKeyBinding*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_TryGetKeyBinding_Robust_Shared_Input_BoundKeyFunction_Robust_Client_Input_IKeyBinding__" data-uid="Robust.Client.Input.IInputManager.TryGetKeyBinding(Robust.Shared.Input.BoundKeyFunction,Robust.Client.Input.IKeyBinding@)">TryGetKeyBinding(BoundKeyFunction, out IKeyBinding)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetKeyBinding(BoundKeyFunction function, out IKeyBinding binding)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyFunction.html">BoundKeyFunction</a></td>
+        <td><span class="parametername">function</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Input.IKeyBinding.html">IKeyBinding</a></td>
+        <td><span class="parametername">binding</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Client_Input_IInputManager_TryGetKeyBinding_Robust_Shared_Input_BoundKeyFunction_Robust_Client_Input_IKeyBinding___remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>Which keybind is returned if there are multiple for a key function is unspecified.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_ViewportKeyEvent_Robust_Client_UserInterface_Control_Robust_Shared_Input_BoundKeyEventArgs_.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.ViewportKeyEvent(Robust.Client.UserInterface.Control%2CRobust.Shared.Input.BoundKeyEventArgs)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L26">View Source</a>
+  </span>
+  <a id="Robust_Client_Input_IInputManager_ViewportKeyEvent_" data-uid="Robust.Client.Input.IInputManager.ViewportKeyEvent*"></a>
+  <h4 id="Robust_Client_Input_IInputManager_ViewportKeyEvent_Robust_Client_UserInterface_Control_Robust_Shared_Input_BoundKeyEventArgs_" data-uid="Robust.Client.Input.IInputManager.ViewportKeyEvent(Robust.Client.UserInterface.Control,Robust.Shared.Input.BoundKeyEventArgs)">ViewportKeyEvent(Control, BoundKeyEventArgs)</h4>
+  <div class="markdown level1 summary"><p>Relay a key event that hit a viewport further down the input stack.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ViewportKeyEvent(Control control, BoundKeyEventArgs eventArgs)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.UserInterface.Control.html">Control</a></td>
+        <td><span class="parametername">control</span></td>
+        <td><p>The viewport control that relayed the input.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyEventArgs.html">BoundKeyEventArgs</a></td>
+        <td><span class="parametername">eventArgs</span></td>
+        <td><p>The key event args triggering the input.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Client_Input_IInputManager_ViewportKeyEvent_Robust_Client_UserInterface_Control_Robust_Shared_Input_BoundKeyEventArgs__remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>This is ONLY intended to be used in key handler from viewport controls.</p>
+</div>
+  <h3 id="events">Events
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_FirstChanceOnKeyEvent.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.FirstChanceOnKeyEvent%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L110">View Source</a>
+  </span>
+  <h4 id="Robust_Client_Input_IInputManager_FirstChanceOnKeyEvent" data-uid="Robust.Client.Input.IInputManager.FirstChanceOnKeyEvent">FirstChanceOnKeyEvent</h4>
+  <div class="markdown level1 summary"><p>An event that gets fired before everything else when a key event comes in.
+For key down events, the event can be handled to block it.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event KeyEventAction FirstChanceOnKeyEvent</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Input.KeyEventAction.html">KeyEventAction</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Robust_Client_Input_IInputManager_FirstChanceOnKeyEvent_remarks">Remarks</h5>
+  <div class="markdown level1 remarks"><p>Do not use this for regular input handling.
+This is a low-level API intended solely for stuff like the key rebinding menu.</p>
+</div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_KeyBindStateChanged.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.KeyBindStateChanged%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L82">View Source</a>
+  </span>
+  <h4 id="Robust_Client_Input_IInputManager_KeyBindStateChanged" data-uid="Robust.Client.Input.IInputManager.KeyBindStateChanged">KeyBindStateChanged</h4>
+  <div class="markdown level1 summary"><p>If UIKeyBindStateChanged did not handle the BoundKeyEvent, KeyBindStateChanged is called.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action&lt;ViewportBoundKeyEventArgs&gt;? KeyBindStateChanged</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Action</span>&lt;<a class="xref" href="Robust.Client.Input.ViewportBoundKeyEventArgs.html">ViewportBoundKeyEventArgs</a>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_OnInputModeChanged.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.OnInputModeChanged%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L114">View Source</a>
+  </span>
+  <h4 id="Robust_Client_Input_IInputManager_OnInputModeChanged" data-uid="Robust.Client.Input.IInputManager.OnInputModeChanged">OnInputModeChanged</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action OnInputModeChanged</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Action</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_OnKeyBindingAdded.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.OnKeyBindingAdded%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L112">View Source</a>
+  </span>
+  <h4 id="Robust_Client_Input_IInputManager_OnKeyBindingAdded" data-uid="Robust.Client.Input.IInputManager.OnKeyBindingAdded">OnKeyBindingAdded</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action&lt;IKeyBinding&gt; OnKeyBindingAdded</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Action</span>&lt;<a class="xref" href="Robust.Client.Input.IKeyBinding.html">IKeyBinding</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_OnKeyBindingRemoved.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.OnKeyBindingRemoved%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L113">View Source</a>
+  </span>
+  <h4 id="Robust_Client_Input_IInputManager_OnKeyBindingRemoved" data-uid="Robust.Client.Input.IInputManager.OnKeyBindingRemoved">OnKeyBindingRemoved</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action&lt;IKeyBinding&gt; OnKeyBindingRemoved</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Action</span>&lt;<a class="xref" href="Robust.Client.Input.IKeyBinding.html">IKeyBinding</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager_UIKeyBindStateChanged.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager.UIKeyBindStateChanged%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L77">View Source</a>
+  </span>
+  <h4 id="Robust_Client_Input_IInputManager_UIKeyBindStateChanged" data-uid="Robust.Client.Input.IInputManager.UIKeyBindStateChanged">UIKeyBindStateChanged</h4>
+  <div class="markdown level1 summary"><p>UIKeyBindStateChanged is called when a keybind is found.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Func&lt;BoundKeyEventArgs, bool&gt; UIKeyBindStateChanged</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Func</span>&lt;<a class="xref" href="../Robust.Shared/Robust.Shared.Input.BoundKeyEventArgs.html">BoundKeyEventArgs</a>, <span class="xref">System.Boolean</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Input_IInputManager.md&amp;value=---%0Auid%3A%20Robust.Client.Input.IInputManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Input/IInputManager.cs/#L14" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,3402 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Struct Matrix4
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Struct Matrix4
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Shared.Maths.Matrix4">
+  
+  
+  <h1 id="Robust_Shared_Maths_Matrix4" data-uid="Robust.Shared.Maths.Matrix4" class="text-break">Struct Matrix4
+  </h1>
+  <div class="markdown level0 summary"><p>Represents a 4x4 Matrix</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><span class="xref">IEquatable</span>&lt;<a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a>&gt;</div>
+    <div><span class="xref">ISpanFormattable</span></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Shared.Maths.html">Robust.Shared.Maths</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Shared.Maths.dll</h6>
+  <h5 id="Robust_Shared_Maths_Matrix4_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public struct Matrix4 : IEquatable&lt;Matrix4&gt;, ISpanFormattable</code></pre>
+  </div>
+  <h3 id="constructors">Constructors
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4__ctor_Robust_Shared_Maths_Vector4_Robust_Shared_Maths_Vector4_Robust_Shared_Maths_Vector4_Robust_Shared_Maths_Vector4_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.%23ctor(Robust.Shared.Maths.Vector4%2CRobust.Shared.Maths.Vector4%2CRobust.Shared.Maths.Vector4%2CRobust.Shared.Maths.Vector4)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L80">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4__ctor_" data-uid="Robust.Shared.Maths.Matrix4.#ctor*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4__ctor_Robust_Shared_Maths_Vector4_Robust_Shared_Maths_Vector4_Robust_Shared_Maths_Vector4_Robust_Shared_Maths_Vector4_" data-uid="Robust.Shared.Maths.Matrix4.#ctor(Robust.Shared.Maths.Vector4,Robust.Shared.Maths.Vector4,Robust.Shared.Maths.Vector4,Robust.Shared.Maths.Vector4)">Matrix4(Vector4, Vector4, Vector4, Vector4)</h4>
+  <div class="markdown level1 summary"><p>Constructs a new instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Matrix4(Vector4 row0, Vector4 row1, Vector4 row2, Vector4 row3)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td><span class="parametername">row0</span></td>
+        <td><p>Top row of the matrix</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td><span class="parametername">row1</span></td>
+        <td><p>Second row of the matrix</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td><span class="parametername">row2</span></td>
+        <td><p>Third row of the matrix</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td><span class="parametername">row3</span></td>
+        <td><p>Bottom row of the matrix</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4__ctor_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.%23ctor(System.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L108">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4__ctor_" data-uid="Robust.Shared.Maths.Matrix4.#ctor*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4__ctor_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.#ctor(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">Matrix4(Single, Single, Single, Single, Single, Single, Single, Single, Single, Single, Single, Single, Single, Single, Single, Single)</h4>
+  <div class="markdown level1 summary"><p>Constructs a new instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Matrix4(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m00</span></td>
+        <td><p>First item of the first row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m01</span></td>
+        <td><p>Second item of the first row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m02</span></td>
+        <td><p>Third item of the first row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m03</span></td>
+        <td><p>Fourth item of the first row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m10</span></td>
+        <td><p>First item of the second row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m11</span></td>
+        <td><p>Second item of the second row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m12</span></td>
+        <td><p>Third item of the second row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m13</span></td>
+        <td><p>Fourth item of the second row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m20</span></td>
+        <td><p>First item of the third row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m21</span></td>
+        <td><p>Second item of the third row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m22</span></td>
+        <td><p>Third item of the third row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m23</span></td>
+        <td><p>First item of the third row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m30</span></td>
+        <td><p>Fourth item of the fourth row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m31</span></td>
+        <td><p>Second item of the fourth row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m32</span></td>
+        <td><p>Third item of the fourth row of the matrix.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">m33</span></td>
+        <td><p>Fourth item of the fourth row of the matrix.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Identity.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Identity%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L67">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Matrix4_Identity" data-uid="Robust.Shared.Maths.Matrix4.Identity">Identity</h4>
+  <div class="markdown level1 summary"><p>The identity matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static readonly Matrix4 Identity</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Row0.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Row0%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L47">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Matrix4_Row0" data-uid="Robust.Shared.Maths.Matrix4.Row0">Row0</h4>
+  <div class="markdown level1 summary"><p>Top row of the matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector4 Row0</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Row1.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Row1%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L52">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Matrix4_Row1" data-uid="Robust.Shared.Maths.Matrix4.Row1">Row1</h4>
+  <div class="markdown level1 summary"><p>2nd row of the matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector4 Row1</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Row2.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Row2%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L57">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Matrix4_Row2" data-uid="Robust.Shared.Maths.Matrix4.Row2">Row2</h4>
+  <div class="markdown level1 summary"><p>3rd row of the matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector4 Row2</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Row3.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Row3%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L62">View Source</a>
+  </span>
+  <h4 id="Robust_Shared_Maths_Matrix4_Row3" data-uid="Robust.Shared.Maths.Matrix4.Row3">Row3</h4>
+  <div class="markdown level1 summary"><p>Bottom row of the matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector4 Row3</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Column0.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Column0%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L144">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Column0_" data-uid="Robust.Shared.Maths.Matrix4.Column0*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Column0" data-uid="Robust.Shared.Maths.Matrix4.Column0">Column0</h4>
+  <div class="markdown level1 summary"><p>The first column of this matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector4 Column0 { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Column1.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Column1%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L153">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Column1_" data-uid="Robust.Shared.Maths.Matrix4.Column1*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Column1" data-uid="Robust.Shared.Maths.Matrix4.Column1">Column1</h4>
+  <div class="markdown level1 summary"><p>The second column of this matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector4 Column1 { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Column2.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Column2%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L162">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Column2_" data-uid="Robust.Shared.Maths.Matrix4.Column2*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Column2" data-uid="Robust.Shared.Maths.Matrix4.Column2">Column2</h4>
+  <div class="markdown level1 summary"><p>The third column of this matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector4 Column2 { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Column3.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Column3%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L171">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Column3_" data-uid="Robust.Shared.Maths.Matrix4.Column3*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Column3" data-uid="Robust.Shared.Maths.Matrix4.Column3">Column3</h4>
+  <div class="markdown level1 summary"><p>The fourth column of this matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Vector4 Column3 { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Determinant.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Determinant%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L130">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Determinant_" data-uid="Robust.Shared.Maths.Matrix4.Determinant*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Determinant" data-uid="Robust.Shared.Maths.Matrix4.Determinant">Determinant</h4>
+  <div class="markdown level1 summary"><p>The determinant of this matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float Determinant { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M11.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M11%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L180">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M11_" data-uid="Robust.Shared.Maths.Matrix4.M11*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M11" data-uid="Robust.Shared.Maths.Matrix4.M11">M11</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 1, column 1 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M11 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M12.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M12%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L191">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M12_" data-uid="Robust.Shared.Maths.Matrix4.M12*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M12" data-uid="Robust.Shared.Maths.Matrix4.M12">M12</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 1, column 2 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M12 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M13.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M13%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L202">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M13_" data-uid="Robust.Shared.Maths.Matrix4.M13*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M13" data-uid="Robust.Shared.Maths.Matrix4.M13">M13</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 1, column 3 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M13 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M14.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M14%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L213">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M14_" data-uid="Robust.Shared.Maths.Matrix4.M14*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M14" data-uid="Robust.Shared.Maths.Matrix4.M14">M14</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 1, column 4 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M14 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M21.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M21%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L224">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M21_" data-uid="Robust.Shared.Maths.Matrix4.M21*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M21" data-uid="Robust.Shared.Maths.Matrix4.M21">M21</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 2, column 1 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M21 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M22.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M22%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L235">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M22_" data-uid="Robust.Shared.Maths.Matrix4.M22*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M22" data-uid="Robust.Shared.Maths.Matrix4.M22">M22</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 2, column 2 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M22 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M23.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M23%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L246">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M23_" data-uid="Robust.Shared.Maths.Matrix4.M23*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M23" data-uid="Robust.Shared.Maths.Matrix4.M23">M23</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 2, column 3 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M23 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M24.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M24%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L257">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M24_" data-uid="Robust.Shared.Maths.Matrix4.M24*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M24" data-uid="Robust.Shared.Maths.Matrix4.M24">M24</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 2, column 4 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M24 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M31.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M31%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L268">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M31_" data-uid="Robust.Shared.Maths.Matrix4.M31*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M31" data-uid="Robust.Shared.Maths.Matrix4.M31">M31</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 3, column 1 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M31 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M32.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M32%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L279">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M32_" data-uid="Robust.Shared.Maths.Matrix4.M32*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M32" data-uid="Robust.Shared.Maths.Matrix4.M32">M32</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 3, column 2 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M32 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M33.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M33%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L290">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M33_" data-uid="Robust.Shared.Maths.Matrix4.M33*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M33" data-uid="Robust.Shared.Maths.Matrix4.M33">M33</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 3, column 3 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M33 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M34.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M34%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L301">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M34_" data-uid="Robust.Shared.Maths.Matrix4.M34*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M34" data-uid="Robust.Shared.Maths.Matrix4.M34">M34</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 3, column 4 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M34 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M41.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M41%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L312">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M41_" data-uid="Robust.Shared.Maths.Matrix4.M41*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M41" data-uid="Robust.Shared.Maths.Matrix4.M41">M41</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 4, column 1 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M41 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M42.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M42%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L323">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M42_" data-uid="Robust.Shared.Maths.Matrix4.M42*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M42" data-uid="Robust.Shared.Maths.Matrix4.M42">M42</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 4, column 2 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M42 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M43.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M43%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L334">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M43_" data-uid="Robust.Shared.Maths.Matrix4.M43*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M43" data-uid="Robust.Shared.Maths.Matrix4.M43">M43</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 4, column 3 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M43 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_M44.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.M44%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L345">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_M44_" data-uid="Robust.Shared.Maths.Matrix4.M44*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_M44" data-uid="Robust.Shared.Maths.Matrix4.M44">M44</h4>
+  <div class="markdown level1 summary"><p>Gets or sets the value at row 4, column 4 of this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public float M44 { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateFromAxisAngle_Robust_Shared_Maths_Vector3_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateFromAxisAngle(Robust.Shared.Maths.Vector3%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L416">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateFromAxisAngle_" data-uid="Robust.Shared.Maths.Matrix4.CreateFromAxisAngle*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateFromAxisAngle_Robust_Shared_Maths_Vector3_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.CreateFromAxisAngle(Robust.Shared.Maths.Vector3,System.Single)">CreateFromAxisAngle(Vector3, Single)</h4>
+  <div class="markdown level1 summary"><p>Build a rotation matrix from the specified axis/angle rotation.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 CreateFromAxisAngle(Vector3 axis, float angle)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector3.html">Vector3</a></td>
+        <td><span class="parametername">axis</span></td>
+        <td><p>The axis to rotate about.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">angle</span></td>
+        <td><p>Angle in radians to rotate counter-clockwise (looking in the direction of the given axis).</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>A matrix instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateFromAxisAngle_Robust_Shared_Maths_Vector3_System_Single_Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateFromAxisAngle(Robust.Shared.Maths.Vector3%2CSystem.Single%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L395">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateFromAxisAngle_" data-uid="Robust.Shared.Maths.Matrix4.CreateFromAxisAngle*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateFromAxisAngle_Robust_Shared_Maths_Vector3_System_Single_Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.CreateFromAxisAngle(Robust.Shared.Maths.Vector3,System.Single,Robust.Shared.Maths.Matrix4@)">CreateFromAxisAngle(Vector3, Single, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Build a rotation matrix from the specified axis/angle rotation.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void CreateFromAxisAngle(Vector3 axis, float angle, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector3.html">Vector3</a></td>
+        <td><span class="parametername">axis</span></td>
+        <td><p>The axis to rotate about.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">angle</span></td>
+        <td><p>Angle in radians to rotate counter-clockwise (looking in the direction of the given axis).</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>A matrix instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateOrthographic_System_Single_System_Single_System_Single_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateOrthographic(System.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L596">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateOrthographic_" data-uid="Robust.Shared.Maths.Matrix4.CreateOrthographic*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateOrthographic_System_Single_System_Single_System_Single_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.CreateOrthographic(System.Single,System.Single,System.Single,System.Single)">CreateOrthographic(Single, Single, Single, Single)</h4>
+  <div class="markdown level1 summary"><p>Creates an orthographic projection matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 CreateOrthographic(float width, float height, float zNear, float zFar)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">width</span></td>
+        <td><p>The width of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">height</span></td>
+        <td><p>The height of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zNear</span></td>
+        <td><p>The near edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zFar</span></td>
+        <td><p>The far edge of the projection volume.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateOrthographic_System_Single_System_Single_System_Single_System_Single_Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateOrthographic(System.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L582">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateOrthographic_" data-uid="Robust.Shared.Maths.Matrix4.CreateOrthographic*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateOrthographic_System_Single_System_Single_System_Single_System_Single_Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.CreateOrthographic(System.Single,System.Single,System.Single,System.Single,Robust.Shared.Maths.Matrix4@)">CreateOrthographic(Single, Single, Single, Single, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Creates an orthographic projection matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void CreateOrthographic(float width, float height, float zNear, float zFar, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">width</span></td>
+        <td><p>The width of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">height</span></td>
+        <td><p>The height of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zNear</span></td>
+        <td><p>The near edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zFar</span></td>
+        <td><p>The far edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateOrthographicOffCenter_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateOrthographicOffCenter(System.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L646">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateOrthographicOffCenter_" data-uid="Robust.Shared.Maths.Matrix4.CreateOrthographicOffCenter*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateOrthographicOffCenter_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.CreateOrthographicOffCenter(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">CreateOrthographicOffCenter(Single, Single, Single, Single, Single, Single)</h4>
+  <div class="markdown level1 summary"><p>Creates an orthographic projection matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 CreateOrthographicOffCenter(float left, float right, float bottom, float top, float zNear, float zFar)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">left</span></td>
+        <td><p>The left edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">right</span></td>
+        <td><p>The right edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">bottom</span></td>
+        <td><p>The bottom edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">top</span></td>
+        <td><p>The top edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zNear</span></td>
+        <td><p>The near edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zFar</span></td>
+        <td><p>The far edge of the projection volume.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateOrthographicOffCenter_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateOrthographicOffCenter(System.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L617">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateOrthographicOffCenter_" data-uid="Robust.Shared.Maths.Matrix4.CreateOrthographicOffCenter*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateOrthographicOffCenter_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.CreateOrthographicOffCenter(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,Robust.Shared.Maths.Matrix4@)">CreateOrthographicOffCenter(Single, Single, Single, Single, Single, Single, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Creates an orthographic projection matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void CreateOrthographicOffCenter(float left, float right, float bottom, float top, float zNear, float zFar, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">left</span></td>
+        <td><p>The left edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">right</span></td>
+        <td><p>The right edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">bottom</span></td>
+        <td><p>The bottom edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">top</span></td>
+        <td><p>The top edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zNear</span></td>
+        <td><p>The near edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zFar</span></td>
+        <td><p>The far edge of the projection volume.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreatePerspectiveFieldOfView_System_Single_System_Single_System_Single_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreatePerspectiveFieldOfView(System.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L713">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreatePerspectiveFieldOfView_" data-uid="Robust.Shared.Maths.Matrix4.CreatePerspectiveFieldOfView*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreatePerspectiveFieldOfView_System_Single_System_Single_System_Single_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.CreatePerspectiveFieldOfView(System.Single,System.Single,System.Single,System.Single)">CreatePerspectiveFieldOfView(Single, Single, Single, Single)</h4>
+  <div class="markdown level1 summary"><p>Creates a perspective projection matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 CreatePerspectiveFieldOfView(float fovy, float aspect, float zNear, float zFar)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">fovy</span></td>
+        <td><p>Angle of the field of view in the y direction (in radians)</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">aspect</span></td>
+        <td><p>Aspect ratio of the view (width / height)</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zNear</span></td>
+        <td><p>Distance to the near clip plane</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zFar</span></td>
+        <td><p>Distance to the far clip plane</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>A projection matrix that transforms camera space to raster space</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreatePerspectiveFieldOfView_System_Single_System_Single_System_Single_System_Single_Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreatePerspectiveFieldOfView(System.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L675">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreatePerspectiveFieldOfView_" data-uid="Robust.Shared.Maths.Matrix4.CreatePerspectiveFieldOfView*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreatePerspectiveFieldOfView_System_Single_System_Single_System_Single_System_Single_Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.CreatePerspectiveFieldOfView(System.Single,System.Single,System.Single,System.Single,Robust.Shared.Maths.Matrix4@)">CreatePerspectiveFieldOfView(Single, Single, Single, Single, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Creates a perspective projection matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void CreatePerspectiveFieldOfView(float fovy, float aspect, float zNear, float zFar, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">fovy</span></td>
+        <td><p>Angle of the field of view in the y direction (in radians)</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">aspect</span></td>
+        <td><p>Aspect ratio of the view (width / height)</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zNear</span></td>
+        <td><p>Distance to the near clip plane</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zFar</span></td>
+        <td><p>Distance to the far clip plane</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>A projection matrix that transforms camera space to raster space</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreatePerspectiveOffCenter_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreatePerspectiveOffCenter(System.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L783">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreatePerspectiveOffCenter_" data-uid="Robust.Shared.Maths.Matrix4.CreatePerspectiveOffCenter*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreatePerspectiveOffCenter_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.CreatePerspectiveOffCenter(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">CreatePerspectiveOffCenter(Single, Single, Single, Single, Single, Single)</h4>
+  <div class="markdown level1 summary"><p>Creates an perspective projection matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 CreatePerspectiveOffCenter(float left, float right, float bottom, float top, float zNear, float zFar)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">left</span></td>
+        <td><p>Left edge of the view frustum</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">right</span></td>
+        <td><p>Right edge of the view frustum</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">bottom</span></td>
+        <td><p>Bottom edge of the view frustum</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">top</span></td>
+        <td><p>Top edge of the view frustum</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zNear</span></td>
+        <td><p>Distance to the near clip plane</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zFar</span></td>
+        <td><p>Distance to the far clip plane</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>A projection matrix that transforms camera space to raster space</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreatePerspectiveOffCenter_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreatePerspectiveOffCenter(System.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L742">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreatePerspectiveOffCenter_" data-uid="Robust.Shared.Maths.Matrix4.CreatePerspectiveOffCenter*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreatePerspectiveOffCenter_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.CreatePerspectiveOffCenter(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,Robust.Shared.Maths.Matrix4@)">CreatePerspectiveOffCenter(Single, Single, Single, Single, Single, Single, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Creates an perspective projection matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void CreatePerspectiveOffCenter(float left, float right, float bottom, float top, float zNear, float zFar, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">left</span></td>
+        <td><p>Left edge of the view frustum</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">right</span></td>
+        <td><p>Right edge of the view frustum</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">bottom</span></td>
+        <td><p>Bottom edge of the view frustum</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">top</span></td>
+        <td><p>Top edge of the view frustum</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zNear</span></td>
+        <td><p>Distance to the near clip plane</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">zFar</span></td>
+        <td><p>Distance to the far clip plane</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>A projection matrix that transforms camera space to raster space</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateRotationX_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateRotationX(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L449">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateRotationX_" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationX*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateRotationX_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationX(System.Single)">CreateRotationX(Single)</h4>
+  <div class="markdown level1 summary"><p>Builds a rotation matrix for a rotation around the x-axis.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 CreateRotationX(float angle)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">angle</span></td>
+        <td><p>The counter-clockwise angle in radians.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateRotationX_System_Single_Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateRotationX(System.Single%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L432">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateRotationX_" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationX*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateRotationX_System_Single_Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationX(System.Single,Robust.Shared.Maths.Matrix4@)">CreateRotationX(Single, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Builds a rotation matrix for a rotation around the x-axis.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void CreateRotationX(float angle, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">angle</span></td>
+        <td><p>The counter-clockwise angle in radians.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateRotationY_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateRotationY(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L478">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateRotationY_" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationY*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateRotationY_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationY(System.Single)">CreateRotationY(Single)</h4>
+  <div class="markdown level1 summary"><p>Builds a rotation matrix for a rotation around the y-axis.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 CreateRotationY(float angle)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">angle</span></td>
+        <td><p>The counter-clockwise angle in radians.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateRotationY_System_Single_Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateRotationY(System.Single%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L461">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateRotationY_" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationY*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateRotationY_System_Single_Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationY(System.Single,Robust.Shared.Maths.Matrix4@)">CreateRotationY(Single, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Builds a rotation matrix for a rotation around the y-axis.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void CreateRotationY(float angle, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">angle</span></td>
+        <td><p>The counter-clockwise angle in radians.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateRotationZ_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateRotationZ(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L507">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateRotationZ_" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationZ*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateRotationZ_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationZ(System.Single)">CreateRotationZ(Single)</h4>
+  <div class="markdown level1 summary"><p>Builds a rotation matrix for a rotation around the z-axis.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 CreateRotationZ(float angle)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">angle</span></td>
+        <td><p>The counter-clockwise angle in radians.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateRotationZ_System_Single_Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateRotationZ(System.Single%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L490">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateRotationZ_" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationZ*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateRotationZ_System_Single_Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.CreateRotationZ(System.Single,Robust.Shared.Maths.Matrix4@)">CreateRotationZ(Single, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Builds a rotation matrix for a rotation around the z-axis.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void CreateRotationZ(float angle, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">angle</span></td>
+        <td><p>The counter-clockwise angle in radians.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateTranslation_Robust_Shared_Maths_Vector3_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateTranslation(Robust.Shared.Maths.Vector3)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L563">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateTranslation_" data-uid="Robust.Shared.Maths.Matrix4.CreateTranslation*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateTranslation_Robust_Shared_Maths_Vector3_" data-uid="Robust.Shared.Maths.Matrix4.CreateTranslation(Robust.Shared.Maths.Vector3)">CreateTranslation(Vector3)</h4>
+  <div class="markdown level1 summary"><p>Creates a translation matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 CreateTranslation(Vector3 vector)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector3.html">Vector3</a></td>
+        <td><span class="parametername">vector</span></td>
+        <td><p>The translation vector.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateTranslation_Robust_Shared_Maths_Vector3__Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateTranslation(Robust.Shared.Maths.Vector3%40%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L537">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateTranslation_" data-uid="Robust.Shared.Maths.Matrix4.CreateTranslation*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateTranslation_Robust_Shared_Maths_Vector3__Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.CreateTranslation(Robust.Shared.Maths.Vector3@,Robust.Shared.Maths.Matrix4@)">CreateTranslation(ref Vector3, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Creates a translation matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void CreateTranslation(ref Vector3 vector, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector3.html">Vector3</a></td>
+        <td><span class="parametername">vector</span></td>
+        <td><p>The translation vector.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateTranslation_System_Single_System_Single_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateTranslation(System.Single%2CSystem.Single%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L551">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateTranslation_" data-uid="Robust.Shared.Maths.Matrix4.CreateTranslation*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateTranslation_System_Single_System_Single_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.CreateTranslation(System.Single,System.Single,System.Single)">CreateTranslation(Single, Single, Single)</h4>
+  <div class="markdown level1 summary"><p>Creates a translation matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 CreateTranslation(float x, float y, float z)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">x</span></td>
+        <td><p>X translation.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">y</span></td>
+        <td><p>Y translation.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">z</span></td>
+        <td><p>Z translation.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_CreateTranslation_System_Single_System_Single_System_Single_Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.CreateTranslation(System.Single%2CSystem.Single%2CSystem.Single%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L525">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_CreateTranslation_" data-uid="Robust.Shared.Maths.Matrix4.CreateTranslation*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_CreateTranslation_System_Single_System_Single_System_Single_Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.CreateTranslation(System.Single,System.Single,System.Single,Robust.Shared.Maths.Matrix4@)">CreateTranslation(Single, Single, Single, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Creates a translation matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void CreateTranslation(float x, float y, float z, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">x</span></td>
+        <td><p>X translation.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">y</span></td>
+        <td><p>Y translation.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">z</span></td>
+        <td><p>Z translation.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>The resulting Matrix4 instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Equals_Robust_Shared_Maths_Matrix4_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Equals(Robust.Shared.Maths.Matrix4)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L1228">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Equals_" data-uid="Robust.Shared.Maths.Matrix4.Equals*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Equals_Robust_Shared_Maths_Matrix4_" data-uid="Robust.Shared.Maths.Matrix4.Equals(Robust.Shared.Maths.Matrix4)">Equals(Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Indicates whether the current matrix is equal to another matrix.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Equals(Matrix4 other)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">other</span></td>
+        <td><p>An matrix to compare with this matrix.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>true if the current matrix is equal to the matrix parameter; otherwise, false.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Equals_System_Nullable_System_Object__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Equals(System.Nullable%7BSystem.Object%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L1209">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Equals_" data-uid="Robust.Shared.Maths.Matrix4.Equals*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Equals_System_Nullable_System_Object__" data-uid="Robust.Shared.Maths.Matrix4.Equals(System.Nullable{System.Object})">Equals(Nullable&lt;Object&gt;)</h4>
+  <div class="markdown level1 summary"><p>Indicates whether this instance and a specified object are equal.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override bool Equals(object? obj)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.Object</span>&gt;</td>
+        <td><span class="parametername">obj</span></td>
+        <td><p>The object to compare with this matrix.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True if the instances are equal; false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_GetHashCode.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.GetHashCode%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L1194">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_GetHashCode_" data-uid="Robust.Shared.Maths.Matrix4.GetHashCode*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_GetHashCode" data-uid="Robust.Shared.Maths.Matrix4.GetHashCode">GetHashCode()</h4>
+  <div class="markdown level1 summary"><p>Returns the hashcode for this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override int GetHashCode()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><p>A System.Int32 containing the unique hashcode for this instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Invert.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Invert%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L361">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Invert_" data-uid="Robust.Shared.Maths.Matrix4.Invert*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Invert" data-uid="Robust.Shared.Maths.Matrix4.Invert">Invert()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Invert()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Invert_Robust_Shared_Maths_Matrix4_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Invert(Robust.Shared.Maths.Matrix4)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L984">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Invert_" data-uid="Robust.Shared.Maths.Matrix4.Invert*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Invert_Robust_Shared_Maths_Matrix4_" data-uid="Robust.Shared.Maths.Matrix4.Invert(Robust.Shared.Maths.Matrix4)">Invert(Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Calculate the inverse of the given matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 Invert(Matrix4 mat)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">mat</span></td>
+        <td><p>The matrix to invert</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>The inverse of the given matrix if it has one, or the input if it is singular</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Invert_Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Invert(Robust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L992">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Invert_" data-uid="Robust.Shared.Maths.Matrix4.Invert*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Invert_Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.Invert(Robust.Shared.Maths.Matrix4@)">Invert(ref Matrix4)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Invert(ref Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_LookAt_Robust_Shared_Maths_Vector3_Robust_Shared_Maths_Vector3_Robust_Shared_Maths_Vector3_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.LookAt(Robust.Shared.Maths.Vector3%2CRobust.Shared.Maths.Vector3%2CRobust.Shared.Maths.Vector3)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L861">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_LookAt_" data-uid="Robust.Shared.Maths.Matrix4.LookAt*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_LookAt_Robust_Shared_Maths_Vector3_Robust_Shared_Maths_Vector3_Robust_Shared_Maths_Vector3_" data-uid="Robust.Shared.Maths.Matrix4.LookAt(Robust.Shared.Maths.Vector3,Robust.Shared.Maths.Vector3,Robust.Shared.Maths.Vector3)">LookAt(Vector3, Vector3, Vector3)</h4>
+  <div class="markdown level1 summary"><p>Build a world space to camera space matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 LookAt(Vector3 eye, Vector3 target, Vector3 up)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector3.html">Vector3</a></td>
+        <td><span class="parametername">eye</span></td>
+        <td><p>Eye (camera) position in world space</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector3.html">Vector3</a></td>
+        <td><span class="parametername">target</span></td>
+        <td><p>Target position in world space</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector3.html">Vector3</a></td>
+        <td><span class="parametername">up</span></td>
+        <td><p>Up vector in world space (should not be parallel to the camera direction, that is target - eye)</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>A Matrix4 that transforms world space to camera space</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_LookAt_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.LookAt(System.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L891">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_LookAt_" data-uid="Robust.Shared.Maths.Matrix4.LookAt*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_LookAt_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.LookAt(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">LookAt(Single, Single, Single, Single, Single, Single, Single, Single, Single)</h4>
+  <div class="markdown level1 summary"><p>Build a world space to camera space matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 LookAt(float eyeX, float eyeY, float eyeZ, float targetX, float targetY, float targetZ, float upX, float upY, float upZ)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">eyeX</span></td>
+        <td><p>Eye (camera) position in world space</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">eyeY</span></td>
+        <td><p>Eye (camera) position in world space</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">eyeZ</span></td>
+        <td><p>Eye (camera) position in world space</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">targetX</span></td>
+        <td><p>Target position in world space</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">targetY</span></td>
+        <td><p>Target position in world space</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">targetZ</span></td>
+        <td><p>Target position in world space</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">upX</span></td>
+        <td><p>Up vector in world space (should not be parallel to the camera direction, that is target - eye)</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">upY</span></td>
+        <td><p>Up vector in world space (should not be parallel to the camera direction, that is target - eye)</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">upZ</span></td>
+        <td><p>Up vector in world space (should not be parallel to the camera direction, that is target - eye)</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>A Matrix4 that transforms world space to camera space</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Mult_Robust_Shared_Maths_Matrix4_Robust_Shared_Maths_Matrix4_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Mult(Robust.Shared.Maths.Matrix4%2CRobust.Shared.Maths.Matrix4)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L907">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Mult_" data-uid="Robust.Shared.Maths.Matrix4.Mult*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Mult_Robust_Shared_Maths_Matrix4_Robust_Shared_Maths_Matrix4_" data-uid="Robust.Shared.Maths.Matrix4.Mult(Robust.Shared.Maths.Matrix4,Robust.Shared.Maths.Matrix4)">Mult(Matrix4, Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Multiplies two instances.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 Mult(Matrix4 left, Matrix4 right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">left</span></td>
+        <td><p>The left operand of the multiplication.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">right</span></td>
+        <td><p>The right operand of the multiplication.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>A new instance that is the result of the multiplication</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Mult_Robust_Shared_Maths_Matrix4__Robust_Shared_Maths_Matrix4__Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Mult(Robust.Shared.Maths.Matrix4%40%2CRobust.Shared.Maths.Matrix4%40%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L920">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Mult_" data-uid="Robust.Shared.Maths.Matrix4.Mult*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Mult_Robust_Shared_Maths_Matrix4__Robust_Shared_Maths_Matrix4__Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.Mult(Robust.Shared.Maths.Matrix4@,Robust.Shared.Maths.Matrix4@,Robust.Shared.Maths.Matrix4@)">Mult(ref Matrix4, ref Matrix4, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Multiplies two instances.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Mult(ref Matrix4 left, ref Matrix4 right, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">left</span></td>
+        <td><p>The left operand of the multiplication.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">right</span></td>
+        <td><p>The right operand of the multiplication.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>A new instance that is the result of the multiplication</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Rotate_Robust_Shared_Maths_Quaternion_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Rotate(Robust.Shared.Maths.Quaternion)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L843">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Rotate_" data-uid="Robust.Shared.Maths.Matrix4.Rotate*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Rotate_Robust_Shared_Maths_Quaternion_" data-uid="Robust.Shared.Maths.Matrix4.Rotate(Robust.Shared.Maths.Quaternion)">Rotate(Quaternion)</h4>
+  <div class="markdown level1 summary"><p>Build a rotation matrix from a quaternion</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 Rotate(Quaternion q)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Quaternion.html">Quaternion</a></td>
+        <td><span class="parametername">q</span></td>
+        <td><p>the quaternion</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>A rotation matrix</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Scale_Robust_Shared_Maths_Vector3_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Scale(Robust.Shared.Maths.Vector3)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L810">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Scale_" data-uid="Robust.Shared.Maths.Matrix4.Scale*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Scale_Robust_Shared_Maths_Vector3_" data-uid="Robust.Shared.Maths.Matrix4.Scale(Robust.Shared.Maths.Vector3)">Scale(Vector3)</h4>
+  <div class="markdown level1 summary"><p>Build a scaling matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 Scale(Vector3 scale)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Vector3.html">Vector3</a></td>
+        <td><span class="parametername">scale</span></td>
+        <td><p>Scale factors for x,y and z axes</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>A scaling matrix</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Scale_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Scale(System.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L799">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Scale_" data-uid="Robust.Shared.Maths.Matrix4.Scale*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Scale_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.Scale(System.Single)">Scale(Single)</h4>
+  <div class="markdown level1 summary"><p>Build a scaling matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 Scale(float scale)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">scale</span></td>
+        <td><p>Single scale factor for x,y and z axes</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>A scaling matrix</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Scale_System_Single_System_Single_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Scale(System.Single%2CSystem.Single%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L823">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Scale_" data-uid="Robust.Shared.Maths.Matrix4.Scale*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Scale_System_Single_System_Single_System_Single_" data-uid="Robust.Shared.Maths.Matrix4.Scale(System.Single,System.Single,System.Single)">Scale(Single, Single, Single)</h4>
+  <div class="markdown level1 summary"><p>Build a scaling matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 Scale(float x, float y, float z)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">x</span></td>
+        <td><p>Scale factor for x-axis</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">y</span></td>
+        <td><p>Scale factor for y-axis</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">z</span></td>
+        <td><p>Scale factor for z-axis</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>A scaling matrix</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_ToString.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.ToString%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L1164">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_ToString_" data-uid="Robust.Shared.Maths.Matrix4.ToString*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_ToString" data-uid="Robust.Shared.Maths.Matrix4.ToString">ToString()</h4>
+  <div class="markdown level1 summary"><p>Returns a System.String that represents the current Matrix44.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override string ToString()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_ToString_System_Nullable_System_String__System_Nullable_IFormatProvider__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.ToString(System.Nullable%7BSystem.String%7D%2CSystem.Nullable%7BIFormatProvider%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L1169">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_ToString_" data-uid="Robust.Shared.Maths.Matrix4.ToString*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_ToString_System_Nullable_System_String__System_Nullable_IFormatProvider__" data-uid="Robust.Shared.Maths.Matrix4.ToString(System.Nullable{System.String},System.Nullable{IFormatProvider})">ToString(Nullable&lt;String&gt;, Nullable&lt;IFormatProvider&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string ToString(string? format, IFormatProvider? formatProvider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">format</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">IFormatProvider</span>&gt;</td>
+        <td><span class="parametername">formatProvider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Transpose.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Transpose%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L375">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Transpose_" data-uid="Robust.Shared.Maths.Matrix4.Transpose*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Transpose" data-uid="Robust.Shared.Maths.Matrix4.Transpose">Transpose()</h4>
+  <div class="markdown level1 summary"><p>Converts this instance into its transpose.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Transpose()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Transpose_Robust_Shared_Maths_Matrix4_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Transpose(Robust.Shared.Maths.Matrix4)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L1092">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Transpose_" data-uid="Robust.Shared.Maths.Matrix4.Transpose*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Transpose_Robust_Shared_Maths_Matrix4_" data-uid="Robust.Shared.Maths.Matrix4.Transpose(Robust.Shared.Maths.Matrix4)">Transpose(Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Calculate the transpose of the given matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 Transpose(Matrix4 mat)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">mat</span></td>
+        <td><p>The matrix to transpose</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>The transpose of the given matrix</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_Transpose_Robust_Shared_Maths_Matrix4__Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.Transpose(Robust.Shared.Maths.Matrix4%40%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L1103">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_Transpose_" data-uid="Robust.Shared.Maths.Matrix4.Transpose*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_Transpose_Robust_Shared_Maths_Matrix4__Robust_Shared_Maths_Matrix4__" data-uid="Robust.Shared.Maths.Matrix4.Transpose(Robust.Shared.Maths.Matrix4@,Robust.Shared.Maths.Matrix4@)">Transpose(ref Matrix4, out Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Calculate the transpose of the given matrix</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Transpose(ref Matrix4 mat, out Matrix4 result)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">mat</span></td>
+        <td><p>The matrix to transpose</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">result</span></td>
+        <td><p>The result of the calculation</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_TryFormat_Span_System_Char__System_Int32__ReadOnlySpan_System_Char__System_Nullable_IFormatProvider__.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.TryFormat(Span%7BSystem.Char%7D%2CSystem.Int32%40%2CReadOnlySpan%7BSystem.Char%7D%2CSystem.Nullable%7BIFormatProvider%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L1174">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_TryFormat_" data-uid="Robust.Shared.Maths.Matrix4.TryFormat*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_TryFormat_Span_System_Char__System_Int32__ReadOnlySpan_System_Char__System_Nullable_IFormatProvider__" data-uid="Robust.Shared.Maths.Matrix4.TryFormat(Span{System.Char},System.Int32@,ReadOnlySpan{System.Char},System.Nullable{IFormatProvider})">TryFormat(Span&lt;Char&gt;, out Int32, ReadOnlySpan&lt;Char&gt;, Nullable&lt;IFormatProvider&gt;)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryFormat(Span&lt;char&gt; destination, out int charsWritten, ReadOnlySpan&lt;char&gt; format, IFormatProvider? provider)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Span</span>&lt;<span class="xref">System.Char</span>&gt;</td>
+        <td><span class="parametername">destination</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">charsWritten</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">ReadOnlySpan</span>&lt;<span class="xref">System.Char</span>&gt;</td>
+        <td><span class="parametername">format</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">IFormatProvider</span>&gt;</td>
+        <td><span class="parametername">provider</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="operators">Operators
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_op_Equality_Robust_Shared_Maths_Matrix4_Robust_Shared_Maths_Matrix4_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.op_Equality(Robust.Shared.Maths.Matrix4%2CRobust.Shared.Maths.Matrix4)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L1136">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_op_Equality_" data-uid="Robust.Shared.Maths.Matrix4.op_Equality*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_op_Equality_Robust_Shared_Maths_Matrix4_Robust_Shared_Maths_Matrix4_" data-uid="Robust.Shared.Maths.Matrix4.op_Equality(Robust.Shared.Maths.Matrix4,Robust.Shared.Maths.Matrix4)">Equality(Matrix4, Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Compares two instances for equality.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator ==(Matrix4 left, Matrix4 right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">left</span></td>
+        <td><p>The first instance.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">right</span></td>
+        <td><p>The second instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True, if left equals right; false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_op_Inequality_Robust_Shared_Maths_Matrix4_Robust_Shared_Maths_Matrix4_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.op_Inequality(Robust.Shared.Maths.Matrix4%2CRobust.Shared.Maths.Matrix4)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L1148">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_op_Inequality_" data-uid="Robust.Shared.Maths.Matrix4.op_Inequality*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_op_Inequality_Robust_Shared_Maths_Matrix4_Robust_Shared_Maths_Matrix4_" data-uid="Robust.Shared.Maths.Matrix4.op_Inequality(Robust.Shared.Maths.Matrix4,Robust.Shared.Maths.Matrix4)">Inequality(Matrix4, Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Compares two instances for inequality.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator !=(Matrix4 left, Matrix4 right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">left</span></td>
+        <td><p>The first instance.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">right</span></td>
+        <td><p>The second instance.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><p>True, if left does not equal right; false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4_op_Multiply_Robust_Shared_Maths_Matrix4_Robust_Shared_Maths_Matrix4_.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4.op_Multiply(Robust.Shared.Maths.Matrix4%2CRobust.Shared.Maths.Matrix4)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L1124">View Source</a>
+  </span>
+  <a id="Robust_Shared_Maths_Matrix4_op_Multiply_" data-uid="Robust.Shared.Maths.Matrix4.op_Multiply*"></a>
+  <h4 id="Robust_Shared_Maths_Matrix4_op_Multiply_Robust_Shared_Maths_Matrix4_Robust_Shared_Maths_Matrix4_" data-uid="Robust.Shared.Maths.Matrix4.op_Multiply(Robust.Shared.Maths.Matrix4,Robust.Shared.Maths.Matrix4)">Multiply(Matrix4, Matrix4)</h4>
+  <div class="markdown level1 summary"><p>Matrix multiplication</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Matrix4 operator *(Matrix4 left, Matrix4 right)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">left</span></td>
+        <td><p>left-hand operand</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">right</span></td>
+        <td><p>right-hand operand</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><p>A new Matrix44 which holds the result of the multiplication</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <span class="xref">IEquatable&lt;&gt;</span>
+  </div>
+  <div>
+      <span class="xref">ISpanFormattable</span>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Shared_Maths_Matrix4.md&amp;value=---%0Auid%3A%20Robust.Shared.Maths.Matrix4%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Shared.Maths/Matrix4.cs/#L38" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

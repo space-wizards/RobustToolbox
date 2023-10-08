@@ -1,0 +1,628 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class UIController
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class UIController
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Client.UserInterface.Controllers.UIController">
+  
+  
+  <h1 id="Robust_Client_UserInterface_Controllers_UIController" data-uid="Robust.Client.UserInterface.Controllers.UIController" class="text-break">Class UIController
+  </h1>
+  <div class="markdown level0 summary"><p>Each <a class="xref" href="Robust.Client.UserInterface.Controllers.UIController.html">UIController</a> is instantiated as a singleton by <span class="xref">Robust.Client.UserInterface.UserInterfaceManager</span>
+<a class="xref" href="Robust.Client.UserInterface.Controllers.UIController.html">UIController</a> can use <a class="xref" href="../Robust.Shared/Robust.Shared.IoC.DependencyAttribute.html">DependencyAttribute</a> for regular IoC dependencies
+and <a class="xref" href="Robust.Client.UserInterface.UISystemDependencyAttribute.html">UISystemDependencyAttribute</a> to depend on <a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntitySystem.html">EntitySystem</a>s, which will be automatically
+injected once they are created.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">UIController</span></div>
+      <div class="level2"><a class="xref" href="Robust.Client.UserInterface.Controllers.Implementations.EntitySpawningUIController.html">EntitySpawningUIController</a></div>
+      <div class="level2"><a class="xref" href="Robust.Client.UserInterface.Controllers.Implementations.TileSpawningUIController.html">TileSpawningUIController</a></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Client.UserInterface.Controllers.html">Robust.Client.UserInterface.Controllers</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Client.dll</h6>
+  <h5 id="Robust_Client_UserInterface_Controllers_UIController_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class UIController : object, IEntityEventSubscriber</code></pre>
+  </div>
+  <h3 id="fields">Fields
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_EntityManager.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.EntityManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UIController.cs/#L19">View Source</a>
+  </span>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_EntityManager" data-uid="Robust.Client.UserInterface.Controllers.UIController.EntityManager">EntityManager</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected readonly IEntityManager EntityManager</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityManager.html">IEntityManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_EntitySystemManager.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.EntitySystemManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UIController.cs/#L18">View Source</a>
+  </span>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_EntitySystemManager" data-uid="Robust.Client.UserInterface.Controllers.UIController.EntitySystemManager">EntitySystemManager</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected readonly IEntitySystemManager EntitySystemManager</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntitySystemManager.html">IEntitySystemManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_UIManager.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.UIManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UIController.cs/#L17">View Source</a>
+  </span>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_UIManager" data-uid="Robust.Client.UserInterface.Controllers.UIController.UIManager">UIManager</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected readonly IUserInterfaceManager UIManager</code></pre>
+  </div>
+  <h5 class="fieldValue">Field Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.UserInterface.IUserInterfaceManager.html">IUserInterfaceManager</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_FrameUpdate_Robust_Shared_Timing_FrameEventArgs_.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.FrameUpdate(Robust.Shared.Timing.FrameEventArgs)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UIController.cs/#L25">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controllers_UIController_FrameUpdate_" data-uid="Robust.Client.UserInterface.Controllers.UIController.FrameUpdate*"></a>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_FrameUpdate_Robust_Shared_Timing_FrameEventArgs_" data-uid="Robust.Client.UserInterface.Controllers.UIController.FrameUpdate(Robust.Shared.Timing.FrameEventArgs)">FrameUpdate(FrameEventArgs)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public virtual void FrameUpdate(FrameEventArgs args)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.Timing.FrameEventArgs.html">FrameEventArgs</a></td>
+        <td><span class="parametername">args</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_Initialize.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.Initialize%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UIController.cs/#L21">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controllers_UIController_Initialize_" data-uid="Robust.Client.UserInterface.Controllers.UIController.Initialize*"></a>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_Initialize" data-uid="Robust.Client.UserInterface.Controllers.UIController.Initialize">Initialize()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public virtual void Initialize()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_SubscribeAllEvent__1_Robust_Shared_GameObjects_EntitySessionEventHandler___0__Type___Type___.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.SubscribeAllEvent%60%601(Robust.Shared.GameObjects.EntitySessionEventHandler%7B%60%600%7D%2CType%5B%5D%2CType%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UiController.Subscriptions.cs/#L45">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controllers_UIController_SubscribeAllEvent_" data-uid="Robust.Client.UserInterface.Controllers.UIController.SubscribeAllEvent*"></a>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_SubscribeAllEvent__1_Robust_Shared_GameObjects_EntitySessionEventHandler___0__Type___Type___" data-uid="Robust.Client.UserInterface.Controllers.UIController.SubscribeAllEvent``1(Robust.Shared.GameObjects.EntitySessionEventHandler{``0},Type[],Type[])">SubscribeAllEvent&lt;T&gt;(EntitySessionEventHandler&lt;T&gt;, Type[], Type[])</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected void SubscribeAllEvent&lt;T&gt;(EntitySessionEventHandler&lt;T&gt; handler, Type[] before = null, Type[] after = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntitySessionEventHandler-1.html">EntitySessionEventHandler</a>&lt;T&gt;</td>
+        <td><span class="parametername">handler</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span>[]</td>
+        <td><span class="parametername">before</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span>[]</td>
+        <td><span class="parametername">after</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_SubscribeLocalEvent__1_Robust_Shared_GameObjects_EntityEventHandler___0__Type___Type___.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.SubscribeLocalEvent%60%601(Robust.Shared.GameObjects.EntityEventHandler%7B%60%600%7D%2CType%5B%5D%2CType%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UiController.Subscriptions.cs/#L9">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controllers_UIController_SubscribeLocalEvent_" data-uid="Robust.Client.UserInterface.Controllers.UIController.SubscribeLocalEvent*"></a>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_SubscribeLocalEvent__1_Robust_Shared_GameObjects_EntityEventHandler___0__Type___Type___" data-uid="Robust.Client.UserInterface.Controllers.UIController.SubscribeLocalEvent``1(Robust.Shared.GameObjects.EntityEventHandler{``0},Type[],Type[])">SubscribeLocalEvent&lt;T&gt;(EntityEventHandler&lt;T&gt;, Type[], Type[])</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected void SubscribeLocalEvent&lt;T&gt;(EntityEventHandler&lt;T&gt; handler, Type[] before = null, Type[] after = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityEventHandler-1.html">EntityEventHandler</a>&lt;T&gt;</td>
+        <td><span class="parametername">handler</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span>[]</td>
+        <td><span class="parametername">before</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span>[]</td>
+        <td><span class="parametername">after</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_SubscribeLocalEvent__1_Robust_Shared_GameObjects_EntityEventRefHandler___0__Type___Type___.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.SubscribeLocalEvent%60%601(Robust.Shared.GameObjects.EntityEventRefHandler%7B%60%600%7D%2CType%5B%5D%2CType%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UiController.Subscriptions.cs/#L17">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controllers_UIController_SubscribeLocalEvent_" data-uid="Robust.Client.UserInterface.Controllers.UIController.SubscribeLocalEvent*"></a>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_SubscribeLocalEvent__1_Robust_Shared_GameObjects_EntityEventRefHandler___0__Type___Type___" data-uid="Robust.Client.UserInterface.Controllers.UIController.SubscribeLocalEvent``1(Robust.Shared.GameObjects.EntityEventRefHandler{``0},Type[],Type[])">SubscribeLocalEvent&lt;T&gt;(EntityEventRefHandler&lt;T&gt;, Type[], Type[])</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected void SubscribeLocalEvent&lt;T&gt;(EntityEventRefHandler&lt;T&gt; handler, Type[] before = null, Type[] after = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntityEventRefHandler-1.html">EntityEventRefHandler</a>&lt;T&gt;</td>
+        <td><span class="parametername">handler</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span>[]</td>
+        <td><span class="parametername">before</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span>[]</td>
+        <td><span class="parametername">after</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_SubscribeNetworkEvent__1_Robust_Shared_GameObjects_EntitySessionEventHandler___0__Type___Type___.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.SubscribeNetworkEvent%60%601(Robust.Shared.GameObjects.EntitySessionEventHandler%7B%60%600%7D%2CType%5B%5D%2CType%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UiController.Subscriptions.cs/#L31">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controllers_UIController_SubscribeNetworkEvent_" data-uid="Robust.Client.UserInterface.Controllers.UIController.SubscribeNetworkEvent*"></a>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_SubscribeNetworkEvent__1_Robust_Shared_GameObjects_EntitySessionEventHandler___0__Type___Type___" data-uid="Robust.Client.UserInterface.Controllers.UIController.SubscribeNetworkEvent``1(Robust.Shared.GameObjects.EntitySessionEventHandler{``0},Type[],Type[])">SubscribeNetworkEvent&lt;T&gt;(EntitySessionEventHandler&lt;T&gt;, Type[], Type[])</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected void SubscribeNetworkEvent&lt;T&gt;(EntitySessionEventHandler&lt;T&gt; handler, Type[] before = null, Type[] after = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.EntitySessionEventHandler-1.html">EntitySessionEventHandler</a>&lt;T&gt;</td>
+        <td><span class="parametername">handler</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span>[]</td>
+        <td><span class="parametername">before</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Type</span>[]</td>
+        <td><span class="parametername">after</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_UnSubscribeAllEvent__1.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.UnSubscribeAllEvent%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UiController.Subscriptions.cs/#L53">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controllers_UIController_UnSubscribeAllEvent_" data-uid="Robust.Client.UserInterface.Controllers.UIController.UnSubscribeAllEvent*"></a>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_UnSubscribeAllEvent__1" data-uid="Robust.Client.UserInterface.Controllers.UIController.UnSubscribeAllEvent``1">UnSubscribeAllEvent&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected void UnSubscribeAllEvent&lt;T&gt;()</code></pre>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_UnSubscribeLocalEvent__1.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.UnSubscribeLocalEvent%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UiController.Subscriptions.cs/#L25">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controllers_UIController_UnSubscribeLocalEvent_" data-uid="Robust.Client.UserInterface.Controllers.UIController.UnSubscribeLocalEvent*"></a>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_UnSubscribeLocalEvent__1" data-uid="Robust.Client.UserInterface.Controllers.UIController.UnSubscribeLocalEvent``1">UnSubscribeLocalEvent&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected void UnSubscribeLocalEvent&lt;T&gt;()</code></pre>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController_UnSubscribeNetworkEvent__1.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController.UnSubscribeNetworkEvent%60%601%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UiController.Subscriptions.cs/#L39">View Source</a>
+  </span>
+  <a id="Robust_Client_UserInterface_Controllers_UIController_UnSubscribeNetworkEvent_" data-uid="Robust.Client.UserInterface.Controllers.UIController.UnSubscribeNetworkEvent*"></a>
+  <h4 id="Robust_Client_UserInterface_Controllers_UIController_UnSubscribeNetworkEvent__1" data-uid="Robust.Client.UserInterface.Controllers.UIController.UnSubscribeNetworkEvent``1">UnSubscribeNetworkEvent&lt;T&gt;()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected void UnSubscribeNetworkEvent&lt;T&gt;()</code></pre>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">T</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="../Robust.Shared/Robust.Shared.GameObjects.IEntityEventSubscriber.html">IEntityEventSubscriber</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_UserInterface_Controllers_UIController.md&amp;value=---%0Auid%3A%20Robust.Client.UserInterface.Controllers.UIController%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/UserInterface/Controllers/UiController.Subscriptions.cs/#L7" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

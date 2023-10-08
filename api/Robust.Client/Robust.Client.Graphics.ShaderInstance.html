@@ -1,0 +1,958 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class ShaderInstance
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class ShaderInstance
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../../favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Robust.Client.Graphics.ShaderInstance">
+  
+  
+  <h1 id="Robust_Client_Graphics_ShaderInstance" data-uid="Robust.Client.Graphics.ShaderInstance" class="text-break">Class ShaderInstance
+  </h1>
+  <div class="markdown level0 summary"><p>A shader instance is a wrapper around a shader that can be used for rendering.
+It can contain extra, mutable parameters depending on the shader backing it.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">ShaderInstance</span></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Robust.Client.Graphics.html">Robust.Client.Graphics</a></h6>
+  <h6><strong>Assembly</strong>: Robust.Client.dll</h6>
+  <h5 id="Robust_Client_Graphics_ShaderInstance_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class ShaderInstance : IDisposable</code></pre>
+  </div>
+  <h5 id="Robust_Client_Graphics_ShaderInstance_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>Shader instances are often shared to reduce bloat.
+As such, they can be made &quot;immutable&quot; to avoid accidentally modifying
+the shader instance used by every entity on the station.</p>
+<p>A shader can be made immutable with <a class="xref" href="Robust.Client.Graphics.ShaderInstance.html#Robust_Client_Graphics_ShaderInstance_MakeImmutable">MakeImmutable()</a>. This is irreversible.
+After doing this, operations such as <a class="xref" href="Robust.Client.Graphics.ShaderInstance.html#Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_System_Single_">SetParameter(String, Single)</a> will throw a <see cref="!:InvalidOperationException"></see>.</p>
+<p>You can &quot;duplicate&quot; a shader instance to make a separate,
+once again mutable, copy with <a class="xref" href="Robust.Client.Graphics.ShaderInstance.html#Robust_Client_Graphics_ShaderInstance_Duplicate">Duplicate()</a>.</p>
+</div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_Disposed.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.Disposed%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L29">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_Disposed_" data-uid="Robust.Client.Graphics.ShaderInstance.Disposed*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_Disposed" data-uid="Robust.Client.Graphics.ShaderInstance.Disposed">Disposed</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Disposed { get; protected set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_Mutable.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.Mutable%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L34">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_Mutable_" data-uid="Robust.Client.Graphics.ShaderInstance.Mutable*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_Mutable" data-uid="Robust.Client.Graphics.ShaderInstance.Mutable">Mutable</h4>
+  <div class="markdown level1 summary"><p>Whether this shader is mutable. An immutable shader can no longer be edited and is ideal for sharing.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Mutable { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_Stencil.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.Stencil%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L39">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_Stencil_" data-uid="Robust.Client.Graphics.ShaderInstance.Stencil*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_Stencil" data-uid="Robust.Client.Graphics.ShaderInstance.Stencil">Stencil</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public StencilParameters Stencil { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.StencilParameters.html">StencilParameters</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_StencilFunc.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.StencilFunc%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L69">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_StencilFunc_" data-uid="Robust.Client.Graphics.ShaderInstance.StencilFunc*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_StencilFunc" data-uid="Robust.Client.Graphics.ShaderInstance.StencilFunc">StencilFunc</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public StencilFunc StencilFunc { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.StencilFunc.html">StencilFunc</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_StencilOp.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.StencilOp%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L75">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_StencilOp_" data-uid="Robust.Client.Graphics.ShaderInstance.StencilOp*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_StencilOp" data-uid="Robust.Client.Graphics.ShaderInstance.StencilOp">StencilOp</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public StencilOp StencilOp { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.StencilOp.html">StencilOp</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_StencilReadMask.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.StencilReadMask%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L63">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_StencilReadMask_" data-uid="Robust.Client.Graphics.ShaderInstance.StencilReadMask*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_StencilReadMask" data-uid="Robust.Client.Graphics.ShaderInstance.StencilReadMask">StencilReadMask</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int StencilReadMask { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_StencilTestEnabled.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.StencilTestEnabled%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L51">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_StencilTestEnabled_" data-uid="Robust.Client.Graphics.ShaderInstance.StencilTestEnabled*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_StencilTestEnabled" data-uid="Robust.Client.Graphics.ShaderInstance.StencilTestEnabled">StencilTestEnabled</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool StencilTestEnabled { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_StencilWriteMask.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.StencilWriteMask%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L57">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_StencilWriteMask_" data-uid="Robust.Client.Graphics.ShaderInstance.StencilWriteMask*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_StencilWriteMask" data-uid="Robust.Client.Graphics.ShaderInstance.StencilWriteMask">StencilWriteMask</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int StencilWriteMask { get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_Dispose.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.Dispose%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L191">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_Dispose_" data-uid="Robust.Client.Graphics.ShaderInstance.Dispose*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_Dispose" data-uid="Robust.Client.Graphics.ShaderInstance.Dispose">Dispose()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract void Dispose()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_Duplicate.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.Duplicate%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L184">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_Duplicate_" data-uid="Robust.Client.Graphics.ShaderInstance.Duplicate*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_Duplicate" data-uid="Robust.Client.Graphics.ShaderInstance.Duplicate">Duplicate()</h4>
+  <div class="markdown level1 summary"><p>Make an identical copy of this shader, that is treated separately for the parameters assigned to it.
+The copy is also mutable, even if the source is not so.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ShaderInstance Duplicate()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.ShaderInstance.html">ShaderInstance</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_MakeImmutable.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.MakeImmutable%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L175">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_MakeImmutable_" data-uid="Robust.Client.Graphics.ShaderInstance.MakeImmutable*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_MakeImmutable" data-uid="Robust.Client.Graphics.ShaderInstance.MakeImmutable">MakeImmutable()</h4>
+  <div class="markdown level1 summary"><p>Make this shader permanently immutable.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void MakeImmutable()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Client_Graphics_Texture_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CRobust.Client.Graphics.Texture)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L165">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Client_Graphics_Texture_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,Robust.Client.Graphics.Texture)">SetParameter(String, Texture)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, Texture value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Robust.Client.Graphics.Texture.html">Texture</a></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Color_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CRobust.Shared.Maths.Color)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L123">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Color_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,Robust.Shared.Maths.Color)">SetParameter(String, Color)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, Color value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Color.html">Color</a></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Matrix3__.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CRobust.Shared.Maths.Matrix3%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L151">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Matrix3__" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,Robust.Shared.Maths.Matrix3@)">SetParameter(String, Matrix3)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, in Matrix3 value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix3.html">Matrix3</a></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Matrix4__.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CRobust.Shared.Maths.Matrix4%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L158">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Matrix4__" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,Robust.Shared.Maths.Matrix4@)">SetParameter(String, Matrix4)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, in Matrix4 value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Matrix4.html">Matrix4</a></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Vector2i_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CRobust.Shared.Maths.Vector2i)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L137">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Vector2i_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,Robust.Shared.Maths.Vector2i)">SetParameter(String, Vector2i)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, Vector2i value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Vector2i.html">Vector2i</a></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Vector3_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CRobust.Shared.Maths.Vector3)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L109">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Vector3_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,Robust.Shared.Maths.Vector3)">SetParameter(String, Vector3)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, Vector3 value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Vector3.html">Vector3</a></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Vector4_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CRobust.Shared.Maths.Vector4)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L116">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Robust_Shared_Maths_Vector4_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,Robust.Shared.Maths.Vector4)">SetParameter(String, Vector4)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, Vector4 value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="../Robust.Shared.Maths/Robust.Shared.Maths.Vector4.html">Vector4</a></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_System_Boolean_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CSystem.Boolean)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L144">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_System_Boolean_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,System.Boolean)">SetParameter(String, Boolean)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, bool value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Boolean</span></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_System_Int32_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CSystem.Int32)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L130">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_System_Int32_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,System.Int32)">SetParameter(String, Int32)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, int value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_System_Single_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CSystem.Single)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L81">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_System_Single_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,System.Single)">SetParameter(String, Single)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, float value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_System_Single___.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CSystem.Single%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L88">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_System_Single___" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,System.Single[])">SetParameter(String, Single[])</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, float[] value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Single</span>[]</td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Vector2_.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CVector2)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L95">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Vector2_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,Vector2)">SetParameter(String, Vector2)</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, Vector2 value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Vector2</span></td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Vector2___.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance.SetParameter(System.String%2CVector2%5B%5D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L102">View Source</a>
+  </span>
+  <a id="Robust_Client_Graphics_ShaderInstance_SetParameter_" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter*"></a>
+  <h4 id="Robust_Client_Graphics_ShaderInstance_SetParameter_System_String_Vector2___" data-uid="Robust.Client.Graphics.ShaderInstance.SetParameter(System.String,Vector2[])">SetParameter(String, Vector2[])</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SetParameter(string name, Vector2[] value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">name</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">Vector2</span>[]</td>
+        <td><span class="parametername">value</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/new/master/apiSpec/new?filename=Robust_Client_Graphics_ShaderInstance.md&amp;value=---%0Auid%3A%20Robust.Client.Graphics.ShaderInstance%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/space-wizards/RobustToolbox/blob/master/Robust.Client/Graphics/Shaders/ShaderInstance.cs/#L27" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="toggle-mode">
+                <div class="icon">
+                  <i aria-hidden="true">☀</i>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="switch-style">
+                  <span class="slider round"></span>
+                </label>
+                <div class="icon">
+                  <i aria-hidden="true">☾</i>
+                </div>
+              </div>
+          
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <h5>In This Article</h5>
+              <div></div>
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            <div class="pull-left">
+              
+              <span>Generated by <strong>DocFX</strong></span>
+            </div>
+            <div class="toggle-mode pull-right visible-sm visible-xs">
+              <div class="icon">
+                <i aria-hidden="true">☀</i>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="switch-style-m">
+                <span class="slider round"></span>
+              </label>
+              <div class="icon">
+                <i aria-hidden="true">☾</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="text/javascript" src="../../styles/toggle-theme.js"></script>
+      </footer>    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -27,9 +27,9 @@ public abstract partial class SharedAudioSystem : EntitySystem
 {
     [Dependency] protected readonly IConfigurationManager CfgManager = default!;
     [Dependency] protected readonly IGameTiming Timing = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private   readonly IPrototypeManager _protoMan = default!;
-    [Dependency] private readonly IResourceCache _resource = default!;
+    [Dependency] private   readonly INetManager _netManager = default!;
+    [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
+    [Dependency] private   readonly IResourceCache _resource = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
     [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
 
@@ -48,6 +48,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
+        InitializeEffect();
         ZOffset = CfgManager.GetCVar(CVars.AudioZOffset);
         CfgManager.OnValueChanged(CVars.AudioZOffset, SetZOffset);
         SubscribeLocalEvent<Components.AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
@@ -110,7 +111,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
                 if (collection.Collection == null)
                     return string.Empty;
 
-                var soundCollection = _protoMan.Index<SoundCollectionPrototype>(collection.Collection);
+                var soundCollection = ProtoMan.Index<SoundCollectionPrototype>(collection.Collection);
                 return RandMan.Pick(soundCollection.PickFiles).ToString();
             }
         }

@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.Audio.Effects;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.GameObjects;
@@ -14,11 +15,6 @@ namespace Robust.Shared.Audio.Components;
 public sealed partial class AudioEffectComponent : Component, IAudioEffect
 {
     internal IAudioEffect Effect = new DummyAudioEffect();
-
-    public void Dispose()
-    {
-        Effect.Dispose();
-    }
 
     /// <inheritdoc />
     [DataField, AutoNetworkedField]

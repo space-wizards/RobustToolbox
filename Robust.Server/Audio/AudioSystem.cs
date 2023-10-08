@@ -20,8 +20,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public override void Initialize()
     {
         base.Initialize();
-        InitializeEffect();
         SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+        ShutdownEffect();
     }
 
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)

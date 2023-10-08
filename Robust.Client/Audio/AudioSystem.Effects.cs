@@ -7,8 +7,9 @@ namespace Robust.Client.Audio;
 
 public sealed partial class AudioSystem
 {
-    private void InitializeEffect()
+    protected override void InitializeEffect()
     {
+        base.InitializeEffect();
         SubscribeLocalEvent<AudioEffectComponent, ComponentInit>(OnEffectInit);
         SubscribeLocalEvent<AudioEffectComponent, ComponentShutdown>(OnEffectShutdown);
 
@@ -25,7 +26,10 @@ public sealed partial class AudioSystem
 
     private void OnEffectShutdown(EntityUid uid, AudioEffectComponent component, ComponentShutdown args)
     {
-        component.Effect.Dispose();
+        if (component.Effect is AudioEffect effect)
+        {
+            effect.Dispose();
+        }
     }
 
     private void OnAuxiliaryInit(EntityUid uid, AudioAuxiliaryComponent component, ComponentInit args)

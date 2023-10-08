@@ -64,7 +64,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         base.Initialize();
 
-        InitializeEffect();
         UpdatesOutsidePrediction = true;
         // Need to run after Eye updates so we have an accurate listener position.
         UpdatesAfter.Add(typeof(EyeSystem));

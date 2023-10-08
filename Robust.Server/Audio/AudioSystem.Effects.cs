@@ -1,15 +1,56 @@
+using Robust.Shared.Audio;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.Audio.Effects;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Server.Audio;
 
 public sealed partial class AudioSystem
 {
-    private void InitializeEffect()
+    protected override void InitializeEffect()
     {
+        base.InitializeEffect();
         SubscribeLocalEvent<AudioEffectComponent, ComponentStartup>(OnEffectStartup);
         SubscribeLocalEvent<AudioAuxiliaryComponent, ComponentStartup>(OnAuxiliaryStartup);
+    }
+
+    private void ShutdownEffect()
+    {
+    }
+
+    /// <summary>
+    /// Reloads all <see cref="AudioPresetPrototype"/> entities.
+    /// </summary>
+    public void ReloadPresets()
+    {
+        var query = AllEntityQuery<AudioPresetComponent>();
+        var toDelete = new ValueList<EntityUid>();
+
+        while (query.MoveNext(out var uid, out _))
+        {
+            toDelete.Add(uid);
+        }
+
+        foreach (var ent in toDelete)
+        {
+            Del(ent);
+        }
+
+        foreach (var proto in ProtoMan.EnumeratePrototypes<AudioPresetPrototype>())
+        {
+            if (!proto.CreateAuxiliary)
+                continue;
+
+            var effect = CreateEffect();
+            var aux = CreateAuxiliary();
+            SetEffectPreset(effect.Entity, effect.Component, proto);
+            SetEffect(aux.Entity, aux.Component, effect.Entity);
+            var preset = AddComp<AudioPresetComponent>(aux.Entity);
+            _auxiliaries.Remove(preset.Preset);
+            preset.Preset = proto.ID;
+            _auxiliaries[preset.Preset] = aux.Entity;
+        }
     }
 
     private void OnEffectStartup(EntityUid uid, AudioEffectComponent component, ComponentStartup args)

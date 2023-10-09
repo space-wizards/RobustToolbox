@@ -11,6 +11,7 @@ using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.ResourceManagement.ResourceTypes;
+using Robust.Shared.Serialization;
 using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -446,5 +447,35 @@ public abstract partial class SharedAudioSystem : EntitySystem
     public (EntityUid Entity, Components.AudioComponent Component)? PlayStatic(SoundSpecifier? sound, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         return sound == null ? null : PlayStatic(GetSound(sound), recipient, coordinates, audioParams ?? sound.Params);
+    }
+
+    // These are just here for replays now.
+    // We don't actually need them in shared, or netserializable, but this makes net serialization
+    // and replays happy
+
+    // TODO: This is quite bandwidth intensive.
+    // Sending bus names and file names as strings is expensive and can be optimized.
+    // Also there's redundant fields in AudioParams in most cases.
+    protected abstract class AudioMessage : EntityEventArgs
+    {
+        public string FileName = string.Empty;
+        public AudioParams AudioParams;
+    }
+
+    [NetSerializable, Serializable]
+    protected sealed class PlayAudioGlobalMessage : AudioMessage
+    {
+    }
+
+    [NetSerializable, Serializable]
+    protected sealed class PlayAudioPositionalMessage : AudioMessage
+    {
+        public NetCoordinates Coordinates;
+    }
+
+    [NetSerializable, Serializable]
+    protected sealed class PlayAudioEntityMessage : AudioMessage
+    {
+        public NetEntity NetEntity;
     }
 }

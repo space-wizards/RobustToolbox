@@ -24,6 +24,7 @@ using Robust.Shared.Player;
 using Robust.Shared.Players;
 using Robust.Shared.Replays;
 using Robust.Shared.ResourceManagement.ResourceTypes;
+using Robust.Shared.Serialization;
 using Robust.Shared.Spawners;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
@@ -42,7 +43,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IClientResourceCache _resourceCache = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
     [Dependency] private readonly IAudioInternal _audio = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
@@ -77,6 +77,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         SubscribeLocalEvent<AudioComponent, EntityPausedEvent>(OnAudioPaused);
         SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
         SubscribeLocalEvent<AudioComponent, AfterAutoHandleStateEvent>(OnAudioState);
+
+        // Replay stuff
+        SubscribeNetworkEvent<PlayAudioGlobalMessage>(OnGlobalAudio);
+        SubscribeNetworkEvent<PlayAudioEntityMessage>(OnEntityAudio);
+        SubscribeNetworkEvent<PlayAudioPositionalMessage>(OnEntityCoordinates);
 
         CfgManager.OnValueChanged(CVars.AudioAttenuation, OnAudioAttenuation, true);
         CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
@@ -130,8 +135,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
     {
-        if ((!Timing.ApplyingState && !Timing.IsFirstTimePredicted) || !TryGetAudio(component.FileName, out var audioResource))
+        if ((!Timing.ApplyingState && !Timing.IsFirstTimePredicted) ||
+            !TryGetAudio(component.FileName, out var audioResource))
+        {
+            component.Source = new DummyAudioSource();
             return;
+        }
 
         var source = _audio.CreateAudioSource(audioResource);
 
@@ -337,7 +346,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="audioParams"></param>
     private (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, AudioParams? audioParams = null, bool recordReplay = true)
     {
-        /* left here just in case uhh yeah idk how replays handle clientside entity spawns.
         if (recordReplay && _replayRecording.IsRecording)
         {
             _replayRecording.RecordReplayMessage(new PlayAudioGlobalMessage
@@ -346,7 +354,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
                 AudioParams = audioParams ?? AudioParams.Default
             });
         }
-        */
 
         return TryGetAudio(filename, out var audio) ? PlayGlobal(audio, audioParams) : default;
     }
@@ -372,7 +379,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="entity">The entity "emitting" the audio.</param>
     private (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, EntityUid entity, AudioParams? audioParams = null, bool recordReplay = true)
     {
-        /*
         if (recordReplay && _replayRecording.IsRecording)
         {
             _replayRecording.RecordReplayMessage(new PlayAudioEntityMessage
@@ -382,7 +388,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
                 AudioParams = audioParams ?? AudioParams.Default
             });
         }
-        */
 
         return TryGetAudio(filename, out var audio) ? PlayEntity(audio, entity, audioParams) : default;
     }
@@ -409,7 +414,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="audioParams"></param>
     private (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, EntityCoordinates coordinates, AudioParams? audioParams = null, bool recordReplay = true)
     {
-        /*
         if (recordReplay && _replayRecording.IsRecording)
         {
             _replayRecording.RecordReplayMessage(new PlayAudioPositionalMessage
@@ -419,7 +423,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
                 AudioParams = audioParams ?? AudioParams.Default
             });
         }
-        */
 
         return TryGetAudio(filename, out var audio) ? PlayStatic(audio, coordinates, audioParams) : default;
     }
@@ -521,5 +524,20 @@ public sealed partial class AudioSystem : SharedAudioSystem
         source.MaxDistance = audioParams.MaxDistance;
         source.ReferenceDistance = audioParams.ReferenceDistance;
         source.Looping = audioParams.Loop;
+    }
+
+    private void OnEntityCoordinates(PlayAudioPositionalMessage ev)
+    {
+        PlayStatic(ev.FileName, GetCoordinates(ev.Coordinates), ev.AudioParams, false);
+    }
+
+    private void OnEntityAudio(PlayAudioEntityMessage ev)
+    {
+        PlayEntity(ev.FileName, GetEntity(ev.NetEntity), ev.AudioParams, false);
+    }
+
+    private void OnGlobalAudio(PlayAudioGlobalMessage ev)
+    {
+        PlayGlobal(ev.FileName, ev.AudioParams, false);
     }
 }

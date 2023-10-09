@@ -784,7 +784,7 @@
 
 
 - type: audioPreset
-  id: CASTLE_LARGEROOM
+  id: CastleLargeRoom
   density: 1.0000
   diffusion: 0.8200
   gain: 0.3162
@@ -811,7 +811,7 @@
 
 
 - type: audioPreset
-  id: CASTLE_LONGPASSAGE
+  id: CastleLongPassage
   density: 1.0000
   diffusion: 0.8900
   gain: 0.3162
@@ -838,7 +838,7 @@
 
 
 - type: audioPreset
-  id: CASTLE_HALL
+  id: CastleHall
   density: 1.0000
   diffusion: 0.8100
   gain: 0.3162
@@ -865,7 +865,7 @@
 
 
 - type: audioPreset
-  id: CASTLE_CUPBOARD
+  id: CastleCupboard
   density: 1.0000
   diffusion: 0.8900
   gain: 0.3162
@@ -892,7 +892,7 @@
 
 
 - type: audioPreset
-  id: CASTLE_COURTYARD
+  id: CastleCourtyard
   density: 1.0000
   diffusion: 0.4200
   gain: 0.3162
@@ -919,7 +919,7 @@
 
 
 - type: audioPreset
-  id: CASTLE_ALCOVE
+  id: CastleAlcove
   density: 1.0000
   diffusion: 0.8900
   gain: 0.3162
@@ -945,10 +945,10 @@
   decayHfLimit: 1 
 
 
-/* Factory Presets */
+#  Factory Presets
 
 - type: audioPreset
-  id: FACTORY_SMALLROOM
+  id: FactorySmallRoom
   density: 0.3645
   diffusion: 0.8200
   gain: 0.3162
@@ -975,7 +975,7 @@
 
 
 - type: audioPreset
-  id: FACTORY_SHORTPASSAGE
+  id: FactoryShortPassage
   density: 0.3645
   diffusion: 0.6400
   gain: 0.2512
@@ -1002,7 +1002,7 @@
 
 
 - type: audioPreset
-  id: FACTORY_MEDIUMROOM
+  id: FactoryMediumRoom
   density: 0.4287
   diffusion: 0.8200
   gain: 0.2512
@@ -1029,7 +1029,7 @@
 
 
 - type: audioPreset
-  id: FACTORY_LARGEROOM
+  id: FactoryLargeRoom
   density: 0.4287
   diffusion: 0.7500
   gain: 0.2512
@@ -1056,7 +1056,7 @@
 
 
 - type: audioPreset
-  id: FACTORY_LONGPASSAGE
+  id: FactoryLongPassage
   density: 0.3645
   diffusion: 0.6400
   gain: 0.2512
@@ -1083,7 +1083,7 @@
 
 
 - type: audioPreset
-  id: FACTORY_HALL
+  id: FactoryHall
   density: 0.4287
   diffusion: 0.7500
   gain: 0.3162
@@ -1110,7 +1110,7 @@
 
 
 - type: audioPreset
-  id: FACTORY_CUPBOARD
+  id: FactoryCupboard
   density: 0.3071
   diffusion: 0.6300
   gain: 0.2512
@@ -1137,7 +1137,7 @@
 
 
 - type: audioPreset
-  id: FACTORY_COURTYARD
+  id: FactoryCourtyard
   density: 0.3071
   diffusion: 0.5700
   gain: 0.3162
@@ -1164,7 +1164,7 @@
 
 
 - type: audioPreset
-  id: FACTORY_ALCOVE
+  id: FactoryAlcove
   density: 0.3645
   diffusion: 0.5900
   gain: 0.2512
@@ -1190,10 +1190,10 @@
   decayHfLimit: 1 
 
 
-/* Ice Palace Presets */
+#  Ice Palace Presets
 
 - type: audioPreset
-  id: ICEPALACE_SMALLROOM
+  id: IcePalaceSmallRoom
   density: 1.0000
   diffusion: 0.8400
   gain: 0.3162
@@ -1220,7 +1220,7 @@
 
 
 - type: audioPreset
-  id: ICEPALACE_SHORTPASSAGE
+  id: IcePalaceShortPassage
   density: 1.0000
   diffusion: 0.7500
   gain: 0.3162
@@ -1247,7 +1247,7 @@
 
 
 - type: audioPreset
-  id: ICEPALACE_MEDIUMROOM
+  id: IcePalaceMediumRoom
   density: 1.0000
   diffusion: 0.8700
   gain: 0.3162
@@ -1274,7 +1274,7 @@
 
 
 - type: audioPreset
-  id: ICEPALACE_LARGEROOM
+  id: IcePalaceLargeRoom
   density: 1.0000
   diffusion: 0.8100
   gain: 0.3162
@@ -1301,7 +1301,7 @@
 
 
 - type: audioPreset
-  id: ICEPALACE_LONGPASSAGE
+  id: IcePalaceLongPassage
   density: 1.0000
   diffusion: 0.7700
   gain: 0.3162
@@ -1328,7 +1328,7 @@
 
 
 - type: audioPreset
-  id: ICEPALACE_HALL
+  id: IcePalaceHall
   density: 1.0000
   diffusion: 0.7600
   gain: 0.3162
@@ -1355,7 +1355,7 @@
 
 
 - type: audioPreset
-  id: ICEPALACE_CUPBOARD
+  id: IcePalaceCupboard
   density: 1.0000
   diffusion: 0.8300
   gain: 0.3162
@@ -1382,7 +1382,7 @@
 
 
 - type: audioPreset
-  id: ICEPALACE_COURTYARD
+  id: IcePalaceCourtyard
   density: 1.0000
   diffusion: 0.5900
   gain: 0.3162
@@ -1409,7 +1409,7 @@
 
 
 - type: audioPreset
-  id: ICEPALACE_ALCOVE
+  id: IcePalaceAlcove
   density: 1.0000
   diffusion: 0.8400
   gain: 0.3162
@@ -1435,10 +1435,10 @@
   decayHfLimit: 1 
 
 
-/* Space Station Presets */
+#  Space Station Presets
 
 - type: audioPreset
-  id: SPACESTATION_SMALLROOM
+  id: SpaceStationSmallRoom
   density: 0.2109
   diffusion: 0.7000
   gain: 0.3162
@@ -1465,7 +1465,7 @@
 
 
 - type: audioPreset
-  id: SPACESTATION_SHORTPASSAGE
+  id: SpaceStationShortPassage
   density: 0.2109
   diffusion: 0.8700
   gain: 0.3162
@@ -1492,7 +1492,7 @@
 
 
 - type: audioPreset
-  id: SPACESTATION_MEDIUMROOM
+  id: SpaceStationMediumRoom
   density: 0.2109
   diffusion: 0.7500
   gain: 0.3162
@@ -1519,7 +1519,7 @@
 
 
 - type: audioPreset
-  id: SPACESTATION_LARGEROOM
+  id: SpaceStationLargeRoom
   density: 0.3645
   diffusion: 0.8100
   gain: 0.3162
@@ -1546,7 +1546,7 @@
 
 
 - type: audioPreset
-  id: SPACESTATION_LONGPASSAGE
+  id: SpaceStationLongPassage
   density: 0.4287
   diffusion: 0.8200
   gain: 0.3162
@@ -1573,7 +1573,7 @@
 
 
 - type: audioPreset
-  id: SPACESTATION_HALL
+  id: SpaceStationHall
   density: 0.4287
   diffusion: 0.8700
   gain: 0.3162
@@ -1600,7 +1600,7 @@
 
 
 - type: audioPreset
-  id: SPACESTATION_CUPBOARD
+  id: SpaceStationCupboard
   density: 0.1715
   diffusion: 0.5600
   gain: 0.3162
@@ -1627,7 +1627,7 @@
 
 
 - type: audioPreset
-  id: SPACESTATION_ALCOVE
+  id: SpaceStationAlcove
   density: 0.2109
   diffusion: 0.7800
   gain: 0.3162
@@ -1653,10 +1653,10 @@
   decayHfLimit: 1 
 
 
-/* Wooden Galleon Presets */
+#  Wooden Galleon Presets
 
 - type: audioPreset
-  id: WOODEN_SMALLROOM
+  id: WoodenSmallRoom
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -1683,7 +1683,7 @@
 
 
 - type: audioPreset
-  id: WOODEN_SHORTPASSAGE
+  id: WoodenShortPassage
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -1710,7 +1710,7 @@
 
 
 - type: audioPreset
-  id: WOODEN_MEDIUMROOM
+  id: WoodenMediumRoom
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -1737,7 +1737,7 @@
 
 
 - type: audioPreset
-  id: WOODEN_LARGEROOM
+  id: WoodenLargeRoom
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -1764,7 +1764,7 @@
 
 
 - type: audioPreset
-  id: WOODEN_LONGPASSAGE
+  id: WoodenLongPassage
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -1791,7 +1791,7 @@
 
 
 - type: audioPreset
-  id: WOODEN_HALL
+  id: WoodenHall
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -1818,7 +1818,7 @@
 
 
 - type: audioPreset
-  id: WOODEN_CUPBOARD
+  id: WoodenCupboard
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -1845,7 +1845,7 @@
 
 
 - type: audioPreset
-  id: WOODEN_COURTYARD
+  id: WoodenCourtyard
   density: 1.0000
   diffusion: 0.6500
   gain: 0.3162
@@ -1872,7 +1872,7 @@
 
 
 - type: audioPreset
-  id: WOODEN_ALCOVE
+  id: WoodenAlcove
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -1898,10 +1898,10 @@
   decayHfLimit: 1 
 
 
-/* Sports Presets */
+#  Sports Presets
 
 - type: audioPreset
-  id: SPORT_EMPTYSTADIUM
+  id: SportEmptyStadium
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -1928,7 +1928,7 @@
 
 
 - type: audioPreset
-  id: SPORT_SQUASHCOURT
+  id: SportSquashCourt
   density: 1.0000
   diffusion: 0.7500
   gain: 0.3162
@@ -1955,7 +1955,7 @@
 
 
 - type: audioPreset
-  id: SPORT_SMALLSWIMMINGPOOL
+  id: SportSmallSwimmingPool
   density: 1.0000
   diffusion: 0.7000
   gain: 0.3162
@@ -1982,7 +1982,7 @@
 
 
 - type: audioPreset
-  id: SPORT_LARGESWIMMINGPOOL
+  id: SportLargeSwimmingPool
   density: 1.0000
   diffusion: 0.8200
   gain: 0.3162
@@ -2009,7 +2009,7 @@
 
 
 - type: audioPreset
-  id: SPORT_GYMNASIUM
+  id: SportGymnasium
   density: 1.0000
   diffusion: 0.8100
   gain: 0.3162
@@ -2036,7 +2036,7 @@
 
 
 - type: audioPreset
-  id: SPORT_FULLSTADIUM
+  id: SportFullStadium
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -2063,7 +2063,7 @@
 
 
 - type: audioPreset
-  id: SPORT_STADIUMTANNOY
+  id: SportStadiumTannoy
   density: 1.0000
   diffusion: 0.7800
   gain: 0.3162
@@ -2089,10 +2089,10 @@
   decayHfLimit: 1 
 
 
-/* Prefab Presets */
+#  Prefab Presets
 
 - type: audioPreset
-  id: PREFAB_WORKSHOP
+  id: PrefabWorkshop
   density: 0.4287
   diffusion: 1.0000
   gain: 0.3162
@@ -2119,7 +2119,7 @@
 
 
 - type: audioPreset
-  id: PREFAB_SCHOOLROOM
+  id: PrefabSchoolroom
   density: 0.4022
   diffusion: 0.6900
   gain: 0.3162
@@ -2146,7 +2146,7 @@
 
 
 - type: audioPreset
-  id: PREFAB_PRACTISEROOM
+  id: PrefabPractiseRoom
   density: 0.4022
   diffusion: 0.8700
   gain: 0.3162
@@ -2173,7 +2173,7 @@
 
 
 - type: audioPreset
-  id: PREFAB_OUTHOUSE
+  id: PrefabOuthouse
   density: 1.0000
   diffusion: 0.8200
   gain: 0.3162
@@ -2184,7 +2184,7 @@
   decayLfRatio: 0.3500
   reflectionsGain: 0.8913
   reflectionsDelay: 0.0240
-  reflectionsPan:{ 0.0000 0.0000 -0.0000f },
+  reflectionsPan: 0, 0, 0
   lateReverbGain: 0.6310  
   lateReverbDelay: 0.0440
   lateReverbPan: 0,0,0
@@ -2200,7 +2200,7 @@
 
 
 - type: audioPreset
-  id: PREFAB_CARAVAN
+  id: PrefabCaravan
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -2226,10 +2226,10 @@
   decayHfLimit: 0 
 
 
-/* Dome and Pipe Presets */
+#  Dome and Pipe Presets
 
 - type: audioPreset
-  id: DOME_TOMB
+  id: DomeTomb
   density: 1.0000
   diffusion: 0.7900
   gain: 0.3162
@@ -2256,7 +2256,7 @@
 
 
 - type: audioPreset
-  id: PIPE_SMALL
+  id: PipeSmall
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -2283,7 +2283,7 @@
 
 
 - type: audioPreset
-  id: DOME_SAINTPAULS
+  id: DomeSaintPauls
   density: 1.0000
   diffusion: 0.8700
   gain: 0.3162
@@ -2310,7 +2310,7 @@
 
 
 - type: audioPreset
-  id: PIPE_LONGTHIN
+  id: PipeLongThin
   density: 0.2560
   diffusion: 0.9100
   gain: 0.3162
@@ -2337,7 +2337,7 @@
 
 
 - type: audioPreset
-  id: PIPE_LARGE
+  id: PipeLarge
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -2364,7 +2364,7 @@
 
 
 - type: audioPreset
-  id: PIPE_RESONANT
+  id: PipeResonant
   density: 0.1373
   diffusion: 0.9100
   gain: 0.3162
@@ -2390,10 +2390,10 @@
   decayHfLimit: 0 
 
 
-/* Outdoors Presets */
+#  Outdoors Presets
 
 - type: audioPreset
-  id: OUTDOORS_BACKYARD
+  id: OutdoorsBackyard
   density: 1.0000
   diffusion: 0.4500
   gain: 0.3162
@@ -2404,7 +2404,7 @@
   decayLfRatio: 0.4600
   reflectionsGain: 0.4467
   reflectionsDelay: 0.0690
-  reflectionsPan:{ 0.0000 0.0000 -0.0000f },
+  reflectionsPan: 0, 0, 0
   lateReverbGain: 0.7079  
   lateReverbDelay: 0.0230
   lateReverbPan: 0,0,0
@@ -2420,7 +2420,7 @@
 
 
 - type: audioPreset
-  id: OUTDOORS_ROLLINGPLAINS
+  id: OutdoorsRollingPlains
   density: 1.0000
   diffusion: 0.0000
   gain: 0.3162
@@ -2431,7 +2431,7 @@
   decayLfRatio: 0.4600
   reflectionsGain: 0.1778
   reflectionsDelay: 0.3000
-  reflectionsPan:{ 0.0000 0.0000 -0.0000f },
+  reflectionsPan: 0,0,0
   lateReverbGain: 0.4467  
   lateReverbDelay: 0.0190
   lateReverbPan: 0,0,0
@@ -2447,7 +2447,7 @@
 
 
 - type: audioPreset
-  id: OUTDOORS_DEEPCANYON
+  id: OutdoorsDeepCanyon
   density: 1.0000
   diffusion: 0.7400
   gain: 0.3162
@@ -2458,7 +2458,7 @@
   decayLfRatio: 0.4600
   reflectionsGain: 0.3162
   reflectionsDelay: 0.2230
-  reflectionsPan:{ 0.0000 0.0000 -0.0000f },
+  reflectionsPan: 0,0,0
   lateReverbGain: 0.3548  
   lateReverbDelay: 0.0190
   lateReverbPan: 0,0,0
@@ -2474,7 +2474,7 @@
 
 
 - type: audioPreset
-  id: OUTDOORS_CREEK
+  id: OutdoorsCreek
   density: 1.0000
   diffusion: 0.3500
   gain: 0.3162
@@ -2485,7 +2485,7 @@
   decayLfRatio: 0.4600
   reflectionsGain: 0.3981
   reflectionsDelay: 0.1150
-  reflectionsPan:{ 0.0000 0.0000 -0.0000f },
+  reflectionsPan: 0,0,0
   lateReverbGain: 0.1995  
   lateReverbDelay: 0.0310
   lateReverbPan: 0,0,0
@@ -2501,7 +2501,7 @@
 
 
 - type: audioPreset
-  id: OUTDOORS_VALLEY
+  id: OutdoorsValley
   density: 1.0000
   diffusion: 0.2800
   gain: 0.3162
@@ -2512,7 +2512,7 @@
   decayLfRatio: 0.3500
   reflectionsGain: 0.1413
   reflectionsDelay: 0.2630
-  reflectionsPan:{ 0.0000 0.0000 -0.0000f },
+  reflectionsPan: 0,0,0
   lateReverbGain: 0.3981  
   lateReverbDelay: 0.1000
   lateReverbPan: 0,0,0
@@ -2527,10 +2527,10 @@
   decayHfLimit: 0 
 
 
-/* Mood Presets */
+#  Mood Presets
 
 - type: audioPreset
-  id: MOOD_HEAVEN
+  id: MoodHeaven
   density: 1.0000
   diffusion: 0.9400
   gain: 0.3162
@@ -2557,7 +2557,7 @@
 
 
 - type: audioPreset
-  id: MOOD_HELL
+  id: MoodHell
   density: 1.0000
   diffusion: 0.5700
   gain: 0.3162
@@ -2584,7 +2584,7 @@
 
 
 - type: audioPreset
-  id: MOOD_MEMORY
+  id: MoodMemory
   density: 1.0000
   diffusion: 0.8500
   gain: 0.3162
@@ -2610,10 +2610,10 @@
   decayHfLimit: 0 
 
 
-/* Driving Presets */
+#  Driving Presets
 
 - type: audioPreset
-  id: DRIVING_COMMENTATOR
+  id: DrivingCommentator
   density: 1.0000
   diffusion: 0.0000
   gain: 0.3162
@@ -2640,7 +2640,7 @@
 
 
 - type: audioPreset
-  id: DRIVING_PITGARAGE
+  id: DrivingPitGarage
   density: 0.4287
   diffusion: 0.5900
   gain: 0.3162
@@ -2667,7 +2667,7 @@
 
 
 - type: audioPreset
-  id: DRIVING_INCAR_RACER
+  id: DrivingInCarRacer
   density: 0.0832
   diffusion: 0.8000
   gain: 0.3162
@@ -2694,7 +2694,7 @@
 
 
 - type: audioPreset
-  id: DRIVING_INCAR_SPORTS
+  id: DrivingInCarSports
   density: 0.0832
   diffusion: 0.8000
   gain: 0.3162
@@ -2721,7 +2721,7 @@
 
 
 - type: audioPreset
-  id: DRIVING_INCAR_LUXURY
+  id: DrivingInCarLuxury
   density: 0.2560
   diffusion: 1.0000
   gain: 0.3162
@@ -2748,7 +2748,7 @@
 
 
 - type: audioPreset
-  id: DRIVING_FULLGRANDSTAND
+  id: DrivingFullGrandstand
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -2775,7 +2775,7 @@
 
 
 - type: audioPreset
-  id: DRIVING_EMPTYGRANDSTAND
+  id: DrivingEmptyGrandstand
   density: 1.0000
   diffusion: 1.0000
   gain: 0.3162
@@ -2802,7 +2802,7 @@
 
 
 - type: audioPreset
-  id: DRIVING_TUNNEL
+  id: DrivingTunnel
   density: 1.0000
   diffusion: 0.8100
   gain: 0.3162
@@ -2828,10 +2828,10 @@
   decayHfLimit: 1 
 
 
-/* City Presets */
+#  City Presets
 
 - type: audioPreset
-  id: CITY_STREETS
+  id: CityStreets
   density: 1.0000
   diffusion: 0.7800
   gain: 0.3162
@@ -2858,7 +2858,7 @@
 
 
 - type: audioPreset
-  id: CITY_SUBWAY
+  id: CitySubway
   density: 1.0000
   diffusion: 0.7400
   gain: 0.3162
@@ -2885,7 +2885,7 @@
 
 
 - type: audioPreset
-  id: CITY_MUSEUM
+  id: CityMuseum
   density: 1.0000
   diffusion: 0.8200
   gain: 0.3162
@@ -2896,7 +2896,7 @@
   decayLfRatio: 0.5700
   reflectionsGain: 0.2512
   reflectionsDelay: 0.0390
-  reflectionsPan:{ 0.0000 0.0000 -0.0000f },
+  reflectionsPan: 0,0,0
   lateReverbGain: 0.8913  
   lateReverbDelay: 0.0340
   lateReverbPan: 0,0,0
@@ -2912,7 +2912,7 @@
 
 
 - type: audioPreset
-  id: CITY_LIBRARY
+  id: CityLibrary
   density: 1.0000
   diffusion: 0.8200
   gain: 0.3162
@@ -2923,7 +2923,7 @@
   decayLfRatio: 0.4100
   reflectionsGain: 0.3548
   reflectionsDelay: 0.0290
-  reflectionsPan:{ 0.0000 0.0000 -0.0000f },
+  reflectionsPan: 0,0,0
   lateReverbGain: 0.8913  
   lateReverbDelay: 0.0200
   lateReverbPan: 0,0,0
@@ -2939,7 +2939,7 @@
 
 
 - type: audioPreset
-  id: CITY_UNDERPASS
+  id: CityUnderpass
   density: 1.0000
   diffusion: 0.8200
   gain: 0.3162
@@ -2966,7 +2966,7 @@
 
 
 - type: audioPreset
-  id: CITY_ABANDONED
+  id: CityAbandoned
   density: 1.0000
   diffusion: 0.6900
   gain: 0.3162
@@ -2992,10 +2992,10 @@
   decayHfLimit: 1 
 
 
-/* Misc. Presets */
+#  Misc. Presets
 
 - type: audioPreset
-  id: DUSTYROOM
+  id: DustyRoom
   density: 0.3645
   diffusion: 0.5600
   gain: 0.3162
@@ -3022,7 +3022,7 @@
 
 
 - type: audioPreset
-  id: CHAPEL
+  id: Chapel
   density: 1.0000
   diffusion: 0.8400
   gain: 0.3162
@@ -3049,7 +3049,7 @@
 
 
 - type: audioPreset
-  id: SMALLWATERROOM
+  id: SmallWaterRoom
   density: 1.0000
   diffusion: 0.7000
   gain: 0.3162

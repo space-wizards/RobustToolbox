@@ -34,11 +34,6 @@ internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
     private readonly HashSet<string> _alcDeviceExtensions = new();
     private readonly HashSet<string> _alContextExtensions = new();
 
-    /// <summary>
-    /// The base gain value for a listener, used to boost the default volume.
-    /// </summary>
-    public const float BaseGainMultiplier = 2f;
-
     public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
     public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
 

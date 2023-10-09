@@ -193,7 +193,7 @@ internal partial class AudioManager
 
     public void SetMasterVolume(float newVolume)
     {
-        AL.Listener(ALListenerf.Gain, BaseGainMultiplier * newVolume);
+        AL.Listener(ALListenerf.Gain, newVolume);
     }
 
     public void SetAttenuation(Attenuation attenuation)

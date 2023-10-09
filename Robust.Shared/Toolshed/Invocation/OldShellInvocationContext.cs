@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 

@@ -8,7 +8,6 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
@@ -71,8 +70,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
                  // Setup PVS
                  sEntManager.AddComponent<EyeComponent>(entityUid);
-                 var player = sPlayerManager.ServerSessions.First();
-                 player.AttachToEntity(entityUid);
+                 var player = sPlayerManager.Sessions.First();
+                 EntitySystem.Get<ActorSystem>().Attach(entityUid, player);
                  player.JoinGame();
              });
 
@@ -201,8 +200,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
                  // Setup PVS
                  sEntManager.AddComponent<EyeComponent>(sEntityUid);
-                 var player = sPlayerManager.ServerSessions.First();
-                 player.AttachToEntity(sEntityUid);
+                 var player = sPlayerManager.Sessions.First();
+                 EntitySystem.Get<ActorSystem>().Attach(sEntityUid, player);
                  player.JoinGame();
              });
 

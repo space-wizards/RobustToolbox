@@ -1,8 +1,6 @@
 using System;
-using System.Linq;
 using System.Net;
 using Robust.Client.Configuration;
-using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Player;
@@ -10,13 +8,12 @@ using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -65,12 +62,12 @@ namespace Robust.Client
 
             _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged, invokeImmediately: true);
 
-            _playMan.Initialize();
+            _playMan.Initialize(0);
             _playMan.PlayerListUpdated += OnPlayerListUpdated;
             Reset();
         }
 
-        private void OnPlayerListUpdated(object? sender, EventArgs e)
+        private void OnPlayerListUpdated()
         {
             var serverPlayers = _playMan.PlayerCount;
             if (_net.ServerChannel != null && GameInfo != null && _net.IsConnected)
@@ -130,9 +127,12 @@ namespace Robust.Client
         {
             DebugTools.Assert(RunLevel < ClientRunLevel.Connecting);
             DebugTools.Assert(!_net.IsConnected);
-            _playMan.Startup();
-            _playMan.LocalPlayer!.Name = PlayerNameOverride ?? _configManager.GetCVar(CVars.PlayerName);
+
+            var name = PlayerNameOverride ?? _configManager.GetCVar(CVars.PlayerName);
+            _playMan.SetupSinglePlayer(name);
+
             OnRunLevelChanged(ClientRunLevel.SinglePlayerGame);
+            _playMan.SetStatus(_playMan.LocalSession!, SessionStatus.InGame);
             GameStartedSetup();
         }
 
@@ -173,22 +173,14 @@ namespace Robust.Client
                 info.ServerName = serverName;
             }
 
-            var maxPlayers = _configManager.GetCVar<int>("game.maxplayers");
-            info.ServerMaxPlayers = maxPlayers;
-
-            var userName = _net.ServerChannel!.UserName;
-            var userId = _net.ServerChannel.UserId;
+            var channel = _net.ServerChannel!;
 
             // start up player management
-            _playMan.Startup();
-
-            _playMan.LocalPlayer!.UserId = userId;
-            _playMan.LocalPlayer.Name = userName;
-
-            _playMan.LocalPlayer.StatusChanged += OnLocalStatusChanged;
+            _playMan.SetupMultiplayer(channel);
+            _playMan.PlayerStatusChanged += OnStatusChanged;
 
             var serverPlayers = _playMan.PlayerCount;
-            _discord.Update(info.ServerName, userName, info.ServerMaxPlayers.ToString(), serverPlayers.ToString());
+            _discord.Update(info.ServerName, channel.UserName, info.ServerMaxPlayers.ToString(), serverPlayers.ToString());
 
         }
 
@@ -215,12 +207,13 @@ namespace Robust.Client
         {
             DebugTools.Assert(RunLevel >= ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.InGame);
-
             PlayerJoinedGame?.Invoke(this, new PlayerEventArgs(session));
         }
 
         private void Reset()
         {
+            _configManager.ReceivedInitialNwVars -= OnReceivedClientData;
+            _playMan.PlayerStatusChanged -= OnStatusChanged;
             _configManager.ClearReceivedInitialNwVars();
             OnRunLevelChanged(ClientRunLevel.Initialize);
         }
@@ -263,19 +256,17 @@ namespace Robust.Client
             Reset();
         }
 
-        private void OnLocalStatusChanged(object? obj, StatusEventArgs eventArgs)
+        private void OnStatusChanged(object? sender, SessionStatusEventArgs e)
         {
+            if (e.Session != _playMan.LocalSession)
+                return;
+
             // player finished fully connecting to the server.
             // OldStatus is used here because it can go from connecting-> connected or connecting-> ingame
-            if (eventArgs.OldStatus == SessionStatus.Connecting)
-            {
-                OnPlayerJoinedServer(_playMan.LocalPlayer!.Session);
-            }
-
-            if (eventArgs.NewStatus == SessionStatus.InGame)
-            {
-                OnPlayerJoinedGame(_playMan.LocalPlayer!.Session);
-            }
+            if (e.OldStatus == SessionStatus.Connecting)
+                OnPlayerJoinedServer(e.Session);
+            else if (e.NewStatus == SessionStatus.InGame)
+                OnPlayerJoinedGame(e.Session);
         }
 
         private void OnRunLevelChanged(ClientRunLevel newRunLevel)

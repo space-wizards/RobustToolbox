@@ -15,7 +15,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -418,7 +418,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     #endregion
 
-    public (List<(int, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(IPlayerSession[] sessions)
+    public (List<(int, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(ICommonSession[] sessions)
     {
         var playerChunks = new HashSet<int>[sessions.Length];
         var viewerEntities = new EntityUid[sessions.Length][];
@@ -687,7 +687,7 @@ internal sealed partial class PvsSystem : EntitySystem
     }
 
     internal (List<EntityState>? updates, List<NetEntity>? deletions, List<NetEntity>? leftPvs, GameTick fromTick)
-        CalculateEntityStates(IPlayerSession session,
+        CalculateEntityStates(ICommonSession session,
             GameTick fromTick,
             GameTick toTick,
             (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] chunks,
@@ -1293,11 +1293,11 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
     private EntityUid[] GetSessionViewers(ICommonSession session)
     {
-        if (session.Status != SessionStatus.InGame || session is not IPlayerSession sess)
+        if (session.Status != SessionStatus.InGame)
             return Array.Empty<EntityUid>();
 
         // Fast path
-        if (sess.ViewSubscriptionCount == 0)
+        if (session.ViewSubscriptions.Count == 0)
         {
             if (session.AttachedEntity == null)
                 return Array.Empty<EntityUid>();
@@ -1309,11 +1309,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
         if (session.AttachedEntity != null)
             viewers.Add(session.AttachedEntity.Value);
 
-        foreach (var uid in sess.ViewSubscriptions)
-        {
-            viewers.Add(uid);
-        }
-
+        viewers.UnionWith(session.ViewSubscriptions);
         return viewers.ToArray();
     }
 
@@ -1398,7 +1394,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 [ByRefEvent]
 public struct ExpandPvsEvent
 {
-    public readonly IPlayerSession Session;
+    public readonly ICommonSession Session;
 
     /// <summary>
     /// List of entities that will get added to this session's PVS set.
@@ -1411,7 +1407,7 @@ public struct ExpandPvsEvent
     /// </summary>
     public List<EntityUid>? RecursiveEntities;
 
-    public ExpandPvsEvent(IPlayerSession session)
+    public ExpandPvsEvent(ICommonSession session)
     {
         Session = session;
     }

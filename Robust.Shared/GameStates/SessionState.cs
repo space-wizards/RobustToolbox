@@ -3,25 +3,33 @@ using System;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
+using Robust.Shared.ViewVariables;
 
 #nullable disable
 
 namespace Robust.Shared.GameStates
 {
     [Serializable, NetSerializable]
-    public sealed class PlayerState
+    public sealed class SessionState
     {
+        [ViewVariables]
         public NetUserId UserId { get; set; }
 
+        [ViewVariables]
         public string Name { get; set; }
+
+        [ViewVariables]
         public SessionStatus Status { get; set; }
+
+        [ViewVariables]
         public short Ping { get; set; }
 
+        [ViewVariables]
         public NetEntity? ControlledEntity { get; set; }
 
-        public PlayerState Clone()
+        public SessionState Clone()
         {
-            return new PlayerState
+            return new SessionState
             {
                 UserId = UserId,
                 Name = Name,
@@ -30,6 +38,5 @@ namespace Robust.Shared.GameStates
                 ControlledEntity = ControlledEntity
             };
         }
-
     }
 }

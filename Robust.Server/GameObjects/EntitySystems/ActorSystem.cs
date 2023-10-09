@@ -4,6 +4,7 @@ using Robust.Server.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects
@@ -30,7 +31,7 @@ namespace Robust.Server.GameObjects
         /// <param name="player">The player to attach to the entity</param>
         /// <param name="force">Whether to kick any existing players from the entity</param>
         /// <returns>Whether the attach succeeded, or not.</returns>
-        public bool Attach(EntityUid? uid, IPlayerSession player, bool force = false)
+        public bool Attach(EntityUid? uid, ICommonSession player, bool force = false)
         {
             return Attach(uid, player, false, out _);
         }
@@ -43,7 +44,7 @@ namespace Robust.Server.GameObjects
         /// <param name="force">Whether to kick any existing players from the entity</param>
         /// <param name="forceKicked">The player that was forcefully kicked, or null.</param>
         /// <returns>Whether the attach succeeded, or not.</returns>
-        public bool Attach(EntityUid? entity, IPlayerSession player, bool force, out IPlayerSession? forceKicked)
+        public bool Attach(EntityUid? entity, ICommonSession player, bool force, out ICommonSession? forceKicked)
         {
             // Null by default.
             forceKicked = null;
@@ -79,11 +80,11 @@ namespace Robust.Server.GameObjects
             // We add the actor component.
             actor = EntityManager.AddComponent<ActorComponent>(uid);
             EntityManager.EnsureComponent<EyeComponent>(uid);
-            actor.PlayerSession = player;
-            player.SetAttachedEntity(uid);
+            actor.PlayerSession = (ICommonSession) player;
+            _playerManager.SetAttachedEntity(player, uid);
 
             // The player is fully attached now, raise an event!
-            RaiseLocalEvent(uid, new PlayerAttachedEvent(uid, player, forceKicked), true);
+            RaiseLocalEvent(uid, new PlayerAttachedEvent(uid, (ICommonSession) player, forceKicked), true);
             DebugTools.Assert(player.AttachedEntity == entity);
             return true;
         }
@@ -108,7 +109,7 @@ namespace Robust.Server.GameObjects
         /// <param name="player">The player session that will be detached from any attached entities.</param>
         /// <returns>Whether the player is now detached from any entities.
         /// This returns true if the player wasn't attached to any entity.</returns>
-        public bool Detach(IPlayerSession player)
+        public bool Detach(ICommonSession player)
         {
             var uid = player.AttachedEntity;
             return uid == null || Detach(uid.Value);
@@ -116,13 +117,13 @@ namespace Robust.Server.GameObjects
 
         private void OnActorShutdown(EntityUid entity, ActorComponent component, ComponentShutdown args)
         {
-            component.PlayerSession.SetAttachedEntity(null);
+            _playerManager.SetAttachedEntity(component.PlayerSession, null);
 
             // The player is fully detached now that the component has shut down.
             RaiseLocalEvent(entity, new PlayerDetachedEvent(entity, component.PlayerSession), true);
         }
 
-        public bool TryGetActorFromUserId(NetUserId? userId, [NotNullWhen(true)] out IPlayerSession? actor, [MaybeNullWhen(true)] out EntityUid? actorEntity)
+        public bool TryGetActorFromUserId(NetUserId? userId, [NotNullWhen(true)] out ICommonSession? actor, out EntityUid? actorEntity)
         {
             actor = null;
             actorEntity = null;
@@ -143,14 +144,14 @@ namespace Robust.Server.GameObjects
     public sealed class PlayerAttachedEvent : EntityEventArgs
     {
         public EntityUid Entity { get; }
-        public IPlayerSession Player { get; }
+        public ICommonSession Player { get; }
 
         /// <summary>
         ///     The player session that was forcefully kicked from the entity, if any.
         /// </summary>
-        public IPlayerSession? Kicked { get; }
+        public ICommonSession? Kicked { get; }
 
-        public PlayerAttachedEvent(EntityUid entity, IPlayerSession player, IPlayerSession? kicked = null)
+        public PlayerAttachedEvent(EntityUid entity, ICommonSession player, ICommonSession? kicked = null)
         {
             Entity = entity;
             Player = player;
@@ -164,9 +165,9 @@ namespace Robust.Server.GameObjects
     public sealed class PlayerDetachedEvent : EntityEventArgs
     {
         public EntityUid Entity { get; }
-        public IPlayerSession Player { get; }
+        public ICommonSession Player { get; }
 
-        public PlayerDetachedEvent(EntityUid entity, IPlayerSession player)
+        public PlayerDetachedEvent(EntityUid entity, ICommonSession player)
         {
             Entity = entity;
             Player = player;

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Server.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -68,7 +68,7 @@ namespace Robust.Server.GameStates
             return true;
         }
 
-        public void CleanupDirty(IEnumerable<IPlayerSession> sessions)
+        public void CleanupDirty(IEnumerable<ICommonSession> sessions)
         {
             if (!CullingEnabled)
             {

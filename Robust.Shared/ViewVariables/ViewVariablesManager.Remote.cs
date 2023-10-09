@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using System.Threading.Tasks;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.ViewVariables.Commands;
 
 namespace Robust.Shared.ViewVariables;

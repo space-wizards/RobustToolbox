@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
@@ -20,6 +19,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Utility;
@@ -38,7 +38,7 @@ namespace Robust.Server.Scripting
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
-        readonly Dictionary<IPlayerSession, Dictionary<int, ScriptInstance>> _instances =
+        readonly Dictionary<ICommonSession, Dictionary<int, ScriptInstance>> _instances =
             new();
 
         private ISawmill _sawmill = default!;

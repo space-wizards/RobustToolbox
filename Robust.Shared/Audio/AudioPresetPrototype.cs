@@ -18,7 +18,7 @@ public sealed class AudioPresetPrototype : IPrototype
     /// Should the engine automatically create an auxiliary audio effect slot for this.
     /// </summary>
     [DataField]
-    public bool CreateAuxiliary = true;
+    public bool CreateAuxiliary;
 
     [DataField]
     public float Density;

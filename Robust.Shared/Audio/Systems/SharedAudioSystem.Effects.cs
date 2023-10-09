@@ -76,9 +76,12 @@ public abstract partial class SharedAudioSystem
         Dirty(auxUid, aux);
     }
 
-    public void SetEffect(EntityUid audioUid, AudioComponent component, string effectProto)
+    public void SetEffect(EntityUid? audioUid, AudioComponent? component, string effectProto)
     {
-        SetAuxiliary(audioUid, component, _auxiliaries[effectProto]);
+        if (audioUid == null || component == null)
+            return;
+
+        SetAuxiliary(audioUid.Value, component, _auxiliaries[effectProto]);
     }
 
     /// <summary>

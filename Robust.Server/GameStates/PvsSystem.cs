@@ -774,16 +774,22 @@ internal sealed partial class PvsSystem : EntitySystem
 
         var expandEvent = new ExpandPvsEvent(session);
         RaiseLocalEvent(ref expandEvent);
-        foreach (var entityUid in expandEvent.Entities)
+        if (expandEvent.Entities != null)
         {
-            RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, lastSeen, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+            foreach (var entityUid in expandEvent.Entities)
+            {
+                RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, lastSeen, in fromTick,
+                    ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+            }
         }
 
-        foreach (var entityUid in expandEvent.RecursiveEntities)
+        if (expandEvent.RecursiveEntities != null)
         {
-            RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, lastSeen,in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
+            foreach (var entityUid in expandEvent.RecursiveEntities)
+            {
+                RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, lastSeen,in fromTick,
+                    ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
+            }
         }
 
         var entityStates = new List<EntityState>(entStateCount);
@@ -1390,20 +1396,20 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 }
 
 [ByRefEvent]
-public readonly struct ExpandPvsEvent
+public struct ExpandPvsEvent
 {
     public readonly IPlayerSession Session;
 
     /// <summary>
     /// List of entities that will get added to this session's PVS set.
     /// </summary>
-    public readonly List<EntityUid> Entities = new();
+    public List<EntityUid>? Entities;
 
     /// <summary>
     /// List of entities that will get added to this session's PVS set. Unlike <see cref="Entities"/> this will also
     /// recursively add all children of the given entity.
     /// </summary>
-    public readonly List<EntityUid> RecursiveEntities = new();
+    public List<EntityUid>? RecursiveEntities;
 
     public ExpandPvsEvent(IPlayerSession session)
     {

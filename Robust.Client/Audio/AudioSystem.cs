@@ -135,9 +135,14 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
     {
-        if ((!Timing.ApplyingState && !Timing.IsFirstTimePredicted) ||
-            !TryGetAudio(component.FileName, out var audioResource))
+        if (!Timing.ApplyingState && !Timing.IsFirstTimePredicted)
         {
+            return;
+        }
+
+        if (!TryGetAudio(component.FileName, out var audioResource))
+        {
+            Log.Error($"Error creating audio source for {audioResource}, can't find file {component.FileName}");
             component.Source = new DummyAudioSource();
             return;
         }
@@ -154,8 +159,14 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // Need to set all initial data for first frame.
         component.Source = source;
         ApplyAudioParams(component.Params, component);
-        component.Source.Global = component.Global;
-        // Start playing it first frame as that handles audio properly.
+        component.Global = component.Global;
+        // Don't play until first frame so occlusion etc. are correct.
+        component.Gain = 0f;
+
+        if (!MetaData(uid).EntityPaused)
+        {
+            component.StartPlaying();
+        }
     }
 
     private void OnAudioShutdown(EntityUid uid, AudioComponent component, ComponentShutdown args)
@@ -202,44 +213,23 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
     }
 
-    private bool ResumeStream(EntityUid entity, AudioComponent component, float timeRemaining)
-    {
-        // This exists so if we turn-off / turn-on audio we don't just accidentally replay it on the final tick and clip it.
-        // We should be able to go between maps and just have audio resume where it began cleanly ideally.
-
-        if (component.Playing)
-            return true;
-
-        if (timeRemaining < 0.1f)
-            return false;
-
-        component.Playing = true;
-
-        if (!timeRemaining.Equals(float.MaxValue))
-            component.Source.PlaybackPosition = (float) (GetAudioLength(component.FileName).TotalSeconds - timeRemaining);
-
-        return true;
-    }
-
     private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
     {
-        float timeRemaining = float.MaxValue;
-        if (_despawnQuery.TryGetComponent(entity, out var despawn))
-        {
-            timeRemaining = despawn.Lifetime;
-        }
+        // TODO:
+        // I Originally tried to be fancier here but it caused audio issues so just trying
+        // to replicate the old behaviour for now.
 
         // If it's global but on another map (that isn't nullspace) then stop playing it.
         if (component.Global)
         {
             if (xform.MapID != MapId.Nullspace && listener.MapId != xform.MapID)
             {
-                component.StopPlaying();
+                component.Gain = 0f;
                 return;
             }
 
             // Resume playing.
-            ResumeStream(entity, component, timeRemaining);
+            component.Volume = component.Params.Volume;
             return;
         }
 
@@ -247,14 +237,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // Not relevant to us.
         if (listener.MapId != xform.MapID)
         {
-            component.StopPlaying();
+            component.Gain = 0f;
             return;
         }
 
-        if (!ResumeStream(entity, component, timeRemaining))
-            return;
-
         var mapPos = xform.MapPosition;
+        component.Volume = component.Params.Volume;
 
         // Max distance check
         var delta = mapPos.Position - listener.Position;
@@ -264,7 +252,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (distance > component.MaxDistance)
         {
             // Still keeps the source playing, just with no volume.
-            component.Source.Gain = 0f;
+            component.Gain = 0f;
             return;
         }
 
@@ -504,7 +492,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         // TODO clamp the offset inside of SetPlaybackPosition() itself.
         var offset = audioP.PlayOffsetSeconds;
-        offset = Math.Clamp(offset, 0f, (float) stream.Length.TotalSeconds);
+        offset = Math.Clamp(offset, 0f, (float) stream.Length.TotalSeconds - 0.01f);
         source.PlaybackPosition = offset;
 
         ApplyAudioParams(audioP, comp);

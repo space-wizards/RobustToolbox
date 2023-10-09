@@ -94,7 +94,7 @@ namespace Robust.Server.ViewVariables
             }
 
             if (value is EntityUid uid)
-                return IoCManager.Resolve<IEntityManager>().GetNetEntity(uid);
+                return IoCManager.Resolve<IEntityManager>().GetComponentOrNull<MetaDataComponent>(uid)?.NetEntity ?? NetEntity.Invalid;
 
             var valType = value.GetType();
             if (!valType.IsValueType)

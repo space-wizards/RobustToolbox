@@ -756,15 +756,15 @@ internal sealed partial class PvsSystem : EntitySystem
         }
         globalRecursiveEnumerator.Dispose();
 
-        var localEnumerator = _entityPvsCollection.GetElementsForSession(session);
-        while (localEnumerator.MoveNext())
+        var sessionOverrides = _entityPvsCollection.GetSessionOverrides(session);
+        while (sessionOverrides.MoveNext())
         {
-            var netEntity = localEnumerator.Current;
+            var netEntity = sessionOverrides.Current;
             var uid = GetEntity(netEntity);
             RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen,in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
         }
-        localEnumerator.Dispose();
+        sessionOverrides.Dispose();
 
         foreach (var viewerEntity in viewers)
         {

@@ -751,36 +751,34 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [return: NotNullIfNotNull("uid")]
-        public virtual EntityStringRepresentation? ToPrettyString(EntityUid? uid)
+        public EntityStringRepresentation? ToPrettyString(EntityUid? uid, MetaDataComponent? metadata = null)
         {
-            // We want to retrieve the MetaData component even if it is deleted.
-            if (uid == null)
-                return null;
+            return uid == null ? null : ToPrettyString(uid.Value, metadata);
+        }
 
-            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid.Value, out var component))
-                return new EntityStringRepresentation(uid.Value, true);
+        /// <inheritdoc />
+        public virtual EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata = null)
+        {
+            if (!MetaQuery.Resolve(uid, ref metadata, false))
+                return new EntityStringRepresentation(uid, true);
 
-            var metadata = (MetaDataComponent) component;
-
-            return ToPrettyString(uid.Value, metadata);
+            return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);
         }
 
         /// <inheritdoc />
         [return: NotNullIfNotNull("netEntity")]
         public EntityStringRepresentation? ToPrettyString(NetEntity? netEntity)
         {
-            return ToPrettyString(GetEntity(netEntity));
+            return netEntity == null ? null : ToPrettyString(netEntity.Value);
         }
 
-        public EntityStringRepresentation ToPrettyString(EntityUid uid)
-            => ToPrettyString((EntityUid?) uid).Value;
-
+        /// <inheritdoc />
         public EntityStringRepresentation ToPrettyString(NetEntity netEntity)
-            => ToPrettyString((NetEntity?) netEntity).Value;
-
-        private EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent metadata)
         {
-            return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);
+            if (!TryGetEntityData(netEntity, out var uid, out var meta))
+                return new EntityStringRepresentation(EntityUid.Invalid, true);
+
+            return ToPrettyString(uid.Value, meta);
         }
 
         #endregion Entity Management

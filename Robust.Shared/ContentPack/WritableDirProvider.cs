@@ -28,7 +28,20 @@ namespace Robust.Shared.ContentPack
         public void CreateDir(ResPath path)
         {
             var fullPath = GetFullPath(path);
-            Directory.CreateDirectory(fullPath);
+
+            // Temporary try-catch to debug replay issues.
+            try
+            {
+                Directory.CreateDirectory(fullPath);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                if (Directory.Exists(fullPath))
+                    throw new Exception($"Directory {fullPath} already exists");
+                if (File.Exists(fullPath))
+                    throw new Exception($"File {fullPath} already exists");
+                throw;
+            }
         }
 
         /// <inheritdoc />

@@ -93,14 +93,10 @@ namespace Robust.Client.GameObjects
                 base.Dirty(uid, component, meta);
         }
 
-        [return: NotNullIfNotNull("uid")]
-        public override EntityStringRepresentation? ToPrettyString(EntityUid? uid)
+        public override EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metaDataComponent = null)
         {
-            if (uid == null)
-                return null;
-
             if (_playerManager.LocalPlayer?.ControlledEntity == uid)
-                return base.ToPrettyString(uid).Value with { Session = _playerManager.LocalPlayer.Session };
+                return base.ToPrettyString(uid) with { Session = _playerManager.LocalPlayer.Session };
 
             return base.ToPrettyString(uid);
         }

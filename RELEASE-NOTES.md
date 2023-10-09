@@ -10,7 +10,7 @@ Don't change the format without looking at the script!
 
 ### Breaking changes
 
-* Removed cloneData from AutoNetworkedFieldAttribute. This is now automatically inferred.
+*None yet*
 
 ### New features
 
@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Removed cloneData from AutoNetworkedFieldAttribute. This is now automatically inferred.
+*None yet*
 
 ### New features
 
@@ -54,11 +54,27 @@ END TEMPLATE-->
 *None yet*
 
 
+## 165.0.0
+
+### Breaking changes
+
+* The arguments of `SplitContainer`s resize-finished event have changed.
+
+### New features
+
+* The YAML validator now checks the default values of ProtoId<T> and EntProtoId data fields. 
+
+### Bugfixes
+
+* The minimum draggable area of split containers now blocks mouse inputs.
+
+
 ## 164.0.0
 
 ### Breaking changes
 
 * Make automatic component states infer cloneData.
+* Removed cloneData from AutoNetworkedFieldAttribute. This is now automatically inferred.
 
 ### Internal
 

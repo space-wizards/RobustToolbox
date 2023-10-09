@@ -128,6 +128,7 @@ namespace Robust.UnitTesting
 
             // Required components for the engine to work
             // Why are we still here? Just to suffer? Why can't we just use [RegisterComponent] magic?
+            // TODO End Suffering.
             var compFactory = deps.Resolve<IComponentFactory>();
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(EyeComponent)))
@@ -223,6 +224,11 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(Gravity2DComponent)))
             {
                 compFactory.RegisterClass<Gravity2DComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(ActorComponent)))
+            {
+                compFactory.RegisterClass<ActorComponent>();
             }
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.

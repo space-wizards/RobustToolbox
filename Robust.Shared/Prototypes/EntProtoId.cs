@@ -39,4 +39,6 @@ public readonly record struct EntProtoId(string Id) : IEquatable<string>, ICompa
     {
         return string.Compare(Id, other.Id, StringComparison.Ordinal);
     }
+
+    public override string ToString() => Id ?? string.Empty;
 }

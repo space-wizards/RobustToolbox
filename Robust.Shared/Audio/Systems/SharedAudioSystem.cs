@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Audio.Components;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -32,7 +33,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
     [Dependency] private   readonly IResourceCache _resource = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
-    [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
 
     /// <summary>
     /// Default max range at which the sound can be heard.
@@ -63,7 +63,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     protected virtual void SetZOffset(float value)
     {
-        var query = AllEntityQuery<Components.AudioComponent>();
+        var query = AllEntityQuery<AudioComponent>();
         var oldZOffset = ZOffset;
         ZOffset = value;
 
@@ -82,8 +82,13 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     private void OnAudioGetStateAttempt(EntityUid uid, Components.AudioComponent component, ref ComponentGetStateAttemptEvent args)
     {
-        if (component.ExcludedEntity != null && args.Player?.AttachedEntity == component.ExcludedEntity)
+        var playerEnt = args.Player?.AttachedEntity;
+
+        if ((component.ExcludedEntity != null && playerEnt == component.ExcludedEntity) ||
+            (playerEnt != null && component.IncludedEntities != null && !component.IncludedEntities.Contains(playerEnt.Value)))
+        {
             args.Cancelled = true;
+        }
     }
 
     /// <summary>

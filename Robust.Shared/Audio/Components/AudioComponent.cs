@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Audio.Effects;
 using Robust.Shared.Audio.Sources;
@@ -19,10 +20,24 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     public override bool SessionSpecific => true;
 
+    #region Filters
+
+    // Don't need to network these as client doesn't care.
+
     /// <summary>
     /// If this sound was predicted do we exclude it from a specific entity.
+    /// Useful for predicted audio.
     /// </summary>
+    [DataField]
     public EntityUid? ExcludedEntity;
+
+    /// <summary>
+    /// If the sound was filtered what entities were included.
+    /// </summary>
+    [DataField]
+    public HashSet<EntityUid>? IncludedEntities;
+
+    #endregion
 
     #endregion
 

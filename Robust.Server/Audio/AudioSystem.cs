@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
@@ -9,6 +10,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
+using Robust.Shared.Utility;
 using AudioComponent = Robust.Shared.Audio.Components.AudioComponent;
 
 namespace Robust.Server.Audio;
@@ -34,10 +36,30 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Source = new DummyAudioSource();
     }
 
-    private void AddAudioFilter(EntityUid uid, Filter filter)
+    private void AddAudioFilter(EntityUid uid, AudioComponent component, Filter filter)
     {
+        var count = filter.Count;
+
+        if (count == 0)
+            return;
+
         var nent = GetNetEntity(uid);
         _pvs.AddSessionOverrides(nent, filter);
+
+        var ents = new HashSet<EntityUid>(count);
+
+        foreach (var session in filter.Recipients)
+        {
+            var ent = session.AttachedEntity;
+
+            if (ent == null)
+                continue;
+
+            ents.Add(ent.Value);
+        }
+
+        DebugTools.Assert(component.IncludedEntities == null);
+        component.IncludedEntities = ents;
     }
 
     /// <inheritdoc />
@@ -45,7 +67,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         var entity = Spawn("Audio", MapCoordinates.Nullspace);
         var audio = SetupAudio(entity, filename, audioParams);
-        AddAudioFilter(entity, playerFilter);
+        AddAudioFilter(entity, audio, playerFilter);
 
         return (entity, audio);
     }
@@ -58,7 +80,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
         var audio = SetupAudio(entity, filename, audioParams);
-        AddAudioFilter(entity, playerFilter);
+        AddAudioFilter(entity, audio, playerFilter);
 
         return (entity, audio);
     }
@@ -83,7 +105,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         var entity = Spawn("Audio", coordinates);
         var audio = SetupAudio(entity, filename, audioParams);
-        AddAudioFilter(entity, playerFilter);
+        AddAudioFilter(entity, audio, playerFilter);
 
         return (entity, audio);
     }

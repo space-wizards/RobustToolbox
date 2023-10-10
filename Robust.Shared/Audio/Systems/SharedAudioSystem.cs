@@ -456,6 +456,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     // TODO: This is quite bandwidth intensive.
     // Sending bus names and file names as strings is expensive and can be optimized.
     // Also there's redundant fields in AudioParams in most cases.
+    [NetSerializable, Serializable]
     protected abstract class AudioMessage : EntityEventArgs
     {
         public string FileName = string.Empty;

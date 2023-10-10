@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Audio.Effects;
@@ -6,6 +7,7 @@ using Robust.Shared.Audio.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Audio.Components;
@@ -19,6 +21,12 @@ public sealed partial class AudioComponent : Component, IAudioSource
     #region Filter
 
     public override bool SessionSpecific => true;
+
+    /// <summary>
+    /// Used for synchronising audio on client that comes into PVS range.
+    /// </summary>
+    [DataField(customTypeSerializer:typeof(TimeOffsetSerializer)), AutoNetworkedField]
+    public TimeSpan AudioStart;
 
     #region Filters
 

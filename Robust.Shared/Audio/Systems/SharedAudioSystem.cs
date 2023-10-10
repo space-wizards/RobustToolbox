@@ -52,7 +52,8 @@ public abstract partial class SharedAudioSystem : EntitySystem
         InitializeEffect();
         ZOffset = CfgManager.GetCVar(CVars.AudioZOffset);
         CfgManager.OnValueChanged(CVars.AudioZOffset, SetZOffset);
-        SubscribeLocalEvent<Components.AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
+        SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
+        SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
     }
 
     public override void Shutdown()
@@ -80,7 +81,12 @@ public abstract partial class SharedAudioSystem : EntitySystem
         }
     }
 
-    private void OnAudioGetStateAttempt(EntityUid uid, Components.AudioComponent component, ref ComponentGetStateAttemptEvent args)
+    protected virtual void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
+    {
+        component.AudioStart += args.PausedTime;
+    }
+
+    private void OnAudioGetStateAttempt(EntityUid uid, AudioComponent component, ref ComponentGetStateAttemptEvent args)
     {
         var playerEnt = args.Player?.AttachedEntity;
 
@@ -127,13 +133,14 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     #region AudioParams
 
-    protected Components.AudioComponent SetupAudio(EntityUid uid, string fileName, AudioParams? audioParams)
+    protected AudioComponent SetupAudio(EntityUid uid, string fileName, AudioParams? audioParams)
     {
         DebugTools.Assert(!string.IsNullOrEmpty(fileName));
         audioParams ??= AudioParams.Default;
         var comp = AddComp<Components.AudioComponent>(uid);
         comp.FileName = fileName;
         comp.Params = GetAdjustedParams(audioParams.Value);
+        comp.AudioStart = Timing.CurTime;
 
         if (!audioParams.Value.Loop)
         {

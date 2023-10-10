@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Threading.Tasks;
-using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
-using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
@@ -25,8 +23,6 @@ using Robust.Shared.Player;
 using Robust.Shared.Players;
 using Robust.Shared.Replays;
 using Robust.Shared.ResourceManagement.ResourceTypes;
-using Robust.Shared.Serialization;
-using Robust.Shared.Spawners;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using AudioComponent = Robust.Shared.Audio.Components.AudioComponent;
@@ -58,7 +54,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private EntityQuery<MapGridComponent> _gridQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
-    private EntityQuery<TimedDespawnComponent> _despawnQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
     private float _maxRayLength;
@@ -74,13 +69,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         _gridQuery = GetEntityQuery<MapGridComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
-        _despawnQuery = GetEntityQuery<TimedDespawnComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
 
         SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
         SubscribeLocalEvent<AudioComponent, ComponentShutdown>(OnAudioShutdown);
         SubscribeLocalEvent<AudioComponent, EntityPausedEvent>(OnAudioPaused);
-        SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
         SubscribeLocalEvent<AudioComponent, AfterAutoHandleStateEvent>(OnAudioState);
 
         // Replay stuff
@@ -133,8 +126,9 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Pause();
     }
 
-    private void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
+    protected override void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
     {
+        base.OnAudioUnpaused(uid, component, ref args);
         component.StartPlaying();
     }
 
@@ -171,6 +165,14 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (!MetaData(uid).EntityPaused)
         {
             component.StartPlaying();
+        }
+
+        // If audio came into range then start playback at the correct position.
+        var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % GetAudioLength(component.FileName).TotalSeconds;
+
+        if (offset != 0)
+        {
+            component.PlaybackPosition = (float) offset;
         }
     }
 

@@ -310,6 +310,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return source != null;
     }
 
+    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityCoordinates coordinates,
+        AudioParams? audioParams = null)
+    {
+        return PlayStatic(filename, Filter.Local(), coordinates, true, audioParams);
+    }
+
+    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityUid uid, AudioParams? audioParams = null)
+    {
+        return PlayEntity(filename, Filter.Local(), uid, true, audioParams);
+    }
+
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
     {

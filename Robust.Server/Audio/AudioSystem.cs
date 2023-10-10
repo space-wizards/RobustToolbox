@@ -50,6 +50,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return (entity, audio);
     }
 
+    /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
     {
         if (!Exists(uid))
@@ -58,6 +59,18 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
         var audio = SetupAudio(entity, filename, audioParams);
         AddAudioFilter(entity, playerFilter);
+
+        return (entity, audio);
+    }
+
+    /// <inheritdoc />
+    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityUid uid, AudioParams? audioParams = null)
+    {
+        if (!Exists(uid))
+            return null;
+
+        var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
+        var audio = SetupAudio(entity, filename, audioParams);
 
         return (entity, audio);
     }
@@ -76,22 +89,44 @@ public sealed partial class AudioSystem : SharedAudioSystem
     }
 
     /// <inheritdoc />
+    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityCoordinates coordinates,
+        AudioParams? audioParams = null)
+    {
+        if (!coordinates.IsValid(EntityManager))
+            return null;
+
+        var entity = Spawn("Audio", coordinates);
+        var audio = SetupAudio(entity, filename, audioParams);
+
+        return (entity, audio);
+    }
+
+    /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
     {
         if (sound == null)
             return null;
 
         var audio = PlayPvs(GetSound(sound), source, audioParams ?? sound.Params);
+
+        if (audio == null)
+            return null;
+
         audio.Value.Component.ExcludedEntity = user;
         return audio;
     }
 
+    /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user, AudioParams? audioParams = null)
     {
         if (sound == null)
             return null;
 
         var audio = PlayPvs(GetSound(sound), coordinates, audioParams ?? sound.Params);
+
+        if (audio == null)
+            return null;
+
         audio.Value.Component.ExcludedEntity = user;
         return audio;
     }

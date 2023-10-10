@@ -348,10 +348,8 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="coordinates">The EntityCoordinates to attach the audio source to.</param>
     [return: NotNullIfNotNull("filename")]
-    public (EntityUid Entity, Components.AudioComponent Component)? PlayPvs(string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
-    {
-        return PlayStatic(filename, Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager), coordinates, true, audioParams);
-    }
+    public abstract (EntityUid Entity, Components.AudioComponent Component)? PlayPvs(string filename,
+        EntityCoordinates coordinates, AudioParams? audioParams = null);
 
     /// <summary>
     /// Play an audio file following an entity for every entity in PVS range.
@@ -359,10 +357,8 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="uid">The UID of the entity "emitting" the audio.</param>
     [return: NotNullIfNotNull("filename")]
-    public (EntityUid Entity, Components.AudioComponent Component)? PlayPvs(string filename, EntityUid uid, AudioParams? audioParams = null)
-    {
-        return PlayEntity(filename, Filter.Pvs(uid, entityManager: EntityManager, playerManager:PlayerManager, cfgManager:CfgManager), uid, true, audioParams);
-    }
+    public abstract (EntityUid Entity, Components.AudioComponent Component)? PlayPvs(string filename, EntityUid uid,
+        AudioParams? audioParams = null);
 
     /// <summary>
     /// Plays a predicted sound following an entity. The server will send the sound to every player in PVS range,

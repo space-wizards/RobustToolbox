@@ -125,17 +125,14 @@ namespace Robust.Server.Player
             // make sure nothing got messed up during the life of the session
             DebugTools.Assert(session.Channel == args.Channel);
 
-            //Detach the entity and (don't)delete it.
-
             SetStatus(session, SessionStatus.Disconnected);
             if (session.AttachedEntity != null)
                 EntManager.System<ActorSystem>().Detach(session.AttachedEntity.Value);
 
             var viewSys = EntManager.System<ViewSubscriberSystem>();
-            var playerSess = (ICommonSession) session;
-            foreach (var eye in playerSess.ViewSubscriptions.ToArray())
+            foreach (var eye in session.ViewSubscriptions.ToArray())
             {
-                viewSys.RemoveViewSubscriber(eye, playerSess);
+                viewSys.RemoveViewSubscriber(eye, session);
             }
 
             RemoveSession(session.UserId);

@@ -70,4 +70,10 @@ internal sealed class HeadlessAudioManager : SharedAudioManager, IAudioInternal
     public void _checkAlError(string callerMember = "", int callerLineNumber = -1)
     {
     }
+
+    /// <inheritdoc />
+    public float GetAttenuationGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance)
+    {
+        return 0f;
+    }
 }

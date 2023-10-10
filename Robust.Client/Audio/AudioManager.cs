@@ -33,6 +33,7 @@ internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
 
     private readonly HashSet<string> _alcDeviceExtensions = new();
     private readonly HashSet<string> _alContextExtensions = new();
+    private Attenuation _attenuation;
 
     public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
     public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);

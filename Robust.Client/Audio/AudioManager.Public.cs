@@ -20,6 +20,22 @@ internal partial class AudioManager
         _zOffset = offset;
     }
 
+    /// <inheritdoc />
+    public float GetAttenuationGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance)
+    {
+        switch (_attenuation)
+        {
+            case Attenuation.LinearDistance:
+                return 1 - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance);
+            case Attenuation.LinearDistanceClamped:
+                distance = MathF.Max(referenceDistance, MathF.Min(distance, maxDistance));
+                return 1 - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance);
+            default:
+                // TODO: If you see this you can implement
+                throw new NotImplementedException();
+        }
+    }
+
     public void InitializePostWindowing()
     {
         _gameThread = Thread.CurrentThread;
@@ -225,6 +241,7 @@ internal partial class AudioManager
                 throw new ArgumentOutOfRangeException($"No implementation to set {attenuation.ToString()} for DistanceModel!");
         }
 
+        _attenuation = attenuation;
         OpenALSawmill.Info($"Set audio attenuation to {attenuation.ToString()}");
     }
 

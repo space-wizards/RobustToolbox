@@ -17,6 +17,7 @@ using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -42,6 +43,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IClientResourceCache _resourceCache = default!;
+    [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
     [Dependency] private readonly IAudioInternal _audio = default!;
@@ -52,7 +54,9 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// Per-tick cache of relevant streams.
     /// </summary>
     private readonly List<(EntityUid Entity, AudioComponent Component, TransformComponent Xform)> _streams = new();
+    private EntityUid? _listenerGrid;
 
+    private EntityQuery<MapGridComponent> _gridQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<TimedDespawnComponent> _despawnQuery;
     private EntityQuery<TransformComponent> _xformQuery;
@@ -68,6 +72,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // Need to run after Eye updates so we have an accurate listener position.
         UpdatesAfter.Add(typeof(EyeSystem));
 
+        _gridQuery = GetEntityQuery<MapGridComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
         _despawnQuery = GetEntityQuery<TimedDespawnComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
@@ -202,6 +207,9 @@ public sealed partial class AudioSystem : SharedAudioSystem
             _streams.Add((uid, comp, xform));
         }
 
+        _mapManager.TryFindGridAt(ourPos, out var gridUid, out _);
+        _listenerGrid = gridUid == EntityUid.Invalid ? null : gridUid;
+
         try
         {
             Parallel.ForEach(_streams, opts, comp => ProcessStream(comp.Entity, comp.Component, comp.Xform, ourPos));
@@ -241,11 +249,56 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return;
         }
 
-        var mapPos = xform.MapPosition;
+        Vector2 worldPos;
+        var gridUid = xform.ParentUid;
+
+        // Handle grid audio differently by using nearest-edge instead of entity centre.
+        if (_gridQuery.HasComponent(gridUid))
+        {
+            // It's our grid so max volume.
+            if (_listenerGrid == gridUid)
+            {
+                component.Volume = component.Params.Volume;
+                component.Occlusion = 0f;
+                component.Position = listener.Position;
+                return;
+            }
+
+            // TODO: Need a grid-optimised version because this is gonna be expensive.
+            // Just to avoid clipping on and off grid or nearestPoint changing we'll
+            // always set the sound to listener's pos, we'll just manually do gain ourselves.
+            if (_physics.TryGetNearest(gridUid, listener, out _, out var gridDistance))
+            {
+                // Out of range
+                if (gridDistance > component.MaxDistance)
+                {
+                    component.Gain = 0f;
+                    return;
+                }
+
+                var paramsGain = MathF.Pow(10, component.Params.Volume / 10);
+
+                // Thought I'd never have to manually calculate gain again but this is the least
+                // unpleasant audio I could get at the moment.
+                component.Gain = paramsGain * _audio.GetAttenuationGain(
+                    gridDistance,
+                    component.Params.RolloffFactor,
+                    component.Params.ReferenceDistance,
+                    component.Params.MaxDistance);
+                component.Position = listener.Position;
+                return;
+            }
+
+            // Can't get nearest point so don't play anymore.
+            component.Gain = 0f;
+            return;
+        }
+
+        worldPos = _xformSys.GetWorldPosition(entity);
         component.Volume = component.Params.Volume;
 
         // Max distance check
-        var delta = mapPos.Position - listener.Position;
+        var delta = worldPos - listener.Position;
         var distance = delta.Length();
 
         // Out of range so just clip it for us.
@@ -261,7 +314,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Occlusion = occlusion;
 
         // Update audio positions.
-        component.Position = mapPos.Position;
+        component.Position = worldPos;
 
         // Make race cars go NYYEEOOOOOMMMMM
         if (_physicsQuery.TryGetComponent(entity, out var physicsComp))

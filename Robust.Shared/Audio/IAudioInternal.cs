@@ -46,4 +46,9 @@ internal interface IAudioInternal
     void SetZOffset(float f);
 
     void _checkAlError([CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1);
+
+    /// <summary>
+    /// Manually calculates the specified gain for an attenuation source with the specified distance.
+    /// </summary>
+    float GetAttenuationGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance);
 }

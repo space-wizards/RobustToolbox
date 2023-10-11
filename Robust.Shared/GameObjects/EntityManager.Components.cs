@@ -122,7 +122,7 @@ namespace Robust.Shared.GameObjects
             foreach (var comp in comps)
             {
                 if (comp is { LifeStage:  ComponentLifeStage.Added })
-                    comp.LifeInitialize(this, CompIdx.Index(comp.GetType()));
+                    LifeInitialize(comp, CompIdx.Index(comp.GetType()));
             }
 
 #if DEBUG
@@ -155,20 +155,20 @@ namespace Robust.Shared.GameObjects
             // Init transform first, we always have it.
             var transform = GetComponent<TransformComponent>(uid);
             if (transform.LifeStage == ComponentLifeStage.Initialized)
-                transform.LifeStartup(this);
+                LifeStartup(transform);
 
             // Init physics second if it exists.
             if (TryGetComponent<PhysicsComponent>(uid, out var phys)
                 && phys.LifeStage == ComponentLifeStage.Initialized)
             {
-                phys.LifeStartup(this);
+                LifeStartup(phys);
             }
 
             // Do rest of components.
             foreach (var comp in comps)
             {
                 if (comp is { LifeStage: ComponentLifeStage.Initialized })
-                    comp.LifeStartup(this);
+                    LifeStartup(comp);
             }
         }
 
@@ -216,10 +216,10 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 if (!Comp.Initialized)
-                    Comp.LifeInitialize(_entMan, CompType);
+                    ((EntityManager) _entMan).LifeInitialize(Comp, CompType);
 
                 if (metadata.EntityInitialized && !Comp.Running)
-                    Comp.LifeStartup(_entMan);
+                    ((EntityManager) _entMan).LifeStartup(Comp);
             }
 
             public static implicit operator T(CompInitializeHandle<T> handle)
@@ -329,7 +329,7 @@ namespace Robust.Shared.GameObjects
             ComponentAdded?.Invoke(eventArgs);
             _eventBus.OnComponentAdded(eventArgs);
 
-            component.LifeAddToEntity(this, reg.Idx);
+            LifeAddToEntity(component, reg.Idx);
 
             if (skipInit)
                 return;
@@ -342,10 +342,10 @@ namespace Robust.Shared.GameObjects
             if (component.Networked)
                 DirtyEntity(uid, metadata);
 
-            component.LifeInitialize(this, reg.Idx);
+            LifeInitialize(component, reg.Idx);
 
             if (metadata.EntityInitialized)
-                component.LifeStartup(this);
+                LifeStartup(component);
 
             if (metadata.EntityLifeStage >= EntityLifeStage.MapInitialized)
                 EventBus.RaiseComponentEvent(component, MapInitEventInstance);
@@ -516,7 +516,7 @@ namespace Robust.Shared.GameObjects
             }
 
             if (component.LifeStage >= ComponentLifeStage.Initialized && component.LifeStage <= ComponentLifeStage.Running)
-                component.LifeShutdown(this);
+                LifeShutdown(component);
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -548,10 +548,10 @@ namespace Robust.Shared.GameObjects
             }
 
             if (component.Running)
-                component.LifeShutdown(this);
+                LifeShutdown(component);
 
             if (component.LifeStage != ComponentLifeStage.PreAdd)
-                component.LifeRemoveFromEntity(this); // Sets delete
+                LifeRemoveFromEntity(component); // Sets delete
 
 #if EXCEPTION_TOLERANCE
             }
@@ -582,11 +582,11 @@ namespace Robust.Shared.GameObjects
                 {
                     // TODO add options to cancel deferred deletion?
                     _sawmill.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(uid)}, type={component.GetType()}");
-                    component.LifeShutdown(this);
+                    LifeShutdown(component);
                 }
 
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
-                    component.LifeRemoveFromEntity(this);
+                    LifeRemoveFromEntity(component);
 
 #if EXCEPTION_TOLERANCE
             }

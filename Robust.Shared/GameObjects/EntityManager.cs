@@ -524,7 +524,7 @@ namespace Robust.Shared.GameObjects
                 {
                     try
                     {
-                        component.LifeShutdown(this);
+                        LifeShutdown(component);
                     }
                     catch (Exception e)
                     {

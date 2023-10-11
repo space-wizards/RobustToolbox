@@ -22,13 +22,14 @@ public sealed class PvsOverrideSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Used to ensure that an entity is always sent to a specific client. Overrides any global or pre-existing
-    ///     client-specific overrides.
+    ///     Used to ensure that an entity is always sent to a specific client. By default this overrides any global or pre-existing
+    ///     client-specific overrides. Unlike global overrides, this is always recursive.
     /// </summary>
     /// <param name="removeExistingOverride">Whether or not to supersede existing overrides.</param>
-    public void AddSessionOverride(EntityUid uid, ICommonSession session,bool removeExistingOverride = true)
+    /// <param name="recursive">If true, this will also recursively send any children of the given index.</param>
+    public void AddSessionOverride(EntityUid uid, ICommonSession session, bool removeExistingOverride = true)
     {
-        _pvs.EntityPVSCollection.UpdateIndex(GetNetEntity(uid), session, removeExistingOverride);
+        _pvs.EntityPVSCollection.AddSessionOverride(GetNetEntity(uid), session, removeExistingOverride);
     }
 
     /// <summary>

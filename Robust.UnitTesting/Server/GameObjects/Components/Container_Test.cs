@@ -222,9 +222,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(entManager.GetComponent<TransformComponent>(containerEntity).ChildCount, Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(containerEntity).ChildEntities.First(), Is.EqualTo(insertEntity));
 
-            result = insertEntity.TryGetContainerMan(out var resultContainerMan);
+            result = containerSys.TryGetContainingContainer(insertEntity, out var resultContainerMan);
             Assert.That(result, Is.True);
-            Assert.That(resultContainerMan, Is.EqualTo(container.Manager));
+            Assert.That(resultContainerMan?.Manager, Is.EqualTo(container.Manager));
         }
 
         [Test]

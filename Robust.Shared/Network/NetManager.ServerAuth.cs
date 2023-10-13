@@ -211,9 +211,15 @@ namespace Robust.Shared.Network
 
                 var endPoint = connection.RemoteEndPoint;
                 var connect = await OnConnecting(endPoint, userData, type);
-                if (connect.IsDenied)
+                if (connect.DenyReasonData is { } deny)
                 {
-                    connection.Disconnect($"Connection denied: {connect.DenyReason}");
+                    var denyMsg = $"Connect denied: {deny.Text}";
+                    var structured = NetStructuredDisconnectMessages.EncodeObject(denyMsg, true);
+                    foreach (var (k, v) in deny.AdditionalProperties)
+                    {
+                        structured[k] = v;
+                    }
+                    connection.Disconnect(NetStructuredDisconnectMessages.Encode(structured));
                     return;
                 }
 

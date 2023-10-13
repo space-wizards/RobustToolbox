@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -31,9 +32,10 @@ namespace Robust.Shared.Network
     /// </summary>
     public sealed class NetConnectingArgs : EventArgs
     {
-        public bool IsDenied => DenyReason != null;
+        public bool IsDenied => DenyReasonData != null;
 
-        public string? DenyReason { get; private set; }
+        public string? DenyReason => DenyReasonData?.Text;
+        public NetDenyReason? DenyReasonData { get; private set; }
 
         public NetUserData UserData { get; }
 
@@ -48,7 +50,12 @@ namespace Robust.Shared.Network
 
         public void Deny(string reason)
         {
-            DenyReason = reason;
+            Deny(new NetDenyReason(reason));
+        }
+
+        public void Deny(NetDenyReason reason)
+        {
+            DenyReasonData = reason;
         }
 
         /// <summary>
@@ -62,6 +69,20 @@ namespace Robust.Shared.Network
             UserData = data;
             IP = ip;
             AuthType = authType;
+        }
+    }
+
+    /// <summary>
+    /// Contains a reason for denying a client connection to the game server.
+    /// </summary>
+    /// <param name="Text">The textual reason, presented to the user.</param>
+    /// <param name="AdditionalProperties">Additional JSON properties that will be included in the <see cref="NetStructuredDisconnectMessages"/>.</param>
+    /// <seealso cref="NetStructuredDisconnectMessages"/>
+    /// <seealso cref="NetConnectingArgs"/>
+    public record NetDenyReason(string Text, Dictionary<string, JsonNode> AdditionalProperties)
+    {
+        public NetDenyReason(string Text) : this(Text, new Dictionary<string, JsonNode>())
+        {
         }
     }
 

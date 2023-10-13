@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `NetConnectingArgs.Deny()` can now pass along structured data that will be received by the client.
 
 ### Bugfixes
 
@@ -81,7 +81,7 @@ END TEMPLATE-->
 
 ### New features
 
-* The YAML validator now checks the default values of ProtoId<T> and EntProtoId data fields. 
+* The YAML validator now checks the default values of ProtoId<T> and EntProtoId data fields.
 
 ### Bugfixes
 

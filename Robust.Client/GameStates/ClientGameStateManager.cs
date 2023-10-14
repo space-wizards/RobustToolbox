@@ -277,18 +277,15 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                if (PredictionNeedsResetting)
+                try
                 {
-                    try
-                    {
-                        ResetPredictedEntities();
-                    }
-                    catch (Exception e)
-                    {
-                        // avoid exception spam from repeatedly trying to reset the same entity.
-                        _entitySystemManager.GetEntitySystem<ClientDirtySystem>().Reset();
-                        _runtimeLog.LogException(e, "ResetPredictedEntities");
-                    }
+                    ResetPredictedEntities();
+                }
+                catch (Exception e)
+                {
+                    // avoid exception spam from repeatedly trying to reset the same entity.
+                    _entitySystemManager.GetEntitySystem<ClientDirtySystem>().Reset();
+                    _runtimeLog.LogException(e, "ResetPredictedEntities");
                 }
 
                 // If we were waiting for a new state, we are now applying it.
@@ -477,19 +474,21 @@ namespace Robust.Client.GameStates
 
         public void ResetPredictedEntities()
         {
-            PredictionNeedsResetting = false;
-
             using var _ = _prof.Group("ResetPredictedEntities");
             using var __ = _timing.StartStateApplicationArea();
 
+            // This is terrible, and I hate it. This also needs to run even when prediction is disabled.
+            _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
+            _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
+
+            if (!PredictionNeedsResetting)
+                return;
+
+            PredictionNeedsResetting = false;
             var countReset = 0;
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
             var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
             RemQueue<Component> toRemove = new();
-
-            // This is terrible, and I hate it.
-            _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
-            _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
 
             foreach (var entity in system.DirtyEntities)
             {

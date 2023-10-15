@@ -21,6 +21,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using ActorComponent = Robust.Shared.GameObjects.ActorComponent;
 
 namespace Robust.Server.Player
 {
@@ -536,7 +537,7 @@ namespace Robust.Server.Player
                 return false;
             }
 
-            session = actor.PlayerSession;
+            session = actor.Session;
             return true;
         }
     }

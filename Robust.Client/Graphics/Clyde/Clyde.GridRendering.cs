@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Client.Map;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
@@ -22,7 +24,7 @@ namespace Robust.Client.Graphics.Clyde
         private int _verticesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
-        private void _drawGrids(Viewport viewport, Box2Rotated worldBounds, IEye eye)
+        private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
         {
             var mapId = eye.Position.MapId;
             if (!_mapManager.MapExists(mapId))
@@ -41,13 +43,31 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
 
+            // Special-case tile edges rather than doing an entire overlay space for grids.
+            // If you want more than make an interface and a special DrawGrid method and add another overlay draw space.
+            var tileOverlay = _overlayManager.GetOverlay<TileEdgeOverlay>();
+            var xformSystem = _entityManager.System<SharedTransformSystem>();
+
+            var args = new OverlayDrawArgs(OverlaySpace.WorldSpaceEntities,
+                null,
+                viewport,
+                _renderHandle.DrawingHandleWorld,
+                new UIBox2i((0, 0), viewport.Size),
+                viewport.Eye!.Position.MapId,
+                worldAABB,
+                worldBounds);
+
             foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
-                if (!_mapChunkData.ContainsKey(mapGrid.Owner))
+                var gridUid = mapGrid.Owner;
+
+                if (!_mapChunkData.ContainsKey(gridUid))
                     continue;
 
-                var transform = _entityManager.GetComponent<TransformComponent>(mapGrid.Owner);
-                gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
+                var transform = _entityManager.GetComponent<TransformComponent>(gridUid);
+                var worldMatrix = xformSystem.GetWorldMatrix(transform);
+
+                gridProgram.SetUniform(UniIModelMatrix, worldMatrix);
                 var enumerator = mapGrid.GetMapChunks(worldBounds);
 
                 while (enumerator.MoveNext(out var chunk))
@@ -55,7 +75,7 @@ namespace Robust.Client.Graphics.Clyde
                     if (_isChunkDirty(mapGrid, chunk))
                         _updateChunkMesh(mapGrid, chunk);
 
-                    var datum = _mapChunkData[mapGrid.Owner][chunk.Indices];
+                    var datum = _mapChunkData[gridUid][chunk.Indices];
 
                     if (datum.TileCount == 0)
                         continue;
@@ -67,6 +87,8 @@ namespace Robust.Client.Graphics.Clyde
                     GL.DrawElements(GetQuadGLPrimitiveType(), datum.TileCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
                     CheckGlError();
                 }
+
+                tileOverlay.DrawGrid(in args, gridUid, mapGrid, worldMatrix);
             }
         }
 

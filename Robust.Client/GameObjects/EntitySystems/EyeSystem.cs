@@ -29,7 +29,7 @@ public sealed class EyeSystem : SharedEyeSystem
         UpdateEye(component);
     }
 
-    private void OnEyeAttached(EntityUid uid, EyeComponent component, PlayerAttachedEvent args)
+    private void OnEyeAttached(EntityUid uid, EyeComponent component, ref PlayerAttachedEvent args)
     {
         // TODO: This probably shouldn't be nullable bruv.
         if (component._eye != null)
@@ -41,7 +41,7 @@ public sealed class EyeSystem : SharedEyeSystem
         RaiseLocalEvent(uid, ref ev, true);
     }
 
-    private void OnEyeDetached(EntityUid uid, EyeComponent component, PlayerDetachedEvent args)
+    private void OnEyeDetached(EntityUid uid, EyeComponent component, ref PlayerDetachedEvent args)
     {
         _eyeManager.ClearCurrentEye();
     }

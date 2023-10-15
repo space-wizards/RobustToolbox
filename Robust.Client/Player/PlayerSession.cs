@@ -21,6 +21,11 @@ namespace Robust.Client.Player
         [ViewVariables]
         public EntityUid? AttachedEntity { get; set; }
 
+        void ICommonSession.SetAttachedEntity(EntityUid? entity)
+        {
+            AttachedEntity = entity;
+        }
+
         /// <inheritdoc />
         [ViewVariables]
         public NetUserId UserId { get; }

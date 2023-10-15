@@ -63,12 +63,12 @@ public sealed partial class PhysicsSystem
         UpdateIsPredicted(args.Joint.BodyBUid);
     }
 
-    private void OnAttach(PlayerAttachedEvent ev)
+    private void OnAttach(ref PlayerAttachedEvent ev)
     {
         UpdateIsPredicted(ev.Entity);
     }
 
-    private void OnDetach(PlayerDetachedEvent ev)
+    private void OnDetach(ref PlayerDetachedEvent ev)
     {
         UpdateIsPredicted(ev.Entity);
     }

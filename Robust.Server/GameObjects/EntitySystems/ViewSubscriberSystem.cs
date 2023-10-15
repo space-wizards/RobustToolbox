@@ -1,5 +1,6 @@
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Players;
 
 namespace Robust.Server.GameObjects
 {
@@ -51,7 +52,7 @@ namespace Robust.Server.GameObjects
         {
             foreach (var session in component.SubscribedSessions)
             {
-                session.RemoveViewSubscription(uid);
+                ((IPlayerSession) session).RemoveViewSubscription(uid);
             }
         }
     }

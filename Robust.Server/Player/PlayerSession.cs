@@ -180,7 +180,7 @@ namespace Robust.Server.Player
         public LoginType AuthType => ConnectedClient.AuthType;
 
         /// <inheritdoc />
-        void IPlayerSession.SetAttachedEntity(EntityUid? entity)
+        void ICommonSession.SetAttachedEntity(EntityUid? entity)
         {
             AttachedEntity = entity;
             UpdatePlayerState();

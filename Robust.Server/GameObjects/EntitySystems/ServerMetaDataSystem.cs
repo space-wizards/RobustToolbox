@@ -64,7 +64,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
     ///     If a new player gets attached to an entity, this will ensure that the player receives session-restricted
     ///     component states by dirtying any restricted components.
     /// </summary>
-    private void OnActorPlayerAttach(EntityUid uid, MetaDataComponent meta, PlayerAttachedEvent args)
+    private void OnActorPlayerAttach(EntityUid uid, MetaDataComponent meta, ref PlayerAttachedEvent args)
     {
         if ((meta.Flags & MetaDataFlags.SessionSpecific) == 0)
             return;

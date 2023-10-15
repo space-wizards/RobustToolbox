@@ -16,6 +16,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Placement;
 using Robust.Shared.Prototypes;
+using ActorComponent = Robust.Shared.GameObjects.ActorComponent;
 
 namespace Robust.Server.Placement
 {
@@ -246,7 +247,7 @@ namespace Robust.Server.Placement
             if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
-            var playerConnection = actor.PlayerSession.ConnectedClient;
+            var playerConnection = actor.Session.ConnectedClient;
             if (playerConnection == null)
                 return;
 
@@ -267,7 +268,7 @@ namespace Robust.Server.Placement
             if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
-            var playerConnection = actor.PlayerSession.ConnectedClient;
+            var playerConnection = actor.Session.ConnectedClient;
             if (playerConnection == null)
                 return;
 
@@ -288,7 +289,7 @@ namespace Robust.Server.Placement
             if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
-            var playerConnection = actor.PlayerSession.ConnectedClient;
+            var playerConnection = actor.Session.ConnectedClient;
             if (playerConnection == null)
                 return;
 

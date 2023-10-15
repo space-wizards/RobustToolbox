@@ -146,8 +146,8 @@ public sealed class AudioSystem : SharedAudioSystem
 
     public override IPlayingAudioStream? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null)
     {
-        if (TryComp(recipient, out ActorComponent? actor))
-            return PlayGlobal(filename, actor.PlayerSession, audioParams);
+        if (TryComp(recipient, out Shared.GameObjects.ActorComponent? actor))
+            return PlayGlobal(filename, actor.Session, audioParams);
         return null;
     }
 
@@ -158,8 +158,8 @@ public sealed class AudioSystem : SharedAudioSystem
 
     public override IPlayingAudioStream? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        if (TryComp(recipient, out ActorComponent? actor))
-            return PlayEntity(filename, actor.PlayerSession, uid, audioParams);
+        if (TryComp(recipient, out Shared.GameObjects.ActorComponent? actor))
+            return PlayEntity(filename, actor.Session, uid, audioParams);
         return null;
     }
 
@@ -170,8 +170,8 @@ public sealed class AudioSystem : SharedAudioSystem
 
     public override IPlayingAudioStream? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        if (TryComp(recipient, out ActorComponent? actor))
-            return PlayStatic(filename, actor.PlayerSession, coordinates, audioParams);
+        if (TryComp(recipient, out Shared.GameObjects.ActorComponent? actor))
+            return PlayStatic(filename, actor.Session, coordinates, audioParams);
         return null;
     }
 }

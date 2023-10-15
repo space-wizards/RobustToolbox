@@ -4,6 +4,7 @@ using Robust.Server.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Players;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects
@@ -43,7 +44,7 @@ namespace Robust.Server.GameObjects
         /// <param name="force">Whether to kick any existing players from the entity</param>
         /// <param name="forceKicked">The player that was forcefully kicked, or null.</param>
         /// <returns>Whether the attach succeeded, or not.</returns>
-        public bool Attach(EntityUid? entity, IPlayerSession player, bool force, out IPlayerSession? forceKicked)
+        public bool Attach(EntityUid? entity, IPlayerSession player, bool force, out ICommonSession? forceKicked)
         {
             // Null by default.
             forceKicked = null;
@@ -68,7 +69,7 @@ namespace Robust.Server.GameObjects
                     return false;
 
                 // Set the event's force-kicked session before detaching it.
-                forceKicked = actor.PlayerSession;
+                forceKicked = actor.Session;
                 Detach(uid, actor);
             }
 
@@ -79,11 +80,12 @@ namespace Robust.Server.GameObjects
             // We add the actor component.
             actor = EntityManager.AddComponent<ActorComponent>(uid);
             EntityManager.EnsureComponent<EyeComponent>(uid);
-            actor.PlayerSession = player;
+            actor.Session = player;
             player.SetAttachedEntity(uid);
 
             // The player is fully attached now, raise an event!
-            RaiseLocalEvent(uid, new PlayerAttachedEvent(uid, player, forceKicked), true);
+            var attachedEv = new PlayerAttachedEvent(uid, player, forceKicked);
+            RaiseLocalEvent(uid, ref attachedEv, true);
             DebugTools.Assert(player.AttachedEntity == entity);
             return true;
         }
@@ -93,7 +95,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         /// <param name="entity">The entity player sessions will be detached from.</param>
         /// <returns>Whether any player session was detached.</returns>
-        public bool Detach(EntityUid uid, ActorComponent? actor = null)
+        public bool Detach(EntityUid uid, Shared.GameObjects.ActorComponent? actor = null)
         {
             if (!Resolve(uid, ref actor, false))
                 return false;
@@ -116,10 +118,11 @@ namespace Robust.Server.GameObjects
 
         private void OnActorShutdown(EntityUid entity, ActorComponent component, ComponentShutdown args)
         {
-            component.PlayerSession.SetAttachedEntity(null);
+            component.Session.SetAttachedEntity(null);
 
             // The player is fully detached now that the component has shut down.
-            RaiseLocalEvent(entity, new PlayerDetachedEvent(entity, component.PlayerSession), true);
+            var detachedEv = new PlayerDetachedEvent(entity, component.Session);
+            RaiseLocalEvent(entity, ref detachedEv, true);
         }
 
         public bool TryGetActorFromUserId(NetUserId? userId, [NotNullWhen(true)] out IPlayerSession? actor, [MaybeNullWhen(true)] out EntityUid? actorEntity)
@@ -134,42 +137,6 @@ namespace Robust.Server.GameObjects
             }
 
             return actor != null;
-        }
-    }
-
-    /// <summary>
-    ///     Event for when a player has been attached to an entity.
-    /// </summary>
-    public sealed class PlayerAttachedEvent : EntityEventArgs
-    {
-        public EntityUid Entity { get; }
-        public IPlayerSession Player { get; }
-
-        /// <summary>
-        ///     The player session that was forcefully kicked from the entity, if any.
-        /// </summary>
-        public IPlayerSession? Kicked { get; }
-
-        public PlayerAttachedEvent(EntityUid entity, IPlayerSession player, IPlayerSession? kicked = null)
-        {
-            Entity = entity;
-            Player = player;
-            Kicked = kicked;
-        }
-    }
-
-    /// <summary>
-    ///     Event for when a player has been detached from an entity.
-    /// </summary>
-    public sealed class PlayerDetachedEvent : EntityEventArgs
-    {
-        public EntityUid Entity { get; }
-        public IPlayerSession Player { get; }
-
-        public PlayerDetachedEvent(EntityUid entity, IPlayerSession player)
-        {
-            Entity = entity;
-            Player = player;
         }
     }
 }

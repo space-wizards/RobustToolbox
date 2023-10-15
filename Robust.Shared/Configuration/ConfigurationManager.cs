@@ -617,6 +617,11 @@ namespace Robust.Shared.Configuration
                 return long.Parse(value);
             }
 
+            if (type == typeof(ushort))
+            {
+                return ushort.Parse(value);
+            }
+
             // Must be a string.
             return value;
         }

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;
@@ -30,6 +31,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         SubscribeAllEvent<PredictedBoundUIWrapMessage>(OnMessageReceived);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentInit>(OnUserInterfaceInit);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
+
+        SubscribeLocalEvent<ActorUIComponent, ComponentGetState>(OnActorUiGetState);
+    }
+
+    private void OnActorUiGetState(EntityUid uid, ActorUIComponent component, ref ComponentGetState args)
+    {
+        args.State = new ActorUIComponentState(component.OpenBUIS);
     }
 
     private void OnUserInterfaceInit(EntityUid uid, UserInterfaceComponent component, ComponentInit args)
@@ -38,7 +46,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         foreach (var prototypeData in component.InterfaceData)
         {
-            component.Interfaces[prototypeData.UiKey] = new PlayerBoundUserInterface(prototypeData, uid);
+            component.Interfaces[prototypeData.UiKey] = new PlayerBoundUserInterface(prototypeData, GetNetEntity(uid));
             component.MappedInterfaceData[prototypeData.UiKey] = prototypeData;
         }
     }
@@ -108,7 +116,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         RaiseLocalEvent(uid, (object)message, true);
     }
 
-    protected void DeactivateInterface(EntityUid entityUid, PlayerBoundUserInterface ui,
+    private void DeactivateInterface(EntityUid entityUid, PlayerBoundUserInterface ui,
         ActiveUserInterfaceComponent? activeUis = null)
     {
         if (!Resolve(entityUid, ref activeUis, false))
@@ -121,9 +129,21 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void ActivateInterface(PlayerBoundUserInterface ui)
     {
-        EnsureComp<ActiveUserInterfaceComponent>(ui.Owner).Interfaces.Add(ui);
+        if (!TryGetEntity(ui.Owner, out var buiEnt))
+            return;
+
+        EnsureComp<ActiveUserInterfaceComponent>(buiEnt.Value).Interfaces.Add(ui);
     }
 
+    /// <summary>
+    /// Tries to close a BUI session.
+    /// </summary>
+    /// <param name="session">Session trying to close the BUI</param>
+    /// <param name="uid">The target BUI</param>
+    /// <param name="uiKey"></param>
+    /// <param name="remoteCall"></param>
+    /// <param name="uiComp"></param>
+    /// <returns></returns>
     internal bool TryCloseUi(ICommonSession? session, EntityUid uid, Enum uiKey, bool remoteCall = false,
         UserInterfaceComponent? uiComp = null)
     {
@@ -270,7 +290,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     public void SetUiState(PlayerBoundUserInterface bui, BoundUserInterfaceState state, ICommonSession? session = null,
         bool clearOverrides = true)
     {
-        var msg = new BoundUIWrapMessage(GetNetEntity(bui.Owner), new UpdateBoundStateMessage(state), bui.UiKey);
+        var msg = new BoundUIWrapMessage(bui.Owner, new UpdateBoundStateMessage(state), bui.UiKey);
         if (session == null)
         {
             bui.StateMessage = msg;
@@ -331,9 +351,10 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         var uiComp = EnsureComp<ActorUIComponent>(session.AttachedEntity.Value);
         uiComp.OpenBUIS.Add(bui);
-        RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Owner, session));
+        var buiEnt = GetEntity(bui.Owner);
 
-        RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new OpenBoundInterfaceMessage(), bui.UiKey));
+        RaiseLocalEvent(buiEnt, new BoundUIOpenedEvent(bui.UiKey, buiEnt, session));
+        OpenUiLocal(bui.Owner, bui.UiKey);
 
         // Fun fact, clients needs to have BUIs open before they can receive the state.....
         if (bui.StateMessage != null)
@@ -341,6 +362,10 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         ActivateInterface(bui);
         return true;
+    }
+
+    protected virtual void OpenUiLocal(NetEntity netEntity, Enum uiKey)
+    {
     }
 
     #endregion
@@ -371,7 +396,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     protected void CloseShared(PlayerBoundUserInterface bui, ICommonSession session,
         ActiveUserInterfaceComponent? activeUis = null)
     {
-        var owner = bui.Owner;
+        var buiEnt = GetEntity(bui.Owner);
         bui._subscribedSessions.Remove(session);
         bui.PlayerStateOverrides.Remove(session);
 
@@ -383,10 +408,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             }
         }
 
-        RaiseLocalEvent(owner, new BoundUIClosedEvent(bui.UiKey, owner, session));
+        TryCloseUi(session, buiEnt, bui.UiKey);
+        RaiseLocalEvent(buiEnt, new BoundUIClosedEvent(bui.UiKey, buiEnt, session));
 
         if (bui._subscribedSessions.Count == 0)
-            DeactivateInterface(bui.Owner, bui, activeUis);
+            DeactivateInterface(buiEnt, bui, activeUis);
     }
 
     /// <summary>
@@ -450,7 +476,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public void SendUiMessage(PlayerBoundUserInterface bui, BoundUserInterfaceMessage message)
     {
-        var msg = new BoundUIWrapMessage(GetNetEntity(bui.Owner), message, bui.UiKey);
+        var msg = new BoundUIWrapMessage(bui.Owner, message, bui.UiKey);
         foreach (var session in bui.SubscribedSessions)
         {
             RaiseNetworkEvent(msg, session.ConnectedClient);
@@ -478,7 +504,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!bui.SubscribedSessions.Contains(session))
             return false;
 
-        RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), message, bui.UiKey), session.ConnectedClient);
+        RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, message, bui.UiKey), session.ConnectedClient);
         return true;
     }
 

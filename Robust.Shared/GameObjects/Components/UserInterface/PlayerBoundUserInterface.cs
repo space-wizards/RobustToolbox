@@ -31,23 +31,27 @@ public sealed partial class PlayerBoundUserInterface
     /// Target entity for this BUI interaction.
     /// </summary>
     [DataField]
-    public EntityUid Owner;
+    public NetEntity Owner;
 
+    [NonSerialized]
     internal readonly HashSet<ICommonSession> _subscribedSessions = new();
 
     /// <summary>
     /// Pending state message to be sent next tick.
     /// </summary>
+    [NonSerialized]
     internal BoundUIWrapMessage? StateMessage;
 
     /// <summary>
     /// Is there a pending state message for next tick.
     /// </summary>
+    [NonSerialized]
     internal bool StateDirty;
 
     [DataField, AutoNetworkedField]
     public bool RequireInputValidation;
 
+    [NonSerialized]
     internal readonly Dictionary<ICommonSession, BoundUIWrapMessage> PlayerStateOverrides =
         new();
 
@@ -56,7 +60,7 @@ public sealed partial class PlayerBoundUserInterface
     /// </summary>
     public IReadOnlySet<ICommonSession> SubscribedSessions => _subscribedSessions;
 
-    public PlayerBoundUserInterface(PrototypeData data, EntityUid owner)
+    public PlayerBoundUserInterface(PrototypeData data, NetEntity owner)
     {
         RequireInputValidation = data.RequireInputValidation;
         UiKey = data.UiKey;

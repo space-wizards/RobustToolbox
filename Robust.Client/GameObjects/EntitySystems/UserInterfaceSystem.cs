@@ -3,6 +3,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using System;
+using Robust.Shared.GameStates;
 using UserInterfaceComponent = Robust.Shared.GameObjects.UserInterfaceComponent;
 
 namespace Robust.Client.GameObjects
@@ -17,14 +18,36 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<ActorUIComponent, AfterAutoHandleStateEvent>(OnActorUIAuto);
+            SubscribeLocalEvent<ActorUIComponent, ComponentHandleState>(OnActorUiHandleState);
             SubscribeNetworkEvent<BoundUIWrapMessage>(MessageReceived);
         }
 
-        private void OnActorUIAuto(EntityUid uid, ActorUIComponent component, ref AfterAutoHandleStateEvent args)
+        private void OnActorUiHandleState(EntityUid uid, ActorUIComponent component, ref ComponentHandleState args)
         {
-            // TODO: Open UIs or w/e
-            throw new NotImplementedException();
+            if (args.Current is not ActorUIComponentState state)
+                return;
+
+            TryComp<ActorComponent>(uid, out var actorComp);
+            var session = actorComp?.Session;
+
+            foreach (var bui in component.OpenBUIS)
+            {
+                if (!TryGetEntity(bui.Owner, out var buiEntity))
+                    continue;
+
+                TryCloseUi(session, buiEntity.Value, bui.UiKey);
+            }
+
+            foreach (var bui in state.OpenBUIS)
+            {
+                if (!TryGetEntity(bui.Owner, out var buiEntity))
+                    continue;
+
+                TryOpenUiLocal(buiEntity.Value, bui.UiKey);
+            }
+
+            component.OpenBUIS.Clear();
+            component.OpenBUIS.AddRange(state.OpenBUIS);
         }
 
         private void MessageReceived(BoundUIWrapMessage ev)
@@ -50,7 +73,14 @@ namespace Robust.Client.GameObjects
                 bui.InternalReceiveMessage(message);
         }
 
-        private bool TryOpenUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? uiComp = null)
+        protected override void OpenUiLocal(NetEntity netEntity, Enum uiKey)
+        {
+            base.OpenUiLocal(netEntity, uiKey);
+            RaisePredictiveEvent(new BoundUIWrapMessage(netEntity, new OpenBoundInterfaceMessage(), uiKey));
+            TryOpenUiLocal(GetEntity(netEntity), uiKey);
+        }
+
+        private bool TryOpenUiLocal(EntityUid uid, Enum uiKey, UserInterfaceComponent? uiComp = null)
         {
             if (!Resolve(uid, ref uiComp))
                 return false;

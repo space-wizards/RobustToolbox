@@ -14,6 +14,9 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 {
     [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
+    /// <summary>
+    /// Per-tick cache for sessions.
+    /// </summary>
     private readonly List<ICommonSession> _sessionCache = new();
 
     private EntityQuery<IgnoreUIRangeComponent> _ignoreQuery;
@@ -63,7 +66,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         if (!uiComp.Interfaces.TryGetValue(msg.UiKey, out var ui))
         {
-            Log.Debug($"Got BoundInterfaceMessageWrapMessage for unknown UI key: {msg.UiKey}");
+            Log.Error($"Got BoundInterfaceMessageWrapMessage for unknown UI key: {msg.UiKey}");
             return;
         }
 
@@ -95,6 +98,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         message.Session = args.SenderSession;
         message.Entity = msg.Entity;
         message.UiKey = msg.UiKey;
+
+        if (msg.Message is OpenBoundInterfaceMessage)
+        {
+            OpenUi(ui, session);
+        }
 
         // Raise as object so the correct type is used.
         RaiseLocalEvent(uid, (object)message, true);
@@ -265,7 +273,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         var msg = new BoundUIWrapMessage(GetNetEntity(bui.Owner), new UpdateBoundStateMessage(state), bui.UiKey);
         if (session == null)
         {
-            bui.LastStateMsg = msg;
+            bui.StateMessage = msg;
             if (clearOverrides)
                 bui.PlayerStateOverrides.Clear();
         }
@@ -325,12 +333,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         uiComp.OpenBUIS.Add(bui);
         RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Owner, session));
 
-        RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new OpenBoundInterfaceMessage(), bui.UiKey),
-            session.ConnectedClient);
+        RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new OpenBoundInterfaceMessage(), bui.UiKey));
 
         // Fun fact, clients needs to have BUIs open before they can receive the state.....
-        if (bui.LastStateMsg != null)
-            RaiseNetworkEvent(bui.LastStateMsg, session.ConnectedClient);
+        if (bui.StateMessage != null)
+            RaiseNetworkEvent(bui.StateMessage, session.ConnectedClient);
 
         ActivateInterface(bui);
         return true;
@@ -357,8 +364,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!bui._subscribedSessions.Remove(session))
             return false;
 
-        RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new CloseBoundInterfaceMessage(), bui.UiKey),
-            session.ConnectedClient);
         CloseShared(bui, session, activeUis);
         return true;
     }
@@ -371,7 +376,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         bui.PlayerStateOverrides.Remove(session);
 
         if (TryComp(session.AttachedEntity, out ActorUIComponent? actorUi))
-            actorUi.OpenBUIS.Remove(bui);
+        {
+            if (actorUi.OpenBUIS.Remove(bui))
+            {
+                Dirty(session.AttachedEntity.Value, actorUi);
+            }
+        }
 
         RaiseLocalEvent(owner, new BoundUIClosedEvent(bui.UiKey, owner, session));
 

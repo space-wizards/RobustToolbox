@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
@@ -7,9 +8,12 @@ namespace Robust.Shared.GameObjects;
 /// <summary>
 /// Tracks UIs open for a particular entity.
 /// </summary>
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class ActorUIComponent : Component
 {
-    [ViewVariables]
+    /// <summary>
+    /// Currently open BUIs for this entity, also contains corresponding data such as EntityUid, etc.
+    /// </summary>
+    [DataField, AutoNetworkedField]
     public List<PlayerBoundUserInterface> OpenBUIS = new();
 }

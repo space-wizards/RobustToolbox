@@ -17,7 +17,14 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
+            SubscribeLocalEvent<ActorUIComponent, AfterAutoHandleStateEvent>(OnActorUIAuto);
             SubscribeNetworkEvent<BoundUIWrapMessage>(MessageReceived);
+        }
+
+        private void OnActorUIAuto(EntityUid uid, ActorUIComponent component, ref AfterAutoHandleStateEvent args)
+        {
+            // TODO: Open UIs or w/e
+            throw new NotImplementedException();
         }
 
         private void MessageReceived(BoundUIWrapMessage ev)
@@ -39,22 +46,8 @@ namespace Robust.Client.GameObjects
             // Raise as object so the correct type is used.
             RaiseLocalEvent(uid, (object)message, true);
 
-            switch (message)
-            {
-                case OpenBoundInterfaceMessage _:
-                    TryOpenUi(uid, uiKey, cmp);
-                    break;
-
-                case CloseBoundInterfaceMessage _:
-                    TryCloseUi(message.Session, uid, uiKey, remoteCall: true, uiComp: cmp);
-                    break;
-
-                default:
-                    if (cmp.OpenInterfaces.TryGetValue(uiKey, out var bui))
-                        bui.InternalReceiveMessage(message);
-
-                    break;
-            }
+            if (cmp.OpenInterfaces.TryGetValue(uiKey, out var bui))
+                bui.InternalReceiveMessage(message);
         }
 
         private bool TryOpenUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? uiComp = null)

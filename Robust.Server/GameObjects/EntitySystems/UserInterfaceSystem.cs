@@ -14,7 +14,6 @@ namespace Robust.Server.GameObjects
         {
             base.Initialize();
 
-            SubscribeNetworkEvent<BoundUIWrapMessage>(OnMessageReceived);
             _playerMan.PlayerStatusChanged += OnPlayerStatusChanged;
         }
 
@@ -60,13 +59,13 @@ namespace Robust.Server.GameObjects
                         RaiseNetworkEvent(state, player.ConnectedClient);
                     }
 
-                    if (ui.LastStateMsg == null)
+                    if (ui.StateMessage == null)
                         continue;
 
                     foreach (var session in ui.SubscribedSessions)
                     {
                         if (!ui.PlayerStateOverrides.ContainsKey(session))
-                            RaiseNetworkEvent(ui.LastStateMsg, session.ConnectedClient);
+                            RaiseNetworkEvent(ui.StateMessage, session.ConnectedClient);
                     }
                 }
             }

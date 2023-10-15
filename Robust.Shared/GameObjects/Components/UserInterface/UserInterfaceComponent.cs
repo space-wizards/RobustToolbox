@@ -13,9 +13,17 @@ namespace Robust.Shared.GameObjects
     {
         // TODO: Obviously clean this shit up, I just moved it into shared.
 
-        [ViewVariables] public readonly Dictionary<Enum, BoundUserInterface> OpenInterfaces = new();
+        /// <summary>
+        /// Contains the currently open BUIs for this entity.
+        /// </summary>
+        [ViewVariables]
+        public readonly Dictionary<Enum, BoundUserInterface> OpenInterfaces = new();
 
-        [ViewVariables] public readonly Dictionary<Enum, PlayerBoundUserInterface> Interfaces = new();
+        /// <summary>
+        /// Contains all the matching possible BUIs for this entity.
+        /// </summary>
+        [ViewVariables]
+        public readonly Dictionary<Enum, PlayerBoundUserInterface> Interfaces = new();
 
         public Dictionary<Enum, PrototypeData> MappedInterfaceData = new();
 
@@ -131,11 +139,17 @@ namespace Robust.Shared.GameObjects
         }
     }
 
+    /// <summary>
+    /// Raised from client to server to open a BUI.
+    /// </summary>
     [NetSerializable, Serializable]
     internal sealed class OpenBoundInterfaceMessage : BoundUserInterfaceMessage
     {
     }
 
+    /// <summary>
+    /// Raised from client to server to close a BUI.
+    /// </summary>
     [NetSerializable, Serializable]
     internal sealed class CloseBoundInterfaceMessage : BoundUserInterfaceMessage
     {

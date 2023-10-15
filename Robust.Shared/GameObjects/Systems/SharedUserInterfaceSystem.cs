@@ -8,12 +8,14 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract class SharedUserInterfaceSystem : EntitySystem
 {
+    [Dependency] protected readonly IGameTiming Timing = default!;
     [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
@@ -162,8 +164,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return false;
 
         // Tell server to close please.
-        if (_netManager.IsClient)
-            SendUiMessage(boundUserInterface, new CloseBoundInterfaceMessage());
+        if (_netManager.IsClient && Timing.IsFirstTimePredicted)
+            RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(uid), new CloseBoundInterfaceMessage(), uiKey));
 
         uiComp.OpenInterfaces.Remove(uiKey);
         boundUserInterface.Dispose();
@@ -344,6 +346,9 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!TryGetUi(uid, uiKey, out var bui, ui))
             return false;
 
+        if (!Timing.IsFirstTimePredicted)
+            return true;
+
         return Open(bui, session);
     }
 
@@ -381,12 +386,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     #region Close
 
-    public bool TryClose(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
+    public void TryClose(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
     {
         if (!TryGetUi(uid, uiKey, out var bui, ui))
-            return false;
+            return;
 
-        return Close(bui, session);
+        if (!Timing.IsFirstTimePredicted)
+            return;
+
+        Close(bui, session);
     }
 
     /// <summary>

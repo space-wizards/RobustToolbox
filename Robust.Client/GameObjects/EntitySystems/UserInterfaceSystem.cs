@@ -30,20 +30,23 @@ namespace Robust.Client.GameObjects
             TryComp<ActorComponent>(uid, out var actorComp);
             var session = actorComp?.Session;
 
-            foreach (var bui in component.OpenBUIS)
+            if (Timing.IsFirstTimePredicted)
             {
-                if (!TryGetEntity(bui.Owner, out var buiEntity))
-                    continue;
+                foreach (var bui in component.OpenBUIS)
+                {
+                    if (!TryGetEntity(bui.Owner, out var buiEntity))
+                        continue;
 
-                TryClose(session, buiEntity.Value, bui.UiKey);
-            }
+                    TryClose(session, buiEntity.Value, bui.UiKey);
+                }
 
-            foreach (var bui in state.OpenBUIS)
-            {
-                if (!TryGetEntity(bui.Owner, out var buiEntity))
-                    continue;
+                foreach (var bui in state.OpenBUIS)
+                {
+                    if (!TryGetEntity(bui.Owner, out var buiEntity))
+                        continue;
 
-                ClientOpenUi(buiEntity.Value, bui.UiKey);
+                    ClientOpenUi(buiEntity.Value, bui.UiKey);
+                }
             }
 
             component.OpenBUIS.Clear();
@@ -63,7 +66,7 @@ namespace Robust.Client.GameObjects
             if (_playerManager.LocalPlayer != null)
                 message.Session = _playerManager.LocalPlayer.Session;
 
-            message.Entity = GetNetEntity(uid);
+            message.Entity = ev.Entity;
             message.UiKey = uiKey;
 
             // Raise as object so the correct type is used.
@@ -76,8 +79,12 @@ namespace Robust.Client.GameObjects
         protected override void OpenUiLocal(NetEntity netEntity, Enum uiKey)
         {
             base.OpenUiLocal(netEntity, uiKey);
-            RaisePredictiveEvent(new BoundUIWrapMessage(netEntity, new OpenBoundInterfaceMessage(), uiKey));
-            ClientOpenUi(GetEntity(netEntity), uiKey);
+
+            if (Timing.IsFirstTimePredicted)
+            {
+                RaisePredictiveEvent(new BoundUIWrapMessage(netEntity, new OpenBoundInterfaceMessage(), uiKey));
+                ClientOpenUi(GetEntity(netEntity), uiKey);
+            }
         }
 
         /// <summary>

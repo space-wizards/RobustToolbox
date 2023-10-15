@@ -6,6 +6,7 @@ using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;
 
@@ -13,6 +14,7 @@ namespace Robust.Shared.GameObjects;
 
 public abstract class SharedUserInterfaceSystem : EntitySystem
 {
+    [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
     /// <summary>
@@ -43,10 +45,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     private void OnUserInterfaceInit(EntityUid uid, UserInterfaceComponent component, ComponentInit args)
     {
         component.Interfaces.Clear();
+        var netEnt = GetNetEntity(uid);
 
         foreach (var prototypeData in component.InterfaceData)
         {
-            component.Interfaces[prototypeData.UiKey] = new PlayerBoundUserInterface(prototypeData, GetNetEntity(uid));
+            component.Interfaces[prototypeData.UiKey] = new PlayerBoundUserInterface(prototypeData, netEnt);
             component.MappedInterfaceData[prototypeData.UiKey] = prototypeData;
         }
     }
@@ -67,9 +70,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     internal void OnMessageReceived(BaseBoundUIWrapMessage msg, EntitySessionEventArgs args)
     {
+        if (args.SenderSession is not { } session)
+            return;
+
         var uid = GetEntity(msg.Entity);
 
-        if (!TryComp(uid, out UserInterfaceComponent? uiComp) || args.SenderSession is not { } session)
+        if (!TryComp(uid, out UserInterfaceComponent? uiComp))
             return;
 
         if (!uiComp.Interfaces.TryGetValue(msg.UiKey, out var ui))
@@ -109,13 +115,17 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         if (msg.Message is OpenBoundInterfaceMessage)
         {
-            OpenUi(ui, session);
+            Open(ui, session);
+            return;
         }
 
         // Raise as object so the correct type is used.
         RaiseLocalEvent(uid, (object)message, true);
     }
 
+    /// <summary>
+    /// Removes the UI from active UIs and if relevant removes the active UI component.
+    /// </summary>
     private void DeactivateInterface(EntityUid entityUid, PlayerBoundUserInterface ui,
         ActiveUserInterfaceComponent? activeUis = null)
     {
@@ -127,12 +137,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             RemCompDeferred(entityUid, activeUis);
     }
 
-    private void ActivateInterface(PlayerBoundUserInterface ui)
+    /// <summary>
+    /// Adds the UI to active UIs.
+    /// </summary>
+    private void ActivateInterface(EntityUid owner, PlayerBoundUserInterface ui)
     {
-        if (!TryGetEntity(ui.Owner, out var buiEnt))
-            return;
-
-        EnsureComp<ActiveUserInterfaceComponent>(buiEnt.Value).Interfaces.Add(ui);
+        EnsureComp<ActiveUserInterfaceComponent>(owner).Interfaces.Add(ui);
     }
 
     /// <summary>
@@ -141,11 +151,9 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <param name="session">Session trying to close the BUI</param>
     /// <param name="uid">The target BUI</param>
     /// <param name="uiKey"></param>
-    /// <param name="remoteCall"></param>
     /// <param name="uiComp"></param>
     /// <returns></returns>
-    internal bool TryCloseUi(ICommonSession? session, EntityUid uid, Enum uiKey, bool remoteCall = false,
-        UserInterfaceComponent? uiComp = null)
+    internal bool TryClose(ICommonSession? session, EntityUid uid, Enum uiKey, UserInterfaceComponent? uiComp = null)
     {
         if (!Resolve(uid, ref uiComp))
             return false;
@@ -153,7 +161,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!uiComp.OpenInterfaces.TryGetValue(uiKey, out var boundUserInterface))
             return false;
 
-        if (!remoteCall)
+        // Tell server to close please.
+        if (_netManager.IsClient)
             SendUiMessage(boundUserInterface, new CloseBoundInterfaceMessage());
 
         uiComp.OpenInterfaces.Remove(uiKey);
@@ -218,7 +227,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     ///     Return UIs a session has open.
     ///     Null if empty.
-    /// <summary>
+    /// </summary>
     public List<PlayerBoundUserInterface>? GetAllUIsForSession(ICommonSession session)
     {
         if (TryComp<ActorUIComponent>(session.AttachedEntity, out var actorUI))
@@ -313,19 +322,19 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!TryGetUi(uid, uiKey, out var bui, ui))
             return false;
 
-        ToggleUi(bui, session);
+        Toggle(bui, session);
         return true;
     }
 
     /// <summary>
     ///     Switches between closed and open for a specific client.
     /// </summary>
-    public void ToggleUi(PlayerBoundUserInterface bui, ICommonSession session)
+    public void Toggle(PlayerBoundUserInterface bui, ICommonSession session)
     {
         if (bui._subscribedSessions.Contains(session))
-            CloseUi(bui, session);
+            Close(bui, session);
         else
-            OpenUi(bui, session);
+            Open(bui, session);
     }
 
     #region Open
@@ -335,13 +344,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!TryGetUi(uid, uiKey, out var bui, ui))
             return false;
 
-        return OpenUi(bui, session);
+        return Open(bui, session);
     }
 
     /// <summary>
     ///     Opens this interface for a specific client.
     /// </summary>
-    public bool OpenUi(PlayerBoundUserInterface bui, ICommonSession session)
+    public bool Open(PlayerBoundUserInterface bui, ICommonSession session)
     {
         if (session.Status == SessionStatus.Connecting || session.Status == SessionStatus.Disconnected)
             return false;
@@ -360,7 +369,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (bui.StateMessage != null)
             RaiseNetworkEvent(bui.StateMessage, session.ConnectedClient);
 
-        ActivateInterface(bui);
+        ActivateInterface(buiEnt, bui);
         return true;
     }
 
@@ -377,13 +386,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!TryGetUi(uid, uiKey, out var bui, ui))
             return false;
 
-        return CloseUi(bui, session);
+        return Close(bui, session);
     }
 
     /// <summary>
     ///     Close this interface for a specific client.
     /// </summary>
-    public bool CloseUi(PlayerBoundUserInterface bui, ICommonSession session,
+    public bool Close(PlayerBoundUserInterface bui, ICommonSession session,
         ActiveUserInterfaceComponent? activeUis = null)
     {
         if (!bui._subscribedSessions.Remove(session))
@@ -408,7 +417,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             }
         }
 
-        TryCloseUi(session, buiEnt, bui.UiKey);
+        TryClose(session, buiEnt, bui.UiKey);
         RaiseLocalEvent(buiEnt, new BoundUIClosedEvent(bui.UiKey, buiEnt, session));
 
         if (bui._subscribedSessions.Count == 0)
@@ -450,7 +459,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         foreach (var session in bui.SubscribedSessions.ToArray())
         {
-            CloseUi(bui, session);
+            Close(bui, session);
         }
     }
 
@@ -543,7 +552,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
             if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Fail)
             {
-                CloseUi(ui, session, activeUis);
+                Close(ui, session, activeUis);
                 continue;
             }
 
@@ -551,13 +560,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
             if (uiMap != xform.MapID)
             {
-                CloseUi(ui, session, activeUis);
+                Close(ui, session, activeUis);
                 continue;
             }
 
             var distanceSquared = (uiPos - _xformSystem.GetWorldPosition(xform)).LengthSquared();
             if (distanceSquared > ui.InteractionRangeSqrd)
-                CloseUi(ui, session, activeUis);
+                Close(ui, session, activeUis);
         }
     }
 }

@@ -57,7 +57,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void Close()
         {
-            UiSystem.TryCloseUi(_playerManager.LocalSession, Owner, UiKey);
+            UiSystem.TryClose(_playerManager.LocalSession, Owner, UiKey);
         }
 
         /// <summary>

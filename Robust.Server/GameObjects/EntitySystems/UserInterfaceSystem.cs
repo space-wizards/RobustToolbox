@@ -13,7 +13,8 @@ namespace Robust.Server.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-
+            // Someday replace this with the predicted one TM.
+            SubscribeNetworkEvent<BoundUIWrapMessage>(OnMessageReceived);
             _playerMan.PlayerStatusChanged += OnPlayerStatusChanged;
         }
 

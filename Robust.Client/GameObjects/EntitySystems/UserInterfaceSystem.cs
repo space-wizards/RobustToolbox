@@ -35,7 +35,7 @@ namespace Robust.Client.GameObjects
                 if (!TryGetEntity(bui.Owner, out var buiEntity))
                     continue;
 
-                TryCloseUi(session, buiEntity.Value, bui.UiKey);
+                TryClose(session, buiEntity.Value, bui.UiKey);
             }
 
             foreach (var bui in state.OpenBUIS)
@@ -43,7 +43,7 @@ namespace Robust.Client.GameObjects
                 if (!TryGetEntity(bui.Owner, out var buiEntity))
                     continue;
 
-                TryOpenUiLocal(buiEntity.Value, bui.UiKey);
+                ClientOpenUi(buiEntity.Value, bui.UiKey);
             }
 
             component.OpenBUIS.Clear();
@@ -77,16 +77,17 @@ namespace Robust.Client.GameObjects
         {
             base.OpenUiLocal(netEntity, uiKey);
             RaisePredictiveEvent(new BoundUIWrapMessage(netEntity, new OpenBoundInterfaceMessage(), uiKey));
-            TryOpenUiLocal(GetEntity(netEntity), uiKey);
+            ClientOpenUi(GetEntity(netEntity), uiKey);
         }
 
-        private bool TryOpenUiLocal(EntityUid uid, Enum uiKey, UserInterfaceComponent? uiComp = null)
+        /// <summary>
+        /// Opens a UI on the client. Required to instantiate the BUI class.
+        /// </summary>
+        private void ClientOpenUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? uiComp = null)
         {
-            if (!Resolve(uid, ref uiComp))
-                return false;
+            if (!Resolve(uid, ref uiComp)) return;
 
-            if (uiComp.OpenInterfaces.ContainsKey(uiKey))
-                return false;
+            if (uiComp.OpenInterfaces.ContainsKey(uiKey)) return;
 
             var data = uiComp.MappedInterfaceData[uiKey];
 
@@ -104,8 +105,6 @@ namespace Robust.Client.GameObjects
                 uiComp.Interfaces[uiKey]._subscribedSessions.Add(playerSession);
                 RaiseLocalEvent(uid, new BoundUIOpenedEvent(uiKey, uid, playerSession), true);
             }
-
-            return true;
         }
     }
 }

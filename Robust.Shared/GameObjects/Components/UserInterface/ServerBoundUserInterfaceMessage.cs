@@ -4,6 +4,7 @@ using Robust.Shared.Players;
 
 namespace Robust.Shared.GameObjects
 {
+    // Not relevant for networking (at least not yet).
     [RegisterComponent]
     public sealed partial class ActiveUserInterfaceComponent : Component
     {

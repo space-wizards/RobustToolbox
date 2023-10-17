@@ -54,6 +54,75 @@ END TEMPLATE-->
 *None yet*
 
 
+## 166.0.0
+
+### Breaking changes
+
+* EntityUid-NetEntity conversion methods now return null when given a null value, rather than returning an invalid id.
+* ExpandPvsEvent now defaults to using null lists to reduce allocations.
+* Various component lifestage related methods have been moved from the `Component` class to `EntityManager`.
+* Session/client specific PVS overrides are now always recursive, which means that all children of the overriden entity will also get sent.
+
+### New features
+
+* Added a SortedSet yaml serializer.
+
+### Other
+
+* AddComponentUninitialized is now marked as obsolete and will be removed in the future.
+* DebugTools.AssertOwner() now accepts null components.
+
+
+## 165.0.0
+
+### Breaking changes
+
+* The arguments of `SplitContainer`s resize-finished event have changed.
+
+### New features
+
+* The YAML validator now checks the default values of ProtoId<T> and EntProtoId data fields. 
+
+### Bugfixes
+
+* The minimum draggable area of split containers now blocks mouse inputs.
+
+
+## 164.0.0
+
+### Breaking changes
+
+* Make automatic component states infer cloneData.
+* Removed cloneData from AutoNetworkedFieldAttribute. This is now automatically inferred.
+
+### Internal
+
+* Reduce Transform GetComponents in RecursiveDeleteEntity.
+
+
+## 163.0.0
+
+### Breaking changes
+
+* Moved TimedDespawn to engine for a component that deletes the attached entity after a timer has elapsed.
+
+### New features
+
+* Add ExecuteCommand for integration tests.
+* Allow adding / removing widgets of cub-controls.
+* Give maps / grids a default name to help with debugging.
+* Use ToPrettyString in component resolve errors to help with debugging.
+
+### Bugfixes
+
+* Fix console backspace exception.
+* Fix rendering invalid maps spamming exceptions every frame.
+
+### Internal
+
+* Move ClientGameStatemanager local variables to fields to avoid re-allocating every tick.
+
+
 ## 162.2.1
 
 

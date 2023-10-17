@@ -68,7 +68,7 @@ public partial class EntityManager
             return true;
         }
 
-        entity = EntityUid.Invalid;
+        entity = null;
         return false;
     }
 
@@ -92,7 +92,7 @@ public partial class EntityManager
     {
         if (nEntity == null)
         {
-            entity = EntityUid.Invalid;
+            entity = null;
             return false;
         }
 
@@ -104,7 +104,7 @@ public partial class EntityManager
     {
         if (uid == EntityUid.Invalid)
         {
-            netEntity = NetEntity.Invalid;
+            netEntity = null;
             return false;
         }
 
@@ -125,7 +125,7 @@ public partial class EntityManager
     {
         if (uid == null)
         {
-            netEntity = NetEntity.Invalid;
+            netEntity = null;
             return false;
         }
 

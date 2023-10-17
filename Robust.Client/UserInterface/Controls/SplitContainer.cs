@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
@@ -14,7 +15,17 @@ namespace Robust.Client.UserInterface.Controls
         /// for each enum value to see how the different options work.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public SplitResizeMode ResizeMode { get; set; }
+        public SplitResizeMode ResizeMode
+        {
+            get => _resizeMode;
+            set
+            {
+                _resizeMode = value;
+                _splitDragArea.Visible = value != SplitResizeMode.NotResizable;
+            }
+        }
+
+        private SplitResizeMode _resizeMode = SplitResizeMode.RespectChildrenMinSize;
 
         /// <summary>
         /// Width of the split in virtual pixels
@@ -30,7 +41,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        private float _splitWidth;
+        private float _splitWidth = 10;
 
         /// <summary>
         ///     This width determines the minimum size of the draggable area around the split. This has no effect if it
@@ -38,11 +49,13 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public float MinDraggableWidth = 10f;
 
+        public float DraggableWidth => MathF.Max(MinDraggableWidth, _splitWidth);
+
         /// <summary>
         /// Virtual pixel offset from the edge beyond which the split cannot be moved.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public float SplitEdgeSeparation { get; set; }
+        public float SplitEdgeSeparation { get; set; } = 10;
 
         private float _splitStart;
 
@@ -58,6 +71,7 @@ namespace Robust.Client.UserInterface.Controls
                 _splitStart = value - _splitWidth / 2;
                 ClampSplitCenter();
                 InvalidateMeasure();
+                OnSplitResized?.Invoke();
             }
         }
 
@@ -81,12 +95,50 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        private SplitState _splitState;
-        private bool _dragging;
+        private SplitState _splitState = SplitState.Auto;
         private SplitOrientation _orientation;
-        private SplitStretchDirection _stretchDirection;
+        private SplitStretchDirection _stretchDirection = SplitStretchDirection.BottomRight;
+        private bool _dragging;
+        private float _dragOffset;
 
         private bool Vertical => Orientation == SplitOrientation.Vertical;
+
+        private readonly SplitDragControl _splitDragArea = new();
+
+        /// <summary>
+        /// The upper/left control in the split container.
+        /// </summary>
+        public Control? First
+        {
+            get
+            {
+                if (ChildCount < 3)
+                    return null;
+
+                DebugTools.AssertNotEqual(GetChild(0), _splitDragArea);
+                return GetChild(0);
+            }
+        }
+
+        /// <summary>
+        /// The lower/right control in the split container.
+        /// </summary>
+        public Control? Second
+        {
+            get
+            {
+                if (ChildCount < 3)
+                    return null;
+
+                DebugTools.AssertNotEqual(GetChild(1), _splitDragArea);
+                return GetChild(1);
+            }
+        }
+
+        public (Control First, Control Second)? Splits => ChildCount < 3 ? null : (GetChild(0), GetChild(1));
+
+        public event Action? OnSplitResizeFinished;
+        public event Action? OnSplitResized;
 
         /// <summary>
         /// Whether the split position should be set manually or automatically.
@@ -131,73 +183,53 @@ namespace Robust.Client.UserInterface.Controls
         public SplitContainer()
         {
             MouseFilter = MouseFilterMode.Stop;
-            _splitState = SplitState.Auto;
-            _stretchDirection = SplitStretchDirection.BottomRight;
-            _dragging = false;
-            ResizeMode = SplitResizeMode.RespectChildrenMinSize;
-            SplitWidth = 10;
-            SplitEdgeSeparation = 10;
+            AddChild(_splitDragArea);
+            _splitDragArea.Visible = _resizeMode != SplitResizeMode.NotResizable;
+            _splitDragArea.DefaultCursorShape =  Vertical ? CursorShape.VResize : CursorShape.HResize;
+            _splitDragArea.OnMouseUp += StopDragging;
+            _splitDragArea.OnMouseDown += StartDragging;
+            _splitDragArea.OnMouseMove += OnMove;
         }
 
-        protected internal override void MouseMove(GUIMouseMoveEventArgs args)
+        private void OnMove(GUIMouseMoveEventArgs args)
         {
-            base.MouseMove(args);
+            if (ResizeMode == SplitResizeMode.NotResizable)
+                return;
 
-            if (ResizeMode == SplitResizeMode.NotResizable) return;
+            if (!_dragging)
+                return;
 
-            if (_dragging)
-            {
-                var newOffset = Vertical ? args.RelativePosition.Y : args.RelativePosition.X;
-
-                SplitCenter = newOffset;
-                DefaultCursorShape = Vertical ? CursorShape.VResize : CursorShape.HResize;
-            }
-            else
-            {
-                // on mouseover, check if they are over the split and change the cursor accordingly
-                var cursor = CursorShape.Arrow;
-                if (CanDragAt(args.RelativePosition))
-                {
-                    cursor = Vertical ? CursorShape.VResize : CursorShape.HResize;
-                }
-
-                DefaultCursorShape = cursor;
-            }
+            // Source control might be either the container, or the separator.
+            // So we manually calculate the relative coordinates wrt the container.
+            var relative = args.GlobalPosition - GlobalPosition;
+            SplitCenter = Vertical ? relative.Y - _dragOffset : relative.X + _dragOffset;
         }
 
-
-        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
+        protected override void ChildAdded(Control newChild)
         {
-            base.KeyBindDown(args);
-
-            if (ResizeMode == SplitResizeMode.NotResizable) return;
-
-            if (_dragging || args.Function != EngineKeyFunctions.UIClick) return;
-
-            if (CanDragAt(args.RelativePosition))
-            {
-                _dragging = true;
-                _splitState = SplitState.Manual;
-            }
+            base.ChildAdded(newChild);
+            _splitDragArea.SetPositionLast();
         }
 
-        protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
+        public void StartDragging(GUIBoundKeyEventArgs args)
         {
-            base.KeyBindUp(args);
+            if (ResizeMode == SplitResizeMode.NotResizable || _dragging)
+                return;
 
-            if (args.Function != EngineKeyFunctions.UIClick) return;
+            _dragging = true;
+            _dragOffset = DraggableWidth / 2 - (Vertical ? args.RelativePosition.Y : args.RelativePosition.X);
+            _splitState = SplitState.Manual;
+            DefaultCursorShape = Vertical ? CursorShape.VResize : CursorShape.HResize;
+        }
+
+        private void StopDragging(GUIBoundKeyEventArgs args)
+        {
+            if (!_dragging)
+                return;
 
             _dragging = false;
             DefaultCursorShape = CursorShape.Arrow;
-        }
-
-        private bool CanDragAt(Vector2 relativePosition)
-        {
-            var distance = Vertical
-                ? Math.Abs(relativePosition.Y - SplitCenter)
-                : Math.Abs(relativePosition.X - SplitCenter);
-
-            return distance <= _splitWidth || distance <= MinDraggableWidth;
+            OnSplitResizeFinished?.Invoke();
         }
 
         /// <summary>
@@ -218,7 +250,7 @@ namespace Robust.Client.UserInterface.Controls
                 desiredSplit += Vertical ? desiredSize.Value.Y - Size.Y : desiredSize.Value.X - Size.X;
             _splitStart = MathHelper.Clamp(desiredSplit, SplitEdgeSeparation, splitMax);
 
-            if (ResizeMode == SplitResizeMode.RespectChildrenMinSize && ChildCount == 2)
+            if (ResizeMode == SplitResizeMode.RespectChildrenMinSize && ChildCount == 3)
             {
                 var first = GetChild(0);
                 var second = GetChild(1);
@@ -234,7 +266,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
-            if (ChildCount != 2)
+            if (ChildCount < 3)
             {
                 return finalSize;
             }
@@ -287,15 +319,23 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
+            // location & size of the draggable area may be larger than the split area.
+            var dragCenter = _splitStart + _splitWidth / 2;
+            var dragWidth = DraggableWidth;
+            var dragStart = dragCenter - dragWidth / 2;
+            var dragEnd = dragCenter + dragWidth / 2;
+
             if (Vertical)
             {
                 first.Arrange(new UIBox2(0, 0, finalSize.X, _splitStart));
                 second.Arrange(new UIBox2(0, _splitStart + _splitWidth, finalSize.X, finalSize.Y));
+                _splitDragArea.Arrange(new UIBox2(0, dragStart, finalSize.X, dragEnd));
             }
             else
             {
                 first.Arrange(new UIBox2(0, 0, _splitStart, finalSize.Y));
                 second.Arrange(new UIBox2(_splitStart + _splitWidth, 0, finalSize.X, finalSize.Y));
+                _splitDragArea.Arrange(new UIBox2(dragStart, 0, dragEnd, finalSize.Y));
             }
 
             return finalSize;
@@ -303,7 +343,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            if (ChildCount != 2)
+            if (ChildCount < 3)
             {
                 return Vector2.Zero;
             }
@@ -419,6 +459,41 @@ namespace Robust.Client.UserInterface.Controls
             /// The control should stretch the the control on the top or the left.
             /// </summary>
             TopLeft,
+        }
+
+        /// <summary>
+        /// Simple control to intercept mous events and redirect them to the parent.
+        /// </summary>
+        private sealed class SplitDragControl : Control
+        {
+            public event Action<GUIBoundKeyEventArgs>? OnMouseDown;
+            public event Action<GUIBoundKeyEventArgs>? OnMouseUp;
+            public event Action<GUIMouseMoveEventArgs>? OnMouseMove;
+
+            public SplitDragControl()
+            {
+                MouseFilter = MouseFilterMode.Stop;
+            }
+
+            protected internal override void MouseMove(GUIMouseMoveEventArgs args)
+            {
+                base.MouseMove(args);
+                OnMouseMove?.Invoke(args);
+            }
+
+            protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
+            {
+                base.KeyBindDown(args);
+                if (args.Function == EngineKeyFunctions.UIClick)
+                    OnMouseDown?.Invoke(args);
+            }
+
+            protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
+            {
+                base.KeyBindUp(args);
+                if (args.Function == EngineKeyFunctions.UIClick)
+                    OnMouseUp?.Invoke(args);
+            }
         }
     }
 }

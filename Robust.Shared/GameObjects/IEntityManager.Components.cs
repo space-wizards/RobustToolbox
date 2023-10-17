@@ -61,6 +61,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Concrete component type to add.</typeparam>
         /// <param name="uid">Entity being modified.</param>
         /// <returns>Component initialization handle. When you are done setting up the component, make sure to dispose this.</returns>
+        [Obsolete]
         EntityManager.CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : Component, new();
 
         /// <summary>
@@ -221,7 +222,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity to modify.</param>
         /// <param name="component">The output component after being ensured.</param>
         /// <typeparam name="T">Component to add.</typeparam>
-        /// <returns>The component in question</returns>
+        /// <returns>True if the component already existed</returns>
         bool EnsureComponent<T>(EntityUid uid, out T component) where T : Component, new();
 
         /// <summary>

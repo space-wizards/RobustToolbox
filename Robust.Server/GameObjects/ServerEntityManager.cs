@@ -42,6 +42,7 @@ namespace Robust.Server.GameObjects
 #endif
 
         private ISawmill _netEntSawmill = default!;
+        private EntityQuery<ActorComponent> _actorQuery;
 
         public override void Initialize()
         {
@@ -51,6 +52,12 @@ namespace Robust.Server.GameObjects
             ReceivedSystemMessage += (_, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             base.Initialize();
+        }
+
+        public override void Startup()
+        {
+            base.Startup();
+            _actorQuery = GetEntityQuery<ActorComponent>();
         }
 
         EntityUid IServerEntityManagerInternal.AllocEntity(EntityPrototype? prototype)
@@ -109,15 +116,10 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        [return: NotNullIfNotNull("uid")]
-        public override EntityStringRepresentation? ToPrettyString(EntityUid? uid)
+        public override EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata = null)
         {
-            if (uid == null)
-                return null;
-
-            TryGetComponent(uid, out ActorComponent? actor);
-
-            return base.ToPrettyString(uid).Value with { Session = actor?.PlayerSession };
+            _actorQuery.TryGetComponent(uid, out ActorComponent? actor);
+            return base.ToPrettyString(uid) with { Session = actor?.PlayerSession };
         }
 
         #region IEntityNetworkManager impl

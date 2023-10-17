@@ -39,7 +39,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        protected override void OnRemove()
+        protected internal override void OnRemove()
         {
             base.OnRemove();
 

@@ -88,13 +88,16 @@ namespace Robust.Shared.Utility
 
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void AssertOwner(EntityUid? uid, IComponent component)
+        public static void AssertOwner(EntityUid? uid, IComponent? component)
         {
+            if (component == null)
+                return;
+
             if (uid == null)
                 throw new DebugAssertException($"Null entity uid cannot own a component. Component: {component.GetType().Name}");
 
             // Whenever .owner is removed this will need to be replaced by something.
-            // We need some way to ensure that people don't mix up uids & components when calling methods.
+            // As long as components are just reference types, we could just get the component and check if the references are equal?
             if (component.Owner != uid)
                 throw new DebugAssertException($"Entity {uid} is not the owner of the component. Component: {component.GetType().Name}");
         }

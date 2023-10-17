@@ -270,7 +270,7 @@ namespace Robust.Client.ViewVariables.Instances
                 button.OnPressed += _ =>
                 {
                     ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entityManager.GetNetEntity(_entity), componentType.FullName));
+                        new ViewVariablesComponentSelector(_netEntity, componentType.FullName));
                 };
                 removeButton.OnPressed += _ =>
                 {

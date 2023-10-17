@@ -404,6 +404,18 @@ namespace Robust.Client.GameStates
             return _lastStateFullRep.TryGetValue(entity, out dictionary);
         }
 
+        public bool IsQueuedForDetach(NetEntity entity)
+        {
+            // This isn't fast, but its just meant for use in tests & debug asserts.
+            foreach (var msg in _pvsDetachMessages.Values)
+            {
+                if (msg.Contains(entity))
+                    return true;
+            }
+
+            return false;
+        }
+
         public int CalculateBufferSize(GameTick fromTick)
         {
             bool foundState;

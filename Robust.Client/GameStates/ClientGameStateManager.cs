@@ -111,6 +111,13 @@ namespace Robust.Client.GameStates
 
         public event Action<MsgStateLeavePvs>? PvsLeave;
 
+#if DEBUG
+        /// <summary>
+        /// If true, this will cause received game states to be ignored. Used by integration tests.
+        /// </summary>
+        public bool DropStates;
+#endif
+
         /// <inheritdoc />
         public void Initialize()
         {
@@ -203,6 +210,10 @@ namespace Robust.Client.GameStates
 
         private void HandleStateMessage(MsgState message)
         {
+#if DEBUG
+            if (DropStates)
+                return;
+#endif
             // We ONLY ack states that are definitely going to get applied. Otherwise the sever might assume that we
             // applied a state containing entity-creation information, which it would then no longer send to us when
             // we re-encounter this entity
@@ -1442,6 +1453,9 @@ namespace Robust.Client.GameStates
             }
         }
         #endregion
+
+        public bool IsQueuedForDetach(NetEntity entity)
+            => _processor.IsQueuedForDetach(entity);
 
         void IPostInjectInit.PostInject()
         {

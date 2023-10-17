@@ -54,6 +54,23 @@ END TEMPLATE-->
 *None yet*
 
 
+## 167.0.0
+
+### Breaking changes
+
+* Remove ComponentExtensions.
+* Remove ContainerHelpers.
+* Change some TransformSystem methods to fix clientside lerping.
+
+### Bugfixes
+
+* Fixed PVS bugs from dropped entity states.
+
+### Other
+
+* Add more joint debug asserts.
+
+
 ## 166.0.0
 
 ### Breaking changes

@@ -398,6 +398,7 @@ namespace Robust.Shared.GameObjects
             if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;
 
+            DebugTools.AssertOwner(uid, component);
             DirtyEntity(uid, meta);
             component.LastModifiedTick = CurrentTick;
         }

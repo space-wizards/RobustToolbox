@@ -431,7 +431,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             try
             {
-                var comp = (Component) componentFactory.GetComponent(registration.Type);
+                var comp = componentFactory.GetComponent(registration.Type);
                 comp.Owner = _entity;
                 _entityManager.AddComponent(_entity, comp);
             }

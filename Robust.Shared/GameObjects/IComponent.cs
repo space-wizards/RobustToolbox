@@ -47,6 +47,7 @@ namespace Robust.Shared.GameObjects
         ///     Entity that this component is attached to.
         /// </summary>
         /// <seealso cref="EntityQueryEnumerator{TComp1}"/>
+        [Obsolete("Update your API to allow accessing Owner through other means")]
         EntityUid Owner { get; set; }
 
         /// <summary>

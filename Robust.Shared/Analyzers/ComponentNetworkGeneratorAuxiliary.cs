@@ -10,7 +10,7 @@ namespace Robust.Shared.Analyzers;
 ///     component state replication beyond just directly setting variables should not use this attribute.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-[BaseTypeRequired(typeof(Component))]
+[BaseTypeRequired(typeof(IComponent))]
 public sealed class AutoGenerateComponentStateAttribute : Attribute
 {
     /// <summary>

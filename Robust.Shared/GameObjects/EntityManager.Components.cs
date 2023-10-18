@@ -172,9 +172,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public Component AddComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null)
+        public IComponent AddComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null)
         {
-            var newComponent = (Component)_componentFactory.GetComponent(netId);
+            var newComponent = _componentFactory.GetComponent(netId);
 #pragma warning disable CS0618 // Type or member is obsolete
             newComponent.Owner = uid;
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -365,7 +365,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false, meta);
+            RemoveComponentImmediate(comp, uid, false, meta);
             return true;
         }
 
@@ -379,20 +379,13 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp, meta))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false, meta);
+            RemoveComponentImmediate(comp, uid, false, meta);
             return true;
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
-        {
-            RemoveComponent(uid, (Component)component, meta);
-        }
-
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveComponent(EntityUid uid, Component component, MetaDataComponent? meta = null)
         {
             RemoveComponentImmediate(component, uid, false, meta);
         }
@@ -410,7 +403,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentDeferred((Component)comp, uid, false);
+            RemoveComponentDeferred(comp, uid, false);
             return true;
         }
 
@@ -424,14 +417,14 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp, meta))
                 return false;
 
-            RemoveComponentDeferred((Component)comp, uid, false);
+            RemoveComponentDeferred(comp, uid, false);
             return true;
         }
 
         /// <inheritdoc />
         public void RemoveComponentDeferred(EntityUid owner, IComponent component)
         {
-            RemoveComponentDeferred((Component)component, owner, false);
+            RemoveComponentDeferred(component, owner, false);
         }
 
         /// <inheritdoc />
@@ -489,7 +482,7 @@ namespace Robust.Shared.GameObjects
             _entCompIndex.Remove(uid);
         }
 
-        private void RemoveComponentDeferred(Component component, EntityUid uid, bool terminating)
+        private void RemoveComponentDeferred(IComponent component, EntityUid uid, bool terminating)
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 

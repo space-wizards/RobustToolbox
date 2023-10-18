@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* The Component.OnRemove method has been removed. Use SubscribeLocalEvent<TComp, ComponentRemove>(OnRemove) from an EntitySystem instead.
+*None yet*
 
 ### New features
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 168.0.0
+
+### Breaking changes
+
+* The Component.OnRemove method has been removed. Use SubscribeLocalEvent<TComp, ComponentRemove>(OnRemove) from an EntitySystem instead.
 
 
 ## 167.0.0

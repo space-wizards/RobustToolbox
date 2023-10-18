@@ -206,7 +206,7 @@ public partial class EntitySystem
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Obsolete("Use Dirty(EntityUid, Component, MetaDataComponent?")]
-    protected void Dirty(Component component, MetaDataComponent? meta = null)
+    protected void Dirty(IComponent component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(component, meta);
     }
@@ -215,7 +215,7 @@ public partial class EntitySystem
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+    protected void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(uid, component, meta);
     }
@@ -433,7 +433,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.GetComponent&lt;T&gt;"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T Comp<T>(EntityUid uid) where T : Component
+    protected T Comp<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.GetComponent<T>(uid);
     }
@@ -614,14 +614,14 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.AddComponent&lt;T&gt;(EntityUid, T, bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void AddComp<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
+    protected void AddComp<T>(EntityUid uid, T component, bool overwrite = false) where T : IComponent
     {
         EntityManager.AddComponent(uid, component, overwrite);
     }
 
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T EnsureComp<T>(EntityUid uid) where T : Component, new()
+    protected T EnsureComp<T>(EntityUid uid) where T : IComponent, new()
     {
         return EntityManager.EnsureComponent<T>(uid);
     }
@@ -663,7 +663,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.Count" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected int Count<T>() where T : Component
+    protected int Count<T>() where T : IComponent
     {
         return EntityManager.Count<T>();
     }
@@ -819,34 +819,34 @@ public partial class EntitySystem
     #region All Entity Query
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected AllEntityQueryEnumerator<TComp1> AllEntityQuery<TComp1>() where TComp1 : Component
+    protected AllEntityQueryEnumerator<TComp1> AllEntityQuery<TComp1>() where TComp1 : IComponent
     {
         return EntityManager.AllEntityQueryEnumerator<TComp1>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQuery<TComp1, TComp2>()
-        where TComp1 : Component
-        where TComp2 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
     {
         return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQuery<TComp1, TComp2, TComp3>()
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
     {
         return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2, TComp3>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQuery<TComp1, TComp2, TComp3, TComp4>()
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
-        where TComp4 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+        where TComp4 : IComponent
     {
         return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
     }
@@ -856,34 +856,34 @@ public partial class EntitySystem
     #region Get Entity Query
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>() where TComp1 : Component
+    protected EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>() where TComp1 : IComponent
     {
         return EntityManager.EntityQueryEnumerator<TComp1>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
-        where TComp1 : Component
-        where TComp2 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
     {
         return EntityManager.EntityQueryEnumerator<TComp1, TComp2>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
     {
         return EntityManager.EntityQueryEnumerator<TComp1, TComp2, TComp3>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
-        where TComp4 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+        where TComp4 : IComponent
     {
         return EntityManager.EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
     }
@@ -897,7 +897,7 @@ public partial class EntitySystem
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
-    protected EntityQuery<T> GetEntityQuery<T>() where T : Component
+    protected EntityQuery<T> GetEntityQuery<T>() where T : IComponent
     {
         return EntityManager.GetEntityQuery<T>();
     }
@@ -906,7 +906,7 @@ public partial class EntitySystem
     /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1}"/>
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected IEnumerable<TComp1> EntityQuery<TComp1>(bool includePaused = false) where TComp1 : Component
+    protected IEnumerable<TComp1> EntityQuery<TComp1>(bool includePaused = false) where TComp1 : IComponent
     {
         return EntityManager.EntityQuery<TComp1>(includePaused);
     }
@@ -916,8 +916,8 @@ public partial class EntitySystem
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
-        where TComp1 : Component
-        where TComp2 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
     {
         return EntityManager.EntityQuery<TComp1, TComp2>(includePaused);
     }
@@ -927,9 +927,9 @@ public partial class EntitySystem
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
     {
         return EntityManager.EntityQuery<TComp1, TComp2, TComp3>(includePaused);
     }
@@ -939,10 +939,10 @@ public partial class EntitySystem
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
-        where TComp4 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+        where TComp4 : IComponent
     {
         return EntityManager.EntityQuery<TComp1, TComp2, TComp3, TComp4>(includePaused);
     }

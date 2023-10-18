@@ -9,7 +9,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Component that this event relates to.
         /// </summary>
-        public Component Component { get; }
+        public IComponent Component { get; }
 
         /// <summary>
         /// EntityUid of the entity this component belongs to.
@@ -21,7 +21,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="component">The relevant component</param>
         /// <param name="owner">EntityUid of the entity this component belongs to.</param>
-        public ComponentEventArgs(Component component, EntityUid owner)
+        public ComponentEventArgs(IComponent component, EntityUid owner)
         {
             Component = component;
             Owner = owner;

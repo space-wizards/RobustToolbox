@@ -1,5 +1,4 @@
 using System;
-using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -8,7 +7,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    /// <inheritdoc />
+    /// <inheritdoc cref="IComponent"/>
     [Reflect(false)]
     [ImplicitDataDefinitionForInheritors]
     public abstract partial class Component : IComponent
@@ -17,7 +16,8 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         private bool _netSync { get; set; } = true;
 
-        internal bool Networked = true;
+        [Obsolete("Do not use from content")]
+        public bool Networked { get; set; } = true;
 
         /// <inheritdoc />
         public bool NetSyncEnabled
@@ -33,19 +33,10 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public ComponentLifeStage LifeStage { get; internal set; } = ComponentLifeStage.PreAdd;
+        public ComponentLifeStage LifeStage { get; [Obsolete("Do not use from content")] set; } = ComponentLifeStage.PreAdd;
 
-        /// <summary>
-        ///     If true, and if this is a networked component, then component data will only be sent to players if their
-        ///     controlled entity is the owner of this component. This is less performance intensive than <see cref="SessionSpecific"/>.
-        /// </summary>
         public virtual bool SendOnlyToOwner => false;
 
-        /// <summary>
-        ///     If true, and if this is a networked component, then this component will cause <see
-        ///     cref="ComponentGetStateAttemptEvent"/> events to be raised to check whether a given player should
-        ///     receive this component's state.
-        /// </summary>
         public virtual bool SessionSpecific => false;
 
         /// <inheritdoc />
@@ -62,18 +53,14 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public GameTick CreationTick { get; internal set; }
+        public GameTick CreationTick { get; [Obsolete("Do not use from content")] set; }
 
         /// <inheritdoc />
         [ViewVariables]
-        public GameTick LastModifiedTick { get; internal set; }
+        public GameTick LastModifiedTick { get; [Obsolete("Do not use from content")] set; }
 
-        /// <summary>
-        /// Called when the component is removed from an entity.
-        /// Shuts down the component.
-        /// The component has already been marked as deleted in the component manager.
-        /// </summary>
-        protected internal virtual void OnRemove()
+        [Obsolete("Use SubscribeLocalEvent<ComponentType, ComponentRemove> instead")]
+        public virtual void OnRemove()
         {
             LifeStage = ComponentLifeStage.Deleted;
         }
@@ -88,13 +75,15 @@ namespace Robust.Shared.GameObjects
 
         // these two methods clear the LastModifiedTick/CreationTick to mark it as "not different from prototype load".
         // This is used as optimization in the game state system to avoid sending redundant component data.
-        internal virtual void ClearTicks()
+        [Obsolete("Do not use from content")]
+        public virtual void ClearTicks()
         {
             LastModifiedTick = GameTick.Zero;
             ClearCreationTick();
         }
 
-        internal void ClearCreationTick()
+        [Obsolete("Do not use from content")]
+        public void ClearCreationTick()
         {
             CreationTick = GameTick.Zero;
         }

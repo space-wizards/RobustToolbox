@@ -83,9 +83,9 @@ namespace Robust.Shared.GameObjects
 
         public void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null);
 
-        public void Dirty(Component component, MetaDataComponent? metadata = null);
+        public void Dirty(IComponent component, MetaDataComponent? metadata = null);
 
-        public void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null);
+        public void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null);
 
         public void QueueDeleteEntity(EntityUid? uid);
 

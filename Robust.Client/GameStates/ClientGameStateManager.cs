@@ -55,7 +55,7 @@ namespace Robust.Client.GameStates
         private readonly Dictionary<EntityUid, HashSet<Type>> _pendingReapplyNetStates = new();
         private readonly HashSet<NetEntity> _stateEnts = new();
         private readonly List<EntityUid> _toDelete = new();
-        private readonly List<Component> _toRemove = new();
+        private readonly List<IComponent> _toRemove = new();
         private readonly Dictionary<NetEntity, Dictionary<ushort, ComponentState>> _outputData = new();
         private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
 
@@ -499,7 +499,7 @@ namespace Robust.Client.GameStates
             var countReset = 0;
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
             var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
-            RemQueue<Component> toRemove = new();
+            RemQueue<IComponent> toRemove = new();
 
             foreach (var entity in system.DirtyEntities)
             {

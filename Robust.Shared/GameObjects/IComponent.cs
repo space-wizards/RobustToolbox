@@ -79,14 +79,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         GameTick LastModifiedTick { get; [Obsolete("Do not use from content")] set; }
 
-        /// <summary>
-        /// Called when the component is removed from an entity.
-        /// Shuts down the component.
-        /// The component has already been marked as deleted in the component manager.
-        /// </summary>
-        [Obsolete("Use SubscribeLocalEvent<ComponentType, ComponentRemove> instead")]
-        void OnRemove();
-
         [Obsolete("Do not use from content")]
         void ClearTicks();
 

@@ -59,12 +59,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public GameTick LastModifiedTick { get; [Obsolete("Do not use from content")] set; }
 
-        [Obsolete("Use SubscribeLocalEvent<ComponentType, ComponentRemove> instead")]
-        public virtual void OnRemove()
-        {
-            LifeStage = ComponentLifeStage.Deleted;
-        }
-
         /// <inheritdoc />
         [Obsolete]
         public void Dirty(IEntityManager? entManager = null)

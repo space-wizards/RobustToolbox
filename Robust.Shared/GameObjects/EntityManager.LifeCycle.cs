@@ -86,14 +86,6 @@ public partial class EntityManager
 
         component.LifeStage = ComponentLifeStage.Removing;
         EventBus.RaiseComponentEvent(component, CompRemoveInstance);
-
-        component.OnRemove();
-
-#if DEBUG
-        if (component.LifeStage != ComponentLifeStage.Deleted)
-        {
-            DebugTools.Assert($"Component {component.GetType().Name} did not call base {nameof(component.OnRemove)} in derived method.");
-        }
-#endif
+        component.LifeStage = ComponentLifeStage.Deleted;
     }
 }

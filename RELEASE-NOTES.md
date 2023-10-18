@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The Component.OnRemove method has been removed. Use SubscribeLocalEvent<TComp, ComponentRemove>(OnRemove) from an EntitySystem instead.
 
 ### New features
 
@@ -98,7 +98,7 @@ END TEMPLATE-->
 
 ### New features
 
-* The YAML validator now checks the default values of ProtoId<T> and EntProtoId data fields. 
+* The YAML validator now checks the default values of ProtoId<T> and EntProtoId data fields.
 
 ### Bugfixes
 

@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects
 {
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
-    public delegate void ComponentQueryCallback<T>(EntityUid uid, T component) where T : Component;
+    public delegate void ComponentQueryCallback<T>(EntityUid uid, T component) where T : IComponent;
 
     /// <inheritdoc />
     [Virtual]
@@ -387,13 +387,13 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [Obsolete("use override with an EntityUid")]
-        public void Dirty(Component component, MetaDataComponent? meta = null)
+        public void Dirty(IComponent component, MetaDataComponent? meta = null)
         {
             Dirty(component.Owner, component, meta);
         }
 
         /// <inheritdoc />
-        public virtual void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+        public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
             if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;

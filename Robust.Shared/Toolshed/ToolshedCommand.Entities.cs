@@ -126,7 +126,7 @@ public abstract partial class ToolshedCommand
     /// </summary>
     [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected T AddComp<T>(EntityUid entity)
-        where T : Component, new()
+        where T : IComponent, new()
         => EntityManager.AddComponent<T>(entity);
 
     /// <summary>
@@ -142,7 +142,7 @@ public abstract partial class ToolshedCommand
     /// </summary>
     [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected T EnsureComp<T>(EntityUid entity)
-        where T: Component, new()
+        where T: IComponent, new()
         => EntityManager.EnsureComponent<T>(entity);
 
     /// <summary>
@@ -159,6 +159,6 @@ public abstract partial class ToolshedCommand
     /// </summary>
     [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityQuery<T> GetEntityQuery<T>()
-        where T : Component
+        where T : IComponent
         => EntityManager.GetEntityQuery<T>();
 }

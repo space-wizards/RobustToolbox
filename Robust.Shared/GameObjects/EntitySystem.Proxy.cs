@@ -442,7 +442,7 @@ public partial class EntitySystem
     ///     Returns the component of a specific type, or null when it's missing or the entity does not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T? CompOrNull<T>(EntityUid uid) where T : class, IComponent
+    protected T? CompOrNull<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.GetComponentOrNull<T>(uid);
     }
@@ -451,9 +451,9 @@ public partial class EntitySystem
     ///     Returns the component of a specific type, or null when it's missing or the entity does not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T? CompOrNull<T>(EntityUid? uid) where T : class, IComponent
+    protected T? CompOrNull<T>(EntityUid? uid) where T : IComponent
     {
-        return uid.HasValue ? EntityManager.GetComponentOrNull<T>(uid.Value) : null;
+        return uid.HasValue ? EntityManager.GetComponentOrNull<T>(uid.Value) : default;
     }
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
@@ -632,7 +632,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool RemCompDeferred<T>(EntityUid uid) where T : class, IComponent
+    protected bool RemCompDeferred<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.RemoveComponentDeferred<T>(uid);
     }
@@ -681,7 +681,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool RemComp<T>(EntityUid uid) where T : class, IComponent
+    protected bool RemComp<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.RemoveComponent<T>(uid);
     }

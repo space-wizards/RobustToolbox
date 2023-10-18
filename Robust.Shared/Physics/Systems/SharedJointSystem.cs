@@ -90,6 +90,10 @@ public abstract partial class SharedJointSystem : EntitySystem
         {
             RemoveJoint(joint);
         }
+
+        // If we're relaying elsewhere then cleanup our old data.
+        if (component.Relay != null && !TerminatingOrDeleted(component.Relay.Value))
+            SetRelay(uid, null, component);
     }
 
     #endregion

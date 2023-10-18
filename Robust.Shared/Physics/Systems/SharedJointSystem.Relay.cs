@@ -51,7 +51,7 @@ public abstract partial class SharedJointSystem
     {
         foreach (var relay in component.Relayed)
         {
-            if (Deleted(relay) || !_jointsQuery.TryGetComponent(relay, out var joint))
+            if (TerminatingOrDeleted(relay) || !_jointsQuery.TryGetComponent(relay, out var joint))
                 continue;
 
             RefreshRelay(relay, component: joint);
@@ -73,13 +73,13 @@ public abstract partial class SharedJointSystem
             relay = container.Owner;
         }
 
-        RefreshRelay(uid, relay, component);
+        SetRelay(uid, relay, component);
     }
 
     /// <summary>
     /// Refreshes the joint relay for this entity.
     /// </summary>
-    public void RefreshRelay(EntityUid uid, EntityUid? relay, JointComponent? component = null)
+    public void SetRelay(EntityUid uid, EntityUid? relay, JointComponent? component = null)
     {
         if (!Resolve(uid, ref component, false))
             return;
@@ -91,7 +91,11 @@ public abstract partial class SharedJointSystem
         {
             if (relayTarget.Relayed.Remove(uid))
             {
-                // TODO: Comp cleanup.
+                if (relayTarget.Relayed.Count == 0)
+                {
+                    RemCompDeferred<JointRelayTargetComponent>(component.Relay.Value);
+                }
+
                 Dirty(component.Relay.Value, relayTarget);
             }
         }

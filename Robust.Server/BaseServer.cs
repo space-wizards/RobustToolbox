@@ -306,7 +306,9 @@ namespace Robust.Server
             _modLoader.SetUseLoadContext(!ContentStart);
             _modLoader.SetEnableSandboxing(Options.Sandboxing);
 
-            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, Options.ContentModulePrefix))
+            var resourceManifest = ResourceManifestData.LoadResourceManifest(_resources);
+
+            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, resourceManifest.AssemblyPrefix ?? Options.ContentModulePrefix))
             {
                 _logger.Fatal("Errors while loading content assemblies.");
                 return true;

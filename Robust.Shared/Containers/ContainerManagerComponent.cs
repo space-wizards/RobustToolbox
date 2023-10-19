@@ -28,10 +28,10 @@ namespace Robust.Shared.Containers
         void ISerializationHooks.AfterDeserialization()
         {
             // TODO custom type serializer
-            // TODO set owner uid on init.
             foreach (var (id, container) in Containers)
             {
                 container.Manager = this;
+                container.Owner = Owner;
                 container.ID = id;
             }
         }

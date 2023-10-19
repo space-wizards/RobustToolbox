@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
@@ -211,19 +209,18 @@ internal partial class MapManager
 
         if (actualId != MapId.Nullspace) // nullspace isn't bound to an entity
         {
-            var mapComps = EntityManager.EntityQuery<MapComponent>(true);
-
-            MapComponent? result = null;
-            foreach (var mapComp in mapComps)
+            Entity<MapComponent> result = default;
+            var query = EntityManager.AllEntityQueryEnumerator<MapComponent>();
+            while (query.MoveNext(out var uid, out var map))
             {
-                if (mapComp.MapId != actualId)
+                if (map.MapId != actualId)
                     continue;
 
-                result = mapComp;
+                result = (uid, map);
                 break;
             }
 
-            if (result != null)
+            if (result != default)
             {
                 DebugTools.Assert(mapId != null);
                 _mapEntities.Add(actualId, result.Owner);

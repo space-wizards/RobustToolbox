@@ -61,7 +61,7 @@ namespace Robust.Shared.Containers
         /// The entity that owns this container.
         /// </summary>
         [ViewVariables]
-        public EntityUid Owner => Manager.Owner;
+        public EntityUid Owner { get; internal set; }
 
         /// <summary>
         /// Should the contents of this container be shown? False for closed containers like lockers, true for
@@ -76,10 +76,7 @@ namespace Robust.Shared.Containers
             DebugTools.AssertNull(ID);
             ID = id;
             Manager = component;
-
-            // TODO fix container init.
-            // Eventually, we want an owner field, but currently it needs to use component.Owner
-            // Owner = owner;
+            Owner = owner;
         }
 
         /// <summary>
@@ -335,7 +332,7 @@ namespace Robust.Shared.Containers
             else if (reparent)
             {
                 // Container ECS when.
-                sys.AttachParentToContainerOrGrid(xform);
+                sys.AttachParentToContainerOrGrid((toRemove, xform));
                 if (localRotation != null)
                     entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetLocalRotation(xform, localRotation.Value);
             }

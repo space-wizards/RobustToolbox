@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
@@ -86,11 +85,12 @@ internal partial class MapManager
 
     public IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
     {
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-
-        return EntityManager.EntityQuery<MapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(c.Owner).MapID == mapId)
-            .Select(c => c);
+        var query = EntityManager.AllEntityQueryEnumerator<MapGridComponent, TransformComponent>();
+        while (query.MoveNext(out var grid, out var xform))
+        {
+            if (xform.MapID != mapId)
+                yield return grid;
+        }
     }
 
     public IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId)

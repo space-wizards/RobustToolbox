@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 169.0.0
+
+### Breaking changes
+
+* Entity<T> has been introduced to hold a component and its owning entity. Some methods that returned and accepted components directly have been removed or obsoleted to reflect this.
+
+### Other
+
+* By-value events may now be subscribed to by-ref.
+* The manifest's assemblyPrefix value is now respected on the server.
+
+
 ## 168.0.0
 
 ### Breaking changes

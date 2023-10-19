@@ -845,13 +845,13 @@ namespace Robust.Shared.GameObjects
 
             if (set.Length > comps.Length)
             {
-                comps = new Component[set.Length];
+                comps = new IComponent[set.Length];
             }
 
             var i = 0;
             foreach (var c in set)
             {
-                comps[i++] = Unsafe.As<Component>(c);
+                comps[i++] = Unsafe.As<IComponent>(c);
             }
         }
 
@@ -1092,7 +1092,7 @@ namespace Robust.Shared.GameObjects
 
                 for (var i = 0; i < chunk.Size; i++)
                 {
-                    var comp = Unsafe.As<Component>(components.GetValue(i))!;
+                    var comp = Unsafe.As<IComponent>(components.GetValue(i))!;
                     if (comp.Deleted)
                         continue;
 

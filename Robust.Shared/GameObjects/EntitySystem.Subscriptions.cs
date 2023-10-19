@@ -25,7 +25,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <seealso cref="SubscribeLocalEvent{T}(EntityEventRefHandler{T}, Type[], Type[])"/>
-        [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
+        // [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
         protected void SubscribeLocalEvent<T>(
             EntityEventHandler<T> handler,
             Type[]? before = null, Type[]? after = null)
@@ -75,7 +75,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <seealso cref="SubEvent{T}(EventSource, EntityEventRefHandler{T}, Type[], Type[])"/>
-        [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
+        // [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
         private void SubEvent<T>(
             EventSource src,
             EntityEventHandler<T> handler,
@@ -113,7 +113,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <seealso cref="SubscribeLocalEvent{TComp, TEvent}(ComponentEventRefHandler{TComp, TEvent}, Type[], Type[])"/>
-        [Obsolete("Subscribe to the event by ref instead (ComponentEventRefHandler)")]
+        // [Obsolete("Subscribe to the event by ref instead (ComponentEventRefHandler)")]
         protected void SubscribeLocalEvent<TComp, TEvent>(
             ComponentEventHandler<TComp, TEvent> handler,
             Type[]? before = null, Type[]? after = null)

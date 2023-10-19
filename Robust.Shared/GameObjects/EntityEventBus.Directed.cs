@@ -776,7 +776,7 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <seealso cref="ComponentEventRefHandler{TComp, TEvent}"/>
-    [Obsolete("Use ComponentEventRefHandler instead")]
+    // [Obsolete("Use ComponentEventRefHandler instead")]
     public delegate void ComponentEventHandler<in TComp, in TEvent>(EntityUid uid, TComp component, TEvent args)
         where TComp : IComponent
         where TEvent : notnull;

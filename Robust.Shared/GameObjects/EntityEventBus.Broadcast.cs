@@ -21,12 +21,12 @@ namespace Robust.Shared.GameObjects
         /// <param name="subscriber">Subscriber that owns the handler.</param>
         /// <param name="eventHandler">Delegate that handles the event.</param>
         /// <seealso cref="SubscribeEvent{T}(EventSource, IEntityEventSubscriber, EntityEventRefHandler{T})"/>
-        [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
+        // [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
         void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber,
             EntityEventHandler<T> eventHandler) where T : notnull;
 
         /// <seealso cref="SubscribeEvent{T}(EventSource, IEntityEventSubscriber, EntityEventRefHandler{T})"/>
-        [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
+        // [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
         void SubscribeEvent<T>(
             EventSource source,
             IEntityEventSubscriber subscriber,

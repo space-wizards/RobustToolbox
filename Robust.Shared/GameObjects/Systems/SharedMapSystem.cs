@@ -1,11 +1,9 @@
-using JetBrains.Annotations;
-using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using System.Linq;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
@@ -157,6 +155,11 @@ namespace Robust.Shared.GameObjects
     public sealed class GridModifiedEvent : EntityEventArgs
     {
         /// <summary>
+        ///     The id of the grid being changed.
+        /// </summary>
+        public EntityUid GridEnt { get; }
+
+        /// <summary>
         ///     Grid being changed.
         /// </summary>
         public MapGridComponent Grid { get; }
@@ -169,8 +172,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public GridModifiedEvent(MapGridComponent grid, IReadOnlyCollection<(Vector2i position, Tile tile)> modified)
+        public GridModifiedEvent(EntityUid gridEnt, MapGridComponent grid, IReadOnlyCollection<(Vector2i position, Tile tile)> modified)
         {
+            GridEnt = gridEnt;
             Grid = grid;
             Modified = modified;
         }

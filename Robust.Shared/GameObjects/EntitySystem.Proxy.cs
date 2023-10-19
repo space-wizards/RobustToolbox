@@ -221,6 +221,15 @@ public partial class EntitySystem
     }
 
     /// <summary>
+    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
+    {
+        EntityManager.Dirty(ent.Owner, ent.Comp, meta);
+    }
+
+    /// <summary>
     ///     Retrieves the name of an entity.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
@@ -396,7 +405,7 @@ public partial class EntitySystem
         return true;
     }
 
-    /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
+    /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull("uid")]
     protected EntityStringRepresentation? ToPrettyString(EntityUid? uid, MetaDataComponent? metadata = null)
@@ -404,7 +413,7 @@ public partial class EntitySystem
         return EntityManager.ToPrettyString(uid, metadata);
     }
 
-    /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
+    /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull("netEntity")]
     protected EntityStringRepresentation? ToPrettyString(NetEntity? netEntity)
@@ -412,17 +421,17 @@ public partial class EntitySystem
         return EntityManager.ToPrettyString(netEntity);
     }
 
-    /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
+    /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata)
         => EntityManager.ToPrettyString(uid, metadata);
 
-    /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
+    /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(EntityUid uid)
         => EntityManager.ToPrettyString(uid);
 
-    /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
+    /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(NetEntity netEntity)
         => EntityManager.ToPrettyString(netEntity);
@@ -458,7 +467,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryComp<T>(EntityUid uid, [NotNullWhen(true)] out T? comp)
+    protected bool TryComp<T>(EntityUid uid, [NotNullWhen(true)] out T? comp) where T : IComponent
     {
         return EntityManager.TryGetComponent(uid, out comp);
     }
@@ -479,7 +488,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryComp<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? comp)
+    protected bool TryComp<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? comp) where T : IComponent
     {
         if (!uid.HasValue)
         {

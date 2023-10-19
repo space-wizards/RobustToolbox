@@ -350,7 +350,7 @@ namespace Robust.Client.Graphics.Clyde
                         _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
 
                         if (entry.Sprite.RaiseShaderEvent)
-                            _entityManager.EventBus.RaiseLocalEvent(entry.Sprite.Owner,
+                            _entityManager.EventBus.RaiseLocalEvent(entry.Uid,
                                 new BeforePostShaderRenderEvent(entry.Sprite, viewport), false);
                     }
                 }

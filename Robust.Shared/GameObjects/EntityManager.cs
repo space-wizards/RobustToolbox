@@ -395,12 +395,19 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
+            Dirty(new Entity<IComponent>(uid, component), meta);
+        }
+
+        public virtual void Dirty(Entity<IComponent> ent, MetaDataComponent? meta = null)
+        {
+            if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
                 return;
 
-            DebugTools.AssertOwner(uid, component);
-            DirtyEntity(uid, meta);
-            component.LastModifiedTick = CurrentTick;
+            DebugTools.AssertOwner(ent, ent.Comp);
+            DirtyEntity(ent, meta);
+#pragma warning disable CS0618 // Type or member is obsolete
+            ent.Comp.LastModifiedTick = CurrentTick;
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
@@ -659,7 +666,9 @@ namespace Robust.Shared.GameObjects
 
             // allocate the required TransformComponent
             var xformComp = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
+#pragma warning disable CS0618 // Type or member is obsolete
             xformComp.Owner = uid;
+#pragma warning restore CS0618 // Type or member is obsolete
             AddComponentInternal(uid, xformComp, false, true, metadata);
 
             return uid;

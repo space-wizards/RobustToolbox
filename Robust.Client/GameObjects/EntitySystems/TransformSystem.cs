@@ -28,11 +28,11 @@ namespace Robust.Client.GameObjects
 
         // Only keep track of transforms actively lerping.
         // Much faster than iterating 3000+ transforms every frame.
-        [ViewVariables] private readonly List<TransformComponent> _lerpingTransforms = new();
+        [ViewVariables] private readonly List<Entity<TransformComponent>> _lerpingTransforms = new();
 
         public void Reset()
         {
-            foreach (var xform in _lerpingTransforms)
+            foreach (var (_, xform) in _lerpingTransforms)
             {
                 xform.ActivelyLerping = false;
                 xform.NextPosition = null;
@@ -77,7 +77,7 @@ namespace Robust.Client.GameObjects
                     return;
                 }
 
-                _lerpingTransforms.Add(xform);
+                _lerpingTransforms.Add((uid, xform));
                 xform.ActivelyLerping = true;
                 xform.PredictedLerp = false;
                 xform.LerpParent = xform.ParentUid;
@@ -96,7 +96,7 @@ namespace Robust.Client.GameObjects
 
             if (!xform.ActivelyLerping)
             {
-                _lerpingTransforms.Add(xform);
+                _lerpingTransforms.Add((uid, xform));
                 xform.ActivelyLerping = true;
                 xform.PredictedLerp = true;
                 xform.PrevRotation = xform._localRotation;
@@ -123,8 +123,7 @@ namespace Robust.Client.GameObjects
 
             for (var i = 0; i < _lerpingTransforms.Count; i++)
             {
-                var transform = _lerpingTransforms[i];
-                var uid = transform.Owner;
+                var (uid, transform) = _lerpingTransforms[i];
                 var found = false;
 
                 // Only lerp if parent didn't change.

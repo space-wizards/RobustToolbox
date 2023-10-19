@@ -27,9 +27,6 @@ namespace Robust.Client.Console.Commands
             var componentName = args[1];
 
             var component = _componentFactory.GetComponent(componentName);
-
-            component.Owner = entity;
-
             _entityManager.AddComponent(entity, component);
         }
     }

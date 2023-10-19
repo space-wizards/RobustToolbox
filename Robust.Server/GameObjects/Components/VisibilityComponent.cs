@@ -1,5 +1,4 @@
 using System;
-using Robust.Shared.Analyzers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -22,7 +21,7 @@ namespace Robust.Server.GameObjects
         public int LayerVV
         {
             get => Layer;
-            set => EntitySystem.Get<VisibilitySystem>().SetLayer(this, value);
+            set => EntitySystem.Get<VisibilitySystem>().SetLayer(Owner, this, value);
         }
     }
 }

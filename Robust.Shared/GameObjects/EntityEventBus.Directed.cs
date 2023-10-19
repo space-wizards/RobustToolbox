@@ -46,6 +46,12 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : notnull;
 
+        void SubscribeLocalEvent<TComp, TEvent>(
+            EntityEventRefHandler<TComp, TEvent> handler,
+            Type orderType, Type[]? before = null, Type[]? after = null)
+            where TComp : IComponent
+            where TEvent : notnull;
+
         #endregion
 
         void UnsubscribeLocalEvent<TComp, TEvent>()
@@ -281,6 +287,25 @@ namespace Robust.Shared.GameObjects
         {
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, ref args);
+
+            var orderData = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
+
+            EntSubscribe<TEvent>(
+                CompIdx.Index<TComp>(),
+                typeof(TComp),
+                typeof(TEvent),
+                EventHandler,
+                orderData);
+
+            RegisterCommon(typeof(TEvent), orderData, out _);
+        }
+
+        public void SubscribeLocalEvent<TComp, TEvent>(EntityEventRefHandler<TComp, TEvent> handler, Type orderType,
+            Type[]? before = null,
+            Type[]? after = null) where TComp : IComponent where TEvent : notnull
+        {
+            void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
+                => handler(new Entity<TComp>(uid, (TComp) comp), ref args);
 
             var orderData = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
 
@@ -716,6 +741,10 @@ namespace Robust.Shared.GameObjects
         where TEvent : notnull;
 
     public delegate void ComponentEventRefHandler<in TComp, TEvent>(EntityUid uid, TComp component, ref TEvent args)
+        where TComp : IComponent
+        where TEvent : notnull;
+
+    public delegate void EntityEventRefHandler<TComp, TEvent>(Entity<TComp> ent, ref TEvent args)
         where TComp : IComponent
         where TEvent : notnull;
 }

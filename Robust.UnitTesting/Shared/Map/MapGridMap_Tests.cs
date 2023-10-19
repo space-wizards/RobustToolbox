@@ -41,7 +41,7 @@ public sealed class MapGridMap_Tests
         var mapManager = sim.Resolve<IMapManager>();
 
         var mapId = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId);
+        mapManager.CreateGridEntity(mapId);
 
         Assert.DoesNotThrow(() =>
         {

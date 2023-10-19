@@ -250,7 +250,6 @@ namespace Robust.Shared.Prototypes
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
                 var newComponent = factory.GetComponent(compName);
-                newComponent.Owner = entity;
                 entityManager.AddComponent(entity, newComponent);
                 component = newComponent;
             }

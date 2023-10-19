@@ -7,7 +7,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using Direction = Robust.Shared.Maths.Direction;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -18,17 +17,13 @@ namespace Robust.Client.UserInterface.Controls
         IEntityManager _entMan;
 
         [ViewVariables]
-        private SpriteComponent? _sprite;
-        public SpriteComponent? Sprite
-        {
-            get => _sprite;
-            [Obsolete("Use SetEntity()")]
-            set => SetEntity(value?.Owner);
-        }
+        public SpriteComponent? Sprite { get; private set; }
 
 
         [ViewVariables]
         public EntityUid? Entity { get; private set; }
+
+        public Entity<SpriteComponent>? Ent => Entity == null || Sprite == null ? null : (Entity.Value, Sprite);
 
         /// <summary>
         /// This field configures automatic scaling of the sprite. This automatic scaling is done before
@@ -124,14 +119,22 @@ namespace Robust.Client.UserInterface.Controls
         public SpriteView()
         {
             _entMan = IoCManager.Resolve<IEntityManager>();
-            _entMan.TryGetComponent(Entity, out _sprite);
+            if (_entMan.TryGetComponent(Entity, out SpriteComponent? sprite))
+            {
+                Sprite = sprite;
+            }
+
             RectClipContent = true;
         }
 
         public void SetEntity(EntityUid? uid)
         {
             Entity = uid;
-            _entMan.TryGetComponent(Entity, out _sprite);
+
+            if (_entMan.TryGetComponent(Entity, out SpriteComponent? sprite))
+            {
+                Sprite = sprite;
+            }
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
@@ -143,13 +146,13 @@ namespace Robust.Client.UserInterface.Controls
 
         private void UpdateSize()
         {
-            if (Entity == null || _sprite == null)
+            if (Entity == null || Sprite == null)
             {
                 _spriteSize = default;
                 return;
             }
 
-            var spriteBox = _sprite.CalculateRotatedBoundingBox(default,  _worldRotation ?? Angle.Zero, _eyeRotation)
+            var spriteBox = Sprite.CalculateRotatedBoundingBox(default,  _worldRotation ?? Angle.Zero, _eyeRotation)
                 .CalcBoundingBox();
 
             if (!SpriteOffset)
@@ -191,10 +194,10 @@ namespace Robust.Client.UserInterface.Controls
 
         internal override void DrawInternal(IRenderHandle renderHandle)
         {
-            if (Entity is not {} uid || _sprite == null)
+            if (Entity is not {} uid || Sprite == null)
                 return;
 
-            if (_sprite.Deleted)
+            if (Sprite.Deleted)
             {
                 SetEntity(null);
                 return;
@@ -214,11 +217,11 @@ namespace Robust.Client.UserInterface.Controls
 
             var offset = SpriteOffset
                 ? Vector2.Zero
-                : - (-_eyeRotation).RotateVec(_sprite.Offset) * new Vector2(1, -1) * EyeManager.PixelsPerMeter;
+                : - (-_eyeRotation).RotateVec(Sprite.Offset) * new Vector2(1, -1) * EyeManager.PixelsPerMeter;
 
             var position = PixelSize / 2 + offset * stretch * UIScale;
             var scale = Scale * UIScale * stretch;
-            renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, _sprite);
+            renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, Sprite);
         }
     }
 }

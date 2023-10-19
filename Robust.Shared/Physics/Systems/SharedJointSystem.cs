@@ -26,7 +26,7 @@ public abstract partial class SharedJointSystem : EntitySystem
 
     // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
     // we can delete the component.
-    private readonly HashSet<JointComponent> _dirtyJoints = new();
+    private readonly HashSet<Entity<JointComponent>> _dirtyJoints = new();
     protected readonly HashSet<Joint> AddedJoints = new();
     protected readonly List<Joint> ToRemove = new();
 
@@ -115,8 +115,8 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         foreach (var joint in _dirtyJoints)
         {
-            if (joint.Deleted || joint.JointCount != 0) continue;
-            EntityManager.RemoveComponent<JointComponent>(joint.Owner);
+            if (joint.Comp.Deleted || joint.Comp.JointCount != 0) continue;
+            EntityManager.RemoveComponent<JointComponent>(joint);
         }
 
         _dirtyJoints.Clear();
@@ -139,7 +139,8 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         jointComponentA ??= EnsureComp<JointComponent>(aUid);
         jointComponentB ??= EnsureComp<JointComponent>(bUid);
-        DebugTools.Assert(jointComponentA.Owner == aUid && jointComponentB.Owner == bUid);
+        DebugTools.AssertOwner(aUid, jointComponentA);
+        DebugTools.AssertOwner(bUid, jointComponentB);
         DebugTools.AssertNotEqual(jointComponentA.Relay, bUid);
         DebugTools.AssertNotEqual(jointComponentB.Relay, aUid);
 
@@ -198,8 +199,8 @@ public abstract partial class SharedJointSystem : EntitySystem
         Dirty(bUid, jointComponentB);
 
         // Also flag these for checking juusssttt in case.
-        _dirtyJoints.Add(jointComponentA);
-        _dirtyJoints.Add(jointComponentB);
+        _dirtyJoints.Add((aUid, jointComponentA));
+        _dirtyJoints.Add((bUid, jointComponentB));
         // Note: creating a joint doesn't wake the bodies.
 
         // Raise broadcast last so we can do both sides of directed first.
@@ -522,12 +523,12 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         // Originally I logged these but because of prediction the client can just nuke them multiple times in a row
         // because each body has its own JointComponent, bleh.
-        if (!EntityManager.TryGetComponent<JointComponent>(bodyAUid, out var jointComponentA))
+        if (!TryComp<JointComponent>(bodyAUid, out var jointComponentA))
         {
             return;
         }
 
-        if (!EntityManager.TryGetComponent<JointComponent>(bodyBUid, out var jointComponentB))
+        if (!TryComp<JointComponent>(bodyBUid, out var jointComponentB))
         {
             return;
         }
@@ -559,12 +560,12 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         if (!jointComponentA.Deleted)
         {
-            Dirty(jointComponentA);
+            Dirty(bodyAUid, jointComponentA);
         }
 
         if (!jointComponentB.Deleted)
         {
-            Dirty(jointComponentB);
+            Dirty(bodyBUid, jointComponentB);
         }
 
         if (jointComponentA.Deleted && jointComponentB.Deleted)
@@ -599,8 +600,8 @@ public abstract partial class SharedJointSystem : EntitySystem
         }
 
         // We can't just check up front due to how prediction works.
-        _dirtyJoints.Add(jointComponentA);
-        _dirtyJoints.Add(jointComponentB);
+        _dirtyJoints.Add((bodyAUid, jointComponentA));
+        _dirtyJoints.Add((bodyBUid, jointComponentB));
     }
 
     #endregion

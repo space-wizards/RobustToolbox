@@ -96,6 +96,17 @@ internal partial class MapManager
         state = state2.state;
     }
 
+    public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, ref List<Entity<MapGridComponent>> state,
+        bool approx = false, bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldAABB, ref state, static (EntityUid uid, MapGridComponent grid,
+            ref List<Entity<MapGridComponent>> list) =>
+        {
+            list.Add((uid, grid));
+            return true;
+        }, approx, includeMap);
+    }
+
     public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false,
         bool includeMap = true)
     {
@@ -106,6 +117,17 @@ internal partial class MapManager
         bool approx = false, bool includeMap = true)
     {
         FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), ref state, callback, approx, includeMap);
+    }
+
+    public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> state,
+        bool approx = false, bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldBounds, ref state, static (EntityUid uid, MapGridComponent grid,
+            ref List<Entity<MapGridComponent>> list) =>
+        {
+            list.Add((uid, grid));
+            return true;
+        }, approx, includeMap);
     }
 
     private bool IsIntersecting(

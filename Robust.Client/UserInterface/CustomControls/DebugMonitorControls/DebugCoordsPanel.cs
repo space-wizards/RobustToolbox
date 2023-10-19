@@ -117,7 +117,7 @@ Mouse Pos:
     {playerWorldOffset}
     {playerCoordinates}
     Rotation: {playerRotation.Degrees:F2}°
-    EntId: {entityTransform.Owner}
+    EntId: {controlledEntity}
     GridUid: {entityTransform.GridUid}
     Grid Rotation: {gridRotation.Degrees:F2}°");
             }

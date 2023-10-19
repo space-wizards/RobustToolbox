@@ -58,8 +58,6 @@ namespace Robust.Client.GameStates
         private readonly Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)> _compStateWork = new();
         private readonly Dictionary<EntityUid, HashSet<Type>> _pendingReapplyNetStates = new();
         private readonly HashSet<NetEntity> _stateEnts = new();
-        private readonly List<EntityUid> _toDelete = new();
-        private readonly List<IComponent> _toRemove = new();
         private readonly Dictionary<NetEntity, Dictionary<ushort, ComponentState>> _outputData = new();
         private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
 
@@ -905,7 +903,7 @@ namespace Robust.Client.GameStates
             var xforms = _entities.GetEntityQuery<TransformComponent>();
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
-            _toDelete.Clear();
+            using var toDelete = new PooledList<EntityUid>();
 
             // Client side entities won't need the transform, but that should always be a tiny minority of entities
             var metaQuery = _entityManager.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
@@ -916,7 +914,7 @@ namespace Robust.Client.GameStates
                 if (metadata.NetEntity.IsClientSide())
                 {
                     if (deleteClientEntities)
-                        _toDelete.Add(ent);
+                        toDelete.Add(ent);
 
                     continue;
                 }
@@ -943,14 +941,14 @@ namespace Robust.Client.GameStates
                         && !deleteClientEntities // don't add duplicates
                         && _entities.IsClientSide(child.Value))
                     {
-                        _toDelete.Add(child.Value);
+                        toDelete.Add(child.Value);
                     }
                 }
 
-                _toDelete.Add(ent);
+                toDelete.Add(ent);
             }
 
-            foreach (var ent in _toDelete)
+            foreach (var ent in toDelete)
             {
                 _entities.DeleteEntity(ent);
             }
@@ -1166,19 +1164,19 @@ namespace Robust.Client.GameStates
             // First remove any deleted components
             if (curState?.NetComponents != null)
             {
-                _toRemove.Clear();
+                using var toRemove = new PooledList<IComponent>();
                 using var compTypes = new PooledList<ComponentType>();
 
                 foreach (var (id, comp) in meta.NetComponents)
                 {
                     if (comp.NetSyncEnabled && !curState.NetComponents.Contains(id))
                     {
-                        _toRemove.Add(comp);
+                        toRemove.Add(comp);
                         compTypes.Add(comp.GetType());
                     }
                 }
 
-                if (_toRemove.Count > 0)
+                if (toRemove.Count > 0)
                 {
                     foreach (var comp in toRemove)
                     {
@@ -1211,7 +1209,7 @@ namespace Robust.Client.GameStates
             }
             else if (curState != null)
             {
-                using var addedComps = new PooledList<Component>();
+                using var addedComps = new PooledList<IComponent>();
                 using var addedCompTypes = new PooledList<ComponentType>();
 
                 foreach (var compChange in curState.ComponentChanges.Span)
@@ -1467,16 +1465,15 @@ namespace Robust.Client.GameStates
                 _entityManager.EventBus.RaiseComponentEvent(comp, ref handleState);
             }
 
-            // ensure we don't have any extra components
-            _toRemove.Clear();
+            using var toRemove = new PooledList<IComponent>();
 
             foreach (var (id, comp) in meta.NetComponents)
             {
                 if (comp.NetSyncEnabled && !lastState.ContainsKey(id))
-                    _toRemove.Add(comp);
+                    toRemove.Add(comp);
             }
 
-            foreach (var comp in _toRemove)
+            foreach (var comp in toRemove)
             {
                 _entities.RemoveComponent(uid, comp);
             }

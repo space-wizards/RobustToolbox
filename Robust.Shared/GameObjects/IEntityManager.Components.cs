@@ -138,14 +138,6 @@ namespace Robust.Shared.GameObjects
         void RemoveComponentDeferred(EntityUid uid, IComponent component);
 
         /// <summary>
-        ///     Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
-        ///     Throws if the given component does not belong to the entity.
-        /// </summary>
-        /// <param name="uid">Entity UID to modify.</param>
-        /// <param name="component">Component to remove.</param>
-        void RemoveComponentDeferred(EntityUid uid, Component component);
-
-        /// <summary>
         ///     Removes all components from an entity, except the required components.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>

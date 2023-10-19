@@ -36,7 +36,7 @@ namespace Robust.Shared.GameObjects
 
         private static readonly ComponentState DefaultComponentState = new();
 
-        private readonly HashSet<Component> _deleteSet = new(TypeCapacity);
+        private readonly HashSet<IComponent> _deleteSet = new(TypeCapacity);
 
         /// <inheritdoc />
         public event Action<AddedComponentEventArgs>? ComponentAdded;
@@ -223,14 +223,14 @@ namespace Robust.Shared.GameObjects
             AddComponentInternal(uid, component, false, metadata);
         }
 
-        private void AddComponentInternal<T>(EntityUid uid, T component, bool skipInit, MetaDataComponent? metadata = null) where T : Component
+        private void AddComponentInternal<T>(EntityUid uid, T component, bool skipInit, MetaDataComponent? metadata = null) where T : IComponent
         {
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
             AddComponentInternal(uid, component, reg, skipInit, metadata);
         }
 
-        private void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit, MetaDataComponent? metadata = null) where T : Component
+        private void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit, MetaDataComponent? metadata = null) where T : IComponent
         {
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
@@ -328,7 +328,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            RemoveComponent(uid, (Component)component, meta);
+            RemoveComponent(uid, component, meta);
         }
 
 
@@ -365,12 +365,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public void RemoveComponentDeferred(EntityUid owner, IComponent component)
-        {
-            RemoveComponentDeferred(component, owner, false);
-        }
-
-        /// <inheritdoc />
-        public void RemoveComponentDeferred(EntityUid owner, Component component)
         {
             RemoveComponentDeferred(component, owner, false);
         }
@@ -444,7 +438,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// WARNING: Do not call this unless you're sure of what you're doing!
         /// </summary>
-        internal void RemoveComponentInternal(EntityUid uid, Component component, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
+        internal void RemoveComponentInternal(EntityUid uid, IComponent component, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
         {
             // I hate this but also didn't want the MetaQuery.GetComponent overhead.
             // and with archetypes we want to avoid moves at all costs.
@@ -456,7 +450,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="terminating">Is the entity terminating.</param>
         /// <param name="archetypeChange">Should we handle the archetype change or is it being handled externally.</param>
-        private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating, bool archetypeChange, MetaDataComponent? meta = null)
+        private void RemoveComponentImmediate(IComponent component, EntityUid uid, bool terminating, bool archetypeChange, MetaDataComponent? meta = null)
         {
             if (component.Deleted)
             {
@@ -530,7 +524,7 @@ namespace Robust.Shared.GameObjects
             _deleteSet.Clear();
         }
 
-        private void DeleteComponent(EntityUid entityUid, Component component, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
+        private void DeleteComponent(EntityUid entityUid, IComponent component, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
         {
             if (!MetaQuery.ResolveInternal(entityUid, ref metadata))
                 return;
@@ -820,7 +814,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
-            return new EntityQuery<Component>(this, _world, type, _resolveSawmill);
+            return new EntityQuery<IComponent>(this, _world, type, _resolveSawmill);
         }
 
         /// <inheritdoc />
@@ -1204,11 +1198,11 @@ namespace Robust.Shared.GameObjects
             {
                 if (_manager.TryGetComponent(uid, _type.Value.Type, out var comp))
                 {
-                    component = Unsafe.As<TComp1>(comp);
+                    component = (TComp1) comp;
                     return true;
                 }
 
-                component = null;
+                component = default;
                 return false;
             }
             else

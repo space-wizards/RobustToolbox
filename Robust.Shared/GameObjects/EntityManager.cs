@@ -51,8 +51,8 @@ namespace Robust.Shared.GameObjects
 
         private QueryDescription _archMetaQuery = new QueryDescription().WithAll<MetaDataComponent>();
 
-        protected EntityQuery<MetaDataComponent> MetaQuery;
-        private EntityQuery<TransformComponent> TransformQuery;
+        public EntityQuery<MetaDataComponent> MetaQuery;
+        public EntityQuery<TransformComponent> TransformQuery;
 
         #endregion Dependencies
 
@@ -317,19 +317,19 @@ namespace Robust.Shared.GameObjects
 
         public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, out _, overrides);
+            return CreateEntity(prototypeName, out _, out _, overrides);
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, out _, overrides);
+            return CreateEntity(prototypeName, out _, out _, overrides);
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName, out var xform, overrides);
+            var newEntity = CreateEntity(prototypeName, out _, out var xform, overrides);
             _xforms.SetCoordinates(newEntity, xform, coordinates, unanchor: false);
             return newEntity;
         }
@@ -337,7 +337,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName, out var transform, overrides);
+            var newEntity = CreateEntity(prototypeName, out _, out var transform, overrides);
 
             if (coordinates.MapId == MapId.Nullspace)
             {
@@ -694,23 +694,23 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual EntityUid CreateEntity(string? prototypeName, out TransformComponent xform, IEntityLoadContext? context = null)
+        private protected virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, out TransformComponent xform, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
-                return AllocEntity(out _, out xform);
+                return AllocEntity(out metadata, out xform);
 
             if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-            return CreateEntity(prototype, out xform, context);
+            return CreateEntity(prototype, out metadata, out xform, context);
         }
 
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected EntityUid CreateEntity(EntityPrototype prototype, out TransformComponent xform, IEntityLoadContext? context = null)
+        private protected EntityUid CreateEntity(EntityPrototype prototype, out MetaDataComponent metadata, out TransformComponent xform, IEntityLoadContext? context = null)
         {
-            var entity = AllocEntity(prototype, out var metadata, out xform);
+            var entity = AllocEntity(prototype, out metadata, out xform);
             try
             {
                 LoadEntity(metadata.EntityPrototype, entity, context);

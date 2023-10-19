@@ -644,13 +644,6 @@ public partial class EntitySystem
         return EntityManager.RemoveComponentDeferred(uid, type);
     }
 
-    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, Component)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void RemCompDeferred(EntityUid uid, Component component)
-    {
-        EntityManager.RemoveComponentDeferred(uid, component);
-    }
-
     /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, IComponent)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void RemCompDeferred(EntityUid uid, IComponent component)
@@ -691,13 +684,6 @@ public partial class EntitySystem
     protected bool RemComp(EntityUid uid, Type type)
     {
         return EntityManager.RemoveComponent(uid, type);
-    }
-
-    /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, Component)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void RemComp(EntityUid uid, Component component)
-    {
-        EntityManager.RemoveComponent(uid, component);
     }
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, IComponent)"/>

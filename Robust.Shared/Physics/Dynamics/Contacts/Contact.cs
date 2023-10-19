@@ -365,5 +365,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Is this a special contact for grid-grid collisions
         /// </summary>
         Grid = 1 << 2,
+
+        Deleting = 1 << 3,
     }
 }

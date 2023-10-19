@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
+﻿using System;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 
 namespace Robust.Shared.Prototypes;
 
@@ -11,7 +12,8 @@ namespace Robust.Shared.Prototypes;
 ///     This will be automatically validated by <see cref="ProtoIdSerializer{T}"/> if used in data fields.
 /// </remarks>
 /// <remarks><seealso cref="EntProtoId"/> for an <see cref="EntityPrototype"/> alias.</remarks>
-public readonly record struct ProtoId<T>(string Id) where T : class, IPrototype
+[Serializable]
+public readonly record struct ProtoId<T>(string Id) : IEquatable<string>, IComparable<ProtoId<T>> where T : class, IPrototype
 {
     public static implicit operator string(ProtoId<T> protoId)
     {
@@ -22,4 +24,21 @@ public readonly record struct ProtoId<T>(string Id) where T : class, IPrototype
     {
         return new ProtoId<T>(id);
     }
+
+    public static implicit operator ProtoId<T>?(string? id)
+    {
+        return id == null ? default(ProtoId<T>?) : new ProtoId<T>(id);
+    }
+
+    public bool Equals(string? other)
+    {
+        return Id == other;
+    }
+
+    public int CompareTo(ProtoId<T> other)
+    {
+        return string.Compare(Id, other.Id, StringComparison.Ordinal);
+    }
+
+    public override string ToString() => Id ?? string.Empty;
 }

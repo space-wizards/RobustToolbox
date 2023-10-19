@@ -13,7 +13,6 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Set;
 using Robust.Shared.ViewVariables;
 using Component = Robust.Shared.GameObjects.Component;
 
@@ -105,7 +104,7 @@ namespace Robust.Shared.Prototypes
         [Obsolete("Use the HideSpawnMenu")]
         public bool NoSpawn { get; private set; }
 
-        public bool HideSpawnMenu => Categories.Contains(HideCategory);
+        public bool HideSpawnMenu => Categories.Contains(HideCategory) || NoSpawn;
 
         [DataField("placement")]
         private EntityPlacementProperties PlacementProperties = new();
@@ -211,7 +210,7 @@ namespace Robust.Shared.Prototypes
 
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                var newComponent = Unsafe.As<Component>(factory.GetComponent(compReg));
+                var newComponent = factory.GetComponent(compName);
                 newComponent.Owner = entity;
                 add = true;
                 component = Unsafe.As<IComponent>(newComponent);

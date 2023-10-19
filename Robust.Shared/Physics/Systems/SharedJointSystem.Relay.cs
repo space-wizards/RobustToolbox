@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -110,5 +109,29 @@ public abstract partial class SharedJointSystem
         }
 
         Dirty(uid, component);
+
+#if DEBUG
+        if (component.Relay == null)
+            return;
+
+        if (TryComp(uid, out JointComponent? jointComp))
+        {
+            foreach (var joint in jointComp.Joints.Values)
+            {
+                DebugTools.AssertNotEqual(joint.BodyAUid, component.Relay);
+                DebugTools.AssertNotEqual(joint.BodyBUid, component.Relay);
+
+            }
+        }
+
+        if (TryComp(component.Relay, out JointComponent? relayJointComp))
+        {
+            foreach (var joint in relayJointComp.Joints.Values)
+            {
+                DebugTools.AssertNotEqual(joint.BodyAUid, uid);
+                DebugTools.AssertNotEqual(joint.BodyBUid, uid);
+            }
+        }
+#endif
     }
 }

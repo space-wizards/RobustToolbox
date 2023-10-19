@@ -196,7 +196,7 @@ namespace Robust.Server.Console
                             break;
 
                         case ConsoleKey.Backspace:
-                            if (currentBuffer.Length > 0)
+                            if (currentBuffer.Length > 0 && internalCursor > 0)
                             {
                                 currentBuffer = currentBuffer.Remove(internalCursor - 1, 1);
                                 internalCursor--;

@@ -61,7 +61,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool Deleted(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
             return true;
 
         return metaData.EntityDeleted;
@@ -73,7 +73,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TerminatingOrDeleted(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
             return true;
 
         return metaData.EntityLifeStage >= EntityLifeStage.Terminating;
@@ -104,7 +104,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityLifeStage LifeStage(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
         return metaData.EntityLifeStage;
@@ -169,7 +169,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryLifeStage(EntityUid uid, [NotNullWhen(true)] out EntityLifeStage? lifeStage, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
         {
             lifeStage = null;
             return false;
@@ -206,7 +206,7 @@ public partial class EntitySystem
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Obsolete("Use Dirty(EntityUid, Component, MetaDataComponent?")]
-    protected void Dirty(Component component, MetaDataComponent? meta = null)
+    protected void Dirty(IComponent component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(component, meta);
     }
@@ -215,7 +215,7 @@ public partial class EntitySystem
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+    protected void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(uid, component, meta);
     }
@@ -227,7 +227,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected string Name(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if(!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
         return metaData.EntityName;
@@ -240,7 +240,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected string Description(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if(!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
         return metaData.EntityDescription;
@@ -253,7 +253,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityPrototype? Prototype(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
         return metaData.EntityPrototype;
@@ -265,7 +265,7 @@ public partial class EntitySystem
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
     protected GameTick LastModifiedTick(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
         return metaData.EntityLastModifiedTick;
@@ -278,7 +278,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool Paused(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
         return metaData.EntityPaused;
@@ -291,7 +291,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void SetPaused(EntityUid uid, bool paused, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
         EntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>().SetEntityPaused(uid, paused, metaData);
@@ -302,12 +302,12 @@ public partial class EntitySystem
     /// </summary>
     /// <returns>Whether the operation succeeded.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryDirty(EntityUid uid)
+    protected bool TryDirty(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if (!Exists(uid))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
             return false;
 
-        DirtyEntity(uid);
+        DirtyEntity(uid, metaData);
         return true;
     }
 
@@ -318,7 +318,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryName(EntityUid uid, [NotNullWhen(true)] out string? name, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
         {
             name = null;
             return false;
@@ -335,7 +335,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryDescription(EntityUid uid, [NotNullWhen(true)] out string? description, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
         {
             description = null;
             return false;
@@ -352,7 +352,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryPrototype(EntityUid uid, [NotNullWhen(true)] out EntityPrototype? prototype, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
         {
             prototype = null;
             return false;
@@ -369,7 +369,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryLastModifiedTick(EntityUid uid, [NotNullWhen(true)] out GameTick? lastModifiedTick, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
         {
             lastModifiedTick = null;
             return false;
@@ -386,7 +386,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryPaused(EntityUid uid, [NotNullWhen(true)] out bool? paused, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData, false))
+        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
         {
             paused = null;
             return false;
@@ -399,9 +399,9 @@ public partial class EntitySystem
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull("uid")]
-    protected EntityStringRepresentation? ToPrettyString(EntityUid? uid)
+    protected EntityStringRepresentation? ToPrettyString(EntityUid? uid, MetaDataComponent? metadata = null)
     {
-        return EntityManager.ToPrettyString(uid);
+        return EntityManager.ToPrettyString(uid, metadata);
     }
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
@@ -414,13 +414,18 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata)
+        => EntityManager.ToPrettyString(uid, metadata);
+
+    /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(EntityUid uid)
-        => ToPrettyString((EntityUid?) uid).Value;
+        => EntityManager.ToPrettyString(uid);
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(NetEntity netEntity)
-        => ToPrettyString((NetEntity?) netEntity).Value;
+        => EntityManager.ToPrettyString(netEntity);
 
     #endregion
 
@@ -428,7 +433,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.GetComponent&lt;T&gt;"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T Comp<T>(EntityUid uid) where T : Component
+    protected T Comp<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.GetComponent<T>(uid);
     }
@@ -437,7 +442,7 @@ public partial class EntitySystem
     ///     Returns the component of a specific type, or null when it's missing or the entity does not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T? CompOrNull<T>(EntityUid uid) where T : class, IComponent
+    protected T? CompOrNull<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.GetComponentOrNull<T>(uid);
     }
@@ -446,9 +451,9 @@ public partial class EntitySystem
     ///     Returns the component of a specific type, or null when it's missing or the entity does not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T? CompOrNull<T>(EntityUid? uid) where T : class, IComponent
+    protected T? CompOrNull<T>(EntityUid? uid) where T : IComponent
     {
-        return uid.HasValue ? EntityManager.GetComponentOrNull<T>(uid.Value) : null;
+        return uid.HasValue ? EntityManager.GetComponentOrNull<T>(uid.Value) : default;
     }
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
@@ -456,6 +461,20 @@ public partial class EntitySystem
     protected bool TryComp<T>(EntityUid uid, [NotNullWhen(true)] out T? comp)
     {
         return EntityManager.TryGetComponent(uid, out comp);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryComp(EntityUid uid, [NotNullWhen(true)] out TransformComponent? comp)
+    {
+        return EntityManager.TransformQuery.TryGetComponent(uid, out comp);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryComp(EntityUid uid, [NotNullWhen(true)] out MetaDataComponent? comp)
+    {
+        return EntityManager.MetaQuery.TryGetComponent(uid, out comp);
     }
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
@@ -469,6 +488,30 @@ public partial class EntitySystem
         }
 
         return EntityManager.TryGetComponent(uid.Value, out comp);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
+    protected bool TryComp([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TransformComponent? comp)
+    {
+        if (!uid.HasValue)
+        {
+            comp = default;
+            return false;
+        }
+
+        return EntityManager.TransformQuery.TryGetComponent(uid.Value, out comp);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
+    protected bool TryComp([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out MetaDataComponent? comp)
+    {
+        if (!uid.HasValue)
+        {
+            comp = default;
+            return false;
+        }
+
+        return EntityManager.MetaQuery.TryGetComponent(uid.Value, out comp);
     }
 
     /// <inheritdoc cref="IEntityManager.GetComponents"/>
@@ -492,7 +535,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected TransformComponent Transform(EntityUid uid)
     {
-        return EntityManager.GetComponent<TransformComponent>(uid);
+        return EntityManager.TransformQuery.GetComponent(uid);
     }
 
     /// <summary>
@@ -502,7 +545,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected MetaDataComponent MetaData(EntityUid uid)
     {
-        return EntityManager.GetComponent<MetaDataComponent>(uid);
+        return EntityManager.MetaQuery.GetComponent(uid);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -571,14 +614,14 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.AddComponent&lt;T&gt;(EntityUid, T, bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void AddComp<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
+    protected void AddComp<T>(EntityUid uid, T component, bool overwrite = false) where T : IComponent
     {
         EntityManager.AddComponent(uid, component);
     }
 
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T EnsureComp<T>(EntityUid uid) where T : Component, new()
+    protected T EnsureComp<T>(EntityUid uid) where T : IComponent, new()
     {
         return EntityManager.EnsureComponent<T>(uid);
     }
@@ -589,7 +632,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool RemCompDeferred<T>(EntityUid uid) where T : class, IComponent
+    protected bool RemCompDeferred<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.RemoveComponentDeferred<T>(uid);
     }
@@ -620,7 +663,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.Count" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected int Count<T>() where T : Component
+    protected int Count<T>() where T : IComponent
     {
         return EntityManager.Count<T>();
     }
@@ -638,7 +681,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool RemComp<T>(EntityUid uid) where T : class, IComponent
+    protected bool RemComp<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.RemoveComponent<T>(uid);
     }
@@ -776,34 +819,34 @@ public partial class EntitySystem
     #region All Entity Query
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected AllEntityQueryEnumerator<TComp1> AllEntityQuery<TComp1>() where TComp1 : Component
+    protected AllEntityQueryEnumerator<TComp1> AllEntityQuery<TComp1>() where TComp1 : IComponent
     {
         return EntityManager.AllEntityQueryEnumerator<TComp1>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQuery<TComp1, TComp2>()
-        where TComp1 : Component
-        where TComp2 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
     {
         return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQuery<TComp1, TComp2, TComp3>()
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
     {
         return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2, TComp3>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQuery<TComp1, TComp2, TComp3, TComp4>()
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
-        where TComp4 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+        where TComp4 : IComponent
     {
         return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
     }
@@ -813,34 +856,34 @@ public partial class EntitySystem
     #region Get Entity Query
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>() where TComp1 : Component
+    protected EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>() where TComp1 : IComponent
     {
         return EntityManager.EntityQueryEnumerator<TComp1>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
-        where TComp1 : Component
-        where TComp2 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
     {
         return EntityManager.EntityQueryEnumerator<TComp1, TComp2>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
     {
         return EntityManager.EntityQueryEnumerator<TComp1, TComp2, TComp3>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
-        where TComp4 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+        where TComp4 : IComponent
     {
         return EntityManager.EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
     }
@@ -854,7 +897,7 @@ public partial class EntitySystem
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
-    protected EntityQuery<T> GetEntityQuery<T>() where T : Component
+    protected EntityQuery<T> GetEntityQuery<T>() where T : IComponent
     {
         return EntityManager.GetEntityQuery<T>();
     }
@@ -863,7 +906,7 @@ public partial class EntitySystem
     /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1}"/>
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected IEnumerable<TComp1> EntityQuery<TComp1>(bool includePaused = false) where TComp1 : Component
+    protected IEnumerable<TComp1> EntityQuery<TComp1>(bool includePaused = false) where TComp1 : IComponent
     {
         return EntityManager.EntityQuery<TComp1>(includePaused);
     }
@@ -873,8 +916,8 @@ public partial class EntitySystem
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
-        where TComp1 : Component
-        where TComp2 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
     {
         return EntityManager.EntityQuery<TComp1, TComp2>(includePaused);
     }
@@ -884,9 +927,9 @@ public partial class EntitySystem
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
     {
         return EntityManager.EntityQuery<TComp1, TComp2, TComp3>(includePaused);
     }
@@ -896,10 +939,10 @@ public partial class EntitySystem
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
-        where TComp1 : Component
-        where TComp2 : Component
-        where TComp3 : Component
-        where TComp4 : Component
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+        where TComp4 : IComponent
     {
         return EntityManager.EntityQuery<TComp1, TComp2, TComp3, TComp4>(includePaused);
     }

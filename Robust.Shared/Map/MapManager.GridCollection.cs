@@ -153,7 +153,9 @@ internal partial class MapManager
         var fallbackParentEuid = GetMapEntityIdOrThrow(currentMapId);
         EntityManager.GetComponent<TransformComponent>(gridEnt).AttachParent(fallbackParentEuid);
 
-        EntityManager.InitializeComponents(gridEnt);
+        var meta = EntityManager.GetComponent<MetaDataComponent>(gridEnt);
+        EntityManager.System<MetaDataSystem>().SetEntityName(gridEnt, $"grid", meta);
+        EntityManager.InitializeComponents(gridEnt, meta);
         EntityManager.StartComponents(gridEnt);
         return grid;
     }

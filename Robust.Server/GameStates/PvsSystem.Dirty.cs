@@ -92,9 +92,9 @@ namespace Robust.Server.GameStates
         /// <summary>
         ///     Marks an entity's current chunk as dirty.
         /// </summary>
-        internal void MarkDirty(EntityUid uid)
+        internal void MarkDirty(EntityUid uid, TransformComponent xform)
         {
-            var coordinates = _transform.GetMoverCoordinates(uid);
+            var coordinates = _transform.GetMoverCoordinates(uid, xform);
             _entityPvsCollection.MarkDirty(_entityPvsCollection.GetChunkIndex(coordinates));
         }
     }

@@ -82,11 +82,8 @@ namespace Robust.Client.Physics
                     continue;
                 }
 
-                xform.PrevPosition = position;
-                xform.PrevRotation = rotation;
-                xform.LerpParent = parentUid;
-                xform.NextPosition = xform.LocalPosition;
-                xform.NextRotation = xform.LocalRotation;
+                // Transform system will handle lerping.
+                _transform.SetLocalPositionRotation(uid, xform.LocalPosition, xform.LocalRotation, xform);
             }
 
             component.LerpData.Clear();

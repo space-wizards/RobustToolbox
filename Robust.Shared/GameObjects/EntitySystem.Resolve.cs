@@ -27,9 +27,25 @@ namespace Robust.Shared.GameObjects
             var found = EntityManager.TryGetComponent(uid, out component);
 
             if(logMissing && !found)
-                Log.Error($"Can't resolve \"{typeof(TComp)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+                Log.Error($"Can't resolve \"{typeof(TComp)}\" on entity {ToPrettyString(uid)}!\n{new StackTrace(1, true)}");
 
             return found;
+        }
+
+        /// <inheritdoc cref="Resolve{TComp}"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected bool Resolve(EntityUid uid, [NotNullWhen(true)] ref MetaDataComponent? component,
+            bool logMissing = true)
+        {
+            return EntityManager.MetaQuery.Resolve(uid, ref component);
+        }
+
+        /// <inheritdoc cref="Resolve{TComp}"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected bool Resolve(EntityUid uid, [NotNullWhen(true)] ref TransformComponent? component,
+            bool logMissing = true)
+        {
+            return EntityManager.TransformQuery.Resolve(uid, ref component);
         }
 
         /// <summary>

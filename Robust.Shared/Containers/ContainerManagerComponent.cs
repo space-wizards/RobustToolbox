@@ -39,19 +39,6 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        protected override void OnRemove()
-        {
-            base.OnRemove();
-
-            foreach (var container in Containers.Values)
-            {
-                container.Shutdown(_entMan, _netMan);
-            }
-
-            Containers.Clear();
-        }
-
-        /// <inheritdoc />
         public T MakeContainer<T>(string id)
             where T : BaseContainer
         {

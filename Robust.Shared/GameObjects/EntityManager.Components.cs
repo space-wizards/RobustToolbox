@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Arch.Core;
 using Arch.Core.Utils;
 using JetBrains.Annotations;
@@ -55,7 +56,7 @@ namespace Robust.Shared.GameObjects
         #region Component Management
 
         /// <inheritdoc />
-        public int Count<T>() where T : Component
+        public int Count<T>() where T : IComponent
         {
             return _world.CountEntities(new QueryDescription().WithAll<T>());
         }
@@ -80,7 +81,7 @@ namespace Robust.Shared.GameObjects
             metadata.EntityLifeStage = EntityLifeStage.Initializing;
 
             // Initialize() can modify the collection of components. Copy them.
-            FixedArray32<Component?> compsFixed = default;
+            FixedArray32<IComponent?> compsFixed = default;
 
             var comps = compsFixed.AsSpan;
             CopyComponentsInto(ref comps, uid);
@@ -88,7 +89,7 @@ namespace Robust.Shared.GameObjects
             foreach (var comp in comps)
             {
                 if (comp is { LifeStage:  ComponentLifeStage.Added })
-                    comp.LifeInitialize(this, CompIdx.Index(comp.GetType()));
+                    LifeInitialize(comp, CompIdx.Index(comp.GetType()));
             }
 
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
@@ -99,7 +100,7 @@ namespace Robust.Shared.GameObjects
         {
             // Startup() can modify _components
             // This code can only handle additions to the list. Is there a better way? Probably not.
-            FixedArray32<Component?> compsFixed = default;
+            FixedArray32<IComponent?> compsFixed = default;
 
             var comps = compsFixed.AsSpan;
             CopyComponentsInto(ref comps, uid);
@@ -109,26 +110,26 @@ namespace Robust.Shared.GameObjects
             // Init transform first, we always have it.
             var transform = GetComponent<TransformComponent>(uid);
             if (transform.LifeStage == ComponentLifeStage.Initialized)
-                transform.LifeStartup(this);
+                LifeStartup(transform);
 
             // Init physics second if it exists.
             if (TryGetComponent<PhysicsComponent>(uid, out var phys)
                 && phys.LifeStage == ComponentLifeStage.Initialized)
             {
-                phys.LifeStartup(this);
+                LifeStartup(phys);
             }
 
             // Do rest of components.
             foreach (var comp in comps)
             {
                 if (comp is { LifeStage: ComponentLifeStage.Initialized })
-                    comp.LifeStartup(this);
+                    LifeStartup(comp);
             }
         }
 
-        public Component AddComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null)
+        public IComponent AddComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null)
         {
-            var newComponent = (Component)_componentFactory.GetComponent(netId);
+            var newComponent = _componentFactory.GetComponent(netId);
 #pragma warning disable CS0618 // Type or member is obsolete
             newComponent.Owner = uid;
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -136,7 +137,7 @@ namespace Robust.Shared.GameObjects
             return newComponent;
         }
 
-        public T AddComponent<T>(EntityUid uid) where T : Component, new()
+        public T AddComponent<T>(EntityUid uid) where T : IComponent, new()
         {
             var newComponent = _componentFactory.GetComponent<T>();
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -147,7 +148,7 @@ namespace Robust.Shared.GameObjects
         }
 
         public readonly struct CompInitializeHandle<T> : IDisposable
-            where T : Component
+            where T : IComponent
         {
             private readonly IEntityManager _entMan;
             private readonly EntityUid _owner;
@@ -170,10 +171,10 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 if (!Comp.Initialized)
-                    Comp.LifeInitialize(_entMan, CompType);
+                    ((EntityManager) _entMan).LifeInitialize(Comp, CompType);
 
                 if (metadata.EntityInitialized && !Comp.Running)
-                    Comp.LifeStartup(_entMan);
+                    ((EntityManager) _entMan).LifeStartup(Comp);
             }
 
             public static implicit operator T(CompInitializeHandle<T> handle)
@@ -183,7 +184,8 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : Component, new()
+        [Obsolete]
+        public CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : IComponent, new()
         {
             var reg = _componentFactory.GetRegistration<T>();
             var newComponent = _componentFactory.GetComponent<T>();
@@ -200,7 +202,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void AddComponent<T>(EntityUid uid, T component, MetaDataComponent? metadata = null) where T : Component
+        public void AddComponent<T>(EntityUid uid, T component, MetaDataComponent? metadata = null) where T : IComponent
         {
             if (!uid.IsValid() || !EntityExists(uid))
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
@@ -267,7 +269,7 @@ namespace Robust.Shared.GameObjects
             ComponentAdded?.Invoke(eventArgs);
             _eventBus.OnComponentAdded(eventArgs);
 
-            component.LifeAddToEntity(this, reg.Idx);
+            LifeAddToEntity(component, reg.Idx);
 
             if (skipInit)
                 return;
@@ -281,8 +283,10 @@ namespace Robust.Shared.GameObjects
             if (component.Networked)
                 DirtyEntity(uid, metadata);
 
-            component.LifeInitialize(this, reg.Idx);
-            component.LifeStartup(this);
+            LifeInitialize(component, reg.Idx);
+
+            if (metadata.EntityInitialized)
+                LifeStartup(component);
 
             if (metadata.EntityLifeStage >= EntityLifeStage.MapInitialized)
                 EventBus.RaiseComponentEvent(component, MapInitEventInstance);
@@ -327,12 +331,6 @@ namespace Robust.Shared.GameObjects
             RemoveComponent(uid, (Component)component, meta);
         }
 
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveComponent(EntityUid uid, Component component, MetaDataComponent? meta = null)
-        {
-            RemoveComponentImmediate(component, uid, false, true, meta);
-        }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -347,7 +345,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentDeferred((Component)comp, uid, false);
+            RemoveComponentDeferred(comp, uid, false);
             return true;
         }
 
@@ -361,14 +359,14 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp, meta))
                 return false;
 
-            RemoveComponentDeferred((Component)comp, uid, false);
+            RemoveComponentDeferred(comp, uid, false);
             return true;
         }
 
         /// <inheritdoc />
         public void RemoveComponentDeferred(EntityUid owner, IComponent component)
         {
-            RemoveComponentDeferred((Component)component, owner, false);
+            RemoveComponentDeferred(component, owner, false);
         }
 
         /// <inheritdoc />
@@ -407,7 +405,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void RemoveComponentDeferred(Component component, EntityUid uid, bool terminating)
+        private void RemoveComponentDeferred(IComponent component, EntityUid uid, bool terminating)
         {
             if (component.Owner != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
@@ -432,7 +430,7 @@ namespace Robust.Shared.GameObjects
             }
 
             if (component.LifeStage >= ComponentLifeStage.Initialized && component.LifeStage <= ComponentLifeStage.Running)
-                component.LifeShutdown(this);
+                LifeShutdown(component);
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -478,10 +476,10 @@ namespace Robust.Shared.GameObjects
             }
 
             if (component.Running)
-                component.LifeShutdown(this);
+                LifeShutdown(component);
 
             if (component.LifeStage != ComponentLifeStage.PreAdd)
-                component.LifeRemoveFromEntity(this); // Sets delete
+                LifeRemoveFromEntity(component); // Sets delete
 
 #if EXCEPTION_TOLERANCE
             }
@@ -512,11 +510,11 @@ namespace Robust.Shared.GameObjects
                 {
                     // TODO add options to cancel deferred deletion?
                     _sawmill.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(uid)}, type={component.GetType()}");
-                    component.LifeShutdown(this);
+                    LifeShutdown(component);
                 }
 
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
-                    component.LifeRemoveFromEntity(this);
+                    LifeRemoveFromEntity(component);
 
 #if EXCEPTION_TOLERANCE
             }
@@ -632,15 +630,14 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T EnsureComponent<T>(EntityUid uid) where T : Component, new()
+        public T EnsureComponent<T>(EntityUid uid) where T : IComponent, new()
         {
             if (TryGetComponent<T>(uid, out var component))
             {
                 // Check for deferred component removal.
                 if (component.LifeStage <= ComponentLifeStage.Running)
                     return component;
-                else
-                    RemoveComponent(uid, component);
+                RemoveComponent(uid, component);
             }
 
             return AddComponent<T>(uid);
@@ -648,7 +645,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool EnsureComponent<T>(EntityUid entity, out T component) where T : Component, new()
+        public bool EnsureComponent<T>(EntityUid entity, out T component) where T : IComponent, new()
         {
             if (TryGetComponent<T>(entity, out var comp))
             {
@@ -658,8 +655,8 @@ namespace Robust.Shared.GameObjects
                     component = comp;
                     return true;
                 }
-                else
-                    RemoveComponent(entity, comp);
+
+                RemoveComponent(entity, comp);
             }
 
             component = AddComponent<T>(entity);
@@ -816,12 +813,12 @@ namespace Robust.Shared.GameObjects
             return TryGetComponent(uid.Value, netId, out component, meta);
         }
 
-        public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component
+        public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent
         {
             return new EntityQuery<TComp1>(this, _world, null, _resolveSawmill);
         }
 
-        public EntityQuery<Component> GetEntityQuery(Type type)
+        public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
             return new EntityQuery<Component>(this, _world, type, _resolveSawmill);
         }
@@ -847,9 +844,9 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         /// Copy the components for an entity into the given span,
-        /// or re-allocate the span as an array if there's not enough space.
+        /// or re-allocate the span as an array if there's not enough space.º
         /// </summary>
-        private void CopyComponentsInto(ref Span<Component?> comps, EntityUid uid)
+        private void CopyComponentsInto(ref Span<IComponent?> comps, EntityUid uid)
         {
             var set = _world.GetAllComponents(uid);
 
@@ -895,7 +892,7 @@ namespace Robust.Shared.GameObjects
 
         #region Join Functions
 
-        public (EntityUid Uid, T Component)[] AllComponents<T>() where T : Component
+        public (EntityUid Uid, T Component)[] AllComponents<T>() where T : IComponent
         {
             var query = AllEntityQueryEnumerator<T>();
             var comps = new (EntityUid Uid, T Component)[Count<T>()];
@@ -910,7 +907,7 @@ namespace Robust.Shared.GameObjects
             return comps;
         }
 
-        public List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : Component
+        public List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : IComponent
         {
             var query = AllEntityQueryEnumerator<T>();
             var comps = new List<(EntityUid Uid, T Component)>(Count<T>());
@@ -1080,7 +1077,7 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         /// <inheritdoc />
-        public IEnumerable<(EntityUid Uid, Component Component)> GetAllComponents(Type type, bool includePaused = false)
+        public IEnumerable<(EntityUid Uid, IComponent Component)> GetAllComponents(Type type, bool includePaused = false)
         {
             var query = new QueryDescription();
 
@@ -1136,23 +1133,23 @@ namespace Robust.Shared.GameObjects
 
     public readonly struct NetComponentEnumerable
     {
-        private readonly Dictionary<ushort, Component> _dictionary;
+        private readonly Dictionary<ushort, IComponent> _dictionary;
 
-        public NetComponentEnumerable(Dictionary<ushort, Component> dictionary) => _dictionary = dictionary;
+        public NetComponentEnumerable(Dictionary<ushort, IComponent> dictionary) => _dictionary = dictionary;
         public NetComponentEnumerator GetEnumerator() => new(_dictionary);
     }
 
     public struct NetComponentEnumerator
     {
         // DO NOT MAKE THIS READONLY
-        private Dictionary<ushort, Component>.Enumerator _dictEnum;
+        private Dictionary<ushort, IComponent>.Enumerator _dictEnum;
 
-        public NetComponentEnumerator(Dictionary<ushort, Component> dictionary) =>
+        public NetComponentEnumerator(Dictionary<ushort, IComponent> dictionary) =>
             _dictEnum = dictionary.GetEnumerator();
 
         public bool MoveNext() => _dictEnum.MoveNext();
 
-        public (ushort netId, Component component) Current
+        public (ushort netId, IComponent component) Current
         {
             get
             {
@@ -1162,7 +1159,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public readonly struct EntityQuery<TComp1> where TComp1 : Component
+    public readonly struct EntityQuery<TComp1> where TComp1 : IComponent
     {
         private readonly IEntityManager _manager;
         private readonly World _world;
@@ -1268,7 +1265,7 @@ namespace Robust.Shared.GameObjects
             if (TryGetComponent(uid, out var comp))
                 return comp;
 
-            return null;
+            return default;
         }
 
         #region Internal
@@ -1319,7 +1316,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        /// Elides the component.Deleted check of <see cref="HasComponent"/>
+        /// Elides the component.Deleted check of <see cref="HasComponent(EntityUid)"/>
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
@@ -1364,7 +1361,7 @@ namespace Robust.Shared.GameObjects
             if (TryGetComponent(uid, out var comp))
                 return comp;
 
-            return null;
+            return default;
         }
 
         #endregion

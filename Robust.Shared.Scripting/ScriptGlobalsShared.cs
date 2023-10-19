@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
@@ -188,10 +187,10 @@ namespace Robust.Shared.Scripting
         }
 
         #region EntityManager proxy methods
-        public T Comp<T>(EntityUid uid) where T : Component
+        public T Comp<T>(EntityUid uid) where T : IComponent
             => ent.GetComponent<T>(uid);
 
-        public bool TryComp<T>(EntityUid uid, out T? comp) where T : Component
+        public bool TryComp<T>(EntityUid uid, out T? comp) where T : IComponent
             => ent.TryGetComponent(uid, out comp);
 
         public bool HasComp<T>(EntityUid uid) where T : IComponent

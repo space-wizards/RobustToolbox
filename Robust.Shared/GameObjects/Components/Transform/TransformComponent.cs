@@ -85,8 +85,9 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public Angle PrevRotation { get; internal set; }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        internal bool ActivelyLerping { get; set; }
+        [ViewVariables] public bool ActivelyLerping;
+
+        [ViewVariables] public GameTick LastLerp = GameTick.Zero;
 
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
@@ -397,7 +398,8 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] public int ChildCount => _children.Count;
 
-        [ViewVariables] internal EntityUid LerpParent { get; set; }
+        [ViewVariables] public EntityUid LerpParent;
+        public bool PredictedLerp;
 
         /// <summary>
         /// Detaches this entity from its parent.

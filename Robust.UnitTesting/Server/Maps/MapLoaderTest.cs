@@ -61,7 +61,6 @@ entities:
             var compFactory = IoCManager.Resolve<IComponentFactory>();
             compFactory.RegisterClass<MapDeserializeTestComponent>();
             compFactory.RegisterClass<VisibilityComponent>();
-            compFactory.RegisterClass<ActorComponent>();
             compFactory.RegisterClass<IgnoreUIRangeComponent>();
             compFactory.GenerateNetIds();
             IoCManager.Resolve<ISerializationManager>().Initialize();

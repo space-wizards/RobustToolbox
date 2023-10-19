@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.IoC;
@@ -6,7 +5,6 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.Console;
 
-[Obsolete("You should use ToolshedCommand instead.")]
 public abstract class LocalizedCommands : IConsoleCommand
 {
     [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Prometheus;
 using Robust.Client.GameStates;
 using Robust.Client.Player;
@@ -43,9 +42,9 @@ namespace Robust.Client.GameObjects
             base.FlushEntities();
         }
 
-        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName)
+        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, out MetaDataComponent metadata)
         {
-            return base.CreateEntity(prototypeName, out _);
+            return base.CreateEntity(prototypeName, out metadata);
         }
 
         void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)
@@ -86,21 +85,17 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+        public override void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
             //  Client only dirties during prediction
             if (_gameTiming.InPrediction)
                 base.Dirty(uid, component, meta);
         }
 
-        [return: NotNullIfNotNull("uid")]
-        public override EntityStringRepresentation? ToPrettyString(EntityUid? uid)
+        public override EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metaDataComponent = null)
         {
-            if (uid == null)
-                return null;
-
             if (_playerManager.LocalPlayer?.ControlledEntity == uid)
-                return base.ToPrettyString(uid).Value with { Session = _playerManager.LocalPlayer.Session };
+                return base.ToPrettyString(uid) with { Session = _playerManager.LocalPlayer.Session };
 
             return base.ToPrettyString(uid);
         }

@@ -1,4 +1,5 @@
-using JetBrains.Annotations;
+using System;
+using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -7,8 +8,6 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using System;
-using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects
 {
@@ -68,7 +67,7 @@ namespace Robust.Shared.GameObjects
         /// The components attached to the entity that are currently networked.
         /// </summary>
         [ViewVariables]
-        internal readonly Dictionary<ushort, Component> NetComponents = new();
+        internal readonly Dictionary<ushort, IComponent> NetComponents = new();
 
         /// <summary>
         /// Network identifier for this entity.
@@ -189,15 +188,8 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         ///     Every entity will always have the first bit set to true.
         /// </remarks>
-        [Access(typeof(MetaDataSystem))]
-        public int VisibilityMask = 1;
-
-        [UsedImplicitly, ViewVariables(VVAccess.ReadWrite)]
-        private int VVVisibilityMask
-        {
-            get => VisibilityMask;
-            set => IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetVisibilityMask(Owner, value, this);
-        }
+        [ViewVariables] // TODO ACCESS RRestrict writing to server-side visibility system
+        public int VisibilityMask { get; internal set; }= 1;
 
         [ViewVariables]
         public bool EntityPaused => PauseTime != null;
@@ -206,7 +198,8 @@ namespace Robust.Shared.GameObjects
         public bool EntityInitializing => EntityLifeStage == EntityLifeStage.Initializing;
         public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
 
-        internal override void ClearTicks()
+        [Obsolete("Do not use from content")]
+        public override void ClearTicks()
         {
             // Do not clear modified ticks.
             // MetaDataComponent is used in the game state system to carry initial data like prototype ID.

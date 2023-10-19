@@ -441,10 +441,19 @@ public sealed partial class EntityLookupSystem
 
     #region MapCoordinates
 
+    [Obsolete]
     public HashSet<IComponent> GetComponentsInRange(Type type, MapCoordinates coordinates, float range)
     {
         DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         return GetComponentsInRange(type, coordinates.MapId, coordinates.Position, range);
+    }
+
+    public HashSet<Entity<IComponent>> GetEntitiesInRange(Type type, MapCoordinates coordinates, float range)
+    {
+        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
+        var entities = new HashSet<Entity<IComponent>>();
+        GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities);
+        return entities;
     }
 
     public HashSet<T> GetComponentsInRange<T>(MapCoordinates coordinates, float range) where T : IComponent

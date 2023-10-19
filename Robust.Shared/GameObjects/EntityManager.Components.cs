@@ -306,7 +306,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false, true, meta);
+            RemoveComponentImmediate(comp, uid, false, true, meta);
             return true;
         }
 
@@ -320,7 +320,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp, meta))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false, true, meta);
+            RemoveComponentImmediate(comp, uid, false, true, meta);
             return true;
         }
 
@@ -328,9 +328,8 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            RemoveComponent(uid, component, meta);
+            RemoveComponentImmediate(component, uid, false, true, meta);
         }
-
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -386,7 +385,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var obj in objComps)
             {
-                var comp = (Component) obj;
+                var comp = (IComponent) obj;
 
                 try
                 {

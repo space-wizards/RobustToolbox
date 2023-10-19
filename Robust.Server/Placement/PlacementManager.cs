@@ -199,11 +199,11 @@ namespace Robust.Server.Placement
             }
             else if (tileType != 0) // create a new grid
             {
-                var newGrid = _mapManager.CreateGrid(coordinates.GetMapId(_entityManager));
+                var newGrid = _mapManager.CreateGridEntity(coordinates.GetMapId(_entityManager));
                 var newGridXform = _entityManager.GetComponent<TransformComponent>(newGrid.Owner);
-                newGridXform.WorldPosition = coordinates.Position - newGrid.TileSizeHalfVector; // assume bottom left tile origin
-                var tilePos = newGrid.WorldToTile(coordinates.Position);
-                newGrid.SetTile(tilePos, new Tile(tileType));
+                newGridXform.WorldPosition = coordinates.Position - newGrid.Comp.TileSizeHalfVector; // assume bottom left tile origin
+                var tilePos = newGrid.Comp.WorldToTile(coordinates.Position);
+                newGrid.Comp.SetTile(tilePos, new Tile(tileType));
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);

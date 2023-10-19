@@ -17,11 +17,9 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
-using SixLabors.ImageSharp;
-using Color = Robust.Shared.Maths.Color;
-using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde

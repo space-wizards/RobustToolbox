@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using Robust.Server.Maps;
-using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -733,7 +732,7 @@ public sealed class MapLoaderSystem : EntitySystem
             return;
 
         // get ents that the grids will bind to
-        var gridComps = new MapGridComponent[yamlGrids.Count];
+        var gridComps = new Entity<MapGridComponent>[yamlGrids.Count];
         var gridQuery = _serverEntityManager.GetEntityQuery<MapGridComponent>();
 
         // linear search for new grid comps
@@ -745,7 +744,7 @@ public sealed class MapLoaderSystem : EntitySystem
             // These should actually be new, pre-init
             DebugTools.Assert(gridComp.LifeStage == ComponentLifeStage.Added);
 
-            gridComps[gridComp.GridIndex] = gridComp;
+            gridComps[gridComp.GridIndex] = new Entity<MapGridComponent>(uid, gridComp);
         }
 
         for (var index = 0; index < yamlGrids.Count; index++)
@@ -764,18 +763,18 @@ public sealed class MapLoaderSystem : EntitySystem
             MappingDataNode yamlGridInfo = (MappingDataNode)yamlGrid["settings"];
             SequenceDataNode yamlGridChunks = (SequenceDataNode)yamlGrid["chunks"];
 
-            var grid = AllocateMapGrid(gridComp, yamlGridInfo);
-            var gridUid = grid.Owner;
+            AllocateMapGrid(gridComp, yamlGridInfo);
+            var gridUid = gridComp.Owner;
 
             foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
-                _serManager.Read(chunkNode, _context, instanceProvider: () => _mapSystem.GetOrAddChunk(gridUid, grid, chunkOffsetX, chunkOffsetY), notNullableOverride: true);
+                _serManager.Read(chunkNode, _context, instanceProvider: () => _mapSystem.GetOrAddChunk(gridUid, gridComp, chunkOffsetX, chunkOffsetY), notNullableOverride: true);
             }
         }
     }
 
-    private static MapGridComponent AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
+    private static void AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
     {
         // sane defaults
         ushort csz = 16;
@@ -795,8 +794,6 @@ public sealed class MapLoaderSystem : EntitySystem
 
         gridComp.ChunkSize = csz;
         gridComp.TileSize = tsz;
-
-        return gridComp;
     }
 
     private void StartupEntities(MapData data)

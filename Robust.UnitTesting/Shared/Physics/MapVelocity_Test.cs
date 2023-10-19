@@ -1,12 +1,11 @@
 using System.Numerics;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
-using System.Threading.Tasks;
 
 namespace Robust.UnitTesting.Shared.Physics
 {
@@ -43,8 +42,8 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
-                var grid2 = mapManager.CreateGrid(mapId);
+                var grid = mapManager.CreateGridEntity(mapId);
+                var grid2 = mapManager.CreateGridEntity(mapId);
                 var gridUidA = grid.Owner;
 
                 Assert.That(entityManager.TryGetComponent<PhysicsComponent>(gridUidA, out var gridPhysics));
@@ -112,7 +111,7 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
+                var grid = mapManager.CreateGridEntity(mapId);
                 var gridUid = grid.Owner;
 
                 Assert.That(entityManager.TryGetComponent<PhysicsComponent>(gridUid, out var gridPhysics));

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
@@ -9,7 +10,7 @@ namespace Robust.Client.GameObjects
 {
     public sealed class AnimationPlayerSystem : EntitySystem, IPostInjectInit
     {
-        private readonly List<AnimationPlayerComponent> _activeAnimations = new();
+        private readonly List<Entity<AnimationPlayerComponent>> _activeAnimations = new();
 
         private EntityQuery<MetaDataComponent> _metaQuery;
 
@@ -38,22 +39,22 @@ namespace Robust.Client.GameObjects
                     continue;
                 }
 
-                if (!Update(uid, anim, frameTime))
+                if (!Update(uid, anim.Comp, frameTime))
                 {
                     continue;
                 }
 
                 _activeAnimations.RemoveSwap(i);
                 i--;
-                anim.HasPlayingAnimation = false;
+                anim.Comp.HasPlayingAnimation = false;
             }
         }
 
-        internal void AddComponent(AnimationPlayerComponent component)
+        internal void AddComponent(Entity<AnimationPlayerComponent> ent)
         {
-            if (component.HasPlayingAnimation) return;
-            _activeAnimations.Add(component);
-            component.HasPlayingAnimation = true;
+            if (ent.Comp.HasPlayingAnimation) return;
+            _activeAnimations.Add(ent);
+            ent.Comp.HasPlayingAnimation = true;
         }
 
         private bool Update(EntityUid uid, AnimationPlayerComponent component, float frameTime)
@@ -78,7 +79,6 @@ namespace Robust.Client.GameObjects
             {
                 component.PlayingAnimations.Remove(key);
                 EntityManager.EventBus.RaiseLocalEvent(uid, new AnimationCompletedEvent {Uid = uid, Key = key}, true);
-                component.AnimationComplete(key);
             }
 
             return false;
@@ -89,22 +89,29 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void Play(EntityUid uid, Animation animation, string key)
         {
-            var component = EntityManager.EnsureComponent<AnimationPlayerComponent>(uid);
-            Play(component, animation, key);
+            var component = EnsureComp<AnimationPlayerComponent>(uid);
+            Play(new Entity<AnimationPlayerComponent>(uid, component), animation, key);
         }
 
+        [Obsolete("Use Play(EntityUid<AnimationPlayerComponent> ent, Animation animation, string key) instead")]
         public void Play(EntityUid uid, AnimationPlayerComponent? component, Animation animation, string key)
         {
             component ??= EntityManager.EnsureComponent<AnimationPlayerComponent>(uid);
-            Play(component, animation, key);
+            Play(new Entity<AnimationPlayerComponent>(uid, component), animation, key);
         }
 
         /// <summary>
         ///     Start playing an animation.
         /// </summary>
+        [Obsolete("Use Play(EntityUid<AnimationPlayerComponent> ent, Animation animation, string key) instead")]
         public void Play(AnimationPlayerComponent component, Animation animation, string key)
         {
-            AddComponent(component);
+            Play(new Entity<AnimationPlayerComponent>(component.Owner, component), animation, key);
+        }
+
+        public void Play(Entity<AnimationPlayerComponent> ent, Animation animation, string key)
+        {
+            AddComponent(ent);
             var playback = new AnimationPlaybackShared.AnimationPlayback(animation);
 
 #if DEBUG
@@ -120,14 +127,14 @@ namespace Robust.Client.GameObjects
                     return;
                 }
 
-                if (!EntityManager.TryGetComponent(component.Owner, compTrack.ComponentType, out var animatedComp))
+                if (!EntityManager.TryGetComponent(ent.Owner, compTrack.ComponentType, out var animatedComp))
                 {
                     _sawmill.Error(
-                        $"Attempted to play a component animation, but the entity {ToPrettyString(component.Owner)} does not have the component to be animated: {compTrack.ComponentType}.");
+                        $"Attempted to play a component animation, but the entity {ToPrettyString(ent.Owner)} does not have the component to be animated: {compTrack.ComponentType}.");
                     return;
                 }
 
-                if (IsClientSide(component.Owner) || !animatedComp.NetSyncEnabled)
+                if (IsClientSide(ent.Owner) || !animatedComp.NetSyncEnabled)
                     continue;
 
                 var reg = _compFact.GetRegistration(animatedComp);
@@ -140,13 +147,13 @@ namespace Robust.Client.GameObjects
                     if (animatedComp.GetType().GetProperty(compTrack.Property) is { } property &&
                         property.HasCustomAttribute<AutoNetworkedFieldAttribute>())
                     {
-                        _sawmill.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(component.Owner)}");
+                        _sawmill.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(ent.Owner)}");
                     }
                 }
             }
 #endif
 
-            component.PlayingAnimations.Add(key, playback);
+            ent.Comp.PlayingAnimations.Add(key, playback);
         }
 
         public bool HasRunningAnimation(EntityUid uid, string key)

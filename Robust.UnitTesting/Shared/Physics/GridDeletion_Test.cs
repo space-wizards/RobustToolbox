@@ -31,13 +31,13 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
 
 
         PhysicsComponent physics = default!;
-        MapGridComponent grid = default!;
+        Entity<MapGridComponent> grid = default!;
         MapId mapId = default!;
 
         await server.WaitAssertion(() =>
         {
             mapId = mapManager.CreateMap();
-            grid = mapManager.CreateGrid(mapId);
+            grid = mapManager.CreateGridEntity(mapId);
 
             physics = entManager.GetComponent<PhysicsComponent>(grid.Owner);
             physSystem.SetBodyType(grid.Owner, BodyType.Dynamic, body: physics);

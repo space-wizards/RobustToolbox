@@ -47,10 +47,6 @@ namespace Robust.Server.Console.Commands
             }
 
             var component = _componentFactory.GetComponent(registration.Type);
-
-#pragma warning disable CS0618
-            component.Owner = uid.Value;
-#pragma warning restore CS0618
             _entityManager.AddComponent(uid.Value, component);
 
             shell.WriteLine($"Added {componentName} component to entity {_entityManager.GetComponent<MetaDataComponent>(uid.Value).EntityName}.");

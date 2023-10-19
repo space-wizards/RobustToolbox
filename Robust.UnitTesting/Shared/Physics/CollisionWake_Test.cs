@@ -1,12 +1,11 @@
 using System.Numerics;
+using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
-using System.Threading.Tasks;
-using Robust.Shared.Map.Components;
 
 namespace Robust.UnitTesting.Shared.Physics
 {
@@ -44,7 +43,7 @@ namespace Robust.UnitTesting.Shared.Physics
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
 
-            MapGridComponent grid = default!;
+            Entity<MapGridComponent> grid = default!;
             MapId mapId = default!;
             PhysicsComponent entityOnePhysics = default!;
             TransformComponent xform = default!;
@@ -53,8 +52,8 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
-                grid = mapManager.CreateGrid(mapId);
-                grid.SetTile(Vector2i.Zero, new Tile(1));
+                grid = mapManager.CreateGridEntity(mapId);
+                grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
 
                 var entityOne = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));
                 entityOnePhysics = entManager.GetComponent<PhysicsComponent>(entityOne);

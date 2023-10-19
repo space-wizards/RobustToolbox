@@ -175,9 +175,6 @@ namespace Robust.Shared.GameObjects
         public IComponent AddComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null)
         {
             var newComponent = _componentFactory.GetComponent(netId);
-#pragma warning disable CS0618 // Type or member is obsolete
-            newComponent.Owner = uid;
-#pragma warning restore CS0618 // Type or member is obsolete
             AddComponent(uid, newComponent, metadata: meta);
             return newComponent;
         }
@@ -185,9 +182,6 @@ namespace Robust.Shared.GameObjects
         public T AddComponent<T>(EntityUid uid) where T : IComponent, new()
         {
             var newComponent = _componentFactory.GetComponent<T>();
-#pragma warning disable CS0618 // Type or member is obsolete
-            newComponent.Owner = uid;
-#pragma warning restore CS0618 // Type or member is obsolete
             AddComponent(uid, newComponent);
             return newComponent;
         }
@@ -486,7 +480,9 @@ namespace Robust.Shared.GameObjects
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
+#pragma warning disable CS0618 // Type or member is obsolete
             if (component.Owner != uid)
+#pragma warning restore CS0618 // Type or member is obsolete
                 throw new InvalidOperationException("Component is not owned by entity.");
 
             if (component.Deleted) return;
@@ -1121,9 +1117,9 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
-                foreach (var t1Comp in comps.Values)
+                foreach (var (uid, t1Comp) in comps)
                 {
-                    if (t1Comp.Deleted || !MetaQuery.TryGetComponentInternal(t1Comp.Owner, out var metaComp)) continue;
+                    if (t1Comp.Deleted || !MetaQuery.TryGetComponentInternal(uid, out var metaComp)) continue;
 
                     if (metaComp.EntityPaused) continue;
 
@@ -1164,7 +1160,7 @@ namespace Robust.Shared.GameObjects
                     if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
                         continue;
 
-                    if (t1Comp.Deleted || !metaComps.TryGetValue(t1Comp.Owner, out var metaComp)) continue;
+                    if (t1Comp.Deleted || !metaComps.TryGetValue(uid, out var metaComp)) continue;
 
                     var meta = (MetaDataComponent)metaComp;
 
@@ -1216,7 +1212,7 @@ namespace Robust.Shared.GameObjects
                     if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
                         continue;
 
-                    if (t1Comp.Deleted || !metaComps.TryGetValue(t1Comp.Owner, out var metaComp)) continue;
+                    if (t1Comp.Deleted || !metaComps.TryGetValue(uid, out var metaComp)) continue;
 
                     var meta = (MetaDataComponent)metaComp;
 
@@ -1279,7 +1275,7 @@ namespace Robust.Shared.GameObjects
                     if (!trait4.TryGetValue(uid, out var t4Comp) || t4Comp.Deleted)
                         continue;
 
-                    if (t1Comp.Deleted || !metaComps.TryGetValue(t1Comp.Owner, out var metaComp)) continue;
+                    if (t1Comp.Deleted || !metaComps.TryGetValue(uid, out var metaComp)) continue;
 
                     var meta = (MetaDataComponent)metaComp;
 

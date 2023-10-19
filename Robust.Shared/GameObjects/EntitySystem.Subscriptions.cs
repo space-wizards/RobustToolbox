@@ -138,6 +138,18 @@ namespace Robust.Shared.GameObjects
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
         }
 
+        protected void SubscribeLocalEvent<TComp, TEvent>(
+            EntityEventRefHandler<TComp, TEvent> handler,
+            Type[]? before = null, Type[]? after = null)
+            where TComp : IComponent
+            where TEvent : notnull
+        {
+            EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
+
+            _subscriptions ??= new();
+            _subscriptions.Add(new SubLocal<TComp, TEvent>());
+        }
+
         private void ShutdownSubscriptions()
         {
             if (_subscriptions == null)

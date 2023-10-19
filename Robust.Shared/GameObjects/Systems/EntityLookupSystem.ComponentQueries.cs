@@ -75,6 +75,67 @@ public sealed partial class EntityLookupSystem
         }
     }
 
+    private void AddEntitiesIntersecting<T>(
+        EntityUid lookupUid,
+        HashSet<Entity<T>> intersecting,
+        Box2 worldAABB,
+        LookupFlags flags,
+        EntityQuery<T> query) where T : IComponent
+    {
+        var lookup = _broadQuery.GetComponent(lookupUid);
+        var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
+        var localAABB = invMatrix.TransformBox(worldAABB);
+        var state = (intersecting, query);
+
+        if ((flags & LookupFlags.Dynamic) != 0x0)
+        {
+            lookup.DynamicTree.QueryAabb(ref state, static (ref (HashSet<Entity<T>> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
+            {
+                if (!tuple.query.TryGetComponent(value.Entity, out var comp))
+                    return true;
+
+                tuple.intersecting.Add((value.Entity, comp));
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & (LookupFlags.Static)) != 0x0)
+        {
+            lookup.StaticTree.QueryAabb(ref state, static (ref (HashSet<Entity<T>> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
+            {
+                if (!tuple.query.TryGetComponent(value.Entity, out var comp))
+                    return true;
+
+                tuple.intersecting.Add((value.Entity, comp));
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        {
+            lookup.StaticSundriesTree.QueryAabb(ref state, static (ref (HashSet<Entity<T>> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>
+            {
+                if (!tuple.query.TryGetComponent(value, out var comp))
+                    return true;
+
+                tuple.intersecting.Add((value, comp));
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.Sundries) != 0x0)
+        {
+            lookup.SundriesTree.QueryAabb(ref state, static (ref (HashSet<Entity<T>> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>
+            {
+                if (!tuple.query.TryGetComponent(value, out var comp))
+                    return true;
+
+                tuple.intersecting.Add((value, comp));
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+    }
+
     private bool AnyComponentsIntersecting<T>(
         EntityUid lookupUid,
         Box2 worldAABB,
@@ -166,6 +227,21 @@ public sealed partial class EntityLookupSystem
         }
     }
 
+    private void RecursiveAdd<T>(EntityUid uid, ref ValueList<Entity<T>> toAdd, EntityQuery<T> query) where T : IComponent
+    {
+        var childEnumerator = _xformQuery.GetComponent(uid).ChildEnumerator;
+
+        while (childEnumerator.MoveNext(out var child))
+        {
+            if (query.TryGetComponent(child.Value, out var compies))
+            {
+                toAdd.Add((child.Value, compies));
+            }
+
+            RecursiveAdd(child.Value, ref toAdd, query);
+        }
+    }
+
     private void AddContained<T>(HashSet<T> intersecting, LookupFlags flags, EntityQuery<T> query) where T : IComponent
     {
         if ((flags & LookupFlags.Contained) == 0x0) return;
@@ -183,6 +259,36 @@ public sealed partial class EntityLookupSystem
                     if (query.TryGetComponent(contained, out var compies))
                     {
                         toAdd.Add(compies);
+                    }
+
+                    RecursiveAdd(contained, ref toAdd, query);
+                }
+            }
+        }
+
+        foreach (var uid in toAdd)
+        {
+            intersecting.Add(uid);
+        }
+    }
+
+    private void AddContained<T>(HashSet<Entity<T>> intersecting, LookupFlags flags, EntityQuery<T> query) where T : IComponent
+    {
+        if ((flags & LookupFlags.Contained) == 0x0) return;
+
+        var toAdd = new ValueList<Entity<T>>();
+
+        foreach (var comp in intersecting)
+        {
+            if (!_containerQuery.TryGetComponent(comp.Owner, out var conManager)) continue;
+
+            foreach (var con in conManager.GetAllContainers())
+            {
+                foreach (var contained in con.ContainedEntities)
+                {
+                    if (query.TryGetComponent(contained, out var compies))
+                    {
+                        toAdd.Add((contained, compies));
                     }
 
                     RecursiveAdd(contained, ref toAdd, query);
@@ -369,6 +475,47 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
+    public void GetEntitiesIntersecting<T>(MapId mapId, Box2 worldAABB, HashSet<Entity<T>>? entities, LookupFlags flags = DefaultFlags) where T : IComponent
+    {
+        entities ??= new HashSet<Entity<T>>();
+        if (mapId == MapId.Nullspace) return;
+
+        if (!UseBoundsQuery<T>(worldAABB.Height * worldAABB.Width))
+        {
+            var query = AllEntityQuery<T, TransformComponent>();
+
+            while (query.MoveNext(out var uid, out var comp, out var xform))
+            {
+                if (xform.MapID != mapId || !worldAABB.Contains(_transform.GetWorldPosition(xform))) continue;
+                entities.Add((uid, comp));
+            }
+        }
+        else
+        {
+            var query = GetEntityQuery<T>();
+
+            // Get grid entities
+            var state = (this, worldAABB, flags, query, entities);
+
+            _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+                static (EntityUid uid, MapGridComponent grid,
+                    ref (EntityLookupSystem system,
+                        Box2 worldAABB,
+                        LookupFlags flags,
+                        EntityQuery<T> query,
+                        HashSet<Entity<T>> intersecting) tuple) =>
+                {
+                    tuple.system.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.worldAABB, tuple.flags, tuple.query);
+                    return true;
+                }, (flags & LookupFlags.Approximate) != 0x0);
+
+            // Get map entities
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            AddEntitiesIntersecting(mapUid, entities, worldAABB, flags, query);
+            AddContained(entities, flags, query);
+        }
+    }
+
     #endregion
 
     #region EntityCoordinates
@@ -378,6 +525,14 @@ public sealed partial class EntityLookupSystem
         var mapPos = coordinates.ToMap(EntityManager, _transform);
         return GetComponentsInRange<T>(mapPos, range);
     }
+
+    public void GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, HashSet<Entity<T>>? entities) where T : IComponent
+    {
+        entities ??= new HashSet<Entity<T>>();
+        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        GetEntitiesInRange(mapPos, range, entities);
+    }
+
     #endregion
 
     #region MapCoordinates
@@ -391,6 +546,11 @@ public sealed partial class EntityLookupSystem
     public HashSet<T> GetComponentsInRange<T>(MapCoordinates coordinates, float range) where T : IComponent
     {
         return GetComponentsInRange<T>(coordinates.MapId, coordinates.Position, range);
+    }
+
+    public void GetEntitiesInRange<T>(MapCoordinates coordinates, float range, HashSet<Entity<T>>? entities) where T : IComponent
+    {
+        GetEntitiesInRange(coordinates.MapId, coordinates.Position, range, entities);
     }
 
     #endregion
@@ -436,6 +596,20 @@ public sealed partial class EntityLookupSystem
 
         var worldAABB = new Box2(worldPos - rangeVec, worldPos + rangeVec);
         return GetComponentsIntersecting<T>(mapId, worldAABB);
+    }
+
+    public void GetEntitiesInRange<T>(MapId mapId, Vector2 worldPos, float range, HashSet<Entity<T>>? entities) where T : IComponent
+    {
+        entities ??= new HashSet<Entity<T>>();
+        DebugTools.Assert(range > 0, "Range must be a positive float");
+
+        if (mapId == MapId.Nullspace) return;
+
+        // TODO: Actual circles
+        var rangeVec = new Vector2(range, range);
+
+        var worldAABB = new Box2(worldPos - rangeVec, worldPos + rangeVec);
+        GetEntitiesIntersecting(mapId, worldAABB, entities);
     }
 
     #endregion

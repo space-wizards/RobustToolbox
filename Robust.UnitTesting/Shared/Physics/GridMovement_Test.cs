@@ -32,10 +32,10 @@ public sealed class GridMovement_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            var grid = mapManager.CreateGridEntity(mapId);
 
             // Setup 1 body on grid, 1 body off grid, and assert that it's all gucci.
-            grid.SetTile(Vector2i.Zero, new Tile(1));
+            grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
             var fixtures = entManager.GetComponent<FixturesComponent>(grid.Owner);
             Assert.That(fixtures.FixtureCount, Is.EqualTo(1));
 

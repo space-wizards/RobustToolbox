@@ -604,7 +604,7 @@ namespace Robust.Client.GameStates
         ///     Whenever a new entity is created, the server doesn't send full state data, given that much of the data
         ///     can simply be obtained from the entity prototype information. This function basically creates a fake
         ///     initial server state for any newly created entity. It does this by simply using the standard <see
-        ///     cref="IEntityManager.GetComponentState(IEventBus, IComponent)"/>.
+        ///     cref="IEntityManager.GetComponentState"/>.
         /// </remarks>
         private void MergeImplicitData(IEnumerable<NetEntity> createdEntities)
         {
@@ -1188,7 +1188,6 @@ namespace Robust.Client.GameStates
                     if (!meta.NetComponents.TryGetValue(id, out var comp))
                     {
                         comp = _compFactory.GetComponent(id);
-                        comp.Owner = uid;
                         _entityManager.AddComponent(uid, comp, true, metadata: meta);
                     }
 
@@ -1202,7 +1201,6 @@ namespace Robust.Client.GameStates
                     if (!meta.NetComponents.TryGetValue(compChange.NetID, out var comp))
                     {
                         comp = _compFactory.GetComponent(compChange.NetID);
-                        comp.Owner = uid;
                         _entityManager.AddComponent(uid, comp, true, metadata:meta);
                     }
                     else if (compChange.LastModifiedTick <= lastApplied && lastApplied != GameTick.Zero)
@@ -1272,7 +1270,9 @@ namespace Robust.Client.GameStates
                     var handleState = new ComponentHandleState(cur, next);
                     bus.RaiseComponentEvent(comp, ref handleState);
                 }
+#pragma warning disable CS0168 // Variable is declared but never used
                 catch (Exception e)
+#pragma warning restore CS0168 // Variable is declared but never used
                 {
 #if EXCEPTION_TOLERANCE
                     _sawmill.Error($"Failed to apply comp state: entity={_entities.ToPrettyString(uid)}, comp={comp.GetType()}");
@@ -1429,7 +1429,6 @@ namespace Robust.Client.GameStates
                 if (!meta.NetComponents.TryGetValue(id, out var comp))
                 {
                     comp = _compFactory.GetComponent(id);
-                    comp.Owner = uid;
                     _entityManager.AddComponent(uid, comp, true, meta);
                 }
 

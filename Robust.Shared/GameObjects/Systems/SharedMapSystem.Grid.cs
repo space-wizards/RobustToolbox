@@ -6,12 +6,12 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
-using Robust.Shared.Physics.Components;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -296,7 +296,7 @@ public abstract partial class SharedMapSystem
 
         MapManager.SuppressOnTileChanged = false;
         if (modified.Count != 0)
-            RaiseLocalEvent(uid, new GridModifiedEvent(component, modified), true);
+            RaiseLocalEvent(uid, new GridModifiedEvent(uid, component, modified), true);
     }
 
     private void OnGridGetState(EntityUid uid, MapGridComponent component, ref ComponentGetState args)

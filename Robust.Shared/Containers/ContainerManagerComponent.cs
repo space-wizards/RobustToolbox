@@ -7,7 +7,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
@@ -22,7 +21,6 @@ namespace Robust.Shared.Containers
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly INetManager _netMan = default!;
 
         [DataField("containers")]
         public Dictionary<string, BaseContainer> Containers = new();
@@ -38,33 +36,29 @@ namespace Robust.Shared.Containers
             }
         }
 
-        /// <inheritdoc />
-        public T MakeContainer<T>(string id)
+        public T MakeContainer<T>(EntityUid uid, string id)
             where T : BaseContainer
         {
             if (HasContainer(id))
                 throw new ArgumentException($"Container with specified ID already exists: '{id}'");
 
             var container = _dynFactory.CreateInstanceUnchecked<T>(typeof(T), inject: false);
-            container.Init(id, Owner, this);
+            container.Init(id, uid, this);
             Containers[id] = container;
             _entMan.Dirty(this);
             return container;
         }
 
-        /// <inheritdoc />
         public BaseContainer GetContainer(string id)
         {
             return Containers[id];
         }
 
-        /// <inheritdoc />
         public bool HasContainer(string id)
         {
             return Containers.ContainsKey(id);
         }
 
-        /// <inheritdoc />
         public bool TryGetContainer(string id, [NotNullWhen(true)] out BaseContainer? container)
         {
             var ret = Containers.TryGetValue(id, out var cont);
@@ -72,7 +66,6 @@ namespace Robust.Shared.Containers
             return ret;
         }
 
-        /// <inheritdoc />
         public bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out BaseContainer? container)
         {
             foreach (var contain in Containers.Values)
@@ -88,7 +81,6 @@ namespace Robust.Shared.Containers
             return false;
         }
 
-        /// <inheritdoc />
         public bool ContainsEntity(EntityUid entity)
         {
             foreach (var container in Containers.Values)
@@ -99,7 +91,6 @@ namespace Robust.Shared.Containers
             return false;
         }
 
-        /// <inheritdoc />
         public bool Remove(EntityUid toremove,
             TransformComponent? xform = null,
             MetaDataComponent? meta = null,
@@ -214,7 +205,9 @@ namespace Robust.Shared.Containers
 
             object IEnumerator.Current => Current;
 
-            public void Dispose() { }
+            public void Dispose()
+            {
+            }
         }
     }
 }

@@ -1,5 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
@@ -9,12 +14,6 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Robust.Shared.Log;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Containers
 {
@@ -107,10 +106,9 @@ namespace Robust.Shared.Containers
             bool force = false)
         {
             IoCManager.Resolve(ref entMan);
-            DebugTools.Assert(transform == null || transform.Owner == toinsert);
-            DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
-            DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
-            DebugTools.Assert(physics == null || physics.Owner == toinsert);
+            DebugTools.AssertOwner(toinsert, transform);
+            DebugTools.AssertOwner(Owner, ownerTransform);
+            DebugTools.AssertOwner(toinsert, physics);
             DebugTools.Assert(!ExpectedEntities.Contains(entMan.GetNetEntity(toinsert)));
             DebugTools.Assert(Manager.Containers.ContainsKey(ID));
 
@@ -298,8 +296,8 @@ namespace Robust.Shared.Containers
             IoCManager.Resolve(ref entMan);
             DebugTools.AssertNotNull(Manager);
             DebugTools.Assert(entMan.EntityExists(toRemove));
-            DebugTools.Assert(xform == null || xform.Owner == toRemove);
-            DebugTools.Assert(meta == null || meta.Owner == toRemove);
+            DebugTools.AssertOwner(toRemove, xform);
+            DebugTools.AssertOwner(toRemove, meta);
 
             xform ??= entMan.GetComponent<TransformComponent>(toRemove);
             meta ??= entMan.GetComponent<MetaDataComponent>(toRemove);

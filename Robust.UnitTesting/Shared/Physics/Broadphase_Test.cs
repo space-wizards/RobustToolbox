@@ -1,8 +1,6 @@
 using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
-using Robust.Client.UserInterface.CustomControls;
-using Robust.Server.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -30,9 +28,9 @@ public sealed class Broadphase_Test
 
         var mapId = mapManager.CreateMap();
         var mapEnt = mapManager.GetMapEntityId(mapId);
-        var grid = mapManager.CreateGrid(mapId);
+        var grid = mapManager.CreateGridEntity(mapId);
 
-        grid.SetTile(Vector2i.Zero, new Tile(1));
+        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
         Assert.That(entManager.HasComponent<BroadphaseComponent>(grid.Owner));
         var broadphase = entManager.GetComponent<BroadphaseComponent>(grid.Owner);
 
@@ -65,10 +63,10 @@ public sealed class Broadphase_Test
 
         var mapId = mapManager.CreateMap();
         var mapEnt = mapManager.GetMapEntityId(mapId);
-        var grid = mapManager.CreateGrid(mapId);
+        var grid = mapManager.CreateGridEntity(mapId);
         var gridUid = grid.Owner;
 
-        grid.SetTile(Vector2i.Zero, new Tile(1));
+        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
         Assert.That(entManager.HasComponent<BroadphaseComponent>(gridUid));
         var broadphase = entManager.GetComponent<BroadphaseComponent>(gridUid);
 
@@ -114,10 +112,10 @@ public sealed class Broadphase_Test
 
         var mapId1 = mapManager.CreateMap();
         var mapId2 = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId1);
+        var grid = mapManager.CreateGridEntity(mapId1);
         var xform = entManager.GetComponent<TransformComponent>(grid.Owner);
 
-        grid.SetTile(Vector2i.Zero, new Tile(1));
+        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
         var mapBroadphase1 = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId1));
         var mapBroadphase2 = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId2));
         entManager.TickUpdate(0.016f, false);
@@ -146,9 +144,9 @@ public sealed class Broadphase_Test
         var lookup = system.GetEntitySystem<EntityLookupSystem>();
 
         var mapId = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId);
+        var grid = mapManager.CreateGridEntity(mapId);
 
-        grid.SetTile(Vector2i.Zero, new Tile(1));
+        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid.Owner);
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId));
 
@@ -173,7 +171,7 @@ public sealed class Broadphase_Test
         Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(gridBroadphase));
 
         // They should get deparented to the map and updated to the map's broadphase instead.
-        grid.SetTile(Vector2i.Zero, Tile.Empty);
+        grid.Comp.SetTile(Vector2i.Zero, Tile.Empty);
         Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(mapBroadphase));
         Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(mapBroadphase));
         Assert.That(lookup.FindBroadphase(child2), Is.EqualTo(mapBroadphase));
@@ -203,16 +201,16 @@ public sealed class Broadphase_Test
         var mapB = mapManager.GetMapEntityId(mapBId);
 
         // setup grids
-        var gridAComp = mapManager.CreateGrid(mapAId);
-        var gridBComp = mapManager.CreateGrid(mapBId);
-        var gridCComp = mapManager.CreateGrid(mapAId);
+        var gridAComp = mapManager.CreateGridEntity(mapAId);
+        var gridBComp = mapManager.CreateGridEntity(mapBId);
+        var gridCComp = mapManager.CreateGridEntity(mapAId);
         var gridA = gridAComp.Owner;
         var gridB = gridBComp.Owner;
         var gridC = gridCComp.Owner;
         xforms.SetLocalPosition(gridC, new Vector2(10, 10));
-        gridAComp.SetTile(Vector2i.Zero, new Tile(1));
-        gridBComp.SetTile(Vector2i.Zero, new Tile(1));
-        gridCComp.SetTile(Vector2i.Zero, new Tile(1));
+        gridAComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
+        gridBComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
+        gridCComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
 
         // set up test entities
         var parent = entManager.SpawnEntity(null, new EntityCoordinates(mapA, new Vector2(200,200)));

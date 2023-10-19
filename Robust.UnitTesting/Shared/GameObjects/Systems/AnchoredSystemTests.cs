@@ -1,15 +1,14 @@
+using System.Linq;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Server;
-using System.Linq;
-using System.Numerics;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -46,7 +45,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             mapManager.CreateMap(TestMapId);
 
             // Add grid 1, as the default grid to anchor things to.
-            var grid = mapManager.CreateGrid(TestMapId);
+            var grid = mapManager.CreateGridEntity(TestMapId);
 
             return (sim, grid.Owner);
         }
@@ -130,7 +129,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
             Assert.False(entMan.GetComponent<TransformComponent>(ent1).Anchored);
-            Assert.That(grid.GetAnchoredEntities(pos).Count() == 0);
+            Assert.That(!grid.GetAnchoredEntities(pos).Any());
             entMan.DeleteEntity(ent1);
 
             var ent2 = entMan.CreateEntityUninitialized(null, coordinates);
@@ -359,8 +358,8 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // Act
             // We purposefully use the grid as container so parent stays the same, reparent will unanchor
-            var containerMan = entMan.AddComponent<ContainerManagerComponent>(grid.Owner);
-            var container = containerMan.MakeContainer<Container>("TestContainer");
+            var containerMan = entMan.AddComponent<ContainerManagerComponent>(gridId);
+            var container = containerMan.MakeContainer<Container>(gridId, "TestContainer");
             container.Insert(ent1);
 
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).Anchored, Is.False);
@@ -478,8 +477,8 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
-            var containerMan = entMan.AddComponent<ContainerManagerComponent>(grid.Owner);
-            var container = containerMan.MakeContainer<Container>("TestContainer");
+            var containerMan = entMan.AddComponent<ContainerManagerComponent>(gridId);
+            var container = containerMan.MakeContainer<Container>(gridId, "TestContainer");
             container.Insert(ent1);
 
             // Act

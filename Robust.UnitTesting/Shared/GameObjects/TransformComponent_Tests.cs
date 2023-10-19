@@ -57,19 +57,19 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var mapManager = server.Resolve<IMapManager>();
 
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
-            grid.SetTile(new Vector2i(0, 0), new Tile(1));
+            var grid = mapManager.CreateGridEntity(mapId);
+            grid.Comp.SetTile(new Vector2i(0, 0), new Tile(1));
             var gridXform = entManager.GetComponent<TransformComponent>(grid.Owner);
             gridXform.LocalPosition = new Vector2(0f, 100f);
 
-            var ent1 = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, Vector2.One * grid.TileSize / 2));
+            var ent1 = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, Vector2.One * grid.Comp.TileSize / 2));
             var ent2 = entManager.SpawnEntity(null, new EntityCoordinates(ent1, Vector2.Zero));
 
             var xform2 = entManager.GetComponent<TransformComponent>(ent2);
             Assert.That(xform2.WorldPosition, Is.EqualTo(new Vector2(0.5f, 100.5f)));
 
             xform2.AttachToGridOrMap();
-            Assert.That(xform2.LocalPosition, Is.EqualTo(Vector2.One * grid.TileSize / 2));
+            Assert.That(xform2.LocalPosition, Is.EqualTo(Vector2.One * grid.Comp.TileSize / 2));
         }
     }
 }

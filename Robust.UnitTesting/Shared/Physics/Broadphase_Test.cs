@@ -31,10 +31,10 @@ public sealed class Broadphase_Test
         var grid = mapManager.CreateGridEntity(mapId);
 
         grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
-        Assert.That(entManager.HasComponent<BroadphaseComponent>(grid.Owner));
-        var broadphase = entManager.GetComponent<BroadphaseComponent>(grid.Owner);
+        Assert.That(entManager.HasComponent<BroadphaseComponent>(grid));
+        var broadphase = entManager.GetComponent<BroadphaseComponent>(grid);
 
-        var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(0.5f, 0.5f)));
+        var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
         var xform = entManager.GetComponent<TransformComponent>(ent);
         Assert.That(broadphase.SundriesTree, Does.Contain(ent));
 
@@ -113,7 +113,7 @@ public sealed class Broadphase_Test
         var mapId1 = mapManager.CreateMap();
         var mapId2 = mapManager.CreateMap();
         var grid = mapManager.CreateGridEntity(mapId1);
-        var xform = entManager.GetComponent<TransformComponent>(grid.Owner);
+        var xform = entManager.GetComponent<TransformComponent>(grid);
 
         grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
         var mapBroadphase1 = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId1));
@@ -147,12 +147,12 @@ public sealed class Broadphase_Test
         var grid = mapManager.CreateGridEntity(mapId);
 
         grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
-        var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid.Owner);
+        var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid);
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId));
 
         Assert.That(entManager.EntityQuery<BroadphaseComponent>(true).Count(), Is.EqualTo(2));
 
-        var parent = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(0.5f, 0.5f)));
+        var parent = entManager.SpawnEntity(null, new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
 
         var child1 = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var child1Xform = entManager.GetComponent<TransformComponent>(child1);

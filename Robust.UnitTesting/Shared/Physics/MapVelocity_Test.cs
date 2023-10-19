@@ -52,7 +52,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Vector2 offset = new(3, 4);
                 Vector2 expectedFinalVelocity = new Vector2(-4, 3) * 2 + Vector2.One;
 
-                var dummy = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid.Owner, offset));
+                var dummy = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid, offset));
                 Assert.That(entityManager.TryGetComponent(dummy, out PhysicsComponent? body));
                 Assert.That(entityManager.TryGetComponent(dummy, out TransformComponent? xform));
                 xformSystem.SetParent(dummy, xform!, gridUidA);
@@ -84,7 +84,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(velocities.Item2, Is.Approximately(angularVelocity, 1e-6));
 
                 // Check that velocity does not change when changing parent
-                xformSystem.SetParent(dummy, xform!, grid2.Owner);
+                xformSystem.SetParent(dummy, xform!, grid2);
                 linearVelocity = physicsSys.GetMapLinearVelocity(dummy, body);
                 angularVelocity = physicsSys.GetMapAngularVelocity(dummy, body);
                 velocities = physicsSys.GetMapVelocities(dummy, body);

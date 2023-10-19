@@ -84,8 +84,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var childTrans = EntityManager.GetComponent<TransformComponent>(child);
 
             // that are not on the same map
-            parentTrans.Coordinates = new EntityCoordinates(GridA.Owner, new Vector2(5, 5));
-            childTrans.Coordinates = new EntityCoordinates(GridB.Owner, new Vector2(4, 4));
+            parentTrans.Coordinates = new EntityCoordinates(GridA, new Vector2(5, 5));
+            childTrans.Coordinates = new EntityCoordinates(GridB, new Vector2(4, 4));
 
             // if they are parented, the child keeps its world position, but moves to the parents map
             childTrans.AttachParent(parentTrans);

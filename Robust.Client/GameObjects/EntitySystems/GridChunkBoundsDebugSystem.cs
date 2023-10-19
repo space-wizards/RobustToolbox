@@ -78,7 +78,7 @@ namespace Robust.Client.GameObjects
             _mapManager.FindGridsIntersecting(currentMap, viewport, ref _grids);
             foreach (var grid in _grids)
             {
-                var worldMatrix = _entityManager.GetComponent<TransformComponent>(grid.Owner).WorldMatrix;
+                var worldMatrix = _entityManager.GetComponent<TransformComponent>(grid).WorldMatrix;
                 worldHandle.SetTransform(worldMatrix);
                 var transform = new Transform(Vector2.Zero, Angle.Zero);
 

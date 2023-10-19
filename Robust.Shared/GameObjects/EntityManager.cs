@@ -403,8 +403,8 @@ namespace Robust.Shared.GameObjects
             if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
                 return;
 
-            DebugTools.AssertOwner(ent.Owner, ent.Comp);
-            DirtyEntity(ent.Owner, meta);
+            DebugTools.AssertOwner(ent, ent.Comp);
+            DirtyEntity(ent, meta);
 #pragma warning disable CS0618 // Type or member is obsolete
             ent.Comp.LastModifiedTick = CurrentTick;
 #pragma warning restore CS0618 // Type or member is obsolete

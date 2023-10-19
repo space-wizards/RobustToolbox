@@ -185,7 +185,7 @@ namespace Robust.UnitTesting.Shared.Map
             var grid = mapManager.CreateGridEntity(mapId);
             var mapEnt = mapManager.GetMapEntityId(mapId);
             var gridEnt = grid.Owner;
-            var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid.Owner, Vector2.Zero));
+            var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid, Vector2.Zero));
 
             Assert.That(entityManager.GetComponent<TransformComponent>(mapEnt).Coordinates.EntityId, Is.EqualTo(mapEnt));
             Assert.That(entityManager.GetComponent<TransformComponent>(gridEnt).Coordinates.EntityId, Is.EqualTo(mapEnt));
@@ -207,7 +207,7 @@ namespace Robust.UnitTesting.Shared.Map
             var grid = mapManager.CreateGridEntity(mapId);
             var mapEnt = mapManager.GetMapEntityId(mapId);
             var gridEnt = grid.Owner;
-            var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid.Owner, Vector2.Zero));
+            var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid, Vector2.Zero));
 
             var mapCoords = entityManager.GetComponent<TransformComponent>(mapEnt).Coordinates;
             Assert.That(mapCoords.IsValid(entityManager), Is.EqualTo(true));
@@ -257,7 +257,7 @@ namespace Robust.UnitTesting.Shared.Map
             var mapId = mapManager.CreateMap();
             var grid = mapManager.CreateGridEntity(mapId);
             var gridEnt = grid.Owner;
-            var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid.Owner, entPos));
+            var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid, entPos));
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.ToMap(entityManager), Is.EqualTo(new MapCoordinates(entPos, mapId)));
 
@@ -276,7 +276,7 @@ namespace Robust.UnitTesting.Shared.Map
             var mapEnt = mapManager.GetMapEntityId(mapId);
             var grid = mapManager.CreateGridEntity(mapId);
             var gridEnt = grid.Owner;
-            var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid.Owner, Vector2.Zero));
+            var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid, Vector2.Zero));
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.WithEntityId(mapEnt).Position, Is.EqualTo(Vector2.Zero));
 

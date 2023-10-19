@@ -66,7 +66,7 @@ namespace Robust.UnitTesting.Shared
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
 
             entManager.DeleteEntity(dummy);
-            mapManager.DeleteGrid(grid.Owner);
+            mapManager.DeleteGrid(grid);
             mapManager.DeleteMap(mapId);
         }
     }

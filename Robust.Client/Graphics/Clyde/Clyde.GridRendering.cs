@@ -44,10 +44,10 @@ namespace Robust.Client.Graphics.Clyde
             _mapManager.FindGridsIntersecting(mapId, worldBounds, ref grids);
             foreach (var mapGrid in grids)
             {
-                if (!_mapChunkData.ContainsKey(mapGrid.Owner))
+                if (!_mapChunkData.ContainsKey(mapGrid))
                     continue;
 
-                var transform = _entityManager.GetComponent<TransformComponent>(mapGrid.Owner);
+                var transform = _entityManager.GetComponent<TransformComponent>(mapGrid);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
                 var enumerator = mapGrid.Comp.GetMapChunks(worldBounds);
 
@@ -56,7 +56,7 @@ namespace Robust.Client.Graphics.Clyde
                     if (_isChunkDirty(mapGrid, chunk))
                         _updateChunkMesh(mapGrid, chunk);
 
-                    var datum = _mapChunkData[mapGrid.Owner][chunk.Indices];
+                    var datum = _mapChunkData[mapGrid][chunk.Indices];
 
                     if (datum.TileCount == 0)
                         continue;
@@ -73,7 +73,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateChunkMesh(Entity<MapGridComponent> grid, MapChunk chunk)
         {
-            var data = _mapChunkData[grid.Owner];
+            var data = _mapChunkData[grid];
 
             if (!data.TryGetValue(chunk.Indices, out var datum))
             {
@@ -159,19 +159,19 @@ namespace Robust.Client.Graphics.Clyde
                 Dirty = true
             };
 
-            _mapChunkData[grid.Owner].Add(chunk.Indices, datum);
+            _mapChunkData[grid].Add(chunk.Indices, datum);
             return datum;
         }
 
         private bool _isChunkDirty(Entity<MapGridComponent> grid, MapChunk chunk)
         {
-            var data = _mapChunkData[grid.Owner];
+            var data = _mapChunkData[grid];
             return !data.TryGetValue(chunk.Indices, out var datum) || datum.Dirty;
         }
 
         public void _setChunkDirty(Entity<MapGridComponent> grid, Vector2i chunk)
         {
-            var data = _mapChunkData.GetOrNew(grid.Owner);
+            var data = _mapChunkData.GetOrNew(grid);
             if (data.TryGetValue(chunk, out var datum))
             {
                 datum.Dirty = true;

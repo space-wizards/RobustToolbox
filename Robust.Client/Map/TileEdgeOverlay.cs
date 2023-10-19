@@ -47,7 +47,7 @@ public sealed class TileEdgeOverlay : Overlay
         {
             var tileSize = grid.Comp.TileSize;
             var tileDimensions = new Vector2(tileSize, tileSize);
-            var xform = xformQuery.GetComponent(grid.Owner);
+            var xform = xformQuery.GetComponent(grid);
             args.WorldHandle.SetTransform(xform.WorldMatrix);
 
             foreach (var tileRef in grid.Comp.GetTilesIntersecting(args.WorldBounds, false))

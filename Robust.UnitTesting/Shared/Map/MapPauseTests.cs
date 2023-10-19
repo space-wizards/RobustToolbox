@@ -144,7 +144,7 @@ internal sealed class MapPauseTests
         var newGrid = mapMan.CreateGridEntity(mapId);
 
         // assert
-        var metaData = entMan.GetComponent<MetaDataComponent>(newGrid.Owner);
+        var metaData = entMan.GetComponent<MetaDataComponent>(newGrid);
         Assert.That(metaData.EntityPaused, Is.True);
     }
 

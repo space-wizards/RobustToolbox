@@ -223,7 +223,7 @@ internal partial class MapManager
             if (result != default)
             {
                 DebugTools.Assert(mapId != null);
-                _mapEntities.Add(actualId, result.Owner);
+                _mapEntities.Add(actualId, result);
                 _sawmill.Debug($"Rebinding map {actualId} to entity {result.Owner}");
             }
             else

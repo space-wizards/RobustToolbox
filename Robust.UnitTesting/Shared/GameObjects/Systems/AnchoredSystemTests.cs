@@ -47,7 +47,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             // Add grid 1, as the default grid to anchor things to.
             var grid = mapManager.CreateGridEntity(TestMapId);
 
-            return (sim, grid.Owner);
+            return (sim, grid);
         }
 
         // An entity is anchored to the tile it is over on the target grid.

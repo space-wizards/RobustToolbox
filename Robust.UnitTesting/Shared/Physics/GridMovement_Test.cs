@@ -36,10 +36,10 @@ public sealed class GridMovement_Test : RobustIntegrationTest
 
             // Setup 1 body on grid, 1 body off grid, and assert that it's all gucci.
             grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
-            var fixtures = entManager.GetComponent<FixturesComponent>(grid.Owner);
+            var fixtures = entManager.GetComponent<FixturesComponent>(grid);
             Assert.That(fixtures.FixtureCount, Is.EqualTo(1));
 
-            var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, 0.5f, 0.5f ));
+            var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid, 0.5f, 0.5f ));
             var onGridBody = entManager.AddComponent<PhysicsComponent>(onGrid);
             physSystem.SetBodyType(onGrid, BodyType.Dynamic, body: onGridBody);
             var shapeA = new PolygonShape();

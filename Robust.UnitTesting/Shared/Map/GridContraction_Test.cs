@@ -72,7 +72,7 @@ namespace Robust.UnitTesting.Shared.Map
                     grid.Comp.SetTile(new Vector2i(i, 0), Tile.Empty);
                 }
 
-                Assert.That(!((!entManager.EntityExists(grid.Owner) ? EntityLifeStage.Deleted : entManager.GetComponent<MetaDataComponent>(grid.Owner).EntityLifeStage) >= EntityLifeStage.Deleted));
+                Assert.That(!((!entManager.EntityExists(grid) ? EntityLifeStage.Deleted : entManager.GetComponent<MetaDataComponent>(grid).EntityLifeStage) >= EntityLifeStage.Deleted));
             });
         }
     }

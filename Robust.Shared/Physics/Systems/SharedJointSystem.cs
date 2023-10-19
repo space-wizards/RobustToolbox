@@ -116,7 +116,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         foreach (var joint in _dirtyJoints)
         {
             if (joint.Comp.Deleted || joint.Comp.JointCount != 0) continue;
-            EntityManager.RemoveComponent<JointComponent>(joint.Owner);
+            EntityManager.RemoveComponent<JointComponent>(joint);
         }
 
         _dirtyJoints.Clear();

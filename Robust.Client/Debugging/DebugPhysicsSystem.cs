@@ -231,14 +231,14 @@ namespace Robust.Client.Debugging
             {
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
-                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody)) continue;
 
-                    var xform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
+                    var xform = _physicsSystem.GetPhysicsTransform(physBody);
                     var comp = physBody.Comp;
 
                     const float AlphaModifier = 0.2f;
 
-                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody.Owner).Fixtures.Values)
+                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody).Fixtures.Values)
                     {
                         // Invalid shape - Box2D doesn't check for IsSensor but we will for sanity.
                         if (comp.BodyType == BodyType.Dynamic && fixture.Density == 0f && fixture.Hard)
@@ -276,7 +276,7 @@ namespace Robust.Client.Debugging
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
                     var color = Color.Purple.WithAlpha(Alpha);
-                    var transform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
+                    var transform = _physicsSystem.GetPhysicsTransform(physBody);
                     worldHandle.DrawCircle(Transform.Mul(transform, physBody.Comp.LocalCenter), 0.2f, color);
                 }
 
@@ -285,9 +285,9 @@ namespace Robust.Client.Debugging
 
                 foreach (var grid in _grids)
                 {
-                    var physBody = _entityManager.GetComponent<PhysicsComponent>(grid.Owner);
+                    var physBody = _entityManager.GetComponent<PhysicsComponent>(grid);
                     var color = Color.Orange.WithAlpha(Alpha);
-                    var transform = _physicsSystem.GetPhysicsTransform(grid.Owner);
+                    var transform = _physicsSystem.GetPhysicsTransform(grid);
                     worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 1f, color);
                 }
             }
@@ -296,14 +296,14 @@ namespace Robust.Client.Debugging
             {
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
-                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody)) continue;
 
-                    var xform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
+                    var xform = _physicsSystem.GetPhysicsTransform(physBody);
 
                     const float AlphaModifier = 0.2f;
                     Box2? aabb = null;
 
-                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody.Owner).Fixtures.Values)
+                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody).Fixtures.Values)
                     {
                         for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {

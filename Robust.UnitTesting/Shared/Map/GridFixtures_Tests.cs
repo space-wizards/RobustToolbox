@@ -33,8 +33,8 @@ namespace Robust.UnitTesting.Shared.Map
                 var grid = mapManager.CreateGridEntity(mapId);
 
                 // Should be nothing if grid empty
-                Assert.That(entManager.TryGetComponent(grid.Owner, out PhysicsComponent? gridBody));
-                Assert.That(entManager.TryGetComponent(grid.Owner, out FixturesComponent? manager));
+                Assert.That(entManager.TryGetComponent(grid, out PhysicsComponent? gridBody));
+                Assert.That(entManager.TryGetComponent(grid, out FixturesComponent? manager));
                 Assert.That(manager!.FixtureCount, Is.EqualTo(0));
                 Assert.That(gridBody!.BodyType, Is.EqualTo(BodyType.Static));
 
@@ -60,7 +60,7 @@ namespace Robust.UnitTesting.Shared.Map
                 grid.Comp.SetTile(new Vector2i(0, -1), new Tile(1));
                 Assert.That(manager.FixtureCount, Is.EqualTo(2));
 
-                physSystem.SetLinearVelocity(grid.Owner, Vector2.One, manager: manager, body: gridBody);
+                physSystem.SetLinearVelocity(grid, Vector2.One, manager: manager, body: gridBody);
                 Assert.That(gridBody.LinearVelocity.Length, Is.EqualTo(0f));
             });
         }

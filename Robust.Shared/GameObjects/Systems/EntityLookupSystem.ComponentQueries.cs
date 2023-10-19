@@ -210,7 +210,7 @@ public sealed partial class EntityLookupSystem
 
         foreach (var comp in intersecting)
         {
-            if (!_containerQuery.TryGetComponent(comp.Owner, out var conManager)) continue;
+            if (!_containerQuery.TryGetComponent(comp, out var conManager)) continue;
 
             foreach (var con in conManager.GetAllContainers())
             {

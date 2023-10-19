@@ -127,14 +127,14 @@ namespace Robust.Client.GameObjects
                     return;
                 }
 
-                if (!EntityManager.TryGetComponent(ent.Owner, compTrack.ComponentType, out var animatedComp))
+                if (!EntityManager.TryGetComponent(ent, compTrack.ComponentType, out var animatedComp))
                 {
                     _sawmill.Error(
-                        $"Attempted to play a component animation, but the entity {ToPrettyString(ent.Owner)} does not have the component to be animated: {compTrack.ComponentType}.");
+                        $"Attempted to play a component animation, but the entity {ToPrettyString(ent)} does not have the component to be animated: {compTrack.ComponentType}.");
                     return;
                 }
 
-                if (IsClientSide(ent.Owner) || !animatedComp.NetSyncEnabled)
+                if (IsClientSide(ent) || !animatedComp.NetSyncEnabled)
                     continue;
 
                 var reg = _compFact.GetRegistration(animatedComp);
@@ -147,7 +147,7 @@ namespace Robust.Client.GameObjects
                     if (animatedComp.GetType().GetProperty(compTrack.Property) is { } property &&
                         property.HasCustomAttribute<AutoNetworkedFieldAttribute>())
                     {
-                        _sawmill.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(ent.Owner)}");
+                        _sawmill.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(ent)}");
                     }
                 }
             }

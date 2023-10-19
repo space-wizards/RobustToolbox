@@ -29,7 +29,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var gridA = mapManager.CreateGridEntity(TestMapId);
             var gridB = mapManager.CreateGridEntity(TestMapId);
 
-            return (sim, gridA.Owner, gridB.Owner);
+            return (sim, gridA, gridB);
         }
 
         /// <summary>

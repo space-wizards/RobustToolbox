@@ -10,6 +10,7 @@ using Robust.Client.ViewVariables.Editors;
 using Robust.Client.ViewVariables.Instances;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
@@ -190,6 +191,11 @@ namespace Robust.Client.ViewVariables
                 return new VVPropEditorEntityUid();
             }
 
+            if (type == typeof(NetEntity))
+            {
+                return new VVPropEditorNetEntity();
+            }
+
             if (type == typeof(Color))
             {
                 return new VVPropEditorColor();
@@ -227,7 +233,7 @@ namespace Robust.Client.ViewVariables
                 instance = new ViewVariablesInstanceObject(this, _robustSerializer);
             }
 
-            var window = new DefaultWindow {Title = "View Variables"};
+            var window = new DefaultWindow {Title = Loc.GetString("view-variables")};
             instance.Initialize(window, obj);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
@@ -245,7 +251,7 @@ namespace Robust.Client.ViewVariables
         {
             var window = new DefaultWindow
             {
-                Title = "View Variables",
+                Title = Loc.GetString("view-variables"),
                 SetSize = _defaultWindowSize
             };
             var loadingLabel = new Label {Text = "Retrieving remote object data from server..."};

@@ -1,7 +1,6 @@
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -54,7 +53,7 @@ public sealed class ClientDirtySystem : EntitySystem
 
         var uid = args.BaseArgs.Owner;
         var comp = args.BaseArgs.Component;
-        if (!_timing.InPrediction || !comp.NetSyncEnabled || IsClientSide(uid))
+        if (!_timing.InPrediction || !comp.NetSyncEnabled || IsClientSide(uid, args.Meta))
             return;
 
         // Was this component added during prediction? If yes, then there is no need to re-add it when resetting.

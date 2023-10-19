@@ -54,6 +54,245 @@ END TEMPLATE-->
 *None yet*
 
 
+## 168.0.0
+
+### Breaking changes
+
+* The Component.OnRemove method has been removed. Use SubscribeLocalEvent<TComp, ComponentRemove>(OnRemove) from an EntitySystem instead.
+
+
+## 167.0.0
+
+### Breaking changes
+
+* Remove ComponentExtensions.
+* Remove ContainerHelpers.
+* Change some TransformSystem methods to fix clientside lerping.
+
+### Bugfixes
+
+* Fixed PVS bugs from dropped entity states.
+
+### Other
+
+* Add more joint debug asserts.
+
+
+## 166.0.0
+
+### Breaking changes
+
+* EntityUid-NetEntity conversion methods now return null when given a null value, rather than returning an invalid id.
+* ExpandPvsEvent now defaults to using null lists to reduce allocations.
+* Various component lifestage related methods have been moved from the `Component` class to `EntityManager`.
+* Session/client specific PVS overrides are now always recursive, which means that all children of the overriden entity will also get sent.
+
+### New features
+
+* Added a SortedSet yaml serializer.
+
+### Other
+
+* AddComponentUninitialized is now marked as obsolete and will be removed in the future.
+* DebugTools.AssertOwner() now accepts null components.
+
+
+## 165.0.0
+
+### Breaking changes
+
+* The arguments of `SplitContainer`s resize-finished event have changed.
+
+### New features
+
+* The YAML validator now checks the default values of ProtoId<T> and EntProtoId data fields.
+
+### Bugfixes
+
+* The minimum draggable area of split containers now blocks mouse inputs.
+
+
+## 164.0.0
+
+### Breaking changes
+
+* Make automatic component states infer cloneData.
+* Removed cloneData from AutoNetworkedFieldAttribute. This is now automatically inferred.
+
+### Internal
+
+* Reduce Transform GetComponents in RecursiveDeleteEntity.
+
+
+## 163.0.0
+
+### Breaking changes
+
+* Moved TimedDespawn to engine for a component that deletes the attached entity after a timer has elapsed.
+
+### New features
+
+* Add ExecuteCommand for integration tests.
+* Allow adding / removing widgets of cub-controls.
+* Give maps / grids a default name to help with debugging.
+* Use ToPrettyString in component resolve errors to help with debugging.
+
+### Bugfixes
+
+* Fix console backspace exception.
+* Fix rendering invalid maps spamming exceptions every frame.
+
+### Internal
+
+* Move ClientGameStatemanager local variables to fields to avoid re-allocating every tick.
+
+
+## 162.2.1
+
+
+## 162.2.0
+
+### New features
+
+* Add support for automatically networking entity lists and sets.
+* Add nullable conversion operators for ProtoIds.
+* Add LocId serializer for validation.
+
+### Bugfixes
+
+* Fix deleting a contact inside of collision events throwing.
+* Localize VV.
+
+### Internal
+
+* Use CollectionsMarshal in GameStateManager.
+
+
+## 162.1.1
+
+### Bugfixes
+
+* Fixes "NoSpawn" entities appearing in the spawn menu.
+
+
+## 162.1.0
+
+### New features
+
+* Mark ProtoId as NetSerializable.
+
+### Bugfixes
+
+* Temporarily revert NetForceAckThreshold change as it can lead to client stalling.
+* Fix eye visibility layers not updating on children when a parent changes.
+
+### Internal
+
+* Use CollectionsMarshal in RobustTree and AddComponentInternal.
+
+
+## 162.0.0
+
+### New features
+
+* Add entity categories for prototypes and deprecate the `noSpawn` tag.
+* Add missing proxy method for `TryGetEntityData`.
+* Add NetForceAckThreshold cvar to forcibly update acks for late clients.
+
+### Internal
+
+* Use CollectionMarshals in PVS and DynamicTree.
+* Make the proxy methods use MetaQuery / TransformQuery.
+
+
+## 161.1.0
+
+### New features
+
+* Add more DebugTools assert variations.
+
+### Bugfixes
+
+* Don't attempt to insert entities into deleted containers.
+* Try to fix oldestAck not being set correctly leading to deletion history getting bloated for pvs.
+
+
+## 161.0.0
+
+### Breaking changes
+
+* Point light animations now need to use different component fields in order to animate the lights. `Enabled` should be replaced with `AnimatedEnable` and `Radius` should be replaced with `AnimatedRadius`
+
+### New features
+
+* EntProtoId is now net-serializable
+* Added print_pvs_ack command to debug PVS issues.
+
+### Bugfixes
+
+* Fixes AngleTypeParser not using InvariantCulture
+* Fixed a bug that was causing `MetaDataComponent.LastComponentRemoved` to be updated improperly.
+
+### Other
+
+* The string representation of client-side entities now looks nicer and simply uses a 'c' prefix.
+
+
+## 160.1.0
+
+### New features
+
+* Add optional MetaDataComponent args to Entitymanager methods.
+
+### Internal
+
+* Move _netComponents onto MetaDataComponent.
+* Remove some component resolves internally on adding / removing components.
+
+
+## 160.0.2
+
+### Other
+
+* Transform component and containers have new convenience fields to make using VIewVariables easier.
+
+
+## 160.0.0
+
+### Breaking changes
+
+* ComponentReference has now been entirely removed.
+* Sensor / non-hard physics bodies are now included in EntityLookup by default.
+
+
+## 159.1.0
+
+
+## 159.0.3
+
+### Bugfixes
+
+* Fix potentially deleted entities having states re-applied when NetEntities come in.
+
+
+## 159.0.2
+
+### Bugfixes
+
+* Fix PointLight state handling not queueing ComponentTree updates.
+
+
+## 159.0.1
+
+### Bugfixes
+
+* Fix pending entity states not being removed when coming in (only on entity deletion).
+
+### Internal
+
+* Remove PhysicsComponent ref from Fixture.
+
+
 ## 159.0.0
 
 ### Breaking changes

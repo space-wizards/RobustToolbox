@@ -83,11 +83,11 @@ namespace Robust.Shared.GameObjects
 
         public void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null);
 
-        public void Dirty(Component component, MetaDataComponent? metadata = null);
+        public void Dirty(IComponent component, MetaDataComponent? metadata = null);
 
-        public void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null);
+        public void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null);
 
-        public void QueueDeleteEntity(EntityUid uid);
+        public void QueueDeleteEntity(EntityUid? uid);
 
         public bool IsQueuedForDeletion(EntityUid uid);
 
@@ -127,7 +127,24 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns a string representation of an entity with various information regarding it.
         /// </summary>
-        EntityStringRepresentation ToPrettyString(EntityUid uid);
+        EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata = null);
+
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        EntityStringRepresentation ToPrettyString(NetEntity netEntity);
+
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        [return: NotNullIfNotNull("uid")]
+        EntityStringRepresentation? ToPrettyString(EntityUid? uid, MetaDataComponent? metadata = null);
+
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        [return: NotNullIfNotNull("netEntity")]
+        EntityStringRepresentation? ToPrettyString(NetEntity? netEntity);
 
         #endregion Entity Management
 

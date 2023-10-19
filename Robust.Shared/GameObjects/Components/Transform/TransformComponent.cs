@@ -25,6 +25,10 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
+        // Currently this field just exists for VV. In future, it might become a real field
+        [ViewVariables]
+        private NetEntity NetParent => _entMan.GetNetEntity(_parent);
+
         [DataField("parent")] internal EntityUid _parent;
         [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
         [DataField("rot")] internal Angle _localRotation; // local rotation
@@ -81,8 +85,9 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public Angle PrevRotation { get; internal set; }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        internal bool ActivelyLerping { get; set; }
+        [ViewVariables] public bool ActivelyLerping;
+
+        [ViewVariables] public GameTick LastLerp = GameTick.Zero;
 
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
@@ -393,7 +398,8 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] public int ChildCount => _children.Count;
 
-        [ViewVariables] internal EntityUid LerpParent { get; set; }
+        [ViewVariables] public EntityUid LerpParent;
+        public bool PredictedLerp;
 
         /// <summary>
         /// Detaches this entity from its parent.

@@ -140,6 +140,8 @@ public abstract partial class SharedJointSystem : EntitySystem
         jointComponentA ??= EnsureComp<JointComponent>(aUid);
         jointComponentB ??= EnsureComp<JointComponent>(bUid);
         DebugTools.Assert(jointComponentA.Owner == aUid && jointComponentB.Owner == bUid);
+        DebugTools.AssertNotEqual(jointComponentA.Relay, bUid);
+        DebugTools.AssertNotEqual(jointComponentB.Relay, aUid);
 
         var jointsA = jointComponentA.Joints;
         var jointsB = jointComponentB.Joints;
@@ -190,10 +192,10 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         _physics.WakeBody(aUid, body: bodyA);
         _physics.WakeBody(bUid, body: bodyB);
-        Dirty(bodyA);
-        Dirty(bodyB);
-        Dirty(jointComponentA);
-        Dirty(jointComponentB);
+        Dirty(aUid, bodyA);
+        Dirty(bUid, bodyB);
+        Dirty(aUid, jointComponentA);
+        Dirty(bUid, jointComponentB);
 
         // Also flag these for checking juusssttt in case.
         _dirtyJoints.Add(jointComponentA);

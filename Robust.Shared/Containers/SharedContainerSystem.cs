@@ -8,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
@@ -16,6 +17,7 @@ namespace Robust.Shared.Containers
 {
     public abstract partial class SharedContainerSystem
     {
+        [Dependency] private readonly INetManager _net = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
@@ -34,6 +36,7 @@ namespace Robust.Shared.Containers
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartupValidation);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentGetState>(OnContainerGetState);
+            SubscribeLocalEvent<ContainerManagerComponent, ComponentRemove>(OnContainerManagerRemove);
 
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _mapQuery = GetEntityQuery<MapComponent>();
@@ -60,6 +63,16 @@ namespace Robust.Shared.Containers
             }
 
             args.State = new ContainerManagerComponent.ContainerManagerComponentState(containerSet);
+        }
+
+        private void OnContainerManagerRemove(EntityUid uid, ContainerManagerComponent component, ComponentRemove args)
+        {
+            foreach (var container in component.Containers.Values)
+            {
+                container.Shutdown(EntityManager, _net);
+            }
+
+            component.Containers.Clear();
         }
 
         // TODO: Make ContainerManagerComponent ECS and make these proxy methods the real deal.
@@ -242,7 +255,7 @@ namespace Robust.Shared.Containers
             EntityQuery<T> entityQuery,
             [NotNullWhen(true)] ref T? foundComponent,
             MetaDataComponent? meta = null,
-            TransformComponent? xform = null) where T : Component
+            TransformComponent? xform = null) where T : IComponent
         {
             if (!MetaQuery.Resolve(uid, ref meta))
                 return false;
@@ -270,7 +283,7 @@ namespace Robust.Shared.Containers
             EntityQuery<T> entityQuery,
             List<T> foundComponents,
             MetaDataComponent? meta = null,
-            TransformComponent? xform = null) where T : Component
+            TransformComponent? xform = null) where T : IComponent
         {
             if (!MetaQuery.Resolve(uid, ref meta))
                 return foundComponents.Any();

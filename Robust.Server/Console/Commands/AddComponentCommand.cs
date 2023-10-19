@@ -1,5 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -47,7 +46,7 @@ namespace Robust.Server.Console.Commands
                 shell.WriteLine($"Entity {_entityManager.GetComponent<MetaDataComponent>(uid.Value).EntityName} already has a {componentName} component.");
             }
 
-            var component = (Component) _componentFactory.GetComponent(registration.Type);
+            var component = _componentFactory.GetComponent(registration.Type);
 
 #pragma warning disable CS0618
             component.Owner = uid.Value;

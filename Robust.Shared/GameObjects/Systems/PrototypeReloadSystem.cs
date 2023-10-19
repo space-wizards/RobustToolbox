@@ -77,7 +77,7 @@ internal sealed class PrototypeReloadSystem : EntitySystem
                      .Except(oldPrototypeComponents))
         {
             var data = newPrototype.Components[name];
-            var component = (Component)_componentFactory.GetComponent(name);
+            var component = _componentFactory.GetComponent(name);
             component.Owner = entity;
             EntityManager.AddComponent(entity, component);
         }

@@ -42,9 +42,9 @@ namespace Robust.Client.GameObjects
             base.FlushEntities();
         }
 
-        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName)
+        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, out MetaDataComponent metadata)
         {
-            return base.CreateEntity(prototypeName);
+            return base.CreateEntity(prototypeName, out metadata);
         }
 
         void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)
@@ -65,9 +65,12 @@ namespace Robust.Client.GameObjects
                 base.DirtyEntity(uid, meta);
         }
 
-        public override void QueueDeleteEntity(EntityUid uid)
+        public override void QueueDeleteEntity(EntityUid? uid)
         {
-            if (IsClientSide(uid))
+            if (uid == null)
+                return;
+
+            if (IsClientSide(uid.Value))
             {
                 base.QueueDeleteEntity(uid);
                 return;
@@ -78,23 +81,23 @@ namespace Robust.Client.GameObjects
 
             // Client-side entity deletion is not supported and will cause errors.
             if (_client.RunLevel == ClientRunLevel.Connected || _client.RunLevel == ClientRunLevel.InGame)
-                LogManager.RootSawmill.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
+                LogManager.RootSawmill.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid.Value)}. Trace: {Environment.StackTrace}");
         }
 
         /// <inheritdoc />
-        public override void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+        public override void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
             //  Client only dirties during prediction
             if (_gameTiming.InPrediction)
                 base.Dirty(uid, component, meta);
         }
 
-        public override EntityStringRepresentation ToPrettyString(EntityUid uid)
+        public override EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metaDataComponent = null)
         {
             if (_playerManager.LocalPlayer?.ControlledEntity == uid)
                 return base.ToPrettyString(uid) with { Session = _playerManager.LocalPlayer.Session };
-            else
-                return base.ToPrettyString(uid);
+
+            return base.ToPrettyString(uid);
         }
 
         public override void RaisePredictiveEvent<T>(T msg)

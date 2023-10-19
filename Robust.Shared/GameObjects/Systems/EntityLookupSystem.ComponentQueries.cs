@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Collections;
-using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 
@@ -21,7 +19,7 @@ public sealed partial class EntityLookupSystem
         HashSet<T> intersecting,
         Box2 worldAABB,
         LookupFlags flags,
-        EntityQuery<T> query) where T : Component
+        EntityQuery<T> query) where T : IComponent
     {
         var lookup = _broadQuery.GetComponent(lookupUid);
         var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
@@ -82,7 +80,7 @@ public sealed partial class EntityLookupSystem
         Box2 worldAABB,
         LookupFlags flags,
         EntityQuery<T> query,
-        EntityUid? ignored = null) where T : Component
+        EntityUid? ignored = null) where T : IComponent
     {
         var lookup = _broadQuery.GetComponent(lookupUid);
         var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
@@ -153,7 +151,7 @@ public sealed partial class EntityLookupSystem
         return state.found;
     }
 
-    private void RecursiveAdd<T>(EntityUid uid, ref ValueList<T> toAdd, EntityQuery<T> query) where T : Component
+    private void RecursiveAdd<T>(EntityUid uid, ref ValueList<T> toAdd, EntityQuery<T> query) where T : IComponent
     {
         var childEnumerator = _xformQuery.GetComponent(uid).ChildEnumerator;
 
@@ -168,7 +166,7 @@ public sealed partial class EntityLookupSystem
         }
     }
 
-    private void AddContained<T>(HashSet<T> intersecting, LookupFlags flags, EntityQuery<T> query) where T : Component
+    private void AddContained<T>(HashSet<T> intersecting, LookupFlags flags, EntityQuery<T> query) where T : IComponent
     {
         if ((flags & LookupFlags.Contained) == 0x0) return;
 
@@ -209,7 +207,7 @@ public sealed partial class EntityLookupSystem
     /// <summary>
     /// Should we just iterate every component and check position or do bounds checks.
     /// </summary>
-    private bool UseBoundsQuery<T>(float area) where T : Component
+    private bool UseBoundsQuery<T>(float area) where T : IComponent
     {
         // If the component has a low count we'll just do an estimate if it's faster to iterate every comp directly
         // Might be useful to have some way to expose this to content?
@@ -224,7 +222,7 @@ public sealed partial class EntityLookupSystem
 
     public bool AnyComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, EntityUid? ignored = null, LookupFlags flags = DefaultFlags)
     {
-        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         if (mapId == MapId.Nullspace) return false;
 
         if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
@@ -256,7 +254,7 @@ public sealed partial class EntityLookupSystem
                     (EntityLookupSystem system,
                     Box2 worldAABB,
                     LookupFlags flags,
-                    EntityQuery<Component> query,
+                    EntityQuery<IComponent> query,
                     EntityUid? ignored,
                     bool found) tuple) =>
                 {
@@ -274,13 +272,13 @@ public sealed partial class EntityLookupSystem
         return false;
     }
 
-    public HashSet<Component> GetComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
+    public HashSet<IComponent> GetComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
-        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         if (mapId == MapId.Nullspace)
-            return new HashSet<Component>();
+            return new HashSet<IComponent>();
 
-        var intersecting = new HashSet<Component>();
+        var intersecting = new HashSet<IComponent>();
 
         if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
         {
@@ -311,8 +309,8 @@ public sealed partial class EntityLookupSystem
                     ref (EntityLookupSystem system,
                         Box2 worldAABB,
                         LookupFlags flags,
-                        EntityQuery<Component> query,
-                        HashSet<Component> intersecting) tuple) =>
+                        EntityQuery<IComponent> query,
+                        HashSet<IComponent> intersecting) tuple) =>
                 {
                     tuple.system.AddComponentsIntersecting(uid, tuple.intersecting, tuple.worldAABB, tuple.flags, tuple.query);
                     return true;
@@ -327,7 +325,7 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
-    public HashSet<T> GetComponentsIntersecting<T>(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags) where T : Component
+    public HashSet<T> GetComponentsIntersecting<T>(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return new HashSet<T>();
 
@@ -375,7 +373,7 @@ public sealed partial class EntityLookupSystem
 
     #region EntityCoordinates
 
-    public HashSet<T> GetComponentsInRange<T>(EntityCoordinates coordinates, float range) where T : Component
+    public HashSet<T> GetComponentsInRange<T>(EntityCoordinates coordinates, float range) where T : IComponent
     {
         var mapPos = coordinates.ToMap(EntityManager, _transform);
         return GetComponentsInRange<T>(mapPos, range);
@@ -384,13 +382,13 @@ public sealed partial class EntityLookupSystem
 
     #region MapCoordinates
 
-    public HashSet<Component> GetComponentsInRange(Type type, MapCoordinates coordinates, float range)
+    public HashSet<IComponent> GetComponentsInRange(Type type, MapCoordinates coordinates, float range)
     {
-        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         return GetComponentsInRange(type, coordinates.MapId, coordinates.Position, range);
     }
 
-    public HashSet<T> GetComponentsInRange<T>(MapCoordinates coordinates, float range) where T : Component
+    public HashSet<T> GetComponentsInRange<T>(MapCoordinates coordinates, float range) where T : IComponent
     {
         return GetComponentsInRange<T>(coordinates.MapId, coordinates.Position, range);
     }
@@ -401,7 +399,7 @@ public sealed partial class EntityLookupSystem
 
     public bool AnyComponentsInRange(Type type, MapId mapId, Vector2 worldPos, float range)
     {
-        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         DebugTools.Assert(range > 0, "Range must be a positive float");
 
         if (mapId == MapId.Nullspace) return false;
@@ -413,12 +411,12 @@ public sealed partial class EntityLookupSystem
         return AnyComponentsIntersecting(type, mapId, worldAABB);
     }
 
-    public HashSet<Component> GetComponentsInRange(Type type, MapId mapId, Vector2 worldPos, float range)
+    public HashSet<IComponent> GetComponentsInRange(Type type, MapId mapId, Vector2 worldPos, float range)
     {
-        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         DebugTools.Assert(range > 0, "Range must be a positive float");
 
-        if (mapId == MapId.Nullspace) return new HashSet<Component>();
+        if (mapId == MapId.Nullspace) return new HashSet<IComponent>();
 
         // TODO: Actual circles
         var rangeVec = new Vector2(range, range);
@@ -427,7 +425,7 @@ public sealed partial class EntityLookupSystem
         return GetComponentsIntersecting(type, mapId, worldAABB);
     }
 
-    public HashSet<T> GetComponentsInRange<T>(MapId mapId, Vector2 worldPos, float range) where T : Component
+    public HashSet<T> GetComponentsInRange<T>(MapId mapId, Vector2 worldPos, float range) where T : IComponent
     {
         DebugTools.Assert(range > 0, "Range must be a positive float");
 

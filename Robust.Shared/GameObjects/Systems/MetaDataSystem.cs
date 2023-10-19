@@ -148,12 +148,6 @@ public abstract class MetaDataSystem : EntitySystem
 
         component.Flags &= ~ev.ToRemove;
     }
-
-    public virtual void SetVisibilityMask(EntityUid uid, int value, MetaDataComponent? meta = null)
-    {
-        if (Resolve(uid, ref meta))
-            meta.VisibilityMask = value;
-    }
 }
 
 /// <summary>

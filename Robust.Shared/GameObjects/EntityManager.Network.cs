@@ -16,7 +16,7 @@ public partial class EntityManager
     /// Inverse lookup for net entities.
     /// Regular lookup uses MetadataComponent.
     /// </summary>
-    protected readonly Dictionary<NetEntity, EntityUid> NetEntityLookup = new(EntityCapacity);
+    protected readonly Dictionary<NetEntity, (EntityUid, MetaDataComponent)> NetEntityLookup = new(EntityCapacity);
 
     /// <summary>
     /// Clears an old inverse lookup for a particular entityuid.
@@ -34,7 +34,7 @@ public partial class EntityManager
     internal void SetNetEntity(EntityUid uid, NetEntity netEntity, MetaDataComponent component)
     {
         DebugTools.Assert(!NetEntityLookup.ContainsKey(netEntity));
-        NetEntityLookup[netEntity] = uid;
+        NetEntityLookup[netEntity] = (uid, component);
         component.NetEntity = netEntity;
     }
 
@@ -64,11 +64,26 @@ public partial class EntityManager
     {
         if (NetEntityLookup.TryGetValue(nEntity, out var went))
         {
-            entity = went;
+            entity = went.Item1;
             return true;
         }
 
-        entity = EntityUid.Invalid;
+        entity = null;
+        return false;
+    }
+
+    /// <inheritdoc />
+    public bool TryGetEntityData(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity, [NotNullWhen(true)] out MetaDataComponent? meta)
+    {
+        if (NetEntityLookup.TryGetValue(nEntity, out var went))
+        {
+            entity = went.Item1;
+            meta = went.Item2;
+            return true;
+        }
+
+        entity = null;
+        meta = null;
         return false;
     }
 
@@ -77,7 +92,7 @@ public partial class EntityManager
     {
         if (nEntity == null)
         {
-            entity = EntityUid.Invalid;
+            entity = null;
             return false;
         }
 
@@ -89,7 +104,7 @@ public partial class EntityManager
     {
         if (uid == EntityUid.Invalid)
         {
-            netEntity = NetEntity.Invalid;
+            netEntity = null;
             return false;
         }
 
@@ -110,7 +125,7 @@ public partial class EntityManager
     {
         if (uid == null)
         {
-            netEntity = NetEntity.Invalid;
+            netEntity = null;
             return false;
         }
 
@@ -141,7 +156,15 @@ public partial class EntityManager
         if (nEntity == NetEntity.Invalid)
             return EntityUid.Invalid;
 
-        return NetEntityLookup.GetValueOrDefault(nEntity);
+        if (!NetEntityLookup.TryGetValue(nEntity, out var tuple))
+            return EntityUid.Invalid;
+
+        return tuple.Item1;
+    }
+
+    public (EntityUid, MetaDataComponent) GetEntityData(NetEntity nEntity)
+    {
+        return NetEntityLookup[nEntity];
     }
 
     /// <inheritdoc />

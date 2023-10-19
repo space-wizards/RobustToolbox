@@ -24,6 +24,7 @@ using SharpZstd.Interop;
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Server.Replays;
+using Robust.Shared.Console;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Players;
 
@@ -48,6 +49,7 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IParallelManager _parallelMgr = default!;
+        [Dependency] private readonly IConsoleHost _conHost = default!;
 
         private static readonly Histogram _usageHistogram = Metrics.CreateHistogram("robust_game_state_update_usage",
             "Amount of time spent processing different parts of the game state update", new HistogramConfiguration
@@ -83,6 +85,25 @@ namespace Robust.Server.GameStates
             _parallelMgr.AddAndInvokeParallelCountChanged(ResetParallelism);
 
             _cfg.OnValueChanged(CVars.NetPVSCompressLevel, _ => ResetParallelism(), true);
+
+            // temporary command for debugging PVS bugs.
+            _conHost.RegisterCommand("print_pvs_ack", PrintPvsAckInfo);
+        }
+
+        private void PrintPvsAckInfo(IConsoleShell shell, string argstr, string[] args)
+        {
+            var ack = _pvs.PlayerData.Min(x => x.Value.LastReceivedAck);
+            var players = _pvs.PlayerData
+                .Where(x => x.Value.LastReceivedAck == ack)
+                .Select(x => x.Key)
+                .Select(x => $"{x.Name} ({_entityManager.ToPrettyString(x.AttachedEntity)})");
+
+            shell.WriteLine($@"Current tick: {_gameTiming.CurTick}
+Stored oldest acked tick: {_lastOldestAck}
+Deletion history size: {_pvs.EntityPVSCollection.GetDeletedIndices(GameTick.First)?.Count ?? 0}
+Actual oldest: {ack}
+Oldest acked clients: {string.Join(", ", players)}
+");
         }
 
         private void ResetParallelism()
@@ -147,15 +168,6 @@ namespace Robust.Server.GameStates
         /// <inheritdoc />
         public void SendGameStateUpdate()
         {
-            if (!_networkManager.IsConnected)
-            {
-                // Prevent deletions piling up if we have no clients.
-                _pvs.CullDeletionHistory(GameTick.MaxValue);
-                _mapManager.CullDeletionHistory(GameTick.MaxValue);
-                _pvs.CleanupDirty(Enumerable.Empty<IPlayerSession>());
-                return;
-            }
-
             var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
             // Update entity positions in PVS chunks/collections
@@ -195,14 +207,21 @@ namespace Robust.Server.GameStates
                 _pvs.CleanupDirty(players);
             }
 
-            // keep the deletion history buffers clean
-            if (oldestAck > _lastOldestAck)
+            if (oldestAck == GameTick.MaxValue)
             {
-                using var _ = _usageHistogram.WithLabels("Cull History").NewTimer();
-                _lastOldestAck = oldestAck;
-                _pvs.CullDeletionHistory(oldestAck);
-                _mapManager.CullDeletionHistory(oldestAck);
+                // There were no connected players?
+                // In that case we just clear all deletion history.
+                _pvs.CullDeletionHistory(GameTick.MaxValue);
+                _lastOldestAck = GameTick.Zero;
+                return;
             }
+
+            if (oldestAck == _lastOldestAck)
+                return;
+
+            _lastOldestAck = oldestAck;
+            using var __ = _usageHistogram.WithLabels("Cull History").NewTimer();
+            _pvs.CullDeletionHistory(oldestAck);
         }
 
         private GameTick SendStates(IPlayerSession[] players, PvsData? pvsData)
@@ -210,8 +229,6 @@ namespace Robust.Server.GameStates
             var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
             var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
             var oldestAckValue = GameTick.MaxValue.Value;
-            var tQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var mQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
 
             // Replays process game states in parallel with players
             Parallel.For(-1, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
@@ -225,7 +242,7 @@ namespace Robust.Server.GameStates
                     PvsEventSource.Log.WorkStart(_gameTiming.CurTick.Value, i, guid);
 
                     if (i >= 0)
-                        SendStateUpdate(i, resource, inputSystem, players[i], pvsData, mQuery, tQuery, ref oldestAckValue);
+                        SendStateUpdate(i, resource, inputSystem, players[i], pvsData, ref oldestAckValue);
                     else
                         _replay.Update();
 
@@ -304,8 +321,6 @@ namespace Robust.Server.GameStates
             InputSystem inputSystem,
             IPlayerSession session,
             PvsData? pvsData,
-            EntityQuery<MetaDataComponent> mQuery,
-            EntityQuery<TransformComponent> tQuery,
             ref uint oldestAckValue)
         {
             var channel = session.ConnectedClient;

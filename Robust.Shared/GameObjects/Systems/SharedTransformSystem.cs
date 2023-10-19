@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
 
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
-        private EntityQuery<TransformComponent> _xformQuery;
+        protected EntityQuery<TransformComponent> XformQuery;
 
         private readonly Queue<MoveEvent> _gridMoves = new();
         private readonly Queue<MoveEvent> _otherMoves = new();
@@ -39,7 +39,7 @@ namespace Robust.Shared.GameObjects
 
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
-            _xformQuery = GetEntityQuery<TransformComponent>();
+            XformQuery = GetEntityQuery<TransformComponent>();
 
             SubscribeLocalEvent<TileChangedEvent>(MapManagerOnTileChanged);
             SubscribeLocalEvent<TransformComponent, ComponentInit>(OnCompInit);
@@ -85,17 +85,17 @@ namespace Robust.Shared.GameObjects
             if (!TryComp(gridId, out BroadphaseComponent? lookup) || !_mapManager.TryGetGrid(gridId, out var grid))
                 return;
 
-            if (!_xformQuery.TryGetComponent(gridId, out var gridXform))
+            if (!XformQuery.TryGetComponent(gridId, out var gridXform))
                 return;
 
-            if (!_xformQuery.TryGetComponent(gridXform.MapUid, out var mapTransform))
+            if (!XformQuery.TryGetComponent(gridXform.MapUid, out var mapTransform))
                 return;
 
             var aabb = _lookup.GetLocalBounds(tileIndices, grid.TileSize);
 
             foreach (var entity in _lookup.GetEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
             {
-                if (!_xformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
+                if (!XformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
                     continue;
 
                 if (!aabb.Contains(xform.LocalPosition))
@@ -148,7 +148,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityCoordinates GetMoverCoordinates(EntityUid uid)
         {
-            return GetMoverCoordinates(uid, _xformQuery.GetComponent(uid));
+            return GetMoverCoordinates(uid, XformQuery.GetComponent(uid));
         }
 
         public EntityCoordinates GetMoverCoordinates(EntityUid uid, TransformComponent xform)
@@ -168,11 +168,11 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
 
             // Not parented to grid so convert their pos back to the grid.
-            var worldPos = GetWorldPosition(xform, _xformQuery);
+            var worldPos = GetWorldPosition(xform, XformQuery);
 
             return xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, worldPos)
-                : new EntityCoordinates(xform.GridUid.Value, _xformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
+                : new EntityCoordinates(xform.GridUid.Value, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
         }
 
         public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
@@ -191,7 +191,7 @@ namespace Robust.Shared.GameObjects
             if (!parentUid.IsValid())
                 return coordinates;
 
-            var parentXform = _xformQuery.GetComponent(parentUid);
+            var parentXform = XformQuery.GetComponent(parentUid);
 
             // GriddUid is only set after init.
             if (!parentXform._gridInitialized)
@@ -209,11 +209,11 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(!_mapManager.IsGrid(parentUid) && !_mapManager.IsMap(parentUid));
 
             // Not parented to grid so convert their pos back to the grid.
-            var worldPos = GetWorldMatrix(parentXform, _xformQuery).Transform(coordinates.Position);
+            var worldPos = GetWorldMatrix(parentXform, XformQuery).Transform(coordinates.Position);
 
             return parentXform.GridUid == null
                 ? new EntityCoordinates(mapId ?? parentUid, worldPos)
-                : new EntityCoordinates(parentXform.GridUid.Value, _xformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
+                : new EntityCoordinates(parentXform.GridUid.Value, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
         }
 
         /// <summary>
@@ -231,15 +231,15 @@ namespace Robust.Shared.GameObjects
 
             // Is the entity directly parented to the grid?
             if (xform.GridUid == xform.ParentUid)
-                return (xform.Coordinates, GetWorldRotation(xform, _xformQuery));
+                return (xform.Coordinates, GetWorldRotation(xform, XformQuery));
 
             DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
 
-            var (pos, worldRot) = GetWorldPositionRotation(xform, _xformQuery);
+            var (pos, worldRot) = GetWorldPositionRotation(xform, XformQuery);
 
             var coords = xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, pos)
-                : new EntityCoordinates(xform.GridUid.Value, _xformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(pos));
+                : new EntityCoordinates(xform.GridUid.Value, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(pos));
 
             return (coords, worldRot);
         }

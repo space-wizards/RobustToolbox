@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -26,6 +25,9 @@ namespace Robust.Shared.Prototypes
         private ILocalizationManager _loc = default!;
 
         private static readonly Dictionary<string, string> LocPropertiesDefault = new();
+
+        [ValidatePrototypeId<EntityCategoryPrototype>]
+        private const string HideCategory = "hideSpawnMenu";
 
         // LOCALIZATION NOTE:
         // Localization-related properties in here are manually localized in LocalizationManager.
@@ -56,6 +58,10 @@ namespace Robust.Shared.Prototypes
 
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
+
+        [DataField("categories")]
+        [AlwaysPushInheritance]
+        public HashSet<string> Categories = new();
 
         [ViewVariables]
         public IReadOnlyDictionary<string, string> LocProperties => _locPropertiesSet ?? LocPropertiesDefault;
@@ -92,7 +98,10 @@ namespace Robust.Shared.Prototypes
         [ViewVariables]
         [NeverPushInheritance]
         [DataField("noSpawn")]
+        [Obsolete("Use the HideSpawnMenu")]
         public bool NoSpawn { get; private set; }
+
+        public bool HideSpawnMenu => Categories.Contains(HideCategory) || NoSpawn;
 
         [DataField("placement")]
         private EntityPlacementProperties PlacementProperties = new();
@@ -240,7 +249,7 @@ namespace Robust.Shared.Prototypes
 
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                var newComponent = (Component) factory.GetComponent(compName);
+                var newComponent = factory.GetComponent(compName);
                 newComponent.Owner = entity;
                 entityManager.AddComponent(entity, newComponent);
                 component = newComponent;

@@ -28,7 +28,7 @@ public record struct PhysicsHull()
         e.Normalize();
 
         // discard points left of e and find point furthest to the right of e
-        var rightPoints = new Vector2[PhysicsConstants.MaxPolygonVertices];
+        Span<Vector2> rightPoints = stackalloc Vector2[PhysicsConstants.MaxPolygonVertices];
         var rightCount = 0;
 
         var bestIndex = 0;

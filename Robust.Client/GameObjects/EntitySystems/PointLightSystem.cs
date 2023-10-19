@@ -32,6 +32,8 @@ namespace Robust.Client.GameObjects
             component.Energy = state.Energy;
             component.Radius = state.Radius;
             component.Color = state.Color;
+
+            _lightTree.QueueTreeUpdate(uid, component);
         }
 
         public override SharedPointLightComponent EnsureLight(EntityUid uid)
@@ -41,14 +43,12 @@ namespace Robust.Client.GameObjects
 
         public override bool ResolveLight(EntityUid uid, [NotNullWhen(true)] ref SharedPointLightComponent? component)
         {
-            if (TryComp<PointLightComponent>(uid, out var comp))
-            {
-                component = comp;
+            if (component is not null)
                 return true;
-            }
 
-            component = null;
-            return false;
+            TryComp<PointLightComponent>(uid, out var comp);
+            component = comp;
+            return component != null;
         }
 
         public override bool TryGetLight(EntityUid uid, [NotNullWhen(true)] out SharedPointLightComponent? component)

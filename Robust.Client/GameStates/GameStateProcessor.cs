@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -361,9 +362,11 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, implicitCompState) in implicitEntState)
                 {
-                    if (!fullRep.TryGetValue(netId, out var serverState))
+                    ref var serverState = ref CollectionsMarshal.GetValueRefOrAddDefault(fullRep, netId, out var exists);
+
+                    if (!exists)
                     {
-                        fullRep.Add(netId, implicitCompState);
+                        serverState = implicitCompState;
                         continue;
                     }
 
@@ -379,7 +382,7 @@ namespace Robust.Client.GameStates
                     }
 
                     serverDelta.ApplyToFullState(implicitCompState);
-                    fullRep[netId] = implicitCompState;
+                    serverState = implicitCompState;
                     DebugTools.Assert(implicitCompState is IComponentDeltaState d && d.FullState);
                 }
             }
@@ -399,6 +402,18 @@ namespace Robust.Client.GameStates
             [NotNullWhen(true)] out Dictionary<ushort, ComponentState>? dictionary)
         {
             return _lastStateFullRep.TryGetValue(entity, out dictionary);
+        }
+
+        public bool IsQueuedForDetach(NetEntity entity)
+        {
+            // This isn't fast, but its just meant for use in tests & debug asserts.
+            foreach (var msg in _pvsDetachMessages.Values)
+            {
+                if (msg.Contains(entity))
+                    return true;
+            }
+
+            return false;
         }
 
         public int CalculateBufferSize(GameTick fromTick)

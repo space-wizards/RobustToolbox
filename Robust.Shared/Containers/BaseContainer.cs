@@ -209,7 +209,7 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(transform.LocalRotation == Angle.Zero);
             DebugTools.Assert(!physicsQuery.TryGetComponent(toinsert, out var phys) || (!phys.Awake && !phys.CanCollide));
 
-            entMan.Dirty(Manager);
+            entMan.Dirty(Owner, Manager);
             return true;
         }
 
@@ -355,7 +355,7 @@ namespace Robust.Shared.Containers
 
             DebugTools.Assert(destination == null || xform.Coordinates.Equals(destination.Value));
 
-            entMan.Dirty(Manager);
+            entMan.Dirty(Owner, Manager);
             return true;
         }
 

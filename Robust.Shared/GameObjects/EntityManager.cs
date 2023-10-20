@@ -398,7 +398,7 @@ namespace Robust.Shared.GameObjects
             Dirty(new Entity<IComponent>(uid, component), meta);
         }
 
-        public virtual void Dirty(Entity<IComponent> ent, MetaDataComponent? meta = null)
+        public virtual void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
         {
             if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
                 return;

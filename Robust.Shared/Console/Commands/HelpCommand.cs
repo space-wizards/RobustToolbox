@@ -13,6 +13,7 @@ internal sealed class HelpCommand : LocalizedCommands
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
+        // Not a toolshed command since it doesn't support optional arguments
         ExecuteStatic(shell, argStr, args);
     }
 

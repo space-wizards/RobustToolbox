@@ -57,6 +57,11 @@ namespace Robust.Shared.Console
 
         void WriteLine(FormattedMessage message);
 
+        void WriteMarkup(string markup)
+        {
+            WriteLine(FormattedMessage.FromMarkup(markup));
+        }
+
         /// <summary>
         /// Write an error line to the console window.
         /// </summary>

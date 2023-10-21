@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -164,7 +163,8 @@ namespace Robust.Server.Console
             var message = new MsgConCmdReg();
 
             var counter = 0;
-            message.Commands = new MsgConCmdReg.Command[AvailableCommands.Count];
+            var toolshedCommands = _toolshed.DefaultEnvironment.AllCommands().ToArray();
+            message.Commands = new MsgConCmdReg.Command[AvailableCommands.Count + toolshedCommands.Length];
 
             foreach (var command in AvailableCommands.Values)
             {
@@ -173,6 +173,18 @@ namespace Robust.Server.Console
                     Name = command.Command,
                     Description = command.Description,
                     Help = command.Help
+                };
+            }
+
+            foreach (var spec in toolshedCommands)
+            {
+                // TODO toolshed subcommands
+                // Help already includes description for toolshed
+                message.Commands[counter++] = new MsgConCmdReg.Command
+                {
+                    Name = spec.FullName(),
+                    Description = spec.Cmd.Description(spec.SubCommand),
+                    Help = spec.Cmd.GetHelp(spec.SubCommand)
                 };
             }
 

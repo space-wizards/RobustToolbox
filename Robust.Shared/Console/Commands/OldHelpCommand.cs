@@ -6,6 +6,7 @@ public sealed class OldHelpCommand : LocalizedCommands
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
+        // For the people that got used to oldhelp
         HelpCommand.ExecuteStatic(shell, argStr, args);
     }
 

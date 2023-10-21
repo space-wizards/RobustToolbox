@@ -178,8 +178,6 @@ namespace Robust.Server.Console
 
             foreach (var spec in toolshedCommands)
             {
-                // TODO toolshed subcommands
-                // Help already includes description for toolshed
                 message.Commands[counter++] = new MsgConCmdReg.Command
                 {
                     Name = spec.FullName(),

@@ -32,6 +32,9 @@ namespace Robust.Shared.Console
 
         private readonly CommandBuffer _commandBuffer = new CommandBuffer();
 
+        // TODO add Initialize() method.
+        protected ISawmill Sawmill => LogManager.GetSawmill(SawmillName);
+
         /// <inheritdoc />
         public bool IsServer { get; }
 

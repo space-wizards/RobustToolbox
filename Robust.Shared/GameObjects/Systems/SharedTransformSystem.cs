@@ -8,6 +8,7 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Robust.Shared.Containers;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
@@ -23,6 +24,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly SharedMapSystem _map = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly INetManager _netMan = default!;
+        [Dependency] private readonly SharedContainerSystem _container = default!;
 
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;

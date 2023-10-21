@@ -149,7 +149,7 @@ internal sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
         }
 
         DebugTools.Assert(_object is not Component || ReferenceEquals(ParentComponent.Component, _object));
-        _entMan.Dirty(ParentComponent.Component);
+        _entMan.Dirty(ParentComponent.Owner, ParentComponent.Component);
     }
 
     public override object? Invoke(object?[]? parameters) => null;

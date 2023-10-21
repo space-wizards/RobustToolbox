@@ -501,12 +501,6 @@ namespace Robust.Shared.Containers
             }
         }
 
-        [Obsolete("Use AttachParentToContainerOrGrid(EntityUid<TransformComponent>) instead")]
-        public void AttachParentToContainerOrGrid(TransformComponent transform)
-        {
-            AttachParentToContainerOrGrid(new Entity<TransformComponent>(transform.Owner, transform));
-        }
-
         public void AttachParentToContainerOrGrid(Entity<TransformComponent> transform)
         {
             // TODO make this check upwards for any container, and parent to that.

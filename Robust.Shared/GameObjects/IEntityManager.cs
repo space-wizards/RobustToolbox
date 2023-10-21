@@ -83,11 +83,12 @@ namespace Robust.Shared.GameObjects
 
         public void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null);
 
+        [Obsolete("use override with an EntityUid")]
         public void Dirty(IComponent component, MetaDataComponent? metadata = null);
 
         public void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null);
 
-        public void Dirty(Entity<IComponent> ent, MetaDataComponent? meta = null);
+        public void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent;
 
         public void QueueDeleteEntity(EntityUid? uid);
 

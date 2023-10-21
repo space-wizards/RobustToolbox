@@ -208,7 +208,7 @@ public partial class EntitySystem
     [Obsolete("Use Dirty(EntityUid, Component, MetaDataComponent?")]
     protected void Dirty(IComponent component, MetaDataComponent? meta = null)
     {
-        EntityManager.Dirty(component, meta);
+        EntityManager.Dirty(component.Owner, component, meta);
     }
 
     /// <summary>

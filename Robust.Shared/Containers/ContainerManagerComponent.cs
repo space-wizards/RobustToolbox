@@ -45,7 +45,7 @@ namespace Robust.Shared.Containers
             var container = _dynFactory.CreateInstanceUnchecked<T>(typeof(T), inject: false);
             container.Init(id, uid, this);
             Containers[id] = container;
-            _entMan.Dirty(this);
+            _entMan.Dirty(uid, this);
             return container;
         }
 

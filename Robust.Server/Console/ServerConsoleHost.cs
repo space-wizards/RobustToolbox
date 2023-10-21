@@ -164,26 +164,39 @@ namespace Robust.Server.Console
 
             var counter = 0;
             var toolshedCommands = _toolshed.DefaultEnvironment.AllCommands().ToArray();
-            message.Commands = new MsgConCmdReg.Command[AvailableCommands.Count + toolshedCommands.Length];
+            message.Commands = new List<MsgConCmdReg.Command>(AvailableCommands.Count + toolshedCommands.Length);
+            var commands = new HashSet<string>();
 
             foreach (var command in AvailableCommands.Values)
             {
-                message.Commands[counter++] = new MsgConCmdReg.Command
+                if (!commands.Add(command.Command))
+                {
+                    Sawmill.Error($"Duplicate command: {command.Command}");
+                    continue;
+                }
+                message.Commands.Add(new MsgConCmdReg.Command
                 {
                     Name = command.Command,
                     Description = command.Description,
                     Help = command.Help
-                };
+                });
             }
 
             foreach (var spec in toolshedCommands)
             {
-                message.Commands[counter++] = new MsgConCmdReg.Command
+                var name = spec.FullName();
+                if (!commands.Add(name))
                 {
-                    Name = spec.FullName(),
+                    Sawmill.Warning($"Duplicate toolshed command: {name}");
+                    continue;
+                }
+
+                message.Commands.Add(new MsgConCmdReg.Command
+                {
+                    Name = name,
                     Description = spec.Cmd.Description(spec.SubCommand),
                     Help = spec.Cmd.GetHelp(spec.SubCommand)
-                };
+                });
             }
 
             NetManager.ServerSendMessage(message, senderConnection);

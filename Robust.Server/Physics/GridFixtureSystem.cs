@@ -257,7 +257,7 @@ namespace Robust.Server.Physics
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
                     var group = grids[i];
-                    var newGrid = _mapManager.CreateGrid(mapId);
+                    var newGrid = _mapManager.CreateGridEntity(mapId);
                     var newGridUid = newGrid.Owner;
                     var newGridXform = xformQuery.GetComponent(newGridUid);
                     newGrids[i] = newGridUid;
@@ -284,7 +284,7 @@ namespace Robust.Server.Physics
                         }
                     }
 
-                    newGrid.SetTiles(tileData);
+                    newGrid.Comp.SetTiles(tileData);
                     DebugTools.Assert(_mapManager.IsGrid(newGridUid), "A split grid had no tiles?");
 
                     // Set tiles on new grid + update anchored entities

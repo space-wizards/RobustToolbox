@@ -66,14 +66,14 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         {
             var mapId = mapMan.CreateMap();
             mapMan.GetMapEntityId(mapId);
-            var gridComp = mapMan.CreateGrid(mapId);
-            gridComp.SetTile(Vector2i.Zero, new Tile(1));
+            var gridComp = mapMan.CreateGridEntity(mapId);
+            gridComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
             grid1 = gridComp.Owner;
             xformSys.SetLocalPosition(grid1, new Vector2(-2,0));
             grid1Net = sEntMan.GetNetEntity(grid1);
 
-            gridComp = mapMan.CreateGrid(mapId);
-            gridComp.SetTile(Vector2i.Zero, new Tile(1));
+            gridComp = mapMan.CreateGridEntity(mapId);
+            gridComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
             grid2 = gridComp.Owner;
             xformSys.SetLocalPosition(grid2, new Vector2(2,0));
             grid2Net = sEntMan.GetNetEntity(grid2);

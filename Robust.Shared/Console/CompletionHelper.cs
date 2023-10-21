@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -173,7 +171,7 @@ public static class CompletionHelper
         }
     }
 
-    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null) where T : Component
+    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null) where T : IComponent
     {
         IoCManager.Resolve(ref entManager);
 

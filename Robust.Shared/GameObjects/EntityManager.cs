@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects
 {
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
-    public delegate void ComponentQueryCallback<T>(EntityUid uid, T component) where T : Component;
+    public delegate void ComponentQueryCallback<T>(EntityUid uid, T component) where T : IComponent;
 
     /// <inheritdoc />
     [Virtual]
@@ -387,19 +387,28 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [Obsolete("use override with an EntityUid")]
-        public void Dirty(Component component, MetaDataComponent? meta = null)
+        public void Dirty(IComponent component, MetaDataComponent? meta = null)
         {
             Dirty(component.Owner, component, meta);
         }
 
         /// <inheritdoc />
-        public virtual void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+        public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
+            Dirty(new Entity<IComponent>(uid, component), meta);
+        }
+
+        /// <inheritdoc />
+        public virtual void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
+        {
+            if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
                 return;
 
-            DirtyEntity(uid, meta);
-            component.LastModifiedTick = CurrentTick;
+            DebugTools.AssertOwner(ent, ent.Comp);
+            DirtyEntity(ent, meta);
+#pragma warning disable CS0618 // Type or member is obsolete
+            ent.Comp.LastModifiedTick = CurrentTick;
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
@@ -524,7 +533,7 @@ namespace Robust.Shared.GameObjects
                 {
                     try
                     {
-                        component.LifeShutdown(this);
+                        LifeShutdown(component);
                     }
                     catch (Exception e)
                     {
@@ -658,7 +667,9 @@ namespace Robust.Shared.GameObjects
 
             // allocate the required TransformComponent
             var xformComp = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
+#pragma warning disable CS0618 // Type or member is obsolete
             xformComp.Owner = uid;
+#pragma warning restore CS0618 // Type or member is obsolete
             AddComponentInternal(uid, xformComp, false, true, metadata);
 
             return uid;

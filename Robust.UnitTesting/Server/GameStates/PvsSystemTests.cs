@@ -55,8 +55,8 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         {
             var mapId = mapMan.CreateMap();
             map = mapMan.GetMapEntityId(mapId);
-            var gridComp = mapMan.CreateGrid(mapId);
-            gridComp.SetTile(Vector2i.Zero, new Tile(1));
+            var gridComp = mapMan.CreateGridEntity(mapId);
+            gridComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
             grid = gridComp.Owner;
         });
 

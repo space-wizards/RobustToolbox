@@ -54,6 +54,83 @@ END TEMPLATE-->
 *None yet*
 
 
+## 170.0.0
+
+### Breaking changes
+
+* Removed obsolete methods and properties in VisibilitySystem, SharedContainerSystem and MetaDataComponent.
+
+### Bugfixes
+
+* Fixed duplicate command error.
+* Fixed not being able to delete individual entities with the delete command.
+
+### Other
+
+* FileLogHandler logs can now be deleted while the engine is running.
+
+
+## 169.0.1
+
+### Other
+
+* The client now knows about registered server-side toolshed commands.
+
+## 169.0.0
+
+### Breaking changes
+
+* Entity<T> has been introduced to hold a component and its owning entity. Some methods that returned and accepted components directly have been removed or obsoleted to reflect this.
+
+### Other
+
+* By-value events may now be subscribed to by-ref.
+* The manifest's assemblyPrefix value is now respected on the server.
+
+
+## 168.0.0
+
+### Breaking changes
+
+* The Component.OnRemove method has been removed. Use SubscribeLocalEvent<TComp, ComponentRemove>(OnRemove) from an EntitySystem instead.
+
+
+## 167.0.0
+
+### Breaking changes
+
+* Remove ComponentExtensions.
+* Remove ContainerHelpers.
+* Change some TransformSystem methods to fix clientside lerping.
+
+### Bugfixes
+
+* Fixed PVS bugs from dropped entity states.
+
+### Other
+
+* Add more joint debug asserts.
+
+
+## 166.0.0
+
+### Breaking changes
+
+* EntityUid-NetEntity conversion methods now return null when given a null value, rather than returning an invalid id.
+* ExpandPvsEvent now defaults to using null lists to reduce allocations.
+* Various component lifestage related methods have been moved from the `Component` class to `EntityManager`.
+* Session/client specific PVS overrides are now always recursive, which means that all children of the overriden entity will also get sent.
+
+### New features
+
+* Added a SortedSet yaml serializer.
+
+### Other
+
+* AddComponentUninitialized is now marked as obsolete and will be removed in the future.
+* DebugTools.AssertOwner() now accepts null components.
+
+
 ## 165.0.0
 
 ### Breaking changes
@@ -62,7 +139,7 @@ END TEMPLATE-->
 
 ### New features
 
-* The YAML validator now checks the default values of ProtoId<T> and EntProtoId data fields. 
+* The YAML validator now checks the default values of ProtoId<T> and EntProtoId data fields.
 
 ### Bugfixes
 

@@ -18,7 +18,6 @@ public static class Diagnostics
     public const string IdInvalidNotNullableFlagType = "RA0011";
     public const string IdNotNullableFlagValueType = "RA0012";
     public const string IdByRefEventSubscribedByValue = "RA0013";
-    public const string IdValueEventSubscribedByRef = "RA0014";
     public const string IdByRefEventRaisedByValue = "RA0015";
     public const string IdValueEventRaisedByRef = "RA0016";
     public const string IdDataDefinitionPartial = "RA0017";

@@ -17,15 +17,15 @@ cmd-error-dir-not-found = Could not find directory: {$dir}.
 cmd-failure-no-attached-entity = There is no entity attached to this shell.
 
 ## 'help' command
-cmd-oldhelp-desc = Display general help or help text for a specific command
-cmd-oldhelp-help = Usage: help [command name]
+cmd-help-desc = Display general help or help text for a specific command
+cmd-help-help = Usage: help [command name]
     When no command name is provided, displays general-purpose help text. If a command name is provided, displays help text for that command.
 
-cmd-oldhelp-no-args = To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'. To search for commands, use 'list <filter>'.
-cmd-oldhelp-unknown = Unknown command: { $command }
-cmd-oldhelp-top = { $command } - { $description }
-cmd-oldhelp-invalid-args = Invalid amount of arguments.
-cmd-oldhelp-arg-cmdname = [command name]
+cmd-help-no-args = To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'. To search for commands, use 'list <filter>'.
+cmd-help-unknown = Unknown command: { $command }
+cmd-help-top = { $command } - { $description }
+cmd-help-invalid-args = Invalid amount of arguments.
+cmd-help-arg-cmdname = [command name]
 
 ## 'cvar' command
 cmd-cvar-desc = Gets or sets a CVar.

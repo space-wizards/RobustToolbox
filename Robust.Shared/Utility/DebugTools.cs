@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -98,7 +97,9 @@ namespace Robust.Shared.Utility
 
             // Whenever .owner is removed this will need to be replaced by something.
             // As long as components are just reference types, we could just get the component and check if the references are equal?
+#pragma warning disable CS0618 // Type or member is obsolete
             if (component.Owner != uid)
+#pragma warning restore CS0618 // Type or member is obsolete
                 throw new DebugAssertException($"Entity {uid} is not the owner of the component. Component: {component.GetType().Name}");
         }
 

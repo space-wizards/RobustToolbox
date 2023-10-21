@@ -148,7 +148,7 @@ internal sealed class ListMapsCommand : LocalizedCommands
                 mapId, _map.IsMapInitialized(mapId),
                 _map.IsMapPaused(mapId),
                 _map.GetMapEntityId(mapId),
-                string.Join(",", _map.GetAllMapGrids(mapId).Select(grid => grid.Owner)));
+                string.Join(",", _map.GetAllGrids(mapId).Select(grid => grid.Owner)));
         }
 
         shell.WriteLine(msg.ToString());

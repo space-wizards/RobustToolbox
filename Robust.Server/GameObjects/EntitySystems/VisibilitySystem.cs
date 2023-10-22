@@ -1,13 +1,14 @@
-using System;
 using Robust.Server.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
     public sealed class VisibilitySystem : EntitySystem
     {
         [Dependency] private readonly PvsSystem _pvs = default!;
+        [Dependency] private readonly IViewVariablesManager _vvManager = default!;
 
         private EntityQuery<TransformComponent> _xformQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
@@ -21,6 +22,15 @@ namespace Robust.Server.GameObjects
             _visiblityQuery = GetEntityQuery<VisibilityComponent>();
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             EntityManager.EntityInitialized += OnEntityInit;
+
+            _vvManager.GetTypeHandler<VisibilityComponent>()
+                .AddPath(nameof(VisibilityComponent.Layer), (_, comp) => comp.Layer, (uid, value, comp) =>
+                {
+                    if (!Resolve(uid, ref comp))
+                        return;
+
+                    SetLayer(uid, comp, value);
+                });
         }
 
         public override void Shutdown()
@@ -40,12 +50,6 @@ namespace Robust.Server.GameObjects
                 RefreshVisibility(uid, visibilityComponent: component);
         }
 
-        [Obsolete("Use overload that takes an EntityUid instead")]
-        public void AddLayer(VisibilityComponent component, int layer, bool refresh = true)
-        {
-            AddLayer(component.Owner, component, layer, refresh);
-        }
-
         public void RemoveLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
         {
             if ((layer & component.Layer) != layer)
@@ -57,12 +61,6 @@ namespace Robust.Server.GameObjects
                 RefreshVisibility(uid, visibilityComponent: component);
         }
 
-        [Obsolete("Use overload that takes an EntityUid instead")]
-        public void RemoveLayer(VisibilityComponent component, int layer, bool refresh = true)
-        {
-            RemoveLayer(component.Owner, component, layer, refresh);
-        }
-
         public void SetLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
         {
             if (component.Layer == layer)
@@ -72,12 +70,6 @@ namespace Robust.Server.GameObjects
 
             if (refresh)
                 RefreshVisibility(uid, visibilityComponent: component);
-        }
-
-        [Obsolete("Use overload that takes an EntityUid instead")]
-        public void SetLayer(VisibilityComponent component, int layer, bool refresh = true)
-        {
-            SetLayer(component.Owner, component, layer, refresh);
         }
 
         private void OnParentChange(ref EntParentChangedMessage ev)
@@ -125,12 +117,6 @@ namespace Robust.Server.GameObjects
 
                 RecursivelyApplyVisibility(child, childMask, childMeta);
             }
-        }
-
-        [Obsolete("Use overload that takes an EntityUid instead")]
-        public void RefreshVisibility(VisibilityComponent visibilityComponent)
-        {
-            RefreshVisibility(visibilityComponent.Owner, visibilityComponent);
         }
 
         private int GetParentVisibilityMask(EntityUid uid, VisibilityComponent? visibilityComponent = null)

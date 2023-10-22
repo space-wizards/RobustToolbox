@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -111,14 +110,6 @@ namespace Robust.Shared.GameObjects
                     return _entityPrototype != null ? _entityPrototype.Name : string.Empty;
                 return _entityName;
             }
-            [Obsolete("Use MetaDataSystem.SetEntityName")]
-            set
-            {
-                if (value == EntityName)
-                    return;
-
-                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetEntityName(Owner, value, this);
-            }
         }
 
         /// <summary>
@@ -132,14 +123,6 @@ namespace Robust.Shared.GameObjects
                 if (_entityDescription == null)
                     return _entityPrototype != null ? _entityPrototype.Description : string.Empty;
                 return _entityDescription;
-            }
-            [Obsolete("Use MetaDataSystem.SetEntityDescription")]
-            set
-            {
-                if (value == EntityDescription)
-                    return;
-
-                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetEntityDescription(Owner, value, this);
             }
         }
 

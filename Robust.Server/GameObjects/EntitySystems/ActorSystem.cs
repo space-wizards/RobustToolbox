@@ -50,19 +50,20 @@ namespace Robust.Server.GameObjects
             forceKicked = null;
 
             if (player.AttachedEntity == entity)
+            {
+                DebugTools.Assert(entity == null || HasComp<ActorComponent>(entity));
                 return true;
+            }
 
             if (entity is not { } uid)
                 return Detach(player);
 
             // Cannot attach to a deleted, nonexisting or terminating entity.
-            if (!TryComp(uid, out MetaDataComponent? meta) || meta.EntityLifeStage > EntityLifeStage.MapInitialized)
-            {
+            if (TerminatingOrDeleted(uid))
                 return false;
-            }
 
             // Check if there was a player attached to the entity already...
-            if (EntityManager.TryGetComponent(uid, out ActorComponent? actor))
+            if (TryComp(uid, out ActorComponent? actor))
             {
                 // If we're not forcing the attach, this fails.
                 if (!force)
@@ -70,7 +71,8 @@ namespace Robust.Server.GameObjects
 
                 // Set the event's force-kicked session before detaching it.
                 forceKicked = actor.PlayerSession;
-                Detach(uid, actor);
+                RemComp(uid, actor);
+                DebugTools.AssertNull(forceKicked.AttachedEntity);
             }
 
             // Detach from the currently attached entity.
@@ -80,12 +82,12 @@ namespace Robust.Server.GameObjects
             // We add the actor component.
             actor = EntityManager.AddComponent<ActorComponent>(uid);
             EntityManager.EnsureComponent<EyeComponent>(uid);
-            actor.PlayerSession = (ICommonSession) player;
+            actor.PlayerSession = player;
             _playerManager.SetAttachedEntity(player, uid);
+            DebugTools.Assert(player.AttachedEntity == entity);
 
             // The player is fully attached now, raise an event!
-            RaiseLocalEvent(uid, new PlayerAttachedEvent(uid, (ICommonSession) player, forceKicked), true);
-            DebugTools.Assert(player.AttachedEntity == entity);
+            RaiseLocalEvent(uid, new PlayerAttachedEvent(uid, player, forceKicked), true);
             return true;
         }
 
@@ -109,10 +111,22 @@ namespace Robust.Server.GameObjects
         /// <param name="player">The player session that will be detached from any attached entities.</param>
         /// <returns>Whether the player is now detached from any entities.
         /// This returns true if the player wasn't attached to any entity.</returns>
-        public bool Detach(ICommonSession player)
+        public bool Detach(ICommonSession player, ActorComponent? actor = null)
         {
             var uid = player.AttachedEntity;
-            return uid == null || Detach(uid.Value);
+            if (uid == null)
+                return true;
+
+            if (!Resolve(uid.Value, ref actor, false))
+            {
+                Log.Error($"Player {player} was attached to a deleted entity?");
+                ((CommonSession) player).AttachedEntity = null;
+                return true;
+            }
+
+            RemComp(uid.Value, actor);
+            DebugTools.AssertNull(player.AttachedEntity);
+            return false;
         }
 
         private void OnActorShutdown(EntityUid entity, ActorComponent component, ComponentShutdown args)

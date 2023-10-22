@@ -338,10 +338,12 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             var mapId = eye.Position.MapId;
+            if (mapId == MapId.Nullspace)
+                return;
 
             // If this map has lighting disabled, return
             var mapUid = _mapManager.GetMapEntityId(mapId);
-            if (!_entityManager.GetComponent<MapComponent>(mapUid).LightingEnabled)
+            if (!_entityManager.TryGetComponent<MapComponent>(mapUid, out var map) || !map.LightingEnabled)
             {
                 return;
             }

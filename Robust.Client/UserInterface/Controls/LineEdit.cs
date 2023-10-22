@@ -98,6 +98,11 @@ namespace Robust.Client.UserInterface.Controls
                 OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
         }
 
+        public void ForceSubmitText()
+        {
+            OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+        }
+
         /// <summary>
         ///     The text
         /// </summary>
@@ -607,7 +612,7 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (Editable)
                     {
-                        OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+                        ForceSubmitText();
                     }
 
                     args.Handle();

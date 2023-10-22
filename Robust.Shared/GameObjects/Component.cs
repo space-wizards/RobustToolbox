@@ -1,17 +1,13 @@
 using System;
-using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
-using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    /// <inheritdoc />
+    /// <inheritdoc cref="IComponent"/>
     [Reflect(false)]
     [ImplicitDataDefinitionForInheritors]
     public abstract partial class Component : IComponent
@@ -20,7 +16,8 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         private bool _netSync { get; set; } = true;
 
-        internal bool Networked = true;
+        [Obsolete("Do not use from content")]
+        public bool Networked { get; set; } = true;
 
         /// <inheritdoc />
         public bool NetSyncEnabled
@@ -36,107 +33,11 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public ComponentLifeStage LifeStage { get; private set; } = ComponentLifeStage.PreAdd;
+        public ComponentLifeStage LifeStage { get; [Obsolete("Do not use from content")] set; } = ComponentLifeStage.PreAdd;
 
-        /// <summary>
-        ///     If true, and if this is a networked component, then component data will only be sent to players if their
-        ///     controlled entity is the owner of this component. This is less performance intensive than <see cref="SessionSpecific"/>.
-        /// </summary>
         public virtual bool SendOnlyToOwner => false;
 
-        /// <summary>
-        ///     If true, and if this is a networked component, then this component will cause <see
-        ///     cref="ComponentGetStateAttemptEvent"/> events to be raised to check whether a given player should
-        ///     receive this component's state.
-        /// </summary>
         public virtual bool SessionSpecific => false;
-
-        /// <summary>
-        /// Increases the life stage from <see cref="ComponentLifeStage.PreAdd" /> to <see cref="ComponentLifeStage.Added" />,
-        /// after raising a <see cref="ComponentAdd"/> event.
-        /// </summary>
-        internal void LifeAddToEntity(IEntityManager entManager, CompIdx type)
-        {
-            DebugTools.Assert(LifeStage == ComponentLifeStage.PreAdd);
-
-            LifeStage = ComponentLifeStage.Adding;
-            CreationTick = entManager.CurrentTick;
-            // networked components are assumed to be dirty when added to entities. See also: ClearTicks()
-            LastModifiedTick = entManager.CurrentTick;
-            entManager.EventBus.RaiseComponentEvent(this, type, CompAddInstance);
-            LifeStage = ComponentLifeStage.Added;
-        }
-
-        /// <summary>
-        /// Increases the life stage from <see cref="ComponentLifeStage.Added" /> to <see cref="ComponentLifeStage.Initialized" />,
-        /// calling <see cref="Initialize" />.
-        /// </summary>
-        internal void LifeInitialize(IEntityManager entManager, CompIdx type)
-        {
-            DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
-
-            LifeStage = ComponentLifeStage.Initializing;
-            entManager.EventBus.RaiseComponentEvent(this, type, CompInitInstance);
-            LifeStage = ComponentLifeStage.Initialized;
-        }
-
-        /// <summary>
-        /// Increases the life stage from <see cref="ComponentLifeStage.Initialized" /> to
-        /// <see cref="ComponentLifeStage.Running" />, calling <see cref="Startup" />.
-        /// </summary>
-        internal void LifeStartup(IEntityManager entManager)
-        {
-            DebugTools.Assert(LifeStage == ComponentLifeStage.Initialized);
-
-            LifeStage = ComponentLifeStage.Starting;
-            entManager.EventBus.RaiseComponentEvent(this, CompStartupInstance);
-            LifeStage = ComponentLifeStage.Running;
-        }
-
-        /// <summary>
-        /// Increases the life stage from <see cref="ComponentLifeStage.Running" /> to <see cref="ComponentLifeStage.Stopped" />,
-        /// calling <see cref="Shutdown" />.
-        /// </summary>
-        /// <remarks>
-        /// Components are allowed to remove themselves in their own Startup function.
-        /// </remarks>
-        internal void LifeShutdown(IEntityManager entManager)
-        {
-            DebugTools.Assert(LifeStage is >= ComponentLifeStage.Initializing and < ComponentLifeStage.Stopping);
-
-            if (LifeStage <= ComponentLifeStage.Initialized)
-            {
-                // Component was never started, no shutdown logic necessary. Simply mark it as stopped.
-                LifeStage = ComponentLifeStage.Stopped;
-                return;
-            }
-
-            LifeStage = ComponentLifeStage.Stopping;
-            entManager.EventBus.RaiseComponentEvent(this, CompShutdownInstance);
-            LifeStage = ComponentLifeStage.Stopped;
-        }
-
-        /// <summary>
-        /// Increases the life stage from <see cref="ComponentLifeStage.Stopped" /> to <see cref="ComponentLifeStage.Deleted" />,
-        /// calling <see cref="OnRemove" />.
-        /// </summary>
-        internal void LifeRemoveFromEntity(IEntityManager entManager)
-        {
-            // can be called at any time after PreAdd, including inside other life stage events.
-            DebugTools.Assert(LifeStage != ComponentLifeStage.PreAdd);
-
-            LifeStage = ComponentLifeStage.Removing;
-            entManager.EventBus.RaiseComponentEvent(this, CompRemoveInstance);
-
-            OnRemove();
-
-#if DEBUG
-            if (LifeStage != ComponentLifeStage.Deleted)
-            {
-                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(OnRemove)} in derived method.");
-            }
-#endif
-        }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -152,45 +53,31 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public GameTick CreationTick { get; private set; }
+        public GameTick CreationTick { get; [Obsolete("Do not use from content")] set; }
 
         /// <inheritdoc />
         [ViewVariables]
-        public GameTick LastModifiedTick { get; internal set; }
-
-        private static readonly ComponentAdd CompAddInstance = new();
-        private static readonly ComponentInit CompInitInstance = new();
-        private static readonly ComponentStartup CompStartupInstance = new();
-        private static readonly ComponentShutdown CompShutdownInstance = new();
-        private static readonly ComponentRemove CompRemoveInstance = new();
-
-        /// <summary>
-        /// Called when the component is removed from an entity.
-        /// Shuts down the component.
-        /// The component has already been marked as deleted in the component manager.
-        /// </summary>
-        protected virtual void OnRemove()
-        {
-            LifeStage = ComponentLifeStage.Deleted;
-        }
+        public GameTick LastModifiedTick { get; [Obsolete("Do not use from content")] set; }
 
         /// <inheritdoc />
         [Obsolete]
         public void Dirty(IEntityManager? entManager = null)
         {
             IoCManager.Resolve(ref entManager);
-            entManager.Dirty(this);
+            entManager.Dirty(Owner, this);
         }
 
         // these two methods clear the LastModifiedTick/CreationTick to mark it as "not different from prototype load".
         // This is used as optimization in the game state system to avoid sending redundant component data.
-        internal virtual void ClearTicks()
+        [Obsolete("Do not use from content")]
+        public virtual void ClearTicks()
         {
             LastModifiedTick = GameTick.Zero;
             ClearCreationTick();
         }
 
-        internal void ClearCreationTick()
+        [Obsolete("Do not use from content")]
+        public void ClearCreationTick()
         {
             CreationTick = GameTick.Zero;
         }

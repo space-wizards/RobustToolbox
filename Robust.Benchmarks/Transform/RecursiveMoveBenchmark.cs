@@ -54,7 +54,7 @@ public class RecursiveMoveBenchmark
         var mapSys = _entMan.System<SharedMapSystem>();
         var mapId = mapMan.CreateMap();
         var map = mapMan.GetMapEntityId(mapId);
-        var gridComp = mapMan.CreateGrid(mapId);
+        var gridComp = mapMan.CreateGridEntity(mapId);
         var grid = gridComp.Owner;
         _gridCoords = new EntityCoordinates(grid, .5f, .5f);
         _mapCoords = new EntityCoordinates(map, 100, 100);

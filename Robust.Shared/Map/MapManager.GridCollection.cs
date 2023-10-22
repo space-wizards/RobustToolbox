@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 // All the obsolete warnings about GridId are probably useless here.
@@ -47,6 +44,12 @@ internal partial class MapManager
         return CreateGrid(currentMapId, GridCreateOptions.Default);
     }
 
+    public Entity<MapGridComponent> CreateGridEntity(MapId currentMapId, GridCreateOptions? options = null)
+    {
+        options ??= GridCreateOptions.Default;
+        return CreateGrid(currentMapId, options.Value.ChunkSize, default);
+    }
+
     [Obsolete("Use GetComponent<MapGridComponent>(uid)")]
     public MapGridComponent GetGrid(EntityUid gridId)
     {
@@ -61,6 +64,7 @@ internal partial class MapManager
         return EntityManager.HasComponent<MapGridComponent>(uid);
     }
 
+    [Obsolete("Use TryGetComponent(uid, out MapGridComponent? grid)")]
     public bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [MaybeNullWhen(false)] out MapGridComponent grid)
     {
         if (EntityManager.TryGetComponent(euid, out MapGridComponent? comp))
@@ -81,11 +85,24 @@ internal partial class MapManager
 
     public IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
     {
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var query = EntityManager.AllEntityQueryEnumerator<MapGridComponent, TransformComponent>();
+        while (query.MoveNext(out var grid, out var xform))
+        {
+            if (xform.MapID != mapId)
+                yield return grid;
+        }
+    }
 
-        return EntityManager.EntityQuery<MapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(c.Owner).MapID == mapId)
-            .Select(c => c);
+    public IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId)
+    {
+        var query = EntityManager.AllEntityQueryEnumerator<MapGridComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var grid, out var xform))
+        {
+            if (xform.MapID != mapId)
+                continue;
+
+            yield return (uid, grid);
+        }
     }
 
     public virtual void DeleteGrid(EntityUid euid)
@@ -135,7 +152,7 @@ internal partial class MapManager
         EntityManager.EventBus.RaiseLocalEvent(euid, ref ev, true);
     }
 
-    protected MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize, EntityUid forcedGridEuid)
+    protected Entity<MapGridComponent> CreateGrid(MapId currentMapId, ushort chunkSize, EntityUid forcedGridEuid)
     {
         var gridEnt = EntityManager.CreateEntityUninitialized(null, forcedGridEuid);
 
@@ -151,8 +168,10 @@ internal partial class MapManager
         var fallbackParentEuid = GetMapEntityIdOrThrow(currentMapId);
         EntityManager.GetComponent<TransformComponent>(gridEnt).AttachParent(fallbackParentEuid);
 
-        EntityManager.InitializeComponents(gridEnt);
+        var meta = EntityManager.GetComponent<MetaDataComponent>(gridEnt);
+        EntityManager.System<MetaDataSystem>().SetEntityName(gridEnt, $"grid", meta);
+        EntityManager.InitializeComponents(gridEnt, meta);
         EntityManager.StartComponents(gridEnt);
-        return grid;
+        return (gridEnt, grid);
     }
 }

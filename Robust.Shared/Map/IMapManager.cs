@@ -87,10 +87,20 @@ namespace Robust.Shared.Map
         MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize = 16);
         MapGridComponent CreateGrid(MapId currentMapId, in GridCreateOptions options);
         MapGridComponent CreateGrid(MapId currentMapId);
+        Entity<MapGridComponent> CreateGridEntity(MapId currentMapId, GridCreateOptions? options = null);
+
+        [Obsolete("Use GetComponent<MapGridComponent>(uid)")]
         MapGridComponent GetGrid(EntityUid gridId);
+
+        [Obsolete("Use TryGetComponent(uid, out MapGridComponent? grid)")]
         bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [NotNullWhen(true)] out MapGridComponent? grid);
+
+        [Obsolete("Use HasComponent<MapGridComponent>(uid)")]
         bool GridExists([NotNullWhen(true)] EntityUid? euid);
+
         IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId);
+
+        IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId);
 
         /// <summary>
         /// Attempts to find the map grid under the map location.
@@ -131,10 +141,13 @@ namespace Robust.Shared.Map
 
         void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false, bool includeMap = true);
 
+        void FindGridsIntersecting(MapId mapId, Box2 worldAABB, ref List<Entity<MapGridComponent>> state, bool approx = false, bool includeMap = true);
+
         void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false, bool includeMap = true);
 
         void FindGridsIntersecting<TState>(MapId mapId, Box2Rotated worldBounds, ref TState state, GridCallback<TState> callback, bool approx = false, bool includeMap = true);
 
+        void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> state, bool approx = false, bool includeMap = true);
 
         /// <summary>
         /// Returns the grids intersecting this AABB.

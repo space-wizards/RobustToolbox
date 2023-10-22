@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using static Microsoft.CodeAnalysis.SymbolDisplayFormat;
 
 namespace Robust.Shared.CompNetworkGenerator
 {
@@ -14,20 +15,31 @@ namespace Robust.Shared.CompNetworkGenerator
     {
         private const string ClassAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
         private const string MemberAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
+
         private const string GlobalEntityUidName = "global::Robust.Shared.GameObjects.EntityUid";
         private const string GlobalNullableEntityUidName = "global::Robust.Shared.GameObjects.EntityUid?";
-        private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
-        private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
+
+        private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
+        private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
+
+        private const string GlobalEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.EntityUid>";
+        private const string GlobalNetEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.NetEntity>";
+
+        private const string GlobalEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.EntityUid>";
+        private const string GlobalNetEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.NetEntity>";
+
+        private const string GlobalDictionaryName = "global::System.Collections.Generic.Dictionary<TKey, TValue>";
+        private const string GlobalHashSetName = "global::System.Collections.Generic.HashSet<T>";
+        private const string GlobalListName = "global::System.Collections.Generic.List<T>";
 
         private static string GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
         {
-            // Debugger.Launch();
             var nameSpace = classSymbol.ContainingNamespace.ToDisplayString();
             var componentName = classSymbol.Name;
             var stateName = $"{componentName}_AutoState";
 
             var members = classSymbol.GetMembers();
-            var fields = new List<(ITypeSymbol Type, string FieldName, AttributeData Attribute)>();
+            var fields = new List<(ITypeSymbol Type, string FieldName)>();
             var fieldAttr = comp.GetTypeByMetadataName(MemberAttributeName);
 
             foreach (var mem in members)
@@ -44,7 +56,7 @@ namespace Robust.Shared.CompNetworkGenerator
                 switch (mem)
                 {
                     case IFieldSymbol field:
-                        fields.Add((field.Type, field.Name, attribute));
+                        fields.Add((field.Type, field.Name));
                         break;
                     case IPropertySymbol prop:
                     {
@@ -80,7 +92,7 @@ namespace Robust.Shared.CompNetworkGenerator
                             continue;
                         }
 
-                        fields.Add((prop.Type, prop.Name, attribute));
+                        fields.Add((prop.Type, prop.Name));
                         break;
                     }
                 }
@@ -118,9 +130,9 @@ namespace Robust.Shared.CompNetworkGenerator
             //            component.Count = state.Count;
             var handleStateSetters = new StringBuilder();
 
-            foreach (var (type, name, attribute) in fields)
+            foreach (var (type, name) in fields)
             {
-                var typeDisplayStr = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var typeDisplayStr = type.ToDisplayString(FullyQualifiedFormat);
                 var nullable = type.NullableAnnotation == NullableAnnotation.Annotated;
                 var nullableAnnotation = nullable ? "?" : string.Empty;
 
@@ -148,11 +160,31 @@ namespace Robust.Shared.CompNetworkGenerator
             component.{name} = EnsureCoordinates<{componentName}>(state.{name}, uid);");
 
                         break;
+                    case GlobalEntityUidSetName:
+                        stateFields.Append($@"
+        public {GlobalNetEntityUidSetName} {name} = default!;");
+
+                        getStateInit.Append($@"
+                {name} = GetNetEntitySet(component.{name}),");
+                        handleStateSetters.Append($@"
+            component.{name} = EnsureEntitySet<{componentName}>(state.{name}, uid);");
+
+                        break;
+                    case GlobalEntityUidListName:
+                        stateFields.Append($@"
+        public {GlobalNetEntityUidListName} {name} = default!;");
+
+                        getStateInit.Append($@"
+                {name} = GetNetEntityList(component.{name}),");
+                        handleStateSetters.Append($@"
+            component.{name} = EnsureEntityList<{componentName}>(state.{name}, uid);");
+
+                        break;
                     default:
                         stateFields.Append($@"
         public {typeDisplayStr} {name} = default!;");
 
-                        if (attribute.ConstructorArguments[0].Value is bool val && val)
+                        if (IsCloneType(type))
                         {
                             // get first ctor arg of the field attribute, which determines whether the field should be cloned
                             // (like if its a dict or list)
@@ -160,7 +192,9 @@ namespace Robust.Shared.CompNetworkGenerator
                 {name} = component.{name},");
 
                             handleStateSetters.Append($@"
-            if (state.{name} != null)
+            if (state.{name} == null)
+                component.{name} = null;
+            else
                 component.{name} = new(state.{name});");
                         }
                         else
@@ -329,6 +363,21 @@ public partial class {componentName}
                 //Debugger.Launch();
             }
             context.RegisterForSyntaxNotifications(() => new NameReferenceSyntaxReceiver());
+        }
+
+        private static bool IsCloneType(ITypeSymbol type)
+        {
+            if (type is not INamedTypeSymbol named || !named.IsGenericType)
+            {
+                return false;
+            }
+
+            var constructed = named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat);
+            return constructed switch
+            {
+                GlobalDictionaryName or GlobalHashSetName or GlobalListName => true,
+                _ => false
+            };
         }
     }
 }

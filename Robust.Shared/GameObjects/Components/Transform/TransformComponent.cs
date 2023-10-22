@@ -1,18 +1,16 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
-using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects
 {
@@ -85,8 +83,9 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public Angle PrevRotation { get; internal set; }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        internal bool ActivelyLerping { get; set; }
+        [ViewVariables] public bool ActivelyLerping;
+
+        [ViewVariables] public GameTick LastLerp = GameTick.Zero;
 
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
@@ -129,7 +128,7 @@ namespace Robust.Shared.GameObjects
                     LocalRotation = Angle.Zero;
 
                 _noLocalRotation = value;
-                _entMan.Dirty(this);
+                _entMan.Dirty(Owner, this);
             }
         }
 
@@ -151,7 +150,7 @@ namespace Robust.Shared.GameObjects
 
                 var oldRotation = _localRotation;
                 _localRotation = value;
-                _entMan.Dirty(this);
+                _entMan.Dirty(Owner, this);
                 MatricesDirty = true;
 
                 if (!Initialized)
@@ -334,7 +333,7 @@ namespace Robust.Shared.GameObjects
 
                 var oldGridPos = Coordinates;
                 _localPosition = value;
-                _entMan.Dirty(this);
+                _entMan.Dirty(Owner, this);
                 MatricesDirty = true;
 
                 if (!Initialized)
@@ -397,7 +396,8 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] public int ChildCount => _children.Count;
 
-        [ViewVariables] internal EntityUid LerpParent { get; set; }
+        [ViewVariables] public EntityUid LerpParent;
+        public bool PredictedLerp;
 
         /// <summary>
         /// Detaches this entity from its parent.

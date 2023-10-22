@@ -1,11 +1,9 @@
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.UnitTesting.Server;
-using System.Management;
-using System.Numerics;
 using Robust.Shared.Map.Components;
+using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Map
 {
@@ -49,11 +47,11 @@ namespace Robust.UnitTesting.Shared.Map
 
             var mapID = new MapId(11);
             mapMan.CreateMap(mapID);
-            var grid = mapMan.CreateGrid(mapID);
+            var grid = mapMan.CreateGridEntity(mapID);
 
             mapMan.Restart();
 
-            Assert.That(mapMan.GridExists(grid.Owner), Is.False);
+            Assert.That(mapMan.GridExists(grid), Is.False);
         }
 
         /// <summary>

@@ -132,6 +132,11 @@ namespace Robust.Shared.Configuration
                 return long.Parse(input);
             }
 
+            if (type == typeof(ushort))
+            {
+                return ushort.Parse(input);
+            }
+
             throw new NotSupportedException();
         }
     }

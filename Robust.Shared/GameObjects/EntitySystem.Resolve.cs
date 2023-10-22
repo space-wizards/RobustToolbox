@@ -19,7 +19,7 @@ namespace Robust.Shared.GameObjects
         protected bool Resolve<TComp>(EntityUid uid, [NotNullWhen(true)] ref TComp? component, bool logMissing = true)
             where TComp : IComponent
         {
-            DebugTools.Assert(component == null || uid == component.Owner, "Specified Entity is not the component's Owner!");
+            DebugTools.AssertOwner(uid, component);
 
             if (component != null && !component.Deleted)
                 return true;
@@ -27,7 +27,7 @@ namespace Robust.Shared.GameObjects
             var found = EntityManager.TryGetComponent(uid, out component);
 
             if(logMissing && !found)
-                Log.Error($"Can't resolve \"{typeof(TComp)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+                Log.Error($"Can't resolve \"{typeof(TComp)}\" on entity {ToPrettyString(uid)}!\n{new StackTrace(1, true)}");
 
             return found;
         }

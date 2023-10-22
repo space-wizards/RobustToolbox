@@ -31,14 +31,15 @@ internal sealed class PrototypeReloadSystem : EntitySystem
         if (!eventArgs.ByType.TryGetValue(typeof(EntityPrototype), out var set))
             return;
 
-        foreach (var metadata in EntityQuery<MetaDataComponent>())
+        var query = EntityQueryEnumerator<MetaDataComponent>();
+        while (query.MoveNext(out var uid, out var metadata))
         {
             var id = metadata.EntityPrototype?.ID;
             if (id == null || !set.Modified.ContainsKey(id))
                 continue;
 
             var proto = _prototypes.Index<EntityPrototype>(id);
-            UpdateEntity(metadata.Owner, metadata, proto);
+            UpdateEntity(uid, metadata, proto);
         }
     }
 
@@ -77,8 +78,7 @@ internal sealed class PrototypeReloadSystem : EntitySystem
                      .Except(oldPrototypeComponents))
         {
             var data = newPrototype.Components[name];
-            var component = (Component)_componentFactory.GetComponent(name);
-            component.Owner = entity;
+            var component = _componentFactory.GetComponent(name);
             EntityManager.AddComponent(entity, component);
         }
 

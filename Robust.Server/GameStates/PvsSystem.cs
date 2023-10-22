@@ -1129,8 +1129,8 @@ internal sealed partial class PvsSystem : EntitySystem
             var query = EntityManager.AllEntityQueryEnumerator<MetaDataComponent>();
             while (query.MoveNext(out var uid, out var md))
             {
-                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating);
+                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");
+                DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating, $"Entity {ToPrettyString(uid)} is/has been terminated");
                 if (md.EntityLastModifiedTick <= fromTick)
                     continue;
 
@@ -1165,10 +1165,10 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                     if (!toSend.Add(uid) || !_metaQuery.TryGetComponent(uid, out var md))
                         continue;
 
-                    DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");
+                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating, $"Entity {ToPrettyString(uid)} is/has been terminated");
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick, $"Entity {ToPrettyString(uid)} last modified tick is less than creation tick");
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick, $"Entity {ToPrettyString(uid)} last modified tick is less than from tick");
 
                     var state = GetEntityState(player, uid, fromTick, md);
 
@@ -1192,10 +1192,10 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                     if (!toSend.Add(uid) || !_metaQuery.TryGetComponent(uid, out var md))
                         continue;
 
-                    DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");
+                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating, $"Entity {ToPrettyString(uid)} is/has been terminated");
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick, $"Entity {ToPrettyString(uid)} last modified tick is less than creation tick");
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick, $"Entity {ToPrettyString(uid)} last modified tick is less than from tick");
 
                     var state = GetEntityState(player, uid, fromTick, md);
                     if (!state.Empty)

@@ -657,6 +657,7 @@ namespace Robust.Shared.GameObjects
 #pragma warning disable CS0618
                 Owner = uid,
 #pragma warning restore CS0618
+                EntityLastModifiedTick = _gameTiming.CurTick
             };
 
             SetNetEntity(uid, netEntity, metadata);

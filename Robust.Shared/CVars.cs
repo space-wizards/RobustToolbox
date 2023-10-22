@@ -173,6 +173,13 @@ namespace Robust.Shared
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// Maximum allowed delay between the current tick and a client's last acknowledged tick before we send the
+        /// next game state reliably and simply force update the acked tick,
+        /// </summary>
+        public static readonly CVarDef<int> NetForceAckThreshold =
+            CVarDef.Create("net.force_ack_threshold", 60, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
         /// This limits the number of new entities that can be sent to a client in a single game state. This exists to
         /// avoid stuttering on the client when it has to spawn a bunch of entities in a single tick. If ever entity
         /// spawning isn't hot garbage, this can be increased.

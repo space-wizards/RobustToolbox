@@ -96,7 +96,7 @@ namespace Robust.Client.GameStates
         ///     This includes only applicable states. If there is a gap, future buffers are not included.
         /// </summary>
         /// <param name="fromTick">The tick to calculate from.</param>
-        int CalculateBufferSize(GameTick fromTick);
+        int GetApplicableStateCount(GameTick? fromTick);
 
         bool TryGetLastServerStates(NetEntity entity,
             [NotNullWhen(true)] out Dictionary<ushort, ComponentState>? dictionary);

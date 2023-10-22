@@ -1369,26 +1369,65 @@ public abstract partial class SharedTransformSystem
     }
 
     /// <summary>
-    /// Attempts to place one entity next to another entity. If the target entity is in a container, this will attempt
-    /// to insert that entity into the same container.
+    /// Attempts to drop an entity onto the map or grid next to another entity. If the target entity is in a container,
+    /// this will attempt to insert that entity into the same container. Otherwise it will attach the entity to the
+    /// grid or map at the same world-position as the target entity.
     /// </summary>
-    public void PlaceNextToOrDrop(EntityUid uid, EntityUid target,
-        TransformComponent? xform = null, TransformComponent? targetXform = null)
+    public void DropNextTo(Entity<TransformComponent?> entity, Entity<TransformComponent?> target)
     {
-        if (!XformQuery.Resolve(target, ref targetXform))
+        var xform = entity.Comp;
+        if (!XformQuery.Resolve(entity, ref xform))
             return;
 
-        if (!XformQuery.Resolve(uid, ref xform))
-            return;
-
-        var meta = _metaQuery.GetComponent(target);
-
-        if ((meta.Flags & MetaDataFlags.InContainer) == 0)
+        var targetXform = target.Comp;
+        if (!XformQuery.Resolve(target, ref targetXform) || !targetXform.ParentUid.IsValid())
         {
-            if (targetXform.ParentUid.IsValid())
-                SetCoordinates(uid, xform, targetXform.Coordinates);
-            else
-                DetachParentToNull(uid, xform);
+            DetachParentToNull(entity, xform);
+            return;
+        }
+
+        var coords = targetXform.Coordinates;
+
+        // recursively check for containers.
+        var targetUid = target.Owner;
+        while (targetXform.ParentUid.IsValid())
+        {
+            if (_container.IsEntityInContainer(targetUid)
+                && _container.TryGetContainingContainer(targetXform.ParentUid, targetUid, out var container,
+                    skipExistCheck: true)
+                && container.Insert(entity, EntityManager, xform))
+            {
+                return;
+            }
+
+            targetUid = targetXform.ParentUid;
+            targetXform = XformQuery.GetComponent(targetUid);
+        }
+
+        SetCoordinates(entity, xform, coords);
+        AttachToGridOrMap(entity, xform);
+    }
+
+    /// <summary>
+    /// Attempts to place one entity next to another entity. If the target entity is in a container, this will attempt
+    /// to insert that entity into the same container. Otherwise it will attach the entity to the same parent.
+    /// </summary>
+    public void PlaceNextTo(Entity<TransformComponent?> entity, Entity<TransformComponent?> target)
+    {
+        var xform = entity.Comp;
+        if (!XformQuery.Resolve(entity, ref xform))
+            return;
+
+        var targetXform = target.Comp;
+        if (!XformQuery.Resolve(target, ref targetXform) || !targetXform.ParentUid.IsValid())
+        {
+            DetachParentToNull(entity, xform);
+            return;
+        }
+
+        if (!_container.IsEntityInContainer(target))
+        {
+            SetCoordinates(entity, xform, targetXform.Coordinates);
             return;
         }
 
@@ -1398,8 +1437,8 @@ public abstract partial class SharedTransformSystem
             if (!container.Contains(target))
                 continue;
 
-            if (!container.Insert(uid, EntityManager, xform))
-                PlaceNextToOrDrop(uid, targetXform.ParentUid, xform);
+            if (!container.Insert(entity, EntityManager, xform))
+                PlaceNextTo((entity, xform), targetXform.ParentUid);
         }
     }
 }

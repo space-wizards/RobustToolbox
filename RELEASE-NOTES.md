@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 171.0.0
+
+### Breaking changes
+
+* Change PlaceNextTo method names to be more descriptive.
+* Rename RefreshRelay for joints to SetRelay to match its behaviour.
+
+### Bugfixes
+
+* Fix PVS error spam for joint relays not being cleaned up.
+
+### Other
+
+* Set EntityLastModifiedTick on entity spawn.
+
+
 ## 170.0.0
 
 ### Breaking changes

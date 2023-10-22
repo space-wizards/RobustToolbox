@@ -75,7 +75,8 @@ public sealed class SpawnNextToOrDropTest : EntitySpawnHelpersTest
             Assert.That(Container.GetContainer(GrandChildB, "greatGrandChildB").Contains(uid));
         });
 
-        // AS grandChildB is not in a container, the next insert will drop the entity next to childB
+        // AS grandChildB is not in a container, but its parent still is, the next insert will insert the entity into
+        // the same container as childB
         await Server.WaitPost(() =>
         {
             var uid = EntMan.SpawnNextToOrDrop(null, GreatGrandChildB);

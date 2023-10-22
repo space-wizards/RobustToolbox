@@ -76,8 +76,7 @@ namespace Robust.Server.GameObjects
             }
 
             // Detach from the currently attached entity.
-            if (!Detach(player))
-                return false;
+            Detach(player);
 
             // We add the actor component.
             actor = EntityManager.AddComponent<ActorComponent>(uid);

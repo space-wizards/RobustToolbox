@@ -162,7 +162,7 @@ public partial class EntityManager
             return Spawn(protoName);
 
         var uid = Spawn(protoName, overrides);
-        _xforms.PlaceNextToOrDrop(uid, target);
+        _xforms.DropNextTo(uid, target);
         return uid;
     }
 
@@ -183,7 +183,7 @@ public partial class EntityManager
 
             xform ??= TransformQuery.GetComponent(containerUid);
             if (xform.ParentUid.IsValid())
-                _xforms.PlaceNextToOrDrop(uid, containerUid, targetXform: xform);
+                _xforms.DropNextTo(uid, (containerUid, xform));
         }
 
         return uid;

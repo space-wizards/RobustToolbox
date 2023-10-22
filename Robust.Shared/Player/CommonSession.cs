@@ -35,7 +35,7 @@ internal sealed class CommonSession : ICommonSession
     public SessionData Data { get; }
 
     [ViewVariables]
-    public INetChannel? Channel { get; set; }
+    public INetChannel Channel { get; set; } = default!;
 
     [ViewVariables]
     public HashSet<EntityUid> ViewSubscriptions { get; } = new();

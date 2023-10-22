@@ -323,7 +323,7 @@ Oldest acked clients: {string.Join(", ", players)}
             PvsData? pvsData,
             ref uint oldestAckValue)
         {
-            var channel = session.ConnectedClient;
+            var channel = session.Channel;
             var sessionData = _pvs.PlayerData[session];
             var lastAck = sessionData.LastReceivedAck;
             List<NetEntity>? leftPvs = null;

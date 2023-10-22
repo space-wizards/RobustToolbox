@@ -87,7 +87,7 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
             player = sEntMan.GetNetEntity(playerUid);
 
             // Attach player.
-            var session = (IPlayerSession) sPlayerMan.Sessions.First();
+            var session = sPlayerMan.Sessions.First();
             sEntMan.System<ActorSystem>().Attach(playerUid, session);
             session.JoinGame();
         });

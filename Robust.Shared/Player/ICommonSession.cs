@@ -45,7 +45,7 @@ public interface ICommonSession
     /// On the Server every player has a network channel,
     /// on the Client only the LocalPlayer has a network channel, and that channel points to the server.
     /// </remarks>
-    INetChannel? Channel { get; }
+    INetChannel Channel { get; }
 
     LoginType AuthType { get; }
 
@@ -69,6 +69,6 @@ public interface ICommonSession
     [Obsolete("Use IPlayerManager")]
     void JoinGame() => IoCManager.Resolve<ISharedPlayerManager>().SetStatus(this, SessionStatus.InGame);
 
-    [Obsolete("use the Channel field instead.")]
-    INetChannel ConnectedClient => Channel!;
+    [Obsolete("Just use the Channel field instead.")]
+    INetChannel ConnectedClient => Channel;
 }

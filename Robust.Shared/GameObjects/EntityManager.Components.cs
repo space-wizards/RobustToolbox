@@ -364,8 +364,10 @@ namespace Robust.Shared.GameObjects
         public void RemoveComponents(EntityUid uid, MetaDataComponent? meta = null)
         {
             var objComps = _world.GetAllComponents(uid);
-            foreach (Component comp in objComps)
+            // Reverse order
+            for (var i = objComps.Length - 1; i >= 0; i--)
             {
+                var comp = (IComponent) objComps[i];
                 RemoveComponentImmediate(comp, uid, false, false, meta);
             }
         }
@@ -375,9 +377,10 @@ namespace Robust.Shared.GameObjects
         {
             var objComps = _world.GetAllComponents(uid);
 
-            foreach (var obj in objComps)
+            // Reverse order
+            for (var i = objComps.Length - 1; i >= 0; i--)
             {
-                var comp = (IComponent) obj;
+                var comp = (IComponent) objComps[i];
 
                 try
                 {

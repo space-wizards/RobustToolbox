@@ -80,7 +80,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">The component reference type to remove.</typeparam>
         /// <param name="uid">Entity UID to modify.</param>
-        bool RemoveComponent<T>(EntityUid uid, MetaDataComponent? meta = null) where T : IComponent;
+        bool RemoveComponent<T>(EntityUid uid, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     Removes the component with a specified type.
@@ -111,7 +111,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">The component reference type to remove.</typeparam>
         /// <param name="uid">Entity UID to modify.</param>
-        bool RemoveComponentDeferred<T>(EntityUid uid) where T : IComponent;
+        bool RemoveComponentDeferred<T>(EntityUid uid);
 
         /// <summary>
         ///     Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
@@ -275,8 +275,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component)
-            where T : IComponent;
+        bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component);
 
         /// <summary>
         ///     Returns the component of a specific type.

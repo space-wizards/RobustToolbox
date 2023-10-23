@@ -287,7 +287,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool RemoveComponent<T>(EntityUid uid, MetaDataComponent? meta = null) where T : IComponent
+        public bool RemoveComponent<T>(EntityUid uid, MetaDataComponent? meta = null)
         {
             return RemoveComponent(uid, typeof(T), meta);
         }
@@ -326,7 +326,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool RemoveComponentDeferred<T>(EntityUid uid) where T : IComponent
+        public bool RemoveComponentDeferred<T>(EntityUid uid)
         {
             return RemoveComponentDeferred(uid, typeof(T));
         }
@@ -715,7 +715,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component) where T : IComponent
+        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component)
         {
             if (!uid.HasValue)
             {
@@ -727,7 +727,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!comp.Deleted)
                 {
-                    component = (T) comp;
+                    component = (T)comp;
                     return true;
                 }
             }
@@ -860,7 +860,7 @@ namespace Robust.Shared.GameObjects
         {
             var comps = _world.GetAllComponents(uid);
 
-            foreach (IComponent comp in comps)
+            foreach (Component comp in comps)
             {
                 if (comp.Deleted || comp is not T tComp) continue;
 

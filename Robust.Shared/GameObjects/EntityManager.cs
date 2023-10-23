@@ -451,9 +451,9 @@ namespace Robust.Shared.GameObjects
             }
 
             // Notify all entities they are being terminated prior to detaching & deleting
-            var xform = TransformQuery.GetComponent(e);
-            RecursiveFlagEntityTermination(e, meta, xform);
+            RecursiveFlagEntityTermination(e, meta);
 
+            var xform = TransformQuery.GetComponent(e);
             TransformComponent? parentXform = null;
             if (xform.ParentUid.IsValid())
                 TransformQuery.Resolve(xform.ParentUid, ref parentXform);
@@ -464,9 +464,9 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveFlagEntityTermination(
             EntityUid uid,
-            MetaDataComponent metadata,
-            TransformComponent transform)
+            MetaDataComponent metadata)
         {
+            var transform = TransformQuery.GetComponent(uid);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
 
             try
@@ -488,7 +488,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                RecursiveFlagEntityTermination(child, childMeta, TransformQuery.GetComponent(child));
+                RecursiveFlagEntityTermination(child, childMeta);
             }
         }
 
@@ -538,10 +538,8 @@ namespace Robust.Shared.GameObjects
             // Shut down all components.
             var objComps = _world.GetAllComponents(uid);
 
-            for (var i = objComps.Length; i >= 0; i--)
+            foreach (Component component in objComps)
             {
-                var component = Unsafe.As<IComponent>(objComps[i]);
-
                 if (component.Running)
                 {
                     try

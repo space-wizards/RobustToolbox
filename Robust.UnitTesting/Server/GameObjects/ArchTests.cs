@@ -42,6 +42,7 @@ public sealed class ArchTests
         var entity = entManager.Spawn(null, MapCoordinates.Nullspace);
         entManager.DeleteEntity(entity);
         Assert.That(entManager.Deleted(entity));
+        Assert.That(!entManager.EntityExists(entity));
 
         // Spawn a new entity and check it is a recycled ID.
         var entity2 = entManager.Spawn(null, MapCoordinates.Nullspace);
@@ -51,6 +52,8 @@ public sealed class ArchTests
         // Assert the old entity still returns deleted but new one isn't.
         Assert.That(entManager.Deleted(entity));
         Assert.That(!entManager.Deleted(entity2));
+        Assert.That(!entManager.EntityExists(entity));
+        Assert.That(entManager.EntityExists(entity2));
         entManager.DeleteEntity(entity2);
     }
 }

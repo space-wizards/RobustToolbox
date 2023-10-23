@@ -16,12 +16,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using Robust.Shared.Serialization.Markdown.Mapping;
 using ComponentRegistry = Robust.Shared.Prototypes.ComponentRegistry;
 
 namespace Robust.Shared.GameObjects

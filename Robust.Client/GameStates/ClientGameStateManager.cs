@@ -59,6 +59,9 @@ namespace Robust.Client.GameStates
         private readonly Dictionary<NetEntity, Dictionary<ushort, ComponentState>> _outputData = new();
         private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
 
+        private readonly List<NetEntity> _created = new();
+        private readonly List<NetEntity> _detached = new();
+
         private readonly ObjectPool<Dictionary<ushort, ComponentState>> _compDataPool =
             new DefaultObjectPool<Dictionary<ushort, ComponentState>>(new DictPolicy<ushort, ComponentState>(), 256);
 
@@ -518,7 +521,9 @@ namespace Robust.Client.GameStates
             var countReset = 0;
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
             var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
-            RemQueue<IComponent> toRemove = new();
+            using var toRemove = new PooledList<IComponent>();
+            using var toAdd = new PooledList<ushort>();
+            using var toAddStates = new PooledList<ComponentState>();
 
             foreach (var entity in system.DirtyEntities)
             {
@@ -572,12 +577,17 @@ namespace Robust.Client.GameStates
                     comp.LastModifiedTick = _timing.LastRealTick;
                 }
 
-                // Remove predicted component additions
-                foreach (var comp in toRemove)
+                if (toRemove.Count > 0)
                 {
-                    _entities.RemoveComponent(entity, comp);
+                    // Remove predicted component additions
+                    // TODO: 1 archetype change.
+                    foreach (var comp in toRemove)
+                    {
+                        _entities.RemoveComponent(entity, comp, meta);
+                    }
+
+                    toRemove.Clear();
                 }
-                toRemove.Clear();
 
                 // Re-add predicted removals
                 if (system.RemovedComponents.TryGetValue(entity, out var netIds))
@@ -590,15 +600,29 @@ namespace Robust.Client.GameStates
                         if (!last.TryGetValue(netId, out var state))
                             continue;
 
-                        var comp = _entityManager.AddComponent(entity, netId, meta);
+                        toAdd.Add(netId);
+                        toAddStates.Add(state);
+                    }
 
-                        if (_sawmill.Level <= LogLevel.Debug)
-                            _sawmill.Debug($"  A component was removed: {comp.GetType()}");
+                    if (toAdd.Count > 0)
+                    {
+                        for (var i = 0; i < toAdd.Count; i++)
+                        {
+                            var netId = toAdd[i];
+                            var state = toAddStates[i];
+                            var comp = _entityManager.AddComponent(entity, netId, meta);
 
-                        var stateEv = new ComponentHandleState(state, null);
-                        _entities.EventBus.RaiseComponentEvent(comp, ref stateEv);
-                        comp.ClearCreationTick(); // don't undo the re-adding.
-                        comp.LastModifiedTick = _timing.LastRealTick;
+                            if (_sawmill.Level <= LogLevel.Debug)
+                                _sawmill.Debug($"  A component was removed: {comp.GetType()}");
+
+                            var stateEv = new ComponentHandleState(state, null);
+                            _entities.EventBus.RaiseComponentEvent(comp, ref stateEv);
+                            comp.ClearCreationTick(); // don't undo the re-adding.
+                            comp.LastModifiedTick = _timing.LastRealTick;
+                        }
+
+                        toAdd.Clear();
+                        toAddStates.Clear();
                     }
                 }
 
@@ -681,10 +705,9 @@ namespace Robust.Client.GameStates
                 _config.TickProcessMessages();
             }
 
-            (IEnumerable<NetEntity> Created, List<NetEntity> Detached) output;
             using (_prof.Group("Entity"))
             {
-                output = ApplyEntityStates(curState, nextState);
+                ApplyEntityStates(curState, nextState);
             }
 
             using (_prof.Group("Player"))
@@ -694,13 +717,13 @@ namespace Robust.Client.GameStates
 
             using (_prof.Group("Callback"))
             {
-                GameStateApplied?.Invoke(new GameStateAppliedArgs(curState, output.Detached));
+                GameStateApplied?.Invoke(new GameStateAppliedArgs(curState, _detached));
             }
 
-            return output.Created;
+            return _created;
         }
 
-        private (IEnumerable<NetEntity> Created, List<NetEntity> Detached) ApplyEntityStates(GameState curState, GameState? nextState)
+        private void ApplyEntityStates(GameState curState, GameState? nextState)
         {
             var metas = _entities.GetEntityQuery<MetaDataComponent>();
             var xforms = _entities.GetEntityQuery<TransformComponent>();
@@ -709,6 +732,8 @@ namespace Robust.Client.GameStates
             var enteringPvs = 0;
             _toApply.Clear();
             _toCreate.Clear();
+            _detached.Clear();
+            _created.Clear();
             _pendingReapplyNetStates.Clear();
             var curSpan = curState.EntityStates.Span;
 
@@ -733,6 +758,7 @@ namespace Robust.Client.GameStates
 
                     var uid = _entities.CreateEntity(metaState.PrototypeId, out var newMeta);
                     _toCreate.Add(es.NetEntity, es);
+                    _created.Add(es.NetEntity);
                     _toApply.Add(uid, (es.NetEntity, newMeta, false, GameTick.Zero, es, null));
 
                     // Client creates a client-side net entity for the newly created entity.
@@ -786,7 +812,7 @@ namespace Robust.Client.GameStates
             // Detach entities to null space
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
             var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
-            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys, lookupSys);
+            ProcessPvsDeparture(_detached, curState.ToSequence, metas, xforms, xformSys, containerSys, lookupSys);
 
             // Check next state (AFTER having created new entities introduced in curstate)
             if (nextState != null)
@@ -888,8 +914,6 @@ namespace Robust.Client.GameStates
 
             _prof.WriteValue("State Size", ProfData.Int32(curSpan.Length));
             _prof.WriteValue("Entered PVS", ProfData.Int32(enteringPvs));
-
-            return (_toCreate.Keys, detached);
         }
 
         /// <inheritdoc />
@@ -1025,7 +1049,8 @@ namespace Robust.Client.GameStates
             Detach(GameTick.MaxValue, null, entities, metas, xforms, xformSys, containerSys, lookupSys);
         }
 
-        private List<NetEntity> ProcessPvsDeparture(
+        private void ProcessPvsDeparture(
+            IList<NetEntity> detached,
             GameTick toTick,
             EntityQuery<MetaDataComponent> metas,
             EntityQuery<TransformComponent> xforms,
@@ -1033,18 +1058,17 @@ namespace Robust.Client.GameStates
             ContainerSystem containerSys,
             EntityLookupSystem lookupSys)
         {
-            var toDetach = _processor.GetEntitiesToDetach(toTick, _pvsDetachBudget);
-            var detached = new List<NetEntity>();
+            using var toDetach = new PooledList<(GameTick Tick, List<NetEntity> Entities)>();
+            _processor.GetEntitiesToDetach(toDetach, toTick, _pvsDetachBudget);
 
             if (toDetach.Count == 0)
-                return detached;
+                return;
 
             // TODO optimize
             // If an entity is leaving PVS, so are all of its children. If we can preserve the hierarchy we can avoid
             // things like container insertion and ejection.
 
             using var _ = _prof.Group("Leave PVS");
-            detached.EnsureCapacity(toDetach.Count);
 
             foreach (var (tick, ents) in toDetach)
             {
@@ -1052,7 +1076,6 @@ namespace Robust.Client.GameStates
             }
 
             _prof.WriteValue("Count", ProfData.Int32(detached.Count));
-            return detached;
         }
 
         private void Detach(GameTick maxTick,
@@ -1063,7 +1086,7 @@ namespace Robust.Client.GameStates
             SharedTransformSystem xformSys,
             ContainerSystem containerSys,
             EntityLookupSystem lookupSys,
-            List<NetEntity>? detached = null)
+            IList<NetEntity>? detached = null)
         {
             foreach (var netEntity in entities)
             {
@@ -1117,7 +1140,7 @@ namespace Robust.Client.GameStates
             var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
 
 #if EXCEPTION_TOLERANCE
-            var brokenEnts = new List<EntityUid>();
+            using var brokenEnts = new PooledList<EntityUid>();
 #endif
             using (_prof.Group("Initialize Entity"))
             {
@@ -1502,10 +1525,10 @@ namespace Robust.Client.GameStates
 
     public sealed class GameStateAppliedArgs : EventArgs
     {
-        public GameState AppliedState { get; }
-        public readonly List<NetEntity> Detached;
+        public readonly GameState AppliedState;
+        public readonly IReadOnlyList<NetEntity> Detached;
 
-        public GameStateAppliedArgs(GameState appliedState, List<NetEntity> detached)
+        public GameStateAppliedArgs(GameState appliedState, IReadOnlyList<NetEntity> detached)
         {
             AppliedState = appliedState;
             Detached = detached;

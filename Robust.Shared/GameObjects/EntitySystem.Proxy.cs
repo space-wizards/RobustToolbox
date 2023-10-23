@@ -532,7 +532,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.GetComponents&lt;T&gt;"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected IEnumerable<T> AllComps<T>(EntityUid uid)
+    protected IEnumerable<T> AllComps<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.GetComponents<T>(uid);
     }

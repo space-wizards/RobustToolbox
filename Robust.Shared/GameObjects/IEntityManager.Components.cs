@@ -226,6 +226,14 @@ namespace Robust.Shared.GameObjects
         bool EnsureComponent<T>(EntityUid uid, out T component) where T : IComponent, new();
 
         /// <summary>
+        ///     This method will always return a component for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="entity">Entity to modify.</param>
+        /// <typeparam name="T">Component to add.</typeparam>
+        /// <returns>True if the component already existed</returns>
+        bool EnsureComponent<T>(ref Entity<T?> entity) where T : IComponent, new();
+
+        /// <summary>
         ///     Returns the component of a specific type.
         /// </summary>
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>

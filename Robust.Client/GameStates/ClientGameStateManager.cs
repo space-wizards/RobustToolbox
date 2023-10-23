@@ -1250,12 +1250,15 @@ namespace Robust.Client.GameStates
             {
                 using var addedComps = new PooledList<IComponent>();
                 using var addedCompTypes = new PooledList<ComponentType>();
+                using var addedRegistrations = new PooledList<ComponentRegistration>();
 
                 foreach (var compChange in curState.ComponentChanges.Span)
                 {
                     if (!meta.NetComponents.TryGetValue(compChange.NetID, out var comp))
                     {
-                        comp = _compFactory.GetComponent(compChange.NetID);
+                        var registration = _compFactory.GetRegistration(compChange.NetID);
+                        addedRegistrations.Add(registration);
+                        comp = _compFactory.GetComponent(registration);
                         addedComps.Add(comp);
                         addedCompTypes.Add(comp.GetType());
                     }
@@ -1270,10 +1273,11 @@ namespace Robust.Client.GameStates
                 {
                     _entityManager.AddComponentRange(uid, addedCompTypes);
 
-                    foreach (var comp in addedComps)
+                    for (var i = 0; i < addedComps.Count; i++)
                     {
-                        // TODO: Should pass in compreg + skipinit
-                        _entityManager.AddComponent(uid, comp, meta);
+                        var comp = addedComps[i];
+                        var reg = addedRegistrations[i];
+                        _entityManager.AddComponentInternal(uid, comp, reg, false, meta);
                     }
                 }
             }

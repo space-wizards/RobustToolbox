@@ -222,7 +222,7 @@ namespace Robust.Shared.GameObjects
             AddComponentInternal(uid, component, reg, skipInit, metadata);
         }
 
-        private void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit, MetaDataComponent? metadata = null) where T : IComponent
+        internal void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit, MetaDataComponent? metadata = null) where T : IComponent
         {
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||

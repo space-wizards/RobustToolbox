@@ -91,7 +91,7 @@ internal partial class MapManager
         var query = EntityManager.AllEntityQueryEnumerator<MapGridComponent, TransformComponent>();
         while (query.MoveNext(out var grid, out var xform))
         {
-            if (xform.MapID != mapId)
+            if (xform.MapID == mapId)
                 yield return grid;
         }
     }

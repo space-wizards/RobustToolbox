@@ -471,7 +471,7 @@ namespace Robust.Shared.GameObjects
 
             try
             {
-                var ev = new EntityTerminatingEvent(uid);
+                var ev = new EntityTerminatingEvent(uid, metadata);
                 EventBus.RaiseLocalEvent(uid, ref ev, true);
             }
             catch (Exception e)

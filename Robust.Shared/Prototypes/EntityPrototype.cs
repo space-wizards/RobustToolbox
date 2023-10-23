@@ -202,7 +202,8 @@ namespace Robust.Shared.Prototypes
             ISerializationManager serManager,
             string compName,
             IComponent data,
-            ISerializationContext? context)
+            ISerializationContext? context,
+            MetaDataComponent metadata)
         {
             // TODO optimize
             var compReg = factory.GetRegistration(compName);
@@ -212,8 +213,8 @@ namespace Robust.Shared.Prototypes
             {
                 var newComponent = factory.GetComponent(compName);
                 newComponent.Owner = entity;
+                component = newComponent;
                 add = true;
-                component = Unsafe.As<IComponent>(newComponent);
             }
 
             if (context is not MapSerializationContext map)

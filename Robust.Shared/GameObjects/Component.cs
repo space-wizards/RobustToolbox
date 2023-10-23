@@ -64,7 +64,7 @@ namespace Robust.Shared.GameObjects
         public void Dirty(IEntityManager? entManager = null)
         {
             IoCManager.Resolve(ref entManager);
-            entManager.Dirty(this);
+            entManager.Dirty(Owner, this);
         }
 
         // these two methods clear the LastModifiedTick/CreationTick to mark it as "not different from prototype load".

@@ -409,12 +409,20 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
+            Dirty(new Entity<IComponent>(uid, component), meta);
+        }
+
+        /// <inheritdoc />
+        public virtual void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
+        {
+            if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
                 return;
 
-            DebugTools.AssertOwner(uid, component);
-            DirtyEntity(uid, meta);
-            component.LastModifiedTick = CurrentTick;
+            DebugTools.AssertOwner(ent, ent.Comp);
+            DirtyEntity(ent, meta);
+#pragma warning disable CS0618 // Type or member is obsolete
+            ent.Comp.LastModifiedTick = CurrentTick;
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
@@ -675,6 +683,7 @@ namespace Robust.Shared.GameObjects
 #pragma warning disable CS0618
                 Owner = uid,
 #pragma warning restore CS0618
+                EntityLastModifiedTick = _gameTiming.CurTick
             };
 
             SetNetEntity(uid, netEntity, metadata);
@@ -683,10 +692,11 @@ namespace Robust.Shared.GameObjects
             AddComponentInternal(uid, metadata, _metaReg, true, metadata);
 
             // allocate the required TransformComponent
-            var xformComp = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
-            xformComp.Owner = uid;
-            AddComponentInternal(uid, xformComp, true, metadata);
-            xform = xformComp;
+            xform = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
+#pragma warning disable CS0618 // Type or member is obsolete
+            xform.Owner = uid;
+#pragma warning restore CS0618 // Type or member is obsolete
+            AddComponentInternal(uid, xform, true, metadata);
 
             return uid;
         }
@@ -740,10 +750,10 @@ namespace Robust.Shared.GameObjects
             var count = prototype?.Components.Count ?? 2;
             // Lort forgiv
             using var types = new PooledList<ComponentType>(count);
-            using var comps = new PooledList<object>(count);
-            using var adds = new PooledList<bool>(count);
+            using var comps = new PooledList<IComponent>(count);
             using var compRegs = new PooledList<ComponentRegistration>(count);
             Archetype arc;
+            var metadata = MetaQuery.GetComponent(entity);
 
 #if DEBUG
             arc = _world.GetArchetype(entity);
@@ -758,19 +768,17 @@ namespace Robust.Shared.GameObjects
 
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
 
-                    var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, fullData, context as ISerializationContext);
+                    var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, fullData, context as ISerializationContext, metadata);
                     var compType = comp.CompReg.Idx.Type;
 
-                    // Don't double add an existing component.
-                    if (_world.TryGet(entity, compType, out var existing))
+                    // Don't double add an existing component, just set data above.
+                    if (!comp.Add)
                     {
-                        DebugTools.Assert(existing != null);
                         continue;
                     }
 
                     types.Add(compType);
                     comps.Add(comp.Comp);
-                    adds.Add(comp.Add);
                     compRegs.Add(comp.CompReg);
                 }
             }
@@ -793,19 +801,17 @@ namespace Robust.Shared.GameObjects
                             $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
                     }
 
-                    var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, data, context as ISerializationContext);
+                    var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, data, context as ISerializationContext, metadata);
                     var compType = comp.CompReg.Idx.Type;
 
-                    // Don't double add an existing component.
-                    if (_world.TryGet(entity, compType, out var existing))
+                    // Don't double add an existing component, just set data above.
+                    if (!comp.Add)
                     {
-                        DebugTools.Assert(existing != null);
                         continue;
                     }
 
                     types.Add(compType);
                     comps.Add(comp.Comp);
-                    adds.Add(comp.Add);
                     compRegs.Add(comp.CompReg);
                 }
             }
@@ -818,14 +824,10 @@ namespace Robust.Shared.GameObjects
                 return;
 
             _world.AddRange(entity, types);
-            var metadata = MetaQuery.GetComponent(entity);
 
-            for (var i = 0; i < adds.Count; i++)
+            for (var i = 0; i < comps.Count; i++)
             {
-                if (adds[i])
-                {
-                    AddComponentInternal(entity, (Component) comps[i], compRegs[i], true, metadata: metadata);
-                }
+                AddComponentInternal(entity, comps[i], compRegs[i], true, metadata: metadata);
             }
         }
 

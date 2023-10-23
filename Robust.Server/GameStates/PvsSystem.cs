@@ -35,9 +35,15 @@ internal sealed partial class PvsSystem : EntitySystem
     public const float ChunkSize = 8;
 
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
+    // Main issue is that I CBF figuring out the logic for handling it changing mid-game.
     public const int DirtyBufferSize = 20;
     // Note: If a client has ping higher than TickBuffer / TickRate, then the server will treat every entity as if it
     // had entered PVS for the first time. Note that due to the PVS budget, this buffer is easily overwhelmed.
+
+    /// <summary>
+    /// See <see cref="CVars.NetForceAckThreshold"/>.
+    /// </summary>
+    public int ForceAckThreshold { get; private set; }
 
     /// <summary>
     /// Maximum number of pooled objects
@@ -139,6 +145,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
         _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
+        _configManager.OnValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged, true);
 
         _serverGameStateManager.ClientAck += OnClientAck;
         _serverGameStateManager.ClientRequestFull += OnClientRequestFull;
@@ -156,6 +163,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
         _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
+        _configManager.UnsubValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged);
 
         _serverGameStateManager.ClientAck -= OnClientAck;
         _serverGameStateManager.ClientRequestFull -= OnClientRequestFull;
@@ -199,7 +207,7 @@ internal sealed partial class PvsSystem : EntitySystem
         // return last acked to pool, but only if it is not still in the OverflowDictionary.
         if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(sessionData.LastAcked.Value.Tick))
         {
-            DebugTools.Assert(sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
+            DebugTools.Assert(!sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
             _visSetPool.Return(sessionData.LastAcked.Value.Data);
         }
 
@@ -210,6 +218,11 @@ internal sealed partial class PvsSystem : EntitySystem
     private void OnViewsizeChanged(float obj)
     {
         _viewSize = obj * 2;
+    }
+
+    private void OnForceAckChanged(int value)
+    {
+        ForceAckThreshold = value;
     }
 
     private void SetPvs(bool value)
@@ -1129,8 +1142,8 @@ internal sealed partial class PvsSystem : EntitySystem
             var query = EntityManager.AllEntityQueryEnumerator<MetaDataComponent>();
             while (query.MoveNext(out var uid, out var md))
             {
-                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating);
+                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");
+                DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating, $"Entity {ToPrettyString(uid)} is/has been terminated");
                 if (md.EntityLastModifiedTick <= fromTick)
                     continue;
 
@@ -1165,10 +1178,10 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                     if (!toSend.Add(uid) || !_metaQuery.TryGetComponent(uid, out var md))
                         continue;
 
-                    DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");
+                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating, $"Entity {ToPrettyString(uid)} is/has been terminated");
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick, $"Entity {ToPrettyString(uid)} last modified tick is less than creation tick");
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick, $"Entity {ToPrettyString(uid)} last modified tick is less than from tick");
 
                     var state = GetEntityState(player, uid, fromTick, md);
 
@@ -1192,10 +1205,10 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                     if (!toSend.Add(uid) || !_metaQuery.TryGetComponent(uid, out var md))
                         continue;
 
-                    DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");
+                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating, $"Entity {ToPrettyString(uid)} is/has been terminated");
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick, $"Entity {ToPrettyString(uid)} last modified tick is less than creation tick");
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick, $"Entity {ToPrettyString(uid)} last modified tick is less than from tick");
 
                     var state = GetEntityState(player, uid, fromTick, md);
                     if (!state.Empty)

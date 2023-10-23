@@ -206,7 +206,7 @@ namespace Robust.Shared.Scripting
             => ent.DirtyEntity(uid);
 
         public void Dirty(Component comp)
-            => ent.Dirty(comp);
+            => ent.Dirty(comp.Owner, comp);
 
         public string Name(EntityUid uid)
             => ent.GetComponent<MetaDataComponent>(uid).EntityName;

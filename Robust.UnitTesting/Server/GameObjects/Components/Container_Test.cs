@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.Containers;
 using Robust.Shared.Containers;
@@ -195,7 +193,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var sim = SimulationFactory();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var grid = sim.Resolve<IMapManager>().CreateGrid(new MapId(1)).Owner;
+            var grid = sim.Resolve<IMapManager>().CreateGridEntity(new MapId(1)).Owner;
             var entity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 

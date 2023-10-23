@@ -18,12 +18,14 @@ public partial class EntityManager
     {
         DebugTools.Assert(component.LifeStage == ComponentLifeStage.PreAdd);
 
+#pragma warning disable CS0618 // Type or member is obsolete
         component.LifeStage = ComponentLifeStage.Adding;
         component.CreationTick = CurrentTick;
         // networked components are assumed to be dirty when added to entities. See also: ClearTicks()
         component.LastModifiedTick = CurrentTick;
         EventBus.RaiseComponentEvent(component, type, CompAddInstance);
         component.LifeStage = ComponentLifeStage.Added;
+#pragma warning restore CS0618 // Type or member is obsolete
     }
 
     /// <summary>

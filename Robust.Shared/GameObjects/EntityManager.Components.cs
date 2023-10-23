@@ -73,10 +73,8 @@ namespace Robust.Shared.GameObjects
 
         public void InitializeComponents(EntityUid uid, MetaDataComponent? metadata = null)
         {
-#pragma warning disable CS0618 // Type or member is obsolete
-            DebugTools.Assert(metadata == null || metadata.Owner == uid);
-#pragma warning restore CS0618 // Type or member is obsolete
-            metadata ??= MetaQuery.GetComponent(uid);
+            DebugTools.AssertOwner(uid, metadata);
+            metadata ??= GetComponent<MetaDataComponent>(uid);
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
             metadata.EntityLifeStage = EntityLifeStage.Initializing;
 
@@ -130,9 +128,6 @@ namespace Robust.Shared.GameObjects
         public IComponent AddComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null)
         {
             var newComponent = _componentFactory.GetComponent(netId);
-#pragma warning disable CS0618 // Type or member is obsolete
-            newComponent.Owner = uid;
-#pragma warning restore CS0618 // Type or member is obsolete
             AddComponent(uid, newComponent, metadata: meta);
             return newComponent;
         }
@@ -140,9 +135,6 @@ namespace Robust.Shared.GameObjects
         public T AddComponent<T>(EntityUid uid) where T : IComponent, new()
         {
             var newComponent = _componentFactory.GetComponent<T>();
-#pragma warning disable CS0618 // Type or member is obsolete
-            newComponent.Owner = uid;
-#pragma warning restore CS0618 // Type or member is obsolete
             AddComponent(uid, newComponent);
             return newComponent;
         }
@@ -400,7 +392,11 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveComponentDeferred(IComponent component, EntityUid uid, bool terminating)
         {
+            if (component == null) throw new ArgumentNullException(nameof(component));
+
+#pragma warning disable CS0618 // Type or member is obsolete
             if (component.Owner != uid)
+#pragma warning restore CS0618 // Type or member is obsolete
                 throw new InvalidOperationException("Component is not owned by entity.");
 
             if (component.Deleted) return;
@@ -1234,9 +1230,7 @@ namespace Robust.Shared.GameObjects
         {
             if (component != null)
             {
-#pragma warning disable CS0618 // Type or member is obsolete
-                DebugTools.Assert(uid == component.Owner, "Specified Entity is not the component's Owner!");
-#pragma warning restore CS0618 // Type or member is obsolete
+                DebugTools.AssertOwner(uid, component);
                 return true;
             }
 
@@ -1328,9 +1322,7 @@ namespace Robust.Shared.GameObjects
         {
             if (component != null)
             {
-#pragma warning disable CS0618 // Type or member is obsolete
-                DebugTools.Assert(uid == component.Owner, "Specified Entity is not the component's Owner!");
-#pragma warning restore CS0618 // Type or member is obsolete
+                DebugTools.AssertOwner(uid, component);
                 return true;
             }
 

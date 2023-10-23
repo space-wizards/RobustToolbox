@@ -830,7 +830,6 @@ namespace Robust.UnitTesting
                 ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
                 deps.Register<INetManager, IntegrationNetManager>(true);
                 deps.Register<IClientNetManager, IntegrationNetManager>(true);
-                deps.Register<IGameStateProcessor, GameStateProcessor>(true);
                 deps.Register<IClientGameTiming, ClientGameTiming>(true);
                 deps.Register<IntegrationNetManager, IntegrationNetManager>(true);
                 deps.Register<IModLoader, TestingModLoader>(true);

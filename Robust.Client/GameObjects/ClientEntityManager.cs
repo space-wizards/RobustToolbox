@@ -87,9 +87,15 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
+            Dirty(new Entity<IComponent>(uid, component), meta);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null)
+        {
             //  Client only dirties during prediction
             if (_gameTiming.InPrediction)
-                base.Dirty(uid, component, meta);
+                base.Dirty(ent, meta);
         }
 
         public override EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metaDataComponent = null)

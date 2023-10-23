@@ -54,6 +54,56 @@ END TEMPLATE-->
 *None yet*
 
 
+## 171.0.0
+
+### Breaking changes
+
+* Change PlaceNextTo method names to be more descriptive.
+* Rename RefreshRelay for joints to SetRelay to match its behaviour.
+
+### Bugfixes
+
+* Fix PVS error spam for joint relays not being cleaned up.
+
+### Other
+
+* Set EntityLastModifiedTick on entity spawn.
+
+
+## 170.0.0
+
+### Breaking changes
+
+* Removed obsolete methods and properties in VisibilitySystem, SharedContainerSystem and MetaDataComponent.
+
+### Bugfixes
+
+* Fixed duplicate command error.
+* Fixed not being able to delete individual entities with the delete command.
+
+### Other
+
+* FileLogHandler logs can now be deleted while the engine is running.
+
+
+## 169.0.1
+
+### Other
+
+* The client now knows about registered server-side toolshed commands.
+
+## 169.0.0
+
+### Breaking changes
+
+* Entity<T> has been introduced to hold a component and its owning entity. Some methods that returned and accepted components directly have been removed or obsoleted to reflect this.
+
+### Other
+
+* By-value events may now be subscribed to by-ref.
+* The manifest's assemblyPrefix value is now respected on the server.
+
+
 ## 168.0.0
 
 ### Breaking changes

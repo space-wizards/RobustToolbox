@@ -1249,6 +1249,7 @@ namespace Robust.Client.GameStates
 
                     foreach (var comp in addedComps)
                     {
+                        // TODO: Should pass in compreg + skipinit
                         _entityManager.AddComponent(uid, comp, meta);
                     }
                 }

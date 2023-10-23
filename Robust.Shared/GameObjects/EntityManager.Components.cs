@@ -235,6 +235,7 @@ namespace Robust.Shared.GameObjects
                 $"Attempted to add a {reg.Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
 
             // TODO optimize this
+            // Need multi-comp adds so we can remove this call probably.
             if (!_world.Has(uid, reg.Idx.Type))
                 _world.Add(uid, Unsafe.As<object>(component));
             else

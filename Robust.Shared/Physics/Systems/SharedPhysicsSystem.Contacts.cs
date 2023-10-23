@@ -374,7 +374,6 @@ public abstract partial class SharedPhysicsSystem
         while (node != null)
         {
             var contact = node.Value;
-            node = node.Next;
 
             Fixture fixtureA = contact.FixtureA!;
             Fixture fixtureB = contact.FixtureB!;
@@ -390,6 +389,7 @@ public abstract partial class SharedPhysicsSystem
             if (!bodyA.CanCollide || !bodyB.CanCollide)
             {
                 DestroyContact(contact);
+                node = node.Next;
                 continue;
             }
 
@@ -404,6 +404,7 @@ public abstract partial class SharedPhysicsSystem
                     !ShouldCollide(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB))
                 {
                     DestroyContact(contact);
+                    node = node.Next;
                     continue;
                 }
 
@@ -417,13 +418,14 @@ public abstract partial class SharedPhysicsSystem
             // At least one body must be awake and it must be dynamic or kinematic.
             if (activeA == false && activeB == false)
             {
+                node = node.Next;
                 continue;
             }
-
 
             if (xformA.MapUid == null || xformA.MapUid != xformB.MapUid)
             {
                 DestroyContact(contact);
+                node = node.Next;
                 continue;
             }
 
@@ -448,6 +450,7 @@ public abstract partial class SharedPhysicsSystem
                     contacts[index++] = contact;
                 }
 
+                node = node.Next;
                 continue;
             }
 
@@ -455,6 +458,7 @@ public abstract partial class SharedPhysicsSystem
             {
                 Log.Error($"Found invalid contact index of {indexA} on {contact.FixtureAId} / {ToPrettyString(uidA)}, expected {fixtureA.Proxies.Length}");
                 DestroyContact(contact);
+                node = node.Next;
                 continue;
             }
 
@@ -462,6 +466,7 @@ public abstract partial class SharedPhysicsSystem
             {
                 Log.Error($"Found invalid contact index of {indexB} on {contact.FixtureBId} / {ToPrettyString(uidB)}, expected {fixtureB.Proxies.Length}");
                 DestroyContact(contact);
+                node = node.Next;
                 continue;
             }
 
@@ -494,6 +499,7 @@ public abstract partial class SharedPhysicsSystem
             if (!overlap)
             {
                 DestroyContact(contact);
+                node = node.Next;
                 continue;
             }
 
@@ -504,7 +510,9 @@ public abstract partial class SharedPhysicsSystem
             {
                 Log.Error($"Insufficient contact length at 429! Index {index} and length is {contacts.Length}. Tell Sloth");
             }
+
             contacts[index++] = contact;
+            node = node.Next;
         }
 
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);

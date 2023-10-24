@@ -11,7 +11,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Player;
 
 // This partial class contains code related to getting player sessions via their user ids and names
-public abstract partial class SharedPlayerManager
+internal abstract partial class SharedPlayerManager
 {
     protected readonly ReaderWriterLockSlim Lock = new();
 
@@ -153,5 +153,12 @@ public abstract partial class SharedPlayerManager
 
         UpdateState(session);
         PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(session, old, status));
+    }
+
+    public void JoinGame(ICommonSession session)
+    {
+        // This currently just directly sets the session's status, as this was the old behaviour.
+        // In future, this should probably check if the session is currently in a valid state.
+        SetStatus(session, SessionStatus.InGame);
     }
 }

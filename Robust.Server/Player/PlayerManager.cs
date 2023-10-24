@@ -23,7 +23,7 @@ namespace Robust.Server.Player
     /// <summary>
     ///     This class will manage connected player sessions.
     /// </summary>
-    public sealed class PlayerManager : SharedPlayerManager, IPlayerManager
+    internal sealed class PlayerManager : SharedPlayerManager, IPlayerManager
     {
         private static readonly Gauge PlayerCountMetric = Metrics
             .CreateGauge("robust_player_count", "Number of players on the server.");
@@ -61,26 +61,6 @@ namespace Robust.Server.Player
             _network.Connecting -= OnConnecting;
             _network.Connected -= NewSession;
             _network.Disconnect -= EndSession;
-        }
-
-        /// <summary>
-        ///     Causes all sessions to switch from the lobby to the the game.
-        /// </summary>
-        [Obsolete]
-        public void SendJoinGameToAll()
-        {
-            Lock.EnterReadLock();
-            try
-            {
-                foreach (var session in InternalSessions.Values)
-                {
-                    SetStatus(session, SessionStatus.InGame);
-                }
-            }
-            finally
-            {
-                Lock.ExitReadLock();
-            }
         }
 
         private Task OnConnecting(NetConnectingArgs args)

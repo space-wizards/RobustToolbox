@@ -115,11 +115,11 @@ public interface ISharedPlayerManager
 
     IEnumerable<SessionData> GetAllPlayerData();
 
-    public List<SessionState>? GetPlayerStates(GameTick fromTick);
+    List<SessionState>? GetPlayerStates(GameTick fromTick);
     void UpdateState(ICommonSession commonSession);
 
-    public void RemoveSession(ICommonSession session, bool removeData = false);
-    public void RemoveSession(NetUserId user, bool removeData = false);
+    void RemoveSession(ICommonSession session, bool removeData = false);
+    void RemoveSession(NetUserId user, bool removeData = false);
 
     /// <summary>
     /// Updates a session's <see cref="ICommonSession.AttachedEntity"/>
@@ -129,7 +129,12 @@ public interface ISharedPlayerManager
     /// <summary>
     /// Updates a session's <see cref="ICommonSession.Status"/>
     /// </summary>
-    public void SetStatus(ICommonSession session, SessionStatus status);
+    void SetStatus(ICommonSession session, SessionStatus status);
+
+    /// <summary>
+    /// Set the session's status to <see cref="SessionStatus.InGame"/>.
+    /// </summary>
+    void JoinGame(ICommonSession session);
 
     [Obsolete("Use GetSessionById()")]
     ICommonSession GetSessionByUserId(NetUserId user) => GetSessionById(user);
@@ -137,6 +142,4 @@ public interface ISharedPlayerManager
     [Obsolete("Use TryGetSessionById()")]
     bool TryGetSessionByUserId(NetUserId user, [NotNullWhen(true)] out ICommonSession? session)
         => TryGetSessionById(user, out session);
-
-
 }

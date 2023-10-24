@@ -5,7 +5,6 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -44,7 +43,7 @@ public sealed class DefaultEntityTest : RobustIntegrationTest
         }
 
         var session = playerMan.Sessions.First();
-        await server.WaitPost(() => playerMan.SetStatus(session, SessionStatus.InGame));
+        await server.WaitPost(() => playerMan.JoinGame(session));
 
         for (int i = 0; i < 10; i++)
         {

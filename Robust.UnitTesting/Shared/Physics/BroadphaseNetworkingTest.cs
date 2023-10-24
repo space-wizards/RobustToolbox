@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
 using Robust.Shared;
-using Robust.Shared.Configuration;
+using Robust.Shared.Configuration
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -91,8 +91,8 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
 
             // Attach player.
             var session = sPlayerMan.Sessions.First();
-            EntitySystem.Get<ActorSystem>().Attach(player, session);
-            session.JoinGame();
+            sEntMan.System<ActorSystem>().Attach(player, session);
+            sPlayerMan.JoinGame(session);
         });
 
         var playerNet = sEntMan.GetNetEntity(player);

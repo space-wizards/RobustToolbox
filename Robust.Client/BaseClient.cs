@@ -130,7 +130,7 @@ namespace Robust.Client
             var name = PlayerNameOverride ?? _configManager.GetCVar(CVars.PlayerName);
             _playMan.SetupSinglePlayer(name);
             OnRunLevelChanged(ClientRunLevel.SinglePlayerGame);
-            _playMan.SetStatus(_playMan.LocalSession!, SessionStatus.InGame);
+            _playMan.JoinGame(_playMan.LocalSession!);
             GameStartedSetup();
         }
 

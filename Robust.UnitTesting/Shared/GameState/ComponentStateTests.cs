@@ -74,7 +74,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             player = server.EntMan.Spawn();
             var session = server.PlayerMan.Sessions.First();
             server.System<ActorSystem>().Attach(player, session);
-            session.JoinGame();
+            server.PlayerMan.JoinGame(session);
 
             // Spawn test entities.
             serverEntA = server.EntMan.SpawnAttachedTo(null, coordsA);
@@ -210,7 +210,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             player = server.EntMan.Spawn();
             var session = server.PlayerMan.Sessions.First();
             server.System<ActorSystem>().Attach(player, session);
-            session.JoinGame();
+            server.PlayerMan.JoinGame(session);
 
             // Spawn test entities.
             serverEntA = server.EntMan.SpawnAttachedTo(null, coordsA);

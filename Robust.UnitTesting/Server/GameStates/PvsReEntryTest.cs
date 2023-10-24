@@ -5,7 +5,6 @@ using NUnit.Framework;
 using Robust.Client.GameStates;
 using Robust.Client.Timing;
 using Robust.Server.GameObjects;
-using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -89,7 +88,7 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
             // Attach player.
             var session = sPlayerMan.Sessions.First();
             sEntMan.System<ActorSystem>().Attach(playerUid, session);
-            session.JoinGame();
+            sPlayerMan.JoinGame(session);
         });
 
         for (int i = 0; i < 10; i++)

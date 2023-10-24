@@ -6,7 +6,7 @@ using Robust.Shared.Timing;
 namespace Robust.Shared.Player;
 
 // This partial class has game-state related code.
-public abstract partial class SharedPlayerManager
+internal abstract partial class SharedPlayerManager
 {
     public void Dirty()
     {

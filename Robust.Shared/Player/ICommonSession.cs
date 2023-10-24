@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Network;
 
 namespace Robust.Shared.Player;
@@ -65,9 +64,6 @@ public interface ICommonSession
     /// Class for storing arbitrary session-specific data that is not lost upon reconnect.
     /// </summary>
     SessionData Data { get; }
-
-    [Obsolete("Use IPlayerManager")]
-    void JoinGame() => IoCManager.Resolve<ISharedPlayerManager>().SetStatus(this, SessionStatus.InGame);
 
     [Obsolete("Just use the Channel field instead.")]
     INetChannel ConnectedClient => Channel;

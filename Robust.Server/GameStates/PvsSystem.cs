@@ -710,8 +710,8 @@ internal sealed partial class PvsSystem : EntitySystem
             EntityUid[] viewers)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
-        var newEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSEntityBudget);
-        var enteredEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSEntityEnterBudget);
+        var newEntityBudget = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityBudget);
+        var enteredEntityBudget = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityEnterBudget);
         var newEntityCount = 0;
         var enteredEntityCount = 0;
         var sessionData = PlayerData[session];

@@ -127,10 +127,8 @@ namespace Robust.Client
         {
             DebugTools.Assert(RunLevel < ClientRunLevel.Connecting);
             DebugTools.Assert(!_net.IsConnected);
-
             var name = PlayerNameOverride ?? _configManager.GetCVar(CVars.PlayerName);
             _playMan.SetupSinglePlayer(name);
-
             OnRunLevelChanged(ClientRunLevel.SinglePlayerGame);
             _playMan.SetStatus(_playMan.LocalSession!, SessionStatus.InGame);
             GameStartedSetup();
@@ -207,6 +205,7 @@ namespace Robust.Client
         {
             DebugTools.Assert(RunLevel >= ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.InGame);
+
             PlayerJoinedGame?.Invoke(this, new PlayerEventArgs(session));
         }
 

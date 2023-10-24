@@ -292,6 +292,7 @@ namespace Robust.Client.Placement
         private void TearDownInput()
         {
             CommandBinds.Unregister<PlacementManager>();
+            PlayerManager.LocalPlayerDetached -= OnDetached;
         }
 
         private void OnDetached(EntityUid obj)

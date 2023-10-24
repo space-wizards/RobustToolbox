@@ -9,7 +9,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Player;
 
-internal abstract partial class SharedPlayerManager : ISharedPlayerManager
+public abstract partial class SharedPlayerManager : ISharedPlayerManager
 {
     [Dependency] protected readonly IEntityManager EntManager = default!;
     [Dependency] protected readonly ILogManager LogMan = default!;

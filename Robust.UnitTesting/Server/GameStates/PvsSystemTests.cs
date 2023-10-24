@@ -9,7 +9,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
-using Robust.Shared.Player;
 using cIPlayerManager = Robust.Client.Player.IPlayerManager;
 using sIPlayerManager = Robust.Server.Player.IPlayerManager;
 

@@ -5,7 +5,6 @@ using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
-using Robust.Shared.Player;
 
 namespace Robust.Server.Console.Commands
 {

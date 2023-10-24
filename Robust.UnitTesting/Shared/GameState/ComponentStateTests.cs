@@ -9,7 +9,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Shared.GameState;
 

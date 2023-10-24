@@ -14,7 +14,6 @@ using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
-using Robust.Shared.Player;
 using cIPlayerManager = Robust.Client.Player.IPlayerManager;
 using sIPlayerManager = Robust.Server.Player.IPlayerManager;
 

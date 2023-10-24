@@ -11,7 +11,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Player;
 
 // This partial class contains code related to getting player sessions via their user ids and names
-internal abstract partial class SharedPlayerManager
+public abstract partial class SharedPlayerManager
 {
     protected readonly ReaderWriterLockSlim Lock = new();
 

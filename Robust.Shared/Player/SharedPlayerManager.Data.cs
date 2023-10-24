@@ -6,7 +6,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Player;
 
 // This partial class contains code related to player data.
-internal abstract partial class SharedPlayerManager
+public abstract partial class SharedPlayerManager
 {
     [ViewVariables]
     protected readonly Dictionary<NetUserId, SessionData> PlayerData = new();

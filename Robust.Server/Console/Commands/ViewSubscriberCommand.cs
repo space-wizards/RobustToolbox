@@ -16,7 +16,7 @@ namespace Robust.Server.Console.Commands
         {
             var session = shell.Player;
 
-            if (session is not ICommonSession playerSession)
+            if (session is not { } playerSession)
             {
                 shell.WriteError($"Unable to find {nameof(ICommonSession)} for shell");
                 return;
@@ -53,7 +53,7 @@ namespace Robust.Server.Console.Commands
             {
                 var session = shell.Player;
 
-                if (session is not ICommonSession playerSession)
+                if (session is not { } playerSession)
                 {
                     shell.WriteError($"Unable to find {nameof(ICommonSession)} for shell");
                     return;

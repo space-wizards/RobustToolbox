@@ -23,7 +23,7 @@ namespace Robust.Server.Player
     /// <summary>
     ///     This class will manage connected player sessions.
     /// </summary>
-    internal sealed class PlayerManager : SharedPlayerManager, IPlayerManager
+    public sealed class PlayerManager : SharedPlayerManager, IPlayerManager
     {
         private static readonly Gauge PlayerCountMetric = Metrics
             .CreateGauge("robust_player_count", "Number of players on the server.");

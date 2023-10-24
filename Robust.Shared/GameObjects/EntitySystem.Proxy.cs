@@ -635,6 +635,20 @@ public partial class EntitySystem
         return EntityManager.EnsureComponent<T>(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid, out T)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool EnsureComp<T>(EntityUid uid, out T comp) where T : IComponent, new()
+    {
+        return EntityManager.EnsureComponent(uid, out comp);
+    }
+
+    /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(ref Entity&lt;T&gt;)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool EnsureComp<T>(ref Entity<T?> entity) where T : IComponent, new()
+    {
+        return EntityManager.EnsureComponent(ref entity);
+    }
+
     #endregion
 
     #region Component Remove Deferred

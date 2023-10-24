@@ -1,7 +1,7 @@
 using Robust.Client.Graphics;
 using Robust.Client.Physics;
+using Robust.Client.Player;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameStates;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 
@@ -15,8 +15,8 @@ public sealed class EyeSystem : SharedEyeSystem
     {
         base.Initialize();
         SubscribeLocalEvent<EyeComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<EyeComponent, PlayerDetachedEvent>(OnEyeDetached);
-        SubscribeLocalEvent<EyeComponent, PlayerAttachedEvent>(OnEyeAttached);
+        SubscribeLocalEvent<EyeComponent, LocalPlayerDetachedEvent>(OnEyeDetached);
+        SubscribeLocalEvent<EyeComponent, LocalPlayerAttachedEvent>(OnEyeAttached);
         SubscribeLocalEvent<EyeComponent, AfterAutoHandleStateEvent>(OnEyeAutoState);
 
         // Make sure this runs *after* entities have been moved by interpolation and movement.
@@ -29,7 +29,7 @@ public sealed class EyeSystem : SharedEyeSystem
         UpdateEye(component);
     }
 
-    private void OnEyeAttached(EntityUid uid, EyeComponent component, PlayerAttachedEvent args)
+    private void OnEyeAttached(EntityUid uid, EyeComponent component, LocalPlayerAttachedEvent args)
     {
         // TODO: This probably shouldn't be nullable bruv.
         if (component._eye != null)
@@ -41,7 +41,7 @@ public sealed class EyeSystem : SharedEyeSystem
         RaiseLocalEvent(uid, ref ev, true);
     }
 
-    private void OnEyeDetached(EntityUid uid, EyeComponent component, PlayerDetachedEvent args)
+    private void OnEyeDetached(EntityUid uid, EyeComponent component, LocalPlayerDetachedEvent args)
     {
         _eyeManager.ClearCurrentEye();
     }

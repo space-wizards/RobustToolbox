@@ -42,8 +42,8 @@ public sealed class DefaultEntityTest : RobustIntegrationTest
             await client.WaitRunTicks(1);
         }
 
-        var session = (IPlayerSession)playerMan.Sessions.First();
-        await server.WaitPost(() => session.JoinGame());
+        var session = playerMan.Sessions.First();
+        await server.WaitPost(() => playerMan.JoinGame(session));
 
         for (int i = 0; i < 10; i++)
         {

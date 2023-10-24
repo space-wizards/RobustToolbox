@@ -7,7 +7,7 @@ using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects
@@ -194,7 +194,7 @@ namespace Robust.Server.GameObjects
             return bui.SubscribedSessions.Count > 0;
         }
 
-        public bool SessionHasOpenUi(EntityUid uid, Enum uiKey, IPlayerSession session, UserInterfaceComponent? ui = null)
+        public bool SessionHasOpenUi(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
         {
             if (!TryGetUi(uid, uiKey, out var bui, ui))
                 return false;
@@ -218,7 +218,7 @@ namespace Robust.Server.GameObjects
         public bool TrySetUiState(EntityUid uid,
             Enum uiKey,
             BoundUserInterfaceState state,
-            IPlayerSession? session = null,
+            ICommonSession? session = null,
             UserInterfaceComponent? ui = null,
             bool clearOverrides = true)
         {
@@ -284,7 +284,7 @@ namespace Robust.Server.GameObjects
 
         #region Open
 
-        public bool TryOpen(EntityUid uid, Enum uiKey, IPlayerSession session, UserInterfaceComponent? ui = null)
+        public bool TryOpen(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
         {
             if (!TryGetUi(uid, uiKey, out var bui, ui))
                 return false;
@@ -319,7 +319,7 @@ namespace Robust.Server.GameObjects
         #endregion
 
         #region Close
-        public bool TryClose(EntityUid uid, Enum uiKey, IPlayerSession session, UserInterfaceComponent? ui = null)
+        public bool TryClose(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
         {
             if (!TryGetUi(uid, uiKey, out var bui, ui))
                 return false;

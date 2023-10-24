@@ -689,7 +689,7 @@ namespace Robust.Client.GameStates
 
             using (_prof.Group("Player"))
             {
-                _players.ApplyPlayerStates(curState.PlayerStates.Value ?? Array.Empty<PlayerState>());
+                _players.ApplyPlayerStates(curState.PlayerStates.Value ?? Array.Empty<SessionState>());
             }
 
             using (_prof.Group("Callback"))

@@ -26,7 +26,7 @@ using Prometheus;
 using Robust.Server.Replays;
 using Robust.Shared.Console;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 
 namespace Robust.Server.GameStates
 {
@@ -168,7 +168,7 @@ Oldest acked clients: {string.Join(", ", players)}
         /// <inheritdoc />
         public void SendGameStateUpdate()
         {
-            var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
+            var players = _playerManager.Sessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
             // Update entity positions in PVS chunks/collections
             // TODO disable processing if culling is disabled? Need to check if toggling PVS breaks anything.
@@ -224,7 +224,7 @@ Oldest acked clients: {string.Join(", ", players)}
             _pvs.CullDeletionHistory(oldestAck);
         }
 
-        private GameTick SendStates(IPlayerSession[] players, PvsData? pvsData)
+        private GameTick SendStates(ICommonSession[] players, PvsData? pvsData)
         {
             var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
             var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
@@ -265,7 +265,7 @@ Oldest acked clients: {string.Join(", ", players)}
             public (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] ChunkCache;
         }
 
-        private PvsData? GetPVSData(IPlayerSession[] players)
+        private PvsData? GetPVSData(ICommonSession[] players)
         {
             var (chunks, playerChunks, viewerEntities) = _pvs.GetChunks(players);
             const int ChunkBatchSize = 2;
@@ -319,11 +319,11 @@ Oldest acked clients: {string.Join(", ", players)}
         private void SendStateUpdate(int i,
             PvsThreadResources resources,
             InputSystem inputSystem,
-            IPlayerSession session,
+            ICommonSession session,
             PvsData? pvsData,
             ref uint oldestAckValue)
         {
-            var channel = session.ConnectedClient;
+            var channel = session.Channel;
             var sessionData = _pvs.PlayerData[session];
             var lastAck = sessionData.LastReceivedAck;
             List<NetEntity>? leftPvs = null;

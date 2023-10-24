@@ -1,6 +1,6 @@
 using System.Buffers;
 using System.Collections.Generic;
-using Robust.Client.GameObjects;
+using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
@@ -20,8 +20,8 @@ public sealed partial class PhysicsSystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<PlayerAttachedEvent>(OnAttach);
-        SubscribeLocalEvent<PlayerDetachedEvent>(OnDetach);
+        SubscribeLocalEvent<LocalPlayerAttachedEvent>(OnAttach);
+        SubscribeLocalEvent<LocalPlayerDetachedEvent>(OnDetach);
         SubscribeLocalEvent<PhysicsComponent, JointAddedEvent>(OnJointAdded);
         SubscribeLocalEvent<PhysicsComponent, JointRemovedEvent>(OnJointRemoved);
     }
@@ -63,12 +63,12 @@ public sealed partial class PhysicsSystem
         UpdateIsPredicted(args.Joint.BodyBUid);
     }
 
-    private void OnAttach(PlayerAttachedEvent ev)
+    private void OnAttach(LocalPlayerAttachedEvent ev)
     {
         UpdateIsPredicted(ev.Entity);
     }
 
-    private void OnDetach(PlayerDetachedEvent ev)
+    private void OnDetach(LocalPlayerDetachedEvent ev)
     {
         UpdateIsPredicted(ev.Entity);
     }

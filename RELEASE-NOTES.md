@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 172.0.0
+
+### Breaking changes
+
+* Remove TryLifestage helper methods.
+* Refactor IPlayerManager to remove more IPlayerSession, changed PlayerAttachedEvent etc on client to have the Local prefix, and shuffled namespaces around.
+
+### New features
+
+* Add EnsureComponent(ref Entity<\T?>)
+
+### Bugfixes
+
+* Re-add force ask threshold and fix other PVS bugs.
+
+
 ## 171.0.0
 
 ### Breaking changes

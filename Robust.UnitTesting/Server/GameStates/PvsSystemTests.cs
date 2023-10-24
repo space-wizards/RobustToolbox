@@ -76,7 +76,7 @@ public sealed class PvsSystemTests : RobustIntegrationTest
             sEntMan.SpawnEntity(null, mapCoords);
 
             // Attach player.
-            var session = (ICommonSession) sPlayerMan.Sessions.First();
+            var session = sPlayerMan.Sessions.First();
             EntitySystem.Get<ActorSystem>().Attach(player, session);
             session.JoinGame();
         });

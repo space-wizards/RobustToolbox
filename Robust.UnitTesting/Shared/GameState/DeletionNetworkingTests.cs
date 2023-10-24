@@ -85,7 +85,7 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         {
             var coords = new EntityCoordinates(grid1, new Vector2(0.5f, 0.5f));
             player = sEntMan.SpawnEntity(null, coords);
-            var session = (ICommonSession) sPlayerMan.Sessions.First();
+            var session = sPlayerMan.Sessions.First();
             EntitySystem.Get<ActorSystem>().Attach(player, session);
             session.JoinGame();
         });

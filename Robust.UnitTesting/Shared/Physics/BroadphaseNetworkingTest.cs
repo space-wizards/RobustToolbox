@@ -91,7 +91,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
             Assert.That(physics.CanCollide);
 
             // Attach player.
-            var session = (ICommonSession) sPlayerMan.Sessions.First();
+            var session = sPlayerMan.Sessions.First();
             EntitySystem.Get<ActorSystem>().Attach(player, session);
             session.JoinGame();
         });

@@ -49,7 +49,7 @@ namespace Robust.Server.GameObjects
             if (!Enum.IsDefined(typeof(BoundKeyState), msg.State))
                 return;
 
-            var session = (ICommonSession) eventArgs.SenderSession;
+            var session = eventArgs.SenderSession;
 
             if (_lastProcessedInputCmd[session] < msg.InputSequence)
                 _lastProcessedInputCmd[session] = msg.InputSequence;

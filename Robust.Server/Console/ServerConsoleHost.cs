@@ -41,7 +41,7 @@ namespace Robust.Server.Console
 
             var msg = new MsgConCmd();
             msg.Text = command;
-            NetManager.ServerSendMessage(msg, ((ICommonSession)session).ConnectedClient);
+            NetManager.ServerSendMessage(msg, session.Channel);
         }
 
         /// <inheritdoc />
@@ -155,7 +155,7 @@ namespace Robust.Server.Console
 
         private bool ShellCanExecute(IConsoleShell shell, string cmdName)
         {
-            return shell.Player == null || _groupController.CanCommand((ICommonSession)shell.Player, cmdName);
+            return shell.Player == null || _groupController.CanCommand(shell.Player, cmdName);
         }
 
         private void HandleRegistrationRequest(INetChannel senderConnection)

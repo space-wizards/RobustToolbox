@@ -51,7 +51,7 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length < 1)
             {
-                var player = shell.Player as ICommonSession;
+                var player = shell.Player;
                 var toKickPlayer = player ?? _players.Sessions.FirstOrDefault();
                 if (toKickPlayer == null)
                 {

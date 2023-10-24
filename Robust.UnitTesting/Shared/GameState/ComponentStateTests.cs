@@ -73,7 +73,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         {
             // Attach player.
             player = server.EntMan.Spawn();
-            var session = (ICommonSession) server.PlayerMan.Sessions.First();
+            var session = server.PlayerMan.Sessions.First();
             server.System<ActorSystem>().Attach(player, session);
             session.JoinGame();
 
@@ -209,7 +209,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         {
             // Attach player.
             player = server.EntMan.Spawn();
-            var session = (ICommonSession) server.PlayerMan.Sessions.First();
+            var session = server.PlayerMan.Sessions.First();
             server.System<ActorSystem>().Attach(player, session);
             session.JoinGame();
 

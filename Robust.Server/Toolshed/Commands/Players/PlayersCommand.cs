@@ -31,7 +31,7 @@ public sealed class PlayerCommand : ToolshedCommand
             ctx.ReportError(new NotForServerConsoleError());
         }
 
-        return (ICommonSession)ctx.Session!;
+        return ctx.Session!;
     }
 
     [CommandImplementation("imm")]

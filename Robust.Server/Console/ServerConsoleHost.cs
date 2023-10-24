@@ -49,18 +49,12 @@ namespace Robust.Server.Console
         {
             var msg = new FormattedMessage();
             msg.AddText(text);
-            if (session is ICommonSession playerSession)
-                OutputText(playerSession, msg, false);
-            else
-                OutputText(null, msg, false);
+            OutputText(session, msg, false);
         }
 
         public override void WriteLine(ICommonSession? session, FormattedMessage msg)
         {
-            if (session is ICommonSession playerSession)
-                OutputText(playerSession, msg, false);
-            else
-                OutputText(null, msg, false);
+            OutputText(session, msg, false);
         }
 
         /// <inheritdoc />
@@ -68,10 +62,7 @@ namespace Robust.Server.Console
         {
             var msg = new FormattedMessage();
             msg.AddText(text);
-            if (session is ICommonSession playerSession)
-                OutputText(playerSession, msg, true);
-            else
-                OutputText(null, msg, true);
+            OutputText(session, msg, true);
         }
 
         public bool IsCmdServer(IConsoleCommand cmd) => true;

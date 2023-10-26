@@ -73,6 +73,27 @@ namespace Robust.Client.Graphics.Clyde
                     CheckGlError();
                 }
             }
+
+            CullEmptyChunks();
+        }
+
+        private void CullEmptyChunks()
+        {
+            foreach (var (grid, chunks) in _mapChunkData)
+            {
+                var gridComp = _mapManager.GetGridComp(grid);
+                foreach (var (index, chunk) in chunks)
+                {
+                    if (!chunk.Dirty || gridComp.Chunks.ContainsKey(index))
+                    {
+                        DebugTools.Assert(gridComp.Chunks[index].FilledTiles > 0);
+                        continue;
+                    }
+
+                    DeleteChunk(chunk);
+                    chunks.Remove(index);
+                }
+            }
         }
 
         private void _updateChunkMesh(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
@@ -159,24 +180,6 @@ namespace Robust.Client.Graphics.Clyde
             return datum;
         }
 
-        private void _updateOnGridModified(GridModifiedEvent args)
-        {
-            var gridData = _mapChunkData.GetOrNew(args.GridEnt);
-
-            foreach (var (pos, _) in args.Modified)
-            {
-                var chunk = args.Grid.GridTileToChunkIndices(pos);
-                if (gridData.TryGetValue(chunk, out var data))
-                    data.Dirty = true;
-            }
-
-            foreach (var chunk in args.RemovedChunks)
-            {
-                if (gridData.Remove(chunk, out var data))
-                    DeleteChunk(data);
-            }
-        }
-
         private void DeleteChunk(MapChunkData data)
         {
             DeleteVertexArray(data.VAO);
@@ -187,11 +190,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateTileMapOnUpdate(ref TileChangedEvent args)
         {
-            var guid = args.NewTile.GridUid;
-            var data = _mapChunkData.GetOrNew(guid);
-            var chunk = _mapManager.GetGrid(guid).GridTileToChunkIndices(args.NewTile.GridIndices);
-            if (data.TryGetValue(chunk, out var datum))
-                datum.Dirty = true;
+            var gridData = _mapChunkData.GetOrNew(args.Entity);
+            if (gridData.TryGetValue(args.ChunkIndex, out var data))
+                data.Dirty = true;
         }
 
         private void _updateOnGridCreated(GridStartupEvent ev)

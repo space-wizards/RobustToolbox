@@ -126,11 +126,12 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public TileChangedEvent(EntityUid uid, TileRef newTile, Tile oldTile)
+        public TileChangedEvent(EntityUid uid, TileRef newTile, Tile oldTile, Vector2i chunkIndex)
         {
             Entity = uid;
             NewTile = newTile;
             OldTile = oldTile;
+            ChunkIndex = chunkIndex;
         }
 
         /// <summary>
@@ -147,45 +148,10 @@ namespace Robust.Shared.GameObjects
         ///     Old tile that was replaced.
         /// </summary>
         public readonly Tile OldTile;
-    }
-
-    /// <summary>
-    ///     Arguments for when a one or more tiles on a grid are modified at once.
-    /// </summary>
-    public sealed class GridModifiedEvent : EntityEventArgs
-    {
-        /// <summary>
-        ///     The id of the grid being changed.
-        /// </summary>
-        public EntityUid GridEnt { get; }
 
         /// <summary>
-        ///     Grid being changed.
+        ///     The index of the grid-chunk that this tile belongs to.
         /// </summary>
-        public MapGridComponent Grid { get; }
-
-        /// <summary>
-        /// Set of tiles that were modified. Note that this does not necessarily include tiles in chunks that have been
-        /// removed entirely. See <see cref="RemovedChunks"/> for that.
-        /// </summary>
-        public IReadOnlyCollection<(Vector2i position, Tile tile)> Modified { get; }
-
-        /// <summary>
-        /// List of chunks that have been entirely removed. All of the tiles in this chunk are now empty.
-        /// Note that these tiles are not included in <see cref="Modified"/>.
-        /// </summary>
-        public readonly List<Vector2i> RemovedChunks;
-
-        /// <summary>
-        ///     Creates a new instance of this class.
-        /// </summary>
-        public GridModifiedEvent(EntityUid gridEnt, MapGridComponent grid,
-            IReadOnlyCollection<(Vector2i position, Tile tile)> modified, List<Vector2i> removedChunks)
-        {
-            GridEnt = gridEnt;
-            Grid = grid;
-            Modified = modified;
-            RemovedChunks = removedChunks;
-        }
+        public readonly Vector2i ChunkIndex;
     }
 }

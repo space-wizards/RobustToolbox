@@ -298,6 +298,7 @@ public abstract partial class SharedMapSystem
 
         var chunk = GetOrAddChunk(uid, component, data.Index);
         chunk.SuppressCollisionRegeneration = true;
+        DebugTools.Assert(data.TileData.Any(x => !x.IsEmpty));
         DebugTools.Assert(data.TileData.Length == component.ChunkSize * component.ChunkSize);
         for (ushort x = 0; x < component.ChunkSize; x++)
         {
@@ -701,11 +702,20 @@ public abstract partial class SharedMapSystem
 
     public void SetTile(EntityUid uid, MapGridComponent grid, Vector2i gridIndices, Tile tile)
     {
-        var (chunk, chunkTile) = ChunkAndOffsetForTile(uid, grid, gridIndices);
-        SetChunkTile(uid, grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
-        // Ideally we'd to this here for consistency but apparently tile modified does it or something.
-        // Yeah it's noodly.
-        // RegenerateCollision(chunk);
+        var chunkIndex = GridTileToChunkIndices(uid, grid, gridIndices);
+        if (!grid.Chunks.TryGetValue(chunkIndex, out var chunk))
+        {
+            if (tile.IsEmpty)
+                return;
+
+            grid.Chunks[chunkIndex] = chunk = new MapChunk(chunkIndex.X, chunkIndex.Y, grid.ChunkSize)
+            {
+                LastTileModifiedTick = _timing.CurTick
+            };
+        }
+
+        var offset = chunk.GridTileToChunkTile(gridIndices);
+        SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile);
     }
 
     public void SetTiles(EntityUid uid, MapGridComponent grid, List<(Vector2i GridIndices, Tile Tile)> tiles)
@@ -717,10 +727,22 @@ public abstract partial class SharedMapSystem
 
         foreach (var (gridIndices, tile) in tiles)
         {
-            var (chunk, chunkTile) = ChunkAndOffsetForTile(uid, grid, gridIndices);
+            var chunkIndex = GridTileToChunkIndices(uid, grid, gridIndices);
+            if (!grid.Chunks.TryGetValue(chunkIndex, out var chunk))
+            {
+                if (tile.IsEmpty)
+                    return;
+
+                grid.Chunks[chunkIndex] = chunk = new MapChunk(chunkIndex.X, chunkIndex.Y, grid.ChunkSize)
+                {
+                    LastTileModifiedTick = _timing.CurTick
+                };
+            }
+
+            var offset = chunk.GridTileToChunkTile(gridIndices);
             chunks.Add(chunk);
             chunk.SuppressCollisionRegeneration = true;
-            SetChunkTile(uid, grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
+            SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile);
         }
 
         foreach (var chunk in chunks)
@@ -1029,14 +1051,18 @@ public abstract partial class SharedMapSystem
     public bool IsAnchored(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, EntityUid euid)
     {
         var tilePos = TileIndicesFor(uid, grid, coords);
-        var (chunk, chunkTile) = ChunkAndOffsetForTile(uid, grid, tilePos);
+
+        if (!TryChunkAndOffsetForTile(uid, grid, tilePos, out var chunk, out var chunkTile))
+            return false;
+
         var snapgrid = chunk.GetSnapGrid((ushort)chunkTile.X, (ushort)chunkTile.Y);
         return snapgrid?.Contains(euid) == true;
     }
 
     public bool AddToSnapGridCell(EntityUid gridUid, MapGridComponent grid, Vector2i pos, EntityUid euid)
     {
-        var (chunk, chunkTile) = ChunkAndOffsetForTile(gridUid, grid, pos);
+        if (!TryChunkAndOffsetForTile(gridUid, grid, pos, out var chunk, out var chunkTile))
+            return false;
 
         if (chunk.GetTile((ushort)chunkTile.X, (ushort)chunkTile.Y).IsEmpty)
             return false;
@@ -1052,7 +1078,12 @@ public abstract partial class SharedMapSystem
 
     public void RemoveFromSnapGridCell(EntityUid gridUid, MapGridComponent grid, Vector2i pos, EntityUid euid)
     {
-        var (chunk, chunkTile) = ChunkAndOffsetForTile(gridUid, grid, pos);
+        var gridChunkIndices = GridTileToChunkIndices(gridUid, grid, pos);
+
+        if (!grid.Chunks.TryGetValue(gridChunkIndices, out var chunk))
+            return;
+
+        var chunkTile = chunk.GridTileToChunkTile(pos);
         chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, euid);
     }
 
@@ -1061,12 +1092,18 @@ public abstract partial class SharedMapSystem
         RemoveFromSnapGridCell(gridUid, grid, TileIndicesFor(gridUid, grid, coords), euid);
     }
 
-    private (MapChunk, Vector2i) ChunkAndOffsetForTile(EntityUid uid, MapGridComponent grid, Vector2i pos)
+    private bool TryChunkAndOffsetForTile(EntityUid uid, MapGridComponent grid, Vector2i pos,
+        [NotNullWhen(true)]out MapChunk? chunk, out Vector2i offset)
     {
         var gridChunkIndices = GridTileToChunkIndices(uid, grid, pos);
-        var chunk = GetOrAddChunk(uid, grid, gridChunkIndices);
-        var chunkTile = chunk.GridTileToChunkTile(pos);
-        return (chunk, chunkTile);
+        if (!grid.Chunks.TryGetValue(gridChunkIndices, out chunk))
+        {
+            offset = default;
+            return false;
+        }
+
+        offset = chunk.GridTileToChunkTile(pos);
+        return true;
     }
 
     public IEnumerable<EntityUid> GetInDir(EntityUid uid, MapGridComponent grid, EntityCoordinates position, Direction dir)

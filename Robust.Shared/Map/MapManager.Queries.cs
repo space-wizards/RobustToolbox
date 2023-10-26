@@ -215,14 +215,14 @@ internal partial class MapManager
             // you account for the fact that fixtures are shrunk slightly!
             var chunkIndices = SharedMapSystem.GetChunkIndices(localPos, iGrid.ChunkSize);
 
-            if (!tuple.mapSystem.HasChunk(iUid, iGrid, chunkIndices))
+            if (!iGrid.Chunks.TryGetValue(chunkIndices, out var chunk))
                 return true;
 
-            var chunk = tuple.mapSystem.GetOrAddChunk(iUid, iGrid, chunkIndices);
             var chunkRelative = SharedMapSystem.GetChunkRelative(localPos, iGrid.ChunkSize);
             var chunkTile = chunk.GetTile(chunkRelative);
 
-            if (chunkTile.IsEmpty) return true;
+            if (chunkTile.IsEmpty)
+                return true;
 
             tuple.uid = iUid;
             tuple.grid = iGrid;

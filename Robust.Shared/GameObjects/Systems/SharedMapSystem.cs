@@ -165,18 +165,27 @@ namespace Robust.Shared.GameObjects
         public MapGridComponent Grid { get; }
 
         /// <summary>
-        /// Set of tiles that were modified.
+        /// Set of tiles that were modified. Note that this does not necessarily include tiles in chunks that have been
+        /// removed entirely. See <see cref="RemovedChunks"/> for that.
         /// </summary>
         public IReadOnlyCollection<(Vector2i position, Tile tile)> Modified { get; }
 
         /// <summary>
+        /// List of chunks that have been entirely removed. All of the tiles in this chunk are now empty.
+        /// Note that these tiles are not included in <see cref="Modified"/>.
+        /// </summary>
+        public readonly List<Vector2i> RemovedChunks;
+
+        /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public GridModifiedEvent(EntityUid gridEnt, MapGridComponent grid, IReadOnlyCollection<(Vector2i position, Tile tile)> modified)
+        public GridModifiedEvent(EntityUid gridEnt, MapGridComponent grid,
+            IReadOnlyCollection<(Vector2i position, Tile tile)> modified, List<Vector2i> removedChunks)
         {
             GridEnt = gridEnt;
             Grid = grid;
             Modified = modified;
+            RemovedChunks = removedChunks;
         }
     }
 }

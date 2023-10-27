@@ -331,6 +331,22 @@ namespace Robust.Client.Input
                 RaiseRawKeyInput(args, rawInput, RawKeyAction.Up);
         }
 
+        public bool ExistingBinding(KeyBindingRegistration reg)
+        {
+            foreach (var existingBind in _bindings)
+            {
+                if (existingBind.BaseKey == reg.BaseKey &&
+                    existingBind.Mod1 == reg.Mod1 &&
+                    existingBind.Mod2 == reg.Mod2 &&
+                    existingBind.Mod3 == reg.Mod3)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private bool DownBind(KeyBinding binding, bool uiOnly, bool isRepeat)
         {
             if (binding.State == BoundKeyState.Down)
@@ -531,6 +547,11 @@ namespace Robust.Client.Input
                         }
                     }
 
+                    if (userData && !ValidateBinding(reg))
+                    {
+                        Logger.WarningS("input", "User keybinding failed validation");
+                        continue;
+                    }
                     RegisterBinding(reg, markModified: userData);
                 }
             }
@@ -546,6 +567,49 @@ namespace Robust.Client.Input
                     _modifiedKeyFunctions.UnionWith(leaveEmpty);
                 }
             }
+        }
+
+        /// <summary>
+        /// Crude validation of whether a keybinding is valid.
+        /// </summary>
+        private bool ValidateBinding(KeyBindingRegistration reg)
+        {
+            // If it's mouse just uhh special-case it for now.
+            if (reg.BaseKey == Key.MouseLeft ||
+                reg.BaseKey == Key.MouseMiddle ||
+                reg.BaseKey == Key.MouseRight)
+            {
+                if (reg.Mod1 != Key.Unknown ||
+                    reg.Mod2 != Key.Unknown ||
+                    reg.Mod3 != Key.Unknown)
+                {
+                    foreach (var bind in _bindings)
+                    {
+                        if (bind.BaseKey == reg.BaseKey &&
+                            bind.Mod1 == reg.Mod1 &&
+                            bind.Mod2 == reg.Mod2 &&
+                            bind.Mod3 == reg.Mod3)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+
+            foreach (var bind in _bindings)
+            {
+                if (bind.BaseKey == reg.BaseKey &&
+                    bind.Mod1 == reg.Mod1 &&
+                    bind.Mod2 == reg.Mod2 &&
+                    bind.Mod3 == reg.Mod3)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <inheritdoc />
@@ -579,6 +643,25 @@ namespace Robust.Client.Input
             RegisterBinding(binding, markModified);
 
             return binding;
+        }
+
+        public bool TryGetBindings(in KeyBindingRegistration reg, [NotNullWhen(true)] out List<IKeyBinding>? bindings)
+        {
+            bindings = null;
+
+            foreach (var bind in _bindings)
+            {
+                if (bind.BaseKey == reg.BaseKey &&
+                    bind.Mod1 == reg.Mod1 &&
+                    bind.Mod2 == reg.Mod2 &&
+                    bind.Mod3 == reg.Mod3)
+                {
+                    bindings ??= new List<IKeyBinding>();
+                    bindings.Add(bind);
+                }
+            }
+
+            return (bindings != null);
         }
 
         public void RemoveBinding(IKeyBinding binding, bool markModified = true)

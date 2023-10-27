@@ -1038,6 +1038,14 @@ namespace Robust.Client.Input
                 Type = keyMode
             };
 
+            if (_inputManager.TryGetBindings(registration, out var existing))
+            {
+                foreach (var bind in existing)
+                {
+                    _inputManager.RemoveBinding(bind);
+                }
+            }
+
             _inputManager.RegisterBinding(registration);
         }
 

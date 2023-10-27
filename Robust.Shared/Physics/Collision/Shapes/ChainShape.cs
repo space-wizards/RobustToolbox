@@ -89,18 +89,21 @@ public sealed partial class ChainShape : IPhysShape
         NextVertex = Vertices[1];
     }
 
-    public void CreateChain(Vector2[] vertices, int count, Vector2 prevVertex, Vector2 nextVertex)
+    public void CreateChain(ReadOnlySpan<Vector2> vertices, Vector2 prevVertex, Vector2 nextVertex)
     {
+        var count = vertices.Length;
         DebugTools.Assert(Vertices.Length == 0);
         DebugTools.Assert(count >= 2);
+#if DEBUG
         for (var i = 1; i < count; ++i)
         {
             // If the code crashes here, it means your vertices are too close together.
             DebugTools.Assert((vertices[i-1] - vertices[i]).LengthSquared() > PhysicsConstants.LinearSlop * PhysicsConstants.LinearSlop);
         }
+#endif
 
         Array.Resize(ref Vertices, count);
-        Array.Copy(vertices, Vertices, count);
+        vertices.CopyTo(Vertices);
 
         PrevVertex = prevVertex;
         NextVertex = nextVertex;

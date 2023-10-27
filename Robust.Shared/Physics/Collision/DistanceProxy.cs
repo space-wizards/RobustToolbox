@@ -67,7 +67,6 @@ internal ref struct DistanceProxy
                 break;
 
             case ShapeType.Chain:
-
                 ChainShape chain = (ChainShape) shape;
                 Debug.Assert(0 <= index && index < chain.Vertices.Length);
 

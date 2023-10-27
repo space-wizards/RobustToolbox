@@ -39,18 +39,18 @@ public sealed partial class ChainShape : IPhysShape
     /// </summary>
     /// <param name="position"></param>
     /// <param name="radius"></param>
+    /// <param name="outer">Does the chain block the outside (CCW) or inside (CW).</param>
     /// <param name="count">How many multiply radius by count to get total edges.</param>
-    public void CreateLoop(Vector2 position, float radius, int count = 16)
+    public void CreateLoop(Vector2 position, float radius, bool outer = true, float count = 16f)
     {
         int divisions = Math.Max(16,(int)(radius * count));
         float arcLength = MathF.PI * 2 / divisions;
         Span<Vector2> vertices = stackalloc Vector2[divisions];
 
-        // Draws a "circle", but its just a polygon with a bunch of sides
-        // this is the GL_LINES version, not GL_LINE_STRIP
         for (int i = 0; i < divisions; i++)
         {
-            var startPos = new Vector2(MathF.Cos(arcLength * i) * radius, MathF.Sin(arcLength * i) * radius);
+            var index = outer ? i : -i;
+            var startPos = new Vector2(MathF.Cos(arcLength * index) * radius, MathF.Sin(arcLength * index) * radius);
             vertices[i] = startPos;
         }
 

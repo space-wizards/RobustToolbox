@@ -366,6 +366,9 @@ namespace Robust.Client.Debugging
 
                 _debugPhysicsSystem.PointCount = 0;
             }
+
+            worldHandle.UseShader(null);
+            worldHandle.SetTransform(Matrix3.Identity);
         }
 
         private void DrawScreen(DrawingHandleScreen screenHandle, OverlayDrawArgs args)
@@ -438,6 +441,9 @@ namespace Robust.Client.Debugging
                     }
                 }
             }
+
+            screenHandle.UseShader(null);
+            screenHandle.SetTransform(Matrix3.Identity);
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)

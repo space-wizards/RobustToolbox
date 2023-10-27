@@ -60,7 +60,7 @@ public sealed partial class ChainShape : IPhysShape
     /// <summary>
     /// Creates a chain loop with the specified vertices and count.
     /// </summary>
-    public void CreateLoop(Span<Vector2> vertices)
+    public void CreateLoop(ReadOnlySpan<Vector2> vertices)
     {
         var count = vertices.Length;
         DebugTools.Assert(Vertices.Length == 0);

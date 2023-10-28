@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.Collections;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Random
@@ -62,6 +63,8 @@ namespace Robust.Shared.Random
             list.RemoveAt(index);
             return element;
         }
+
+        public static Angle NextAngle(this System.Random random) => NextFloat(random) * MathF.Tau;
 
         public static float NextFloat(this IRobustRandom random)
         {

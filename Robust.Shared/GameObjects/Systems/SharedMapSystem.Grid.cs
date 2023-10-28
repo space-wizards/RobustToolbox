@@ -259,7 +259,6 @@ public abstract partial class SharedMapSystem
             chunk.ValidateChunk();
             DebugTools.Assert(chunk.FilledTiles > 0);
         }
-        DebugTools.Assert(component.Chunks.Count > 0);
 #endif
     }
 

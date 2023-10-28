@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 173.1.0
+
+### New features
+
+* Add physics chain shapes from Box2D.
+
+
 ## 173.0.0
 
 ### Breaking changes

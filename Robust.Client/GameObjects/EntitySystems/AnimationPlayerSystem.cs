@@ -3,21 +3,17 @@ using System.Collections.Generic;
 using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class AnimationPlayerSystem : EntitySystem, IPostInjectInit
+    public sealed class AnimationPlayerSystem : EntitySystem
     {
         private readonly List<Entity<AnimationPlayerComponent>> _activeAnimations = new();
 
         private EntityQuery<MetaDataComponent> _metaQuery;
 
         [Dependency] private readonly IComponentFactory _compFact = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-
-        private ISawmill _sawmill = default!;
 
         public override void Initialize()
         {
@@ -123,13 +119,13 @@ namespace Robust.Client.GameObjects
 
                 if (compTrack.ComponentType == null)
                 {
-                    _sawmill.Error("Attempted to play a component animation without any component specified.");
+                    Log.Error("Attempted to play a component animation without any component specified.");
                     return;
                 }
 
                 if (!EntityManager.TryGetComponent(ent, compTrack.ComponentType, out var animatedComp))
                 {
-                    _sawmill.Error(
+                    Log.Error(
                         $"Attempted to play a component animation, but the entity {ToPrettyString(ent)} does not have the component to be animated: {compTrack.ComponentType}.");
                     return;
                 }
@@ -147,7 +143,7 @@ namespace Robust.Client.GameObjects
                     if (animatedComp.GetType().GetProperty(compTrack.Property) is { } property &&
                         property.HasCustomAttribute<AutoNetworkedFieldAttribute>())
                     {
-                        _sawmill.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(ent)}");
+                        Log.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(ent)}");
                     }
                 }
             }
@@ -182,19 +178,18 @@ namespace Robust.Client.GameObjects
 
         public void Stop(EntityUid uid, string key)
         {
-            if (!TryComp<AnimationPlayerComponent>(uid, out var player)) return;
+            if (!TryComp<AnimationPlayerComponent>(uid, out var player))
+                return;
+
             player.PlayingAnimations.Remove(key);
         }
 
         public void Stop(EntityUid uid, AnimationPlayerComponent? component, string key)
         {
-            if (!Resolve(uid, ref component, false)) return;
-            component.PlayingAnimations.Remove(key);
-        }
+            if (!Resolve(uid, ref component, false))
+                return;
 
-        void IPostInjectInit.PostInject()
-        {
-            _sawmill = _logManager.GetSawmill("anim");
+            component.PlayingAnimations.Remove(key);
         }
     }
 

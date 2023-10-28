@@ -15,6 +15,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Placement;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Server.Placement

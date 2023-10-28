@@ -41,31 +41,3 @@ public interface IPlayerManager : ISharedPlayerManager
     [Obsolete("Use LocalSession instead")]
     LocalPlayer? LocalPlayer { get;}
 }
-
-/// <summary>
-/// ECS event that gets raised when the local player gets attached to a new entity. The event is both broadcast and
-/// raised directed at the new entity.
-/// </summary>
-public sealed class LocalPlayerAttachedEvent : EntityEventArgs
-{
-    public LocalPlayerAttachedEvent(EntityUid entity)
-    {
-        Entity = entity;
-    }
-
-    public EntityUid Entity { get; }
-}
-
-/// <summary>
-/// ECS event that gets raised when the local player gets detached from an entity. The event is both broadcast and
-/// raised directed at the new entity.
-/// </summary>
-public sealed class LocalPlayerDetachedEvent : EntityEventArgs
-{
-    public LocalPlayerDetachedEvent(EntityUid entity)
-    {
-        Entity = entity;
-    }
-
-    public EntityUid Entity { get; }
-}

@@ -99,8 +99,7 @@ namespace Robust.Client.Player
         /// <inheritdoc />
         public override void Shutdown()
         {
-            if (LocalSession != null)
-                SetAttachedEntity(LocalSession, null);
+            SetAttachedEntity(LocalSession, null, out _);
             LocalPlayer = null;
             LocalSession = null;
             _pendingStates.Clear();
@@ -108,34 +107,39 @@ namespace Robust.Client.Player
             PlayerListUpdated?.Invoke();
         }
 
-        public override void SetAttachedEntity(ICommonSession session, EntityUid? uid)
+        public override bool SetAttachedEntity(ICommonSession? session, EntityUid? uid, out ICommonSession? kicked, bool force = false)
         {
+            kicked = null;
+            if (session == null)
+                return false;
+
             if (session.AttachedEntity == uid)
-                return;
+                return true;
 
             var old = session.AttachedEntity;
-            base.SetAttachedEntity(session, uid);
+            if (!base.SetAttachedEntity(session, uid, out kicked, force))
+                return false;
 
             if (session != LocalSession)
-                return;
+                return true;
 
             if (old.HasValue)
             {
                 Sawmill.Info($"Detaching local player from {EntManager.ToPrettyString(old)}.");
-                EntManager.EventBus.RaiseLocalEvent(old.Value, new LocalPlayerDetachedEvent(old.Value), true);
+                EntManager.EventBus.RaiseLocalEvent(old.Value, new LocalPlayerDetachedEvent(old.Value, session), true);
                 LocalPlayerDetached?.Invoke(old.Value);
             }
 
             if (uid == null)
             {
                 Sawmill.Info($"Local player is no longer attached to any entity.");
-                return;
+                return true;
             }
 
             if (!EntManager.EntityExists(uid))
             {
                 Sawmill.Error($"Attempted to attach player to non-existent entity {uid}!");
-                return;
+                return true;
             }
 
             if (!EntManager.EnsureComponent(uid.Value, out EyeComponent eye))
@@ -146,8 +150,9 @@ namespace Robust.Client.Player
             }
 
             Sawmill.Info($"Attaching local player to {EntManager.ToPrettyString(uid)}.");
-            EntManager.EventBus.RaiseLocalEvent(uid.Value, new LocalPlayerAttachedEvent(uid.Value), true);
+            EntManager.EventBus.RaiseLocalEvent(uid.Value, new LocalPlayerAttachedEvent(uid.Value, session), true);
             LocalPlayerAttached?.Invoke(uid.Value);
+            return true;
         }
 
         public void ApplyPlayerStates(IReadOnlyCollection<SessionState> list)
@@ -193,7 +198,7 @@ namespace Robust.Client.Player
                     _pendingStates.Remove(state.UserId);
                 }
 
-                SetAttachedEntity(LocalSession, uid);
+                SetAttachedEntity(LocalSession, uid, out _, true);
                 SetStatus(LocalSession, state.Status);
             }
 
@@ -237,7 +242,7 @@ namespace Robust.Client.Player
                     newSession.Ping = state.Ping;
                     newSession.Name = state.Name;
                     SetStatus(newSession, state.Status);
-                    SetAttachedEntity(newSession, controlled);
+                    SetAttachedEntity(newSession, controlled, out _, true);
                     dirty = true;
                     continue;
                 }
@@ -256,7 +261,7 @@ namespace Robust.Client.Player
                 local.Name = state.Name;
                 local.Ping = state.Ping;
                 SetStatus(local, state.Status);
-                SetAttachedEntity(local, controlled);
+                SetAttachedEntity(local, controlled, out _, true);
             }
 
             // Remove old users. This only works if the provided state is a list of all players

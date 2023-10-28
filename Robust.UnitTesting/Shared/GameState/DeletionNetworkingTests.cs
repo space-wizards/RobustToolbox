@@ -9,8 +9,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
-using cIPlayerManager = Robust.Client.Player.IPlayerManager;
-using sIPlayerManager = Robust.Server.Player.IPlayerManager;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -37,8 +35,8 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         var cEntMan = client.ResolveDependency<IEntityManager>();
         var netMan = client.ResolveDependency<IClientNetManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
-        var cPlayerMan = client.ResolveDependency<cIPlayerManager>();
-        var sPlayerMan = server.ResolveDependency<sIPlayerManager>();
+        var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
         var xformSys = sEntMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
@@ -85,7 +83,7 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
             var coords = new EntityCoordinates(grid1, new Vector2(0.5f, 0.5f));
             player = sEntMan.SpawnEntity(null, coords);
             var session = sPlayerMan.Sessions.First();
-            sEntMan.System<ActorSystem>().Attach(player, session);
+            server.PlayerMan.SetAttachedEntity(session, player);
             sPlayerMan.JoinGame(session);
         });
 
@@ -94,7 +92,7 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         // Check player got properly attached
         await client.WaitPost(() =>
         {
-            var ent = cEntMan.GetNetEntity(cPlayerMan.LocalPlayer?.ControlledEntity);
+            var ent = cEntMan.GetNetEntity(cPlayerMan.LocalEntity);
             Assert.That(ent, Is.EqualTo(sEntMan.GetNetEntity(player)));
         });
 

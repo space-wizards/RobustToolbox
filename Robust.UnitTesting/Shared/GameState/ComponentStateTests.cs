@@ -8,7 +8,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Shared.GameState;
 
@@ -73,7 +72,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             // Attach player.
             player = server.EntMan.Spawn();
             var session = server.PlayerMan.Sessions.First();
-            server.System<ActorSystem>().Attach(player, session);
+            server.PlayerMan.SetAttachedEntity(session, player);
             server.PlayerMan.JoinGame(session);
 
             // Spawn test entities.
@@ -209,7 +208,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             // Attach player.
             player = server.EntMan.Spawn();
             var session = server.PlayerMan.Sessions.First();
-            server.System<ActorSystem>().Attach(player, session);
+            server.PlayerMan.SetAttachedEntity(session, player);
             server.PlayerMan.JoinGame(session);
 
             // Spawn test entities.

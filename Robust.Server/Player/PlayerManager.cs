@@ -106,8 +106,7 @@ namespace Robust.Server.Player
             DebugTools.Assert(session.Channel == args.Channel);
 
             SetStatus(session, SessionStatus.Disconnected);
-            if (session.AttachedEntity != null)
-                EntManager.System<ActorSystem>().Detach(session.AttachedEntity.Value);
+            SetAttachedEntity(session, null, out _, true);
 
             var viewSys = EntManager.System<ViewSubscriberSystem>();
             foreach (var eye in session.ViewSubscriptions.ToArray())

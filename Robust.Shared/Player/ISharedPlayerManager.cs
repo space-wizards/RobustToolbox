@@ -87,7 +87,7 @@ public interface ISharedPlayerManager
     /// <summary>
     /// Attempts to get the session with the given <see cref="NetUserId"/>.
     /// </summary>
-    bool TryGetSessionById(NetUserId user, [NotNullWhen(true)] out ICommonSession? session);
+    bool TryGetSessionById([NotNullWhen(true)] NetUserId? user, [NotNullWhen(true)] out ICommonSession? session);
 
     /// <summary>
     /// Attempts to get the session with the given <see cref="ICommonSession.Name"/>.
@@ -122,9 +122,28 @@ public interface ISharedPlayerManager
     void RemoveSession(NetUserId user, bool removeData = false);
 
     /// <summary>
-    /// Updates a session's <see cref="ICommonSession.AttachedEntity"/>
+    /// Sets a session's attached entity, optionally kicking any sessions already attached to it.
     /// </summary>
-    void SetAttachedEntity(ICommonSession session, EntityUid? uid);
+    /// <param name="session">The player whose attached entity should get updated</param>
+    /// <param name="entity">The entity to attach the player to, if any.</param>
+    /// <param name="force">Whether to kick any existing players that are already attached to the entity</param>
+    /// <param name="kicked">The player that was forcefully kicked, if any.</param>
+    /// <returns>Whether the attach succeeded, or not.</returns>
+    bool SetAttachedEntity(
+        [NotNullWhen(true)] ICommonSession? session,
+        EntityUid? entity,
+        out ICommonSession? kicked,
+        bool force = false);
+
+    /// <summary>
+    /// Sets a session's attached entity, optionally kicking any sessions already attached to it.
+    /// </summary>
+    /// <param name="session">The player whose attached entity should get updated</param>
+    /// <param name="entity">The entity to attach the player to, if any.</param>
+    /// <param name="force">Whether to kick any existing players that are already attached to the entity</param>
+    /// <returns>Whether the attach succeeded, or not.</returns>
+    bool SetAttachedEntity([NotNullWhen(true)] ICommonSession? session, EntityUid? entity, bool force = false)
+        => SetAttachedEntity(session, entity, out _, force);
 
     /// <summary>
     /// Updates a session's <see cref="ICommonSession.Status"/>
@@ -138,8 +157,4 @@ public interface ISharedPlayerManager
 
     [Obsolete("Use GetSessionById()")]
     ICommonSession GetSessionByUserId(NetUserId user) => GetSessionById(user);
-
-    [Obsolete("Use TryGetSessionById()")]
-    bool TryGetSessionByUserId(NetUserId user, [NotNullWhen(true)] out ICommonSession? session)
-        => TryGetSessionById(user, out session);
 }

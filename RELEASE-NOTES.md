@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 173.0.0
+
+### Breaking changes
+
+* Remove GridModifiedEvent in favor of TileChangedEvent.
+
+### Bugfixes
+
+* Fix some grid rendering bugs where chunks don't get destroyed correctly.
+
+
 ## 172.0.0
 
 ### Breaking changes

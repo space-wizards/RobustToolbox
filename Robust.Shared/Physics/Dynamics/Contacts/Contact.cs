@@ -293,8 +293,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     chain.GetChildEdge(ref edge, ChildIndexA);
                     _manifoldManager.CollideEdgeAndCircle(ref manifold, edge, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
                     _manifoldManager.ReturnEdge(edge);
-                }
                     break;
+                }
                 case ContactType.ChainAndPolygon:
                 {
                     var loop2 = (ChainShape) FixtureA!.Shape;

@@ -302,8 +302,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     loop2.GetChildEdge(ref edge, ChildIndexA);
                     _manifoldManager.CollideEdgeAndPolygon(ref manifold, edge, in transformA, (PolygonShape) FixtureB!.Shape, in transformB);
                     _manifoldManager.ReturnEdge(edge);
-                }
                     break;
+                }
                 case ContactType.Circle:
                     _manifoldManager.CollideCircles(ref manifold, (PhysShapeCircle) FixtureA!.Shape, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
                     break;

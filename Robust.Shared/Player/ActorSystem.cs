@@ -1,13 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
-using Robust.Server.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
-using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
-namespace Robust.Server.GameObjects
+namespace Robust.Shared.Player
 {
     /// <summary>
     ///     System that handles players being attached/detached from entities.
@@ -15,7 +13,7 @@ namespace Robust.Server.GameObjects
     [UsedImplicitly]
     public sealed class ActorSystem : EntitySystem
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
 
         public override void Initialize()
         {

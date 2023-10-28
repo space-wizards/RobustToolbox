@@ -67,17 +67,15 @@ internal ref struct DistanceProxy
                 break;
 
             case ShapeType.Chain:
-                throw new NotImplementedException();
-            /*
-            ChainShape chain = (ChainShape) shape;
-            Debug.Assert(0 <= index && index < chain.Vertices.Count);
-            Vertices.Clear();
-            Vertices.Add(chain.Vertices[index]);
-            Vertices.Add(index + 1 < chain.Vertices.Count ? chain.Vertices[index + 1] : chain.Vertices[0]);
+                ChainShape chain = (ChainShape) shape;
+                Debug.Assert(0 <= index && index < chain.Vertices.Length);
 
-            Radius = chain.Radius;
-            */
+                Buffer._00 = chain.Vertices[index];
+                Buffer._01 = index + 1 < chain.Vertices.Length ? chain.Vertices[index + 1] : chain.Vertices[0];
+                Vertices = Buffer.AsSpan;
 
+                Radius = chain.Radius;
+                break;
             case ShapeType.Edge:
                 EdgeShape edge = (EdgeShape) shape;
 

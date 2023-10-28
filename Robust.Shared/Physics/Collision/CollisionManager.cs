@@ -22,7 +22,9 @@
 
 using System;
 using System.Numerics;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Collision.Shapes;
 
 namespace Robust.Shared.Physics.Collision;
 
@@ -34,6 +36,9 @@ internal sealed partial class CollisionManager : IManifoldManager
     /*
      * Farseer had this as a static class with a ThreadStatic DistanceInput
      */
+
+    private ObjectPool<EdgeShape> _edgePool =
+        new DefaultObjectPool<EdgeShape>(new DefaultPooledObjectPolicy<EdgeShape>());
 
     /// <summary>
     ///     Used for debugging contact points.
@@ -130,6 +135,16 @@ internal sealed partial class CollisionManager : IManifoldManager
         }
 
         return numOut;
+    }
+
+    public EdgeShape GetContactEdge()
+    {
+        return _edgePool.Get();
+    }
+
+    public void ReturnEdge(EdgeShape edge)
+    {
+        _edgePool.Return(edge);
     }
 }
 

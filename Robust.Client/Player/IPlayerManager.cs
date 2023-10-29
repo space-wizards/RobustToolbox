@@ -15,14 +15,21 @@ public interface IPlayerManager : ISharedPlayerManager
     event Action? PlayerListUpdated;
 
     /// <summary>
-    /// Invoked when <see cref="ISharedPlayerManager.LocalSession"/> gets attached to a new entity. See also <see cref="LocalPlayerAttachedEvent"/>
+    /// Invoked when <see cref="ISharedPlayerManager.LocalSession"/> gets attached to a new entity, or when the local
+    /// session gets updated. See also <see cref="LocalPlayerAttachedEvent"/>
     /// </summary>
     event Action<EntityUid>? LocalPlayerAttached;
 
     /// <summary>
-    /// Invoked when <see cref="ISharedPlayerManager.LocalSession"/> gets detached from new entity. See also <see cref="LocalPlayerDetachedEvent"/>
+    /// Invoked when <see cref="ISharedPlayerManager.LocalSession"/> gets detached from an entity, or when the local
+    /// session gets updated. See also <see cref="LocalPlayerDetachedEvent"/>
     /// </summary>
     event Action<EntityUid>? LocalPlayerDetached;
+
+    /// <summary>
+    /// Invoked whenever <see cref="ISharedPlayerManager.LocalSession"/> changes.
+    /// </summary>
+    event Action<(ICommonSession? Old, ICommonSession? New)>? LocalSessionChanged;
 
     void ApplyPlayerStates(IReadOnlyCollection<SessionState> list);
 
@@ -37,6 +44,8 @@ public interface IPlayerManager : ISharedPlayerManager
     /// using the given <see cref="INetChannel"/>.
     /// </summary>
     void SetupMultiplayer(INetChannel channel);
+
+    void SetLocalSession(ICommonSession session);
 
     [Obsolete("Use LocalSession instead")]
     LocalPlayer? LocalPlayer { get;}

@@ -35,33 +35,29 @@ public sealed class PlayerDetachedEvent : EntityEventArgs
 }
 
 /// <summary>
-/// Variant of <see cref="PlayerAttachedEvent"/> that gets raised by the client when the local player gets attached to
-/// a new entity.
+/// Variant of <see cref="PlayerAttachedEvent"/> that gets raised by the client when the local session gets attached to
+/// a new entity. This event will also get raised if the local session changes.
 /// </summary>
 public sealed class LocalPlayerAttachedEvent : EntityEventArgs
 {
     public readonly EntityUid Entity;
-    public readonly ICommonSession Player;
 
-    public LocalPlayerAttachedEvent(EntityUid entity, ICommonSession player)
+    public LocalPlayerAttachedEvent(EntityUid entity)
     {
         Entity = entity;
-        Player = player;
     }
 }
 
 /// <summary>
-/// Variant of <see cref="PlayerDetachedEvent"/> that gets raised by the client when the local player gets attached to
-/// a new entity.
+/// Variant of <see cref="PlayerDetachedEvent"/> that gets raised by the client when the local session gets attached to
+/// a new entity. This event will also get raised if the local session changes.
 /// </summary>
 public sealed class LocalPlayerDetachedEvent : EntityEventArgs
 {
     public readonly EntityUid Entity;
-    public readonly ICommonSession Player;
 
-    public LocalPlayerDetachedEvent(EntityUid entity, ICommonSession player)
+    public LocalPlayerDetachedEvent(EntityUid entity)
     {
         Entity = entity;
-        Player = player;
     }
 }

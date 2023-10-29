@@ -99,7 +99,14 @@ internal abstract partial class SharedPlayerManager
         return new CommonSession(user, name, data);
     }
 
-    internal CommonSession CreateAndAddSession(NetUserId user, string name)
+    public ICommonSession CreateAndAddSession(INetChannel channel)
+    {
+        var session = CreateAndAddSession(channel.UserId, channel.UserName);
+        session.Channel = channel;
+        return session;
+    }
+
+    public ICommonSession CreateAndAddSession(NetUserId user, string name)
     {
         Lock.EnterWriteLock();
         CommonSession session;
@@ -224,6 +231,18 @@ internal abstract partial class SharedPlayerManager
 
         UpdateState(session);
         PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(session, old, status));
+    }
+
+    public void SetPing(ICommonSession session, short ping)
+    {
+        ((CommonSession) session).Ping = ping;
+        UpdateState(session);
+    }
+
+    public void SetName(ICommonSession session, string name)
+    {
+        ((CommonSession) session).Name = name;
+        UpdateState(session);
     }
 
     public void JoinGame(ICommonSession session)

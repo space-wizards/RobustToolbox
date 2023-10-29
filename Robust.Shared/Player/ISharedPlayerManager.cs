@@ -121,6 +121,10 @@ public interface ISharedPlayerManager
     void RemoveSession(ICommonSession session, bool removeData = false);
     void RemoveSession(NetUserId user, bool removeData = false);
 
+    ICommonSession CreateAndAddSession(INetChannel channel);
+
+    ICommonSession CreateAndAddSession(NetUserId user, string name);
+
     /// <summary>
     /// Sets a session's attached entity, optionally kicking any sessions already attached to it.
     /// </summary>
@@ -149,6 +153,16 @@ public interface ISharedPlayerManager
     /// Updates a session's <see cref="ICommonSession.Status"/>
     /// </summary>
     void SetStatus(ICommonSession session, SessionStatus status);
+
+    /// <summary>
+    /// Updates a session's <see cref="ICommonSession.Ping"/>
+    /// </summary>
+    void SetPing(ICommonSession session, short ping);
+
+    /// <summary>
+    /// Updates a session's <see cref="ICommonSession.Name"/>
+    /// </summary>
+    public void SetName(ICommonSession session, string name);
 
     /// <summary>
     /// Set the session's status to <see cref="SessionStatus.InGame"/>.

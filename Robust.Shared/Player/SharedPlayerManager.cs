@@ -27,7 +27,7 @@ internal abstract partial class SharedPlayerManager : ISharedPlayerManager
     public int PlayerCount => InternalSessions.Count;
 
     [ViewVariables]
-    public ICommonSession? LocalSession { get; set; }
+    public ICommonSession? LocalSession { get; protected set; }
 
     [ViewVariables]
     public NetUserId? LocalUser => LocalSession?.UserId;

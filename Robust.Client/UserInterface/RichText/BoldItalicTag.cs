@@ -9,7 +9,7 @@ public sealed class BoldItalicTag : IMarkupTag
 {
     public const string BoldItalicFont = "DefaultBoldItalic";
 
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
+    [Dependency] private readonly IClientResourceCache _resourceCache = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     public string Name => "bolditalic";

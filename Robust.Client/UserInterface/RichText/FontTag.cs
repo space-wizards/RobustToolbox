@@ -16,7 +16,7 @@ public sealed class FontTag : IMarkupTag
     public const string DefaultFont = "Default";
     public const int DefaultSize = 12;
 
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
+    [Dependency] private readonly IClientResourceCache _resourceCache = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     public string Name => "font";
@@ -43,7 +43,7 @@ public sealed class FontTag : IMarkupTag
     public static Font CreateFont(
         Stack<Font> contextFontStack,
         MarkupNode node,
-        IResourceCache cache,
+        IClientResourceCache cache,
         IPrototypeManager prototypeManager,
         string fontId)
     {

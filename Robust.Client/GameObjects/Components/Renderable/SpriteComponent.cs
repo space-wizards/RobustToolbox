@@ -36,7 +36,7 @@ namespace Robust.Client.GameObjects
     [RegisterComponent]
     public sealed partial class SpriteComponent : Component, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
-        [Dependency] private readonly IResourceCache resourceCache = default!;
+        [Dependency] private readonly IClientResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
         [Dependency] private readonly IEntityManager entities = default!;
         [Dependency] private readonly IReflectionManager reflection = default!;
@@ -1379,7 +1379,7 @@ namespace Robust.Client.GameObjects
         }
 
         [Obsolete("Use SpriteSystem instead.")]
-        internal static RSI.State GetFallbackState(IResourceCache cache)
+        internal static RSI.State GetFallbackState(IClientResourceCache cache)
         {
             var rsi = cache.GetResource<RSIResource>("/Textures/error.rsi").RSI;
             return rsi["error"];
@@ -2101,12 +2101,12 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache)
+        public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IClientResourceCache resourceCache)
         {
             return GetPrototypeTextures(prototype, resourceCache, out var _);
         }
 
-        public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache, out bool noRot)
+        public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IClientResourceCache resourceCache, out bool noRot)
         {
             var results = new List<IDirectionalTextureProvider>();
             noRot = false;
@@ -2161,7 +2161,7 @@ namespace Robust.Client.GameObjects
         }
 
         [Obsolete("Use SpriteSystem")]
-        public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
+        public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IClientResourceCache resourceCache)
         {
             // TODO when moving to a non-static method in a system, pass in IComponentFactory
             if (prototype.TryGetComponent(out IconComponent? icon))

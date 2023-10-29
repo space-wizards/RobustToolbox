@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Audio.Midi;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 
@@ -20,7 +21,7 @@ public interface IMidiRenderer : IDisposable
     /// <summary>
     ///     The buffered audio source of this renderer.
     /// </summary>
-    internal IClydeBufferedAudioSource Source { get; }
+    internal IBufferedAudioSource Source { get; }
 
     /// <summary>
     ///     Whether this renderer has been disposed or not.

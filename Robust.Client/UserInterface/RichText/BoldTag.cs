@@ -10,7 +10,7 @@ public sealed class BoldTag : IMarkupTag
 {
     public const string BoldFont = "DefaultBold";
 
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
+    [Dependency] private readonly IClientResourceCache _resourceCache = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     public string Name => "bold";

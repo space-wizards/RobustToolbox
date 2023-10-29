@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 
 namespace Robust.Shared.GameObjects;
 

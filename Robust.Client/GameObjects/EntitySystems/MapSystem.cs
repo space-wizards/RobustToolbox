@@ -11,7 +11,7 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly IResourceCache _resource = default!;
+        [Dependency] private readonly IClientResourceCache _resource = default!;
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
 
         public override void Initialize()

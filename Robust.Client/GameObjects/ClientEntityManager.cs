@@ -170,7 +170,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel channel)
+        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel? channel)
         {
             throw new NotSupportedException();
         }

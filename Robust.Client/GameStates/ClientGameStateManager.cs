@@ -133,6 +133,8 @@ namespace Robust.Client.GameStates
         public void Initialize()
         {
             _sawmill = _logMan.GetSawmill("state");
+            _sawmill.Level = LogLevel.Info;
+
             _processor = new GameStateProcessor(this, _timing, _sawmill);
 
             _network.RegisterNetMessage<MsgState>(HandleStateMessage);
@@ -712,7 +714,7 @@ namespace Robust.Client.GameStates
 
             using (_prof.Group("Player"))
             {
-                _players.ApplyPlayerStates(curState.PlayerStates.Value ?? Array.Empty<PlayerState>());
+                _players.ApplyPlayerStates(curState.PlayerStates.Value ?? Array.Empty<SessionState>());
             }
 
             using (_prof.Group("Callback"))

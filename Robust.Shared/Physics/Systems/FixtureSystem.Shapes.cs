@@ -16,6 +16,7 @@ namespace Robust.Shared.Physics.Systems
         {
             switch (shape)
             {
+                case ChainShape:
                 case EdgeShape:
                     return false;
                 case PhysShapeAabb aabb:
@@ -49,6 +50,11 @@ namespace Robust.Shared.Physics.Systems
             // we can just cut out the middle-man
             switch (shape)
             {
+                case ChainShape:
+                    data.Mass = 0f;
+                    data.Center = Vector2.Zero;
+                    data.I = 0f;
+                    break;
                 case EdgeShape edge:
                     data.Mass = 0.0f;
                     data.Center = (edge.Vertex1 + edge.Vertex2) * 0.5f;
@@ -153,6 +159,11 @@ namespace Robust.Shared.Physics.Systems
             // we can just cut out the middle-man
             switch (shape)
             {
+                case ChainShape:
+                    data.Mass = 0f;
+                    data.Center = Vector2.Zero;
+                    data.I = 0f;
+                    break;
                 case EdgeShape edge:
                     data.Mass = 0.0f;
                     data.Center = (edge.Vertex1 + edge.Vertex2) * 0.5f;

@@ -331,6 +331,11 @@ public interface IPrototypeManager
     ///     This does NOT fire on initial prototype load.
     /// </remarks>
     event Action<PrototypesReloadedEventArgs> PrototypesReloaded;
+
+    /// <summary>
+    /// Get the yaml data for a given prototype.
+    /// </summary>
+    IReadOnlyDictionary<string, MappingDataNode> GetPrototypeData(EntityPrototype prototype);
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

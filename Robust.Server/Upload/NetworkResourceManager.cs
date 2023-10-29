@@ -5,6 +5,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Upload;
 using Robust.Shared.ViewVariables;
 
@@ -17,7 +18,7 @@ public sealed class NetworkResourceManager : SharedNetworkResourceManager
     [Dependency] private readonly IConfigurationManager _cfgManager = default!;
     [Dependency] private readonly IConGroupController _controller = default!;
 
-    public event Action<IPlayerSession, NetworkResourceUploadMessage>? OnResourceUploaded;
+    public event Action<ICommonSession, NetworkResourceUploadMessage>? OnResourceUploaded;
 
     [ViewVariables] public bool Enabled { get; private set; } = true;
     [ViewVariables] public float SizeLimit { get; private set; }

@@ -54,6 +54,78 @@ END TEMPLATE-->
 *None yet*
 
 
+## 175.0.0
+
+### Breaking changes
+
+* Removed static SoundSystem.Play methods.
+* Moved IPlayingAudioStream onto AudioComponent and entities instead of an abstract stream.
+* IResourceCache is in shared and IClientResourceCache is the client version to use for textures.
+* Default audio attenuation changed from InverseDistanceClamped to LinearDistanceClamped.
+* Removed per-source audio attenuation.
+
+### New features
+
+* Add preliminary support for EFX Reverb presets + auxiliary slots; these are also entities.
+* Audio on grid entities is now attached to the grid.
+
+### Bugfixes
+
+* If an audio entity comes into PVS range its track will start at the relevant offset and not the beginning.
+* Z-Axis offset is considered for ReferenceDistance / MaxDistance for audio.
+* Audio will now pause if the attached entity is paused.
+
+### Other
+
+* Changed audio Z-Axis offset from -5m to -1m.
+
+
+## 174.0.0
+
+### Breaking changes
+
+* ActorComponent has been moved to `Robust.Shared.Player` (namespace changed).
+
+### New features
+
+* Added `SpriteSystem.GetFrame()` method, which takes in an animated RSI and a time and returns a frame/texture.
+* Added `IRobustRandom.NextAngle()`
+
+
+## 173.1.0
+
+### New features
+
+* Add physics chain shapes from Box2D.
+
+
+## 173.0.0
+
+### Breaking changes
+
+* Remove GridModifiedEvent in favor of TileChangedEvent.
+
+### Bugfixes
+
+* Fix some grid rendering bugs where chunks don't get destroyed correctly.
+
+
+## 172.0.0
+
+### Breaking changes
+
+* Remove TryLifestage helper methods.
+* Refactor IPlayerManager to remove more IPlayerSession, changed PlayerAttachedEvent etc on client to have the Local prefix, and shuffled namespaces around.
+
+### New features
+
+* Add EnsureComponent(ref Entity<\T?>)
+
+### Bugfixes
+
+* Re-add force ask threshold and fix other PVS bugs.
+
+
 ## 171.0.0
 
 ### Breaking changes

@@ -141,7 +141,7 @@ internal partial class MapManager
     /// </summary>
     /// <param name="tileRef">A reference to the new tile.</param>
     /// <param name="oldTile">The old tile that got replaced.</param>
-    public void RaiseOnTileChanged(TileRef tileRef, Tile oldTile)
+    public void RaiseOnTileChanged(TileRef tileRef, Tile oldTile, Vector2i chunk)
     {
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
@@ -151,7 +151,7 @@ internal partial class MapManager
             return;
 
         var euid = tileRef.GridUid;
-        var ev = new TileChangedEvent(euid, tileRef, oldTile);
+        var ev = new TileChangedEvent(euid, tileRef, oldTile, chunk);
         EntityManager.EventBus.RaiseLocalEvent(euid, ref ev, true);
     }
 

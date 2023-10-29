@@ -8,7 +8,6 @@ using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
@@ -29,7 +28,7 @@ namespace Robust.Client.Placement
     {
         [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] internal readonly IPlayerManager PlayerManager = default!;
-        [Dependency] internal readonly IResourceCache ResourceCache = default!;
+        [Dependency] internal readonly IClientResourceCache ResourceCache = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] internal readonly IMapManager MapManager = default!;
         [Dependency] private readonly IGameTiming _time = default!;
@@ -287,23 +286,17 @@ namespace Robust.Client.Placement
                     }, outsidePrediction: true))
                 .Register<PlacementManager>();
 
-            var localPlayer = PlayerManager.LocalPlayer;
-            localPlayer!.EntityAttached += OnEntityAttached;
+            PlayerManager.LocalPlayerDetached += OnDetached;
         }
 
         private void TearDownInput()
         {
             CommandBinds.Unregister<PlacementManager>();
-
-            if (PlayerManager.LocalPlayer != null)
-            {
-                PlayerManager.LocalPlayer.EntityAttached -= OnEntityAttached;
-            }
+            PlayerManager.LocalPlayerDetached -= OnDetached;
         }
 
-        private void OnEntityAttached(EntityAttachedEventArgs eventArgs)
+        private void OnDetached(EntityUid obj)
         {
-            // player attached to a new entity, basically disable the editor
             Clear();
         }
 

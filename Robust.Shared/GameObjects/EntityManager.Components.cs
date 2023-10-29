@@ -10,7 +10,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 #if EXCEPTION_TOLERANCE
@@ -634,6 +634,26 @@ namespace Robust.Shared.GameObjects
             }
 
             return AddComponent<T>(uid);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool EnsureComponent<T>(ref Entity<T?> entity) where T : IComponent, new()
+        {
+            if (entity.Comp != null)
+            {
+                // Check for deferred component removal.
+                if (entity.Comp.LifeStage <= ComponentLifeStage.Running)
+                {
+                    DebugTools.AssertOwner(entity, entity.Comp);
+                    return true;
+                }
+
+                RemoveComponent(entity, entity.Comp);
+            }
+
+            entity.Comp = AddComponent<T>(entity);
+            return false;
         }
 
         /// <inheritdoc />

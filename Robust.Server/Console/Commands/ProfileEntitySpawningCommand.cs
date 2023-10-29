@@ -48,7 +48,10 @@ public sealed class ProfileEntitySpawningCommand : IConsoleCommand
 
         MeasureProfiler.StartCollectingData();
 
-        _entities.SpawnEntities(MapCoordinates.Nullspace, prototype, amount);
+        for (var i = 0; i < amount; i++)
+        {
+            _entities.SpawnEntity(prototype, MapCoordinates.Nullspace);
+        }
 
         MeasureProfiler.SaveData();
 

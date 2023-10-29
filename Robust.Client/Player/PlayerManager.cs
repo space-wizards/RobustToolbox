@@ -70,7 +70,9 @@ namespace Robust.Client.Player
             if (LocalSession != null)
                 throw new InvalidOperationException($"Player manager already running?");
 
-            SetLocalSession(CreateAndAddSession(default, name));
+            var session = CreateAndAddSession(default, name);
+            session.ClientSide = true;
+            SetLocalSession(session);
             Startup();
             PlayerListUpdated?.Invoke();
         }
@@ -286,8 +288,10 @@ namespace Robust.Client.Player
             {
                 foreach (var oldUser in InternalSessions.Keys.ToArray())
                 {
-                    // clear slot, player left
                     if (users.Contains(oldUser))
+                        continue;
+
+                    if (InternalSessions[oldUser].ClientSide)
                         continue;
 
                     DebugTools.Assert(oldUser != LocalUser

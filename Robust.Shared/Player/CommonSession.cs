@@ -34,6 +34,8 @@ internal sealed class CommonSession : ICommonSession
     [ViewVariables]
     public SessionData Data { get; }
 
+    public bool ClientSide { get; set; }
+
     [ViewVariables]
     public INetChannel Channel { get; set; } = default!;
 

@@ -68,4 +68,10 @@ public interface ICommonSession
 
     [Obsolete("Just use the Channel field instead.")]
     INetChannel ConnectedClient => Channel;
+
+    /// <summary>
+    /// If true, this indicates that this is a client-side session, and should be ignored when applying a server's
+    /// game state.
+    /// </summary>
+    bool ClientSide { get; set; }
 }

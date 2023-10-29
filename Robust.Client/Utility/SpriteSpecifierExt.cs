@@ -17,7 +17,7 @@ namespace Robust.Client.Utility
     /// </summary>
     public static class SpriteSpecifierExt
     {
-        public static Texture GetTexture(this SpriteSpecifier.Texture texSpecifier, IResourceCache cache)
+        public static Texture GetTexture(this SpriteSpecifier.Texture texSpecifier, IClientResourceCache cache)
         {
             return cache
                 .GetResource<TextureResource>(SpriteSpecifierSerializer.TextureRoot / texSpecifier.TexturePath)
@@ -25,7 +25,7 @@ namespace Robust.Client.Utility
         }
 
         [Obsolete("Use SpriteSystem")]
-        public static RSI.State GetState(this SpriteSpecifier.Rsi rsiSpecifier, IResourceCache cache)
+        public static RSI.State GetState(this SpriteSpecifier.Rsi rsiSpecifier, IClientResourceCache cache)
         {
             if (!cache.TryGetResource<RSIResource>(SpriteSpecifierSerializer.TextureRoot / rsiSpecifier.RsiPath, out var theRsi))
             {
@@ -56,7 +56,7 @@ namespace Robust.Client.Utility
         [Obsolete("Use SpriteSystem")]
         public static IRsiStateLike RsiStateLike(this SpriteSpecifier specifier)
         {
-            var resC = IoCManager.Resolve<IResourceCache>();
+            var resC = IoCManager.Resolve<IClientResourceCache>();
             switch (specifier)
             {
                 case SpriteSpecifier.Texture tex:

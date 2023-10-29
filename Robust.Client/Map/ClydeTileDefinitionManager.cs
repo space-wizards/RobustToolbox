@@ -7,6 +7,7 @@ using Robust.Client.Map;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
@@ -22,7 +23,7 @@ namespace Robust.Client.Map
 {
     internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
     {
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly IResourceManager _manager = default!;
 
         private Texture? _tileTextureAtlas;
 
@@ -86,7 +87,7 @@ namespace Robust.Client.Map
                     0, (h - EyeManager.PixelsPerMeter) / h,
                     tileSize / w, tileSize / h);
                 Image<Rgba32> image;
-                using (var stream = _resourceCache.ContentFileRead("/Textures/noTile.png"))
+                using (var stream = _manager.ContentFileRead("/Textures/noTile.png"))
                 {
                     image = Image.Load<Rgba32>(stream);
                 }
@@ -110,7 +111,7 @@ namespace Robust.Client.Map
                 // Already know it's not null above
                 var path = def.Sprite!.Value;
 
-                using (var stream = _resourceCache.ContentFileRead(path))
+                using (var stream = _manager.ContentFileRead(path))
                 {
                     image = Image.Load<Rgba32>(stream);
                 }

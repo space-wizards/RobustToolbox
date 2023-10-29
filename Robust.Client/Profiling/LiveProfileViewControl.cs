@@ -13,7 +13,7 @@ namespace Robust.Client.Profiling;
 public sealed class LiveProfileViewControl : Control
 {
     [Dependency] private readonly ProfManager _profManager = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
+    [Dependency] private readonly IClientResourceCache _resourceCache = default!;
 
     public int MaxDepth { get; set; } = 2;
 

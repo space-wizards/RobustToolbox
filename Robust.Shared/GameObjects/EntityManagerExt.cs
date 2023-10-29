@@ -3,21 +3,21 @@
     public static class EntityManagerExt
     {
         public static T? GetComponentOrNull<T>(this IEntityManager entityManager, EntityUid entityUid)
-            where T : class, IComponent
+            where T : IComponent
         {
             if (entityManager.TryGetComponent(entityUid, out T? component))
                 return component;
 
-            return null;
+            return default;
         }
 
         public static T? GetComponentOrNull<T>(this IEntityManager entityManager, EntityUid? entityUid)
-            where T : class, IComponent
+            where T : IComponent
         {
             if (entityUid.HasValue && entityManager.TryGetComponent(entityUid.Value, out T? component))
                 return component;
 
-            return null;
+            return default;
         }
     }
 }

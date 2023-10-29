@@ -423,16 +423,19 @@ public abstract partial class SharedPhysicsSystem
 
                             var uidA = joint.BodyAUid;
                             var uidB = joint.BodyBUid;
+                            DebugTools.AssertNotEqual(uidA, uidB);
 
                             if (jointQuery.TryGetComponent(uidA, out var jointCompA) &&
                                 jointCompA.Relay != null)
                             {
+                                DebugTools.AssertNotEqual(uidB, jointCompA.Relay.Value);
                                 uidA = jointCompA.Relay.Value;
                             }
 
                             if (jointQuery.TryGetComponent(uidB, out var jointCompB) &&
                                 jointCompB.Relay != null)
                             {
+                                DebugTools.AssertNotEqual(uidA, jointCompB.Relay.Value);
                                 uidB = jointCompB.Relay.Value;
                             }
 

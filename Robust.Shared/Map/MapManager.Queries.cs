@@ -96,6 +96,17 @@ internal partial class MapManager
         state = state2.state;
     }
 
+    public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, ref List<Entity<MapGridComponent>> state,
+        bool approx = false, bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldAABB, ref state, static (EntityUid uid, MapGridComponent grid,
+            ref List<Entity<MapGridComponent>> list) =>
+        {
+            list.Add((uid, grid));
+            return true;
+        }, approx, includeMap);
+    }
+
     public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false,
         bool includeMap = true)
     {
@@ -106,6 +117,17 @@ internal partial class MapManager
         bool approx = false, bool includeMap = true)
     {
         FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), ref state, callback, approx, includeMap);
+    }
+
+    public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> state,
+        bool approx = false, bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldBounds, ref state, static (EntityUid uid, MapGridComponent grid,
+            ref List<Entity<MapGridComponent>> list) =>
+        {
+            list.Add((uid, grid));
+            return true;
+        }, approx, includeMap);
     }
 
     private bool IsIntersecting(
@@ -193,14 +215,14 @@ internal partial class MapManager
             // you account for the fact that fixtures are shrunk slightly!
             var chunkIndices = SharedMapSystem.GetChunkIndices(localPos, iGrid.ChunkSize);
 
-            if (!tuple.mapSystem.HasChunk(iUid, iGrid, chunkIndices))
+            if (!iGrid.Chunks.TryGetValue(chunkIndices, out var chunk))
                 return true;
 
-            var chunk = tuple.mapSystem.GetOrAddChunk(iUid, iGrid, chunkIndices);
             var chunkRelative = SharedMapSystem.GetChunkRelative(localPos, iGrid.ChunkSize);
             var chunkTile = chunk.GetTile(chunkRelative);
 
-            if (chunkTile.IsEmpty) return true;
+            if (chunkTile.IsEmpty)
+                return true;
 
             tuple.uid = iUid;
             tuple.grid = iGrid;

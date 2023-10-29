@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -13,11 +14,12 @@ namespace Robust.Shared.GameStates
         // Definitely wasteful to send EVERY tile.
         // Optimize away future coder.
         // Also it's stored row-major.
-        public readonly Tile[] TileData;
+        public readonly Tile[]? TileData;
 
+        [MemberNotNullWhen(false, nameof(TileData))]
         public bool IsDeleted()
         {
-            return TileData == default;
+            return TileData == null;
         }
 
         private ChunkDatum(Vector2i index, Tile[] tileData)
@@ -33,7 +35,7 @@ namespace Robust.Shared.GameStates
 
         public static ChunkDatum CreateDeleted(Vector2i index)
         {
-            return new ChunkDatum(index, default!);
+            return new ChunkDatum(index, null!);
         }
     }
 }

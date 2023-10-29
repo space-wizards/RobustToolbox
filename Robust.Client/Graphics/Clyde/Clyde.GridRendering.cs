@@ -4,7 +4,6 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -41,22 +40,28 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
 
-            foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+            var grids = new List<Entity<MapGridComponent>>();
+            _mapManager.FindGridsIntersecting(mapId, worldBounds, ref grids);
+            foreach (var mapGrid in grids)
             {
-                if (!_mapChunkData.ContainsKey(mapGrid.Owner))
+                if (!_mapChunkData.ContainsKey(mapGrid))
                     continue;
 
-                var transform = _entityManager.GetComponent<TransformComponent>(mapGrid.Owner);
+                var transform = _entityManager.GetComponent<TransformComponent>(mapGrid);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
-                var enumerator = mapGrid.GetMapChunks(worldBounds);
+                var enumerator = mapGrid.Comp.GetMapChunks(worldBounds);
+                var data = _mapChunkData[mapGrid];
 
                 while (enumerator.MoveNext(out var chunk))
                 {
-                    if (_isChunkDirty(mapGrid, chunk))
-                        _updateChunkMesh(mapGrid, chunk);
+                    DebugTools.Assert(chunk.FilledTiles > 0);
+                    if (!data.TryGetValue(chunk.Indices, out MapChunkData? datum))
+                        data[chunk.Indices] = datum = _initChunkBuffers(mapGrid, chunk);
 
-                    var datum = _mapChunkData[mapGrid.Owner][chunk.Indices];
+                    if (datum.Dirty)
+                        _updateChunkMesh(mapGrid, chunk, datum);
 
+                    DebugTools.Assert(datum.TileCount > 0);
                     if (datum.TileCount == 0)
                         continue;
 
@@ -68,22 +73,36 @@ namespace Robust.Client.Graphics.Clyde
                     CheckGlError();
                 }
             }
+
+            CullEmptyChunks();
         }
 
-        private void _updateChunkMesh(MapGridComponent grid, MapChunk chunk)
+        private void CullEmptyChunks()
         {
-            var data = _mapChunkData[grid.Owner];
-
-            if (!data.TryGetValue(chunk.Indices, out var datum))
+            foreach (var (grid, chunks) in _mapChunkData)
             {
-                datum = _initChunkBuffers(grid, chunk);
-            }
+                var gridComp = _mapManager.GetGridComp(grid);
+                foreach (var (index, chunk) in chunks)
+                {
+                    if (!chunk.Dirty || gridComp.Chunks.ContainsKey(index))
+                    {
+                        DebugTools.Assert(gridComp.Chunks[index].FilledTiles > 0);
+                        continue;
+                    }
 
+                    DeleteChunk(chunk);
+                    chunks.Remove(index);
+                }
+            }
+        }
+
+        private void _updateChunkMesh(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
+        {
             Span<ushort> indexBuffer = stackalloc ushort[_indicesPerChunk(chunk)];
             Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk)];
 
             var i = 0;
-            var cSz = grid.ChunkSize;
+            var cSz = grid.Comp.ChunkSize;
             var cScaled = chunk.Indices * cSz;
             for (ushort x = 0; x < cSz; x++)
             {
@@ -130,7 +149,7 @@ namespace Robust.Client.Graphics.Clyde
             datum.TileCount = i;
         }
 
-        private unsafe MapChunkData _initChunkBuffers(MapGridComponent grid, MapChunk chunk)
+        private unsafe MapChunkData _initChunkBuffers(Entity<MapGridComponent> grid, MapChunk chunk)
         {
             var vao = GenVertexArray();
             BindVertexArray(vao);
@@ -158,41 +177,22 @@ namespace Robust.Client.Graphics.Clyde
                 Dirty = true
             };
 
-            _mapChunkData[grid.Owner].Add(chunk.Indices, datum);
             return datum;
         }
 
-        private bool _isChunkDirty(MapGridComponent grid, MapChunk chunk)
+        private void DeleteChunk(MapChunkData data)
         {
-            var data = _mapChunkData[grid.Owner];
-            return !data.TryGetValue(chunk.Indices, out var datum) || datum.Dirty;
-        }
-
-        public void _setChunkDirty(MapGridComponent grid, Vector2i chunk)
-        {
-            var data = _mapChunkData.GetOrNew(grid.Owner);
-            if (data.TryGetValue(chunk, out var datum))
-            {
-                datum.Dirty = true;
-            }
-            // Don't need to set it if we don't have an entry since lack of an entry is treated as dirty.
-        }
-
-        private void _updateOnGridModified(GridModifiedEvent args)
-        {
-            foreach (var (pos, _) in args.Modified)
-            {
-                var grid = args.Grid;
-                var chunk = grid.GridTileToChunkIndices(pos);
-                _setChunkDirty(grid, chunk);
-            }
+            DeleteVertexArray(data.VAO);
+            CheckGlError();
+            data.VBO.Delete();
+            data.EBO.Delete();
         }
 
         private void _updateTileMapOnUpdate(ref TileChangedEvent args)
         {
-            var grid = _mapManager.GetGrid(args.NewTile.GridUid);
-            var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));
-            _setChunkDirty(grid, chunk);
+            var gridData = _mapChunkData.GetOrNew(args.Entity);
+            if (gridData.TryGetValue(args.ChunkIndex, out var data))
+                data.Dirty = true;
         }
 
         private void _updateOnGridCreated(GridStartupEvent ev)
@@ -208,10 +208,7 @@ namespace Robust.Client.Graphics.Clyde
             var data = _mapChunkData[gridId];
             foreach (var chunkDatum in data.Values)
             {
-                DeleteVertexArray(chunkDatum.VAO);
-                CheckGlError();
-                chunkDatum.VBO.Delete();
-                chunkDatum.EBO.Delete();
+                DeleteChunk(chunkDatum);
             }
 
             _mapChunkData.Remove(gridId);

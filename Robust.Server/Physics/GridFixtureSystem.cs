@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Robust.Server.Console;
-using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
@@ -15,7 +14,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -92,9 +91,7 @@ namespace Robust.Server.Physics
 
         private void OnDebugRequest(RequestGridNodesMessage msg, EntitySessionEventArgs args)
         {
-            var pSession = (PlayerSession) args.SenderSession;
-
-            if (!_conGroup.CanCommand(pSession, ShowGridNodesCommand)) return;
+            if (!_conGroup.CanCommand(args.SenderSession, ShowGridNodesCommand)) return;
 
             AddDebugSubscriber(args.SenderSession);
         }
@@ -260,7 +257,7 @@ namespace Robust.Server.Physics
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
                     var group = grids[i];
-                    var newGrid = _mapManager.CreateGrid(mapId);
+                    var newGrid = _mapManager.CreateGridEntity(mapId);
                     var newGridUid = newGrid.Owner;
                     var newGridXform = xformQuery.GetComponent(newGridUid);
                     newGrids[i] = newGridUid;
@@ -287,7 +284,7 @@ namespace Robust.Server.Physics
                         }
                     }
 
-                    newGrid.SetTiles(tileData);
+                    newGrid.Comp.SetTiles(tileData);
                     DebugTools.Assert(_mapManager.IsGrid(newGridUid), "A split grid had no tiles?");
 
                     // Set tiles on new grid + update anchored entities

@@ -151,11 +151,12 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Get all entities colliding with a certain body.
         /// </summary>
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2Rotated worldBounds)
+        public IEnumerable<Entity<PhysicsComponent>> GetCollidingEntities(MapId mapId, in Box2Rotated worldBounds)
         {
-            if (mapId == MapId.Nullspace) return Array.Empty<PhysicsComponent>();
+            if (mapId == MapId.Nullspace)
+                return Array.Empty<Entity<PhysicsComponent>>();
 
-            var bodies = new HashSet<PhysicsComponent>();
+            var bodies = new HashSet<Entity<PhysicsComponent>>();
 
             foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
             {
@@ -163,12 +164,12 @@ namespace Robust.Shared.Physics.Systems
 
                 foreach (var proxy in broadphase.StaticTree.QueryAabb(gridAABB, false))
                 {
-                    bodies.Add(proxy.Body);
+                    bodies.Add(new Entity<PhysicsComponent>(proxy.Entity, proxy.Body));
                 }
 
                 foreach (var proxy in broadphase.DynamicTree.QueryAabb(gridAABB, false))
                 {
-                    bodies.Add(proxy.Body);
+                    bodies.Add(new Entity<PhysicsComponent>(proxy.Entity, proxy.Body));
                 }
             }
 

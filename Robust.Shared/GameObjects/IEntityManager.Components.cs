@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -31,7 +31,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Gets the number of a specific component.
         /// </summary>
-        public int Count<T>() where T : Component;
+        public int Count<T>() where T : IComponent;
 
         /// <summary>
         /// Gets the number of a specific component.
@@ -44,12 +44,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">Concrete component type to add.</typeparam>
         /// <returns>The newly added component.</returns>
-        T AddComponent<T>(EntityUid uid) where T : Component, new();
+        T AddComponent<T>(EntityUid uid) where T : IComponent, new();
 
         /// <summary>
         ///     Adds a Component with a given network id to an entity.
         /// </summary>
-        Component AddComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null);
+        IComponent AddComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     Adds an uninitialized Component type to an entity.
@@ -61,7 +61,8 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Concrete component type to add.</typeparam>
         /// <param name="uid">Entity being modified.</param>
         /// <returns>Component initialization handle. When you are done setting up the component, make sure to dispose this.</returns>
-        EntityManager.CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : Component, new();
+        [Obsolete]
+        EntityManager.CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : IComponent, new();
 
         /// <summary>
         ///     Adds a Component to an entity. If the entity is already Initialized, the component will
@@ -70,7 +71,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity being modified.</param>
         /// <param name="component">Component to add.</param>
         /// <param name="overwrite">Should it overwrite existing components?</param>
-        void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : Component;
+        void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : IComponent;
 
         /// <summary>
         ///     Removes the component with the specified reference type,
@@ -213,7 +214,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity to modify.</param>
         /// <typeparam name="T">Component to add.</typeparam>
         /// <returns>The component in question</returns>
-        T EnsureComponent<T>(EntityUid uid) where T : Component, new();
+        T EnsureComponent<T>(EntityUid uid) where T : IComponent, new();
 
         /// <summary>
         ///     This method will always return a component for a certain entity, adding it if it's not there already.
@@ -222,7 +223,15 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">The output component after being ensured.</param>
         /// <typeparam name="T">Component to add.</typeparam>
         /// <returns>True if the component already existed</returns>
-        bool EnsureComponent<T>(EntityUid uid, out T component) where T : Component, new();
+        bool EnsureComponent<T>(EntityUid uid, out T component) where T : IComponent, new();
+
+        /// <summary>
+        ///     This method will always return a component for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="entity">Entity to modify.</param>
+        /// <typeparam name="T">Component to add.</typeparam>
+        /// <returns>True if the component already existed</returns>
+        bool EnsureComponent<T>(ref Entity<T?> entity) where T : IComponent, new();
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -333,9 +342,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns a cached struct enumerator with the specified component.
         /// </summary>
-        EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component;
+        EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent;
 
-        EntityQuery<Component> GetEntityQuery(Type type);
+        EntityQuery<IComponent> GetEntityQuery(Type type);
 
         /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance
@@ -397,49 +406,49 @@ namespace Robust.Shared.GameObjects
         /// Returns all instances of a component in an array.
         /// Use sparingly.
         /// </summary>
-        (EntityUid Uid, T Component)[] AllComponents<T>() where T : Component;
+        (EntityUid Uid, T Component)[] AllComponents<T>() where T : IComponent;
 
         /// <summary>
         /// Returns all instances of a component in a List.
         /// Use sparingly.
         /// </summary>
-        List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : Component;
+        List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : IComponent;
 
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
-            where TComp1 : Component;
+            where TComp1 : IComponent;
 
         AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQueryEnumerator<TComp1, TComp2>()
-            where TComp1 : Component
-            where TComp2 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent;
 
         AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQueryEnumerator<TComp1, TComp2, TComp3>()
-            where TComp1 : Component
-            where TComp2 : Component
-            where TComp3 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent;
 
         AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
-            where TComp1 : Component
-            where TComp2 : Component
-            where TComp3 : Component
-            where TComp4 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent
+            where TComp4 : IComponent;
 
         EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>()
-            where TComp1 : Component;
+            where TComp1 : IComponent;
 
         EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
-            where TComp1 : Component
-            where TComp2 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent;
 
         EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
-            where TComp1 : Component
-            where TComp2 : Component
-            where TComp3 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent;
 
         EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
-            where TComp1 : Component
-            where TComp2 : Component
-            where TComp3 : Component
-            where TComp4 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent
+            where TComp4 : IComponent;
 
         /// <summary>
         ///     Returns ALL component instances of a specified type.
@@ -490,7 +499,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="type">A trait or component type to check for.</param>
         /// <param name="includePaused"></param>
         /// <returns>All components that are the specified type.</returns>
-        IEnumerable<(EntityUid Uid, Component Component)> GetAllComponents(Type type, bool includePaused = false);
+        IEnumerable<(EntityUid Uid, IComponent Component)> GetAllComponents(Type type, bool includePaused = false);
 
         /// <summary>
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.

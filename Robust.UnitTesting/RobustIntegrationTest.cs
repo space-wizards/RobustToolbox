@@ -30,7 +30,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -830,7 +830,6 @@ namespace Robust.UnitTesting
                 ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
                 deps.Register<INetManager, IntegrationNetManager>(true);
                 deps.Register<IClientNetManager, IntegrationNetManager>(true);
-                deps.Register<IGameStateProcessor, GameStateProcessor>(true);
                 deps.Register<IClientGameTiming, ClientGameTiming>(true);
                 deps.Register<IntegrationNetManager, IntegrationNetManager>(true);
                 deps.Register<IModLoader, TestingModLoader>(true);

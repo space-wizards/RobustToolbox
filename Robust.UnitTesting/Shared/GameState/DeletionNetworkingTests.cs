@@ -2,18 +2,13 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.Player;
+using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Collision.Shapes;
-using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Physics.Systems;
 using cIPlayerManager = Robust.Client.Player.IPlayerManager;
 using sIPlayerManager = Robust.Server.Player.IPlayerManager;
 
@@ -70,14 +65,14 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         {
             var mapId = mapMan.CreateMap();
             mapMan.GetMapEntityId(mapId);
-            var gridComp = mapMan.CreateGrid(mapId);
-            gridComp.SetTile(Vector2i.Zero, new Tile(1));
+            var gridComp = mapMan.CreateGridEntity(mapId);
+            gridComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
             grid1 = gridComp.Owner;
             xformSys.SetLocalPosition(grid1, new Vector2(-2,0));
             grid1Net = sEntMan.GetNetEntity(grid1);
 
-            gridComp = mapMan.CreateGrid(mapId);
-            gridComp.SetTile(Vector2i.Zero, new Tile(1));
+            gridComp = mapMan.CreateGridEntity(mapId);
+            gridComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
             grid2 = gridComp.Owner;
             xformSys.SetLocalPosition(grid2, new Vector2(2,0));
             grid2Net = sEntMan.GetNetEntity(grid2);
@@ -89,9 +84,9 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         {
             var coords = new EntityCoordinates(grid1, new Vector2(0.5f, 0.5f));
             player = sEntMan.SpawnEntity(null, coords);
-            var session = (IPlayerSession) sPlayerMan.Sessions.First();
-            session.AttachToEntity(player);
-            session.JoinGame();
+            var session = sPlayerMan.Sessions.First();
+            sEntMan.System<ActorSystem>().Attach(player, session);
+            sPlayerMan.JoinGame(session);
         });
 
         await RunTicks();

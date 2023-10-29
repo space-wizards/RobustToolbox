@@ -21,7 +21,7 @@ namespace Robust.Server.Console.Commands
 
             var sb = new StringBuilder();
 
-            var players = _players.ServerSessions;
+            var players = _players.Sessions;
             sb.AppendLine($"{"Player Name",20} {"Status",12} {"Playing Time",14} {"Ping",9} {"IP EndPoint",20}");
             sb.AppendLine("-------------------------------------------------------------------------------");
 
@@ -50,8 +50,8 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length < 1)
             {
-                var player = shell.Player as IPlayerSession;
-                var toKickPlayer = player ?? _players.ServerSessions.FirstOrDefault();
+                var player = shell.Player;
+                var toKickPlayer = player ?? _players.Sessions.FirstOrDefault();
                 if (toKickPlayer == null)
                 {
                     shell.WriteLine("You need to provide a player to kick.");
@@ -79,7 +79,7 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length == 1)
             {
-                var options = _players.ServerSessions.OrderBy(c => c.Name).Select(c => c.Name).ToArray();
+                var options = _players.Sessions.OrderBy(c => c.Name).Select(c => c.Name).ToArray();
 
                 return CompletionResult.FromHintOptions(options, "<PlayerIndex>");
             }

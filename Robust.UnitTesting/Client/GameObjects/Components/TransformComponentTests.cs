@@ -26,10 +26,10 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             mapManager.CreateMap(TestMapId);
 
             // Adds two grids to use in tests.
-            var gridA = mapManager.CreateGrid(TestMapId);
-            var gridB = mapManager.CreateGrid(TestMapId);
+            var gridA = mapManager.CreateGridEntity(TestMapId);
+            var gridB = mapManager.CreateGridEntity(TestMapId);
 
-            return (sim, gridA.Owner, gridB.Owner);
+            return (sim, gridA, gridB);
         }
 
         /// <summary>
@@ -47,18 +47,18 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var gridB = mapMan.GetGrid(gridIdB);
 
             // Arrange
-            var initialPos = new EntityCoordinates(gridA.Owner, new Vector2(0, 0));
+            var initialPos = new EntityCoordinates(gridIdA, new Vector2(0, 0));
             var parent = entMan.SpawnEntity(null, initialPos);
             var child = entMan.SpawnEntity(null, initialPos);
             var parentTrans = entMan.GetComponent<TransformComponent>(parent);
             var childTrans = entMan.GetComponent<TransformComponent>(child);
             ComponentHandleState handleState;
 
-            var compState = new TransformComponentState(new Vector2(5, 5), new Angle(0), entMan.GetNetEntity(gridB.Owner), false, false);
+            var compState = new TransformComponentState(new Vector2(5, 5), new Angle(0), entMan.GetNetEntity(gridIdB), false, false);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(parent, parentTrans, ref handleState);
 
-            compState = new TransformComponentState(new Vector2(6, 6), new Angle(0), entMan.GetNetEntity(gridB.Owner), false, false);
+            compState = new TransformComponentState(new Vector2(6, 6), new Angle(0), entMan.GetNetEntity(gridIdB), false, false);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(child, childTrans, ref handleState);
             // World pos should be 6, 6 now.
@@ -90,7 +90,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var gridB = mapMan.GetGrid(gridIdB);
 
             // Arrange
-            var initalPos = new EntityCoordinates(gridA.Owner, new Vector2(0, 0));
+            var initalPos = new EntityCoordinates(gridIdA, new Vector2(0, 0));
             var node1 = entMan.SpawnEntity(null, initalPos);
             var node2 = entMan.SpawnEntity(null, initalPos);
             var node3 = entMan.SpawnEntity(null, initalPos);
@@ -103,7 +103,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var node2Trans = entMan.GetComponent<TransformComponent>(node2);
             var node3Trans = entMan.GetComponent<TransformComponent>(node3);
 
-            var compState = new TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), entMan.GetNetEntity(gridB.Owner), false, false);
+            var compState = new TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), entMan.GetNetEntity(gridIdB), false, false);
             var handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(node1, node1Trans, ref handleState);
 

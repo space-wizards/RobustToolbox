@@ -1,11 +1,3 @@
-using Robust.Client.ComponentTrees;
-using Robust.Client.GameObjects;
-using Robust.Shared.GameObjects;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Threading;
-using Robust.Shared.Utility;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -14,7 +6,15 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
+using Robust.Client.ComponentTrees;
+using Robust.Client.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Threading;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -260,7 +260,7 @@ internal partial class Clyde
             if (cmp != 0)
                 return cmp;
 
-            return a.Sprite.Owner.CompareTo(b.Sprite.Owner);
+            return a.Uid.CompareTo(b.Uid);
         }
     }
 }

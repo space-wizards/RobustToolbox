@@ -2,7 +2,6 @@ using System;
 using System.Globalization;
 using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Map
@@ -25,7 +24,7 @@ namespace Robust.Shared.Map
                 return;
 
             mapComp.MapPaused = paused;
-            EntityManager.Dirty(mapComp);
+            EntityManager.Dirty(mapUid, mapComp);
 
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
@@ -65,7 +64,7 @@ namespace Robust.Shared.Map
 
             mapComp.MapPreInit = false;
             mapComp.MapPaused = false;
-            EntityManager.Dirty(mapComp);
+            EntityManager.Dirty(mapEnt, mapComp);
 
             RecursiveDoMapInit(mapEnt, in xformQuery, in metaQuery, in metaSystem);
         }

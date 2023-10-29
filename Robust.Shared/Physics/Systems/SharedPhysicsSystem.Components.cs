@@ -22,6 +22,7 @@
  * PhysicsComponent is heavily modified from Box2D.
  */
 
+using System;
 using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -371,8 +372,16 @@ public partial class SharedPhysicsSystem
             Dirty(body);
     }
 
+    [Obsolete("Use SetAwake with EntityUid<PhysicsComponent>")]
     public void SetAwake(EntityUid uid, PhysicsComponent body, bool value, bool updateSleepTime = true)
     {
+        SetAwake(new Entity<PhysicsComponent>(uid, body), value, updateSleepTime);
+    }
+
+    public void SetAwake(Entity<PhysicsComponent> ent, bool value, bool updateSleepTime = true)
+    {
+        var uid = ent.Owner;
+        var body = ent.Comp;
         if (body.Awake == value)
             return;
 
@@ -396,7 +405,7 @@ public partial class SharedPhysicsSystem
         if (updateSleepTime)
             SetSleepTime(body, 0);
 
-        Dirty(body);
+        Dirty(ent);
     }
 
     public void TrySetBodyType(EntityUid uid, BodyType value, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)

@@ -2,7 +2,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.Player;
+using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -54,8 +54,8 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         {
             var mapId = mapMan.CreateMap();
             map = mapMan.GetMapEntityId(mapId);
-            var gridComp = mapMan.CreateGrid(mapId);
-            gridComp.SetTile(Vector2i.Zero, new Tile(1));
+            var gridComp = mapMan.CreateGridEntity(mapId);
+            gridComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
             grid = gridComp.Owner;
         });
 
@@ -75,9 +75,9 @@ public sealed class PvsSystemTests : RobustIntegrationTest
             sEntMan.SpawnEntity(null, mapCoords);
 
             // Attach player.
-            var session = (IPlayerSession) sPlayerMan.Sessions.First();
-            session.AttachToEntity(player);
-            session.JoinGame();
+            var session = sPlayerMan.Sessions.First();
+            sEntMan.System<ActorSystem>().Attach(player, session);
+            sPlayerMan.JoinGame(session);
         });
 
         for (int i = 0; i < 10; i++)

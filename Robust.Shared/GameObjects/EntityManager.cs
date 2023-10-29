@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects
 {
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
-    public delegate void ComponentQueryCallback<T>(EntityUid uid, T component) where T : Component;
+    public delegate void ComponentQueryCallback<T>(EntityUid uid, T component) where T : IComponent;
 
     /// <inheritdoc />
     [Virtual]
@@ -136,15 +136,6 @@ namespace Robust.Shared.GameObjects
 
             var prototype = metadata.EntityPrototype;
 
-            // Prototype may or may not have metadata / transforms
-            var protoComps = prototype.Components.Keys.ToList();
-
-            protoComps.Remove(_xformName);
-
-            // Fast check if the component counts match.
-            if (protoComps.Count != ComponentCount(uid) - 2)
-                return false;
-
             // Check if entity name / description match
             if (metadata.EntityName != prototype.Name ||
                 metadata.EntityDescription != prototype.Description)
@@ -152,43 +143,26 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            // Get default prototype data
-            Dictionary<string, MappingDataNode> protoData = new();
-            try
-            {
-                _context.WritingReadingPrototypes = true;
+            var protoData = PrototypeManager.GetPrototypeData(prototype);
+            var comps = _entCompIndex[uid];
 
-                foreach (var compType in protoComps)
-                {
-                    if (compType == _xformName)
-                        continue;
-
-                    var comp = prototype.Components[compType];
-                    protoData.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component, alwaysWrite: true, context: _context));
-                }
-
-                _context.WritingReadingPrototypes = false;
-            }
-            catch (Exception e)
-            {
-                _sawmill.Error($"Failed to convert prototype {prototype.ID} into yaml. Exception: {e.Message}");
+            // Fast check if the component counts match.
+            // Note that transform and metadata are not included in the prototype data.
+            if (protoData.Count + 2 != comps.Count)
                 return false;
-            }
 
-            var comps = new HashSet<IComponent>(GetComponents(uid));
-            var compNames = new HashSet<string>(protoComps.Count);
             foreach (var component in comps)
             {
+                if (component.Deleted)
+                    return false;
+
                 var compType = component.GetType();
                 var compName = _componentFactory.GetComponentName(compType);
-
-                if (compType == typeof(MetaDataComponent) || compType == typeof(TransformComponent))
+                if (compName == _xformName || compName == _metaReg.Name)
                     continue;
 
-                compNames.Add(compName);
-
                 // If the component isn't on the prototype then it's custom.
-                if (!protoComps.Contains(compName))
+                if (!protoData.TryGetValue(compName, out var protoMapping))
                     return false;
 
                 MappingDataNode compMapping;
@@ -202,25 +176,9 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                if (protoData.TryGetValue(compName, out var protoMapping))
-                {
-                    var diff = compMapping.Except(protoMapping);
+                var diff = compMapping.Except(protoMapping);
 
-                    if (diff != null && diff.Children.Count != 0)
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            // An entity may also remove components on init -> check no components are missing.
-            foreach (var compType in protoComps)
-            {
-                if (!compNames.Contains(compType))
+                if (diff != null && diff.Children.Count != 0)
                     return false;
             }
 
@@ -387,19 +345,28 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [Obsolete("use override with an EntityUid")]
-        public void Dirty(Component component, MetaDataComponent? meta = null)
+        public void Dirty(IComponent component, MetaDataComponent? meta = null)
         {
             Dirty(component.Owner, component, meta);
         }
 
         /// <inheritdoc />
-        public virtual void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+        public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
+            Dirty(new Entity<IComponent>(uid, component), meta);
+        }
+
+        /// <inheritdoc />
+        public virtual void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
+        {
+            if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
                 return;
 
-            DirtyEntity(uid, meta);
-            component.LastModifiedTick = CurrentTick;
+            DebugTools.AssertOwner(ent, ent.Comp);
+            DirtyEntity(ent, meta);
+#pragma warning disable CS0618 // Type or member is obsolete
+            ent.Comp.LastModifiedTick = CurrentTick;
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
@@ -524,7 +491,7 @@ namespace Robust.Shared.GameObjects
                 {
                     try
                     {
-                        component.LifeShutdown(this);
+                        LifeShutdown(component);
                     }
                     catch (Exception e)
                     {
@@ -648,6 +615,7 @@ namespace Robust.Shared.GameObjects
 #pragma warning disable CS0618
                 Owner = uid,
 #pragma warning restore CS0618
+                EntityLastModifiedTick = _gameTiming.CurTick
             };
 
             SetNetEntity(uid, netEntity, metadata);
@@ -658,7 +626,9 @@ namespace Robust.Shared.GameObjects
 
             // allocate the required TransformComponent
             var xformComp = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
+#pragma warning disable CS0618 // Type or member is obsolete
             xformComp.Owner = uid;
+#pragma warning restore CS0618 // Type or member is obsolete
             AddComponentInternal(uid, xformComp, false, true, metadata);
 
             return uid;
@@ -802,18 +772,6 @@ namespace Robust.Shared.GameObjects
         /// Generates a unique network id and increments <see cref="NextNetworkId"/>
         /// </summary>
         protected virtual NetEntity GenerateNetEntity() => new(NextNetworkId++);
-
-        private sealed class EntityDiffContext : ISerializationContext
-        {
-            public SerializationManager.SerializerProvider SerializerProvider { get; }
-            public bool WritingReadingPrototypes { get; set; }
-
-            public EntityDiffContext()
-            {
-                SerializerProvider = new();
-                SerializerProvider.RegisterSerializer(this);
-            }
-        }
     }
 
     public enum EntityMessageType : byte

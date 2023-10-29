@@ -28,6 +28,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -306,7 +307,9 @@ namespace Robust.Server
             _modLoader.SetUseLoadContext(!ContentStart);
             _modLoader.SetEnableSandboxing(Options.Sandboxing);
 
-            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, Options.ContentModulePrefix))
+            var resourceManifest = ResourceManifestData.LoadResourceManifest(_resources);
+
+            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, resourceManifest.AssemblyPrefix ?? Options.ContentModulePrefix))
             {
                 _logger.Fatal("Errors while loading content assemblies.");
                 return true;

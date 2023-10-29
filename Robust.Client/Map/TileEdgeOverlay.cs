@@ -1,12 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Direction = Robust.Shared.Maths.Direction;
 
 namespace Robust.Client.Map;
 
@@ -17,12 +18,14 @@ public sealed class TileEdgeOverlay : Overlay
 {
     private readonly IEntityManager _entManager;
     private readonly IMapManager _mapManager;
-    private readonly IClientResourceCache _resource;
+    private readonly IResourceCache _resource;
     private readonly ITileDefinitionManager _tileDefManager;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowEntities;
 
-    public TileEdgeOverlay(IEntityManager entManager, IMapManager mapManager, IClientResourceCache resource, ITileDefinitionManager tileDefManager)
+    private List<Entity<MapGridComponent>> _grids = new();
+
+    public TileEdgeOverlay(IEntityManager entManager, IMapManager mapManager, IResourceCache resource, ITileDefinitionManager tileDefManager)
     {
         _entManager = entManager;
         _mapManager = mapManager;
@@ -36,16 +39,18 @@ public sealed class TileEdgeOverlay : Overlay
         if (args.MapId == MapId.Nullspace)
             return;
 
-        var xformQuery = _entManager.GetEntityQuery<TransformComponent>();
+        _grids.Clear();
+        _mapManager.FindGridsIntersecting(args.MapId, args.WorldBounds, ref _grids);
 
-        foreach (var grid in _mapManager.FindGridsIntersecting(args.MapId, args.WorldBounds))
+        var xformQuery = _entManager.GetEntityQuery<TransformComponent>();
+        foreach (var grid in _grids)
         {
-            var tileSize = grid.TileSize;
+            var tileSize = grid.Comp.TileSize;
             var tileDimensions = new Vector2(tileSize, tileSize);
-            var xform = xformQuery.GetComponent(grid.Owner);
+            var xform = xformQuery.GetComponent(grid);
             args.WorldHandle.SetTransform(xform.WorldMatrix);
 
-            foreach (var tileRef in grid.GetTilesIntersecting(args.WorldBounds, false))
+            foreach (var tileRef in grid.Comp.GetTilesIntersecting(args.WorldBounds, false))
             {
                 var tileDef = _tileDefManager[tileRef.Tile.TypeId];
 
@@ -61,7 +66,7 @@ public sealed class TileEdgeOverlay : Overlay
                             continue;
 
                         var neighborIndices = new Vector2i(tileRef.GridIndices.X + x, tileRef.GridIndices.Y + y);
-                        var neighborTile = grid.GetTileRef(neighborIndices);
+                        var neighborTile = grid.Comp.GetTileRef(neighborIndices);
                         var neighborDef = _tileDefManager[neighborTile.Tile.TypeId];
 
                         // If it's the same tile then no edge to be drawn.

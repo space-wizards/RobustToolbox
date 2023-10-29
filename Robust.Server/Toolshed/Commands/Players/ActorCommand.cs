@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Robust.Server.GameObjects;
-using Robust.Server.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed;
 
 namespace Robust.Server.Toolshed.Commands.Players;
@@ -17,7 +17,7 @@ public sealed class ActorCommand : ToolshedCommand
     }
 
     [CommandImplementation("session")]
-    public IEnumerable<IPlayerSession> Session([PipedArgument] IEnumerable<EntityUid> input)
+    public IEnumerable<ICommonSession> Session([PipedArgument] IEnumerable<EntityUid> input)
     {
         return input.Where(HasComp<ActorComponent>).Select(x => Comp<ActorComponent>(x).PlayerSession);
     }

@@ -2,7 +2,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.Player;
+using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -64,9 +64,9 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         {
             var mapId = mapMan.CreateMap();
             map1 = mapMan.GetMapEntityId(mapId);
-            var gridComp = mapMan.CreateGrid(mapId);
-            gridComp.SetTile(Vector2i.Zero, new Tile(1));
-            grid1 = gridComp.Owner;
+            var gridEnt = mapMan.CreateGridEntity(mapId);
+            gridEnt.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            grid1 = gridEnt.Owner;
         });
 
         var map1Net = sEntMan.GetNetEntity(map1);
@@ -90,9 +90,9 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
             Assert.That(physics.CanCollide);
 
             // Attach player.
-            var session = (IPlayerSession) sPlayerMan.Sessions.First();
-            session.AttachToEntity(player);
-            session.JoinGame();
+            var session = sPlayerMan.Sessions.First();
+            sEntMan.System<ActorSystem>().Attach(player, session);
+            sPlayerMan.JoinGame(session);
         });
 
         var playerNet = sEntMan.GetNetEntity(player);
@@ -136,9 +136,9 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
             // Create grid
             var mapId = mapMan.CreateMap();
             map2 = mapMan.GetMapEntityId(mapId);
-            var gridComp = mapMan.CreateGrid(mapId);
-            gridComp.SetTile(Vector2i.Zero, new Tile(1));
-            grid2 = gridComp.Owner;
+            var gridEnt = mapMan.CreateGridEntity(mapId);
+            gridEnt.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            grid2 = gridEnt.Owner;
 
             // Move player
             var coords = new EntityCoordinates(grid2, Vector2.Zero);

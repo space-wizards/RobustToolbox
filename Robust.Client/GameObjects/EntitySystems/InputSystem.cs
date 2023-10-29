@@ -3,16 +3,13 @@ using System.Numerics;
 using Robust.Client.GameStates;
 using Robust.Client.Input;
 using Robust.Client.Player;
-using Robust.Shared;
-using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -131,7 +128,7 @@ namespace Robust.Client.GameObjects
 
         public override void Initialize()
         {
-            SubscribeLocalEvent<PlayerAttachSysMessage>(OnAttachedEntityChanged);
+            SubscribeLocalEvent<LocalPlayerAttachedEvent>(OnAttachedEntityChanged);
 
             _conHost.RegisterCommand("incmd",
                 "Inserts an input command into the simulation",
@@ -171,11 +168,11 @@ namespace Robust.Client.GameObjects
             HandleInputCommand(localPlayer.Session, keyFunction, message);
         }
 
-        private void OnAttachedEntityChanged(PlayerAttachSysMessage message)
+        private void OnAttachedEntityChanged(LocalPlayerAttachedEvent message)
         {
-            if (message.AttachedEntity != default) // attach
+            if (message.Entity != default) // attach
             {
-                SetEntityContextActive(_inputManager, message.AttachedEntity);
+                SetEntityContextActive(_inputManager, message.Entity);
             }
             else // detach
             {
@@ -226,45 +223,5 @@ namespace Robust.Client.GameObjects
 
             _sawmillInputContext = _logManager.GetSawmill("input.context");
         }
-    }
-
-    /// <summary>
-    ///     Entity system message that is raised when the player changes attached entities.
-    /// </summary>
-    public sealed class PlayerAttachSysMessage : EntityEventArgs
-    {
-        /// <summary>
-        ///     New entity the player is attached to.
-        /// </summary>
-        public EntityUid AttachedEntity { get; }
-
-        /// <summary>
-        ///     Creates a new instance of <see cref="PlayerAttachSysMessage"/>.
-        /// </summary>
-        /// <param name="attachedEntity">New entity the player is attached to.</param>
-        public PlayerAttachSysMessage(EntityUid attachedEntity)
-        {
-            AttachedEntity = attachedEntity;
-        }
-    }
-
-    public sealed class PlayerAttachedEvent : EntityEventArgs
-    {
-        public PlayerAttachedEvent(EntityUid entity)
-        {
-            Entity = entity;
-        }
-
-        public EntityUid Entity { get; }
-    }
-
-    public sealed class PlayerDetachedEvent : EntityEventArgs
-    {
-        public PlayerDetachedEvent(EntityUid entity)
-        {
-            Entity = entity;
-        }
-
-        public EntityUid Entity { get; }
     }
 }

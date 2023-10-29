@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
-using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -273,9 +272,14 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
-        if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
-
         var intersecting = new HashSet<EntityUid>();
+        GetEntitiesIntersecting(mapId, worldAABB, intersecting, flags);
+        return intersecting;
+    }
+
+    public void GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, HashSet<EntityUid> intersecting, LookupFlags flags = DefaultFlags)
+    {
+        if (mapId == MapId.Nullspace) return;
 
         // Get grid entities
         var state = (this, _map, intersecting, worldAABB, _transform, flags);
@@ -309,8 +313,6 @@ public sealed partial class EntityLookupSystem
         var localAABB = _transform.GetInvWorldMatrix(mapUid).TransformBox(worldAABB);
         AddEntitiesIntersecting(mapUid, intersecting, localAABB, flags);
         AddContained(intersecting, flags);
-
-        return intersecting;
     }
 
     #endregion
@@ -547,15 +549,22 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesInRange(MapId mapId, Vector2 worldPos, float range,
         LookupFlags flags = DefaultFlags)
     {
+        var entities = new HashSet<EntityUid>();
+        GetEntitiesInRange(mapId, worldPos, range, entities, flags);
+        return entities;
+    }
+
+    public void GetEntitiesInRange(MapId mapId, Vector2 worldPos, float range, HashSet<EntityUid> entities, LookupFlags flags = DefaultFlags)
+    {
         DebugTools.Assert(range > 0, "Range must be a positive float");
 
         if (mapId == MapId.Nullspace)
-            return new HashSet<EntityUid>();
+            return;
 
         // TODO: Actual circles
         var rangeVec = new Vector2(range, range);
         var worldAABB = new Box2(worldPos - rangeVec, worldPos + rangeVec);
-        return GetEntitiesIntersecting(mapId, worldAABB, flags);
+        GetEntitiesIntersecting(mapId, worldAABB, entities, flags);
     }
 
     #endregion

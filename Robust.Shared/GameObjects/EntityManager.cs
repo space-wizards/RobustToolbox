@@ -144,14 +144,14 @@ namespace Robust.Shared.GameObjects
             }
 
             var protoData = PrototypeManager.GetPrototypeData(prototype);
-            var comps = _entCompIndex[uid];
+            var comps = _world.GetAllComponents(uid);
 
             // Fast check if the component counts match.
             // Note that transform and metadata are not included in the prototype data.
-            if (protoData.Count + 2 != comps.Count)
+            if (protoData.Count + 2 != comps.Length)
                 return false;
 
-            foreach (var component in comps)
+            foreach (IComponent component in comps)
             {
                 if (component.Deleted)
                     return false;

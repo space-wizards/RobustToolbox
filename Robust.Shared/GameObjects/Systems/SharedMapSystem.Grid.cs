@@ -559,7 +559,10 @@ public abstract partial class SharedMapSystem
     internal void RegenerateCollision(EntityUid uid, MapGridComponent grid, IReadOnlySet<MapChunk> chunks)
     {
         if (HasComp<MapComponent>(uid))
+        {
+            ClearEmptyMapChunks(uid, grid, chunks);
             return;
+        }
 
         var chunkRectangles = new Dictionary<MapChunk, List<Box2i>>(chunks.Count);
         var removedChunks = new List<MapChunk>();
@@ -620,6 +623,23 @@ public abstract partial class SharedMapSystem
         OnGridBoundsChange(uid, grid);
         var ev = new RegenerateGridBoundsEvent(uid, chunkRectangles, removedChunks);
         RaiseLocalEvent(ref ev);
+    }
+
+    /// <summary>
+    /// Variation of <see cref="RegenerateCollision(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Map.Components.MapGridComponent,Robust.Shared.Map.MapChunk)"/>
+    /// that only simply removes empty chunks. Intended for use with "planet-maps", which have no grid fixtures.
+    /// </summary>
+    private void ClearEmptyMapChunks(EntityUid uid, MapGridComponent grid, IReadOnlySet<MapChunk> modified)
+    {
+        foreach (var chunk in modified)
+        {
+            DebugTools.Assert(chunk.FilledTiles >= 0);
+            if (chunk.FilledTiles > 0)
+                continue;
+
+            DebugTools.AssertEqual(chunk.Fixtures.Count, 0, "maps should not have grid-chunk fixtures");
+            RemoveChunk(uid, grid, chunk.Indices);
+        }
     }
 
     #region TileAccess
@@ -722,7 +742,7 @@ public abstract partial class SharedMapSystem
         if (tiles.Count == 0)
             return;
 
-        var chunks = new HashSet<MapChunk>(Math.Max(1, tiles.Count / grid.ChunkSize));
+        var modified = new HashSet<MapChunk>(Math.Max(1, tiles.Count / grid.ChunkSize));
 
         foreach (var (gridIndices, tile) in tiles)
         {
@@ -730,7 +750,7 @@ public abstract partial class SharedMapSystem
             if (!grid.Chunks.TryGetValue(chunkIndex, out var chunk))
             {
                 if (tile.IsEmpty)
-                    return;
+                    continue;
 
                 grid.Chunks[chunkIndex] = chunk = new MapChunk(chunkIndex.X, chunkIndex.Y, grid.ChunkSize)
                 {
@@ -739,17 +759,17 @@ public abstract partial class SharedMapSystem
             }
 
             var offset = chunk.GridTileToChunkTile(gridIndices);
-            chunks.Add(chunk);
             chunk.SuppressCollisionRegeneration = true;
-            SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile);
+            if (SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile))
+                modified.Add(chunk);
         }
 
-        foreach (var chunk in chunks)
+        foreach (var chunk in modified)
         {
             chunk.SuppressCollisionRegeneration = false;
         }
 
-        RegenerateCollision(uid, grid, chunks);
+        RegenerateCollision(uid, grid, modified);
     }
 
     public IEnumerable<TileRef> GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2Rotated localArea, bool ignoreEmpty = true,

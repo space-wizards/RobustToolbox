@@ -29,7 +29,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Retrieves whether the entity is initializing. Throws if the entity does not exist.
+    ///     Retrieves whether the entity is initializing.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool Initializing(EntityUid uid, MetaDataComponent? metaData = null)
@@ -38,16 +38,16 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Retrieves whether the entity is initialized. Throws if the entity does not exist.
+    ///     Retrieves whether the entity has been initialized and has not yet been deleted.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool Initialized(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        return LifeStage(uid, metaData) >= EntityLifeStage.Initialized;
+        return LifeStage(uid, metaData) is >= EntityLifeStage.Initialized and < EntityLifeStage.Terminating;
     }
 
     /// <summary>
-    ///     Retrieves whether the entity is being terminated. Throws if the entity does not exist.
+    ///     Retrieves whether the entity is being terminated.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool Terminating(EntityUid uid, MetaDataComponent? metaData = null)
@@ -56,15 +56,13 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Retrieves whether the entity is deleted or is nonexistent.
+    ///     Retrieves whether the entity is deleted or is nonexistent. Returns false if the entity is currently in the
+    ///     process of being deleted.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool Deleted(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
-            return true;
-
-        return metaData.EntityDeleted;
+        return LifeStage(uid, metaData) >= EntityLifeStage.Deleted;
     }
 
     /// <summary>
@@ -73,23 +71,11 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TerminatingOrDeleted(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
-            return true;
-
-        return metaData.EntityLifeStage >= EntityLifeStage.Terminating;
+        return LifeStage(uid, metaData) >= EntityLifeStage.Terminating;
     }
 
-    /// <summary>
-    ///     Retrieves whether the entity is deleted or is nonexistent.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool Deleted(EntityUid uid, EntityQuery<MetaDataComponent> metaQuery)
-    {
-        if (!metaQuery.TryGetComponent(uid, out var meta))
-            return true;
-
-        return meta.EntityDeleted;
-    }
+    [Obsolete("Use override without the EntityQuery")]
+    protected bool Deleted(EntityUid uid, EntityQuery<MetaDataComponent> metaQuery) => Deleted(uid);
 
     /// <summary>
     ///     Retrieves whether the entity is deleted or is nonexistent.
@@ -105,68 +91,12 @@ public partial class EntitySystem
     protected EntityLifeStage LifeStage(EntityUid uid, MetaDataComponent? metaData = null)
     {
         if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
-            throw CompNotFound<MetaDataComponent>(uid);
+            return EntityLifeStage.Deleted;
 
         return metaData.EntityLifeStage;
     }
 
-    /// <summary>
-    ///     Attempts to retrieve whether the entity is initializing.
-    /// </summary>
-    /// <returns>Whether it could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryInitializing(EntityUid uid, [NotNullWhen(true)] out bool? initializing, MetaDataComponent? metaData = null)
-    {
-        if (!TryLifeStage(uid, out var lifeStage, metaData))
-        {
-            initializing = null;
-            return false;
-        }
-
-        initializing = lifeStage == EntityLifeStage.Initializing;
-        return true;
-    }
-
-    /// <summary>
-    ///     Attempts to retrieve whether the entity is initialized.
-    /// </summary>
-    /// <returns>Whether it could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryInitialized(EntityUid uid, [NotNullWhen(true)] out bool? initialized, MetaDataComponent? metaData = null)
-    {
-        if (!TryLifeStage(uid, out var lifeStage, metaData))
-        {
-            initialized = null;
-            return false;
-        }
-
-        initialized = lifeStage >= EntityLifeStage.Initialized;
-        return true;
-    }
-
-    /// <summary>
-    ///     Attempts to retrieve whether the entity is terminating.
-    /// </summary>
-    /// <returns>Whether it could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryTerminating(EntityUid uid, [NotNullWhen(true)] out bool? terminating, MetaDataComponent? metaData = null)
-    {
-        if (!TryLifeStage(uid, out var lifeStage, metaData))
-        {
-            terminating = null;
-            return false;
-        }
-
-        terminating = lifeStage == EntityLifeStage.Terminating;
-        return true;
-    }
-
-    /// <summary>
-    ///     Attempts to retrieve the life-stage of the entity.
-    ///     <seealso cref="MetaDataComponent.EntityLifeStage"/>
-    /// </summary>
-    /// <returns>Whether it could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("Use LifeStage()")]
     protected bool TryLifeStage(EntityUid uid, [NotNullWhen(true)] out EntityLifeStage? lifeStage, MetaDataComponent? metaData = null)
     {
         if (!EntityManager.MetaQuery.Resolve(uid, ref metaData, false))
@@ -633,6 +563,20 @@ public partial class EntitySystem
     protected T EnsureComp<T>(EntityUid uid) where T : IComponent, new()
     {
         return EntityManager.EnsureComponent<T>(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid, out T)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool EnsureComp<T>(EntityUid uid, out T comp) where T : IComponent, new()
+    {
+        return EntityManager.EnsureComponent(uid, out comp);
+    }
+
+    /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(ref Entity&lt;T&gt;)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool EnsureComp<T>(ref Entity<T?> entity) where T : IComponent, new()
+    {
+        return EntityManager.EnsureComponent(ref entity);
     }
 
     #endregion

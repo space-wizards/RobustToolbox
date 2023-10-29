@@ -5,7 +5,7 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Shared.Input.Binding
 {

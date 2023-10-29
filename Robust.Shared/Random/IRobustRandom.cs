@@ -28,7 +28,7 @@ public interface IRobustRandom
     double NextDouble(double minValue, double maxValue) => NextDouble() * (maxValue - minValue) + minValue;
     void NextBytes(byte[] buffer);
 
-    public Angle NextAngle() => NextFloat() * MathHelper.Pi * 2;
+    public Angle NextAngle() => NextFloat() * MathF.Tau;
     public Angle NextAngle(Angle minValue, Angle maxValue) => NextFloat() * (maxValue - minValue) + minValue;
     public Angle NextAngle(Angle maxValue) => NextFloat() * maxValue;
 

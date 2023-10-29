@@ -15,7 +15,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -35,9 +35,15 @@ internal sealed partial class PvsSystem : EntitySystem
     public const float ChunkSize = 8;
 
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
+    // Main issue is that I CBF figuring out the logic for handling it changing mid-game.
     public const int DirtyBufferSize = 20;
     // Note: If a client has ping higher than TickBuffer / TickRate, then the server will treat every entity as if it
     // had entered PVS for the first time. Note that due to the PVS budget, this buffer is easily overwhelmed.
+
+    /// <summary>
+    /// See <see cref="CVars.NetForceAckThreshold"/>.
+    /// </summary>
+    public int ForceAckThreshold { get; private set; }
 
     /// <summary>
     /// Maximum number of pooled objects
@@ -139,6 +145,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
         _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
+        _configManager.OnValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged, true);
 
         _serverGameStateManager.ClientAck += OnClientAck;
         _serverGameStateManager.ClientRequestFull += OnClientRequestFull;
@@ -156,6 +163,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
         _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
+        _configManager.UnsubValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged);
 
         _serverGameStateManager.ClientAck -= OnClientAck;
         _serverGameStateManager.ClientRequestFull -= OnClientRequestFull;
@@ -199,7 +207,7 @@ internal sealed partial class PvsSystem : EntitySystem
         // return last acked to pool, but only if it is not still in the OverflowDictionary.
         if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(sessionData.LastAcked.Value.Tick))
         {
-            DebugTools.Assert(sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
+            DebugTools.Assert(!sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
             _visSetPool.Return(sessionData.LastAcked.Value.Data);
         }
 
@@ -210,6 +218,11 @@ internal sealed partial class PvsSystem : EntitySystem
     private void OnViewsizeChanged(float obj)
     {
         _viewSize = obj * 2;
+    }
+
+    private void OnForceAckChanged(int value)
+    {
+        ForceAckThreshold = value;
     }
 
     private void SetPvs(bool value)
@@ -420,7 +433,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     #endregion
 
-    public (List<(int, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(IPlayerSession[] sessions)
+    public (List<(int, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(ICommonSession[] sessions)
     {
         var playerChunks = new HashSet<int>[sessions.Length];
         var viewerEntities = new EntityUid[sessions.Length][];
@@ -689,7 +702,7 @@ internal sealed partial class PvsSystem : EntitySystem
     }
 
     internal (List<EntityState>? updates, List<NetEntity>? deletions, List<NetEntity>? leftPvs, GameTick fromTick)
-        CalculateEntityStates(IPlayerSession session,
+        CalculateEntityStates(ICommonSession session,
             GameTick fromTick,
             GameTick toTick,
             (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] chunks,
@@ -697,8 +710,8 @@ internal sealed partial class PvsSystem : EntitySystem
             EntityUid[] viewers)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
-        var newEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSEntityBudget);
-        var enteredEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSEntityEnterBudget);
+        var newEntityBudget = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityBudget);
+        var enteredEntityBudget = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityEnterBudget);
         var newEntityCount = 0;
         var enteredEntityCount = 0;
         var sessionData = PlayerData[session];
@@ -1302,11 +1315,11 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
     private EntityUid[] GetSessionViewers(ICommonSession session)
     {
-        if (session.Status != SessionStatus.InGame || session is not IPlayerSession sess)
+        if (session.Status != SessionStatus.InGame)
             return Array.Empty<EntityUid>();
 
         // Fast path
-        if (sess.ViewSubscriptionCount == 0)
+        if (session.ViewSubscriptions.Count == 0)
         {
             if (session.AttachedEntity == null)
                 return Array.Empty<EntityUid>();
@@ -1318,11 +1331,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
         if (session.AttachedEntity != null)
             viewers.Add(session.AttachedEntity.Value);
 
-        foreach (var uid in sess.ViewSubscriptions)
-        {
-            viewers.Add(uid);
-        }
-
+        viewers.UnionWith(session.ViewSubscriptions);
         return viewers.ToArray();
     }
 
@@ -1412,7 +1421,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 [ByRefEvent]
 public struct ExpandPvsEvent
 {
-    public readonly IPlayerSession Session;
+    public readonly ICommonSession Session;
 
     /// <summary>
     /// List of entities that will get added to this session's PVS set.
@@ -1425,7 +1434,7 @@ public struct ExpandPvsEvent
     /// </summary>
     public List<EntityUid>? RecursiveEntities;
 
-    public ExpandPvsEvent(IPlayerSession session)
+    public ExpandPvsEvent(ICommonSession session)
     {
         Session = session;
     }

@@ -7,7 +7,7 @@ using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
@@ -41,7 +41,7 @@ namespace Robust.Server.Console
 
             var msg = new MsgConCmd();
             msg.Text = command;
-            NetManager.ServerSendMessage(msg, ((IPlayerSession)session).ConnectedClient);
+            NetManager.ServerSendMessage(msg, session.Channel);
         }
 
         /// <inheritdoc />
@@ -49,18 +49,12 @@ namespace Robust.Server.Console
         {
             var msg = new FormattedMessage();
             msg.AddText(text);
-            if (session is IPlayerSession playerSession)
-                OutputText(playerSession, msg, false);
-            else
-                OutputText(null, msg, false);
+            OutputText(session, msg, false);
         }
 
         public override void WriteLine(ICommonSession? session, FormattedMessage msg)
         {
-            if (session is IPlayerSession playerSession)
-                OutputText(playerSession, msg, false);
-            else
-                OutputText(null, msg, false);
+            OutputText(session, msg, false);
         }
 
         /// <inheritdoc />
@@ -68,10 +62,7 @@ namespace Robust.Server.Console
         {
             var msg = new FormattedMessage();
             msg.AddText(text);
-            if (session is IPlayerSession playerSession)
-                OutputText(playerSession, msg, true);
-            else
-                OutputText(null, msg, true);
+            OutputText(session, msg, true);
         }
 
         public bool IsCmdServer(IConsoleCommand cmd) => true;
@@ -155,7 +146,7 @@ namespace Robust.Server.Console
 
         private bool ShellCanExecute(IConsoleShell shell, string cmdName)
         {
-            return shell.Player == null || _groupController.CanCommand((IPlayerSession)shell.Player, cmdName);
+            return shell.Player == null || _groupController.CanCommand(shell.Player, cmdName);
         }
 
         private void HandleRegistrationRequest(INetChannel senderConnection)
@@ -213,7 +204,7 @@ namespace Robust.Server.Console
             ExecuteCommand(session, text);
         }
 
-        private void OutputText(IPlayerSession? session, FormattedMessage text, bool error)
+        private void OutputText(ICommonSession? session, FormattedMessage text, bool error)
         {
             if (session != null)
             {

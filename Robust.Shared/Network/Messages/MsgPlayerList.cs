@@ -13,15 +13,15 @@ namespace Robust.Shared.Network.Messages
         public override MsgGroups MsgGroup => MsgGroups.Core;
 
         public byte PlyCount { get; set; }
-        public List<PlayerState> Plyrs { get; set; }
+        public List<SessionState> Plyrs { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
-            Plyrs = new List<PlayerState>();
+            Plyrs = new List<SessionState>();
             PlyCount = buffer.ReadByte();
             for (var i = 0; i < PlyCount; i++)
             {
-                var plyNfo = new PlayerState
+                var plyNfo = new SessionState
                 {
                     UserId = new NetUserId(buffer.ReadGuid()),
                     Name = buffer.ReadString(),

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 
 namespace Robust.Shared.Toolshed.Commands.Math;
 

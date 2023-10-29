@@ -26,7 +26,7 @@ using Prometheus;
 using Robust.Server.Replays;
 using Robust.Shared.Console;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 
 namespace Robust.Server.GameStates
 {
@@ -168,7 +168,7 @@ Oldest acked clients: {string.Join(", ", players)}
         /// <inheritdoc />
         public void SendGameStateUpdate()
         {
-            var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
+            var players = _playerManager.Sessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
             // Update entity positions in PVS chunks/collections
             // TODO disable processing if culling is disabled? Need to check if toggling PVS breaks anything.
@@ -224,7 +224,7 @@ Oldest acked clients: {string.Join(", ", players)}
             _pvs.CullDeletionHistory(oldestAck);
         }
 
-        private GameTick SendStates(IPlayerSession[] players, PvsData? pvsData)
+        private GameTick SendStates(ICommonSession[] players, PvsData? pvsData)
         {
             var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
             var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
@@ -265,7 +265,7 @@ Oldest acked clients: {string.Join(", ", players)}
             public (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] ChunkCache;
         }
 
-        private PvsData? GetPVSData(IPlayerSession[] players)
+        private PvsData? GetPVSData(ICommonSession[] players)
         {
             var (chunks, playerChunks, viewerEntities) = _pvs.GetChunks(players);
             const int ChunkBatchSize = 2;
@@ -319,11 +319,11 @@ Oldest acked clients: {string.Join(", ", players)}
         private void SendStateUpdate(int i,
             PvsThreadResources resources,
             InputSystem inputSystem,
-            IPlayerSession session,
+            ICommonSession session,
             PvsData? pvsData,
             ref uint oldestAckValue)
         {
-            var channel = session.ConnectedClient;
+            var channel = session.Channel;
             var sessionData = _pvs.PlayerData[session];
             var lastAck = sessionData.LastReceivedAck;
             List<NetEntity>? leftPvs = null;
@@ -347,7 +347,7 @@ Oldest acked clients: {string.Join(", ", players)}
                 (entStates, deletions, fromTick) = _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
             }
 
-            var playerStates = _playerManager.GetPlayerStates(lastAck);
+            var playerStates = _playerManager.GetPlayerStates(fromTick);
 
             // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
             var lastInputCommand = inputSystem.GetLastInputCommand(session);
@@ -368,11 +368,30 @@ Oldest acked clients: {string.Join(", ", players)}
             stateUpdateMessage.State = state;
             stateUpdateMessage.CompressionContext = resources.CompressionContext;
 
-            _networkManager.ServerSendMessage(stateUpdateMessage, channel);
-
             // If the state is too big we let Lidgren send it reliably. This is to avoid a situation where a state is so
             // large that it (or part of it) consistently gets dropped. When we send reliably, we immediately update the
             // ack so that the next state will not also be huge.
+            //
+            // We also do this if the client's last ack is too old. This helps prevent things like the entity deletion
+            // history from becoming too bloated if a bad client fails to send acks for whatever reason.
+
+            if (_gameTiming.CurTick.Value > lastAck.Value + _pvs.ForceAckThreshold)
+            {
+                stateUpdateMessage.ForceSendReliably = true;
+
+                // Aside from the time shortly after connecting, this shouldn't be common. If it is happening.
+                // something is probably wrong (or we have a malicious client). Hence we log an error.
+                // If it is more frequent than I think, this can be downgraded to a warning.
+
+#if FULL_RELEASE
+                var connectedTime = (DateTime.UtcNow - session.ConnectedTime).TotalMinutes;
+                if (lastAck > GameTick.Zero && connectedTime > 1)
+                    _logger.Error($"Client {session} exceeded ack-tick threshold. Last ack: {lastAck}. Cur tick: {_gameTiming.CurTick}. Connect time: {connectedTime} minutes");
+#endif
+            }
+
+            _networkManager.ServerSendMessage(stateUpdateMessage, channel);
+
             if (stateUpdateMessage.ShouldSendReliably())
             {
                 sessionData.LastReceivedAck = _gameTiming.CurTick;

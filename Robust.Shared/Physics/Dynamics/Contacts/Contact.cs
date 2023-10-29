@@ -287,19 +287,23 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     _manifoldManager.CollideEdgeAndPolygon(ref manifold, (EdgeShape) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.ChainAndCircle:
-                    throw new NotImplementedException();
-                    /*
-                    ChainShape chain = (ChainShape)FixtureA.Shape;
-                    chain.GetChildEdge(_edge, ChildIndexA);
-                    Collision.CollisionManager.CollideEdgeAndCircle(ref manifold, _edge, ref transformA, (CircleShape)FixtureB.Shape, ref transformB);
-                    */
+                {
+                    var chain = (ChainShape) FixtureA!.Shape;
+                    var edge = _manifoldManager.GetContactEdge();
+                    chain.GetChildEdge(ref edge, ChildIndexA);
+                    _manifoldManager.CollideEdgeAndCircle(ref manifold, edge, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
+                    _manifoldManager.ReturnEdge(edge);
+                    break;
+                }
                 case ContactType.ChainAndPolygon:
-                    throw new NotImplementedException();
-                    /*
-                    ChainShape loop2 = (ChainShape)FixtureA.Shape;
-                    loop2.GetChildEdge(_edge, ChildIndexA);
-                    Collision.CollisionManager.CollideEdgeAndPolygon(ref manifold, _edge, ref transformA, (PolygonShape)FixtureB.Shape, ref transformB);
-                    */
+                {
+                    var loop2 = (ChainShape) FixtureA!.Shape;
+                    var edge = _manifoldManager.GetContactEdge();
+                    loop2.GetChildEdge(ref edge, ChildIndexA);
+                    _manifoldManager.CollideEdgeAndPolygon(ref manifold, edge, in transformA, (PolygonShape) FixtureB!.Shape, in transformB);
+                    _manifoldManager.ReturnEdge(edge);
+                    break;
+                }
                 case ContactType.Circle:
                     _manifoldManager.CollideCircles(ref manifold, (PhysShapeCircle) FixtureA!.Shape, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
                     break;

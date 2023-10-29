@@ -211,52 +211,23 @@ public abstract partial class SharedMapSystem
         if (args.Current is not MapGridComponentState state)
             return;
 
+        DebugTools.Assert(component.ChunkSize == state.ChunkSize || component.Chunks.Count == 0,
+            "Can't modify chunk size of an existing grid.");
+
         component.ChunkSize = state.ChunkSize;
+        DebugTools.Assert(state.ChunkData != null || state.FullGridData != null);
 
         if (state.ChunkData == null && state.FullGridData == null)
             return;
 
-        var modified = new List<(Vector2i position, Tile tile)>();
-        MapManager.SuppressOnTileChanged = true;
+        var modifiedChunks = new HashSet<MapChunk>();
 
         // delta state
         if (state.ChunkData != null)
         {
             foreach (var chunkData in state.ChunkData)
             {
-                if (chunkData.IsDeleted())
-                    continue;
-
-                var chunk = GetOrAddChunk(uid, component, chunkData.Index);
-                chunk.SuppressCollisionRegeneration = true;
-                DebugTools.Assert(chunkData.TileData.Length == component.ChunkSize * component.ChunkSize);
-
-                var counter = 0;
-                for (ushort x = 0; x < component.ChunkSize; x++)
-                {
-                    for (ushort y = 0; y < component.ChunkSize; y++)
-                    {
-                        var tile = chunkData.TileData[counter++];
-                        if (chunk.GetTile(x, y) == tile)
-                            continue;
-
-                        SetChunkTile(uid, component, chunk, x, y, tile);
-                        modified.Add((new Vector2i(chunk.X * component.ChunkSize + x, chunk.Y * component.ChunkSize + y), tile));
-                    }
-                }
-            }
-
-            foreach (var chunkData in state.ChunkData)
-            {
-                if (chunkData.IsDeleted())
-                {
-                    RemoveChunk(uid, component, chunkData.Index);
-                    continue;
-                }
-
-                var chunk = GetOrAddChunk(uid, component, chunkData.Index);
-                chunk.SuppressCollisionRegeneration = false;
-                RegenerateCollision(uid, component, chunk);
+                ApplyChunkData(uid, component, chunkData, modifiedChunks);
             }
         }
 
@@ -266,37 +237,86 @@ public abstract partial class SharedMapSystem
             foreach (var index in component.Chunks.Keys)
             {
                 if (!state.FullGridData.ContainsKey(index))
-                    RemoveChunk(uid, component, index);
+                    ApplyChunkData(uid, component, ChunkDatum.CreateDeleted(index), modifiedChunks);
             }
 
             foreach (var (index, tiles) in state.FullGridData)
             {
-                var chunk = GetOrAddChunk(uid, component, index);
-                chunk.SuppressCollisionRegeneration = true;
-                DebugTools.Assert(tiles.Length == component.ChunkSize * component.ChunkSize);
-
-                var counter = 0;
-                for (ushort x = 0; x < component.ChunkSize; x++)
-                {
-                    for (ushort y = 0; y < component.ChunkSize; y++)
-                    {
-                        var tile = tiles[counter++];
-                        if (chunk.GetTile(x, y) == tile)
-                            continue;
-
-                        SetChunkTile(uid, component, chunk, x, y, tile);
-                        modified.Add((new Vector2i(chunk.X * component.ChunkSize + x, chunk.Y * component.ChunkSize + y), tile));
-                    }
-                }
-
-                chunk.SuppressCollisionRegeneration = false;
-                RegenerateCollision(uid, component, chunk);
+                ApplyChunkData(uid, component, ChunkDatum.CreateModified(index, tiles), modifiedChunks);
             }
         }
 
-        MapManager.SuppressOnTileChanged = false;
-        if (modified.Count != 0)
-            RaiseLocalEvent(uid, new GridModifiedEvent(uid, component, modified), true);
+        var count = component.Chunks.Count;
+        RegenerateCollision(uid, component, modifiedChunks);
+
+        // Regeneration can remove chunks in general, but it shouldn't do that here as the state handling
+        // should already have removed all the chunks.
+        DebugTools.AssertEqual(component.Chunks.Count, count);
+
+#if DEBUG
+        foreach (var chunk in component.Chunks.Values)
+        {
+            chunk.ValidateChunk();
+            DebugTools.Assert(chunk.FilledTiles > 0);
+        }
+#endif
+    }
+
+    private void ApplyChunkData(EntityUid uid, MapGridComponent component, ChunkDatum data,
+        HashSet<MapChunk> modifiedChunks)
+    {
+        bool shapeChanged = false;
+        var counter = 0;
+
+        if (data.IsDeleted())
+        {
+            if (!component.Chunks.TryGetValue(data.Index, out var deletedChunk))
+                return;
+
+            // Deleted chunks still need to raise tile-changed events.
+            deletedChunk.SuppressCollisionRegeneration = true;
+            for (ushort x = 0; x < component.ChunkSize; x++)
+            {
+                for (ushort y = 0; y < component.ChunkSize; y++)
+                {
+                    if (!deletedChunk.TrySetTile(x, y, Tile.Empty, out var oldTile, out var chunkShapeChanged))
+                        continue;
+
+                    var gridIndices = deletedChunk.ChunkTileToGridTile((x, y));
+                    var newTileRef = new TileRef(uid, gridIndices, Tile.Empty);
+                    _mapInternal.RaiseOnTileChanged(newTileRef, oldTile, data.Index);
+                }
+            }
+
+            component.Chunks.Remove(data.Index);
+
+            // TODO is this required?
+            modifiedChunks.Add(deletedChunk);
+            return;
+        }
+
+        var chunk = GetOrAddChunk(uid, component, data.Index);
+        chunk.SuppressCollisionRegeneration = true;
+        DebugTools.Assert(data.TileData.Any(x => !x.IsEmpty));
+        DebugTools.Assert(data.TileData.Length == component.ChunkSize * component.ChunkSize);
+        for (ushort x = 0; x < component.ChunkSize; x++)
+        {
+            for (ushort y = 0; y < component.ChunkSize; y++)
+            {
+                var tile = data.TileData[counter++];
+                if (!chunk.TrySetTile(x, y, tile, out var oldTile, out var tileShapeChanged))
+                    continue;
+
+                shapeChanged |= tileShapeChanged;
+                var gridIndices = chunk.ChunkTileToGridTile((x, y));
+                var newTileRef = new TileRef(uid, gridIndices, tile);
+                _mapInternal.RaiseOnTileChanged(newTileRef, oldTile, data.Index);
+            }
+        }
+
+        chunk.SuppressCollisionRegeneration = false;
+        if (shapeChanged)
+            modifiedChunks.Add(chunk);
     }
 
     private void OnGridGetState(EntityUid uid, MapGridComponent component, ref ComponentGetState args)
@@ -317,14 +337,21 @@ public abstract partial class SharedMapSystem
         else
         {
             chunkData = new List<ChunkDatum>();
-            var chunks = component.ChunkDeletionHistory;
 
-            foreach (var (tick, indices) in chunks)
+            foreach (var (tick, indices) in component.ChunkDeletionHistory)
             {
                 if (tick < fromTick && fromTick != GameTick.Zero)
                     continue;
 
-                chunkData.Add(ChunkDatum.CreateDeleted(indices));
+                // Chunk may have been re-added sometime after it was deleted, but before deletion history was culled.
+                if (!component.Chunks.TryGetValue(indices, out var chunk))
+                {
+                    chunkData.Add(ChunkDatum.CreateDeleted(indices));
+                    continue;
+                }
+
+                if (chunk.LastTileModifiedTick < fromTick)
+                    Log.Error($"Encountered un-deleted chunk with an old last-modified tick on grid {ToPrettyString(uid)}");
             }
 
             foreach (var (index, chunk) in GetMapChunks(uid, component))
@@ -349,6 +376,21 @@ public abstract partial class SharedMapSystem
         }
 
         args.State = new MapGridComponentState(component.ChunkSize, chunkData);
+
+#if DEBUG
+        if (chunkData == null)
+            return;
+
+        HashSet<Vector2> keys = new();
+        foreach (var chunk in chunkData)
+        {
+            if (chunk.TileData == null)
+                continue;
+
+            DebugTools.Assert(keys.Add(chunk.Index), "Duplicate chunk");
+            DebugTools.Assert(chunk.TileData.Any(x => !x.IsEmpty), "Empty non-deleted chunk");
+        }
+#endif
     }
 
     private void GetFullState(EntityUid uid, MapGridComponent component, ref ComponentGetState args)
@@ -370,6 +412,13 @@ public abstract partial class SharedMapSystem
         }
 
         args.State = new MapGridComponentState(component.ChunkSize, chunkData);
+
+#if DEBUG
+        foreach (var chunk in chunkData.Values)
+        {
+            DebugTools.Assert(chunk.Any(x => !x.IsEmpty));
+        }
+#endif
     }
 
     private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
@@ -432,14 +481,6 @@ public abstract partial class SharedMapSystem
 
         component.MapProxy = DynamicTree.Proxy.Free;
         RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
-
-        if (uid == EntityUid.Invalid)
-            return;
-
-        if (!MapManager.GridExists(uid))
-            return;
-
-        MapManager.DeleteGrid(uid);
     }
 
     private Box2 GetWorldAABB(EntityUid uid, MapGridComponent grid, TransformComponent? xform = null)
@@ -660,11 +701,20 @@ public abstract partial class SharedMapSystem
 
     public void SetTile(EntityUid uid, MapGridComponent grid, Vector2i gridIndices, Tile tile)
     {
-        var (chunk, chunkTile) = ChunkAndOffsetForTile(uid, grid, gridIndices);
-        SetChunkTile(uid, grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
-        // Ideally we'd to this here for consistency but apparently tile modified does it or something.
-        // Yeah it's noodly.
-        // RegenerateCollision(chunk);
+        var chunkIndex = GridTileToChunkIndices(uid, grid, gridIndices);
+        if (!grid.Chunks.TryGetValue(chunkIndex, out var chunk))
+        {
+            if (tile.IsEmpty)
+                return;
+
+            grid.Chunks[chunkIndex] = chunk = new MapChunk(chunkIndex.X, chunkIndex.Y, grid.ChunkSize)
+            {
+                LastTileModifiedTick = _timing.CurTick
+            };
+        }
+
+        var offset = chunk.GridTileToChunkTile(gridIndices);
+        SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile);
     }
 
     public void SetTiles(EntityUid uid, MapGridComponent grid, List<(Vector2i GridIndices, Tile Tile)> tiles)
@@ -676,10 +726,22 @@ public abstract partial class SharedMapSystem
 
         foreach (var (gridIndices, tile) in tiles)
         {
-            var (chunk, chunkTile) = ChunkAndOffsetForTile(uid, grid, gridIndices);
+            var chunkIndex = GridTileToChunkIndices(uid, grid, gridIndices);
+            if (!grid.Chunks.TryGetValue(chunkIndex, out var chunk))
+            {
+                if (tile.IsEmpty)
+                    return;
+
+                grid.Chunks[chunkIndex] = chunk = new MapChunk(chunkIndex.X, chunkIndex.Y, grid.ChunkSize)
+                {
+                    LastTileModifiedTick = _timing.CurTick
+                };
+            }
+
+            var offset = chunk.GridTileToChunkTile(gridIndices);
             chunks.Add(chunk);
             chunk.SuppressCollisionRegeneration = true;
-            SetChunkTile(uid, grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
+            SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile);
         }
 
         foreach (var chunk in chunks)
@@ -988,14 +1050,18 @@ public abstract partial class SharedMapSystem
     public bool IsAnchored(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, EntityUid euid)
     {
         var tilePos = TileIndicesFor(uid, grid, coords);
-        var (chunk, chunkTile) = ChunkAndOffsetForTile(uid, grid, tilePos);
+
+        if (!TryChunkAndOffsetForTile(uid, grid, tilePos, out var chunk, out var chunkTile))
+            return false;
+
         var snapgrid = chunk.GetSnapGrid((ushort)chunkTile.X, (ushort)chunkTile.Y);
         return snapgrid?.Contains(euid) == true;
     }
 
     public bool AddToSnapGridCell(EntityUid gridUid, MapGridComponent grid, Vector2i pos, EntityUid euid)
     {
-        var (chunk, chunkTile) = ChunkAndOffsetForTile(gridUid, grid, pos);
+        if (!TryChunkAndOffsetForTile(gridUid, grid, pos, out var chunk, out var chunkTile))
+            return false;
 
         if (chunk.GetTile((ushort)chunkTile.X, (ushort)chunkTile.Y).IsEmpty)
             return false;
@@ -1011,7 +1077,12 @@ public abstract partial class SharedMapSystem
 
     public void RemoveFromSnapGridCell(EntityUid gridUid, MapGridComponent grid, Vector2i pos, EntityUid euid)
     {
-        var (chunk, chunkTile) = ChunkAndOffsetForTile(gridUid, grid, pos);
+        var gridChunkIndices = GridTileToChunkIndices(gridUid, grid, pos);
+
+        if (!grid.Chunks.TryGetValue(gridChunkIndices, out var chunk))
+            return;
+
+        var chunkTile = chunk.GridTileToChunkTile(pos);
         chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, euid);
     }
 
@@ -1020,12 +1091,18 @@ public abstract partial class SharedMapSystem
         RemoveFromSnapGridCell(gridUid, grid, TileIndicesFor(gridUid, grid, coords), euid);
     }
 
-    private (MapChunk, Vector2i) ChunkAndOffsetForTile(EntityUid uid, MapGridComponent grid, Vector2i pos)
+    private bool TryChunkAndOffsetForTile(EntityUid uid, MapGridComponent grid, Vector2i pos,
+        [NotNullWhen(true)]out MapChunk? chunk, out Vector2i offset)
     {
         var gridChunkIndices = GridTileToChunkIndices(uid, grid, pos);
-        var chunk = GetOrAddChunk(uid, grid, gridChunkIndices);
-        var chunkTile = chunk.GridTileToChunkTile(pos);
-        return (chunk, chunkTile);
+        if (!grid.Chunks.TryGetValue(gridChunkIndices, out chunk))
+        {
+            offset = default;
+            return false;
+        }
+
+        offset = chunk.GridTileToChunkTile(pos);
+        return true;
     }
 
     public IEnumerable<EntityUid> GetInDir(EntityUid uid, MapGridComponent grid, EntityCoordinates position, Direction dir)
@@ -1264,7 +1341,7 @@ public abstract partial class SharedMapSystem
         var gridTile = mapChunk.ChunkTileToGridTile(tileIndices);
         mapChunk.LastTileModifiedTick = _timing.CurTick;
         grid.LastTileModifiedTick = _timing.CurTick;
-        Dirty(grid);
+        Dirty(uid, grid);
 
         // The map serializer currently sets tiles of unbound grids as part of the deserialization process
         // It properly sets SuppressOnTileChanged so that the event isn't spammed for every tile on the grid.
@@ -1272,7 +1349,7 @@ public abstract partial class SharedMapSystem
         if (!MapManager.SuppressOnTileChanged)
         {
             var newTileRef = new TileRef(uid, gridTile, newTile);
-            _mapInternal.RaiseOnTileChanged(newTileRef, oldTile);
+            _mapInternal.RaiseOnTileChanged(newTileRef, oldTile, mapChunk.Indices);
         }
 
         if (shapeChanged && !mapChunk.SuppressCollisionRegeneration)

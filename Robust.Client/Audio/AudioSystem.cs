@@ -161,11 +161,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;
 
-        if (!MetaData(uid).EntityPaused)
-        {
-            component.StartPlaying();
-        }
-
         // If audio came into range then start playback at the correct position.
         var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % GetAudioLength(component.FileName).TotalSeconds;
 
@@ -227,6 +222,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // TODO:
         // I Originally tried to be fancier here but it caused audio issues so just trying
         // to replicate the old behaviour for now.
+        if (!component.Started)
+        {
+            component.Started = true;
+            component.StartPlaying();
+        }
 
         // If it's global but on another map (that isn't nullspace) then stop playing it.
         if (component.Global)

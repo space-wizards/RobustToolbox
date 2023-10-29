@@ -44,13 +44,6 @@ public partial class EntityManager
     public EntityUid[] SpawnEntities(MapCoordinates coordinates, string? prototype, int count)
     {
         var ents = new EntityUid[count];
-
-        if (prototype != null)
-        {
-            var compTypes = GetComponentType(PrototypeManager.Index<EntityPrototype>(prototype));
-            _world.Reserve(compTypes, count);
-        }
-
         for (var i = 0; i < count; i++)
         {
             ents[i] = Spawn(prototype, coordinates);

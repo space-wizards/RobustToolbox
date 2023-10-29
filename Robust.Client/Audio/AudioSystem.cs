@@ -20,7 +20,6 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
-using Robust.Shared.Players;
 using Robust.Shared.Replays;
 using Robust.Shared.ResourceManagement.ResourceTypes;
 using Robust.Shared.Threading;

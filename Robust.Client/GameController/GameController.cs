@@ -388,7 +388,7 @@ namespace Robust.Client
                 _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
             }
 
-            _resourceManifest = ResourceManifestData.LoadResourceManifest(_resourceCache);
+            _resourceManifest = ResourceManifestData.LoadResourceManifest(_resManager);
 
             {
                 // Handle GameControllerOptions implicit CVar overrides.

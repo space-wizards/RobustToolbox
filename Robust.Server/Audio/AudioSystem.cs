@@ -3,15 +3,14 @@ using System.Numerics;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Components;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
-using Robust.Shared.Players;
 using Robust.Shared.Utility;
-using AudioComponent = Robust.Shared.Audio.Components.AudioComponent;
 
 namespace Robust.Server.Audio;
 

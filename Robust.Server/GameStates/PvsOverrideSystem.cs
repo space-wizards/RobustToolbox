@@ -1,6 +1,5 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
-using Robust.Shared.Players;
 
 namespace Robust.Server.GameStates;
 
@@ -29,7 +28,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// <param name="removeExistingOverride">Whether or not to supersede existing overrides.</param>
     public void AddSessionOverride(NetEntity entity, ICommonSession session, bool removeExistingOverride = true)
     {
-        _pvs.EntityPVSCollection.UpdateIndex(entity, session, removeExistingOverride);
+        _pvs.EntityPVSCollection.AddSessionOverride(entity, session, removeExistingOverride);
     }
 
     // 'placeholder'

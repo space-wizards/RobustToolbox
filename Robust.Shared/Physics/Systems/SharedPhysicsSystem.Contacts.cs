@@ -538,8 +538,8 @@ public abstract partial class SharedPhysicsSystem
                     var uidB = contact.EntityB;
                     var worldPoint = worldPoints[i];
 
-                    var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, worldPoint);
-                    var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, worldPoint);
+                    var ev1 = new StartCollideEvent(uidA, uidB, contact, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, worldPoint);
+                    var ev2 = new StartCollideEvent(uidB, uidA, contact, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, worldPoint);
 
                     RaiseLocalEvent(uidA, ref ev1, true);
                     RaiseLocalEvent(uidB, ref ev2, true);

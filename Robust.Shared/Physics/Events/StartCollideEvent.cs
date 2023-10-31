@@ -3,6 +3,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Dynamics.Contacts;
 
 namespace Robust.Shared.Physics.Events;
 
@@ -11,6 +12,8 @@ public readonly struct StartCollideEvent
 {
     public readonly EntityUid OurEntity;
     public readonly EntityUid OtherEntity;
+
+    public readonly Contact Contact;
 
     public readonly PhysicsComponent OurBody;
     public readonly PhysicsComponent OtherBody;
@@ -25,6 +28,7 @@ public readonly struct StartCollideEvent
     public StartCollideEvent(
         EntityUid ourEntity,
         EntityUid otherEntity,
+        Contact contact,
         string ourFixtureId,
         string otherFixtureId,
         Fixture ourFixture,
@@ -35,6 +39,7 @@ public readonly struct StartCollideEvent
     {
         OurEntity = ourEntity;
         OtherEntity = otherEntity;
+        Contact = contact;
         OurFixtureId = ourFixtureId;
         OtherFixtureId = otherFixtureId;
         OurFixture = ourFixture;

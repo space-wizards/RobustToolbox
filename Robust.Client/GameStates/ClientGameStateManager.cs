@@ -122,9 +122,9 @@ namespace Robust.Client.GameStates
         /// If true, this will cause received game states to be ignored. Used by integration tests.
         /// </summary>
         public bool DropStates;
+#endif
 
         private bool _resettingPredictedEntities;
-#endif
 
         /// <inheritdoc />
         public void Initialize()
@@ -162,7 +162,6 @@ namespace Robust.Client.GameStates
             _conHost.RegisterCommand("localdelete", Loc.GetString("cmd-local-delete-desc"), Loc.GetString("cmd-local-delete-help"), LocalDeleteEntCommand);
             _conHost.RegisterCommand("fullstatereset", Loc.GetString("cmd-full-state-reset-desc"), Loc.GetString("cmd-full-state-reset-help"), (_,_,_) => RequestFullState());
 
-#if DEBUG
             _entities.ComponentAdded += args =>
             {
                 var comp = _compFactory.GetRegistration(args.ComponentType);
@@ -171,7 +170,6 @@ namespace Robust.Client.GameStates
                     _sawmill.Error($"Added component {comp.Name} with net id {comp.NetID}. Stack trace:\n{Environment.StackTrace}");
                 }
             };
-#endif
 
             var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
             if (!metaId.HasValue)
@@ -549,41 +547,50 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-                foreach (var (netId, comp) in meta.NetComponents)
+                try
                 {
-                    if (!comp.NetSyncEnabled)
-                        continue;
+                    _resettingPredictedEntities = true;
 
-                    // Was this component added during prediction?
-                    if (comp.CreationTick > _timing.LastRealTick)
+                    foreach (var (netId, comp) in meta.NetComponents)
                     {
-                        if (last.ContainsKey(netId))
+                        if (!comp.NetSyncEnabled)
+                            continue;
+
+                        // Was this component added during prediction?
+                        if (comp.CreationTick > _timing.LastRealTick)
                         {
-                            // Component was probably removed and then re-addedd during a single prediction run
-                            // Just reset state as normal.
-                            comp.ClearCreationTick();
+                            if (last.ContainsKey(netId))
+                            {
+                                // Component was probably removed and then re-addedd during a single prediction run
+                                // Just reset state as normal.
+                                comp.ClearCreationTick();
+                            }
+                            else
+                            {
+                                toRemove.Add(comp);
+                                if (_sawmill.Level <= LogLevel.Debug)
+                                    _sawmill.Debug($"  A new component was added: {comp.GetType()}");
+                                continue;
+                            }
                         }
-                        else
+
+                        if (comp.LastModifiedTick <= _timing.LastRealTick ||
+                            !last.TryGetValue(netId, out var compState))
                         {
-                            toRemove.Add(comp);
-                            if (_sawmill.Level <= LogLevel.Debug)
-                                _sawmill.Debug($"  A new component was added: {comp.GetType()}");
                             continue;
                         }
+
+                        if (_sawmill.Level <= LogLevel.Debug)
+                            _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
+
+                        var handleState = new ComponentHandleState(compState, null);
+                        _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
+                        comp.LastModifiedTick = _timing.LastRealTick;
                     }
-
-                    if (comp.LastModifiedTick <= _timing.LastRealTick ||
-                        !last.TryGetValue(netId, out var compState))
-                    {
-                        continue;
-                    }
-
-                    if (_sawmill.Level <= LogLevel.Debug)
-                        _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
-
-                    var handleState = new ComponentHandleState(compState, null);
-                    _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
-                    comp.LastModifiedTick = _timing.LastRealTick;
+                }
+                finally
+                {
+                    _resettingPredictedEntities = false;
                 }
 
                 // Remove predicted component additions

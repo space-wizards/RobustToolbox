@@ -171,7 +171,11 @@ namespace Robust.Client.GameStates
                     if (comp.NetID == null)
                         return;
 
-                    _sawmill.Error($"Added component {comp.Name} with net id {comp.NetID}. Stack trace:\n{Environment.StackTrace}");
+                    _sawmill.Error($"""
+                    Added component {comp.Name} with net id {comp.NetID} while resetting predicted entities.
+                    Stack trace:
+                    {Environment.StackTrace}
+                    """);
                 }
             };
 

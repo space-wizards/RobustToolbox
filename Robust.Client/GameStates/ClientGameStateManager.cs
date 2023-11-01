@@ -549,76 +549,42 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-#if DEBUG
-                _resettingPredictedEntities = true;
-                IComponent? lastComp = null;
-                var oldComps = new Dictionary<ushort, IComponent>(meta.NetComponents);
-                try
+                foreach (var (netId, comp) in meta.NetComponents)
                 {
-#endif
-                    foreach (var (netId, comp) in meta.NetComponents)
+                    if (!comp.NetSyncEnabled)
+                        continue;
+
+                    // Was this component added during prediction?
+                    if (comp.CreationTick > _timing.LastRealTick)
                     {
-#if DEBUG
-                        lastComp = comp;
-#endif
-                        if (!comp.NetSyncEnabled)
-                            continue;
-
-                        // Was this component added during prediction?
-                        if (comp.CreationTick > _timing.LastRealTick)
+                        if (last.ContainsKey(netId))
                         {
-                            if (last.ContainsKey(netId))
-                            {
-                                // Component was probably removed and then re-addedd during a single prediction run
-                                // Just reset state as normal.
-                                comp.ClearCreationTick();
-                            }
-                            else
-                            {
-                                toRemove.Add(comp);
-                                if (_sawmill.Level <= LogLevel.Debug)
-                                    _sawmill.Debug($"  A new component was added: {comp.GetType()}");
-                                continue;
-                            }
+                            // Component was probably removed and then re-addedd during a single prediction run
+                            // Just reset state as normal.
+                            comp.ClearCreationTick();
                         }
-
-                        if (comp.LastModifiedTick <= _timing.LastRealTick ||
-                            !last.TryGetValue(netId, out var compState))
+                        else
                         {
+                            toRemove.Add(comp);
+                            if (_sawmill.Level <= LogLevel.Debug)
+                                _sawmill.Debug($"  A new component was added: {comp.GetType()}");
                             continue;
                         }
-
-                        if (_sawmill.Level <= LogLevel.Debug)
-                            _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
-
-                        var handleState = new ComponentHandleState(compState, null);
-                        _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
-                        comp.LastModifiedTick = _timing.LastRealTick;
                     }
-#if DEBUG
-                }
-                catch (InvalidOperationException e)
-                {
-                    var newComps = new Dictionary<ushort, IComponent>(meta.NetComponents);
-                    foreach (var id in oldComps.Keys)
+
+                    if (comp.LastModifiedTick <= _timing.LastRealTick ||
+                        !last.TryGetValue(netId, out var compState))
                     {
-                        newComps.Remove(id);
+                        continue;
                     }
 
-                    _sawmill.Error($"""
-                        Error in {nameof(ResetPredictedEntities)}:
-                        {e}
+                    if (_sawmill.Level <= LogLevel.Debug)
+                        _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
 
-                        Last component: {lastComp}
-                        Component difference: {string.Join("\n", newComps)}
-                        """);
-                    throw;
+                    var handleState = new ComponentHandleState(compState, null);
+                    _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
+                    comp.LastModifiedTick = _timing.LastRealTick;
                 }
-                finally
-                {
-                    _resettingPredictedEntities = false;
-                }
-#endif
 
                 // Remove predicted component additions
                 foreach (var comp in toRemove)

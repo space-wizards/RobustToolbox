@@ -122,6 +122,8 @@ namespace Robust.Client.GameStates
         /// If true, this will cause received game states to be ignored. Used by integration tests.
         /// </summary>
         public bool DropStates;
+
+        private bool _resettingPredictedEntities;
 #endif
 
         /// <inheritdoc />
@@ -159,6 +161,17 @@ namespace Robust.Client.GameStates
             _conHost.RegisterCommand("detachent", Loc.GetString("cmd-detach-ent-desc"), Loc.GetString("cmd-detach-ent-help"), DetachEntCommand);
             _conHost.RegisterCommand("localdelete", Loc.GetString("cmd-local-delete-desc"), Loc.GetString("cmd-local-delete-help"), LocalDeleteEntCommand);
             _conHost.RegisterCommand("fullstatereset", Loc.GetString("cmd-full-state-reset-desc"), Loc.GetString("cmd-full-state-reset-help"), (_,_,_) => RequestFullState());
+
+#if DEBUG
+            _entities.ComponentAdded += args =>
+            {
+                var comp = _compFactory.GetRegistration(args.ComponentType);
+                if (_resettingPredictedEntities && comp.NetID != null)
+                {
+                    _sawmill.Error($"Added component {comp.Name} with net id {comp.NetID}. Stack trace:\n{Environment.StackTrace}");
+                }
+            };
+#endif
 
             var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
             if (!metaId.HasValue)
@@ -536,41 +549,76 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-                foreach (var (netId, comp) in meta.NetComponents)
+#if DEBUG
+                _resettingPredictedEntities = true;
+                IComponent? lastComp = null;
+                var oldComps = new Dictionary<ushort, IComponent>(meta.NetComponents);
+                try
                 {
-                    if (!comp.NetSyncEnabled)
-                        continue;
-
-                    // Was this component added during prediction?
-                    if (comp.CreationTick > _timing.LastRealTick)
+#endif
+                    foreach (var (netId, comp) in meta.NetComponents)
                     {
-                        if (last.ContainsKey(netId))
+#if DEBUG
+                        lastComp = comp;
+#endif
+                        if (!comp.NetSyncEnabled)
+                            continue;
+
+                        // Was this component added during prediction?
+                        if (comp.CreationTick > _timing.LastRealTick)
                         {
-                            // Component was probably removed and then re-addedd during a single prediction run
-                            // Just reset state as normal.
-                            comp.ClearCreationTick();
+                            if (last.ContainsKey(netId))
+                            {
+                                // Component was probably removed and then re-addedd during a single prediction run
+                                // Just reset state as normal.
+                                comp.ClearCreationTick();
+                            }
+                            else
+                            {
+                                toRemove.Add(comp);
+                                if (_sawmill.Level <= LogLevel.Debug)
+                                    _sawmill.Debug($"  A new component was added: {comp.GetType()}");
+                                continue;
+                            }
                         }
-                        else
+
+                        if (comp.LastModifiedTick <= _timing.LastRealTick ||
+                            !last.TryGetValue(netId, out var compState))
                         {
-                            toRemove.Add(comp);
-                            if (_sawmill.Level <= LogLevel.Debug)
-                                _sawmill.Debug($"  A new component was added: {comp.GetType()}");
                             continue;
                         }
+
+                        if (_sawmill.Level <= LogLevel.Debug)
+                            _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
+
+                        var handleState = new ComponentHandleState(compState, null);
+                        _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
+                        comp.LastModifiedTick = _timing.LastRealTick;
                     }
-
-                    if (comp.LastModifiedTick <= _timing.LastRealTick || !last.TryGetValue(netId, out var compState))
-                    {
-                        continue;
-                    }
-
-                    if (_sawmill.Level <= LogLevel.Debug)
-                        _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
-
-                    var handleState = new ComponentHandleState(compState, null);
-                    _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
-                    comp.LastModifiedTick = _timing.LastRealTick;
+#if DEBUG
                 }
+                catch (InvalidOperationException e)
+                {
+                    var newComps = new Dictionary<ushort, IComponent>(meta.NetComponents);
+                    foreach (var id in oldComps.Keys)
+                    {
+                        newComps.Remove(id);
+                    }
+
+                    _sawmill.Error($"""
+                        Error in {nameof(ResetPredictedEntities)}:
+                        {e}
+
+                        Last component: {lastComp}
+                        Component difference: {string.Join("\n", newComps)}
+                        """);
+                    throw;
+                }
+                finally
+                {
+                    _resettingPredictedEntities = false;
+                }
+#endif
 
                 // Remove predicted component additions
                 foreach (var comp in toRemove)

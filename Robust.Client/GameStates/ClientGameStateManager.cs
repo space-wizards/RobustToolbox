@@ -164,9 +164,13 @@ namespace Robust.Client.GameStates
 
             _entities.ComponentAdded += args =>
             {
-                var comp = _compFactory.GetRegistration(args.ComponentType);
-                if (_resettingPredictedEntities && comp.NetID != null)
+                if (_resettingPredictedEntities)
                 {
+                    var comp = _compFactory.GetRegistration(args.ComponentType);
+
+                    if (comp.NetID == null)
+                        return;
+
                     _sawmill.Error($"Added component {comp.Name} with net id {comp.NetID}. Stack trace:\n{Environment.StackTrace}");
                 }
             };

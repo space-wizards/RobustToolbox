@@ -631,7 +631,7 @@ public partial class SharedPhysicsSystem
         if (!Resolve(uid, ref manager, ref body))
             return new Box2();
 
-        var transform = new Transform(Vector2.Zero, 0);
+        var transform = new Transform(0);
 
         var bounds = new Box2(Vector2.Zero, Vector2.Zero);
 

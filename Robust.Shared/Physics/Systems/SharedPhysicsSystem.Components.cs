@@ -624,6 +624,30 @@ public partial class SharedPhysicsSystem
     }
 
     /// <summary>
+    /// Gets the physics Object space AABB, only considering fixtures.
+    /// </summary>
+    public Box2 GetObjectAABB(EntityUid uid, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    {
+        if (!Resolve(uid, ref manager, ref body))
+            return new Box2();
+
+        var transform = new Transform(Vector2.Zero, 0);
+
+        var bounds = new Box2(Vector2.Zero, Vector2.Zero);
+
+        foreach (var fixture in manager.Fixtures.Values)
+        {
+            for (var i = 0; i < fixture.Shape.ChildCount; i++)
+            {
+                var boundy = fixture.Shape.ComputeAABB(transform, i);
+                bounds = bounds.Union(boundy);
+            }
+        }
+
+        return bounds;
+    }
+
+    /// <summary>
     /// Gets the physics World AABB, only considering fixtures.
     /// </summary>
     public Box2 GetWorldAABB(EntityUid uid, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)

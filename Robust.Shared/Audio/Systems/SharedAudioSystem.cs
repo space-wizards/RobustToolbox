@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -188,8 +189,16 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// </summary>
     public TimeSpan GetAudioLength(string filename)
     {
-        var resource = _resource.GetResource<AudioResource>(filename);
-        return resource.AudioStream.Length;
+        // Use direct file if found.
+        if (_resource.TryGetResource(filename, out AudioResource? resource))
+            return resource.AudioStream.Length;
+
+        // Fall back to shipped metadata
+        var protoName = filename.Replace("/", "_");
+        if (ProtoMan.TryIndex(protoName, out AudioMetadataPrototype? metadata))
+           return metadata.Length;
+
+        throw new FileNotFoundException($"Unable to find metadata for audio file {filename}");
     }
 
     /// <summary>

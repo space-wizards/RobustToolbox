@@ -121,6 +121,13 @@ namespace Robust.Shared
             CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// The maximum size of the game state buffer. If this is exceeded the client will request a full game state.
+        /// Values less than <see cref="GameStateProcessor.MinimumMaxBufferSize"/> will be ignored.
+        /// </summary>
+        public static readonly CVarDef<int> NetMaxBufferSize =
+            CVarDef.Create("net.max_buffer_size", 512, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// Enable verbose game state/networking logging.
         /// </summary>
         public static readonly CVarDef<bool> NetLogging =

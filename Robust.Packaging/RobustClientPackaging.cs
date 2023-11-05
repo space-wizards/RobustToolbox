@@ -7,6 +7,7 @@ public sealed class RobustClientPackaging
     public static IReadOnlySet<string> ClientIgnoredResources { get; } = new HashSet<string>
     {
         "Maps",
+        "ConfigPresets",
         // Leaving this here for future archaeologists to ponder at.
         "emotes.xml",
         "Groups",

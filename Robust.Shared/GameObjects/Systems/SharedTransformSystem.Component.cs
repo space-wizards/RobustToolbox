@@ -163,37 +163,21 @@ public abstract partial class SharedTransformSystem
     /// <summary>
     ///     Returns whether the given entity is a child of this transform or one of its descendants.
     /// </summary>
-    public bool ContainsEntity(TransformComponent xform, EntityUid entity)
+    public bool ContainsEntity(EntityUid parent, Entity<TransformComponent?> child)
     {
-        return ContainsEntity(xform, entity, XformQuery);
-    }
-
-    /// <inheritdoc cref="ContainsEntity(Robust.Shared.GameObjects.TransformComponent,Robust.Shared.GameObjects.EntityUid)"/>
-    public bool ContainsEntity(TransformComponent xform, EntityUid entity, EntityQuery<TransformComponent> xformQuery)
-    {
-        return ContainsEntity(xform, XformQuery.GetComponent(entity), xformQuery);
-    }
-
-    /// <inheritdoc cref="ContainsEntity(Robust.Shared.GameObjects.TransformComponent,Robust.Shared.GameObjects.EntityUid)"/>
-    public bool ContainsEntity(TransformComponent xform, TransformComponent entityTransform)
-    {
-        return ContainsEntity(xform, entityTransform, XformQuery);
-    }
-
-    /// <inheritdoc cref="ContainsEntity(Robust.Shared.GameObjects.TransformComponent,Robust.Shared.GameObjects.EntityUid)"/>
-    public bool ContainsEntity(TransformComponent xform, TransformComponent entityTransform, EntityQuery<TransformComponent> xformQuery)
-    {
-        // Is the entity the scene root
-        if (!entityTransform.ParentUid.IsValid())
+        if (!Resolve(child.Owner, ref child.Comp))
             return false;
 
-        // Is this the direct parent of the entity
-        if (xform.Owner == entityTransform.ParentUid)
+        if (!child.Comp.ParentUid.IsValid())
+            return false;
+
+        if (parent == child.Comp.ParentUid)
             return true;
 
-        // Recursively search up the parents for this object
-        var parentXform = xformQuery.GetComponent(entityTransform.ParentUid);
-        return ContainsEntity(xform, parentXform, xformQuery);
+        if (!XformQuery.TryGetComponent(child.Comp.ParentUid, out var parentXform))
+            return false;
+
+        return ContainsEntity(parent, (child.Comp.ParentUid, parentXform));
     }
 
     #endregion

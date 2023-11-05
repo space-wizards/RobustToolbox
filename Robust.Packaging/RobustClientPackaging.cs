@@ -4,7 +4,7 @@ namespace Robust.Packaging;
 
 public sealed class RobustClientPackaging
 {
-    public static IReadOnlySet<string> ClientIgnoresResources { get; } = new HashSet<string>
+    public static IReadOnlySet<string> ClientIgnoredResources { get; } = new HashSet<string>
     {
         "Maps",
         // Leaving this here for future archaeologists to ponder at.
@@ -18,8 +18,8 @@ public sealed class RobustClientPackaging
         AssetPass pass,
         CancellationToken cancel = default)
     {
-        var ignoreSet = ClientIgnoresResources.Union(RobustSharedPackaging.SharedIgnoredResources).ToHashSet();
+        var ignoreSet = ClientIgnoredResources.Union(RobustSharedPackaging.SharedIgnoredResources).ToHashSet();
 
-        await RobustSharedPackaging.DoResourceCopy(Path.Combine(contentDir, "Resources"), pass, ignoreSet, cancel);
+        await RobustSharedPackaging.DoResourceCopy(Path.Combine(contentDir, "Resources"), pass, ignoreSet, cancel: cancel);
     }
 }

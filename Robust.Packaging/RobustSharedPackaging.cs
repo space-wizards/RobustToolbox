@@ -15,14 +15,16 @@ public sealed class RobustSharedPackaging
         ".DS_Store"
     };
 
+    // IDK what these are supposed to correspond to but targetDir is the target directory.
     public static async Task WriteContentAssemblies(
         AssetPass pass,
         string contentDir,
         string binDir,
         IEnumerable<string> contentAssemblies,
+        string targetDir = "Assemblies",
         CancellationToken cancel = default)
     {
-        await WriteContentAssemblies("Assemblies", pass, contentDir, binDir, contentAssemblies, cancel);
+        await WriteContentAssemblies(targetDir, pass, contentDir, binDir, contentAssemblies, cancel);
     }
 
     public static Task WriteContentAssemblies(
@@ -59,6 +61,7 @@ public sealed class RobustSharedPackaging
         string diskSource,
         AssetPass pass,
         IReadOnlySet<string> ignoreSet,
+        string targetDir = "",
         CancellationToken cancel = default)
     {
         foreach (var path in Directory.EnumerateFileSystemEntries(diskSource))
@@ -69,7 +72,7 @@ public sealed class RobustSharedPackaging
             if (ignoreSet.Contains(filename))
                 continue;
 
-            var targetPath = filename;
+            var targetPath = Path.Combine(targetDir, filename);
             if (Directory.Exists(path))
                 CopyDirIntoZip(path, targetPath, pass);
             else
@@ -84,10 +87,10 @@ public sealed class RobustSharedPackaging
         foreach (var file in Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories))
         {
             var relPath = Path.GetRelativePath(directory, file);
-            if (Path.DirectorySeparatorChar != '/')
-                relPath = relPath.Replace(Path.DirectorySeparatorChar, '/');
-
             var zipPath = $"{basePath}/{relPath}";
+
+            if (Path.DirectorySeparatorChar != '/')
+                zipPath = zipPath.Replace(Path.DirectorySeparatorChar, '/');
 
             // Console.WriteLine($"{directory}/{zipPath} -> /{zipPath}");
             pass.InjectFileFromDisk(zipPath, file);

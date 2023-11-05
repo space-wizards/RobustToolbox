@@ -39,7 +39,7 @@ public sealed class DefaultMagicAczProvider : IMagicAczProvider
             contentDir,
             binFolderPath,
             assemblyNames,
-            cancel);
+            cancel: cancel);
 
         await RobustClientPackaging.WriteClientResources(contentDir, inputPass, cancel);
 

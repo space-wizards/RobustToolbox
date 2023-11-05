@@ -138,16 +138,23 @@ namespace Robust.Shared.Containers
                 return false;
             }
 
+            transform ??= transformQuery.GetComponent(toinsert);
+
             //Verify we can insert into this container
-            if (!force && !containerSys.CanInsert(toinsert, this))
+            if (!force && !containerSys.CanInsert(toinsert, this, transform))
                 return false;
 
             // Please somebody ecs containers
             var lookupSys = entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
             var xformSys = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
-            transform ??= transformQuery.GetComponent(toinsert);
             meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
+            if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
+            {
+                Logger.ErrorS("container",
+                    $"Attempted to insert a terminating entity {entMan.ToPrettyString(toinsert)} into a container {ID} in entity: {entMan.ToPrettyString(Owner)}.");
+                return false;
+            }
 
             // remove from any old containers.
             if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&

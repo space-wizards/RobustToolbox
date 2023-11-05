@@ -216,35 +216,27 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        ///     Recursively if the entity, or any parent entity, is inside of a container.
+        ///     Recursively check if the entity or any parent is inside of a container.
         /// </summary>
         /// <returns>If the entity is inside of a container.</returns>
         public bool IsEntityOrParentInContainer(
             EntityUid uid,
             MetaDataComponent? meta = null,
-            TransformComponent? xform = null,
-            EntityQuery<MetaDataComponent>? metas = null,
-            EntityQuery<TransformComponent>? xforms = null)
+            TransformComponent? xform = null)
         {
-            if (meta == null)
-            {
-                metas ??= GetEntityQuery<MetaDataComponent>();
-                meta = metas.Value.GetComponent(uid);
-            }
+            if (!MetaQuery.Resolve(uid, ref meta))
+                return false;
 
             if ((meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer)
                 return true;
 
-            if (xform == null)
-            {
-                xforms ??= GetEntityQuery<TransformComponent>();
-                xform = xforms.Value.GetComponent(uid);
-            }
+            if (!TransformQuery.Resolve(uid, ref xform))
+                return false;
 
             if (!xform.ParentUid.Valid)
                 return false;
 
-            return IsEntityOrParentInContainer(xform.ParentUid, metas: metas, xforms: xforms);
+            return IsEntityOrParentInContainer(xform.ParentUid);
         }
 
         /// <summary>

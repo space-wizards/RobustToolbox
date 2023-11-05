@@ -270,7 +270,7 @@ public sealed partial class EntityLookupSystem
                 if (xform.MapID != mapId ||
                     !worldAABB.Contains(_transform.GetWorldPosition(xform)) ||
                     ((flags & LookupFlags.Contained) == 0x0 &&
-                    _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform, _metaQuery, _xformQuery)))
+                    _container.IsEntityOrParentInContainer(uid, null, xform)))
                 {
                     continue;
                 }
@@ -332,7 +332,7 @@ public sealed partial class EntityLookupSystem
                 if (xform.MapID != mapId ||
                     !worldAABB.Contains(_transform.GetWorldPosition(xform)) ||
                     ((flags & LookupFlags.Contained) == 0x0 &&
-                     _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform, _metaQuery, _xformQuery)))
+                     _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform)))
                 {
                     continue;
                 }

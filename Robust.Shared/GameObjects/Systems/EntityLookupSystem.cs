@@ -368,7 +368,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         FixturesComponent manager,
         EntityQuery<TransformComponent> xformQuery)
     {
-        DebugTools.Assert(!_container.IsEntityOrParentInContainer(body.Owner, null, xform, null, xformQuery));
+        DebugTools.Assert(!_container.IsEntityOrParentInContainer(body.Owner, null, xform));
         DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadphase.Owner, physicsMap.Owner, body.CanCollide, body.BodyType == BodyType.Static));
         DebugTools.Assert(broadphase.Owner == broadUid);
 
@@ -843,7 +843,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         TransformComponent xform,
         [NotNullWhen(true)] out BroadphaseComponent? broadphase)
     {
-        if (xform.MapID == MapId.Nullspace || _container.IsEntityOrParentInContainer(xform.Owner, null, xform, null, _xformQuery))
+        if (xform.MapID == MapId.Nullspace || _container.IsEntityOrParentInContainer(xform.Owner, null, xform))
         {
             broadphase = null;
             return false;

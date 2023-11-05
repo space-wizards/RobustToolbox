@@ -21,11 +21,11 @@ public sealed class RobustClientAssetGraph
     /// </summary>
     public IReadOnlyCollection<AssetPass> AllPasses { get; }
 
-    public RobustClientAssetGraph()
+    public RobustClientAssetGraph(bool parallel = true)
     {
         // The code injecting the list of source files is assumed to be pretty single-threaded.
         // We use a parallelizing input to break out all the work on files coming in onto multiple threads.
-        Input = new AssetPassPipe { Name = "RobustClientAssetGraphInput", Parallelize = true };
+        Input = new AssetPassPipe { Name = "RobustClientAssetGraphInput", Parallelize = parallel };
         PresetPasses = new AssetPassPipe { Name = "RobustClientAssetGraphPresetPasses" };
         Output = new AssetPassPipe { Name = "RobustClientAssetGraphOutput", CheckDuplicates = true };
         NormalizeText = new AssetPassNormalizeText { Name = "RobustClientAssetGraphNormalizeText" };

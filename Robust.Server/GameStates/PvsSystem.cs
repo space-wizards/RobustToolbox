@@ -888,7 +888,7 @@ internal sealed partial class PvsSystem : EntitySystem
             return null;
 
         var tick = _gameTiming.CurTick;
-        var minSize = Math.Max(0, lastSent.Count - lastSent.Count);
+        var minSize = Math.Max(0, lastSent.Count - visibleEnts.Count);
         var leftView = new List<NetEntity>(minSize);
 
         foreach (var netEntity in lastSent.Keys)

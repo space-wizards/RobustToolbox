@@ -830,17 +830,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            if (TryGetComponent(uid.Value, typeof(T), out var comp))
-            {
-                if (!comp.Deleted)
-                {
-                    component = (T)comp;
-                    return true;
-                }
-            }
-
-            component = default;
-            return false;
+            return TryGetComponent(uid.Value, out component);
         }
 
         /// <inheritdoc />

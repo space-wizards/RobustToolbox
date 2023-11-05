@@ -1416,6 +1416,15 @@ namespace Robust.Shared.GameObjects
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+        public Entity<TComp1> Get(EntityUid uid)
+        {
+            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+                return new Entity<TComp1>(uid, (TComp1) comp);
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)

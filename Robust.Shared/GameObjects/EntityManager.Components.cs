@@ -1488,6 +1488,12 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+        public bool Resolve(ref Entity<TComp1?> entity, bool logMissing = true)
+        {
+            return Resolve(entity.Owner, ref entity.Comp, logMissing);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public TComp1? CompOrNull(EntityUid uid)

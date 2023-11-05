@@ -12,21 +12,8 @@ public abstract partial class SharedContainerSystem
     public bool CanInsert(
         EntityUid toInsert,
         BaseContainer container,
-        bool assumeEmpty = false)
-    {
-        return CanInsert(toInsert, container.Owner, container, assumeEmpty);
-    }
-
-    /// <summary>
-    /// Checks if the entity can be inserted into the given container.
-    /// </summary>
-    /// <param name="assumeEmpty">If true, this will check whether the entity could be inserted if the container were
-    /// empty.</param>
-    public bool CanInsert(
-        EntityUid toInsert,
-        Entity<TransformComponent?> containerEntity,
-        BaseContainer container,
-        bool assumeEmpty = false)
+        bool assumeEmpty = false,
+        TransformComponent? containerXform = null)
     {
         if (container.Owner == toInsert)
             return false;
@@ -42,7 +29,7 @@ public abstract partial class SharedContainerSystem
             return false;
 
         // Prevent circular insertion.
-        if (_transform.ContainsEntity(toInsert, containerEntity))
+        if (_transform.ContainsEntity(toInsert, (container.Owner, containerXform)))
             return false;
 
         var insertAttemptEvent = new ContainerIsInsertingAttemptEvent(container, toInsert, assumeEmpty);

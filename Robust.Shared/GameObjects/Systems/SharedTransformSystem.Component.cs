@@ -161,7 +161,7 @@ public abstract partial class SharedTransformSystem
     #region Contains
 
     /// <summary>
-    ///     Returns whether the given entity is a child of this transform or one of its descendants.
+    ///     Checks whether the first entity or one of it's children is the parent of some other entity.
     /// </summary>
     public bool ContainsEntity(EntityUid parent, Entity<TransformComponent?> child)
     {
@@ -237,7 +237,7 @@ public abstract partial class SharedTransformSystem
             {
                 var msg = $"Attempted to re-parent to a terminating object. Entity: {ToPrettyString(component.ParentUid)}, new parent: {ToPrettyString(uid)}";
 #if EXCEPTION_TOLERANCE
-                Logger.Error(msg);
+                Log.Error(msg);
                 Del(uid);
 #else
                 throw new InvalidOperationException(msg);

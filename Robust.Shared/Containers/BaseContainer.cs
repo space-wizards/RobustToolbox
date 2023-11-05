@@ -141,7 +141,7 @@ namespace Robust.Shared.Containers
             transform ??= transformQuery.GetComponent(toinsert);
 
             //Verify we can insert into this container
-            if (!force && !containerSys.CanInsert(toinsert, this, transform))
+            if (!force && !containerSys.CanInsert(toinsert, this, containerXform: ownerTransform))
                 return false;
 
             // Please somebody ecs containers

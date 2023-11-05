@@ -6,8 +6,7 @@ public sealed class RobustServerPackaging
 {
     public static IReadOnlySet<string> ServerIgnoresResources { get; } = new HashSet<string>
     {
-        // Need Audio so we can parse metadata if applicable.
-        // This will get dropped later.
+        "Audio",
         "Textures",
         "Fonts",
         "Shaders",

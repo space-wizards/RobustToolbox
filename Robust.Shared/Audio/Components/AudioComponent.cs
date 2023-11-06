@@ -49,10 +49,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     #endregion
 
-    // We can't just start playing on audio creation as we don't have the correct position yet.
-    // As such we'll wait for FrameUpdate before we start playing to avoid the position being cooked.
-    public bool Started = false;
-
     [AutoNetworkedField]
     [DataField(required: true)]
     public string FileName = string.Empty;

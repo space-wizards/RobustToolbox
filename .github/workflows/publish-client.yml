@@ -25,14 +25,8 @@ jobs:
       with:
         dotnet-version: 7.0.x
 
-    - name: Install dependencies
-      run: dotnet restore
-
-    - name: Build Packaging
-      run: dotnet build Content.Packaging --configuration Release --no-restore /m
-
     - name: Package client
-      run: dotnet run --project Content.Packaging client --platform windows --platform mac --platform linux
+      run: Tools/package_client_build.py -p windows mac linux
 
     - name: Shuffle files around
       run: |

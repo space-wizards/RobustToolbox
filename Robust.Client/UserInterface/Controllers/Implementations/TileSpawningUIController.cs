@@ -19,7 +19,7 @@ namespace Robust.Client.UserInterface.Controllers.Implementations;
 public sealed class TileSpawningUIController : UIController
 {
     [Dependency] private readonly IPlacementManager _placement = default!;
-    [Dependency] private readonly IClientResourceCache _resources = default!;
+    [Dependency] private readonly IResourceCache _resources = default!;
     [Dependency] private readonly ITileDefinitionManager _tiles = default!;
 
     private TileSpawnWindow? _window;

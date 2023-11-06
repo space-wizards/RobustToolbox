@@ -48,7 +48,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             set
             {
-                Texture = IoCManager.Resolve<IClientResourceCache>().GetResource<TextureResource>(value);
+                Texture = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
                 _texturePath = value;
             }
 

@@ -87,8 +87,6 @@ namespace Robust.Shared.Maths
             get => (TopRight - BottomLeft) * 0.5f;
         }
 
-        public static Box2 Empty = new Box2();
-
         /// <summary>
         ///     A 1x1 unit box with the origin centered.
         /// </summary>

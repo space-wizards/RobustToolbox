@@ -12,7 +12,7 @@ public sealed class DefaultStylesheet
 {
     public Stylesheet Stylesheet { get; private set; } = default!;
 
-    public DefaultStylesheet(IClientResourceCache res, IUserInterfaceManager userInterfaceManager)
+    public DefaultStylesheet(IResourceCache res, IUserInterfaceManager userInterfaceManager)
     {
         var notoSansFont = res.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf");
         var notoSansFont12 = new VectorFont(notoSansFont, 12);

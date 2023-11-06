@@ -16,38 +16,30 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// </summary>
     /// <param name="removeExistingOverride">Whether or not to supersede existing overrides.</param>
     /// <param name="recursive">If true, this will also recursively send any children of the given index.</param>
-    public void AddGlobalOverride(NetEntity entity, bool removeExistingOverride = true, bool recursive = false)
+    public void AddGlobalOverride(EntityUid uid, bool removeExistingOverride = true, bool recursive = false)
     {
-        _pvs.EntityPVSCollection.AddGlobalOverride(entity, removeExistingOverride, recursive);
+        _pvs.EntityPVSCollection.AddGlobalOverride(GetNetEntity(uid), removeExistingOverride, recursive);
     }
 
     /// <summary>
-    ///     Used to ensure that an entity is always sent to a specific client. Overrides any global or pre-existing
-    ///     client-specific overrides.
+    ///     Used to ensure that an entity is always sent to a specific client. By default this overrides any global or pre-existing
+    ///     client-specific overrides. Unlike global overrides, this is always recursive.
     /// </summary>
     /// <param name="removeExistingOverride">Whether or not to supersede existing overrides.</param>
-    public void AddSessionOverride(NetEntity entity, ICommonSession session, bool removeExistingOverride = true)
+    /// <param name="recursive">If true, this will also recursively send any children of the given index.</param>
+    public void AddSessionOverride(EntityUid uid, ICommonSession session, bool removeExistingOverride = true)
     {
-        _pvs.EntityPVSCollection.AddSessionOverride(entity, session, removeExistingOverride);
-    }
-
-    // 'placeholder'
-    public void AddSessionOverrides(NetEntity entity, Filter filter, bool removeExistingOverride = true)
-    {
-        foreach (var player in filter.Recipients)
-        {
-            AddSessionOverride(entity, player, removeExistingOverride);
-        }
+        _pvs.EntityPVSCollection.AddSessionOverride(GetNetEntity(uid), session, removeExistingOverride);
     }
 
     /// <summary>
     ///     Removes any global or client-specific overrides.
     /// </summary>
-    public void ClearOverride(NetEntity entity, TransformComponent? xform = null)
+    public void ClearOverride(EntityUid uid, TransformComponent? xform = null)
     {
-        if (!TryGetEntity(entity, out var uid) || !Resolve(uid.Value, ref xform))
+        if (!Resolve(uid, ref xform))
             return;
 
-        _pvs.EntityPVSCollection.UpdateIndex(entity, xform.Coordinates, true);
+        _pvs.EntityPVSCollection.UpdateIndex(GetNetEntity(uid), xform.Coordinates, true);
     }
 }

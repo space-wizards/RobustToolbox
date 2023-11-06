@@ -10,7 +10,7 @@ public sealed class ItalicTag : IMarkupTag
 {
     public const string ItalicFont = "DefaultItalic";
 
-    [Dependency] private readonly IClientResourceCache _resourceCache = default!;
+    [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     public string Name => "italic";

@@ -242,6 +242,7 @@ internal partial class MapManager
             }
         }
 
+        var args = new MapEventArgs(actualId);
         return actualId;
     }
 }

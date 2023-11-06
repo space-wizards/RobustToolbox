@@ -8,7 +8,7 @@ namespace Robust.Client.UserInterface.RichText;
 
 public sealed class HeadingTag : IMarkupTag
 {
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
+    [Dependency] private readonly IClientResourceCache _resourceCache = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     public string Name => "head";

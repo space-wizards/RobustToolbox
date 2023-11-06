@@ -28,7 +28,7 @@ namespace Robust.Client.Placement
     {
         [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] internal readonly IPlayerManager PlayerManager = default!;
-        [Dependency] internal readonly IResourceCache ResourceCache = default!;
+        [Dependency] internal readonly IClientResourceCache ResourceCache = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] internal readonly IMapManager MapManager = default!;
         [Dependency] private readonly IGameTiming _time = default!;

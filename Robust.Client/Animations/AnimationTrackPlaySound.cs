@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Robust.Client.Audio;
 using Robust.Client.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Player;
 
 namespace Robust.Client.Animations
@@ -37,7 +39,12 @@ namespace Robust.Client.Animations
 
                 var keyFrame = KeyFrames[keyFrameIndex];
 
-                SoundSystem.Play(keyFrame.Resource, Filter.Local(), entity, keyFrame.AudioParamsFunc.Invoke());
+                var audioParams = keyFrame.AudioParamsFunc.Invoke();
+                var audio = new SoundPathSpecifier(keyFrame.Resource)
+                {
+                    Params = audioParams
+                };
+                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<AudioSystem>().PlayEntity(audio, Filter.Local(), entity, true);
             }
 
             return (keyFrameIndex, playingTime);

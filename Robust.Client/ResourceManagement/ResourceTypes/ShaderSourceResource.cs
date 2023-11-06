@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.ResourceManagement;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -20,28 +21,31 @@ namespace Robust.Client.ResourceManagement
         [ViewVariables]
         internal ParsedShader ParsedShader { get; private set; } = default!;
 
-        public override void Load(IResourceCache cache, ResPath path)
+        public override void Load(IDependencyCollection dependencies, ResPath path)
         {
-            using (var stream = cache.ContentFileRead(path))
+            var manager = dependencies.Resolve<IResourceManager>();
+
+            using (var stream = manager.ContentFileRead(path))
             using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
             {
-                ParsedShader = ShaderParser.Parse(reader, cache);
+                ParsedShader = ShaderParser.Parse(reader, manager);
             }
 
-            ClydeHandle = ((IClydeInternal)cache.Clyde).LoadShader(ParsedShader, path.ToString());
+            ClydeHandle = dependencies.Resolve<IClydeInternal>().LoadShader(ParsedShader, path.ToString());
         }
 
-        public override void Reload(IResourceCache cache, ResPath path, CancellationToken ct = default)
+        public override void Reload(IDependencyCollection dependencies, ResPath path, CancellationToken ct = default)
         {
+            var manager = dependencies.Resolve<IResourceManager>();
             ct = ct != default ? ct : new CancellationTokenSource(30000).Token;
 
             for (;;)
             {
                 try
                 {
-                    using var stream = cache.ContentFileRead(path);
+                    using var stream = manager.ContentFileRead(path);
                     using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
-                    ParsedShader = ShaderParser.Parse(reader, cache);
+                    ParsedShader = ShaderParser.Parse(reader, manager);
                     break;
                 }
                 catch (IOException ioe)
@@ -57,7 +61,7 @@ namespace Robust.Client.ResourceManagement
                 }
             }
 
-            ((IClydeInternal)cache.Clyde).ReloadShader(ClydeHandle, ParsedShader);
+            dependencies.Resolve<IClydeInternal>().ReloadShader(ClydeHandle, ParsedShader);
         }
     }
 }

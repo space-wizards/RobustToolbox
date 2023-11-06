@@ -40,7 +40,7 @@ namespace Robust.Client.GameStates
         public NetEntityOverlay()
         {
             IoCManager.InjectDependencies(this);
-            var cache = IoCManager.Resolve<IResourceCache>();
+            var cache = IoCManager.Resolve<IClientResourceCache>();
             _font = new VectorFont(cache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
             _lineHeight = _font.GetLineHeight(1);
 

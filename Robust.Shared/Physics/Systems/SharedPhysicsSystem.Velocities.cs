@@ -43,9 +43,6 @@ public abstract partial class SharedPhysicsSystem
         EntityQuery<TransformComponent>? xformQuery = null,
         EntityQuery<PhysicsComponent>? physicsQuery = null)
     {
-        if (!Resolve(uid, ref component))
-            return Vector2.Zero;
-
         xformQuery ??= EntityManager.GetEntityQuery<TransformComponent>();
         physicsQuery ??= EntityManager.GetEntityQuery<PhysicsComponent>();
 
@@ -53,7 +50,7 @@ public abstract partial class SharedPhysicsSystem
         var parent = xform.ParentUid;
         var localPos = xform.LocalPosition;
 
-        var velocity = component.LinearVelocity;
+        var velocity = component?.LinearVelocity ?? Vector2.Zero;
         Vector2 angularComponent = Vector2.Zero;
 
         while (parent != xform.MapUid && parent.IsValid())

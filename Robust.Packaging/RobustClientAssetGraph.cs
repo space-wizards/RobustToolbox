@@ -21,7 +21,11 @@ public sealed class RobustClientAssetGraph
     /// </summary>
     public IReadOnlyCollection<AssetPass> AllPasses { get; }
 
-    public RobustClientAssetGraph(bool parallel = true)
+    public const string AudioPass = "RobustClientAssetGraphAudioMetadata";
+
+    /// <param name="parallel">Should inputs be run in parallel. Should only be turned off for debugging.</param>
+    /// <param name="runAudioPass">Should audio files be stripped out and only metadata included. Useful for server packaging.</param>
+    public RobustClientAssetGraph(bool parallel = true, bool runAudioPass = false)
     {
         // The code injecting the list of source files is assumed to be pretty single-threaded.
         // We use a parallelizing input to break out all the work on files coming in onto multiple threads.
@@ -29,18 +33,22 @@ public sealed class RobustClientAssetGraph
         PresetPasses = new AssetPassPipe { Name = "RobustClientAssetGraphPresetPasses" };
         Output = new AssetPassPipe { Name = "RobustClientAssetGraphOutput", CheckDuplicates = true };
         NormalizeText = new AssetPassNormalizeText { Name = "RobustClientAssetGraphNormalizeText" };
+        var audioPass = new AssetPassAudioMetadata { Name = AudioPass, Enabled = runAudioPass};
 
         PresetPasses.AddDependency(Input);
         NormalizeText.AddDependency(PresetPasses).AddBefore(Output);
         Output.AddDependency(PresetPasses);
         Output.AddDependency(NormalizeText);
 
+        audioPass.AddDependency(PresetPasses);
+
         AllPasses = new AssetPass[]
         {
             Input,
             PresetPasses,
             Output,
-            NormalizeText
+            NormalizeText,
+            audioPass,
         };
     }
 }

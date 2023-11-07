@@ -31,9 +31,9 @@ namespace Robust.Server.Placement
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
-        private EntityLookupSystem _lookup = default!;
-        private SharedMapSystem _maps = default!;
-        private SharedTransformSystem _xformSystem = default!;
+        private EntityLookupSystem _lookup => _entityManager.System<EntityLookupSystem>();
+        private SharedMapSystem _maps => _entityManager.System<SharedMapSystem>();
+        private SharedTransformSystem _xformSystem => _entityManager.System<SharedTransformSystem>();
 
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
@@ -51,9 +51,6 @@ namespace Robust.Server.Placement
         {
             // Someday PlacementManagerSystem my beloved.
             _sawmill = _logManager.GetSawmill("placement");
-            _lookup = _entityManager.System<EntityLookupSystem>();
-            _maps = _entityManager.System<SharedMapSystem>();
-            _xformSystem = _entityManager.System<SharedTransformSystem>();
 
             _networkManager.RegisterNetMessage<MsgPlacement>(HandleNetMessage);
         }

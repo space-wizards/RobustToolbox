@@ -311,6 +311,7 @@ namespace Robust.Shared.GameObjects
         ///     This is effectively a more complete version of <see cref="WorldPosition"/>
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Obsolete("Use TransformSystem.GetMapCoordinates")]
         public MapCoordinates MapPosition => new(WorldPosition, MapID);
 
         /// <summary>

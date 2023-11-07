@@ -25,7 +25,7 @@ public sealed class AssetPassAudioMetadata : AssetPass
 
     public bool Enabled = false;
 
-    public AssetPassAudioMetadata(string metadataPath = "Resources/EnginePrototypes/audio_metadata.yml")
+    public AssetPassAudioMetadata(string metadataPath = "Resources/Prototypes/audio_metadata.yml")
     {
         _metadataPath = metadataPath;
         _audioManager = new HeadlessAudioManager();

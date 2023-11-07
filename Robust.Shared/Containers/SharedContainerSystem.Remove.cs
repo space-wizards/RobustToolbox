@@ -22,7 +22,7 @@ public abstract partial class SharedContainerSystem
     /// If not specified, and reparent option is true, then the entity will either be inserted into a parent
     /// container, the grid, or the map.</param>
     /// <param name="localRotation">Optional final local rotation after removal. Avoids redundant move events.</param>
-    public bool Insert(
+    public bool Remove(
         Entity<TransformComponent?, MetaDataComponent?> toRemove,
         BaseContainer container,
         bool reparent = true,

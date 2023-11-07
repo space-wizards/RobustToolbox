@@ -803,7 +803,8 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 GetWorldPosition(TransformComponent component)
     {
-        Vector2 pos = component._localPosition;
+        // To avoid rounding issues.
+        Vector2d pos = component._localPosition;
 
         while (component.ParentUid != component.MapUid && component.ParentUid.IsValid())
         {
@@ -811,7 +812,7 @@ public abstract partial class SharedTransformSystem
             pos = component._localRotation.RotateVec(pos) + component._localPosition;
         }
 
-        return pos;
+        return (Vector2) pos;
     }
 
     [Pure]

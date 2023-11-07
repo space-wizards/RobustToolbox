@@ -122,6 +122,21 @@ namespace Robust.Shared.Maths
             return new Vector2((float) dx, (float) dy);
         }
 
+        [Pure]
+        public Vector2d RotateVec(in Vector2d vec)
+        {
+            // No calculation necessery when theta is zero
+            if (Theta == 0)
+                return vec;
+
+            var cos = Math.Cos(Theta);
+            var sin = Math.Sin(Theta);
+            var dx = cos * vec.X - sin * vec.Y;
+            var dy = sin * vec.X + cos * vec.Y;
+
+            return new Vector2d(dx, dy);
+        }
+
         public bool EqualsApprox(Angle other, double tolerance)
         {
             return EqualsApprox(this, other, tolerance);

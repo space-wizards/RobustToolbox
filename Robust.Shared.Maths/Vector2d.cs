@@ -32,5 +32,15 @@ namespace Robust.Shared.Maths
         {
             return new(vector.X, vector.Y);
         }
+
+        public static explicit operator Vector2(Vector2d vector)
+        {
+            return new Vector2((float) vector.X, (float) vector.Y);
+        }
+
+        public static Vector2d operator +(Vector2d a, Vector2d b)
+        {
+            return new Vector2d(a.X + b.X, a.Y + b.Y);
+        }
     }
 }

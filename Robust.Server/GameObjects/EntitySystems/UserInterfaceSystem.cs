@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.Player;
@@ -20,8 +19,6 @@ namespace Robust.Server.GameObjects
         private EntityQuery<IgnoreUIRangeComponent> _ignoreUIRangeQuery;
 
         private readonly List<ICommonSession> _sessionCache = new();
-
-        private readonly Dictionary<ICommonSession, List<PlayerBoundUserInterface>> _openInterfaces = new();
 
         /// <inheritdoc />
         public override void Initialize()
@@ -46,7 +43,7 @@ namespace Robust.Server.GameObjects
             if (args.NewStatus != SessionStatus.Disconnected)
                 return;
 
-            if (!_openInterfaces.TryGetValue(args.Session, out var buis))
+            if (!OpenInterfaces.TryGetValue(args.Session, out var buis))
                 return;
 
             foreach (var bui in buis.ToArray())
@@ -92,7 +89,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Verify that the subscribed clients are still in range of the interface.
         /// </summary>
-        private void CheckRange(EntityUid uid, Shared.GameObjects.ActiveUserInterfaceComponent activeUis, PlayerBoundUserInterface ui, TransformComponent transform, EntityQuery<TransformComponent> query)
+        private void CheckRange(EntityUid uid, ActiveUserInterfaceComponent activeUis, PlayerBoundUserInterface ui, TransformComponent transform, EntityQuery<TransformComponent> query)
         {
             if (ui.InteractionRange <= 0)
                 return;
@@ -139,11 +136,6 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private void ActivateInterface(PlayerBoundUserInterface ui)
-        {
-            EnsureComp<ActiveUserInterfaceComponent>(ui.Owner).Interfaces.Add(ui);
-        }
-
         #region Get BUI
 
         public bool HasUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
@@ -168,20 +160,14 @@ namespace Robust.Server.GameObjects
                 ? bui
                 : null;
         }
-        public bool TryGetUi(EntityUid uid, Enum uiKey, [NotNullWhen(true)] out PlayerBoundUserInterface? bui, UserInterfaceComponent? ui = null)
-        {
-            bui = null;
-
-            return Resolve(uid, ref ui, false) && ui.Interfaces.TryGetValue(uiKey, out bui);
-        }
 
         /// <summary>
         ///     Return UIs a session has open.
         ///     Null if empty.
-        /// <summary>
+        /// </summary>
         public List<PlayerBoundUserInterface>? GetAllUIsForSession(ICommonSession session)
         {
-            _openInterfaces.TryGetValue(session, out var value);
+            OpenInterfaces.TryGetValue(session, out var value);
             return value;
         }
         #endregion
@@ -259,94 +245,14 @@ namespace Robust.Server.GameObjects
             bui.StateDirty = true;
         }
 
-        /// <summary>
-        ///     Switches between closed and open for a specific client.
-        /// </summary>
-        public bool TryToggleUi(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
-        {
-            if (!TryGetUi(uid, uiKey, out var bui, ui))
-                return false;
-
-            ToggleUi(bui, session);
-            return true;
-        }
-
-        /// <summary>
-        ///     Switches between closed and open for a specific client.
-        /// </summary>
-        public void ToggleUi(PlayerBoundUserInterface bui, ICommonSession session)
-        {
-            if (bui._subscribedSessions.Contains(session))
-                CloseUi(bui, session);
-            else
-                OpenUi(bui, session);
-        }
-
-        #region Open
-
-        public bool TryOpen(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
-        {
-            if (!TryGetUi(uid, uiKey, out var bui, ui))
-                return false;
-
-            return OpenUi(bui, session);
-        }
-
-        /// <summary>
-        ///     Opens this interface for a specific client.
-        /// </summary>
-        public bool OpenUi(PlayerBoundUserInterface bui, ICommonSession session)
-        {
-            if (session.Status == SessionStatus.Connecting || session.Status == SessionStatus.Disconnected)
-                return false;
-
-            if (!bui._subscribedSessions.Add(session))
-                return false;
-
-            _openInterfaces.GetOrNew(session).Add(bui);
-            RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Owner, session));
-
-            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new OpenBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
-
-            // Fun fact, clients needs to have BUIs open before they can receive the state.....
-            if (bui.LastStateMsg != null)
-                RaiseNetworkEvent(bui.LastStateMsg, session.ConnectedClient);
-
-            ActivateInterface(bui);
-            return true;
-        }
-
-        #endregion
-
         #region Close
-        public bool TryClose(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
-        {
-            if (!TryGetUi(uid, uiKey, out var bui, ui))
-                return false;
-
-            return CloseUi(bui, session);
-        }
-
-        /// <summary>
-        ///     Close this interface for a specific client.
-        /// </summary>
-        public bool CloseUi(PlayerBoundUserInterface bui, ICommonSession session, ActiveUserInterfaceComponent? activeUis = null)
-        {
-            if (!bui._subscribedSessions.Remove(session))
-                return false;
-
-            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new CloseBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
-            CloseShared(bui, session, activeUis);
-            return true;
-        }
-
         protected override void CloseShared(PlayerBoundUserInterface bui, ICommonSession session, ActiveUserInterfaceComponent? activeUis = null)
         {
             var owner = bui.Owner;
             bui._subscribedSessions.Remove(session);
             bui.PlayerStateOverrides.Remove(session);
 
-            if (_openInterfaces.TryGetValue(session, out var buis))
+            if (OpenInterfaces.TryGetValue(session, out var buis))
                 buis.Remove(bui);
 
             RaiseLocalEvent(owner, new BoundUIClosedEvent(bui.UiKey, owner, session));

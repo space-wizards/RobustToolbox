@@ -65,14 +65,14 @@ public record struct Entity<T1, T2>
         return new Entity<T1, T2>(tuple.Owner, tuple.Comp1, tuple.Comp2);
     }
 
-    public static implicit operator Entity<T1?, T2?>((EntityUid Owner, T1? Comp1) tuple)
-    {
-        return new Entity<T1?, T2?>(tuple.Owner, tuple.Comp1, default);
-    }
-
     public static implicit operator Entity<T1?, T2?>(EntityUid owner)
     {
         return new Entity<T1?, T2?>(owner, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?>((EntityUid Owner, T1 Comp1) tuple)
+    {
+        return new Entity<T1?, T2?>(tuple.Owner, tuple.Comp1, default);
     }
 
     public static implicit operator EntityUid(Entity<T1, T2> ent)
@@ -123,19 +123,19 @@ public record struct Entity<T1, T2, T3>
         return new Entity<T1, T2, T3>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?>((EntityUid Owner, T1? Comp1, T2? Comp2) tuple)
+    public static implicit operator Entity<T1?, T2?, T3?>(EntityUid owner)
     {
-        return new Entity<T1?, T2?, T3?>(tuple.Owner, tuple.Comp1, tuple.Comp2, default);
+        return new Entity<T1?, T2?, T3?>(owner, default, default, default);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?>((EntityUid Owner, T1? Comp1) tuple)
+    public static implicit operator Entity<T1?, T2?, T3?>((EntityUid Owner, T1 Comp1) tuple)
     {
         return new Entity<T1?, T2?, T3?>(tuple.Owner, tuple.Comp1, default, default);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?>(EntityUid owner)
+    public static implicit operator Entity<T1?, T2?, T3?>((EntityUid Owner, T1 Comp1, T2 Comp2) tuple)
     {
-        return new Entity<T1?, T2?, T3?>(owner, default, default, default);
+        return new Entity<T1?, T2?, T3?>(tuple.Owner, tuple.Comp1, tuple.Comp2, default);
     }
 
     public static implicit operator EntityUid(Entity<T1, T2, T3> ent)
@@ -200,19 +200,19 @@ public record struct Entity<T1, T2, T3, T4>
         return new Entity<T1?, T2?, T3?, T4?>(owner, default, default, default, default);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?>((EntityUid Owner, T1? Comp1, T2? Comp2, T3? Comp3) tuple)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?>((EntityUid Owner, T1 Comp1) tuple)
     {
-        return new Entity<T1?, T2?, T3?, T4?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, default);
+        return new Entity<T1?, T2?, T3?, T4?>(tuple.Owner, tuple.Comp1, default, default, default);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?>((EntityUid Owner, T1? Comp1, T2? Comp2) tuple)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?>((EntityUid Owner, T1 Comp1, T2 Comp2) tuple)
     {
         return new Entity<T1?, T2?, T3?, T4?>(tuple.Owner, tuple.Comp1, tuple.Comp2, default, default);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?>((EntityUid Owner, T1? Comp1) tuple)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3) tuple)
     {
-        return new Entity<T1?, T2?, T3?, T4?>(tuple.Owner, tuple.Comp1, default, default, default);
+        return new Entity<T1?, T2?, T3?, T4?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, default);
     }
 
     public static implicit operator EntityUid(Entity<T1, T2, T3, T4> ent)
@@ -281,29 +281,29 @@ public record struct Entity<T1, T2, T3, T4, T5>
         return new Entity<T1, T2, T3, T4, T5>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?>((EntityUid Owner, T1? Comp1, T2? Comp2, T3? Comp3, T4? Comp4) tuple)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?>(EntityUid owner)
     {
-        return new Entity<T1?, T2?, T3?, T4?, T5?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, default);
+        return new Entity<T1?, T2?, T3?, T4?, T5?>(owner, default, default, default, default, default);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?>((EntityUid Owner, T1? Comp1, T2? Comp2, T3? Comp3) tuple)
-    {
-        return new Entity<T1?, T2?, T3?, T4?, T5?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, default, default);
-    }
-
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?>((EntityUid Owner, T1? Comp1, T2? Comp2) tuple)
-    {
-        return new Entity<T1?, T2?, T3?, T4?, T5?>(tuple.Owner, tuple.Comp1, tuple.Comp2, default, default, default);
-    }
-
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?>((EntityUid Owner, T1? Comp1) tuple)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?>((EntityUid Owner, T1 Comp1) tuple)
     {
         return new Entity<T1?, T2?, T3?, T4?, T5?>(tuple.Owner, tuple.Comp1, default, default, default, default);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?>(EntityUid owner)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?>((EntityUid Owner, T1 Comp1, T2 Comp2) tuple)
     {
-        return new Entity<T1?, T2?, T3?, T4?, T5?>(owner, default, default, default, default, default);
+        return new Entity<T1?, T2?, T3?, T4?, T5?>(tuple.Owner, tuple.Comp1, tuple.Comp2, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3, T4 Comp4) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, default);
     }
 
     public static implicit operator EntityUid(Entity<T1, T2, T3, T4, T5> ent)
@@ -381,34 +381,34 @@ public record struct Entity<T1, T2, T3, T4, T5, T6>
         return new Entity<T1, T2, T3, T4, T5, T6>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5, tuple.Comp6);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>((EntityUid Owner, T1? Comp1, T2? Comp2, T3? Comp3, T4? Comp4, T5? Comp5) tuple)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>(EntityUid owner)
     {
-        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5, default);
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?>(owner, default, default, default, default, default, default);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>((EntityUid Owner, T1? Comp1, T2? Comp2, T3? Comp3, T4? Comp4) tuple)
-    {
-        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, default, default);
-    }
-
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>((EntityUid Owner, T1? Comp1, T2? Comp2, T3? Comp3) tuple)
-    {
-        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, default, default, default);
-    }
-
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>((EntityUid Owner, T1? Comp1, T2? Comp2) tuple)
-    {
-        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?>(tuple.Owner, tuple.Comp1, tuple.Comp2, default, default, default, default);
-    }
-
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>((EntityUid Owner, T1? Comp1) tuple)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>((EntityUid Owner, T1 Comp1) tuple)
     {
         return new Entity<T1?, T2?, T3?, T4?, T5?, T6?>(tuple.Owner, tuple.Comp1, default, default, default, default, default);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>(EntityUid owner)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>((EntityUid Owner, T1 Comp1, T2 Comp2) tuple)
     {
-        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?>(owner, default, default, default, default, default, default);
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?>(tuple.Owner, tuple.Comp1, tuple.Comp2, default, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3, T4 Comp4) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3, T4 Comp4, T5 Comp5) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5, default);
     }
 
     public static implicit operator EntityUid(Entity<T1, T2, T3, T4, T5, T6> ent)
@@ -495,39 +495,39 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7>
         return new Entity<T1, T2, T3, T4, T5, T6, T7>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5, tuple.Comp6, tuple.Comp7);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1? Comp1, T2? Comp2, T3? Comp3, T4? Comp4, T5? Comp5, T6? Comp6) tuple)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(EntityUid owner)
     {
-        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5, tuple.Comp6, default);
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(owner, default, default, default, default, default, default, default);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1? Comp1, T2? Comp2, T3? Comp3, T4? Comp4, T5? Comp5) tuple)
-    {
-        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5, default, default);
-    }
-
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1? Comp1, T2? Comp2, T3? Comp3, T4? Comp4) tuple)
-    {
-        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, default, default, default);
-    }
-
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1? Comp1, T2? Comp2, T3? Comp3) tuple)
-    {
-        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, default, default, default, default);
-    }
-
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1? Comp1, T2? Comp2) tuple)
-    {
-        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(tuple.Owner, tuple.Comp1, tuple.Comp2, default, default, default, default, default);
-    }
-
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1? Comp1) tuple)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1 Comp1) tuple)
     {
         return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(tuple.Owner, tuple.Comp1, default, default, default, default, default, default);
     }
 
-    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(EntityUid owner)
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1 Comp1, T2 Comp2) tuple)
     {
-        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(owner, default, default, default, default, default, default, default);
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(tuple.Owner, tuple.Comp1, tuple.Comp2, default, default, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, default, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3, T4 Comp4) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3, T4 Comp4, T5 Comp5) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3, T4 Comp4, T5 Comp5, T6 Comp6) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5, tuple.Comp6, default);
     }
 
     public static implicit operator EntityUid(Entity<T1, T2, T3, T4, T5, T6, T7> ent)
@@ -626,6 +626,41 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8>
     public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>(EntityUid owner)
     {
         return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>(owner, default, default, default, default, default, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>((EntityUid Owner, T1 Comp1) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>(tuple.Owner, tuple.Comp1, default, default, default, default, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>((EntityUid Owner, T1 Comp1, T2 Comp2) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>(tuple.Owner, tuple.Comp1, tuple.Comp2, default, default, default, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, default, default, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3, T4 Comp4) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, default, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3, T4 Comp4, T5 Comp5) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5, default, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3, T4 Comp4, T5 Comp5, T6 Comp6) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5, tuple.Comp6, default, default);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3, T4 Comp4, T5 Comp5, T6 Comp6, T7 Comp7) tuple)
+    {
+        return new Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4, tuple.Comp5, tuple.Comp6, tuple.Comp7, default);
     }
 
     public static implicit operator EntityUid(Entity<T1, T2, T3, T4, T5, T6, T7, T8> ent)

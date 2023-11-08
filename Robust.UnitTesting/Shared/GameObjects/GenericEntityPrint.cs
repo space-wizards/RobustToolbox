@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Robust.UnitTesting.Shared.GameObjects;
 
 public sealed class GenericEntityPrint
 {
-    // [Test]
+    //[Test]
     public void Print()
     {
         // Using the test framework for things it was not meant for is my passion
@@ -33,6 +34,7 @@ public sealed class GenericEntityPrint
         var compOperators = new StringBuilder();
         var deConstructorParameters = new StringBuilder();
         var deConstructorAccess = new StringBuilder();
+        var partialCasts = new StringBuilder();
 
         for (var j = 1; j <= i; j++)
         {
@@ -47,6 +49,7 @@ public sealed class GenericEntityPrint
             compOperators.Clear();
             deConstructorParameters.Clear();
             deConstructorAccess.Clear();
+            partialCasts.Clear();
 
             var generics = string.Join(", ", Generics(j, false));
             var nullableGenerics = string.Join(", ", Generics(j, true));
@@ -71,6 +74,19 @@ public sealed class GenericEntityPrint
                     """);
                 deConstructorParameters.Append($", out T{kStr} comp{kStr}");
                 deConstructorAccess.AppendLine($"        comp{kStr} = Comp{kStr};");
+
+                if (k == j)
+                    continue;
+
+                var defaultArgs = string.Concat(Enumerable.Repeat(", default", j-k));
+                partialCasts.Append($$"""
+
+                    public static implicit operator Entity<{{nullableGenerics}}>((EntityUid Owner{{tupleParameters}}) tuple)
+                    {
+                        return new Entity<{{nullableGenerics}}>(tuple.Owner{{tupleAccess}}{{defaultArgs}});
+                    }
+
+                """);
             }
 
             structs.Append($$"""
@@ -96,6 +112,7 @@ public sealed class GenericEntityPrint
                     {
                         return new Entity<{{nullableGenerics}}>(owner{{defaults}});
                     }
+                {{partialCasts.ToString().TrimEnd()}}
 
                     public static implicit operator EntityUid(Entity<{{generics}}> ent)
                     {

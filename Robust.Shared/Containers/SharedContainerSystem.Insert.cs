@@ -44,8 +44,8 @@ public abstract partial class SharedContainerSystem
     public bool CanInsert(
         EntityUid toInsert,
         BaseContainer container,
-        TransformComponent? toInsertXform = null,
-        bool assumeEmpty = false)
+        bool assumeEmpty = false,
+        TransformComponent? containerXform = null)
     {
         if (container.Owner == toInsert)
             return false;
@@ -56,15 +56,12 @@ public abstract partial class SharedContainerSystem
         if (!container.CanInsert(toInsert, assumeEmpty, EntityManager))
             return false;
 
-        if (!TransformQuery.Resolve(toInsert, ref toInsertXform))
-            return false;
-
         // no, you can't put maps or grids into containers
         if (_mapQuery.HasComponent(toInsert) || _gridQuery.HasComponent(toInsert))
             return false;
 
         // Prevent circular insertion.
-        if (_transform.ContainsEntity(toInsertXform, container.Owner))
+        if (_transform.ContainsEntity(toInsert, (container.Owner, containerXform)))
             return false;
 
         var insertAttemptEvent = new ContainerIsInsertingAttemptEvent(container, toInsert, assumeEmpty);

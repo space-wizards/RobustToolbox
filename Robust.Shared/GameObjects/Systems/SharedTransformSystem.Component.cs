@@ -828,6 +828,27 @@ public abstract partial class SharedTransformSystem
     }
 
     [Pure]
+    public MapCoordinates GetMapCoordinates(EntityUid entity, TransformComponent? xform = null)
+    {
+        if (!XformQuery.Resolve(entity, ref xform))
+            return MapCoordinates.Nullspace;
+
+        return GetMapCoordinates(xform);
+    }
+
+    [Pure]
+    public MapCoordinates GetMapCoordinates(TransformComponent xform)
+    {
+        return new MapCoordinates(GetWorldPosition(xform), xform.MapID);
+    }
+
+    [Pure]
+    public MapCoordinates GetMapCoordinates(Entity<TransformComponent> entity)
+    {
+        return GetMapCoordinates(entity.Comp);
+    }
+
+    [Pure]
     public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(EntityUid uid)
     {
         return GetWorldPositionRotation(XformQuery.GetComponent(uid));

@@ -34,44 +34,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc cref="Resolve{TComp}(Robust.Shared.GameObjects.EntityUid,ref TComp?,bool)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected bool Resolve<TComp>(ref Entity<TComp?> entity, bool logMissing = true)
-            where TComp : IComponent
-        {
-            return Resolve(entity.Owner, ref entity.Comp, logMissing);
-        }
-
-        /// <inheritdoc cref="Resolve{TComp1,TComp2}(Robust.Shared.GameObjects.EntityUid,ref TComp1?,ref TComp2?,bool)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected bool Resolve<TComp1, TComp2>(ref Entity<TComp1?, TComp2?> entity, bool logMissing = true)
-            where TComp1 : IComponent
-            where TComp2 : IComponent
-        {
-            return Resolve(entity.Owner, ref entity.Comp1, ref entity.Comp2, logMissing);
-        }
-
-        /// <inheritdoc cref="Resolve{TComp1,TComp2,TComp3}(Robust.Shared.GameObjects.EntityUid,ref TComp1?,ref TComp2?,ref TComp3?,bool)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected bool Resolve<TComp1, TComp2, TComp3>(ref Entity<TComp1?, TComp2?, TComp3?> entity, bool logMissing = true)
-            where TComp1 : IComponent
-            where TComp2 : IComponent
-            where TComp3 : IComponent
-        {
-            return Resolve(entity.Owner, ref entity.Comp1, ref entity.Comp2, ref entity.Comp3, logMissing);
-        }
-
-        /// <inheritdoc cref="Resolve{TComp1,TComp2,TComp3,TComp4}(Robust.Shared.GameObjects.EntityUid,ref TComp1?,ref TComp2?,ref TComp3?,ref TComp4?,bool)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected bool Resolve<TComp1, TComp2, TComp3, TComp4>(ref Entity<TComp1?, TComp2?, TComp3?, TComp4?> entity, bool logMissing = true)
-            where TComp1 : IComponent
-            where TComp2 : IComponent
-            where TComp3 : IComponent
-            where TComp4 : IComponent
-        {
-            return Resolve(entity.Owner, ref entity.Comp1, ref entity.Comp2, ref entity.Comp3, ref entity.Comp4, logMissing);
-        }
-
-        /// <inheritdoc cref="Resolve{TComp}(Robust.Shared.GameObjects.EntityUid,ref TComp?,bool)"/>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected bool Resolve(EntityUid uid, [NotNullWhen(true)] ref MetaDataComponent? component,
             bool logMissing = true)
         {

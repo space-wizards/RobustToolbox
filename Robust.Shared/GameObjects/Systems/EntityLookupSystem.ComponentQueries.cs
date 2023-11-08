@@ -450,10 +450,15 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<Entity<IComponent>> GetEntitiesInRange(Type type, MapCoordinates coordinates, float range)
     {
-        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         var entities = new HashSet<Entity<IComponent>>();
-        GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities);
+        GetEntitiesInRange(type, coordinates, range, entities);
         return entities;
+    }
+
+    public void GetEntitiesInRange(Type type, MapCoordinates coordinates, float range, HashSet<Entity<IComponent>> entities)
+    {
+        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
+        GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities);
     }
 
     public HashSet<T> GetComponentsInRange<T>(MapCoordinates coordinates, float range) where T : IComponent

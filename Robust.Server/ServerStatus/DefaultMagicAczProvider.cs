@@ -34,12 +34,12 @@ public sealed class DefaultMagicAczProvider : IMagicAczProvider
         var inputPass = graph.Input;
 
         var contentDir = FindContentRootPath(_deps);
-        await RobustClientPackaging.WriteContentAssemblies(
+        await RobustSharedPackaging.WriteContentAssemblies(
             inputPass,
             contentDir,
             binFolderPath,
             assemblyNames,
-            cancel);
+            cancel: cancel);
 
         await RobustClientPackaging.WriteClientResources(contentDir, inputPass, cancel);
 

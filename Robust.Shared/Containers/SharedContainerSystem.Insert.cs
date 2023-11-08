@@ -1,9 +1,41 @@
+using System;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.Containers;
 
 public abstract partial class SharedContainerSystem
 {
+
+    /// <summary>
+    /// Attempts to insert the entity into this container.
+    /// </summary>
+    /// <remarks>
+    /// If the insertion is successful, the inserted entity will end up parented to the
+    /// container entity, and the inserted entity's local position will be set to the zero vector.
+    /// </remarks>
+    /// <param name="toInsert">The entity to insert.</param>
+    /// <param name="container">The container to insert into.</param>
+    /// <param name="containerXform">The container's transform component.</param>
+    /// <param name="force">Whether to bypass normal insertion checks.</param>
+    /// <returns>False if the entity could not be inserted.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if this container is a child of the entity,
+    /// which would cause infinite loops.
+    /// </exception>
+    public bool Insert(Entity<TransformComponent?, MetaDataComponent?, PhysicsComponent?> toInsert,
+        BaseContainer container,
+        TransformComponent? containerXform = null,
+        bool force = false)
+    {
+        // Cannot Use Resolve(ref toInsert) as the physics component is optional
+        if (!Resolve(toInsert.Owner, ref toInsert.Comp1, ref toInsert.Comp2))
+            return false;
+
+        // TODO move logic over to the system.
+        return container.Insert(toInsert, EntityManager, toInsert, containerXform, toInsert, toInsert, force);
+    }
+
     /// <summary>
     /// Checks if the entity can be inserted into the given container.
     /// </summary>

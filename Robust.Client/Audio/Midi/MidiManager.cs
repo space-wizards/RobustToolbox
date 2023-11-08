@@ -10,7 +10,6 @@ using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
-using Robust.Shared.Audio;
 using Robust.Shared.Audio.Midi;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -42,10 +41,10 @@ internal sealed partial class MidiManager : IMidiManager
     [ViewVariables] private TimeSpan _nextPositionUpdate = TimeSpan.Zero;
 
     [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IResourceManager _resourceManager = default!;
+    [Dependency] private readonly IResourceCacheInternal _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IConfigurationManager _cfgMan = default!;
-    [Dependency] private readonly IAudioInternal _audio = default!;
+    [Dependency] private readonly IClydeAudio _clydeAudio = default!;
     [Dependency] private readonly ITaskManager _taskManager = default!;
     [Dependency] private readonly ILogManager _logger = default!;
     [Dependency] private readonly IParallelManager _parallel = default!;
@@ -274,7 +273,7 @@ internal sealed partial class MidiManager : IMidiManager
         {
             soundfontLoader.SetCallbacks(_soundfontLoaderCallbacks);
 
-            var renderer = new MidiRenderer(_settings!, soundfontLoader, mono, this, _audio, _taskManager, _midiSawmill);
+            var renderer = new MidiRenderer(_settings!, soundfontLoader, mono, this, _clydeAudio, _taskManager, _midiSawmill);
 
             _midiSawmill.Debug($"Loading fallback soundfont {FallbackSoundfont}");
             // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
@@ -352,7 +351,7 @@ internal sealed partial class MidiManager : IMidiManager
                 renderer.LoadSoundfont(file.ToString());
             }
 
-            renderer.Source.Volume = _volume;
+            renderer.Source.SetVolume(Volume);
 
             lock (_renderers)
             {
@@ -375,7 +374,6 @@ internal sealed partial class MidiManager : IMidiManager
 
         // Update positions of streams every frame.
         // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
-        // so TRUE
 
         lock (_renderers)
         {
@@ -417,13 +415,11 @@ internal sealed partial class MidiManager : IMidiManager
                 return;
 
             if (_volumeDirty)
-            {
-                renderer.Source.Volume = Volume;
-            }
+                renderer.Source.SetVolume(Volume);
 
             if (!renderer.Mono)
             {
-                renderer.Source.Global = true;
+                renderer.Source.SetGlobal();
                 return;
             }
 
@@ -438,19 +434,14 @@ internal sealed partial class MidiManager : IMidiManager
                     return;
                 }
 
-                var position = renderer.TrackingCoordinates.Value;
-
-                if (position.MapId == MapId.Nullspace)
+                if (!renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.Position))
                 {
                     return;
                 }
 
-                renderer.Source.Position = position.Position;
-
                 var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value,
                     xformQuery: transQuery, physicsQuery: physicsQuery);
-
-                renderer.Source.Velocity = vel;
+                renderer.Source.SetVelocity(vel);
             }
 
             if (renderer.TrackingCoordinates != null && renderer.TrackingCoordinates.Value.MapId == _eyeManager.CurrentMap)
@@ -474,11 +465,11 @@ internal sealed partial class MidiManager : IMidiManager
                         renderer.TrackingEntity);
                 }
 
-                renderer.Source.Occlusion = occlusion;
+                renderer.Source.SetOcclusion(occlusion);
             }
             else
             {
-                renderer.Source.Occlusion = float.MaxValue;
+                renderer.Source.SetOcclusion(float.MaxValue);
             }
 
         }

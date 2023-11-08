@@ -96,7 +96,7 @@ namespace Robust.Client.Debugging
                             IoCManager.Resolve<IInputManager>(),
                             IoCManager.Resolve<IMapManager>(),
                             IoCManager.Resolve<IPlayerManager>(),
-                            IoCManager.Resolve<IClientResourceCache>(),
+                            IoCManager.Resolve<IResourceCache>(),
                             this,
                             Get<EntityLookupSystem>(),
                             Get<SharedPhysicsSystem>()));
@@ -208,7 +208,7 @@ namespace Robust.Client.Debugging
         private HashSet<Joint> _drawnJoints = new();
         private List<Entity<MapGridComponent>> _grids = new();
 
-        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IPlayerManager playerManager, IClientResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem)
+        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem)
         {
             _entityManager = entityManager;
             _eyeManager = eyeManager;

@@ -120,7 +120,7 @@ namespace Robust.Client.Graphics
                     if (_path == null)
                         throw new InvalidOperationException("Source shaders must specify a source file.");
 
-                    _source = IoCManager.Resolve<IClientResourceCache>().GetResource<ShaderSourceResource>(_path.Value);
+                    _source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>(_path.Value);
 
                     if (_paramMapping != null)
                     {
@@ -142,7 +142,7 @@ namespace Robust.Client.Graphics
 
                 case "canvas":
                     Kind = ShaderKind.Canvas;
-                    _source = IoCManager.Resolve<IClientResourceCache>().GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl");
+                    _source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl");
                     break;
 
                 default:

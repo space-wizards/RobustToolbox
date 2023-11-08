@@ -28,7 +28,7 @@ namespace Robust.Client.UserInterface
             TabContainer.SetTabTitle(Perf, "Profiling");
 
             Stylesheet =
-                new DefaultStylesheet(IoCManager.Resolve<IClientResourceCache>(), IoCManager.Resolve<IUserInterfaceManager>()).Stylesheet;
+                new DefaultStylesheet(IoCManager.Resolve<IResourceCache>(), IoCManager.Resolve<IUserInterfaceManager>()).Stylesheet;
         }
     }
 

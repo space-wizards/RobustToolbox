@@ -9,13 +9,6 @@ namespace Robust.Client.ResourceManagement
 {
     internal partial class ResourceCache
     {
-        public void MountLoaderApi(IResourceManager manager, IFileApi api, string apiPrefix, ResPath? prefix = null)
-        {
-            prefix ??= ResPath.Root;
-            var root = new LoaderApiLoader(api, apiPrefix);
-            manager.AddRoot(prefix.Value, root);
-        }
-
         private sealed class LoaderApiLoader : IContentRoot
         {
             private readonly IFileApi _api;

@@ -54,6 +54,40 @@ END TEMPLATE-->
 *None yet*
 
 
+## 177.0.0
+
+### Breaking changes
+
+* Removed toInsertXform and added containerXform in SharedContainerSystem.CanInsert.
+* Removed EntityQuery parameters from SharedContainerSystem.IsEntityOrParentInContainer.
+* Changed the signature of ContainsEntity in SharedTransformSystem to use Entity<T>.
+* Removed one obsoleted SharedTransformSystem.AnchorEntity method.
+* Changed signature of SharedTransformSystem.SetCoordinates to use Entity<T>.
+
+### New features
+
+* Added more Entity<T> query methods.
+* Added BeforeApplyState event to replay playback.
+
+### Bugfixes
+
+* Fixed inverted GetAllMapGrids map id check.
+* Fixed transform test warnings.
+* Fixed PlacementManager warnings.
+* Fixed reparenting bug for entities that are being deleted.
+
+### Other
+
+* Changed VerticalAlignment of RichTextLabel to Center to be consistent with Label.
+* Changed PVS error log to be a warning instead.
+* Marked insert and remove container methods as obsolete, added container system methods to replace them.
+* Marked TransformComponent.MapPosition as obsolete, added GetMapCoordinates system method to replace it.
+
+### Internal
+
+* Moved TryGetUi/TryToggleUi/ToggleUi/TryOpen/OpenUi/TryClose/CloseUi methods from UserInterfaceSystem to SharedUserInterfaceSystem.
+
+
 ## 176.0.0
 
 ### Breaking changes

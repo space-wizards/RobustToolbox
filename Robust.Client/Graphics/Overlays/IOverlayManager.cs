@@ -4,29 +4,32 @@ using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Timing;
 
-namespace Robust.Client.Graphics;
-
-[PublicAPI]
-public interface IOverlayManager
+namespace Robust.Client.Graphics
 {
-    bool AddOverlay(Overlay overlay);
 
-    bool RemoveOverlay(Overlay overlay);
-    bool RemoveOverlay(Type overlayClass);
-    bool RemoveOverlay<T>() where T : Overlay;
-    bool TryGetOverlay(Type overlayClass, [NotNullWhen(true)] out Overlay? overlay);
-    bool TryGetOverlay<T>([NotNullWhen(true)] out T? overlay) where T : Overlay;
+    [PublicAPI]
+    public interface IOverlayManager
+    {
+        bool AddOverlay(Overlay overlay);
 
-    Overlay GetOverlay(Type overlayClass);
-    T GetOverlay<T>() where T : Overlay;
+        bool RemoveOverlay(Overlay overlay);
+        bool RemoveOverlay(Type overlayClass);
+        bool RemoveOverlay<T>() where T : Overlay;
 
-    bool HasOverlay(Type overlayClass);
-    bool HasOverlay<T>() where T : Overlay;
+        bool TryGetOverlay(Type overlayClass, [NotNullWhen(true)] out Overlay? overlay);
+        bool TryGetOverlay<T>([NotNullWhen(true)] out T? overlay) where T : Overlay;
 
-    IEnumerable<Overlay> AllOverlays { get; }
-}
+        Overlay GetOverlay(Type overlayClass);
+        T GetOverlay<T>() where T : Overlay;
 
-internal interface IOverlayManagerInternal : IOverlayManager
-{
-    void FrameUpdate(FrameEventArgs args);
+        bool HasOverlay(Type overlayClass);
+        bool HasOverlay<T>() where T : Overlay;
+
+        IEnumerable<Overlay> AllOverlays { get; }
+    }
+
+    internal interface IOverlayManagerInternal : IOverlayManager
+    {
+        void FrameUpdate(FrameEventArgs args);
+    }
 }

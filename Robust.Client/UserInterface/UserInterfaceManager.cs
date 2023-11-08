@@ -38,7 +38,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IFontManager _fontManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IClientGameTiming _gameTiming = default!;
-        [Dependency] private readonly IClientResourceCache _resourceCache = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IStateManager _stateManager = default!;

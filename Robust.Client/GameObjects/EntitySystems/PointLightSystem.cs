@@ -10,7 +10,7 @@ namespace Robust.Client.GameObjects
 {
     public sealed class PointLightSystem : SharedPointLightSystem
     {
-        [Dependency] private readonly IClientResourceCache _resourceCache = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly LightTreeSystem _lightTree = default!;
 
         public override void Initialize()

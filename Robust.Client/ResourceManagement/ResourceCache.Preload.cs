@@ -3,13 +3,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Audio;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
-using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
-using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -22,8 +19,7 @@ namespace Robust.Client.ResourceManagement
     internal partial class ResourceCache
     {
         [field: Dependency] public IClyde Clyde { get; } = default!;
-        [field: Dependency] public IAudioInternal ClydeAudio { get; } = default!;
-        [Dependency] private readonly IResourceManager _manager = default!;
+        [field: Dependency] public IClydeAudio ClydeAudio { get; } = default!;
         [field: Dependency] public IFontManager FontManager { get; } = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
@@ -48,7 +44,7 @@ namespace Robust.Client.ResourceManagement
             var sw = Stopwatch.StartNew();
             var resList = GetTypeDict<TextureResource>();
 
-            var texList = _manager.ContentFindFiles("/Textures/")
+            var texList = ContentFindFiles("/Textures/")
                 // Skip PNG files inside RSIs.
                 .Where(p => p.Extension == "png" && !p.ToString().Contains(".rsi/") && !resList.ContainsKey(p))
                 .Select(p => new TextureResource.LoadStepData {Path = p})
@@ -58,7 +54,7 @@ namespace Robust.Client.ResourceManagement
             {
                 try
                 {
-                    TextureResource.LoadPreTexture(_manager, data);
+                    TextureResource.LoadPreTexture(this, data);
                 }
                 catch (Exception e)
                 {
@@ -120,7 +116,7 @@ namespace Robust.Client.ResourceManagement
             var sw = Stopwatch.StartNew();
             var resList = GetTypeDict<RSIResource>();
 
-            var rsiList = _manager.ContentFindFiles("/Textures/")
+            var rsiList = ContentFindFiles("/Textures/")
                 .Where(p => p.ToString().EndsWith(".rsi/meta.json"))
                 .Select(c => c.Directory)
                 .Where(p => !resList.ContainsKey(p))
@@ -131,7 +127,7 @@ namespace Robust.Client.ResourceManagement
             {
                 try
                 {
-                    RSIResource.LoadPreTexture(_manager, data);
+                    RSIResource.LoadPreTexture(this, data);
                 }
                 catch (Exception e)
                 {

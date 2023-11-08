@@ -162,28 +162,30 @@ namespace Robust.Client.GameStates
             _conHost.RegisterCommand("localdelete", Loc.GetString("cmd-local-delete-desc"), Loc.GetString("cmd-local-delete-help"), LocalDeleteEntCommand);
             _conHost.RegisterCommand("fullstatereset", Loc.GetString("cmd-full-state-reset-desc"), Loc.GetString("cmd-full-state-reset-help"), (_,_,_) => RequestFullState());
 
-            _entities.ComponentAdded += args =>
-            {
-                if (_resettingPredictedEntities)
-                {
-                    var comp = _compFactory.GetRegistration(args.ComponentType);
-
-                    if (comp.NetID == null)
-                        return;
-
-                    _sawmill.Error($"""
-                    Added component {comp.Name} with net id {comp.NetID} while resetting predicted entities.
-                    Stack trace:
-                    {Environment.StackTrace}
-                    """);
-                }
-            };
+            _entities.ComponentAdded += OnComponentAdded;
 
             var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
             if (!metaId.HasValue)
                 throw new InvalidOperationException("MetaDataComponent does not have a NetId.");
 
             _metaCompNetId = metaId.Value;
+        }
+
+        private void OnComponentAdded(AddedComponentEventArgs args)
+        {
+            if (_resettingPredictedEntities)
+            {
+                var comp = args.ComponentType;
+
+                if (comp.NetID == null)
+                    return;
+
+                _sawmill.Error($"""
+                    Added component {comp.Name} with net id {comp.NetID} while resetting predicted entities.
+                    Stack trace:
+                    {Environment.StackTrace}
+                    """);
+            }
         }
 
         /// <inheritdoc />

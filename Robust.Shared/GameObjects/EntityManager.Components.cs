@@ -317,7 +317,7 @@ namespace Robust.Shared.GameObjects
                 component.Networked = false;
             }
 
-            var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg.Idx);
+            var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
             ComponentAdded?.Invoke(eventArgs);
             _eventBus.OnComponentAdded(eventArgs);
 

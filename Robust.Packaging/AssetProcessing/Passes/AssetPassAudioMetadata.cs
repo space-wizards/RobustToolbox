@@ -41,9 +41,9 @@ public sealed class AssetPassAudioMetadata : AssetPass
         if (!_audioExtensions.Contains(ext))
             return AssetFileAcceptResult.Pass;
 
-        var updatedName = file.Path.Replace("/", "_");
+        var updatedName = file.Path;
 
-        if (updatedName.StartsWith("Resources_"))
+        if (updatedName.StartsWith("Resources"))
             updatedName = updatedName[10..];
 
         TimeSpan length;
@@ -51,8 +51,8 @@ public sealed class AssetPassAudioMetadata : AssetPass
         if (ext == ".ogg")
         {
             using var stream = file.Open();
-            var vorbis = _audioManager.LoadAudioOggVorbis(stream);
-            length = vorbis.Length;
+            using var vorbis = new NVorbis.VorbisReader(stream);
+            length = vorbis.TotalTime;
         }
         else if (ext == ".wav")
         {

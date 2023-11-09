@@ -194,11 +194,10 @@ public abstract partial class SharedAudioSystem : EntitySystem
             return resource.AudioStream.Length;
 
         // Fall back to shipped metadata
-        var protoName = filename[1..].Replace("/", "_");
-        if (ProtoMan.TryIndex(protoName, out AudioMetadataPrototype? metadata))
+        if (ProtoMan.TryIndex(filename, out AudioMetadataPrototype? metadata))
            return metadata.Length;
 
-        throw new FileNotFoundException($"Unable to find metadata for audio file {filename}, tried {protoName}");
+        throw new FileNotFoundException($"Unable to find metadata for audio file {filename}");
     }
 
     /// <summary>

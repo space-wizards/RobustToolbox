@@ -26,33 +26,33 @@ public struct GridTileEnumerator
     }
 
     public bool MoveNext([NotNullWhen(true)] out TileRef? tileRef)
-    {
-        if (_index == _chunkSize * _chunkSize)
         {
-            if (!_chunkEnumerator.MoveNext())
+            while (true)
             {
-                tileRef = null;
-                return false;
+                if (_index == _chunkSize * _chunkSize)
+                {
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        tileRef = null;
+                        return false;
+                    }
+
+                    _index = 0;
+                }
+
+                var (chunkOrigin, chunk) = _chunkEnumerator.Current;
+                var x = (ushort) (_index / _chunkSize);
+                var y = (ushort) (_index % _chunkSize);
+                var tile = chunk.GetTile(x, y);
+                _index++;
+
+                if (_ignoreEmpty && tile.IsEmpty)
+                    continue;
+
+                var gridX = x + chunkOrigin.X * _chunkSize;
+                var gridY = y + chunkOrigin.Y * _chunkSize;
+                tileRef = new TileRef(_gridUid, gridX, gridY, tile);
+                return true;
             }
-
-            _index = 0;
         }
-
-        var (chunkOrigin, chunk) = _chunkEnumerator.Current;
-
-        var x = (ushort) (_index / _chunkSize);
-        var y = (ushort) (_index % _chunkSize);
-        var tile = chunk.GetTile(x, y);
-        _index++;
-
-        if (_ignoreEmpty && tile.IsEmpty)
-        {
-            return MoveNext(out tileRef);
-        }
-
-        var gridX = x + chunkOrigin.X * _chunkSize;
-        var gridY = y + chunkOrigin.Y * _chunkSize;
-        tileRef = new TileRef(_gridUid, gridX, gridY, tile);
-        return true;
-    }
 }

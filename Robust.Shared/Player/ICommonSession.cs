@@ -30,12 +30,12 @@ public interface ICommonSession
     /// <summary>
     /// Current name of this player.
     /// </summary>
-    string Name { get; set; }
+    string Name { get; }
 
     /// <summary>
     /// Current connection latency of this session from the server to their client.
     /// </summary>
-    short Ping { get; internal set; }
+    short Ping { get; }
 
     /// <summary>
     /// The current network channel for this session.
@@ -43,8 +43,9 @@ public interface ICommonSession
     /// <remarks>
     /// On the Server every player has a network channel,
     /// on the Client only the LocalPlayer has a network channel, and that channel points to the server.
+    /// Unless you know what you are doing, you shouldn't be modifying this directly.
     /// </remarks>
-    INetChannel Channel { get; }
+    INetChannel Channel { get; set; }
 
     LoginType AuthType { get; }
 
@@ -67,4 +68,10 @@ public interface ICommonSession
 
     [Obsolete("Just use the Channel field instead.")]
     INetChannel ConnectedClient => Channel;
+
+    /// <summary>
+    /// If true, this indicates that this is a client-side session, and should be ignored when applying a server's
+    /// game state.
+    /// </summary>
+    bool ClientSide { get; set; }
 }

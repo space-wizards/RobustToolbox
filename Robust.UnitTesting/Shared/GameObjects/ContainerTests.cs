@@ -72,7 +72,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  // Setup PVS
                  sEntManager.AddComponent<EyeComponent>(entityUid);
                  var player = sPlayerManager.Sessions.First();
-                 sEntManager.System<ActorSystem>().Attach(entityUid, player);
+                 server.PlayerMan.SetAttachedEntity(player, entityUid);
                  sPlayerManager.JoinGame(player);
              });
 
@@ -200,7 +200,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  // Setup PVS
                  sEntManager.AddComponent<EyeComponent>(sEntityUid);
                  var player = sPlayerManager.Sessions.First();
-                 sEntManager.System<ActorSystem>().Attach(sEntityUid, player);
+                 server.PlayerMan.SetAttachedEntity(player, sEntityUid);
                  sPlayerManager.JoinGame(player);
              });
 

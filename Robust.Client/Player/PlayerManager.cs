@@ -42,12 +42,13 @@ namespace Robust.Client.Player
         /// <inheritdoc />
         public override int MaxPlayers => _client.GameInfo?.ServerMaxPlayers ?? -1;
 
-        public LocalPlayer? LocalPlayer { get; set; }
+        public LocalPlayer? LocalPlayer { get; private set; }
 
         public event Action<SessionStatusEventArgs>? LocalStatusChanged;
         public event Action? PlayerListUpdated;
         public event Action<EntityUid>? LocalPlayerDetached;
         public event Action<EntityUid>? LocalPlayerAttached;
+        public event Action<(ICommonSession? Old, ICommonSession? New)>? LocalSessionChanged;
 
         /// <inheritdoc />
         public override void Initialize(int maxPlayers)
@@ -64,22 +65,14 @@ namespace Robust.Client.Player
                 LocalStatusChanged?.Invoke(e);
         }
 
-        /// <inheritdoc />
-        public override void Startup()
-        {
-            if (LocalSession == null)
-                throw new InvalidOperationException("LocalSession cannot be null");
-
-            LocalPlayer = new LocalPlayer(LocalSession);
-            base.Startup();
-        }
-
         public void SetupSinglePlayer(string name)
         {
             if (LocalSession != null)
                 throw new InvalidOperationException($"Player manager already running?");
 
-            LocalSession = CreateAndAddSession(default, name);
+            var session = CreateAndAddSession(default, name);
+            session.ClientSide = true;
+            SetLocalSession(session);
             Startup();
             PlayerListUpdated?.Invoke();
         }
@@ -89,18 +82,44 @@ namespace Robust.Client.Player
             if (LocalSession != null)
                 throw new InvalidOperationException($"Player manager already running?");
 
-            var session = CreateAndAddSession(channel.UserId, channel.UserName);
-            session.Channel = channel;
-            LocalSession = session;
+            SetLocalSession(CreateAndAddSession(channel));
             Startup();
             _network.ClientSendMessage(new MsgPlayerListReq());
+        }
+
+        public void SetLocalSession(ICommonSession? session)
+        {
+            if (session == LocalSession)
+                return;
+
+            var old = LocalSession;
+
+            if (old?.AttachedEntity is {} oldUid)
+            {
+                LocalSession = null;
+                LocalPlayer = null;
+                Sawmill.Info($"Detaching local player from {EntManager.ToPrettyString(oldUid)}.");
+                EntManager.EventBus.RaiseLocalEvent(oldUid, new LocalPlayerDetachedEvent(oldUid), true);
+                LocalPlayerDetached?.Invoke(oldUid);
+            }
+
+            LocalSession = session;
+            LocalPlayer = session == null ? null : new LocalPlayer(session);
+            Sawmill.Info($"Changing local session from {old?.ToString() ?? "null"} to {session?.ToString() ?? "null"}.");
+            LocalSessionChanged?.Invoke((old, LocalSession));
+
+            if (session?.AttachedEntity is {} newUid)
+            {
+                Sawmill.Info($"Attaching local player to {EntManager.ToPrettyString(newUid)}.");
+                EntManager.EventBus.RaiseLocalEvent(newUid, new LocalPlayerAttachedEvent(newUid), true);
+                LocalPlayerAttached?.Invoke(newUid);
+            }
         }
 
         /// <inheritdoc />
         public override void Shutdown()
         {
-            if (LocalSession != null)
-                SetAttachedEntity(LocalSession, null);
+            SetAttachedEntity(LocalSession, null, out _);
             LocalPlayer = null;
             LocalSession = null;
             _pendingStates.Clear();
@@ -108,16 +127,21 @@ namespace Robust.Client.Player
             PlayerListUpdated?.Invoke();
         }
 
-        public override void SetAttachedEntity(ICommonSession session, EntityUid? uid)
+        public override bool SetAttachedEntity(ICommonSession? session, EntityUid? uid, out ICommonSession? kicked, bool force = false)
         {
+            kicked = null;
+            if (session == null)
+                return false;
+
             if (session.AttachedEntity == uid)
-                return;
+                return true;
 
             var old = session.AttachedEntity;
-            base.SetAttachedEntity(session, uid);
+            if (!base.SetAttachedEntity(session, uid, out kicked, force))
+                return false;
 
             if (session != LocalSession)
-                return;
+                return true;
 
             if (old.HasValue)
             {
@@ -129,13 +153,13 @@ namespace Robust.Client.Player
             if (uid == null)
             {
                 Sawmill.Info($"Local player is no longer attached to any entity.");
-                return;
+                return true;
             }
 
             if (!EntManager.EntityExists(uid))
             {
                 Sawmill.Error($"Attempted to attach player to non-existent entity {uid}!");
-                return;
+                return true;
             }
 
             if (!EntManager.EnsureComponent(uid.Value, out EyeComponent eye))
@@ -148,6 +172,7 @@ namespace Robust.Client.Player
             Sawmill.Info($"Attaching local player to {EntManager.ToPrettyString(uid)}.");
             EntManager.EventBus.RaiseLocalEvent(uid.Value, new LocalPlayerAttachedEvent(uid.Value), true);
             LocalPlayerAttached?.Invoke(uid.Value);
+            return true;
         }
 
         public void ApplyPlayerStates(IReadOnlyCollection<SessionState> list)
@@ -193,7 +218,7 @@ namespace Robust.Client.Player
                     _pendingStates.Remove(state.UserId);
                 }
 
-                SetAttachedEntity(LocalSession, uid);
+                SetAttachedEntity(LocalSession, uid, out _, true);
                 SetStatus(LocalSession, state.Status);
             }
 
@@ -233,11 +258,10 @@ namespace Robust.Client.Player
                 {
                     // This is a new userid, so we create a new session.
                     DebugTools.Assert(state.UserId != LocalPlayer?.UserId);
-                    var newSession = CreateAndAddSession(state.UserId, state.Name);
+                    var newSession = (CommonSession) CreateAndAddSession(state.UserId, state.Name);
                     newSession.Ping = state.Ping;
-                    newSession.Name = state.Name;
                     SetStatus(newSession, state.Status);
-                    SetAttachedEntity(newSession, controlled);
+                    SetAttachedEntity(newSession, controlled, out _, true);
                     dirty = true;
                     continue;
                 }
@@ -256,7 +280,7 @@ namespace Robust.Client.Player
                 local.Name = state.Name;
                 local.Ping = state.Ping;
                 SetStatus(local, state.Status);
-                SetAttachedEntity(local, controlled);
+                SetAttachedEntity(local, controlled, out _, true);
             }
 
             // Remove old users. This only works if the provided state is a list of all players
@@ -264,8 +288,10 @@ namespace Robust.Client.Player
             {
                 foreach (var oldUser in InternalSessions.Keys.ToArray())
                 {
-                    // clear slot, player left
                     if (users.Contains(oldUser))
+                        continue;
+
+                    if (InternalSessions[oldUser].ClientSide)
                         continue;
 
                     DebugTools.Assert(oldUser != LocalUser

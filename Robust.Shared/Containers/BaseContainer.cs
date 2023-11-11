@@ -79,20 +79,7 @@ namespace Robust.Shared.Containers
             Owner = owner;
         }
 
-        /// <summary>
-        /// Attempts to insert the entity into this container.
-        /// </summary>
-        /// <remarks>
-        /// If the insertion is successful, the inserted entity will end up parented to the
-        /// container entity, and the inserted entity's local position will be set to the zero vector.
-        /// </remarks>
-        /// <param name="toinsert">The entity to insert.</param>
-        /// <param name="entMan"></param>
-        /// <returns>False if the entity could not be inserted.</returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if this container is a child of the entity,
-        /// which would cause infinite loops.
-        /// </exception>
+        [Obsolete("Use container system method")]
         public bool Insert(
             EntityUid toinsert,
             IEntityManager? entMan = null,
@@ -138,16 +125,23 @@ namespace Robust.Shared.Containers
                 return false;
             }
 
+            transform ??= transformQuery.GetComponent(toinsert);
+
             //Verify we can insert into this container
-            if (!force && !containerSys.CanInsert(toinsert, this))
+            if (!force && !containerSys.CanInsert(toinsert, this, containerXform: ownerTransform))
                 return false;
 
             // Please somebody ecs containers
             var lookupSys = entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
             var xformSys = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
-            transform ??= transformQuery.GetComponent(toinsert);
             meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
+            if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
+            {
+                Logger.ErrorS("container",
+                    $"Attempted to insert a terminating entity {entMan.ToPrettyString(toinsert)} into a container {ID} in entity: {entMan.ToPrettyString(Owner)}.");
+                return false;
+            }
 
             // remove from any old containers.
             if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
@@ -270,16 +264,7 @@ namespace Robust.Shared.Containers
         /// <param name="assumeEmpty">Whether to assume that the container is currently empty.</param>
         protected internal virtual bool CanInsert(EntityUid toInsert, bool assumeEmpty, IEntityManager entMan) => true;
 
-        /// <summary>
-        /// Attempts to remove the entity from this container.
-        /// </summary>
-        /// <param name="reparent">If false, this operation will not rigger a move or parent change event. Ignored if
-        /// destination is not null</param>
-        /// <param name="force">If true, this will not perform can-remove checks.</param>
-        /// <param name="destination">Where to place the entity after removing. Avoids unnecessary broadphase updates.
-        /// If not specified, and reparent option is true, then the entity will either be inserted into a parent
-        /// container, the grid, or the map.</param>
-        /// <param name="localRotation">Optional final local rotation after removal. Avoids redundant move events.</param>
+        [Obsolete("Use container system method")]
         public bool Remove(
             EntityUid toRemove,
             IEntityManager? entMan = null,
@@ -359,7 +344,7 @@ namespace Robust.Shared.Containers
             return true;
         }
 
-        [Obsolete("use force option in Remove()")]
+        [Obsolete("Use container system method")]
         public void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, MetaDataComponent? meta = null)
             => Remove(toRemove, entMan, meta: meta, reparent: false, force: true);
 

@@ -12,6 +12,7 @@ using Robust.Client.Upload;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -44,6 +45,7 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
     public event Action? ReplayPlaybackStopped;
     public event Action? ReplayPaused;
     public event Action? ReplayUnpaused;
+    public event Action<(GameState Current, GameState? Next)>? BeforeApplyState;
 
     public ReplayData? Replay { get; private set; }
     public NetUserId? Recorder => Replay?.Recorder;

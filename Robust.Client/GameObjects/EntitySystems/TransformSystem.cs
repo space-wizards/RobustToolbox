@@ -54,9 +54,10 @@ namespace Robust.Client.GameObjects
             //   should show the entity lerping.
             // - If the client predicts an entity will move while already lerping due to a state-application, it should
             //   clear the state's lerp, under the assumption that the client predicted the state and already rendered
-            //   the entity in the final position.
+            //   the entity in the state's final position.
             // - If the client predicts that an entity moves, then we only lerp if this is the first time that the tick
-            //   was predicted. I.e., we assume the entity was already rendered in it's final of that lerp.
+            //   was predicted. I.e., we assume the entity was already rendered in the final position that was
+            //   previously predicted.
             // - If the client predicts that an entity should lerp twice in the same tick, then we need to combine them.
             //   I.e. moving from a->b then b->c, the client should lerp from a->c.
 

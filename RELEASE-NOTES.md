@@ -54,6 +54,84 @@ END TEMPLATE-->
 *None yet*
 
 
+## 177.0.0
+
+### Breaking changes
+
+* Removed toInsertXform and added containerXform in SharedContainerSystem.CanInsert.
+* Removed EntityQuery parameters from SharedContainerSystem.IsEntityOrParentInContainer.
+* Changed the signature of ContainsEntity in SharedTransformSystem to use Entity<T>.
+* Removed one obsoleted SharedTransformSystem.AnchorEntity method.
+* Changed signature of SharedTransformSystem.SetCoordinates to use Entity<T>.
+
+### New features
+
+* Added more Entity<T> query methods.
+* Added BeforeApplyState event to replay playback.
+
+### Bugfixes
+
+* Fixed inverted GetAllMapGrids map id check.
+* Fixed transform test warnings.
+* Fixed PlacementManager warnings.
+* Fixed reparenting bug for entities that are being deleted.
+
+### Other
+
+* Changed VerticalAlignment of RichTextLabel to Center to be consistent with Label.
+* Changed PVS error log to be a warning instead.
+* Marked insert and remove container methods as obsolete, added container system methods to replace them.
+* Marked TransformComponent.MapPosition as obsolete, added GetMapCoordinates system method to replace it.
+
+### Internal
+
+* Moved TryGetUi/TryToggleUi/ToggleUi/TryOpen/OpenUi/TryClose/CloseUi methods from UserInterfaceSystem to SharedUserInterfaceSystem.
+
+
+## 176.0.0
+
+### Breaking changes
+
+* Reverted audio rework temporarily until packaging is fixed.
+* Changes to Robust.Packaging to facilitate Content.Packaging ports from the python packaging scripts.
+
+### New features
+
+* Add a cvar for max game state buffer size.
+* Add an overload for GetEntitiesInRange that takes in a set.
+
+### Bugfixes
+
+* Fix PVS initial list capacity always being 0.
+* Fix replay lerp error spam.
+
+
+## 175.0.0
+
+### Breaking changes
+
+* Removed static SoundSystem.Play methods.
+* Moved IPlayingAudioStream onto AudioComponent and entities instead of an abstract stream.
+* IResourceCache is in shared and IClientResourceCache is the client version to use for textures.
+* Default audio attenuation changed from InverseDistanceClamped to LinearDistanceClamped.
+* Removed per-source audio attenuation.
+
+### New features
+
+* Add preliminary support for EFX Reverb presets + auxiliary slots; these are also entities.
+* Audio on grid entities is now attached to the grid.
+
+### Bugfixes
+
+* If an audio entity comes into PVS range its track will start at the relevant offset and not the beginning.
+* Z-Axis offset is considered for ReferenceDistance / MaxDistance for audio.
+* Audio will now pause if the attached entity is paused.
+
+### Other
+
+* Changed audio Z-Axis offset from -5m to -1m.
+
+
 ## 174.0.0
 
 ### Breaking changes

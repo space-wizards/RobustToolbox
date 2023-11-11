@@ -270,7 +270,7 @@ public sealed partial class EntityLookupSystem
                 if (xform.MapID != mapId ||
                     !worldAABB.Contains(_transform.GetWorldPosition(xform)) ||
                     ((flags & LookupFlags.Contained) == 0x0 &&
-                    _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform, _metaQuery, _xformQuery)))
+                    _container.IsEntityOrParentInContainer(uid, null, xform)))
                 {
                     continue;
                 }
@@ -332,7 +332,7 @@ public sealed partial class EntityLookupSystem
                 if (xform.MapID != mapId ||
                     !worldAABB.Contains(_transform.GetWorldPosition(xform)) ||
                     ((flags & LookupFlags.Contained) == 0x0 &&
-                     _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform, _metaQuery, _xformQuery)))
+                     _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform)))
                 {
                     continue;
                 }
@@ -450,10 +450,15 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<Entity<IComponent>> GetEntitiesInRange(Type type, MapCoordinates coordinates, float range)
     {
-        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         var entities = new HashSet<Entity<IComponent>>();
-        GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities);
+        GetEntitiesInRange(type, coordinates, range, entities);
         return entities;
+    }
+
+    public void GetEntitiesInRange(Type type, MapCoordinates coordinates, float range, HashSet<Entity<IComponent>> entities)
+    {
+        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
+        GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities);
     }
 
     public HashSet<T> GetComponentsInRange<T>(MapCoordinates coordinates, float range) where T : IComponent

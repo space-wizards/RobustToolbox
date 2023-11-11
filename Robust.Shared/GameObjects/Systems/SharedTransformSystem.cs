@@ -49,21 +49,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<TransformComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<TransformComponent, ComponentHandleState>(OnHandleState);
             SubscribeLocalEvent<TransformComponent, GridAddEvent>(OnGridAdd);
-            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
-        }
-
-        private void OnParentChange(ref EntParentChangedMessage ev)
-        {
-            // TODO: when PVS errors on live servers get fixed, wrap this whole subscription in an #if DEBUG block to speed up parent changes & entity deletion.
-            if (ev.Transform.ParentUid == EntityUid.Invalid)
-                return;
-
-            if (LifeStage(ev.Entity) >= EntityLifeStage.Terminating)
-                Log.Error($"Entity {ToPrettyString(ev.Entity)} is getting attached to a new parent while terminating. New parent: {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
-
-
-            if (LifeStage(ev.Transform.ParentUid) >= EntityLifeStage.Terminating)
-                Log.Error($"Entity {ToPrettyString(ev.Entity)} is attaching itself to a terminating entity {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
         }
 
         private void MapManagerOnTileChanged(ref TileChangedEvent e)

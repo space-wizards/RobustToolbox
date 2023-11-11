@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
 
 namespace Robust.UnitTesting.Shared.GameObjects;
 
 public sealed class GenericEntityPrint
 {
-    [Test]
+    //[Test]
     public void Print()
     {
         // Using the test framework for things it was not meant for is my passion

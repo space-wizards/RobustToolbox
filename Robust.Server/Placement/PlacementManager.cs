@@ -191,14 +191,20 @@ namespace Robust.Server.Placement
 
             MapGridComponent? grid;
 
-            _entityManager.TryGetComponent(coordinates.EntityId, out grid);
+            EntityUid gridId;
+            if (_entityManager.TryGetComponent(coordinates.EntityId, out grid))
+            {
+                gridId = coordinates.EntityId;
+            }
+            else
+            {
+                _mapManager.TryFindGridAt(coordinates.ToMap(_entityManager, _xformSystem), out gridId, out grid);
+            }
 
-            if (grid == null)
-                _mapManager.TryFindGridAt(coordinates.ToMap(_entityManager, _xformSystem), out _, out grid);
 
             if (grid != null)  // stick to existing grid
             {
-                _maps.SetTile(coordinates.EntityId, grid, coordinates, new Tile(tileType));
+                _maps.SetTile(gridId, grid, coordinates, new Tile(tileType));
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);

@@ -196,7 +196,7 @@ namespace Robust.Shared.Prototypes
             }
             catch (KeyNotFoundException)
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, typeof(T));
             }
         }
 
@@ -594,7 +594,7 @@ namespace Robust.Shared.Prototypes
         {
             if (!_kinds.TryGetValue(typeof(T), out var index))
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, typeof(T));
             }
 
             return index.Instances.ContainsKey(id);
@@ -625,7 +625,7 @@ namespace Robust.Shared.Prototypes
         {
             if (!_kinds.TryGetValue(kind, out var index))
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, kind);
             }
 
             return index.Instances.TryGetValue(id, out prototype);
@@ -648,7 +648,7 @@ namespace Robust.Shared.Prototypes
         {
             if (!_kinds.TryGetValue(typeof(T), out var index))
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, typeof(T));
             }
 
             return index.Results.ContainsKey(id);

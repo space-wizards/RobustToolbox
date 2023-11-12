@@ -191,18 +191,9 @@ namespace Robust.Server.Placement
 
             MapGridComponent? grid;
 
-            EntityUid gridId;
-            if (_entityManager.TryGetComponent(coordinates.EntityId, out grid))
-            {
-                gridId = coordinates.EntityId;
-            }
-            else
-            {
-                _mapManager.TryFindGridAt(coordinates.ToMap(_entityManager, _xformSystem), out gridId, out grid);
-            }
-
-
-            if (grid != null)  // stick to existing grid
+            EntityUid gridId = coordinates.EntityId;
+            if (_entityManager.TryGetComponent(coordinates.EntityId, out grid)
+                || _mapManager.TryFindGridAt(coordinates.ToMap(_entityManager, _xformSystem), out gridId, out grid))
             {
                 _maps.SetTile(gridId, grid, coordinates, new Tile(tileType));
 

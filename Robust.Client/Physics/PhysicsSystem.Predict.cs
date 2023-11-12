@@ -1,6 +1,5 @@
 using System.Buffers;
 using System.Collections.Generic;
-using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
@@ -8,6 +7,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Physics;

@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 178.0.0
+
+### Breaking changes
+
+* Most methods in ActorSystem have been moved to ISharedPlayerManager. 
+* Several actor/player related components and events have been moved to shared.
+
+### New features
+
+* Added `NetListAsArray<T>.Value` to the sandbox whitelist
+
+
 ## 177.0.0
 
 ### Breaking changes

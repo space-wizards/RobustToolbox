@@ -4,6 +4,7 @@ using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
+using Robust.Shared.Player;
 
 namespace Robust.Client.GameObjects;
 

@@ -17,10 +17,10 @@ internal sealed class CommonSession : ICommonSession
     public NetUserId UserId { get; }
 
     [ViewVariables]
-    public string Name { get; set; } = "<Unknown>";
+    public string Name { get; internal set; } = "<Unknown>";
 
     [ViewVariables]
-    public short Ping { get; set; }
+    public short Ping { get; internal set; }
 
     [ViewVariables]
     public DateTime ConnectedTime { get; set; }
@@ -33,6 +33,8 @@ internal sealed class CommonSession : ICommonSession
 
     [ViewVariables]
     public SessionData Data { get; }
+
+    public bool ClientSide { get; set; }
 
     [ViewVariables]
     public INetChannel Channel { get; set; } = default!;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map.Enumerators;
 
@@ -39,6 +40,7 @@ public struct GridTileEnumerator
         }
 
         var (chunkOrigin, chunk) = _chunkEnumerator.Current;
+        DebugTools.Assert(chunk.FilledTiles > 0, $"Encountered empty chunk while enumerating tiles");
 
         var x = (ushort) (_index / _chunkSize);
         var y = (ushort) (_index % _chunkSize);

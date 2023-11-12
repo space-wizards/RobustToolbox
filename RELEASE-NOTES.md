@@ -54,6 +54,26 @@ END TEMPLATE-->
 *None yet*
 
 
+## 179.0.0
+
+### Breaking changes
+
+* EyeComponent.Eye is no longer nullable
+
+### New features
+
+* Light rendering can now be enabled or disable per eye.
+
+### Bugfixes
+
+* Deserializing old maps with empty grid chunks should now just ignore those chunks.
+
+### Other
+
+* UnknownPrototypeException now also tells you the prototype kind instead of just the unkown ID.
+* Adding or removing networked components while resetting predicted entities now results in a more informative exception.
+
+
 ## 178.0.0
 
 ### Breaking changes

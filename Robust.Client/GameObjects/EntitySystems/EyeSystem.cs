@@ -1,8 +1,6 @@
 using Robust.Client.Graphics;
 using Robust.Client.Physics;
-using Robust.Client.Player;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Player;
 
@@ -27,17 +25,13 @@ public sealed class EyeSystem : SharedEyeSystem
 
     private void OnEyeAutoState(EntityUid uid, EyeComponent component, ref AfterAutoHandleStateEvent args)
     {
-        UpdateEye(component);
+        UpdateEye((uid, component));
     }
 
     private void OnEyeAttached(EntityUid uid, EyeComponent component, LocalPlayerAttachedEvent args)
     {
-        // TODO: This probably shouldn't be nullable bruv.
-        if (component._eye != null)
-        {
-            _eyeManager.CurrentEye = component._eye;
-        }
-
+        UpdateEye((uid, component));
+        _eyeManager.CurrentEye = component.Eye;
         var ev = new EyeAttachedEvent(uid, component);
         RaiseLocalEvent(uid, ref ev, true);
     }
@@ -49,13 +43,7 @@ public sealed class EyeSystem : SharedEyeSystem
 
     private void OnInit(EntityUid uid, EyeComponent component, ComponentInit args)
     {
-        component._eye = new Eye
-        {
-            Position = Transform(uid).MapPosition,
-            Zoom = component.Zoom,
-            DrawFov = component.DrawFov,
-            Rotation = component.Rotation,
-        };
+        UpdateEye((uid, component));
     }
 
     /// <inheritdoc />
@@ -65,7 +53,7 @@ public sealed class EyeSystem : SharedEyeSystem
 
         while (query.MoveNext(out var uid, out var eyeComponent))
         {
-            if (eyeComponent._eye == null)
+            if (eyeComponent.Eye == null)
                 continue;
 
             if (!TryComp<TransformComponent>(eyeComponent.Target, out var xform))
@@ -74,7 +62,7 @@ public sealed class EyeSystem : SharedEyeSystem
                 eyeComponent.Target = null;
             }
 
-            eyeComponent._eye.Position = xform.MapPosition;
+            eyeComponent.Eye.Position = xform.MapPosition;
         }
     }
 }

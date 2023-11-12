@@ -6,8 +6,6 @@ namespace Robust.Shared.GameObjects;
 
 public abstract class SharedEyeSystem : EntitySystem
 {
-    [Dependency] protected readonly SharedTransformSystem TransformSystem = default!;
-
     /// <summary>
     /// Refreshes all values for IEye with the component.
     /// </summary>
@@ -19,6 +17,7 @@ public abstract class SharedEyeSystem : EntitySystem
 
         component.Eye.Offset = component.Offset;
         component.Eye.DrawFov = component.DrawFov;
+        component.Eye.DrawLight = component.DrawLight;
         component.Eye.Rotation = component.Rotation;
         component.Eye.Zoom = component.Zoom;
     }
@@ -32,10 +31,7 @@ public abstract class SharedEyeSystem : EntitySystem
             return;
 
         eyeComponent.Offset = value;
-        if (eyeComponent.Eye != null)
-        {
-            eyeComponent.Eye.Offset = value;
-        }
+        eyeComponent.Eye.Offset = value;
         Dirty(uid, eyeComponent);
     }
 
@@ -48,11 +44,21 @@ public abstract class SharedEyeSystem : EntitySystem
             return;
 
         eyeComponent.DrawFov = value;
-        if (eyeComponent.Eye != null)
-        {
-            eyeComponent.Eye.DrawFov = value;
-        }
+        eyeComponent.Eye.DrawFov = value;
         Dirty(uid, eyeComponent);
+    }
+
+    public void SetDrawLight(Entity<EyeComponent?> entity, bool value)
+    {
+        if (!Resolve(entity, ref entity.Comp))
+            return;
+
+        if (entity.Comp.DrawLight == value)
+            return;
+
+        entity.Comp.DrawLight = value;
+        entity.Comp.Eye.DrawLight = value;
+        Dirty(entity);
     }
 
     public void SetRotation(EntityUid uid, Angle rotation, EyeComponent? eyeComponent = null)
@@ -64,10 +70,7 @@ public abstract class SharedEyeSystem : EntitySystem
             return;
 
         eyeComponent.Rotation = rotation;
-        if (eyeComponent.Eye != null)
-        {
-            eyeComponent.Eye.Rotation = rotation;
-        }
+        eyeComponent.Eye.Rotation = rotation;
     }
 
     public void SetTarget(EntityUid uid, EntityUid? value, EyeComponent? eyeComponent = null)
@@ -91,10 +94,7 @@ public abstract class SharedEyeSystem : EntitySystem
             return;
 
         eyeComponent.Zoom = value;
-        if (eyeComponent.Eye != null)
-        {
-            eyeComponent.Eye.Zoom = value;
-        }
+        eyeComponent.Eye.Zoom = value;
     }
 
     public void SetVisibilityMask(EntityUid uid, int value, EyeComponent? eyeComponent = null)

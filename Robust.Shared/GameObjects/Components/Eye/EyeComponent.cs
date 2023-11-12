@@ -31,6 +31,9 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite), DataField("drawFov"), AutoNetworkedField]
         public bool DrawFov = true;
 
+        [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField]
+        public bool DrawLight = true;
+
         // yes it's not networked, don't ask.
         [ViewVariables(VVAccess.ReadWrite), DataField("rotation")]
         public Angle Rotation;

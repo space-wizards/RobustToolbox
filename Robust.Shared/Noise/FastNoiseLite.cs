@@ -116,7 +116,7 @@ public sealed partial class FastNoiseLite
     private RotationType3D mRotationType3D = RotationType3D.None;
 
     [DataField("transformType3D")]
-    private TransformType3D mTransformType3D = TransformType3D.DefaultOpenSimplex2;
+    private TransformType3D mTransformType3D = TransformType3D.None;
 
     [DataField("fractalType")]
     private FractalType mFractalType = FractalType.None;
@@ -136,7 +136,6 @@ public sealed partial class FastNoiseLite
     [DataField("pingPongStrength")]
     private float mPingPongStrength = 2.0f;
 
-    [DataField("fractalBounding")]
     private float mFractalBounding = 1 / 1.75f;
 
     [DataField("cellularDistanceFunction")]

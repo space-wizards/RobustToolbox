@@ -154,18 +154,26 @@ public partial class EntitySystem
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
+    protected void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent?
     {
-        EntityManager.Dirty(ent.Owner, ent.Comp, meta);
+        var comp = ent.Comp;
+        if (comp == null && !EntityManager.TryGetComponent(ent.Owner, out comp))
+            return;
+
+        EntityManager.Dirty(ent.Owner, comp, meta);
     }
 
     /// <summary>
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty<T>(Entity<T, MetaDataComponent> ent) where T : IComponent
+    protected void Dirty<T>(Entity<T, MetaDataComponent> ent) where T : IComponent?
     {
-        EntityManager.Dirty(ent.Owner, ent.Comp1, ent.Comp2);
+        var comp = ent.Comp1;
+        if (comp == null && !EntityManager.TryGetComponent(ent.Owner, out comp))
+            return;
+
+        EntityManager.Dirty(ent.Owner, comp, ent.Comp2);
     }
 
     /// <summary>

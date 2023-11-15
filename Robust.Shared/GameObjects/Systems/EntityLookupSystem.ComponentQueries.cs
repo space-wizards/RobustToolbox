@@ -6,7 +6,11 @@ using Robust.Shared.Collections;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
@@ -14,18 +18,6 @@ namespace Robust.Shared.GameObjects;
 public sealed partial class EntityLookupSystem
 {
     #region Private
-
-    private void AddComponentsIntersecting<T>(
-        EntityUid lookupUid,
-        HashSet<T> intersecting,
-        Box2 worldAABB,
-        LookupFlags flags,
-        EntityQuery<T> query) where T : IComponent
-    {
-        var intersectingEntities = new HashSet<Entity<T>>();
-        AddEntitiesIntersecting(lookupUid, intersectingEntities, worldAABB, flags, query);
-        intersecting.UnionWith(intersectingEntities.Select(e => e.Comp));
-    }
 
     private void AddEntitiesIntersecting<T>(
         EntityUid lookupUid,
@@ -83,6 +75,118 @@ public sealed partial class EntityLookupSystem
                     return true;
 
                 tuple.intersecting.Add((value, comp));
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+    }
+
+    private void AddEntitiesIntersecting<T>(
+        EntityUid lookupUid,
+        HashSet<Entity<T>> intersecting,
+        PhysShapeCircle circle,
+        LookupFlags flags,
+        EntityQuery<T> query) where T : IComponent
+    {
+        var lookup = _broadQuery.GetComponent(lookupUid);
+        var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
+        var worldAABB = circle.CalcLocalBounds();
+        var localAABB = invMatrix.TransformBox(worldAABB);
+        var transform = new Transform(new Vector2(0, 0), 0);
+        var state = new QueryState<T>(intersecting, circle, transform, _physics, _manifoldManager, query, _fixturesQuery);
+
+        if ((flags & LookupFlags.Dynamic) != 0x0)
+        {
+            lookup.DynamicTree.QueryAabb(ref state, static (ref QueryState<T> state, in FixtureProxy value) =>
+            {
+                if (!state.Query.TryGetComponent(value.Entity, out var comp))
+                    return true;
+
+                var intersectingTransform = state.Physics.GetPhysicsTransform(value.Entity);
+                if (!state.Manifolds.TestOverlap(state.Circle, 0, value.Fixture.Shape, value.ChildIndex, state.Transform, intersectingTransform))
+                {
+                    return true;
+                }
+
+                state.Intersecting.Add((value.Entity, comp));
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & (LookupFlags.Static)) != 0x0)
+        {
+            lookup.StaticTree.QueryAabb(ref state, static (ref QueryState<T> state, in FixtureProxy value) =>
+            {
+                if (!state.Query.TryGetComponent(value.Entity, out var comp))
+                    return true;
+
+                var intersectingTransform = state.Physics.GetPhysicsTransform(value.Entity);
+                if (!state.Manifolds.TestOverlap(state.Circle, 0, value.Fixture.Shape, value.ChildIndex, state.Transform, intersectingTransform))
+                {
+                    return true;
+                }
+
+                state.Intersecting.Add((value.Entity, comp));
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        {
+            lookup.StaticSundriesTree.QueryAabb(ref state, static (ref QueryState<T> state, in EntityUid value) =>
+            {
+                if (!state.Query.TryGetComponent(value, out var comp) ||
+                    !state.FixturesQuery.TryGetComponent(value, out var fixtures))
+                {
+                    return true;
+                }
+
+                var intersectingTransform = state.Physics.GetPhysicsTransform(value);
+                foreach (var fixture in fixtures.Fixtures.Values)
+                {
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        if (state.Manifolds.TestOverlap(state.Circle, 0, fixture.Shape, i, state.Transform, intersectingTransform))
+                        {
+                            goto found;
+                        }
+                    }
+                }
+
+                return true;
+
+                found:
+                state.Intersecting.Add((value, comp));
+                return true;
+            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+        }
+
+        if ((flags & LookupFlags.Sundries) != 0x0)
+        {
+            lookup.SundriesTree.QueryAabb(ref state, static (ref QueryState<T> state,
+                in EntityUid value) =>
+            {
+                if (!state.Query.TryGetComponent(value, out var comp) ||
+                    !state.FixturesQuery.TryGetComponent(value, out var fixtures))
+                {
+                    return true;
+                }
+
+                var intersectingTransform = state.Physics.GetPhysicsTransform(value);
+                foreach (var fixture in fixtures.Fixtures.Values)
+                {
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        if (!state.Manifolds.TestOverlap(state.Circle, 0, fixture.Shape, i, state.Transform, intersectingTransform))
+                        {
+                            goto found;
+                        }
+                    }
+                }
+
+                return true;
+
+                found:
+                state.Intersecting.Add((value, comp));
                 return true;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
@@ -308,15 +412,6 @@ public sealed partial class EntityLookupSystem
         return false;
     }
 
-    [Obsolete]
-    public HashSet<IComponent> GetComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
-    {
-        var intersectingEntities = new HashSet<Entity<IComponent>>();
-        GetEntitiesIntersecting(type, mapId, worldAABB, intersectingEntities, flags);
-        var intersecting = new HashSet<IComponent>(intersectingEntities.Select(e => e.Comp));
-        return intersecting;
-    }
-
     public void GetEntitiesIntersecting(Type type, MapId mapId, Box2 worldAABB, HashSet<Entity<IComponent>> intersecting, LookupFlags flags = DefaultFlags)
     {
         DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
@@ -366,14 +461,6 @@ public sealed partial class EntityLookupSystem
         }
     }
 
-    [Obsolete]
-    public HashSet<T> GetComponentsIntersecting<T>(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags) where T : IComponent
-    {
-        var intersectingEntities = new HashSet<Entity<T>>();
-        GetEntitiesIntersecting(mapId, worldAABB, intersectingEntities, flags);
-        return new HashSet<T>(intersectingEntities.Select(e => e.Comp));
-    }
-
     public void GetEntitiesIntersecting<T>(MapId mapId, Box2 worldAABB, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return;
@@ -416,13 +503,140 @@ public sealed partial class EntityLookupSystem
 
     #endregion
 
-    #region EntityCoordinates
+    #region Circle
 
-    public HashSet<T> GetComponentsInRange<T>(EntityCoordinates coordinates, float range) where T : IComponent
+    public void GetEntitiesIntersecting(Type type, MapId mapId, PhysShapeCircle circle, HashSet<Entity<IComponent>> intersecting, LookupFlags flags = DefaultFlags)
     {
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
-        return GetComponentsInRange<T>(mapPos, range);
+        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
+        if (mapId == MapId.Nullspace)
+            return;
+
+        var worldAABB = circle.CalcLocalBounds();
+        if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
+        {
+            var circleTransform = new Transform(new Vector2(0, 0), 0);
+
+            foreach (var (uid, comp) in EntityManager.GetAllComponents(type, true))
+            {
+                var xform = _xformQuery.GetComponent(uid);
+
+                if (xform.MapID != mapId ||
+                    !worldAABB.Contains(_transform.GetWorldPosition(xform)) ||
+                    ((flags & LookupFlags.Contained) == 0x0 &&
+                     _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform)))
+                {
+                    continue;
+                }
+
+                if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
+                {
+                    var transform = _physics.GetPhysicsTransform(uid, xform, _xformQuery);
+
+                    foreach (var fixture in fixtures.Fixtures.Values)
+                    {
+                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                        {
+                            if (_manifoldManager.TestOverlap(circle, 0, fixture.Shape, i, circleTransform, transform))
+                            {
+                                goto found;
+                            }
+                        }
+                    }
+
+                    continue;
+                }
+
+                found:
+
+                intersecting.Add((uid, comp));
+            }
+        }
+        else
+        {
+            var query = EntityManager.GetEntityQuery(type);
+
+            // Get grid entities
+            var state = new GridQueryState<IComponent>(intersecting, circle, this, flags, query);
+
+            _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+                static (EntityUid uid, MapGridComponent grid, ref GridQueryState<IComponent> state) =>
+                {
+                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Circle, state.Flags, state.Query);
+                    return true;
+                }, (flags & LookupFlags.Approximate) != 0x0);
+
+            // Get map entities
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            AddEntitiesIntersecting(mapUid, intersecting, circle, flags, query);
+            AddContained(intersecting, flags, query);
+        }
     }
+
+    public void GetEntitiesIntersecting<T>(MapId mapId, PhysShapeCircle circle, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
+    {
+        if (mapId == MapId.Nullspace) return;
+
+        var worldAABB = circle.CalcLocalBounds();
+        if (!UseBoundsQuery<T>(worldAABB.Height * worldAABB.Width))
+        {
+            var circleTransform = new Transform(new Vector2(0, 0), 0);
+            var query = AllEntityQuery<T, TransformComponent>();
+
+            while (query.MoveNext(out var uid, out var comp, out var xform))
+            {
+                if (xform.MapID != mapId || !worldAABB.Contains(_transform.GetWorldPosition(xform))) continue;
+
+                if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
+                {
+                    var transform = _physics.GetPhysicsTransform(uid, xform, _xformQuery);
+
+                    foreach (var fixture in fixtures.Fixtures.Values)
+                    {
+                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                        {
+                            if (_manifoldManager.TestOverlap(circle, 0, fixture.Shape, i, circleTransform, transform))
+                            {
+                                goto found;
+                            }
+                        }
+                    }
+
+                    continue;
+                }
+
+                found:
+                entities.Add((uid, comp));
+            }
+        }
+        else
+        {
+            var query = GetEntityQuery<T>();
+
+            // Get grid entities
+            var state = (this, circle, flags, query, entities);
+
+            _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+                static (EntityUid uid, MapGridComponent grid,
+                    ref (EntityLookupSystem system,
+                        PhysShapeCircle circle,
+                        LookupFlags flags,
+                        EntityQuery<T> query,
+                        HashSet<Entity<T>> intersecting) tuple) =>
+                {
+                    tuple.system.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.circle, tuple.flags, tuple.query);
+                    return true;
+                }, (flags & LookupFlags.Approximate) != 0x0);
+
+            // Get map entities
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            AddEntitiesIntersecting(mapUid, entities, circle, flags, query);
+            AddContained(entities, flags, query);
+        }
+    }
+
+    #endregion
+
+    #region EntityCoordinates
 
     public void GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, HashSet<Entity<T>> entities) where T : IComponent
     {
@@ -441,13 +655,6 @@ public sealed partial class EntityLookupSystem
 
     #region MapCoordinates
 
-    [Obsolete]
-    public HashSet<IComponent> GetComponentsInRange(Type type, MapCoordinates coordinates, float range)
-    {
-        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
-        return GetComponentsInRange(type, coordinates.MapId, coordinates.Position, range);
-    }
-
     public HashSet<Entity<IComponent>> GetEntitiesInRange(Type type, MapCoordinates coordinates, float range)
     {
         var entities = new HashSet<Entity<IComponent>>();
@@ -461,20 +668,21 @@ public sealed partial class EntityLookupSystem
         GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities);
     }
 
+    [Obsolete]
     public HashSet<T> GetComponentsInRange<T>(MapCoordinates coordinates, float range) where T : IComponent
     {
         return GetComponentsInRange<T>(coordinates.MapId, coordinates.Position, range);
     }
 
-    public void GetEntitiesInRange<T>(MapCoordinates coordinates, float range, HashSet<Entity<T>> entities) where T : IComponent
+    public void GetEntitiesInRange<T>(MapCoordinates coordinates, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
-        GetEntitiesInRange(coordinates.MapId, coordinates.Position, range, entities);
+        GetEntitiesInRange(coordinates.MapId, coordinates.Position, range, entities, flags);
     }
 
-    public HashSet<Entity<T>> GetEntitiesInRange<T>(MapCoordinates coordinates, float range) where T : IComponent
+    public HashSet<Entity<T>> GetEntitiesInRange<T>(MapCoordinates coordinates, float range, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         var entities = new HashSet<Entity<T>>();
-        GetEntitiesInRange(coordinates.MapId, coordinates.Position, range, entities);
+        GetEntitiesInRange(coordinates.MapId, coordinates.Position, range, entities, flags);
         return entities;
     }
 
@@ -482,40 +690,15 @@ public sealed partial class EntityLookupSystem
 
     #region MapId
 
-    public bool AnyComponentsInRange(Type type, MapId mapId, Vector2 worldPos, float range)
-    {
-        DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
-        DebugTools.Assert(range > 0, "Range must be a positive float");
-
-        if (mapId == MapId.Nullspace) return false;
-
-        // TODO: Actual circles
-        var rangeVec = new Vector2(range, range);
-
-        var worldAABB = new Box2(worldPos - rangeVec, worldPos + rangeVec);
-        return AnyComponentsIntersecting(type, mapId, worldAABB);
-    }
-
-    [Obsolete]
-    public HashSet<IComponent> GetComponentsInRange(Type type, MapId mapId, Vector2 worldPos, float range)
-    {
-        var entities = new HashSet<Entity<IComponent>>();
-        GetEntitiesInRange(type, mapId, worldPos, range, entities);
-        return new HashSet<IComponent>(entities.Select(e => e.Comp));
-    }
-
-    public void GetEntitiesInRange(Type type, MapId mapId, Vector2 worldPos, float range, HashSet<Entity<IComponent>> entities)
+    public void GetEntitiesInRange(Type type, MapId mapId, Vector2 worldPos, float range, HashSet<Entity<IComponent>> entities, LookupFlags flags = DefaultFlags)
     {
         DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         DebugTools.Assert(range > 0, "Range must be a positive float");
 
         if (mapId == MapId.Nullspace) return;
 
-        // TODO: Actual circles
-        var rangeVec = new Vector2(range, range);
-
-        var worldAABB = new Box2(worldPos - rangeVec, worldPos + rangeVec);
-        GetEntitiesIntersecting(type, mapId, worldAABB, entities);
+        var circle = new PhysShapeCircle(range, worldPos);
+        GetEntitiesIntersecting(type, mapId, circle, entities, flags);
     }
 
     [Obsolete]
@@ -526,18 +709,37 @@ public sealed partial class EntityLookupSystem
         return new HashSet<T>(entities.Select(e => e.Comp));
     }
 
-    public void GetEntitiesInRange<T>(MapId mapId, Vector2 worldPos, float range, HashSet<Entity<T>> entities) where T : IComponent
+    public void GetEntitiesInRange<T>(MapId mapId, Vector2 worldPos, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
-        DebugTools.Assert(range > 0, "Range must be a positive float");
+        GetEntitiesInRange(mapId, new PhysShapeCircle(range, worldPos), entities, flags);
+    }
+
+    public void GetEntitiesInRange<T>(MapId mapId, PhysShapeCircle circle, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
+    {
+        DebugTools.Assert(circle.Radius > 0, "Range must be a positive float");
 
         if (mapId == MapId.Nullspace) return;
 
-        // TODO: Actual circles
-        var rangeVec = new Vector2(range, range);
-
-        var worldAABB = new Box2(worldPos - rangeVec, worldPos + rangeVec);
-        GetEntitiesIntersecting(mapId, worldAABB, entities);
+        GetEntitiesIntersecting(mapId, circle, entities, flags);
     }
 
     #endregion
+
+    private readonly record struct GridQueryState<T>(
+        HashSet<Entity<T>> Intersecting,
+        PhysShapeCircle Circle,
+        EntityLookupSystem Lookup,
+        LookupFlags Flags,
+        EntityQuery<T> Query
+    ) where T : IComponent;
+
+    private readonly record struct QueryState<T>(
+        HashSet<Entity<T>> Intersecting,
+        PhysShapeCircle Circle,
+        Transform Transform,
+        SharedPhysicsSystem Physics,
+        IManifoldManager Manifolds,
+        EntityQuery<T> Query,
+        EntityQuery<FixturesComponent> FixturesQuery
+    ) where T : IComponent;
 }

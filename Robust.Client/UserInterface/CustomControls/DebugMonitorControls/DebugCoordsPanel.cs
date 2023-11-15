@@ -90,19 +90,19 @@ Screen Size: {screenSize} (scale: {screenScale})
 Mouse Pos:
     Screen: {mouseScreenPos}
     {mouseWorldMap}
-    {mouseGridPos}
+    {_entityManager.GetNetCoordinates(mouseGridPos)}
     {tile}
     GUI: {controlHovered}");
 
-            _textBuilder.AppendLine("\nAttached Entity:");
-            var controlledEntity = _playerManager?.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
-            if (controlledEntity == EntityUid.Invalid)
+            _textBuilder.AppendLine("\nAttached NetEntity:");
+            var controlledEntity = _entityManager.GetNetEntity(_playerManager?.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid);
+            if (controlledEntity == NetEntity.Invalid)
             {
-                _textBuilder.AppendLine("No attached entity.");
+                _textBuilder.AppendLine("No attached netentity.");
             }
             else
             {
-                var entityTransform = _entityManager.GetComponent<TransformComponent>(controlledEntity);
+                var entityTransform = _entityManager.GetComponent<TransformComponent>(_entityManager.GetEntity(controlledEntity));
                 var playerWorldOffset = entityTransform.MapPosition;
                 var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
@@ -115,10 +115,10 @@ Mouse Pos:
 
                 _textBuilder.Append($@"    Screen: {playerScreen}
     {playerWorldOffset}
-    {playerCoordinates}
+    {_entityManager.GetNetCoordinates(playerCoordinates)}
     Rotation: {playerRotation.Degrees:F2}°
-    EntId: {controlledEntity}
-    GridUid: {entityTransform.GridUid}
+    NEntId: {controlledEntity}
+    Grid NEntId: {_entityManager.GetNetEntity(entityTransform.GridUid)}
     Grid Rotation: {gridRotation.Degrees:F2}°");
             }
 

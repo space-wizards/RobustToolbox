@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
@@ -488,24 +489,28 @@ namespace Robust.Shared.Physics.Systems
                 if (bodyA.Hard && !fixtureA.Hard)
                     continue;
 
-                DebugTools.Assert(fixtureA.ProxyCount <= 1);
-
-                foreach (var fixtureB in managerB.Fixtures.Values)
+                for (var i = 0; i < fixtureA.Shape.ChildCount; i++)
                 {
-                    if (bodyB.Hard && !fixtureB.Hard)
-                        continue;
+                    input.ProxyA.Set(fixtureA.Shape, i);
 
-                    DebugTools.Assert(fixtureB.ProxyCount <= 1);
-                    input.ProxyA.Set(fixtureA.Shape, 0);
-                    input.ProxyB.Set(fixtureB.Shape, 0);
-                    DistanceManager.ComputeDistance(out var output, out _, input);
+                    foreach (var fixtureB in managerB.Fixtures.Values)
+                    {
+                        if (bodyB.Hard && !fixtureB.Hard)
+                            continue;
 
-                    if (distance < output.Distance)
-                        continue;
+                        for (var j = 0; j < fixtureB.Shape.ChildCount; j++)
+                        {
+                            input.ProxyB.Set(fixtureB.Shape, j);
+                            DistanceManager.ComputeDistance(out var output, out _, input);
 
-                    pointA = output.PointA;
-                    pointB = output.PointB;
-                    distance = output.Distance;
+                            if (distance < output.Distance)
+                                continue;
+
+                            pointA = output.PointA;
+                            pointB = output.PointB;
+                            distance = output.Distance;
+                        }
+                    }
                 }
             }
 
@@ -533,9 +538,8 @@ namespace Robust.Shared.Physics.Systems
                 return false;
             }
 
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var xfA = GetPhysicsTransform(uidA, xformA, xformQuery);
-            var xfB = GetPhysicsTransform(uidB, xformB, xformQuery);
+            var xfA = GetPhysicsTransform(uidA, xformA);
+            var xfB = GetPhysicsTransform(uidB, xformB);
 
             return TryGetNearest(uidA, uidB, out pointA, out pointB, out distance, xfA, xfB, managerA, managerB, bodyA, bodyB);
         }

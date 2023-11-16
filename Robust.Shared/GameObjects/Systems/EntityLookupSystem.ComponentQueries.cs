@@ -92,7 +92,18 @@ public sealed partial class EntityLookupSystem
         var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
         var localAABB = invMatrix.TransformBox(worldAABB);
         var transform = new Transform(0);
-        var state = new QueryState<T>(intersecting, shape, transform, _physics, _manifoldManager, query, _fixturesQuery);
+        var state = new QueryState<T>(
+            intersecting,
+            shape,
+            transform,
+            _fixtures,
+            _physics,
+            _transform,
+            _manifoldManager,
+            query,
+            _fixturesQuery,
+            (flags & LookupFlags.Sensors) != 0
+        );
 
         if ((flags & LookupFlags.Dynamic) != 0x0)
         {
@@ -134,15 +145,24 @@ public sealed partial class EntityLookupSystem
         {
             lookup.StaticSundriesTree.QueryAabb(ref state, static (ref QueryState<T> state, in EntityUid value) =>
             {
-                if (!state.Query.TryGetComponent(value, out var comp) ||
-                    !state.FixturesQuery.TryGetComponent(value, out var fixtures))
+                if (!state.Query.TryGetComponent(value, out var comp))
+                    return true;
+
+                if (!state.FixturesQuery.TryGetComponent(value, out var fixtures))
                 {
+                    var position = state.TransformSystem.GetWorldPosition(value);
+                    if (state.Fixtures.TestPoint(state.Shape, state.Transform, position))
+                        goto found;
+
                     return true;
                 }
 
                 var intersectingTransform = state.Physics.GetPhysicsTransform(value);
                 foreach (var fixture in fixtures.Fixtures.Values)
                 {
+                    if (!state.Sensors && !fixture.Hard)
+                        continue;
+
                     for (var i = 0; i < fixture.Shape.ChildCount; i++)
                     {
                         if (state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform, intersectingTransform))
@@ -165,15 +185,24 @@ public sealed partial class EntityLookupSystem
             lookup.SundriesTree.QueryAabb(ref state, static (ref QueryState<T> state,
                 in EntityUid value) =>
             {
-                if (!state.Query.TryGetComponent(value, out var comp) ||
-                    !state.FixturesQuery.TryGetComponent(value, out var fixtures))
+                if (!state.Query.TryGetComponent(value, out var comp))
+                    return true;
+
+                if (!state.FixturesQuery.TryGetComponent(value, out var fixtures))
                 {
+                    var position = state.TransformSystem.GetWorldPosition(value);
+                    if (state.Fixtures.TestPoint(state.Shape, state.Transform, position))
+                        goto found;
+
                     return true;
                 }
 
                 var intersectingTransform = state.Physics.GetPhysicsTransform(value);
                 foreach (var fixture in fixtures.Fixtures.Values)
                 {
+                    if (!state.Sensors && !fixture.Hard)
+                        continue;
+
                     for (var i = 0; i < fixture.Shape.ChildCount; i++)
                     {
                         if (!state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform, intersectingTransform))
@@ -739,9 +768,12 @@ public sealed partial class EntityLookupSystem
         HashSet<Entity<T>> Intersecting,
         IPhysShape Shape,
         Transform Transform,
+        FixtureSystem Fixtures,
         SharedPhysicsSystem Physics,
+        SharedTransformSystem TransformSystem,
         IManifoldManager Manifolds,
         EntityQuery<T> Query,
-        EntityQuery<FixturesComponent> FixturesQuery
+        EntityQuery<FixturesComponent> FixturesQuery,
+        bool Sensors
     ) where T : IComponent;
 }

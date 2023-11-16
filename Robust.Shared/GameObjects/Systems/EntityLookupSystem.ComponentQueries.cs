@@ -541,6 +541,7 @@ public sealed partial class EntityLookupSystem
             return;
 
         var worldAABB = shape.ComputeAABB(new Transform(0), 0);
+        var sensors = (flags & LookupFlags.Sensors) != 0;
         if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
         {
             var shapeTransform = new Transform(0);
@@ -563,6 +564,9 @@ public sealed partial class EntityLookupSystem
 
                     foreach (var fixture in fixtures.Fixtures.Values)
                     {
+                        if (!sensors && !fixture.Hard)
+                            continue;
+
                         for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
                             if (_manifoldManager.TestOverlap(shape, 0, fixture.Shape, i, shapeTransform, transform))
@@ -606,6 +610,7 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace) return;
 
         var worldAABB = shape.ComputeAABB(new Transform(0), 0);
+        var sensors = (flags & LookupFlags.Sensors) != 0;
         if (!UseBoundsQuery<T>(worldAABB.Height * worldAABB.Width))
         {
             var shapeTransform = new Transform(0);
@@ -621,6 +626,9 @@ public sealed partial class EntityLookupSystem
 
                     foreach (var fixture in fixtures.Fixtures.Values)
                     {
+                        if (!sensors && !fixture.Hard)
+                            continue;
+
                         for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
                             if (_manifoldManager.TestOverlap(shape, 0, fixture.Shape, i, shapeTransform, transform))

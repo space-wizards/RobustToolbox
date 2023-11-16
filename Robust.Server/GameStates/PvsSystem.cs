@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -111,6 +112,7 @@ internal sealed partial class PvsSystem : EntitySystem
         RobustTree<NetEntity> tree)?> _previousTrees = new();
 
     private readonly HashSet<(int visMask, IChunkIndexLocation location)> _reusedTrees = new();
+    private readonly List<(int, IChunkIndexLocation)> _previousIndices = new();
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
@@ -271,6 +273,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             sessionData.LastSeenAt.Remove(metadata.NetEntity);
             sessionData.LastLeftView.Remove(metadata.NetEntity);
+
             if (sessionData.SentEntities.TryGetValue(previousTick, out var ents))
                 ents.Remove(metadata.NetEntity);
         }
@@ -433,10 +436,15 @@ internal sealed partial class PvsSystem : EntitySystem
 
     #endregion
 
-    public (List<(int, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(ICommonSession[] sessions)
+    public List<(int, IChunkIndexLocation)> GetChunks(
+        ICommonSession[] sessions,
+        ref HashSet<int>[] playerChunks,
+        ref EntityUid[][] viewerEntities)
     {
-        var playerChunks = new HashSet<int>[sessions.Length];
-        var viewerEntities = new EntityUid[sessions.Length][];
+        // Pass these in to avoid allocating new ones every tick, 99% of the time sessions length is going to be the same size.
+        // These values will get overridden here and the old values have already been returned to the pool by this point.
+        Array.Resize(ref playerChunks, sessions.Length);
+        Array.Resize(ref viewerEntities, sessions.Length);
 
         _chunkList.Clear();
         // Keep track of the index of each chunk we use for a faster index lookup.
@@ -552,7 +560,7 @@ internal sealed partial class PvsSystem : EntitySystem
             }
         }
 
-        return (_chunkList, playerChunks, viewerEntities);
+        return _chunkList;
     }
 
     public void RegisterNewPreviousChunkTrees(
@@ -569,17 +577,28 @@ internal sealed partial class PvsSystem : EntitySystem
             _reusedTrees.Add(chunks[i]);
         }
 
-        var previousIndices = _previousTrees.Keys.ToArray();
-        for (var i = 0; i < previousIndices.Length; i++)
+        _previousIndices.Clear();
+        _previousIndices.EnsureCapacity(_previousTrees.Count);
+
+        foreach (var index in _previousTrees.Keys)
         {
-            var index = previousIndices[i];
+            _previousIndices.Add(index);
+        }
+
+        for (var i = 0; i < _previousIndices.Count; i++)
+        {
+            var index = _previousIndices[i];
             // ReSharper disable once InconsistentlySynchronizedField
-            if (_reusedTrees.Contains(index)) continue;
-            var chunk = _previousTrees[index];
-            if (chunk.HasValue)
+            if (_reusedTrees.Contains(index))
+                continue;
+
             {
-                _chunkCachePool.Return(chunk.Value.metadata);
-                _treePool.Return(chunk.Value.tree);
+                ref var chunk = ref CollectionsMarshal.GetValueRefOrNullRef(_previousTrees, index);
+                if (chunk != null)
+                {
+                    _chunkCachePool.Return(chunk.Value.metadata);
+                    _treePool.Return(chunk.Value.tree);
+                }
             }
 
             if (!chunks.Contains(index))
@@ -1327,12 +1346,14 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
             return new[] { session.AttachedEntity.Value };
         }
 
-        var viewers = new HashSet<EntityUid>();
+        var viewers = _uidSetPool.Get();
         if (session.AttachedEntity != null)
             viewers.Add(session.AttachedEntity.Value);
 
         viewers.UnionWith(session.ViewSubscriptions);
-        return viewers.ToArray();
+        var viewersArray = viewers.ToArray();
+        _uidSetPool.Return(viewers);
+        return viewersArray;
     }
 
     // Read Safe

@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
@@ -488,17 +489,18 @@ namespace Robust.Shared.Physics.Systems
                 if (bodyA.Hard && !fixtureA.Hard)
                     continue;
 
-                foreach (var fixtureB in managerB.Fixtures.Values)
+                for (var i = 0; i < fixtureA.Shape.ChildCount; i++)
                 {
-                    if (bodyB.Hard && !fixtureB.Hard)
-                        continue;
+                    input.ProxyA.Set(fixtureA.Shape, i);
 
-                    foreach (var proxyA in fixtureA.Proxies)
+                    foreach (var fixtureB in managerB.Fixtures.Values)
                     {
-                        foreach (var proxyB in fixtureB.Proxies)
+                        if (bodyB.Hard && !fixtureB.Hard)
+                            continue;
+
+                        for (var j = 0; j < fixtureB.Shape.ChildCount; j++)
                         {
-                            input.ProxyA.Set(fixtureA.Shape, proxyA.ChildIndex);
-                            input.ProxyB.Set(fixtureB.Shape, proxyB.ChildIndex);
+                            input.ProxyB.Set(fixtureB.Shape, j);
                             DistanceManager.ComputeDistance(out var output, out _, input);
 
                             if (distance < output.Distance)

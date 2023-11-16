@@ -109,6 +109,9 @@ public sealed partial class EntityLookupSystem
         {
             lookup.DynamicTree.QueryAabb(ref state, static (ref QueryState<T> state, in FixtureProxy value) =>
             {
+                if (!state.Sensors && !value.Fixture.Hard)
+                    return true;
+
                 if (!state.Query.TryGetComponent(value.Entity, out var comp))
                     return true;
 
@@ -127,6 +130,9 @@ public sealed partial class EntityLookupSystem
         {
             lookup.StaticTree.QueryAabb(ref state, static (ref QueryState<T> state, in FixtureProxy value) =>
             {
+                if (!state.Sensors && !value.Fixture.Hard)
+                    return true;
+
                 if (!state.Query.TryGetComponent(value.Entity, out var comp))
                     return true;
 
@@ -540,18 +546,18 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return;
 
-        var worldAABB = shape.ComputeAABB(new Transform(0), 0);
+        var shapeTransform = new Transform(0);
+        var worldAABB = shape.ComputeAABB(shapeTransform, 0);
         var sensors = (flags & LookupFlags.Sensors) != 0;
         if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
         {
-            var shapeTransform = new Transform(0);
-
             foreach (var (uid, comp) in EntityManager.GetAllComponents(type, true))
             {
                 var xform = _xformQuery.GetComponent(uid);
+                var xFormPosition = _transform.GetWorldPosition(xform);
 
                 if (xform.MapID != mapId ||
-                    !worldAABB.Contains(_transform.GetWorldPosition(xform)) ||
+                    !worldAABB.Contains(xFormPosition) ||
                     ((flags & LookupFlags.Contained) == 0x0 &&
                      _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform)))
                 {
@@ -560,7 +566,8 @@ public sealed partial class EntityLookupSystem
 
                 if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
                 {
-                    var transform = _physics.GetPhysicsTransform(uid, xform, _xformQuery);
+                    var xFormRotation = _transform.GetWorldRotation(xform, _xformQuery);
+                    var transform = new Transform(xFormPosition, xFormRotation);
 
                     foreach (var fixture in fixtures.Fixtures.Values)
                     {
@@ -577,6 +584,11 @@ public sealed partial class EntityLookupSystem
                     }
 
                     continue;
+                }
+                else
+                {
+                    if (!_fixtures.TestPoint(shape, shapeTransform, xFormPosition))
+                        continue;
                 }
 
                 found:
@@ -609,20 +621,27 @@ public sealed partial class EntityLookupSystem
     {
         if (mapId == MapId.Nullspace) return;
 
-        var worldAABB = shape.ComputeAABB(new Transform(0), 0);
+        var shapeTransform = new Transform(0);
+        var worldAABB = shape.ComputeAABB(shapeTransform, 0);
         var sensors = (flags & LookupFlags.Sensors) != 0;
         if (!UseBoundsQuery<T>(worldAABB.Height * worldAABB.Width))
         {
-            var shapeTransform = new Transform(0);
             var query = AllEntityQuery<T, TransformComponent>();
 
             while (query.MoveNext(out var uid, out var comp, out var xform))
             {
-                if (xform.MapID != mapId || !worldAABB.Contains(_transform.GetWorldPosition(xform))) continue;
+                var xFormPosition = _transform.GetWorldPosition(xform);
+
+                if (xform.MapID != mapId ||
+                    !worldAABB.Contains(xFormPosition))
+                {
+                    continue;
+                }
 
                 if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
                 {
-                    var transform = _physics.GetPhysicsTransform(uid, xform, _xformQuery);
+                    var xFormRotation = _transform.GetWorldRotation(xform, _xformQuery);
+                    var transform = new Transform(xFormPosition, xFormRotation);
 
                     foreach (var fixture in fixtures.Fixtures.Values)
                     {
@@ -639,6 +658,11 @@ public sealed partial class EntityLookupSystem
                     }
 
                     continue;
+                }
+                else
+                {
+                    if (!_fixtures.TestPoint(shape, shapeTransform, xFormPosition))
+                        continue;
                 }
 
                 found:

@@ -1,6 +1,6 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -466,8 +466,8 @@ internal sealed partial class PvsSystem : EntitySystem
             var session = sessions[i];
             playerChunks[i] = _playerChunkPool.Get();
 
-            var viewers = GetSessionViewers(session);
-            viewerEntities[i] = viewers;
+            ref var viewers = ref viewerEntities[i];
+            GetSessionViewers(session, ref viewers);
 
             for (var j = 0; j < viewers.Length; j++)
             {
@@ -1317,28 +1317,44 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
         return entState;
     }
 
-    private EntityUid[] GetSessionViewers(ICommonSession session)
+    private void GetSessionViewers(ICommonSession session, [NotNull] ref EntityUid[]? viewers)
     {
         if (session.Status != SessionStatus.InGame)
-            return Array.Empty<EntityUid>();
+        {
+            viewers = Array.Empty<EntityUid>();
+            return;
+        }
 
         // Fast path
         if (session.ViewSubscriptions.Count == 0)
         {
             if (session.AttachedEntity == null)
-                return Array.Empty<EntityUid>();
+            {
+                viewers = Array.Empty<EntityUid>();
+                return;
+            }
 
-            return new[] { session.AttachedEntity.Value };
+            Array.Resize(ref viewers, 1);
+            viewers[0] = session.AttachedEntity.Value;
+            return;
         }
 
-        var viewers = _uidSetPool.Get();
-        if (session.AttachedEntity != null)
-            viewers.Add(session.AttachedEntity.Value);
+        int i = 0;
+        if (session.AttachedEntity is { } local)
+        {
+            DebugTools.Assert(!session.ViewSubscriptions.Contains(local));
+            Array.Resize(ref viewers, session.ViewSubscriptions.Count + 1);
+            viewers[i++] = local;
+        }
+        else
+        {
+            Array.Resize(ref viewers, session.ViewSubscriptions.Count);
+        }
 
-        viewers.UnionWith(session.ViewSubscriptions);
-        var viewersArray = viewers.ToArray();
-        _uidSetPool.Return(viewers);
-        return viewersArray;
+        foreach (var ent in session.ViewSubscriptions)
+        {
+            viewers[i++] = ent;
+        }
     }
 
     // Read Safe

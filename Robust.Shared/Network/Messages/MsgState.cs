@@ -1,10 +1,9 @@
 using System;
 using System.Buffers;
-using System.Diagnostics;
 using System.IO;
 using Lidgren.Network;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -28,6 +27,23 @@ namespace Robust.Shared.Network.Messages
 
         internal bool _hasWritten;
 
+        private static readonly ObjectPool<MemoryStream> StreamPool =
+            new DefaultObjectPool<MemoryStream>(new MemoryStreamPolicy());
+
+        private sealed class MemoryStreamPolicy : IPooledObjectPolicy<MemoryStream>
+        {
+            public MemoryStream Create()
+            {
+                return new MemoryStream();
+            }
+
+            public bool Return(MemoryStream obj)
+            {
+                obj.Position = 0;
+                return true;
+            }
+        }
+
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             MsgSize = buffer.LengthBytes;
@@ -40,10 +56,11 @@ namespace Robust.Shared.Network.Messages
             {
                 var stream = buffer.ReadAlignedMemory(compressedLength);
                 using var decompressStream = new ZStdDecompressStream(stream);
-                var decompressedStream = new MemoryStream(uncompressedLength);
-                decompressStream.CopyTo(decompressedStream, uncompressedLength);
-                decompressedStream.Position = 0;
-                finalStream = decompressedStream;
+                var decompressed = StreamPool.Get();
+                decompressed.SetLength(uncompressedLength);
+                decompressStream.CopyTo(decompressed, uncompressedLength);
+                decompressed.Position = 0;
+                finalStream = decompressed;
             }
             // State is uncompressed.
             else
@@ -53,14 +70,14 @@ namespace Robust.Shared.Network.Messages
             }
 
             serializer.DeserializeDirect(finalStream, out State);
-            finalStream.Dispose();
+            StreamPool.Return(finalStream);
 
             State.PayloadSize = uncompressedLength;
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
-            var stateStream = new MemoryStream();
+            var stateStream = StreamPool.Get();
             serializer.SerializeDirect(stateStream, State);
             buffer.WriteVariableInt32((int)stateStream.Length);
 
@@ -91,6 +108,7 @@ namespace Robust.Shared.Network.Messages
                 buffer.Write(stateStream.AsSpan());
             }
 
+            StreamPool.Return(stateStream);
             _hasWritten = true;
             MsgSize = buffer.LengthBytes;
         }

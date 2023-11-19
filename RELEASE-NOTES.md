@@ -54,6 +54,25 @@ END TEMPLATE-->
 *None yet*
 
 
+## 180.0.0
+
+### Breaking changes
+
+* Removed some obsolete methods from EntityLookupSystem.
+
+### New features
+
+* PhysicsSystem.TryGetNearest now supports chain shapes.
+* Add IPhysShape methods to EntityLookupSystem rather than relying on AABB checks.
+* Add some more helper methods to SharedTransformSystem.
+* Add GetOrNew dictionary extension that also returns a bool on whether the key existed.
+* Add a GetAnchoredEntities overload that takes in a list.
+
+### Other
+
+* Use NetEntities for the F3 debug panel to align with command usage.
+
+
 ## 179.0.0
 
 ### Breaking changes

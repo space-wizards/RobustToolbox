@@ -118,7 +118,7 @@ Deletion history size: {deletedNents.Count}
 Actual oldest: {ack}
 Oldest acked clients: {string.Join(", ", players)}
 ");
-            
+
             _nentListPool.Return(deletedNents);
         }
 
@@ -409,7 +409,7 @@ Oldest acked clients: {string.Join(", ", players)}
 #endif
             }
 
-            _networkManager.ServerSendMessage(stateUpdateMessage, channel);
+            var canDispose = _networkManager.ServerSendMessage(stateUpdateMessage, channel);
 
             if (stateUpdateMessage.ShouldSendReliably())
             {
@@ -423,23 +423,34 @@ Oldest acked clients: {string.Join(", ", players)}
             // Send PVS detach / left-view messages separately and reliably. This is not resistant to packet loss, but
             // unlike game state it doesn't really matter. This also significantly reduces the size of game state
             // messages as PVS chunks get moved out of view.
+            bool leavePvsDispose = true;
+
             if (leftPvs.Count > 0)
             {
                 var pvsMessage = new MsgStateLeavePvs {Entities = leftPvs, Tick = _gameTiming.CurTick};
-                _networkManager.ServerSendMessage(pvsMessage, channel);
+                leavePvsDispose = _networkManager.ServerSendMessage(pvsMessage, channel);
             }
 
             // Release resources
             // Assume everything has been serialized and we're free to rugpull.
-            foreach (var eState in entStates)
+            if (canDispose)
             {
-                _pvs.ReturnEntityState(eState);
-            }
+                // Should this just happen inside PvsSystem instead and store the pools there?
+                // At either rate it needs doing so.
+                foreach (var eState in entStates)
+                {
+                    _pvs.ReturnEntityState(eState);
+                }
 
-            _nentListPool.Return(leftPvs);
-            _nentListPool.Return(deletions);
-            _entStatePool.Return(entStates);
-            _playerStatePool.Return(playerStates);
+                _nentListPool.Return(deletions);
+                _entStatePool.Return(entStates);
+                _playerStatePool.Return(playerStates);
+
+                if (leavePvsDispose)
+                {
+                    _nentListPool.Return(leftPvs);
+                }
+            }
         }
 
         [EventSource(Name = "Robust.Pvs")]

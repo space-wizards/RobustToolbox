@@ -1005,12 +1005,12 @@ namespace Robust.Shared.Network
         }
 
         /// <inheritdoc />
-        public void ServerSendMessage(NetMessage message, INetChannel recipient)
+        public bool ServerSendMessage(NetMessage message, INetChannel recipient)
         {
             // TODO: Does the entity manager HAVE to shut down after network manager?
             // Though tbf theres no real point in sending messages anymore at that point.
             if (!_initialized)
-                return;
+                return true;
 
             DebugTools.Assert(IsServer);
             if (recipient is not NetChannel channel)
@@ -1024,6 +1024,7 @@ namespace Robust.Shared.Network
             var method = message.DeliveryMethod;
             peer.SendMessage(packet, channel.Connection, method);
             LogSend(message, method, packet);
+            return true;
         }
 
         private static void LogSend(NetMessage message, NetDeliveryMethod method, NetOutgoingMessage packet)

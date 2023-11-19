@@ -248,7 +248,7 @@ namespace Robust.UnitTesting
                 }
             }
 
-            public void ServerSendMessage(NetMessage message, INetChannel recipient)
+            public bool ServerSendMessage(NetMessage message, INetChannel recipient)
             {
                 DebugTools.Assert(IsServer);
 
@@ -256,45 +256,6 @@ namespace Robust.UnitTesting
                 if (message is MsgState stateMsg)
                 {
                     stateMsg._hasWritten = true;
-
-                    // Clone the message as it gets queued and the data needs to persist for a bit.
-                    var oldState = stateMsg.State;
-
-                    var entStates = new List<EntityState>(oldState.EntityStates.Value?.Count ?? 0);
-                    var sesStates = new List<SessionState>(oldState.PlayerStates.Value?.Count ?? 0);
-                    var deletions = new List<NetEntity>(oldState.EntityDeletions.Value?.Count ?? 0);
-
-                    if (oldState.EntityStates.Value != null)
-                    {
-                        foreach (var state in oldState.EntityStates.Value)
-                        {
-                            entStates.Add(state.Clone());
-                        }
-                    }
-
-                    if (oldState.PlayerStates.Value != null)
-                    {
-                        foreach (var state in oldState.PlayerStates.Value)
-                        {
-                            sesStates.Add(state.Clone());
-                        }
-                    }
-
-                    if (oldState.EntityDeletions.Value != null)
-                    {
-                        foreach (var nent in oldState.EntityDeletions.Value)
-                        {
-                            deletions.Add(nent);
-                        }
-                    }
-
-                    stateMsg.State = new GameState(
-                        oldState.FromSequence,
-                        oldState.ToSequence,
-                        oldState.LastProcessedInput,
-                        entStates.Count == 0 ? null : entStates,
-                        sesStates.Count == 0 ? null : sesStates,
-                        deletions.Count == 0 ? null : deletions);
                 }
 
                 // Clone as above because we don't write immediately in tests.
@@ -305,6 +266,7 @@ namespace Robust.UnitTesting
 
                 var channel = (IntegrationNetChannel) recipient;
                 channel.OtherChannel.TryWrite(new DataMessage(message, channel.RemoteUid));
+                return false;
             }
 
             public void ServerSendToMany(NetMessage message, List<INetChannel> recipients)

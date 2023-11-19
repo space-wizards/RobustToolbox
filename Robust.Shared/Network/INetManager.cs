@@ -86,7 +86,8 @@ namespace Robust.Shared.Network
         /// </summary>
         /// <param name="message">Message to send.</param>
         /// <param name="recipient">Channel to send the message over.</param>
-        void ServerSendMessage(NetMessage message, INetChannel recipient);
+        /// <returns>True if the message is sent and can be disposed.</returns>
+        bool ServerSendMessage(NetMessage message, INetChannel recipient);
 
         /// <summary>
         ///     Sends a message to a collection of channels.

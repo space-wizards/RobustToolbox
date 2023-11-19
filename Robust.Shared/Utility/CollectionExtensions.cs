@@ -222,6 +222,17 @@ namespace Robust.Shared.Utility
             return entry!;
         }
 
+        public static TValue GetOrNew<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, out bool exists)
+            where TValue : new()
+            where TKey : notnull
+        {
+            ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out exists);
+            if (!exists)
+                entry = new TValue();
+
+            return entry!;
+        }
+
         // More efficient than LINQ.
         public static KeyValuePair<TKey, TValue>[] ToArray<TKey, TValue>(this Dictionary<TKey, TValue> dict)
             where TKey : notnull

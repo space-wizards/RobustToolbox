@@ -33,6 +33,23 @@ namespace Robust.Shared.GameObjects
             EntityLastModified = lastModified;
             NetComponents = netComps;
         }
+
+        public EntityState Clone()
+        {
+            HashSet<ushort>? netComps = null;
+
+            if (NetComponents?.Count == 0)
+            {
+                netComps = new HashSet<ushort>();
+                netComps.UnionWith(NetComponents);
+            }
+
+            return new EntityState(
+                NetEntity,
+                new List<ComponentChange>(ComponentChanges.Value),
+                EntityLastModified,
+                netComps);
+        }
     }
 
     [Serializable, NetSerializable]

@@ -5,7 +5,10 @@ using System.Linq;
 using System.Net;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using NetSerializer;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -251,7 +254,48 @@ namespace Robust.UnitTesting
 
                 // MsgState sending method depends on the size of the possible compressed buffer. But tests bypass buffer read/write.
                 if (message is MsgState stateMsg)
+                {
                     stateMsg._hasWritten = true;
+
+                    // Clone the message as it gets queued and the data needs to persist for a bit.
+                    var oldState = stateMsg.State;
+
+                    var entStates = new List<EntityState>(oldState.EntityStates.Value?.Count ?? 0);
+                    var sesStates = new List<SessionState>(oldState.PlayerStates.Value?.Count ?? 0);
+                    var deletions = new List<NetEntity>(oldState.EntityDeletions.Value?.Count ?? 0);
+
+                    if (oldState.EntityStates.Value != null)
+                    {
+                        foreach (var state in oldState.EntityStates.Value)
+                        {
+                            entStates.Add(state.Clone());
+                        }
+                    }
+
+                    if (oldState.PlayerStates.Value != null)
+                    {
+                        foreach (var state in oldState.PlayerStates.Value)
+                        {
+                            sesStates.Add(state.Clone());
+                        }
+                    }
+
+                    if (oldState.EntityDeletions.Value != null)
+                    {
+                        foreach (var nent in oldState.EntityDeletions.Value)
+                        {
+                            deletions.Add(nent);
+                        }
+                    }
+
+                    stateMsg.State = new GameState(
+                        oldState.FromSequence,
+                        oldState.ToSequence,
+                        oldState.LastProcessedInput,
+                        entStates.Count == 0 ? null : entStates,
+                        sesStates.Count == 0 ? null : sesStates,
+                        deletions.Count == 0 ? null : deletions);
+                }
 
                 var channel = (IntegrationNetChannel) recipient;
                 channel.OtherChannel.TryWrite(new DataMessage(message, channel.RemoteUid));

@@ -112,7 +112,7 @@ internal sealed partial class PvsSystem : EntitySystem
         new DefaultObjectPool<List<ComponentChange>>(new ListPolicy<ComponentChange>(), MaxVisPoolSize);
 
     private readonly ObjectPool<HashSet<ushort>> _netCompPool =
-        new DefaultObjectPool<HashSet<ushort>>(new SetPolicy<ushort>(), MaxVisPoolSize);
+        new DefaultObjectPool<HashSet<ushort>>(new SetPolicy<ushort>(), MaxVisPoolSize * 8);
 
     private readonly Dictionary<int, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<int, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);

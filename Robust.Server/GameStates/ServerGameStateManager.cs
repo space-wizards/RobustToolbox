@@ -68,7 +68,7 @@ namespace Robust.Server.GameStates
             new DefaultObjectPool<List<NetEntity>>(new ListPolicy<NetEntity>(), Environment.ProcessorCount * 4);
 
         private ObjectPool<List<EntityState>> _entStatePool =
-            new DefaultObjectPool<List<EntityState>>(new ListPolicy<EntityState>());
+            new DefaultObjectPool<List<EntityState>>(new ListPolicy<EntityState>(), Environment.ProcessorCount * 4);
 
         private ObjectPool<List<SessionState>> _playerStatePool =
             new DefaultObjectPool<List<SessionState>>(new ListPolicy<SessionState>());

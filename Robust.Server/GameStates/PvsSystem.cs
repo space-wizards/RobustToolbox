@@ -112,7 +112,6 @@ internal sealed partial class PvsSystem : EntitySystem
         RobustTree<NetEntity> tree)?> _previousTrees = new();
 
     private readonly HashSet<(int visMask, IChunkIndexLocation location)> _reusedTrees = new();
-    private readonly List<(int, IChunkIndexLocation)> _previousIndices = new();
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
@@ -577,34 +576,20 @@ internal sealed partial class PvsSystem : EntitySystem
             _reusedTrees.Add(chunks[i]);
         }
 
-        _previousIndices.Clear();
-        _previousIndices.EnsureCapacity(_previousTrees.Count);
-
-        foreach (var index in _previousTrees.Keys)
+        foreach (var (index, chunk) in _previousTrees)
         {
-            _previousIndices.Add(index);
-        }
-
-        for (var i = 0; i < _previousIndices.Count; i++)
-        {
-            var index = _previousIndices[i];
             // ReSharper disable once InconsistentlySynchronizedField
             if (_reusedTrees.Contains(index))
                 continue;
 
+            if (chunk != null)
             {
-                ref var chunk = ref CollectionsMarshal.GetValueRefOrNullRef(_previousTrees, index);
-                if (chunk != null)
-                {
-                    _chunkCachePool.Return(chunk.Value.metadata);
-                    _treePool.Return(chunk.Value.tree);
-                }
+                _chunkCachePool.Return(chunk.Value.metadata);
+                _treePool.Return(chunk.Value.tree);
             }
 
             if (!chunks.Contains(index))
-            {
                 _previousTrees.Remove(index);
-            }
         }
 
         _previousTrees.EnsureCapacity(chunks.Count);

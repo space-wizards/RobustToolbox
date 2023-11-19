@@ -84,6 +84,9 @@ internal sealed partial class PvsSystem : EntitySystem
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
 
+    private readonly ObjectPool<HashSet<NetEntity>> _nentPool =
+        new DefaultObjectPool<HashSet<NetEntity>>(new SetPolicy<NetEntity>(), MaxVisPoolSize * 8);
+
     private readonly ObjectPool<Stack<NetEntity>> _stackPool
         = new DefaultObjectPool<Stack<NetEntity>>(
             new StackPolicy<NetEntity>(), MaxVisPoolSize);
@@ -95,8 +98,7 @@ internal sealed partial class PvsSystem : EntitySystem
     private readonly ObjectPool<HashSet<int>> _playerChunkPool =
         new DefaultObjectPool<HashSet<int>>(new SetPolicy<int>(), MaxVisPoolSize);
 
-    private readonly ObjectPool<RobustTree<NetEntity>> _treePool =
-        new DefaultObjectPool<RobustTree<NetEntity>>(new TreePolicy<NetEntity>(), MaxVisPoolSize);
+    private ObjectPool<RobustTree<NetEntity>> _treePool = default!;
 
     private readonly ObjectPool<Dictionary<MapChunkLocation, int>> _mapChunkPool =
         new DefaultObjectPool<Dictionary<MapChunkLocation, int>>(
@@ -129,6 +131,8 @@ internal sealed partial class PvsSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
+
+        _treePool = new DefaultObjectPool<RobustTree<NetEntity>>(new TreePolicy<NetEntity>(_nentPool), MaxVisPoolSize);
 
         _eyeQuery = GetEntityQuery<EyeComponent>();
         _metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -1371,10 +1375,16 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
     public sealed class TreePolicy<T> : PooledObjectPolicy<RobustTree<T>> where T : notnull
     {
+        private readonly ObjectPool<HashSet<T>> _pool;
+
+        public TreePolicy(ObjectPool<HashSet<T>> pool)
+        {
+            _pool = pool;
+        }
+
         public override RobustTree<T> Create()
         {
-            var pool = new DefaultObjectPool<HashSet<T>>(new SetPolicy<T>(), MaxVisPoolSize);
-            return new RobustTree<T>(pool);
+            return new RobustTree<T>(_pool);
         }
 
         public override bool Return(RobustTree<T> obj)

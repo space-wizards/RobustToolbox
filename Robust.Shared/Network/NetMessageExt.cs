@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network
 {
@@ -96,16 +97,17 @@ namespace Robust.Shared.Network
         /// <exception cref="ArgumentException">
         ///     Thrown if the current read position of the message is not byte-aligned.
         /// </exception>
-        public static MemoryStream ReadAlignedMemory(this NetIncomingMessage message, int length)
+        public static void ReadAlignedMemory(this NetIncomingMessage message, MemoryStream memStream, int length)
         {
             if ((message.Position & 7) != 0)
             {
                 throw new ArgumentException("Read position in message must be byte-aligned", nameof(message));
             }
 
-            var stream = new MemoryStream(message.Data, message.PositionInBytes, length, false);
+            DebugTools.Assert(memStream.Position == 0);
+            memStream.Write(message.Data, message.PositionInBytes, length);
+            memStream.Position = 0;
             message.Position += length * 8;
-            return stream;
         }
 
         public static TimeSpan ReadTimeSpan(this NetIncomingMessage message)

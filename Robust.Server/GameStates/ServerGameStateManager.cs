@@ -109,7 +109,7 @@ namespace Robust.Server.GameStates
                 .Select(x => x.Key)
                 .Select(x => $"{x.Name} ({_entityManager.ToPrettyString(x.AttachedEntity)})");
 
-            var deletedNents = new List<NetEntity>();
+            var deletedNents = _nentListPool.Get();
             _pvs.GetDeletedEntities(GameTick.First, deletedNents);
 
             shell.WriteLine($@"Current tick: {_gameTiming.CurTick}
@@ -118,6 +118,8 @@ Deletion history size: {deletedNents.Count}
 Actual oldest: {ack}
 Oldest acked clients: {string.Join(", ", players)}
 ");
+            
+            _nentListPool.Return(deletedNents);
         }
 
         private void ResetParallelism()

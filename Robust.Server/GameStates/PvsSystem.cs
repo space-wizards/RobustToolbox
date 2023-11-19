@@ -839,7 +839,8 @@ internal sealed partial class PvsSystem : EntitySystem
             {
                 (uid, meta) = GetEntityData(netEntity);
                 changed = _compChangePool.Get();
-                entityStates.Add(GetFullEntityState(session, uid, meta, changed));
+                var netComps = _netCompPool.Get();
+                entityStates.Add(GetFullEntityState(session, uid, meta, netComps, changed));
                 continue;
             }
 
@@ -1294,10 +1295,14 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
     /// <summary>
     ///     Variant of <see cref="GetEntityState"/> that includes all entity data, including data that can be inferred implicitly from the entity prototype.
     /// </summary>
-    private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta, List<ComponentChange> changed)
+    private EntityState GetFullEntityState(
+        ICommonSession player,
+        EntityUid entityUid,
+        MetaDataComponent meta,
+        HashSet<ushort> netComps,
+        List<ComponentChange> changed)
     {
         var bus = EntityManager.EventBus;
-        var netComps = _netCompPool.Get();
 
         foreach (var (netId, component) in meta.NetComponents)
         {

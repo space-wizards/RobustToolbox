@@ -246,6 +246,39 @@ namespace Robust.Shared.GameObjects
             // We're on a grid, need to convert the coordinates to grid tiles.
             return _map.CoordinatesToTile(xform.GridUid.Value, Comp<MapGridComponent>(xform.GridUid.Value), xform.Coordinates);
         }
+
+        /// <summary>
+        /// Helper method that returns the grid tile an entity is on.
+        /// </summary>
+        public Vector2i GetGridTilePositionOrDefault(Entity<TransformComponent?> entity, MapGridComponent? grid = null)
+        {
+            var xform = entity.Comp;
+            if(!Resolve(entity.Owner, ref xform) || xform.GridUid == null)
+                return Vector2i.Zero;
+
+            if (!Resolve(xform.GridUid.Value, ref grid))
+                return Vector2i.Zero;
+
+            return _map.CoordinatesToTile(xform.GridUid.Value, grid, xform.Coordinates);
+        }
+
+        /// <summary>
+        /// Helper method that returns the grid tile an entity is on.
+        /// </summary>
+        public bool TryGetGridTilePosition(Entity<TransformComponent?> entity, out Vector2i indices, MapGridComponent? grid = null)
+        {
+            indices = default;
+            var xform = entity.Comp;
+            if(!Resolve(entity.Owner, ref xform) || xform.GridUid == null)
+                return false;
+
+            if (!Resolve(xform.GridUid.Value, ref grid))
+                return false;
+
+            indices = _map.CoordinatesToTile(xform.GridUid.Value, grid, xform.Coordinates);
+            return true;
+        }
+
     }
 
     [ByRefEvent]

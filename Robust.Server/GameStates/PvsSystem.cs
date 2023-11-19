@@ -73,6 +73,10 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private readonly List<IPVSCollection> _pvsCollections = new();
 
+    /*
+     * POOLS FOR THE POOL GOD.
+     */
+
     private readonly ObjectPool<Dictionary<NetEntity, PvsEntityVisibility>> _visSetPool
         = new DefaultObjectPool<Dictionary<NetEntity, PvsEntityVisibility>>(
             new DictPolicy<NetEntity, PvsEntityVisibility>(), MaxVisPoolSize);
@@ -101,6 +105,12 @@ internal sealed partial class PvsSystem : EntitySystem
     private readonly ObjectPool<Dictionary<GridChunkLocation, int>> _gridChunkPool =
         new DefaultObjectPool<Dictionary<GridChunkLocation, int>>(
             new ChunkPoolPolicy<GridChunkLocation>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<List<ComponentChange>> _compChangePool =
+        new DefaultObjectPool<List<ComponentChange>>(new ListPolicy<ComponentChange>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<HashSet<ushort>> _netCompPool =
+        new DefaultObjectPool<HashSet<ushort>>(new SetPolicy<ushort>(), MaxVisPoolSize);
 
     private readonly Dictionary<int, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<int, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
@@ -241,7 +251,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     public void CullDeletionHistory(GameTick oldestAck)
     {
-        _entityPvsCollection.CullDeletionHistoryUntil(oldestAck);
+        CullDeletionHistoryUntil(oldestAck);
         _mapManager.CullDeletionHistory(oldestAck);
     }
 
@@ -263,6 +273,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private void OnEntityDeleted(EntityUid e, MetaDataComponent metadata)
     {
+        _deletionHistory.Add((EntityManager.CurrentTick, metadata.NetEntity));
         _entityPvsCollection.RemoveIndex(EntityManager.CurrentTick, metadata.NetEntity);
 
         var previousTick = _gameTiming.CurTick - 1;
@@ -701,13 +712,15 @@ internal sealed partial class PvsSystem : EntitySystem
         tree.Set(netEntity, parentNetEntity);
     }
 
-    internal (List<EntityState>? updates, List<NetEntity>? deletions, List<NetEntity>? leftPvs, GameTick fromTick)
-        CalculateEntityStates(ICommonSession session,
+    internal GameTick CalculateEntityStates(ICommonSession session,
             GameTick fromTick,
             GameTick toTick,
             (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] chunks,
             HashSet<int> visibleChunks,
-            EntityUid[] viewers)
+            EntityUid[] viewers,
+            IList<NetEntity> deletions,
+            IList<NetEntity> leftPvs,
+            IList<EntityState> entityStates)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
         var newEntityBudget = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityBudget);
@@ -724,7 +737,7 @@ internal sealed partial class PvsSystem : EntitySystem
         if (visibleEnts.Count != 0)
             throw new Exception("Encountered non-empty object inside of _visSetPool. Was the same object returned to the pool more than once?");
 
-        var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
+        GetDeletedEntities(fromTick, deletions);
         var entStateCount = 0;
 
         var stack = _stackPool.Get();
@@ -808,8 +821,6 @@ internal sealed partial class PvsSystem : EntitySystem
             }
         }
 
-        var entityStates = new List<EntityState>(entStateCount);
-
         foreach (var (netEntity, visiblity) in visibleEnts)
         {
             EntityUid uid;
@@ -822,10 +833,13 @@ internal sealed partial class PvsSystem : EntitySystem
                 $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(uid)}.");
 #endif
 
+            List<ComponentChange> changed;
+
             if (sessionData.RequestedFull)
             {
                 (uid, meta) = GetEntityData(netEntity);
-                entityStates.Add(GetFullEntityState(session, uid, meta));
+                changed = _compChangePool.Get();
+                entityStates.Add(GetFullEntityState(session, uid, meta, changed));
                 continue;
             }
 
@@ -835,14 +849,15 @@ internal sealed partial class PvsSystem : EntitySystem
             (uid, meta) = GetEntityData(netEntity);
             var entered = visiblity == PvsEntityVisibility.Entered;
             var entFromTick = entered ? lastSeen.GetValueOrDefault(netEntity) : fromTick;
-            var state = GetEntityState(session, uid, entFromTick, meta);
+            changed = _compChangePool.Get();
+            var state = GetEntityState(session, uid, entFromTick, meta, changed);
 
             if (entered || !state.Empty)
                 entityStates.Add(state);
         }
 
         // tell a client to detach entities that have left their view
-        var leftView = ProcessLeavePvs(visibleEnts, lastSent, lastLeft);
+        ProcessLeavePvs(leftPvs, visibleEnts, lastSent, lastLeft);
 
         if (sessionData.SentEntities.Add(toTick, visibleEnts, out var oldEntry))
         {
@@ -871,37 +886,30 @@ internal sealed partial class PvsSystem : EntitySystem
                 _visSetPool.Return(oldEntry.Value.Value);
         }
 
-        if (entityStates.Count == 0) entityStates = default;
-        return (entityStates, deletions, leftView, sessionData.RequestedFull ? GameTick.Zero : fromTick);
+        return sessionData.RequestedFull ? GameTick.Zero : fromTick;
     }
 
     /// <summary>
     ///     Figure out what entities are no longer visible to the client. These entities are sent reliably to the client
     ///     in a separate net message.
     /// </summary>
-    private List<NetEntity>? ProcessLeavePvs(
+    private void ProcessLeavePvs(IList<NetEntity> leftPvs,
         Dictionary<NetEntity, PvsEntityVisibility> visibleEnts,
         Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
         Dictionary<NetEntity, GameTick> lastLeft)
     {
-        if (lastSent == null)
-            return null;
+        if (lastSent == null) return;
 
         var tick = _gameTiming.CurTick;
-        var minSize = Math.Max(0, lastSent.Count - visibleEnts.Count);
-        var leftView = new List<NetEntity>(minSize);
 
         foreach (var netEntity in lastSent.Keys)
         {
-            if (!visibleEnts.ContainsKey(netEntity))
-            {
-                leftView.Add(netEntity);
-                lastLeft[netEntity] = tick;
-            }
+            if (visibleEnts.ContainsKey(netEntity))
+                continue;
 
+            leftPvs.Add(netEntity);
+            lastLeft[netEntity] = tick;
         }
-
-        return leftView.Count > 0 ? leftView : null;
     }
 
     private void RecursivelyAddTreeNode(in NetEntity nodeIndex,
@@ -1113,9 +1121,13 @@ internal sealed partial class PvsSystem : EntitySystem
     /// <summary>
     ///     Gets all entity states that have been modified after and including the provided tick.
     /// </summary>
-    public (List<EntityState>?, List<NetEntity>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
+    public GameTick GetAllEntityStates(
+        ICommonSession? player,
+        GameTick fromTick,
+        GameTick toTick,
+        IList<NetEntity> deletions,
+        IList<EntityState> entityStates)
     {
-        List<EntityState>? stateEntities;
         var toSend = _uidSetPool.Get();
         DebugTools.Assert(toSend.Count == 0);
         bool enumerateAll = false;
@@ -1138,7 +1150,6 @@ internal sealed partial class PvsSystem : EntitySystem
 
         if (enumerateAll)
         {
-            stateEntities = new List<EntityState>(EntityManager.EntityCount);
             var query = EntityManager.AllEntityQueryEnumerator<MetaDataComponent>();
             while (query.MoveNext(out var uid, out var md))
             {
@@ -1147,7 +1158,8 @@ internal sealed partial class PvsSystem : EntitySystem
                 if (md.EntityLastModifiedTick <= fromTick)
                     continue;
 
-                var state = GetEntityState(player, uid, fromTick, md);
+                var changed = _compChangePool.Get();
+                var state = GetEntityState(player, uid, fromTick, md, changed);
 
                 if (state.Empty)
                 {
@@ -1159,12 +1171,11 @@ Metadata last modified: {md.LastModifiedTick}
 Transform last modified: {Transform(uid).LastModifiedTick}");
                 }
 
-                stateEntities.Add(state);
+                entityStates.Add(state);
             }
         }
         else
         {
-            stateEntities = new();
             for (var i = fromTick.Value + 1; i <= toTick.Value; i++)
             {
                 if (!TryGetDirtyEntities(new GameTick(i), out var add, out var dirty))
@@ -1183,7 +1194,8 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                     DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick, $"Entity {ToPrettyString(uid)} last modified tick is less than creation tick");
                     DebugTools.Assert(md.EntityLastModifiedTick > fromTick, $"Entity {ToPrettyString(uid)} last modified tick is less than from tick");
 
-                    var state = GetEntityState(player, uid, fromTick, md);
+                    var changed = _compChangePool.Get();
+                    var state = GetEntityState(player, uid, fromTick, md, changed);
 
                     if (state.Empty)
                     {
@@ -1196,7 +1208,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                         continue;
                     }
 
-                    stateEntities.Add(state);
+                    entityStates.Add(state);
                 }
 
                 foreach (var uid in dirty)
@@ -1210,20 +1222,18 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                     DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick, $"Entity {ToPrettyString(uid)} last modified tick is less than creation tick");
                     DebugTools.Assert(md.EntityLastModifiedTick > fromTick, $"Entity {ToPrettyString(uid)} last modified tick is less than from tick");
 
-                    var state = GetEntityState(player, uid, fromTick, md);
+                    var changed = _compChangePool.Get();
+                    var state = GetEntityState(player, uid, fromTick, md, changed);
                     if (!state.Empty)
-                        stateEntities.Add(state);
+                        entityStates.Add(state);
                 }
             }
         }
 
         _uidSetPool.Return(toSend);
-        var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
+        GetDeletedEntities(fromTick, deletions);
 
-        if (stateEntities.Count == 0)
-            stateEntities = null;
-
-        return (stateEntities, deletions, fromTick);
+        return fromTick;
     }
 
     /// <summary>
@@ -1233,14 +1243,14 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
     /// <param name="entityUid">Uid of the entity to generate the state from.</param>
     /// <param name="fromTick">Only provide delta changes from this tick.</param>
     /// <param name="meta">The entity's metadata component</param>
+    /// <param name="changed">Passed in list of component changes to use.</param>
     /// <returns>New entity State for the given entity.</returns>
-    private EntityState GetEntityState(ICommonSession? player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
+    private EntityState GetEntityState(ICommonSession? player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta, List<ComponentChange> changed)
     {
         var bus = EntityManager.EventBus;
-        var changed = new List<ComponentChange>();
 
         bool sendCompList = meta.LastComponentRemoved > fromTick;
-        HashSet<ushort>? netComps = sendCompList ? new() : null;
+        var netComps = _netCompPool.Get();
 
         foreach (var (netId, component) in meta.NetComponents)
         {
@@ -1259,7 +1269,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
             if (component.LastModifiedTick <= fromTick)
             {
                 if (sendCompList && (!component.SessionSpecific || player == null || EntityManager.CanGetComponentState(bus, component, player)))
-                    netComps!.Add(netId);
+                    netComps.Add(netId);
                 continue;
             }
 
@@ -1271,12 +1281,12 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (sendCompList)
-                netComps!.Add(netId);
+                netComps.Add(netId);
         }
 
         DebugTools.Assert(meta.EntityLastModifiedTick >= meta.LastComponentRemoved);
         DebugTools.Assert(GetEntity(meta.NetEntity) == entityUid);
-        var entState = new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
+        var entState = new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps.Count == 0 ? null : netComps);
 
         return entState;
     }
@@ -1284,12 +1294,10 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
     /// <summary>
     ///     Variant of <see cref="GetEntityState"/> that includes all entity data, including data that can be inferred implicitly from the entity prototype.
     /// </summary>
-    private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta)
+    private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta, List<ComponentChange> changed)
     {
         var bus = EntityManager.EventBus;
-        var changed = new List<ComponentChange>();
-
-        HashSet<ushort> netComps = new();
+        var netComps = _netCompPool.Get();
 
         foreach (var (netId, component) in meta.NetComponents)
         {
@@ -1311,6 +1319,20 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
         var entState = new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
 
         return entState;
+    }
+
+    /// <summary>
+    /// Returns EntityStates resources to the relevant object pools.
+    /// </summary>
+    public void ReturnEntityState(EntityState eState)
+    {
+        if (eState.NetComponents != null)
+        {
+            _netCompPool.Return(eState.NetComponents);
+        }
+
+        var changed = (List<ComponentChange>)eState.ComponentChanges.Value;
+        _compChangePool.Return(changed);
     }
 
     private EntityUid[] GetSessionViewers(ICommonSession session)

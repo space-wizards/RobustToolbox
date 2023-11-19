@@ -1013,7 +1013,7 @@ namespace Robust.Shared.Network
                 return;
 
             DebugTools.Assert(IsServer);
-            if (!(recipient is NetChannel channel))
+            if (recipient is not NetChannel channel)
                 throw new ArgumentException($"Not of type {typeof(NetChannel).FullName}", nameof(recipient));
 
             var peer = channel.Connection.Peer;

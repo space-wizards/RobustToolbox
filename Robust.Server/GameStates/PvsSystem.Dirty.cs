@@ -18,8 +18,8 @@ namespace Robust.Server.GameStates
         /// <summary>
         /// if it's a new entity we need to GetEntityState from tick 0.
         /// </summary>
-        private HashSet<EntityUid>[] _addEntities = new HashSet<EntityUid>[DirtyBufferSize];
-        private HashSet<EntityUid>[] _dirtyEntities = new HashSet<EntityUid>[DirtyBufferSize];
+        private readonly HashSet<EntityUid>[] _addEntities = new HashSet<EntityUid>[DirtyBufferSize];
+        private readonly HashSet<EntityUid>[] _dirtyEntities = new HashSet<EntityUid>[DirtyBufferSize];
         private int _currentIndex = 1;
 
         private void InitializeDirty()

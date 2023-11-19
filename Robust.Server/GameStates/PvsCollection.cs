@@ -37,12 +37,6 @@ public interface IPVSCollection
 
     public void RemoveMap(MapId mapId);
 
-    /// <summary>
-    /// Remove all deletions up to a <see cref="GameTick"/>.
-    /// </summary>
-    /// <param name="tick">The <see cref="GameTick"/> before which all deletions should be removed.</param>
-    public void CullDeletionHistoryUntil(GameTick tick);
-
     public bool IsDirty(IChunkIndexLocation location);
 
     public bool MarkDirty(IChunkIndexLocation location);
@@ -103,11 +97,6 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     private readonly Dictionary<ICommonSession, HashSet<TIndex>> _lastSeen = new();
 
     /// <summary>
-    /// History of deletion-tuples, containing the <see cref="GameTick"/> of the deletion, as well as the <see cref="TIndex"/> of the object which was deleted.
-    /// </summary>
-    private readonly List<(GameTick tick, TIndex index)> _deletionHistory = new();
-
-    /// <summary>
     /// An index containing the <see cref="IIndexLocation"/>s of all <see cref="TIndex"/>.
     /// </summary>
     private readonly Dictionary<TIndex, IIndexLocation> _indexLocations = new();
@@ -151,7 +140,6 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
         foreach (var (index, tick) in _removalBuffer)
         {
-            _deletionHistory.Add((tick, index));
             _changedIndices.Remove(index);
             var location = RemoveIndexInternal(index);
             if (location == null)
@@ -339,51 +327,6 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     public void RemoveIndex(GameTick tick, TIndex index)
     {
         _removalBuffer[index] = tick;
-    }
-
-    /// <inheritdoc />
-    public void CullDeletionHistoryUntil(GameTick tick)
-    {
-        if (tick == GameTick.MaxValue)
-        {
-            _deletionHistory.Clear();
-            return;
-        }
-
-        for (var i = _deletionHistory.Count - 1; i >= 0; i--)
-        {
-            var hist = _deletionHistory[i].tick;
-            if (hist <= tick)
-            {
-                _deletionHistory.RemoveSwap(i);
-                if (_largestCulled < hist)
-                    _largestCulled = hist;
-            }
-        }
-    }
-
-    private GameTick _largestCulled;
-
-    public List<TIndex>? GetDeletedIndices(GameTick fromTick)
-    {
-        if (fromTick == GameTick.Zero)
-            return null;
-
-        // I'm 99% sure this can never happen, but it is hard to test real laggy/lossy networks with many players.
-        if (_largestCulled > fromTick)
-        {
-            _sawmill.Error($"Culled required deletion history! culled: {_largestCulled}. requested: > {fromTick}");
-            _largestCulled = GameTick.Zero;
-        }
-
-        var list = new List<TIndex>();
-        foreach (var (tick, id) in _deletionHistory)
-        {
-            if (tick > fromTick)
-                list.Add(id);
-        }
-
-        return list.Count > 0 ? list : null;
     }
 
     #endregion

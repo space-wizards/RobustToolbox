@@ -14,7 +14,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Threading;
@@ -43,7 +42,6 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
@@ -61,6 +59,19 @@ namespace Robust.Server.GameStates
         private ISawmill _logger = default!;
 
         private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
+
+        /*
+         * Per-PVS pools that get re-allocated for every client. Held onto until the MsgState is serialized.
+         */
+
+        private ObjectPool<List<NetEntity>> _nentListPool =
+            new DefaultObjectPool<List<NetEntity>>(new ListPolicy<NetEntity>(), Environment.ProcessorCount * 4);
+
+        private ObjectPool<List<EntityState>> _entStatePool =
+            new DefaultObjectPool<List<EntityState>>(new ListPolicy<EntityState>());
+
+        private ObjectPool<List<SessionState>> _playerStatePool =
+            new DefaultObjectPool<List<SessionState>>(new ListPolicy<SessionState>());
 
         public ushort TransformNetId { get; set; }
 
@@ -98,9 +109,12 @@ namespace Robust.Server.GameStates
                 .Select(x => x.Key)
                 .Select(x => $"{x.Name} ({_entityManager.ToPrettyString(x.AttachedEntity)})");
 
+            var deletedNents = new List<NetEntity>();
+            _pvs.GetDeletedEntities(GameTick.First, deletedNents);
+
             shell.WriteLine($@"Current tick: {_gameTiming.CurTick}
 Stored oldest acked tick: {_lastOldestAck}
-Deletion history size: {_pvs.EntityPVSCollection.GetDeletedIndices(GameTick.First)?.Count ?? 0}
+Deletion history size: {deletedNents.Count}
 Actual oldest: {ack}
 Oldest acked clients: {string.Join(", ", players)}
 ");
@@ -326,28 +340,34 @@ Oldest acked clients: {string.Join(", ", players)}
             var channel = session.Channel;
             var sessionData = _pvs.PlayerData[session];
             var lastAck = sessionData.LastReceivedAck;
-            List<NetEntity>? leftPvs = null;
-            List<EntityState>? entStates;
-            List<NetEntity>? deletions;
+
+            var leftPvs = _nentListPool.Get();
+            var deletions = _nentListPool.Get();
+            var entStates = _entStatePool.Get();
+            var playerStates = _playerStatePool.Get();
+
             GameTick fromTick;
 
             DebugTools.Assert(_pvs.CullingEnabled == (pvsData != null));
             if (pvsData != null)
             {
-                (entStates, deletions, leftPvs, fromTick) = _pvs.CalculateEntityStates(
+                fromTick = _pvs.CalculateEntityStates(
                     session,
                     lastAck,
                     _gameTiming.CurTick,
                     pvsData.Value.ChunkCache,
                     pvsData.Value.PlayerChunks[i],
-                    pvsData.Value.ViewerEntities[i]);
+                    pvsData.Value.ViewerEntities[i],
+                    deletions,
+                    leftPvs,
+                    entStates);
             }
             else
             {
-                (entStates, deletions, fromTick) = _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
+                fromTick = _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick, deletions, entStates);
             }
 
-            var playerStates = _playerManager.GetPlayerStates(fromTick);
+            _playerManager.GetPlayerStates(playerStates, fromTick);
 
             // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
             var lastInputCommand = inputSystem.GetLastInputCommand(session);
@@ -357,16 +377,18 @@ Oldest acked clients: {string.Join(", ", players)}
                 fromTick,
                 _gameTiming.CurTick,
                 Math.Max(lastInputCommand, lastSystemMessage),
-                entStates,
-                playerStates,
-                deletions);
+                entStates.Count == 0 ? null : entStates,
+                playerStates.Count == 0 ? null : playerStates,
+                deletions.Count == 0 ? null : deletions);
 
             InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
 
             // actually send the state
-            var stateUpdateMessage = new MsgState();
-            stateUpdateMessage.State = state;
-            stateUpdateMessage.CompressionContext = resources.CompressionContext;
+            var stateUpdateMessage = new MsgState
+            {
+                State = state,
+                CompressionContext = resources.CompressionContext
+            };
 
             // If the state is too big we let Lidgren send it reliably. This is to avoid a situation where a state is so
             // large that it (or part of it) consistently gets dropped. When we send reliably, we immediately update the
@@ -399,11 +421,23 @@ Oldest acked clients: {string.Join(", ", players)}
             // Send PVS detach / left-view messages separately and reliably. This is not resistant to packet loss, but
             // unlike game state it doesn't really matter. This also significantly reduces the size of game state
             // messages as PVS chunks get moved out of view.
-            if (leftPvs != null && leftPvs.Count > 0)
+            if (leftPvs.Count > 0)
             {
                 var pvsMessage = new MsgStateLeavePvs {Entities = leftPvs, Tick = _gameTiming.CurTick};
                 _networkManager.ServerSendMessage(pvsMessage, channel);
             }
+
+            // Release resources
+            // Assume everything has been serialized and we're free to rugpull.
+            foreach (var eState in entStates)
+            {
+                _pvs.ReturnEntityState(eState);
+            }
+
+            _nentListPool.Return(leftPvs);
+            _nentListPool.Return(deletions);
+            _entStatePool.Return(entStates);
+            _playerStatePool.Return(playerStates);
         }
 
         [EventSource(Name = "Robust.Pvs")]

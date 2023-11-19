@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Server.GameStates;
 using Robust.Server.Player;
 using Robust.Shared;
@@ -14,7 +15,12 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, ISe
 {
     [Dependency] private readonly IPlayerManager _player = default!;
     [Dependency] private readonly IEntitySystemManager _sysMan = default!;
+
     private GameTick _fromTick = GameTick.Zero;
+
+    private readonly List<EntityState> _entStates = new();
+    private readonly List<NetEntity> _deletions = new();
+    private readonly List<SessionState> _playerStates = new();
 
     private PvsSystem _pvs = default!;
 
@@ -47,9 +53,16 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, ISe
             return;
         }
 
-        var (entStates, deletions, _) = _pvs.GetAllEntityStates(null, _fromTick, Timing.CurTick);
-        var playerStates = _player.GetPlayerStates(_fromTick);
-        var state = new GameState(_fromTick, Timing.CurTick, 0, entStates, playerStates, deletions);
+        _entStates.Clear();
+        _deletions.Clear();
+        _playerStates.Clear();
+
+        _pvs.GetAllEntityStates(null, _fromTick, Timing.CurTick, _deletions, _entStates);
+        _player.GetPlayerStates(_playerStates, _fromTick);
+        var state = new GameState(_fromTick, Timing.CurTick, 0,
+            _entStates,
+            _playerStates,
+            _deletions);
         _fromTick = Timing.CurTick;
         Update(state);
     }

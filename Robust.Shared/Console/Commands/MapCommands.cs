@@ -147,11 +147,11 @@ internal sealed class ListMapsCommand : LocalizedCommands
         {
             var mapUid = _map.GetMapEntityId(mapId);
 
-            msg.AppendFormat("{0}: {1}, init: {2}, paused: {3}, ent: {4}, grids: {5}\n",
+            msg.AppendFormat("{0}: {1}, init: {2}, paused: {3}, nent: {4}, grids: {5}\n",
                 mapId, _entManager.GetComponent<MetaDataComponent>(mapUid).EntityName,
                 _map.IsMapInitialized(mapId),
                 _map.IsMapPaused(mapId),
-                _map.GetMapEntityId(mapId),
+                _entManager.GetNetEntity(_map.GetMapEntityId(mapId)),
                 string.Join(",", _map.GetAllGrids(mapId).Select(grid => grid.Owner)));
         }
 

@@ -256,8 +256,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public HashSet<EntityUid> GetEntitySet(HashSet<NetEntity> netEntities)
     {
-        var entities = new HashSet<EntityUid>();
-        entities.EnsureCapacity(netEntities.Count);
+        var entities = new HashSet<EntityUid>(netEntities.Count);
 
         foreach (var netEntity in netEntities)
         {
@@ -292,6 +291,16 @@ public partial class EntityManager
         return entities;
     }
 
+    public void EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity, HashSet<EntityUid> entities)
+    {
+        entities.Clear();
+        entities.EnsureCapacity(netEntities.Count);
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntity<T>(netEntity, callerEntity));
+        }
+    }
+
     /// <inheritdoc />
     public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
     {
@@ -303,6 +312,16 @@ public partial class EntityManager
         }
 
         return entities;
+    }
+
+    public void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities)
+    {
+        entities.Clear();
+        entities.EnsureCapacity(netEntities.Count);
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntity<T>(netEntity, callerEntity));
+        }
     }
 
     /// <inheritdoc />

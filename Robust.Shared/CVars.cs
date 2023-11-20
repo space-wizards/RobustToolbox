@@ -55,7 +55,7 @@ namespace Robust.Shared
 
         /// <summary>
         /// Size of the pool for Lidgren's array buffers to send messages.
-        /// Set to 0 to disable pooling.
+        /// Set to 0 to disable pooling; max is 8192.
         /// </summary>
         /// <remarks>
         /// Higher just means more potentially wasted space and slower pool retrieval.

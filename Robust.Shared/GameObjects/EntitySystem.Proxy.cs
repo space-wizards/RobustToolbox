@@ -1025,9 +1025,21 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity, HashSet<EntityUid> entities)
+    {
+        EntityManager.EnsureEntitySet<T>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
     {
         return EntityManager.EnsureEntityList<T>(netEntities, callerEntity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities)
+    {
+        EntityManager.EnsureEntityList<T>(netEntities, callerEntity, entities);
     }
 
     /// <summary>

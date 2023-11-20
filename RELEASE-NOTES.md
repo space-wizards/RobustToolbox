@@ -54,6 +54,20 @@ END TEMPLATE-->
 *None yet*
 
 
+## 180.1.0
+
+### New features
+
+* Add the map name to lsmap.
+* Add net.pool_size to CVars to control the message data pool size in Lidgren and to also toggle pooling.
+
+### Bugfixes
+
+* Fix physics contraints causing enormous heap allocations.
+* Fix potential error when writing a runtime log.
+* Fix shape lookups for non-hard fixtures in EntityLookupSystem from 180.0.0
+
+
 ## 180.0.0
 
 ### Breaking changes

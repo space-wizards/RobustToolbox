@@ -55,9 +55,10 @@ namespace Robust.Shared
 
         /// <summary>
         /// Size of the pool for Lidgren's array buffers to send messages.
+        /// Set to 0 to disable pooling.
         /// </summary>
         /// <remarks>
-        /// Set really high because it's probably constant across a server how much is getting used.
+        /// Higher just means more potentially wasted space and slower pool retrieval.
         /// </remarks>
         public static readonly CVarDef<int> NetPoolSize =
             CVarDef.Create("net.pool_size", 512, CVar.CLIENT | CVar.SERVER);

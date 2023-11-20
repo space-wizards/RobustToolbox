@@ -576,7 +576,16 @@ namespace Robust.Shared.Network
             // ping the client once per second.
             netConfig.PingInterval = 1f;
 
-            netConfig.RecycledCacheMaxCount = _config.GetCVar(CVars.NetPoolSize);
+            var poolSize = _config.GetCVar(CVars.NetPoolSize);
+
+            if (poolSize <= 0)
+            {
+                netConfig.UseMessageRecycling = false;
+            }
+            else
+            {
+                netConfig.RecycledCacheMaxCount = Math.Min(poolSize, 8192);
+            }
 
             netConfig.SendBufferSize = _config.GetCVar(CVars.NetSendBufferSize);
             netConfig.ReceiveBufferSize = _config.GetCVar(CVars.NetReceiveBufferSize);

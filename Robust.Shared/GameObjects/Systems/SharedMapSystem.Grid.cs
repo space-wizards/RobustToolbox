@@ -1352,8 +1352,8 @@ public abstract partial class SharedMapSystem
     }
 
     /// <summary>
-    /// Attempts to get the <see cref="ITileDefinition"/> for a given grid index. This will throw an exception if the tile
-    /// at this location has no registered tile definition.
+    /// Attempts to get the <see cref="ITileDefinition"/> for the tile at the given grid indices. This will throw an
+    /// exception if the tile at this location has no registered tile definition.
     /// </summary>
     public bool TryGetTileDef(MapGridComponent grid, Vector2i indices, [NotNullWhen(true)] out ITileDefinition? tileDef)
     {

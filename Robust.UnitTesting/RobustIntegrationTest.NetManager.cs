@@ -258,12 +258,6 @@ namespace Robust.UnitTesting
                     stateMsg._hasWritten = true;
                 }
 
-                // Clone as above because we don't write immediately in tests.
-                if (message is MsgStateLeavePvs leavePvs)
-                {
-                    leavePvs.Entities = new List<NetEntity>(leavePvs.Entities);
-                }
-
                 var channel = (IntegrationNetChannel) recipient;
                 channel.OtherChannel.TryWrite(new DataMessage(message, channel.RemoteUid));
                 return false;

@@ -660,10 +660,14 @@ namespace Robust.Server
             {
                 // Write down exception log
                 var logPath = _config.GetCVar(CVars.LogPath);
-                var relPath = PathHelpers.ExecutableRelativeFile(logPath);
-                Directory.CreateDirectory(relPath);
-                var pathToWrite = Path.Combine(relPath,
+                if (!Path.IsPathRooted(logPath))
+                {
+                    logPath = PathHelpers.ExecutableRelativeFile(logPath);
+                }
+
+                var pathToWrite = Path.Combine(logPath,
                     "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
+                Directory.CreateDirectory(logPath);
                 File.WriteAllText(pathToWrite, _runtimeLog.Display(), EncodingHelpers.UTF8);
             }
 

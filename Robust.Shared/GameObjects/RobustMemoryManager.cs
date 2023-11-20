@@ -1,9 +1,7 @@
+using System;
 using System.IO;
 using Microsoft.IO;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Utility;
-using SixLabors.ImageSharp.Memory;
 
 namespace Robust.Shared.GameObjects;
 
@@ -23,13 +21,13 @@ internal sealed class RobustMemoryManager
     public RobustMemoryManager()
     {
         MemStreamManager.StreamDoubleDisposed += (sender, args) =>
-            throw new InvalidMemoryOperationException("Found double disposed stream.");
+            throw new InvalidOperationException("Found double disposed stream.");
 
         MemStreamManager.StreamFinalized += (sender, args) =>
-            throw new InvalidMemoryOperationException("Stream finalized but not disposed indicating a leak");
+            throw new InvalidOperationException("Stream finalized but not disposed indicating a leak");
 
         MemStreamManager.StreamOverCapacity += (sender, args) =>
-            throw new InvalidMemoryOperationException("Stream over memory capacity");
+            throw new InvalidOperationException("Stream over memory capacity");
     }
 
     public static MemoryStream GetMemoryStream()

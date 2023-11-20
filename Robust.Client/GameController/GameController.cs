@@ -116,6 +116,7 @@ namespace Robust.Client
                 Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
 
             _taskManager.Initialize();
+            _parallelMgr.Initialize();
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
 
             // Load optional Robust modules.
@@ -357,7 +358,6 @@ namespace Robust.Client
 
             ProfileOptSetup.Setup(_configurationManager);
 
-            _parallelMgr.Initialize();
             _prof.Initialize();
 
             _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);

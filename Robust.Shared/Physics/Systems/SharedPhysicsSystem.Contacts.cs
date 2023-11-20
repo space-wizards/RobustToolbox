@@ -43,6 +43,7 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Utility;
+using Schedulers;
 
 namespace Robust.Shared.Physics.Systems;
 
@@ -582,24 +583,19 @@ public abstract partial class SharedPhysicsSystem
 
     private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
     {
+        if (count == 0)
+            return;
+
         var wake = ArrayPool<bool>.Shared.Rent(count);
 
-        if (count > ContactsPerThread * 2)
+        _parallel.ProcessNow(new ManifoldsJob()
         {
-            var batches = (int) Math.Ceiling((float) count / ContactsPerThread);
-
-            Parallel.For(0, batches, i =>
-            {
-                var start = i * ContactsPerThread;
-                var end = Math.Min(start + ContactsPerThread, count);
-                UpdateContacts(contacts, start, end, status, wake, worldPoints);
-            });
-
-        }
-        else
-        {
-            UpdateContacts(contacts, 0, count, status, wake, worldPoints);
-        }
+            Physics = this,
+            Status = status,
+            WorldPoints = worldPoints,
+            Contacts = contacts,
+            Wake = wake,
+        }, count);
 
         // Can't do this during UpdateContacts due to IoC threading issues.
         for (var i = 0; i < count; i++)
@@ -618,6 +614,29 @@ public abstract partial class SharedPhysicsSystem
         }
 
         ArrayPool<bool>.Shared.Return(wake);
+    }
+
+    private record struct ManifoldsJob : IJobParallelFor
+    {
+        public int ThreadCount => 0;
+        public int BatchSize => ContactsPerThread;
+
+        public SharedPhysicsSystem Physics;
+
+        public Contact[] Contacts;
+        public ContactStatus[] Status;
+        public Vector2[] WorldPoints;
+        public bool[] Wake;
+
+        public void Execute(int index)
+        {
+            var end = index + 1;
+            Physics.UpdateContacts(Contacts, index, end, Status, Wake, WorldPoints);
+        }
+
+        public void Finish()
+        {
+        }
     }
 
     private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)

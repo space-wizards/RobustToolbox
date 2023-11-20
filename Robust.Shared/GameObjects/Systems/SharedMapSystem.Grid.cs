@@ -1292,6 +1292,9 @@ public abstract partial class SharedMapSystem
     }
 
     public Vector2i GridTileToChunkIndices(EntityUid uid, MapGridComponent grid, Vector2i gridTile)
+        => GridTileToChunkIndices(grid, gridTile);
+
+    public Vector2i GridTileToChunkIndices(MapGridComponent grid, Vector2i gridTile)
     {
         var x = (int)Math.Floor(gridTile.X / (float) grid.ChunkSize);
         var y = (int)Math.Floor(gridTile.Y / (float) grid.ChunkSize);
@@ -1331,6 +1334,36 @@ public abstract partial class SharedMapSystem
 
         var cTileIndices = chunk.GridTileToChunkTile(indices);
         tile = GetTileRef(uid, grid, chunk, (ushort)cTileIndices.X, (ushort)cTileIndices.Y);
+        return true;
+    }
+
+    public bool TryGetTile(MapGridComponent grid, Vector2i indices, out Tile tile)
+    {
+        var chunkIndices = GridTileToChunkIndices(grid, indices);
+        if (!grid.Chunks.TryGetValue(chunkIndices, out var chunk))
+        {
+            tile = default;
+            return false;
+        }
+
+        var cTileIndices = chunk.GridTileToChunkTile(indices);
+        tile = chunk.Tiles[cTileIndices.X, cTileIndices.Y];
+        return true;
+    }
+
+    /// <summary>
+    /// Attempts to get the <see cref="ITileDefinition"/> for a given grid index. This will throw an exception if the tile
+    /// at this location has no registered tile definition.
+    /// </summary>
+    public bool TryGetTileDef(MapGridComponent grid, Vector2i indices, [NotNullWhen(true)] out ITileDefinition? tileDef)
+    {
+        if (!TryGetTile(grid, indices, out var tile))
+        {
+            tileDef = null;
+            return false;
+        }
+
+        tileDef = _tileMan[tile.TypeId];
         return true;
     }
 

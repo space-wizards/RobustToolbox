@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Configuration;
@@ -38,6 +39,11 @@ public interface IParallelManager
     /// Takes in a parallel job and runs it without blocking.
     /// </summary>
     JobHandle Process(IParallelRobustJob jobs, int amount);
+
+    /// <summary>
+    /// Waits for the specified job handles to finish.
+    /// </summary>
+    void Wait(IReadOnlyList<JobHandle> handles);
 }
 
 internal interface IParallelManagerInternal : IParallelManager
@@ -109,6 +115,11 @@ internal sealed class ParallelManager : IParallelManagerInternal
         var handle = _scheduler.Schedule(job, amount);
         _scheduler.Flush();
         return handle;
+    }
+
+    public void Wait(IReadOnlyList<JobHandle> handles)
+    {
+        JobHandle.CompleteAll(handles);
     }
 }
 

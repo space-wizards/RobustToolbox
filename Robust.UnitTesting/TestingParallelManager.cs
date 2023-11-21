@@ -1,5 +1,5 @@
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using Robust.Shared.Threading;
 using Schedulers;
 
@@ -35,6 +35,11 @@ public sealed class TestingParallelManager : IParallelManager
     }
 
     public JobHandle Process(IParallelRobustJob jobs, int amount)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Wait(IReadOnlyList<JobHandle> handles)
     {
         throw new NotImplementedException();
     }

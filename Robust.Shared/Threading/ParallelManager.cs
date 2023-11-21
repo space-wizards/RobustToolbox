@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
-using Schedulers;
 
 namespace Robust.Shared.Threading;
 
@@ -20,19 +21,17 @@ public interface IParallelManager
     /// Takes in a job that gets flushed.
     /// </summary>
     /// <param name="job"></param>
-    JobHandle Process(IJob job);
+    Task Process(IRobustJob job);
 
     /// <summary>
     /// Takes in a parallel job and runs it the specified amount.
     /// </summary>
-    void ProcessNow(IJobParallelFor jobs, int amount);
+    void ProcessNow(IParallelRobustJob jobs, int amount);
 
     /// <summary>
     /// Takes in a parallel job and runs it without blocking.
     /// </summary>
-    JobHandle Process(IJobParallelFor jobs, int amount);
-
-    void Wait(JobHandle handle);
+    Task[] Process(IParallelRobustJob jobs, int amount);
 }
 
 internal interface IParallelManagerInternal : IParallelManager
@@ -44,22 +43,12 @@ internal sealed class ParallelManager : IParallelManagerInternal
 {
     [Dependency] private readonly IConfigurationManager _cfg = default!;
 
-    private JobScheduler _scheduler = default!;
-
     public event Action? ParallelCountChanged;
     public int ParallelProcessCount { get; private set; }
 
     public void Initialize()
     {
         _cfg.OnValueChanged(CVars.ThreadParallelCount, UpdateCVar, true);
-
-        _scheduler = new JobScheduler(new JobScheduler.Config()
-        {
-            ThreadCount = ParallelProcessCount,
-            // Keep in mind parallel jobs count as 1.
-            MaxExpectedConcurrentJobs = Math.Max(32, ParallelProcessCount),
-            StrictAllocationMode = false,
-        });
     }
 
     public void AddAndInvokeParallelCountChanged(Action changed)
@@ -68,39 +57,102 @@ internal sealed class ParallelManager : IParallelManagerInternal
         changed();
     }
 
-    public JobHandle Process(IJob job)
-    {
-        var handle = _scheduler.Schedule(job);
-        _scheduler.Flush();
-        return handle;
-    }
-
     private void UpdateCVar(int value)
     {
         var oldCount = ParallelProcessCount;
-        ParallelProcessCount = value == 0 ? Environment.ProcessorCount : value;
+        ThreadPool.GetAvailableThreads(out var oldWorker, out var oldCompletion);
+        ParallelProcessCount = value == 0 ? oldWorker : value;
 
         if (oldCount != ParallelProcessCount)
+        {
             ParallelCountChanged?.Invoke();
+
+            ThreadPool.SetMaxThreads(ParallelProcessCount, oldCompletion);
+        }
     }
 
-    public void ProcessNow(IJobParallelFor job, int amount)
+    public Task Process(IRobustJob job)
     {
-        var handle = _scheduler.Schedule(job, amount);
-        _scheduler.Flush();
-        handle.Complete();
+        // TODO: Does this have a race condition where it returns too early maybe?
+        // I think it would be better with a TCS.
+        var wrapper = new JobWrapper(job);
+        ThreadPool.UnsafeQueueUserWorkItem(wrapper, false);
+        return wrapper.Tcs.Task;
     }
 
-    public JobHandle Process(IJobParallelFor job, int amount)
+    public void ProcessNow(IParallelRobustJob job, int amount)
     {
-        var handle = _scheduler.Schedule(job, amount);
-        _scheduler.Flush();
-        return handle;
+        var handles = Process(job, amount);
+        Task.WaitAll(handles);
     }
 
-    public void Wait(JobHandle handle)
+    public Task[] Process(IParallelRobustJob job, int amount)
     {
-        handle.Complete();
+        var batchSize = Math.Min(1, job.BatchSize);
+        var batches = (int) Math.Ceiling(amount / (float) batchSize);
+        var handles = new Task[batches];
+
+        for (var i = 0; i < batches; i++)
+        {
+            var start = i * batchSize;
+            var end = Math.Min(start + batchSize, amount);
+
+            var wrapper = new ParallelJobWrapper(job, start, end);
+
+            ThreadPool.UnsafeQueueUserWorkItem(wrapper, false);
+            handles[i] = wrapper.Tcs.Task;
+        }
+
+        return handles;
+    }
+
+    /// <summary>
+    /// Wraps the underlying IRobustJob so caller doesn't need to worry about handling the reset event.
+    /// </summary>
+    private readonly record struct JobWrapper : IThreadPoolWorkItem
+    {
+        private readonly IRobustJob _job;
+        public readonly TaskCompletionSource Tcs = new();
+
+        public JobWrapper(IRobustJob job)
+        {
+            _job = job;
+        }
+
+        public void Execute()
+        {
+            _job.Execute();
+            Tcs.SetResult();
+        }
+    }
+
+    /// <summary>
+    /// Wraps an IParallelRobustJob and executes each item in a batch for the specified thread.
+    /// </summary>
+    private readonly record struct ParallelJobWrapper : IThreadPoolWorkItem
+    {
+        private readonly IParallelRobustJob _job;
+        public readonly TaskCompletionSource Tcs = new();
+
+        public readonly int Start;
+        public readonly int End;
+
+        public ParallelJobWrapper(IParallelRobustJob job, int start, int end)
+        {
+            _job = job;
+            Start = start;
+            End = end;
+        }
+
+        public void Execute()
+        {
+            for (var i = Start; i < End; i++)
+            {
+                _job.Execute(i);
+            }
+
+            Tcs.SetResult();
+        }
     }
 }
 

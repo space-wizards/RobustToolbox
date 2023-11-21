@@ -1,6 +1,6 @@
 using System;
+using System.Threading.Tasks;
 using Robust.Shared.Threading;
-using Schedulers;
 
 namespace Robust.UnitTesting;
 
@@ -11,30 +11,25 @@ public sealed class TestingParallelManager : IParallelManager
 {
     public event Action? ParallelCountChanged;
     public int ParallelProcessCount => 1;
+
     public void AddAndInvokeParallelCountChanged(Action changed)
     {
         // Gottem
         return;
     }
 
-    public void ProcessNow(IJobParallelFor job, int amount)
+    public Task Process(IRobustJob job)
     {
-        for (var i = 0; i < amount; i++)
-        {
-            job.Execute(i);
-        }
-
-        job.Finish();
+        throw new NotImplementedException();
     }
 
-    public JobHandle Process(IJobParallelFor job, int amount)
+    public void ProcessNow(IParallelRobustJob jobs, int amount)
     {
-        for (var i = 0; i < amount; i++)
-        {
-            job.Execute(i);
-        }
+        throw new NotImplementedException();
+    }
 
-        job.Finish();
-        return new JobHandle();
+    public Task[] Process(IParallelRobustJob jobs, int amount)
+    {
+        throw new NotImplementedException();
     }
 }

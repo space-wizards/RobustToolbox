@@ -31,19 +31,16 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.InteropServices.JavaScript;
-using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Events;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
-using Schedulers;
 
 namespace Robust.Shared.Physics.Systems;
 
@@ -616,9 +613,8 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<bool>.Shared.Return(wake);
     }
 
-    private record struct ManifoldsJob : IJobParallelFor
+    private record struct ManifoldsJob : IParallelRobustJob
     {
-        public int ThreadCount => 0;
         public int BatchSize => ContactsPerThread;
 
         public SharedPhysicsSystem Physics;
@@ -632,10 +628,6 @@ public abstract partial class SharedPhysicsSystem
         {
             var end = index + 1;
             Physics.UpdateContacts(Contacts, index, end, Status, Wake, WorldPoints);
-        }
-
-        public void Finish()
-        {
         }
     }
 

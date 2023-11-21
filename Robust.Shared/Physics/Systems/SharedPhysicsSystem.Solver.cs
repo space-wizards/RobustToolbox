@@ -336,7 +336,6 @@ public abstract partial class SharedPhysicsSystem
     }
 
     private void SolveVelocityConstraints(IslandData island,
-        bool parallel,
         ContactVelocityConstraint[] velocityConstraints,
         Vector2[] linearVelocities,
         float[] angularVelocities)
@@ -355,10 +354,7 @@ public abstract partial class SharedPhysicsSystem
             AngularVelocities = angularVelocities,
         };
 
-        if (parallel)
-            _parallel.ProcessNow(job, contactCount);
-        else
-            _parallel.ProcessSerialNow(job, contactCount);
+        _parallel.ProcessSerialNow(job, contactCount);
     }
 
     private void SolveVelocityConstraint(
@@ -659,7 +655,6 @@ public abstract partial class SharedPhysicsSystem
     private bool SolvePositionConstraints(
         SolverData data,
         in IslandData island,
-        bool parallel,
         ContactPositionConstraint[] positionConstraints,
         Vector2[] positions,
         float[] angles)
@@ -682,24 +677,21 @@ public abstract partial class SharedPhysicsSystem
         };
 
         // Parallel
-        if (parallel)
-        {
-            _parallel.ProcessNow(job, contactCount);
-        }
-        else
-        {
-            _parallel.ProcessSerialNow(job, contactCount);
-        }
+        _parallel.ProcessSerialNow(job, contactCount);
+        var isSolved = true;
 
         for (var i = 0; i < contactCount; i++)
         {
-            if (!solved[i])
-            {
-                return false;
-            }
+            if (solved[i])
+                continue;
+
+            isSolved = false;
+            break;
         }
 
-        return true;
+        ArrayPool<bool>.Shared.Return(solved);
+
+        return isSolved;
     }
 
     /// <summary>

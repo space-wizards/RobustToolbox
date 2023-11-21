@@ -597,6 +597,9 @@ public abstract partial class SharedPhysicsSystem
 
     private void SolveIslands(EntityUid uid, PhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
     {
+        if (islands.Count == 0)
+            return;
+
         var iBegin = 0;
         var gravity = _gravity.GetGravity(uid);
 
@@ -653,40 +656,21 @@ public abstract partial class SharedPhysicsSystem
             sleepStatus[i] = false;
         }
 
-        while (iBegin < actualIslands.Length)
+        var job = new SolveIslandJob()
         {
-            ref var island = ref actualIslands[iBegin];
+            Physics = this,
+            Islands = actualIslands,
+            Data = data,
+            Gravity = gravity,
+            Prediction = prediction,
+            SolvedPositions = solvedPositions,
+            SolvedAngles = solvedAngles,
+            LinearVelocities = linearVelocities,
+            AngularVelocities = angularVelocities,
+            SleepStatus = sleepStatus,
+        };
 
-            if (!InternalParallel(island))
-                break;
-
-            SolveIsland(ref island, in data, true, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
-            iBegin++;
-        }
-
-        var parallelIslandCount = actualIslands.Length - iBegin;
-
-        if (parallelIslandCount > 0)
-        {
-            var islando = new ArraySegment<IslandData>(actualIslands, iBegin, parallelIslandCount);
-
-            var job = new SolveIslandJob()
-            {
-                Physics = this,
-                Parallel = false,
-                Islands = islando.Array!,
-                Data = data,
-                Gravity = gravity,
-                Prediction = prediction,
-                SolvedPositions = solvedPositions,
-                SolvedAngles = solvedAngles,
-                LinearVelocities = linearVelocities,
-                AngularVelocities = angularVelocities,
-                SleepStatus = sleepStatus,
-            };
-
-            _parallel.ProcessNow(job, parallelIslandCount);
-        }
+        _parallel.ProcessNow(job, actualIslands.Length);
 
         // Update data sequentially
         var metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -734,7 +718,6 @@ public abstract partial class SharedPhysicsSystem
     private void SolveIsland(
         ref IslandData island,
         in SolverData data,
-        bool parallel,
         Vector2 gravity,
         bool prediction,
         Vector2[] solvedPositions,
@@ -834,7 +817,7 @@ public abstract partial class SharedPhysicsSystem
                     island.BrokenJoints.Add((island.Joints[j].Original, error));
             }
 
-            SolveVelocityConstraints(island, parallel, velocityConstraints, linearVelocities, angularVelocities);
+            SolveVelocityConstraints(island, velocityConstraints, linearVelocities, angularVelocities);
         }
 
         // Store for warm starting.
@@ -873,7 +856,7 @@ public abstract partial class SharedPhysicsSystem
 
         for (var i = 0; i < data.PositionIterations; i++)
         {
-            var contactsOkay = SolvePositionConstraints(data, in island, parallel, positionConstraints, positions, angles);
+            var contactsOkay = SolvePositionConstraints(data, in island, positionConstraints, positions, angles);
             var jointsOkay = true;
 
             for (var j = 0; j < island.Joints.Count; ++j)
@@ -915,14 +898,7 @@ public abstract partial class SharedPhysicsSystem
             SolvedAngles = solvedAngles,
         };
 
-        if (parallel)
-        {
-            _parallel.ProcessNow(finaliseJob, bodyCount);
-        }
-        else
-        {
-            _parallel.ProcessSerialNow(finaliseJob, bodyCount);
-        }
+        _parallel.ProcessSerialNow(finaliseJob, bodyCount);
 
         // Check sleep status for all of the bodies
         // Writing sleep timer is safe but updating awake or not is not safe.
@@ -1107,7 +1083,6 @@ public abstract partial class SharedPhysicsSystem
         public int BatchSize => 1;
 
         public SharedPhysicsSystem Physics;
-        public bool Parallel;
         public IslandData[] Islands;
         public SolverData Data;
         public Vector2 Gravity;
@@ -1121,7 +1096,7 @@ public abstract partial class SharedPhysicsSystem
         public void Execute(int index)
         {
             ref var island = ref Islands[index];
-            Physics.SolveIsland(ref island, Data, Parallel, Gravity, Prediction, SolvedPositions, SolvedAngles, LinearVelocities, AngularVelocities, SleepStatus);
+            Physics.SolveIsland(ref island, Data,Gravity, Prediction, SolvedPositions, SolvedAngles, LinearVelocities, AngularVelocities, SleepStatus);
         }
     }
 

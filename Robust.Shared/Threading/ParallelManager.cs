@@ -29,6 +29,11 @@ public interface IParallelManager
     void ProcessNow(IParallelRobustJob jobs, int amount);
 
     /// <summary>
+    /// Processes a robust job sequentially if desired.
+    /// </summary>
+    void ProcessSerialNow(IParallelRobustJob jobs, int amount);
+
+    /// <summary>
     /// Takes in a parallel job and runs it without blocking.
     /// </summary>
     Task[] Process(IParallelRobustJob jobs, int amount);
@@ -83,6 +88,14 @@ internal sealed class ParallelManager : IParallelManagerInternal
     {
         var handles = Process(job, amount);
         Task.WaitAll(handles);
+    }
+
+    public void ProcessSerialNow(IParallelRobustJob jobs, int amount)
+    {
+        for (var i = 0; i < amount; i++)
+        {
+            jobs.Execute(i);
+        }
     }
 
     public Task[] Process(IParallelRobustJob job, int amount)

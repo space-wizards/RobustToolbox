@@ -28,6 +28,11 @@ public sealed class TestingParallelManager : IParallelManager
         throw new NotImplementedException();
     }
 
+    public void ProcessSerialNow(IParallelRobustJob jobs, int amount)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task[] Process(IParallelRobustJob jobs, int amount)
     {
         throw new NotImplementedException();

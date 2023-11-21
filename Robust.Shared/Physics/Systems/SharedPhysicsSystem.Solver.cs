@@ -29,6 +29,7 @@ using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
@@ -329,28 +330,26 @@ public abstract partial class SharedPhysicsSystem
     }
 
     private void SolveVelocityConstraints(IslandData island,
-        ParallelOptions? options,
+        bool parallel,
         ContactVelocityConstraint[] velocityConstraints,
         Vector2[] linearVelocities,
         float[] angularVelocities)
     {
         var contactCount = island.Contacts.Count;
 
-        if (options != null && contactCount > VelocityConstraintsPerThread * 2)
+        var job = new SolveVelocityJob()
         {
-            var batches = (int) Math.Ceiling((float) contactCount / VelocityConstraintsPerThread);
+            Physics = this,
+            Island = island,
+            VelocityConstraints = velocityConstraints,
+            LinearVelocities = linearVelocities,
+            AngularVelocities = angularVelocities,
+        };
 
-            Parallel.For(0, batches, options, i =>
-            {
-                var start = i * VelocityConstraintsPerThread;
-                var end = Math.Min(start + VelocityConstraintsPerThread, contactCount);
-                SolveVelocityConstraints(island, start, end, velocityConstraints, linearVelocities, angularVelocities);
-            });
-        }
+        if (parallel)
+            _parallel.ProcessNow(job, contactCount);
         else
-        {
-            SolveVelocityConstraints(island, 0, contactCount, velocityConstraints, linearVelocities, angularVelocities);
-        }
+            _parallel.ProcessSerialNow(job, contactCount);
     }
 
     private void SolveVelocityConstraints(
@@ -658,33 +657,33 @@ public abstract partial class SharedPhysicsSystem
     private bool SolvePositionConstraints(
         SolverData data,
         in IslandData island,
-        ParallelOptions? options,
+        bool parallel,
         ContactPositionConstraint[] positionConstraints,
         Vector2[] positions,
         float[] angles)
     {
         var contactCount = island.Contacts.Count;
 
-        // Parallel
-        if (options != null && contactCount > PositionConstraintsPerThread * 2)
+        var job = new SolvePositionJob()
         {
-            var unsolved = 0;
-            var batches = (int) Math.Ceiling((float) contactCount / PositionConstraintsPerThread);
+            Physics = this,
+            Data = data,
+            PositionConstraints = positionConstraints,
+            Positions = positions,
+            Angles = angles,
+        };
 
-            Parallel.For(0, batches, options, i =>
-            {
-                var start = i * PositionConstraintsPerThread;
-                var end = Math.Min(start + PositionConstraintsPerThread, contactCount);
-
-                if (!SolvePositionConstraints(data, start, end, positionConstraints, positions, angles))
-                    Interlocked.Increment(ref unsolved);
-            });
-
-            return unsolved == 0;
+        // Parallel
+        if (parallel)
+        {
+            _parallel.ProcessNow(job, contactCount);
+        }
+        else
+        {
+            _parallel.ProcessSerialNow(job, contactCount);
         }
 
-        // No parallel
-        return SolvePositionConstraints(data, 0, contactCount, positionConstraints, positions, angles);
+        return job.Unsolved == 0;
     }
 
     /// <summary>
@@ -907,4 +906,42 @@ public abstract partial class SharedPhysicsSystem
 
             }
     }
+
+    #region Jobs
+
+    private record struct SolvePositionJob : IParallelRobustJob
+    {
+        public int BatchSize => PositionConstraintsPerThread;
+
+        public SharedPhysicsSystem Physics;
+        public SolverData Data;
+        public ContactPositionConstraint[] PositionConstraints;
+        public Vector2[] Positions;
+        public float[] Angles;
+        public int Unsolved;
+
+        public void Execute(int index)
+        {
+            if (!Physics.SolvePositionConstraints(Data, index, index + 1, PositionConstraints, Positions, Angles))
+                Interlocked.Increment(ref Unsolved);
+        }
+    }
+
+    private record struct SolveVelocityJob : IParallelRobustJob
+    {
+        public int BatchSize => VelocityConstraintsPerThread;
+
+        public SharedPhysicsSystem Physics;
+        public IslandData Island;
+        public ContactVelocityConstraint[] VelocityConstraints;
+        public Vector2[] LinearVelocities;
+        public float[] AngularVelocities;
+
+        public void Execute(int index)
+        {
+            Physics.SolveVelocityConstraints(Island, index, index + 1, VelocityConstraints, LinearVelocities, AngularVelocities);
+        }
+    }
+
+    #endregion
 }

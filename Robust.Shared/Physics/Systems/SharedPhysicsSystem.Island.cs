@@ -10,6 +10,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
@@ -655,11 +656,6 @@ public abstract partial class SharedPhysicsSystem
             sleepStatus[i] = false;
         }
 
-        var options = new ParallelOptions()
-        {
-            MaxDegreeOfParallelism = _parallel.ParallelProcessCount,
-        };
-
         while (iBegin < actualIslands.Length)
         {
             ref var island = ref actualIslands[iBegin];
@@ -667,15 +663,29 @@ public abstract partial class SharedPhysicsSystem
             if (!InternalParallel(island))
                 break;
 
-            SolveIsland(ref island, in data, options, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
+            SolveIsland(ref island, in data, true, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
             iBegin++;
         }
 
-        Parallel.For(iBegin, actualIslands.Length, options, i =>
+        var parallelIslandCount = actualIslands.Length - iBegin;
+        var islando = new ArraySegment<IslandData>(actualIslands, iBegin, parallelIslandCount);
+
+        var job = new SolveIslandJob()
         {
-            ref var island = ref actualIslands[i];
-            SolveIsland(ref island, in data, null, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
-        });
+            Physics = this,
+            Parallel = false,
+            Islands = islando.Array!,
+            Data = data,
+            Gravity = gravity,
+            Prediction = prediction,
+            SolvedPositions = solvedPositions,
+            SolvedAngles = solvedAngles,
+            LinearVelocities = linearVelocities,
+            AngularVelocities = angularVelocities,
+            SleepStatus = sleepStatus,
+        };
+
+        _parallel.ProcessNow(job, parallelIslandCount);
 
         // Update data sequentially
         var metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -719,10 +729,11 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Go through all the bodies in this island and solve.
     /// </summary>
+    /// <param name="parallel">Should we run internal tasks in parallel (true), or is the entire island being solved in parallel with others (false).</param>
     private void SolveIsland(
         ref IslandData island,
         in SolverData data,
-        ParallelOptions? options,
+        bool parallel,
         Vector2 gravity,
         bool prediction,
         Vector2[] solvedPositions,
@@ -822,7 +833,7 @@ public abstract partial class SharedPhysicsSystem
                     island.BrokenJoints.Add((island.Joints[j].Original, error));
             }
 
-            SolveVelocityConstraints(island, options, velocityConstraints, linearVelocities, angularVelocities);
+            SolveVelocityConstraints(island, parallel, velocityConstraints, linearVelocities, angularVelocities);
         }
 
         // Store for warm starting.
@@ -861,7 +872,7 @@ public abstract partial class SharedPhysicsSystem
 
         for (var i = 0; i < data.PositionIterations; i++)
         {
-            var contactsOkay = SolvePositionConstraints(data, in island, options, positionConstraints, positions, angles);
+            var contactsOkay = SolvePositionConstraints(data, in island, parallel, positionConstraints, positions, angles);
             var jointsOkay = true;
 
             for (var j = 0; j < island.Joints.Count; ++j)
@@ -891,22 +902,25 @@ public abstract partial class SharedPhysicsSystem
         // Solve positions now and store for later; we can't write this safely in parallel.
         var bodies = island.Bodies;
 
-        if (options != null)
+        var finaliseJob = new FinalisePositionJob()
         {
-            const int FinaliseBodies = 32;
-            var batches = (int)MathF.Ceiling((float) bodyCount / FinaliseBodies);
+            Physics = this,
+            Offset = offset,
+            Bodies = bodies,
+            XformQuery = xformQuery,
+            Positions = positions,
+            Angles = angles,
+            SolvedPositions = solvedPositions,
+            SolvedAngles = solvedAngles,
+        };
 
-            Parallel.For(0, batches, options, i =>
-            {
-                var start = i * FinaliseBodies;
-                var end = Math.Min(bodyCount, start + FinaliseBodies);
-
-                FinalisePositions(start, end, offset, bodies, xformQuery, positions, angles, solvedPositions, solvedAngles);
-            });
+        if (parallel)
+        {
+            _parallel.ProcessNow(finaliseJob, bodyCount);
         }
         else
         {
-            FinalisePositions(0, bodyCount, offset, bodies,xformQuery, positions, angles, solvedPositions, solvedAngles);
+            _parallel.ProcessSerialNow(finaliseJob, bodyCount);
         }
 
         // Check sleep status for all of the bodies
@@ -1087,4 +1101,50 @@ public abstract partial class SharedPhysicsSystem
             SetAwake(body.Owner, body, false);
         }
     }
+
+    #region Jobs
+
+    private record struct SolveIslandJob : IParallelRobustJob
+    {
+        public int BatchSize => 1;
+
+        public SharedPhysicsSystem Physics;
+        public bool Parallel;
+        public IslandData[] Islands;
+        public SolverData Data;
+        public Vector2 Gravity;
+        public bool Prediction;
+        public Vector2[] SolvedPositions;
+        public float[] SolvedAngles;
+        public Vector2[] LinearVelocities;
+        public float[] AngularVelocities;
+        public bool[] SleepStatus;
+
+        public void Execute(int index)
+        {
+            ref var island = ref Islands[index];
+            Physics.SolveIsland(ref island, Data, Parallel, Gravity, Prediction, SolvedPositions, SolvedAngles, LinearVelocities, AngularVelocities, SleepStatus);
+        }
+    }
+
+    private record struct FinalisePositionJob : IParallelRobustJob
+    {
+        public int BatchSize => 32;
+
+        public SharedPhysicsSystem Physics;
+        public EntityQuery<TransformComponent> XformQuery;
+        public int Offset;
+        public List<PhysicsComponent> Bodies;
+        public Vector2[] Positions;
+        public float[] Angles;
+        public Vector2[] SolvedPositions;
+        public float[] SolvedAngles;
+
+        public void Execute(int index)
+        {
+            Physics.FinalisePositions(index, index + 1, Offset, Bodies, XformQuery, Positions, Angles, SolvedPositions, SolvedAngles);
+        }
+    }
+
+    #endregion
 }

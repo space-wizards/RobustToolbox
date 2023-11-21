@@ -1,7 +1,7 @@
 namespace Robust.Shared.Threading;
 
 /// <summary>
-/// Helper for <see cref="IRobustJob"/>
+/// Runs the job with the specified batch size per thread; Execute is still called per index.
 /// </summary>
 public interface IParallelRobustJob
 {

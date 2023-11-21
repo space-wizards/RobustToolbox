@@ -665,24 +665,28 @@ public abstract partial class SharedPhysicsSystem
         }
 
         var parallelIslandCount = actualIslands.Length - iBegin;
-        var islando = new ArraySegment<IslandData>(actualIslands, iBegin, parallelIslandCount);
 
-        var job = new SolveIslandJob()
+        if (parallelIslandCount > 0)
         {
-            Physics = this,
-            Parallel = false,
-            Islands = islando.Array!,
-            Data = data,
-            Gravity = gravity,
-            Prediction = prediction,
-            SolvedPositions = solvedPositions,
-            SolvedAngles = solvedAngles,
-            LinearVelocities = linearVelocities,
-            AngularVelocities = angularVelocities,
-            SleepStatus = sleepStatus,
-        };
+            var islando = new ArraySegment<IslandData>(actualIslands, iBegin, parallelIslandCount);
 
-        _parallel.ProcessNow(job, parallelIslandCount);
+            var job = new SolveIslandJob()
+            {
+                Physics = this,
+                Parallel = false,
+                Islands = islando.Array!,
+                Data = data,
+                Gravity = gravity,
+                Prediction = prediction,
+                SolvedPositions = solvedPositions,
+                SolvedAngles = solvedAngles,
+                LinearVelocities = linearVelocities,
+                AngularVelocities = angularVelocities,
+                SleepStatus = sleepStatus,
+            };
+
+            _parallel.ProcessNow(job, parallelIslandCount);
+        }
 
         // Update data sequentially
         var metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -995,29 +999,26 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<ContactPositionConstraint>.Shared.Return(positionConstraints);
     }
 
-    private void FinalisePositions(int start, int end, int offset, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery, Vector2[] positions, float[] angles, Vector2[] solvedPositions, float[] solvedAngles)
+    private void FinalisePositions(int index, int offset, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery, Vector2[] positions, float[] angles, Vector2[] solvedPositions, float[] solvedAngles)
     {
-        for (var i = start; i < end; i++)
-        {
-            var body = bodies[i];
+        var body = bodies[index];
 
-            if (body.BodyType == BodyType.Static)
-                continue;
+        if (body.BodyType == BodyType.Static)
+            return;
 
-            var xform = xformQuery.GetComponent(body.Owner);
-            var parentXform = xformQuery.GetComponent(xform.ParentUid);
-            var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(xformQuery);
-            var worldRot = (float) (parentRot + xform._localRotation);
+        var xform = xformQuery.GetComponent(body.Owner);
+        var parentXform = xformQuery.GetComponent(xform.ParentUid);
+        var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(xformQuery);
+        var worldRot = (float) (parentRot + xform._localRotation);
 
-            var angle = angles[i];
+        var angle = angles[index];
 
-            var q = new Quaternion2D(angle);
-            var adjustedPosition = positions[i] - Physics.Transform.Mul(q, body.LocalCenter);
+        var q = new Quaternion2D(angle);
+        var adjustedPosition = positions[index] - Physics.Transform.Mul(q, body.LocalCenter);
 
-            var solvedPosition = parentInvMatrix.Transform(adjustedPosition);
-            solvedPositions[offset + i] = solvedPosition - xform.LocalPosition;
-            solvedAngles[offset + i] = angles[i] - worldRot;
-        }
+        var solvedPosition = parentInvMatrix.Transform(adjustedPosition);
+        solvedPositions[offset + index] = solvedPosition - xform.LocalPosition;
+        solvedAngles[offset + index] = angles[index] - worldRot;
     }
 
     /// <summary>
@@ -1078,7 +1079,7 @@ public abstract partial class SharedPhysicsSystem
             }
 
             // TODO: Should check if the values update.
-            Dirty(body, metaQuery.GetComponent(uid));
+            Dirty(uid, body, metaQuery.GetComponent(uid));
         }
     }
 
@@ -1139,7 +1140,7 @@ public abstract partial class SharedPhysicsSystem
 
         public void Execute(int index)
         {
-            Physics.FinalisePositions(index, index + 1, Offset, Bodies, XformQuery, Positions, Angles, SolvedPositions, SolvedAngles);
+            Physics.FinalisePositions(index, Offset, Bodies, XformQuery, Positions, Angles, SolvedPositions, SolvedAngles);
         }
     }
 

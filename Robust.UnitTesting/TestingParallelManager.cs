@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Robust.Shared.Threading;
+using Schedulers;
 
 namespace Robust.UnitTesting;
 
@@ -18,7 +19,7 @@ public sealed class TestingParallelManager : IParallelManager
         return;
     }
 
-    public Task Process(IRobustJob job)
+    public JobHandle Process(IRobustJob job)
     {
         throw new NotImplementedException();
     }
@@ -33,7 +34,7 @@ public sealed class TestingParallelManager : IParallelManager
         throw new NotImplementedException();
     }
 
-    public Task[] Process(IParallelRobustJob jobs, int amount)
+    public JobHandle Process(IParallelRobustJob jobs, int amount)
     {
         throw new NotImplementedException();
     }

@@ -193,9 +193,6 @@ public abstract partial class SharedPhysicsSystem
     private float _velocityThreshold;
     private float _baumgarte;
 
-    private const int VelocityConstraintsPerThread = 16;
-    private const int PositionConstraintsPerThread = 16;
-
     #region Setup
 
     private void InitializeIsland()

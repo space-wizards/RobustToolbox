@@ -21,6 +21,7 @@
 */
 
 using System;
+using System.Buffers;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -664,6 +665,11 @@ public abstract partial class SharedPhysicsSystem
     {
         var contactCount = island.Contacts.Count;
 
+        if (contactCount == 0)
+            return true;
+
+        var solved = ArrayPool<bool>.Shared.Rent(contactCount);
+
         var job = new SolvePositionJob()
         {
             Physics = this,
@@ -671,6 +677,7 @@ public abstract partial class SharedPhysicsSystem
             PositionConstraints = positionConstraints,
             Positions = positions,
             Angles = angles,
+            Solved = solved
         };
 
         // Parallel
@@ -683,7 +690,15 @@ public abstract partial class SharedPhysicsSystem
             _parallel.ProcessSerialNow(job, contactCount);
         }
 
-        return job.Unsolved == 0;
+        for (var i = 0; i < contactCount; i++)
+        {
+            if (!solved[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -911,25 +926,31 @@ public abstract partial class SharedPhysicsSystem
 
     private record struct SolvePositionJob : IParallelRobustJob
     {
-        public int BatchSize => PositionConstraintsPerThread;
+        public int BatchSize => 16;
 
         public SharedPhysicsSystem Physics;
         public SolverData Data;
         public ContactPositionConstraint[] PositionConstraints;
         public Vector2[] Positions;
         public float[] Angles;
-        public int Unsolved;
+        public bool[] Solved;
 
         public void Execute(int index)
         {
-            if (!Physics.SolvePositionConstraints(Data, index, index + 1, PositionConstraints, Positions, Angles))
-                Interlocked.Increment(ref Unsolved);
+            if (Physics.SolvePositionConstraints(Data, index, index + 1, PositionConstraints, Positions, Angles))
+            {
+                Solved[index] = true;
+            }
+            else
+            {
+                Solved[index] = false;
+            }
         }
     }
 
     private record struct SolveVelocityJob : IParallelRobustJob
     {
-        public int BatchSize => VelocityConstraintsPerThread;
+        public int BatchSize => 16;
 
         public SharedPhysicsSystem Physics;
         public IslandData Island;

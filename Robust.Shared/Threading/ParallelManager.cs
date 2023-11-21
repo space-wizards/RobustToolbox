@@ -67,14 +67,13 @@ internal sealed class ParallelManager : IParallelManagerInternal
         {
             ParallelCountChanged?.Invoke();
 
+            // TODO: Need to check this / not sure what to do.
             ThreadPool.SetMaxThreads(ParallelProcessCount, oldCompletion);
         }
     }
 
     public Task Process(IRobustJob job)
     {
-        // TODO: Does this have a race condition where it returns too early maybe?
-        // I think it would be better with a TCS.
         var wrapper = new JobWrapper(job);
         ThreadPool.UnsafeQueueUserWorkItem(wrapper, false);
         return wrapper.Tcs.Task;
@@ -111,8 +110,9 @@ internal sealed class ParallelManager : IParallelManagerInternal
     /// </summary>
     private readonly record struct JobWrapper : IThreadPoolWorkItem
     {
-        private readonly IRobustJob _job;
         public readonly TaskCompletionSource Tcs = new();
+
+        private readonly IRobustJob _job;
 
         public JobWrapper(IRobustJob job)
         {
@@ -131,22 +131,22 @@ internal sealed class ParallelManager : IParallelManagerInternal
     /// </summary>
     private readonly record struct ParallelJobWrapper : IThreadPoolWorkItem
     {
-        private readonly IParallelRobustJob _job;
         public readonly TaskCompletionSource Tcs = new();
 
-        public readonly int Start;
-        public readonly int End;
+        private readonly IParallelRobustJob _job;
+        private readonly int _start;
+        private readonly int _end;
 
         public ParallelJobWrapper(IParallelRobustJob job, int start, int end)
         {
             _job = job;
-            Start = start;
-            End = end;
+            _start = start;
+            _end = end;
         }
 
         public void Execute()
         {
-            for (var i = Start; i < End; i++)
+            for (var i = _start; i < _end; i++)
             {
                 _job.Execute(i);
             }

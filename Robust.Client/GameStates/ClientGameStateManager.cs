@@ -129,6 +129,8 @@ namespace Robust.Client.GameStates
         public bool DropStates;
 #endif
 
+        private bool _resettingPredictedEntities;
+
         /// <inheritdoc />
         public void Initialize()
         {
@@ -151,6 +153,7 @@ namespace Robust.Client.GameStates
             _config.OnValueChanged(CVars.NetPredictLagBias, i => PredictLagBias = i, true);
             _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i, true);
             _config.OnValueChanged(CVars.NetPVSEntityExitBudget, i => _pvsDetachBudget = i, true);
+            _config.OnValueChanged(CVars.NetMaxBufferSize, i => _processor.MaxBufferSize = i, true);
 
             _processor.Interpolation = _config.GetCVar(CVars.NetInterp);
             _processor.BufferSize = _config.GetCVar(CVars.NetBufferSize);
@@ -165,11 +168,30 @@ namespace Robust.Client.GameStates
             _conHost.RegisterCommand("localdelete", Loc.GetString("cmd-local-delete-desc"), Loc.GetString("cmd-local-delete-help"), LocalDeleteEntCommand);
             _conHost.RegisterCommand("fullstatereset", Loc.GetString("cmd-full-state-reset-desc"), Loc.GetString("cmd-full-state-reset-help"), (_,_,_) => RequestFullState());
 
+            _entities.ComponentAdded += OnComponentAdded;
+
             var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
             if (!metaId.HasValue)
                 throw new InvalidOperationException("MetaDataComponent does not have a NetId.");
 
             _metaCompNetId = metaId.Value;
+        }
+
+        private void OnComponentAdded(AddedComponentEventArgs args)
+        {
+            if (_resettingPredictedEntities)
+            {
+                var comp = args.ComponentType;
+
+                if (comp.NetID == null)
+                    return;
+
+                _sawmill.Error($"""
+                    Added component {comp.Name} with net id {comp.NetID} while resetting predicted entities.
+                    Stack trace:
+                    {Environment.StackTrace}
+                    """);
+            }
         }
 
         /// <inheritdoc />
@@ -543,40 +565,50 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-                foreach (var (netId, comp) in meta.NetComponents)
+                try
                 {
-                    if (!comp.NetSyncEnabled)
-                        continue;
+                    _resettingPredictedEntities = true;
 
-                    // Was this component added during prediction?
-                    if (comp.CreationTick > _timing.LastRealTick)
+                    foreach (var (netId, comp) in meta.NetComponents)
                     {
-                        if (last.ContainsKey(netId))
+                        if (!comp.NetSyncEnabled)
+                            continue;
+
+                        // Was this component added during prediction?
+                        if (comp.CreationTick > _timing.LastRealTick)
                         {
-                            // Component was probably removed and then re-addedd during a single prediction run
-                            // Just reset state as normal.
-                            comp.ClearCreationTick();
+                            if (last.ContainsKey(netId))
+                            {
+                                // Component was probably removed and then re-addedd during a single prediction run
+                                // Just reset state as normal.
+                                comp.ClearCreationTick();
+                            }
+                            else
+                            {
+                                toRemove.Add(comp);
+                                if (_sawmill.Level <= LogLevel.Debug)
+                                    _sawmill.Debug($"  A new component was added: {comp.GetType()}");
+                                continue;
+                            }
                         }
-                        else
+
+                        if (comp.LastModifiedTick <= _timing.LastRealTick ||
+                            !last.TryGetValue(netId, out var compState))
                         {
-                            toRemove.Add(comp);
-                            if (_sawmill.Level <= LogLevel.Debug)
-                                _sawmill.Debug($"  A new component was added: {comp.GetType()}");
                             continue;
                         }
+
+                        if (_sawmill.Level <= LogLevel.Debug)
+                            _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
+
+                        var handleState = new ComponentHandleState(compState, null);
+                        _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
+                        comp.LastModifiedTick = _timing.LastRealTick;
                     }
-
-                    if (comp.LastModifiedTick <= _timing.LastRealTick || !last.TryGetValue(netId, out var compState))
-                    {
-                        continue;
-                    }
-
-                    if (_sawmill.Level <= LogLevel.Debug)
-                        _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
-
-                    var handleState = new ComponentHandleState(compState, null);
-                    _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
-                    comp.LastModifiedTick = _timing.LastRealTick;
+                }
+                finally
+                {
+                    _resettingPredictedEntities = false;
                 }
 
                 if (toRemove.Count > 0)

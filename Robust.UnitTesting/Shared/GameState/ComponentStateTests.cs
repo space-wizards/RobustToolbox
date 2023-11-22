@@ -2,14 +2,12 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.UnitTesting.Shared.GameState;
 
@@ -74,7 +72,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             // Attach player.
             player = server.EntMan.Spawn();
             var session = server.PlayerMan.Sessions.First();
-            server.System<ActorSystem>().Attach(player, session);
+            server.PlayerMan.SetAttachedEntity(session, player);
             server.PlayerMan.JoinGame(session);
 
             // Spawn test entities.
@@ -210,7 +208,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             // Attach player.
             player = server.EntMan.Spawn();
             var session = server.PlayerMan.Sessions.First();
-            server.System<ActorSystem>().Attach(player, session);
+            server.PlayerMan.SetAttachedEntity(session, player);
             server.PlayerMan.JoinGame(session);
 
             // Spawn test entities.
@@ -308,6 +306,6 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class UnknownEntityTestComponent : Component
 {
-    [DataField, AutoNetworkedField]
+    [AutoNetworkedField]
     public EntityUid? Other;
 }

@@ -27,7 +27,7 @@ public sealed class ClientSpriteSpecifierSerializer : SpriteSpecifierSerializer
             return new ErrorNode(node, "Sprite specifier has missing/invalid state node");
         }
 
-        var res = dependencies.Resolve<IClientResourceCache>();
+        var res = dependencies.Resolve<IResourceCache>();
         var rsiPath = TextureRoot / valuePathNode.Value;
         if (!res.TryGetResource(rsiPath, out RSIResource? resource))
         {

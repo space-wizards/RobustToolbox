@@ -31,9 +31,9 @@ namespace Robust.Shared.GameObjects
     public readonly struct AddedComponentEventArgs
     {
         public readonly ComponentEventArgs BaseArgs;
-        public readonly CompIdx ComponentType;
+        public readonly ComponentRegistration ComponentType;
 
-        public AddedComponentEventArgs(ComponentEventArgs baseArgs, CompIdx componentType)
+        public AddedComponentEventArgs(ComponentEventArgs baseArgs, ComponentRegistration componentType)
         {
             BaseArgs = baseArgs;
             ComponentType = componentType;

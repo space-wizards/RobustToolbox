@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
-using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -53,6 +52,16 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> NetReceiveBufferSize =
             CVarDef.Create("net.receivebuffersize", 131071, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Size of the pool for Lidgren's array buffers to send messages.
+        /// Set to 0 to disable pooling; max is 8192.
+        /// </summary>
+        /// <remarks>
+        /// Higher just means more potentially wasted space and slower pool retrieval.
+        /// </remarks>
+        public static readonly CVarDef<int> NetPoolSize =
+            CVarDef.Create("net.pool_size", 512, CVar.CLIENT | CVar.SERVER);
 
         /// <summary>
         /// Maximum UDP payload size to send.
@@ -119,6 +128,13 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
             CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The maximum size of the game state buffer. If this is exceeded the client will request a full game state.
+        /// Values less than <see cref="GameStateProcessor.MinimumMaxBufferSize"/> will be ignored.
+        /// </summary>
+        public static readonly CVarDef<int> NetMaxBufferSize =
+            CVarDef.Create("net.max_buffer_size", 512, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Enable verbose game state/networking logging.
@@ -1001,7 +1017,7 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<int> AudioAttenuation =
-            CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
+            CVarDef.Create("audio.attenuation", (int) Attenuation.Default, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Audio device to try to output audio to by default.
@@ -1020,10 +1036,6 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> AudioRaycastLength =
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
-
-        public static readonly CVarDef<float> AudioZOffset =
-            CVarDef.Create("audio.z_offset", -1f, CVar.REPLICATED);
-
 
         /*
          * PLAYER

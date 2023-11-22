@@ -15,7 +15,6 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Asynchronous;
-using Robust.Shared.Audio;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -355,7 +354,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class LoadResource : LocalizedCommands
     {
-        [Dependency] private readonly IClientResourceCache _res = default!;
+        [Dependency] private readonly IResourceCache _res = default!;
         [Dependency] private readonly IReflectionManager _reflection = default!;
 
         public override string Command => "ldrsc";
@@ -392,7 +391,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ReloadResource : LocalizedCommands
     {
-        [Dependency] private readonly IClientResourceCache _res = default!;
+        [Dependency] private readonly IResourceCache _res = default!;
         [Dependency] private readonly IReflectionManager _reflection = default!;
 
         public override string Command => "rldrsc";
@@ -459,13 +458,13 @@ namespace Robust.Client.Console.Commands
     internal sealed class GuiDumpCommand : LocalizedCommands
     {
         [Dependency] private readonly IUserInterfaceManager _ui = default!;
-        [Dependency] private readonly IResourceManager _resManager = default!;
+        [Dependency] private readonly IResourceCache _res = default!;
 
         public override string Command => "guidump";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            using var writer = _resManager.UserData.OpenWriteText(new ResPath("/guidump.txt"));
+            using var writer = _res.UserData.OpenWriteText(new ResPath("/guidump.txt"));
 
             foreach (var root in _ui.AllRoots)
             {
@@ -645,8 +644,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ReloadShadersCommand : LocalizedCommands
     {
-        [Dependency] private readonly IResourceCache _cache = default!;
-        [Dependency] private readonly IResourceManagerInternal _resManager = default!;
+        [Dependency] private readonly IResourceCacheInternal _res = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
 
         public override string Command => "rldshader";
@@ -657,7 +655,7 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var resC = _resManager;
+            var resC = _res;
             if (args.Length == 1)
             {
                 if (args[0] == "+watch")
@@ -681,9 +679,9 @@ namespace Robust.Client.Console.Commands
                     var shaderCount = 0;
                     var created = 0;
                     var dirs = new ConcurrentDictionary<string, SortedSet<string>>(stringComparer);
-                    foreach (var (path, src) in _cache.GetAllResources<ShaderSourceResource>())
+                    foreach (var (path, src) in resC.GetAllResources<ShaderSourceResource>())
                     {
-                        if (!_resManager.TryGetDiskFilePath(path, out var fullPath))
+                        if (!resC.TryGetDiskFilePath(path, out var fullPath))
                         {
                             throw new NotImplementedException();
                         }
@@ -732,7 +730,7 @@ namespace Robust.Client.Console.Commands
                                     {
                                         try
                                         {
-                                            _cache.ReloadResource<ShaderSourceResource>(resPath);
+                                            resC.ReloadResource<ShaderSourceResource>(resPath);
                                             shell.WriteLine($"Reloaded shader: {resPath}");
                                         }
                                         catch (Exception)
@@ -793,11 +791,11 @@ namespace Robust.Client.Console.Commands
 
             shell.WriteLine("Reloading content shader resources...");
 
-            foreach (var (path, _) in _cache.GetAllResources<ShaderSourceResource>())
+            foreach (var (path, _) in resC.GetAllResources<ShaderSourceResource>())
             {
                 try
                 {
-                    _cache.ReloadResource<ShaderSourceResource>(path);
+                    resC.ReloadResource<ShaderSourceResource>(path);
                 }
                 catch (Exception)
                 {

@@ -22,8 +22,6 @@ namespace Robust.Shared.Player
 
         public bool SendReliable { get; private set; }
 
-        public int Count => _recipients.Count;
-
         public IEnumerable<ICommonSession> Recipients => _recipients;
 
         /// <summary>

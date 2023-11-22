@@ -50,12 +50,18 @@ internal abstract partial class SharedPlayerManager
         }
     }
 
-    public bool TryGetSessionById(NetUserId user, [NotNullWhen(true)] out ICommonSession? session)
+    public bool TryGetSessionById([NotNullWhen(true)] NetUserId? user, [NotNullWhen(true)] out ICommonSession? session)
     {
+        if (user == null)
+        {
+            session = null;
+            return false;
+        }
+
         Lock.EnterReadLock();
         try
         {
-            return InternalSessions.TryGetValue(user, out session);
+            return InternalSessions.TryGetValue(user.Value, out session);
         }
         finally
         {
@@ -93,7 +99,14 @@ internal abstract partial class SharedPlayerManager
         return new CommonSession(user, name, data);
     }
 
-    internal CommonSession CreateAndAddSession(NetUserId user, string name)
+    public ICommonSession CreateAndAddSession(INetChannel channel)
+    {
+        var session = CreateAndAddSession(channel.UserId, channel.UserName);
+        session.Channel = channel;
+        return session;
+    }
+
+    public ICommonSession CreateAndAddSession(NetUserId user, string name)
     {
         Lock.EnterWriteLock();
         CommonSession session;
@@ -134,13 +147,78 @@ internal abstract partial class SharedPlayerManager
         }
     }
 
-    public virtual void SetAttachedEntity(ICommonSession session, EntityUid? uid)
+    /// <inheritdoc cref="ISharedPlayerManager.SetAttachedEntity"/>
+    public virtual bool SetAttachedEntity(
+        [NotNullWhen(true)] ICommonSession? session,
+        EntityUid? uid,
+        out ICommonSession? kicked,
+        bool force = false)
     {
+        kicked = null;
+        if (session == null)
+            return false;
+
         if (session.AttachedEntity == uid)
+        {
+            DebugTools.Assert(uid == null || EntManager.HasComponent<ActorComponent>(uid));
+            return true;
+        }
+
+        if (uid != null)
+            return Attach(session, uid.Value, out kicked, force);
+
+        Detach(session);
+        return true;
+    }
+
+    private void Detach(ICommonSession session)
+    {
+        if (session.AttachedEntity is not {} uid)
             return;
 
-        ((CommonSession) session).AttachedEntity = uid;
+        ((CommonSession) session).AttachedEntity = null;
         UpdateState(session);
+
+        if (EntManager.TryGetComponent(uid, out ActorComponent? actor) && actor.LifeStage <= ComponentLifeStage.Running)
+        {
+            actor.PlayerSession = default!;
+            EntManager.RemoveComponent(uid, actor);
+        }
+
+        EntManager.EventBus.RaiseLocalEvent(uid, new PlayerDetachedEvent(uid, session), true);
+    }
+
+    private bool Attach(ICommonSession session, EntityUid uid, out ICommonSession? kicked, bool force = false)
+    {
+        kicked = null;
+        if (!EntManager.TryGetComponent(uid, out MetaDataComponent? meta))
+            return false;
+
+        if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
+            return false;
+
+        if (EntManager.EnsureComponent<ActorComponent>(uid, out var actor))
+        {
+            // component already existed.
+            DebugTools.AssertNotNull(actor.PlayerSession);
+            if (!force)
+                return false;
+
+            kicked = actor.PlayerSession;
+            Detach(kicked);
+        }
+
+        if (_netMan.IsServer)
+            EntManager.EnsureComponent<EyeComponent>(uid);
+
+        if (session.AttachedEntity != null)
+            Detach(session);
+
+        ((CommonSession) session).AttachedEntity = uid;
+        actor.PlayerSession = session;
+        UpdateState(session);
+        EntManager.EventBus.RaiseLocalEvent(uid, new PlayerAttachedEvent(uid, session), true);
+        return true;
     }
 
     public void SetStatus(ICommonSession session, SessionStatus status)
@@ -153,6 +231,18 @@ internal abstract partial class SharedPlayerManager
 
         UpdateState(session);
         PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(session, old, status));
+    }
+
+    public void SetPing(ICommonSession session, short ping)
+    {
+        ((CommonSession) session).Ping = ping;
+        UpdateState(session);
+    }
+
+    public void SetName(ICommonSession session, string name)
+    {
+        ((CommonSession) session).Name = name;
+        UpdateState(session);
     }
 
     public void JoinGame(ICommonSession session)

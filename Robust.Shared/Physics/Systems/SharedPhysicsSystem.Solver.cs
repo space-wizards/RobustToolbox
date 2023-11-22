@@ -67,12 +67,8 @@ public abstract partial class SharedPhysicsSystem
             velocityConstraint.TangentSpeed = contact.TangentSpeed;
             velocityConstraint.IndexA = bodyA.IslandIndex[island.Index];
             velocityConstraint.IndexB = bodyB.IslandIndex[island.Index];
-            velocityConstraint.Points = new VelocityConstraintPoint[2];
-
-            for (var j = 0; j < 2; j++)
-            {
-                velocityConstraint.Points[j] = new VelocityConstraintPoint();
-            }
+            Array.Resize(ref velocityConstraint.Points, 2);
+            // Don't need to reset point data as it all gets set below.
 
             var (invMassA, invMassB) = GetInvMass(bodyA, bodyB);
 
@@ -91,7 +87,7 @@ public abstract partial class SharedPhysicsSystem
             (positionConstraint.InvMassA, positionConstraint.InvMassB) = (invMassA, invMassB);
             positionConstraint.LocalCenterA = bodyA.LocalCenter;
             positionConstraint.LocalCenterB = bodyB.LocalCenter;
-            positionConstraint.LocalPoints = new Vector2[2];
+            Array.Resize(ref positionConstraint.LocalPoints, 2);
 
             positionConstraint.InvIA = bodyA.InvI;
             positionConstraint.InvIB = bodyB.InvI;

@@ -14,8 +14,6 @@ namespace Robust.Client.GameStates
     /// <inheritdoc />
     internal sealed class GameStateProcessor : IGameStateProcessor
     {
-        public const int MaxBufferSize = 512;
-
         private readonly IClientGameTiming _timing;
         private readonly IClientGameStateManager _state;
         private readonly ISawmill _logger;
@@ -28,6 +26,8 @@ namespace Robust.Client.GameStates
         public (GameTick Tick, DateTime Time)? LastFullStateRequested { get; private set; } = (GameTick.Zero, DateTime.MaxValue);
 
         private int _bufferSize;
+        private int _maxBufferSize = 512;
+        public const int MinimumMaxBufferSize = 256;
 
         /// <summary>
         /// This dictionary stores the full most recently received server state of any entity. This is used whenever predicted entities get reset.
@@ -48,7 +48,14 @@ namespace Robust.Client.GameStates
         public int BufferSize
         {
             get => _bufferSize;
-            set => _bufferSize = value < 0 ? 0 : value;
+            set => _bufferSize = Math.Max(value, 0);
+        }
+
+        public int MaxBufferSize
+        {
+            get => _maxBufferSize;
+            // We place a lower bound on the maximum size to avoid spamming servers with full game state requests.
+            set => _maxBufferSize = Math.Max(value, MinimumMaxBufferSize);
         }
 
         /// <inheritdoc />
@@ -100,21 +107,21 @@ namespace Robust.Client.GameStates
                 return true;
             }
 
-            if (LastFullState == null && state.FromSequence == GameTick.Zero && state.ToSequence >= LastFullStateRequested!.Value.Tick)
+            if (LastFullState == null && state.FromSequence == GameTick.Zero)
             {
-                LastFullState = state;
-
-                if (Logging)
+                if (state.ToSequence >= LastFullStateRequested!.Value.Tick)
+                {
+                    LastFullState = state;
                     _logger.Info($"Received Full GameState: to={state.ToSequence}, sz={state.PayloadSize}");
+                    return true;
+                }
 
-                return true;
+                _logger.Info($"Received a late full game state. Received: {state.ToSequence}. Requested: {LastFullStateRequested.Value.Tick}");
             }
 
             if (LastFullState != null && state.ToSequence <= LastFullState.ToSequence)
             {
-                if (Logging)
-                    _logger.Info($"While waiting for full, received late GameState with lower to={state.ToSequence} than the last full state={LastFullState.ToSequence}");
-
+                _logger.Info($"While waiting for full, received late GameState with lower to={state.ToSequence} than the last full state={LastFullState.ToSequence}");
                 return false;
             }
 

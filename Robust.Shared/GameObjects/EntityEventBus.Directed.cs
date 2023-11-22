@@ -346,7 +346,7 @@ namespace Robust.Shared.GameObjects
         {
             _subscriptionLock = true;
 
-            EntAddComponent(e.BaseArgs.Owner, e.ComponentType);
+            EntAddComponent(e.BaseArgs.Owner, e.ComponentType.Idx);
         }
 
         public void OnComponentRemoved(in RemovedComponentEventArgs e)

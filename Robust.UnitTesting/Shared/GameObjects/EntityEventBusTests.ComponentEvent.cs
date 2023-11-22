@@ -43,7 +43,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             bus.OnEntityAdded(entUid);
-            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(compInstance, entUid), CompIdx.Index<MetaDataComponent>()));
+
+            var reg = compFactory.GetRegistration(CompIdx.Index<MetaDataComponent>());
+            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(compInstance, entUid), reg));
 
             // Raise
             var evntArgs = new TestEvent(5);
@@ -98,7 +100,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             bus.OnEntityAdded(entUid);
-            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(compInstance, entUid), CompIdx.Index<MetaDataComponent>()));
+
+            var reg = compFacMock.Object.GetRegistration(CompIdx.Index<MetaDataComponent>());
+            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(compInstance, entUid), reg));
 
             // Raise
             var evntArgs = new TestEvent(5);
@@ -151,7 +155,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             entManMock.Raise(m => m.EntityAdded += null, entUid);
-            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(new ComponentEventArgs(compInstance, entUid), CompIdx.Index<MetaDataComponent>()));
+
+            var reg = compFacMock.Object.GetRegistration<MetaDataComponent>();
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(new ComponentEventArgs(compInstance, entUid), reg));
 
             // Raise
             ((IEventBus)bus).RaiseComponentEvent(compInstance, new ComponentInit());
@@ -228,9 +234,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             bus.OnEntityAdded(entUid);
-            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instA, entUid), CompIdx.Index<OrderAComponent>()));
-            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instB, entUid), CompIdx.Index<OrderBComponent>()));
-            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instC, entUid), CompIdx.Index<OrderCComponent>()));
+
+            var regA = compFacMock.Object.GetRegistration(CompIdx.Index<OrderAComponent>());
+            var regB = compFacMock.Object.GetRegistration(CompIdx.Index<OrderBComponent>());
+            var regC = compFacMock.Object.GetRegistration(CompIdx.Index<OrderCComponent>());
+
+            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instA, entUid), regA));
+            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instB, entUid), regB));
+            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instC, entUid), regC));
 
             // Raise
             var evntArgs = new TestEvent(5);

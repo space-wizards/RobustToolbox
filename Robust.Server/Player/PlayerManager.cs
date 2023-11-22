@@ -80,9 +80,7 @@ namespace Robust.Server.Player
         /// <param name="args"></param>
         private void NewSession(object? sender, NetChannelArgs args)
         {
-            var session = CreateAndAddSession(args.Channel.UserId, args.Channel.UserName);
-            session.Channel = args.Channel;
-
+            CreateAndAddSession(args.Channel);
             PlayerCountMetric.Set(PlayerCount);
             // Synchronize base time.
             var msgTimeBase = new MsgSyncTimeBase();
@@ -106,8 +104,7 @@ namespace Robust.Server.Player
             DebugTools.Assert(session.Channel == args.Channel);
 
             SetStatus(session, SessionStatus.Disconnected);
-            if (session.AttachedEntity != null)
-                EntManager.System<ActorSystem>().Detach(session.AttachedEntity.Value);
+            SetAttachedEntity(session, null, out _, true);
 
             var viewSys = EntManager.System<ViewSubscriberSystem>();
             foreach (var eye in session.ViewSubscriptions.ToArray())

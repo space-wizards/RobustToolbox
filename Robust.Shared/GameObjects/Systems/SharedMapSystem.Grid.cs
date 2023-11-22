@@ -985,10 +985,23 @@ public abstract partial class SharedMapSystem
         // create an entire chunk for it.
         var gridChunkPos = GridTileToChunkIndices(uid, grid, pos);
 
-        if (!grid.Chunks.TryGetValue(gridChunkPos, out var chunk)) return Enumerable.Empty<EntityUid>();
+        if (!grid.Chunks.TryGetValue(gridChunkPos, out var chunk))
+            return Enumerable.Empty<EntityUid>();
 
         var chunkTile = chunk.GridTileToChunkTile(pos);
         return chunk.GetSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y);
+    }
+
+    public void GetAnchoredEntities(Entity<MapGridComponent> grid, Vector2i pos, List<EntityUid> list)
+    {
+        var gridChunkPos = GridTileToChunkIndices(grid.Owner, grid.Comp, pos);
+        if (!grid.Comp.Chunks.TryGetValue(gridChunkPos, out var chunk))
+            return;
+
+        var chunkTile = chunk.GridTileToChunkTile(pos);
+        var anchored = chunk.GetSnapGrid((ushort) chunkTile.X, (ushort) chunkTile.Y);
+        if (anchored != null)
+            list.AddRange(anchored);
     }
 
     public AnchoredEntitiesEnumerator GetAnchoredEntitiesEnumerator(EntityUid uid, MapGridComponent grid, Vector2i pos)

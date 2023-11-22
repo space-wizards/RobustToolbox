@@ -258,7 +258,7 @@ namespace Robust.Shared.GameObjects
                 component.Networked = false;
             }
 
-            var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg.Idx);
+            var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
             ComponentAdded?.Invoke(eventArgs);
             _eventBus.OnComponentAdded(eventArgs);
 
@@ -1196,6 +1196,15 @@ namespace Robust.Shared.GameObjects
                 : (TComp1)_manager.GetComponent(uid, _type.Value.Type);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+        public Entity<TComp1> Get(EntityUid uid)
+        {
+            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+                return new Entity<TComp1>(uid, (TComp1) comp);
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
@@ -1267,6 +1276,12 @@ namespace Robust.Shared.GameObjects
                 _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
 
             return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+        public bool Resolve(ref Entity<TComp1?> entity, bool logMissing = true)
+        {
+            return Resolve(entity.Owner, ref entity.Comp, logMissing);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

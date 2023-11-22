@@ -23,7 +23,7 @@ public interface IParallelManager
     /// Takes in a job that gets flushed.
     /// </summary>
     /// <param name="job"></param>
-    ValueTask Process(IRobustJob job);
+    JobHandle Process(IRobustJob job);
 
     /// <summary>
     /// Takes in a parallel job and runs it the specified amount.
@@ -38,7 +38,7 @@ public interface IParallelManager
     /// <summary>
     /// Takes in a parallel job and runs it without blocking.
     /// </summary>
-    ValueTask Process(IParallelRobustJob jobs, int amount);
+    JobHandle Process(IParallelRobustJob jobs, int amount);
 
     /// <summary>
     /// Waits for the specified job handles to finish.
@@ -63,10 +63,6 @@ internal sealed class ParallelManager : IParallelManagerInternal
     public void Initialize()
     {
         _cfg.OnValueChanged(CVars.ThreadParallelCount, UpdateCVar, true);
-
-        // TODO: Finish porting the other big parallel methods.
-        // TODO: Try using ValueTask returns and see if it's okay.
-        // If it is then try swapping JobScheduler back out for Threadpool
 
         _scheduler = new JobScheduler(new JobScheduler.Config()
         {
@@ -93,7 +89,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
         }
     }
 
-    public ValueTask Process(IRobustJob job)
+    public JobHandle Process(IRobustJob job)
     {
         var handle = _scheduler.Schedule(job);
         _scheduler.Flush();
@@ -103,7 +99,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
     public void ProcessNow(IParallelRobustJob job, int amount)
     {
         var handle = Process(job, amount);
-        handle.AsTask().Wait();
+        handle.Complete();
     }
 
     public void ProcessSerialNow(IParallelRobustJob jobs, int amount)
@@ -114,7 +110,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
         }
     }
 
-    public ValueTask Process(IParallelRobustJob job, int amount)
+    public JobHandle Process(IParallelRobustJob job, int amount)
     {
         var handle = _scheduler.Schedule(job, amount);
         _scheduler.Flush();

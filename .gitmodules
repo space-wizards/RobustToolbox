@@ -13,3 +13,6 @@
 [submodule "cefglue"]
 	path = cefglue
 	url = https://github.com/space-wizards/cefglue.git
+[submodule "ZeroAllocJobScheduler"]
+	path = ZeroAllocJobScheduler
+	url = https://github.com/genaray/ZeroAllocJobScheduler

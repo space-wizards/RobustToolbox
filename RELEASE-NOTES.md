@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 180.2.0
+
+### New features
+
+* Add EnsureEntity variants that take in collections.
+* Add more MapSystem helper methods.
+
+### Internal
+
+* Cache some more PVS data to avoid re-allocating every tick.
+
+
 ## 180.1.0
 
 ### New features

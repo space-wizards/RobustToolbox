@@ -92,6 +92,22 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Test]
+        public void HasComponentNoGenericTest()
+        {
+            // Arrange
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
+
+            // Act
+            var result = entMan.HasComponent(entity, typeof(DummyComponent));
+
+            // Assert
+            Assert.That(result, Is.True);
+        }
+
+        [Test]
         public void HasNetComponentTest()
         {
             // Arrange

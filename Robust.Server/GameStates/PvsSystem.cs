@@ -1248,8 +1248,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
         foreach (var (netId, component) in meta.NetComponents)
         {
-            if (!component.NetSyncEnabled)
-                continue;
+            DebugTools.Assert(component.NetSyncEnabled);
 
             if (component.Deleted || !component.Initialized)
             {
@@ -1297,8 +1296,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
         foreach (var (netId, component) in meta.NetComponents)
         {
-            if (!component.NetSyncEnabled)
-                continue;
+            DebugTools.Assert(component.NetSyncEnabled);
 
             if (component.SendOnlyToOwner && player.AttachedEntity != entityUid)
                 continue;

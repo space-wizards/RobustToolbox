@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 181.0.0
+
+### Breaking changes
+
+- Arch is merged refactoring how components are stored on engine. There's minimal changes on the API end to facilitate component nullability with much internal refactoring.
+
+
 ## 180.2.1
 
 

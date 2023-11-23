@@ -259,7 +259,9 @@ namespace Robust.Client.Graphics.Clyde
             var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
 
             var spriteSystem = _entityManager.System<SpriteSystem>();
-            GetSprites(mapId, viewport, eye, worldBounds, out var indexList);
+            ProcessSpriteEntities(mapId, viewport, eye, worldBounds, _drawingSpriteList);
+            Span<int> indexList = stackalloc int[_drawingSpriteList.Count];
+            SortSprites(mapId, viewport, eye, worldBounds, ref indexList);
 
             var screenSize = viewport.Size;
             var overlayIndex = 0;
@@ -395,7 +397,6 @@ namespace Robust.Client.Graphics.Clyde
                 RenderSingleWorldOverlay(worldOverlays[overlayIndex], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
             }
 
-            ArrayPool<int>.Shared.Return(indexList);
             entityPostRenderTarget?.DisposeDeferred();
 
             _debugStats.Entities += _drawingSpriteList.Count;

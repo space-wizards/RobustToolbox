@@ -1,20 +1,75 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <AssemblyName>Arch</AssemblyName>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <DefaultItemExcludes>src/Arch/**/*</DefaultItemExcludes>
-    <DefineConstants>PURE_ECS;CONTRACTS_FULL</DefineConstants>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <LangVersion>latest</LangVersion>
+    <TargetFrameworks>net7.0; net6.0; netstandard2.1</TargetFrameworks>
+
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Nullable>enable</Nullable>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+
+    <PackageId>Arch</PackageId>
+    <Title>Arch</Title>
+    <Version>1.2.7.1-alpha</Version>
+    <Authors>genaray</Authors>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Description>A high performance c# net.6 and net.7 archetype based ECS ( Entity component system ).</Description>
+    <PackageReleaseNotes>Updated LowLevel which fixes bugs. </PackageReleaseNotes>
+    <PackageTags>c#;.net;.net6;.net7;ecs;game;entity;gamedev; game-development; game-engine; entity-component-system;stride;unity;godot;</PackageTags>
+
+    <PackageProjectUrl>https://github.com/genaray/Arch</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/genaray/Arch.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <IsPackable>true</IsPackable>
+
+    <LangVersion>11</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Copyright>Apache2.0</Copyright>
+
+    <NoWarn>1701;1702;1591</NoWarn>
+
+    <Configurations>Debug;Debug-PureECS;Debug-Events;Release;Release-PureECS;Release-Events;</Configurations>
+
+    <UnityPublish>true</UnityPublish>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>TRACE;</DefineConstants>
+    <Optimize>false</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug-PureECS'">
+    <DefineConstants>TRACE;PURE_ECS;</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug-Events'">
+    <DefineConstants>TRACE;EVENTS;</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release-Events'">
+    <DefineConstants>TRACE;EVENTS;</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release-PureECS'">
+    <DefineConstants>TRACE;PURE_ECS</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Arch\src\Arch\**\*.cs">
-      <Link>Arch\%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </Compile>
-    <Compile Remove="Arch\src\Arch\obj\**\*.cs" />
+    <InternalsVisibleTo Include="Arch.Benchmarks" />
+    <InternalsVisibleTo Include="Arch.Tests" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,7 +85,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include=".\Arch\src\Arch.SourceGen\Arch.SourceGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Arch.SourceGen\Arch.SourceGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,4 +95,5 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
     <PackageReference Include="ZeroAllocJobScheduler" Version="1.0.2" />
   </ItemGroup>
+
 </Project>

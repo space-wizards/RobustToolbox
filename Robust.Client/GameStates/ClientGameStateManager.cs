@@ -1306,13 +1306,23 @@ namespace Robust.Client.GameStates
                 // To avoid shuffling the archetype we'll set the component range up-front.
                 if (addedComps.Count > 0)
                 {
+                    // TODO: This fucking sucks but
+                    // - Frequent archetype changes PER COMPONENT sucks
+                    // - the components will be null in event handlers until it's done.
                     _entityManager.AddComponentRange(uid, addedCompTypes);
 
                     for (var i = 0; i < addedComps.Count; i++)
                     {
-                        var comp = addedComps[i];
+                        var component = addedComps[i];
                         var reg = addedRegistrations[i];
-                        _entityManager.AddComponentInternal(uid, comp, reg, false, meta);
+                        _entityManager.AddComponentInternalOnly(uid, component, reg, meta);
+                    }
+
+                    for (var i = 0; i < addedComps.Count; i++)
+                    {
+                        var component = addedComps[i];
+                        var reg = addedRegistrations[i];
+                        _entityManager.AddComponentEvents(uid, component, reg, false, meta);
                     }
                 }
             }

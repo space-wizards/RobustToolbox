@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 182.0.0
+
+### Breaking changes
+
+* Add EntityUid's generation / version to the hashcode.
+
+
 ## 181.0.2
 
 ### Bugfixes

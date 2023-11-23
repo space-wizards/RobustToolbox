@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 181.0.1
+
+### Bugfixes
+
+* Fix the non-generic HasComp and add a test for good measure.
+
+
 ## 181.0.0
 
 ### Breaking changes

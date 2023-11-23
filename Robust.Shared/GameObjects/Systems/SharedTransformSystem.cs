@@ -49,21 +49,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<TransformComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<TransformComponent, ComponentHandleState>(OnHandleState);
             SubscribeLocalEvent<TransformComponent, GridAddEvent>(OnGridAdd);
-            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
-        }
-
-        private void OnParentChange(ref EntParentChangedMessage ev)
-        {
-            // TODO: when PVS errors on live servers get fixed, wrap this whole subscription in an #if DEBUG block to speed up parent changes & entity deletion.
-            if (ev.Transform.ParentUid == EntityUid.Invalid)
-                return;
-
-            if (LifeStage(ev.Entity) >= EntityLifeStage.Terminating)
-                Log.Error($"Entity {ToPrettyString(ev.Entity)} is getting attached to a new parent while terminating. New parent: {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
-
-
-            if (LifeStage(ev.Transform.ParentUid) >= EntityLifeStage.Terminating)
-                Log.Error($"Entity {ToPrettyString(ev.Entity)} is attaching itself to a terminating entity {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
         }
 
         private void MapManagerOnTileChanged(ref TileChangedEvent e)
@@ -261,6 +246,39 @@ namespace Robust.Shared.GameObjects
             // We're on a grid, need to convert the coordinates to grid tiles.
             return _map.CoordinatesToTile(xform.GridUid.Value, Comp<MapGridComponent>(xform.GridUid.Value), xform.Coordinates);
         }
+
+        /// <summary>
+        /// Helper method that returns the grid tile an entity is on.
+        /// </summary>
+        public Vector2i GetGridTilePositionOrDefault(Entity<TransformComponent?> entity, MapGridComponent? grid = null)
+        {
+            var xform = entity.Comp;
+            if(!Resolve(entity.Owner, ref xform) || xform.GridUid == null)
+                return Vector2i.Zero;
+
+            if (!Resolve(xform.GridUid.Value, ref grid))
+                return Vector2i.Zero;
+
+            return _map.CoordinatesToTile(xform.GridUid.Value, grid, xform.Coordinates);
+        }
+
+        /// <summary>
+        /// Helper method that returns the grid tile an entity is on.
+        /// </summary>
+        public bool TryGetGridTilePosition(Entity<TransformComponent?> entity, out Vector2i indices, MapGridComponent? grid = null)
+        {
+            indices = default;
+            var xform = entity.Comp;
+            if(!Resolve(entity.Owner, ref xform) || xform.GridUid == null)
+                return false;
+
+            if (!Resolve(xform.GridUid.Value, ref grid))
+                return false;
+
+            indices = _map.CoordinatesToTile(xform.GridUid.Value, grid, xform.Coordinates);
+            return true;
+        }
+
     }
 
     [ByRefEvent]

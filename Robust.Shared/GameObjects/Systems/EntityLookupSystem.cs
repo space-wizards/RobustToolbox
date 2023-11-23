@@ -11,9 +11,11 @@ using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.BroadPhase;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -72,11 +74,14 @@ public record struct WorldAABBEvent
 
 public sealed partial class EntityLookupSystem : EntitySystem
 {
+    [Dependency] private readonly IManifoldManager _manifoldManager = default!;
     [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly INetManager _netMan = default!;
     [Dependency] private readonly SharedContainerSystem _container = default!;
+    [Dependency] private readonly FixtureSystem _fixtures = default!;
     [Dependency] private readonly SharedMapSystem _map = default!;
+    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private EntityQuery<BroadphaseComponent> _broadQuery;
@@ -368,7 +373,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         FixturesComponent manager,
         EntityQuery<TransformComponent> xformQuery)
     {
-        DebugTools.Assert(!_container.IsEntityOrParentInContainer(body.Owner, null, xform, null, xformQuery));
+        DebugTools.Assert(!_container.IsEntityOrParentInContainer(body.Owner, null, xform));
         DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadphase.Owner, physicsMap.Owner, body.CanCollide, body.BodyType == BodyType.Static));
         DebugTools.Assert(broadphase.Owner == broadUid);
 
@@ -843,7 +848,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         TransformComponent xform,
         [NotNullWhen(true)] out BroadphaseComponent? broadphase)
     {
-        if (xform.MapID == MapId.Nullspace || _container.IsEntityOrParentInContainer(xform.Owner, null, xform, null, _xformQuery))
+        if (xform.MapID == MapId.Nullspace || _container.IsEntityOrParentInContainer(xform.Owner, null, xform))
         {
             broadphase = null;
             return false;

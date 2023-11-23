@@ -54,6 +54,16 @@ namespace Robust.Shared
             CVarDef.Create("net.receivebuffersize", 131071, CVar.ARCHIVE);
 
         /// <summary>
+        /// Size of the pool for Lidgren's array buffers to send messages.
+        /// Set to 0 to disable pooling; max is 8192.
+        /// </summary>
+        /// <remarks>
+        /// Higher just means more potentially wasted space and slower pool retrieval.
+        /// </remarks>
+        public static readonly CVarDef<int> NetPoolSize =
+            CVarDef.Create("net.pool_size", 512, CVar.CLIENT | CVar.SERVER);
+
+        /// <summary>
         /// Maximum UDP payload size to send.
         /// </summary>
         /// <seealso cref="NetMtuExpand"/>
@@ -118,6 +128,13 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
             CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The maximum size of the game state buffer. If this is exceeded the client will request a full game state.
+        /// Values less than <see cref="GameStateProcessor.MinimumMaxBufferSize"/> will be ignored.
+        /// </summary>
+        public static readonly CVarDef<int> NetMaxBufferSize =
+            CVarDef.Create("net.max_buffer_size", 512, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Enable verbose game state/networking logging.

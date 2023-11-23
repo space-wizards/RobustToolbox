@@ -1,7 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -81,7 +80,7 @@ public sealed class DefaultEntityTest : RobustIntegrationTest
             coords = new(map, default);
             var playerUid = sEntMan.SpawnEntity(null, coords);
             player = sEntMan.GetNetEntity(playerUid);
-            sEntMan.System<ActorSystem>().Attach(playerUid, session);
+            server.PlayerMan.SetAttachedEntity(session, playerUid);
         });
 
         for (int i = 0; i < 10; i++)

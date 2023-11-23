@@ -290,6 +290,9 @@ public sealed class MapLoaderSystem : EntitySystem
 
         ReadGrids(data);
 
+        // grids prior to engine v175 might've been serialized with empty chunks which now throw debug asserts.
+        RemoveEmptyChunks(data);
+
         // Then, go hierarchically in order and do the entity things.
         StartupEntities(data);
 
@@ -303,6 +306,25 @@ public sealed class MapLoaderSystem : EntitySystem
         }
 
         return true;
+    }
+
+    private void RemoveEmptyChunks(MapData data)
+    {
+        var gridQuery = _serverEntityManager.GetEntityQuery<MapGridComponent>();
+        foreach (var uid in data.EntitiesToDeserialize.Keys)
+        {
+            if (!gridQuery.TryGetComponent(uid, out var gridComp))
+                continue;
+
+            foreach (var (index, chunk) in gridComp.Chunks)
+            {
+                if (chunk.FilledTiles > 0)
+                    continue;
+
+                Log.Warning($"Encountered empty chunk while deserializing map. Grid: {ToPrettyString(uid)}. Chunk index: {index}");
+                gridComp.Chunks.Remove(index);
+            }
+        }
     }
 
     private bool VerifyEntitiesExist(MapData data, BeforeEntityReadEvent ev)

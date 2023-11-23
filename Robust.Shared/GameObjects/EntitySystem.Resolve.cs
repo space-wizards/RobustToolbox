@@ -32,7 +32,7 @@ namespace Robust.Shared.GameObjects
             return found;
         }
 
-        /// <inheritdoc cref="Resolve{TComp}"/>
+        /// <inheritdoc cref="Resolve{TComp}(Robust.Shared.GameObjects.EntityUid,ref TComp?,bool)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected bool Resolve(EntityUid uid, [NotNullWhen(true)] ref MetaDataComponent? component,
             bool logMissing = true)
@@ -40,7 +40,7 @@ namespace Robust.Shared.GameObjects
             return EntityManager.MetaQuery.Resolve(uid, ref component);
         }
 
-        /// <inheritdoc cref="Resolve{TComp}"/>
+        /// <inheritdoc cref="Resolve{TComp}(Robust.Shared.GameObjects.EntityUid,ref TComp?,bool)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected bool Resolve(EntityUid uid, [NotNullWhen(true)] ref TransformComponent? component,
             bool logMissing = true)

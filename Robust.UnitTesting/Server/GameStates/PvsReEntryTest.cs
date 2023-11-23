@@ -4,15 +4,13 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Client.GameStates;
 using Robust.Client.Timing;
-using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
-using cIPlayerManager = Robust.Client.Player.IPlayerManager;
-using sIPlayerManager = Robust.Server.Player.IPlayerManager;
 
 namespace Robust.UnitTesting.Server.GameStates;
 
@@ -33,13 +31,13 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
         var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
-        var sPlayerMan = server.ResolveDependency<sIPlayerManager>();
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
         var xforms = sEntMan.System<SharedTransformSystem>();
         var stateMan = (ClientGameStateManager) client.ResolveDependency<IClientGameStateManager>();
 
         var cEntMan = client.ResolveDependency<IEntityManager>();
         var netMan = client.ResolveDependency<IClientNetManager>();
-        var cPlayerMan = client.ResolveDependency<cIPlayerManager>();
+        var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
@@ -87,7 +85,7 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
 
             // Attach player.
             var session = sPlayerMan.Sessions.First();
-            sEntMan.System<ActorSystem>().Attach(playerUid, session);
+            server.PlayerMan.SetAttachedEntity(session, playerUid);
             sPlayerMan.JoinGame(session);
         });
 
@@ -106,7 +104,7 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
         {
             Assert.That(cEntMan.TryGetEntityData(entity, out _, out meta));
             Assert.That(cEntMan.TryGetEntity(player, out var cPlayerUid));
-            Assert.That(cPlayerMan.LocalPlayer?.ControlledEntity, Is.EqualTo(cPlayerUid));
+            Assert.That(cPlayerMan.LocalEntity, Is.EqualTo(cPlayerUid));
             Assert.That(meta!.Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.None));
             Assert.That(stateMan.IsQueuedForDetach(entity), Is.False);
         });

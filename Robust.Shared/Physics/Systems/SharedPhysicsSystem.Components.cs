@@ -617,7 +617,7 @@ public partial class SharedPhysicsSystem
         if (!Resolve(uid, ref xform))
             return new Transform();
 
-        xformQuery ??= GetEntityQuery<TransformComponent>();
+        xformQuery ??= _xformQuery;
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery.Value);
 
         return new Transform(worldPos, worldRot);

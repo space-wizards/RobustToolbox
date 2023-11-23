@@ -332,7 +332,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawLightsAndFov(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
         {
-            if (!_lightManager.Enabled)
+            if (!_lightManager.Enabled || !eye.DrawLight)
             {
                 return;
             }

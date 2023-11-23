@@ -7,6 +7,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Localization;
@@ -29,6 +30,10 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly ILocalizationManager _locMan = default!;
+        [Dependency] private readonly IComponentFactory _factory = default!;
+
+        private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
+        private EntityDiffContext _context = new();
 
         private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _kindPriorities = new();
@@ -53,6 +58,7 @@ namespace Robust.Shared.Prototypes
 
             _initialized = true;
             ReloadPrototypeKinds();
+            PrototypesReloaded += OnReload;
         }
 
         /// <inheritdoc />
@@ -190,7 +196,7 @@ namespace Robust.Shared.Prototypes
             }
             catch (KeyNotFoundException)
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, typeof(T));
             }
         }
 
@@ -588,7 +594,7 @@ namespace Robust.Shared.Prototypes
         {
             if (!_kinds.TryGetValue(typeof(T), out var index))
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, typeof(T));
             }
 
             return index.Instances.ContainsKey(id);
@@ -619,7 +625,7 @@ namespace Robust.Shared.Prototypes
         {
             if (!_kinds.TryGetValue(kind, out var index))
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, kind);
             }
 
             return index.Instances.TryGetValue(id, out prototype);
@@ -642,7 +648,7 @@ namespace Robust.Shared.Prototypes
         {
             if (!_kinds.TryGetValue(typeof(T), out var index))
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, typeof(T));
             }
 
             return index.Results.ContainsKey(id);
@@ -846,6 +852,56 @@ namespace Robust.Shared.Prototypes
 
             // Only initialized if prototype is inheriting.
             public MultiRootInheritanceGraph<string>? Inheritance;
+        }
+
+        private void OnReload(PrototypesReloadedEventArgs args)
+        {
+            if (args.ByType.TryGetValue(typeof(EntityPrototype), out var modified))
+            {
+                foreach (var id in modified.Modified.Keys)
+                {
+                    _prototypeDataCache.Remove(id);
+                }
+            }
+
+            if (args.Removed == null || !args.Removed.TryGetValue(typeof(EntityPrototype), out var removed))
+                return;
+
+            foreach (var id in removed)
+            {
+                _prototypeDataCache.Remove(id);
+            }
+        }
+
+        public IReadOnlyDictionary<string, MappingDataNode> GetPrototypeData(EntityPrototype prototype)
+        {
+            if (_prototypeDataCache.TryGetValue(prototype.ID, out var data))
+                return data;
+
+            _context.WritingReadingPrototypes = true;
+            data = new();
+
+            var xform = _factory.GetRegistration(typeof(TransformComponent)).Name;
+            try
+            {
+                foreach (var (compType, comp) in prototype.Components)
+                {
+                    if (compType == xform)
+                        continue;
+
+                    var node = _serializationManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component,
+                        alwaysWrite: true, context: _context);
+                    data.Add(compType, node);
+                }
+            }
+            catch (Exception e)
+            {
+                Sawmill.Error($"Failed to convert prototype {prototype.ID} into yaml. Exception: {e.Message}");
+            }
+
+            _context.WritingReadingPrototypes = false;
+            _prototypeDataCache[prototype.ID] = data;
+            return data;
         }
     }
 }

@@ -28,22 +28,13 @@ public class PrototypeLoadException : Exception
 [Virtual]
 public class UnknownPrototypeException : Exception
 {
-    public override string Message => "Unknown prototype: " + Prototype;
-    public readonly string? Prototype;
+    public override string Message => $"Unknown {Kind.Name} prototype: {Prototype}" ;
+    public readonly string Prototype;
+    public readonly Type Kind;
 
-    public UnknownPrototypeException(string prototype)
+    public UnknownPrototypeException(string prototype, Type kind)
     {
         Prototype = prototype;
-    }
-
-    public UnknownPrototypeException(SerializationInfo info, StreamingContext context) : base(info, context)
-    {
-        Prototype = (string?) info.GetValue("prototype", typeof(string));
-    }
-
-    public override void GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-        base.GetObjectData(info, context);
-        info.AddValue("prototype", Prototype, typeof(string));
+        Kind = kind;
     }
 }

@@ -70,6 +70,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
                 return;
 
             var mapSystem = _entityManager.System<SharedMapSystem>();
+            var xformSystem = _entityManager.System<SharedTransformSystem>();
 
             if (_mapManager.TryFindGridAt(mouseWorldMap, out var mouseGridUid, out var mouseGrid))
             {
@@ -80,7 +81,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
             {
                 mouseGridPos = new EntityCoordinates(_mapManager.GetMapEntityId(mouseWorldMap.MapId),
                     mouseWorldMap.Position);
-                tile = new TileRef(EntityUid.Invalid, mouseGridPos.ToVector2i(_entityManager, _mapManager), Tile.Empty);
+                tile = new TileRef(EntityUid.Invalid, mouseGridPos.ToVector2i(_entityManager, _mapManager, xformSystem), Tile.Empty);
             }
 
             var controlHovered = UserInterfaceManager.CurrentlyHovered;
@@ -90,35 +91,35 @@ Screen Size: {screenSize} (scale: {screenScale})
 Mouse Pos:
     Screen: {mouseScreenPos}
     {mouseWorldMap}
-    {mouseGridPos}
+    {_entityManager.GetNetCoordinates(mouseGridPos)}
     {tile}
     GUI: {controlHovered}");
 
-            _textBuilder.AppendLine("\nAttached Entity:");
-            var controlledEntity = _playerManager?.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            _textBuilder.AppendLine("\nAttached NetEntity:");
+            var controlledEntity = _playerManager.LocalSession?.AttachedEntity ?? EntityUid.Invalid;
+
             if (controlledEntity == EntityUid.Invalid)
             {
-                _textBuilder.AppendLine("No attached entity.");
+                _textBuilder.AppendLine("No attached netentity.");
             }
             else
             {
                 var entityTransform = _entityManager.GetComponent<TransformComponent>(controlledEntity);
-                var playerWorldOffset = entityTransform.MapPosition;
+                var playerWorldOffset = xformSystem.GetMapCoordinates(entityTransform);
                 var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
                 var playerCoordinates = entityTransform.Coordinates;
-                var playerRotation = entityTransform.WorldRotation;
+                var playerRotation = xformSystem.GetWorldRotation(entityTransform);
                 var gridRotation = entityTransform.GridUid != null
-                    ? _entityManager.GetComponent<TransformComponent>(entityTransform.GridUid.Value)
-                    .WorldRotation
+                    ? xformSystem.GetWorldRotation(entityTransform.GridUid.Value)
                     : Angle.Zero;
 
                 _textBuilder.Append($@"    Screen: {playerScreen}
     {playerWorldOffset}
-    {playerCoordinates}
+    {_entityManager.GetNetCoordinates(playerCoordinates)}
     Rotation: {playerRotation.Degrees:F2}°
-    EntId: {controlledEntity}
-    GridUid: {entityTransform.GridUid}
+    NEntId: {_entityManager.GetNetEntity(controlledEntity)}
+    Grid NEntId: {_entityManager.GetNetEntity(entityTransform.GridUid)}
     Grid Rotation: {gridRotation.Degrees:F2}°");
             }
 

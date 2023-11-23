@@ -51,10 +51,11 @@ public sealed class TileEdgeOverlay : Overlay
             var tileSize = grid.Comp.TileSize;
             var tileDimensions = new Vector2(tileSize, tileSize);
             var xform = xformQuery.GetComponent(grid);
-            var worldMatrix = xformSystem.GetWorldMatrix(xform);
+            var (_, _, worldMatrix, invMatrix) = xformSystem.GetWorldPositionRotationMatrixWithInv(xform);
             args.WorldHandle.SetTransform(worldMatrix);
+            var localAABB = invMatrix.TransformBox(args.WorldBounds);
 
-            var enumerator = mapSystem.GetTilesEnumerator(grid.Owner, grid.Comp, args.WorldBounds, false);
+            var enumerator = mapSystem.GetLocalTilesEnumerator(grid.Owner, grid.Comp, localAABB, false);
 
             while (enumerator.MoveNext(out var tileRef))
             {

@@ -34,7 +34,11 @@
 
     <Configurations>Debug;Debug-PureECS;Debug-Events;Release;Release-PureECS;Release-Events;</Configurations>
 
-    <UnityPublish>true</UnityPublish>
+    <AssemblyName>Arch</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefaultItemExcludes>src/Arch/**/*</DefaultItemExcludes>
+    <DefineConstants>PURE_ECS;CONTRACTS_FULL</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -85,7 +89,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Arch.SourceGen\Arch.SourceGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include=".\Arch\src\Arch.SourceGen\Arch.SourceGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -94,6 +98,15 @@
     <PackageReference Include="CommunityToolkit.HighPerformance" Version="7.1.2" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
     <PackageReference Include="ZeroAllocJobScheduler" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Arch\src\Arch\**\*.cs">
+      <Link>Arch\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Remove="Arch\src\Arch\obj\**\*.cs" />
+    <InternalsVisibleTo Include="Arch.Benchmarks" />
+    <InternalsVisibleTo Include="Arch.Tests" />
   </ItemGroup>
 
 </Project>

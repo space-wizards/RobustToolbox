@@ -583,7 +583,7 @@ namespace Robust.Shared.GameObjects
             if (!IsAlive(uid) || !_world.TryGet(uid, type, out var comp))
                 return false;
 
-            return ((IComponent)comp!).Deleted;
+            return !((IComponent)comp!).Deleted;
         }
 
         /// <inheritdoc />

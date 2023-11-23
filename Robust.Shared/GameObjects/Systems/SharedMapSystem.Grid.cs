@@ -770,10 +770,36 @@ public abstract partial class SharedMapSystem
         RegenerateCollision(uid, grid, modified);
     }
 
+    public TilesEnumerator GetLocalTilesEnumerator(EntityUid uid, MapGridComponent grid, Box2 aabb,
+        bool ignoreEmpty = true,
+        Predicate<TileRef>? predicate = null)
+    {
+        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, aabb);
+        return enumerator;
+    }
+
+    public TilesEnumerator GetTilesEnumerator(EntityUid uid, MapGridComponent grid, Box2 aabb, bool ignoreEmpty = true,
+        Predicate<TileRef>? predicate = null)
+    {
+        var invMatrix = _transform.GetInvWorldMatrix(uid);
+        var localAABB = invMatrix.TransformBox(aabb);
+        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
+        return enumerator;
+    }
+
+    public TilesEnumerator GetTilesEnumerator(EntityUid uid, MapGridComponent grid, Box2Rotated bounds, bool ignoreEmpty = true,
+        Predicate<TileRef>? predicate = null)
+    {
+        var invMatrix = _transform.GetInvWorldMatrix(uid);
+        var localAABB = invMatrix.TransformBox(bounds);
+        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
+        return enumerator;
+    }
+
     public IEnumerable<TileRef> GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2 localAABB, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
-        var enumerator = new LocalTilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
+        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
 
         while (enumerator.MoveNext(out var tileRef))
         {
@@ -786,7 +812,7 @@ public abstract partial class SharedMapSystem
     {
         var localAABB = localArea.CalcBoundingBox();
 
-        var enumerator = new LocalTilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
+        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
 
         while (enumerator.MoveNext(out var tileRef))
         {
@@ -800,7 +826,7 @@ public abstract partial class SharedMapSystem
         var matrix = _transform.GetInvWorldMatrix(uid);
         var localArea = matrix.TransformBox(worldArea);
 
-        var enumerator = new LocalTilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localArea);
+        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localArea);
 
         while (enumerator.MoveNext(out var tileRef))
         {
@@ -814,7 +840,7 @@ public abstract partial class SharedMapSystem
         var matrix = _transform.GetInvWorldMatrix(uid);
         var localArea = matrix.TransformBox(worldArea);
 
-        var enumerator = new LocalTilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localArea);
+        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localArea);
 
         while (enumerator.MoveNext(out var tileRef))
         {
@@ -1003,7 +1029,7 @@ public abstract partial class SharedMapSystem
 
     public IEnumerable<EntityUid> GetLocalAnchoredEntities(EntityUid uid, MapGridComponent grid, Box2 localAABB)
     {
-        var enumerator = new LocalTilesEnumerator(this, true, null, uid, grid, localAABB);
+        var enumerator = new TilesEnumerator(this, true, null, uid, grid, localAABB);
 
         while (enumerator.MoveNext(out var tileRef))
         {
@@ -1020,7 +1046,7 @@ public abstract partial class SharedMapSystem
     {
         var invWorldMatrix = _transform.GetInvWorldMatrix(uid);
         var localAABB = invWorldMatrix.TransformBox(worldAABB);
-        var enumerator = new LocalTilesEnumerator(this, true, null, uid, grid, localAABB);
+        var enumerator = new TilesEnumerator(this, true, null, uid, grid, localAABB);
 
         while (enumerator.MoveNext(out var tileRef))
         {
@@ -1416,14 +1442,10 @@ public abstract partial class SharedMapSystem
         }
     }
 
-    /*
-     * Made these 2 structs to make it crystal clear which one is for which.
-     */
-
     /// <summary>
     /// Iterates the local tiles of the specified data.
     /// </summary>
-    public struct LocalTilesEnumerator
+    public struct TilesEnumerator
     {
         private readonly SharedMapSystem _mapSystem;
 
@@ -1439,7 +1461,7 @@ public abstract partial class SharedMapSystem
         private int _x;
         private int _y;
 
-        public LocalTilesEnumerator(
+        public TilesEnumerator(
             SharedMapSystem mapSystem,
             bool ignoreEmpty,
             Predicate<TileRef>? predicate,

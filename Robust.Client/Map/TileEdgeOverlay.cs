@@ -54,7 +54,9 @@ public sealed class TileEdgeOverlay : Overlay
             var worldMatrix = xformSystem.GetWorldMatrix(xform);
             args.WorldHandle.SetTransform(worldMatrix);
 
-            foreach (var tileRef in grid.Comp.GetTilesIntersecting(args.WorldBounds, false))
+            var enumerator = mapSystem.GetTilesEnumerator(grid.Owner, grid.Comp, args.WorldBounds, false);
+
+            while (enumerator.MoveNext(out var tileRef))
             {
                 var tileDef = _tileDefManager[tileRef.Tile.TypeId];
 

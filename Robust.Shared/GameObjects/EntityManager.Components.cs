@@ -237,12 +237,12 @@ namespace Robust.Shared.GameObjects
             // TODO optimize this
             // Need multi-comp adds so we can remove this call probably.
             if (!_world.Has(uid, reg.Idx.Type))
-                _world.Add(uid, Unsafe.As<object>(component));
+                _world.Add(uid, (object) component);
             else
             {
                 // Okay so technically it may have an existing one not null but pointing to a stale component
                 // hence just set it and act casual.
-                _world.Set(uid, Unsafe.As<object>(component));
+                _world.Set(uid, (object) component);
             }
 
             // add the component to the netId grid
@@ -583,7 +583,7 @@ namespace Robust.Shared.GameObjects
             if (!IsAlive(uid) || !_world.TryGet(uid, type, out var comp))
                 return false;
 
-            return !Unsafe.As<IComponent>(comp!).Deleted;
+            return ((IComponent)comp!).Deleted;
         }
 
         /// <inheritdoc />
@@ -761,7 +761,7 @@ namespace Robust.Shared.GameObjects
         {
             if (IsAlive(uid) && _world.TryGet(uid, type, out var comp))
             {
-                component = Unsafe.As<IComponent>(comp!);
+                component = (IComponent)(comp!);
                 if (!component.Deleted)
                 {
                     return true;
@@ -776,7 +776,7 @@ namespace Robust.Shared.GameObjects
         {
             if (IsAlive(uid) && _world.TryGet(uid, type.Type, out var comp))
             {
-                component = Unsafe.As<IComponent>(comp);
+                component = (IComponent)comp!;
                 if (component != null! && !component.Deleted)
                     return true;
             }
@@ -841,7 +841,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var obj in _world.GetAllComponents(uid))
             {
-                var comp = Unsafe.As<IComponent>(obj!);
+                var comp = (IComponent)(obj!);
 
                 if (comp.Deleted) continue;
 
@@ -871,7 +871,7 @@ namespace Robust.Shared.GameObjects
             var i = 0;
             foreach (var c in set)
             {
-                comps[i++] = Unsafe.As<IComponent>(c);
+                comps[i++] = (IComponent)c!;
             }
         }
 
@@ -1113,7 +1113,7 @@ namespace Robust.Shared.GameObjects
 
                 for (var i = 0; i < chunk.Size; i++)
                 {
-                    var comp = Unsafe.As<IComponent>(components.GetValue(i))!;
+                    var comp = (IComponent)(components.GetValue(i))!;
                     if (comp.Deleted)
                         continue;
 

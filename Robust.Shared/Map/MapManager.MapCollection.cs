@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
@@ -233,6 +234,7 @@ internal partial class MapManager
 
                 var mapComp = EntityManager.AddComponent<MapComponent>(newEnt);
                 mapComp.MapId = actualId;
+                EntityManager.AddComponent<PhysicsMapComponent>(newEnt);
                 var meta = EntityManager.GetComponent<MetaDataComponent>(newEnt);
                 EntityManager.System<MetaDataSystem>().SetEntityName(newEnt, $"map {actualId}", meta);
                 EntityManager.Dirty(newEnt, mapComp, meta);

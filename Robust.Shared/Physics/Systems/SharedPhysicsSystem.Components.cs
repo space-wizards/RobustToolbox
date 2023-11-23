@@ -322,7 +322,7 @@ public partial class SharedPhysicsSystem
         body.AngularVelocity = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     /// <summary>
@@ -347,7 +347,7 @@ public partial class SharedPhysicsSystem
         body.LinearVelocity = velocity;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     public void SetAngularDamping(PhysicsComponent body, float value, bool dirty = true)

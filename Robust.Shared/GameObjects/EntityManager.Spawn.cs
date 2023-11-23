@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Arch.Core.Extensions.Dangerous;
 using Robust.Shared.Containers;
 
 namespace Robust.Shared.GameObjects;
@@ -36,6 +37,16 @@ public partial class EntityManager
         for (var i = 0; i < protoNames.Length; i++)
         {
             ents[i] = Spawn(protoNames[i], coordinates);
+        }
+        return ents;
+    }
+
+    public EntityUid[] SpawnEntities(MapCoordinates coordinates, string? prototype, int count)
+    {
+        var ents = new EntityUid[count];
+        for (var i = 0; i < count; i++)
+        {
+            ents[i] = Spawn(prototype, coordinates);
         }
         return ents;
     }

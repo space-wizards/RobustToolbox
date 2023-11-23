@@ -688,9 +688,8 @@ public abstract partial class SharedMapSystem
 
     public IEnumerable<TileRef> GetAllTiles(EntityUid uid, MapGridComponent grid, bool ignoreEmpty = true)
     {
-        foreach (var kvChunk in grid.Chunks)
+        foreach (var chunk in grid.Chunks.Values)
         {
-            var chunk = kvChunk.Value;
             for (ushort x = 0; x < grid.ChunkSize; x++)
             {
                 for (ushort y = 0; y < grid.ChunkSize; y++)
@@ -771,11 +770,28 @@ public abstract partial class SharedMapSystem
         RegenerateCollision(uid, grid, modified);
     }
 
+    public IEnumerable<TileRef> GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2 localAABB, bool ignoreEmpty = true,
+        Predicate<TileRef>? predicate = null)
+    {
+        var enumerator = new LocalTilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
+
+        while (enumerator.MoveNext(out var tileRef))
+        {
+            yield return tileRef;
+        }
+    }
+
     public IEnumerable<TileRef> GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2Rotated localArea, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
         var localAABB = localArea.CalcBoundingBox();
-        return GetLocalTilesIntersecting(uid, grid, localAABB, ignoreEmpty, predicate);
+
+        var enumerator = new LocalTilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
+
+        while (enumerator.MoveNext(out var tileRef))
+        {
+            yield return tileRef;
+        }
     }
 
     public IEnumerable<TileRef> GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2Rotated worldArea, bool ignoreEmpty = true,
@@ -784,9 +800,11 @@ public abstract partial class SharedMapSystem
         var matrix = _transform.GetInvWorldMatrix(uid);
         var localArea = matrix.TransformBox(worldArea);
 
-        foreach (var tile in GetLocalTilesIntersecting(uid, grid, localArea, ignoreEmpty, predicate))
+        var enumerator = new LocalTilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localArea);
+
+        while (enumerator.MoveNext(out var tileRef))
         {
-            yield return tile;
+            yield return tileRef;
         }
     }
 
@@ -796,46 +814,11 @@ public abstract partial class SharedMapSystem
         var matrix = _transform.GetInvWorldMatrix(uid);
         var localArea = matrix.TransformBox(worldArea);
 
-        foreach (var tile in GetLocalTilesIntersecting(uid, grid, localArea, ignoreEmpty, predicate))
+        var enumerator = new LocalTilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localArea);
+
+        while (enumerator.MoveNext(out var tileRef))
         {
-            yield return tile;
-        }
-    }
-
-    public IEnumerable<TileRef> GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2 localArea, bool ignoreEmpty = true,
-        Predicate<TileRef>? predicate = null)
-    {
-        // TODO: Should move the intersecting calls onto mapmanager system and then allow people to pass in xform / xformquery
-        // that way we can avoid the GetComp here.
-        var gridTileLb = new Vector2i((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
-        // If we have 20.1 we want to include that tile but if we have 20 then we don't.
-        var gridTileRt = new Vector2i((int)Math.Ceiling(localArea.Right), (int)Math.Ceiling(localArea.Top));
-
-        for (var x = gridTileLb.X; x < gridTileRt.X; x++)
-        {
-            for (var y = gridTileLb.Y; y < gridTileRt.Y; y++)
-            {
-                var gridChunk = GridTileToChunkIndices(uid, grid, new Vector2i(x, y));
-
-                if (grid.Chunks.TryGetValue(gridChunk, out var chunk))
-                {
-                    var chunkTile = chunk.GridTileToChunkTile(new Vector2i(x, y));
-                    var tile = GetTileRef(uid, grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y);
-
-                    if (ignoreEmpty && tile.Tile.IsEmpty)
-                        continue;
-
-                    if (predicate == null || predicate(tile))
-                        yield return tile;
-                }
-                else if (!ignoreEmpty)
-                {
-                    var tile = new TileRef(uid, x, y, Tile.Empty);
-
-                    if (predicate == null || predicate(tile))
-                        yield return tile;
-                }
-            }
+            yield return tileRef;
         }
     }
 
@@ -1020,22 +1003,32 @@ public abstract partial class SharedMapSystem
 
     public IEnumerable<EntityUid> GetLocalAnchoredEntities(EntityUid uid, MapGridComponent grid, Box2 localAABB)
     {
-        foreach (var tile in GetLocalTilesIntersecting(uid, grid, localAABB, true, null))
+        var enumerator = new LocalTilesEnumerator(this, true, null, uid, grid, localAABB);
+
+        while (enumerator.MoveNext(out var tileRef))
         {
-            foreach (var ent in GetAnchoredEntities(uid, grid, tile.GridIndices))
+            var anchoredEnumerator = GetAnchoredEntitiesEnumerator(uid, grid, tileRef.GridIndices);
+
+            while (anchoredEnumerator.MoveNext(out var ent))
             {
-                yield return ent;
+                yield return ent.Value;
             }
         }
     }
 
     public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, Box2 worldAABB)
     {
-        foreach (var tile in GetTilesIntersecting(uid, grid, worldAABB))
+        var invWorldMatrix = _transform.GetInvWorldMatrix(uid);
+        var localAABB = invWorldMatrix.TransformBox(worldAABB);
+        var enumerator = new LocalTilesEnumerator(this, true, null, uid, grid, localAABB);
+
+        while (enumerator.MoveNext(out var tileRef))
         {
-            foreach (var ent in GetAnchoredEntities(uid, grid, tile.GridIndices))
+            var anchoredEnumerator = GetAnchoredEntitiesEnumerator(uid, grid, tileRef.GridIndices);
+
+            while (anchoredEnumerator.MoveNext(out var ent))
             {
-                yield return ent;
+                yield return ent.Value;
             }
         }
     }
@@ -1420,6 +1413,104 @@ public abstract partial class SharedMapSystem
         if (shapeChanged && !mapChunk.SuppressCollisionRegeneration)
         {
             RegenerateCollision(uid, grid, mapChunk);
+        }
+    }
+
+    /*
+     * Made these 2 structs to make it crystal clear which one is for which.
+     */
+
+    /// <summary>
+    /// Iterates the local tiles of the specified data.
+    /// </summary>
+    public struct LocalTilesEnumerator
+    {
+        private readonly SharedMapSystem _mapSystem;
+
+        private readonly EntityUid _uid;
+        private readonly MapGridComponent _grid;
+        private readonly bool _ignoreEmpty;
+        private readonly Predicate<TileRef>? _predicate;
+
+        private readonly int _lowerY;
+        private readonly int _upperX;
+        private readonly int _upperY;
+
+        private int _x;
+        private int _y;
+
+        public LocalTilesEnumerator(
+            SharedMapSystem mapSystem,
+            bool ignoreEmpty,
+            Predicate<TileRef>? predicate,
+            EntityUid uid,
+            MapGridComponent grid,
+            Box2 aabb)
+        {
+            _mapSystem = mapSystem;
+
+            _uid = uid;
+            _grid = grid;
+            _ignoreEmpty = ignoreEmpty;
+            _predicate = predicate;
+
+            // TODO: Should move the intersecting calls onto mapmanager system and then allow people to pass in xform / xformquery
+            // that way we can avoid the GetComp here.
+            var gridTileLb = new Vector2i((int)Math.Floor(aabb.Left), (int)Math.Floor(aabb.Bottom));
+            // If we have 20.1 we want to include that tile but if we have 20 then we don't.
+            var gridTileRt = new Vector2i((int)Math.Ceiling(aabb.Right), (int)Math.Ceiling(aabb.Top));
+
+            _x = gridTileLb.X;
+            _y = gridTileLb.Y;
+            _lowerY = gridTileLb.Y;
+            _upperX = gridTileRt.X;
+            _upperY = gridTileRt.Y;
+        }
+
+        public bool MoveNext(out TileRef tile)
+        {
+            if (_x >= _upperX)
+            {
+                tile = TileRef.Zero;
+                return false;
+            }
+
+            var gridTile = new Vector2i(_x, _y);
+
+            _y++;
+
+            if (_y >= _upperY)
+            {
+                _x++;
+                _y = _lowerY;
+            }
+
+            var gridChunk = _mapSystem.GridTileToChunkIndices(_uid, _grid, gridTile);
+
+            if (_grid.Chunks.TryGetValue(gridChunk, out var chunk))
+            {
+                var chunkTile = chunk.GridTileToChunkTile(gridTile);
+                tile = _mapSystem.GetTileRef(_uid, _grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y);
+
+                if (_ignoreEmpty && tile.Tile.IsEmpty)
+                    return MoveNext(out tile);
+
+                if (_predicate == null || _predicate(tile))
+                {
+                    return true;
+                }
+            }
+            else if (!_ignoreEmpty)
+            {
+                tile = new TileRef(_uid, gridTile.X, gridTile.Y, Tile.Empty);
+
+                if (_predicate == null || _predicate(tile))
+                {
+                    return true;
+                }
+            }
+
+            return MoveNext(out tile);
         }
     }
 }

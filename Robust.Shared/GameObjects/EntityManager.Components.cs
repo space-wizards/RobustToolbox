@@ -368,7 +368,7 @@ namespace Robust.Shared.GameObjects
             // Reverse order
             for (var i = objComps.Length - 1; i >= 0; i--)
             {
-                var comp = (IComponent) objComps[i];
+                var comp = (IComponent) objComps[i]!;
                 RemoveComponentImmediate(comp, uid, false, false, meta);
             }
         }
@@ -381,7 +381,7 @@ namespace Robust.Shared.GameObjects
             // Reverse order
             for (var i = objComps.Length - 1; i >= 0; i--)
             {
-                var comp = (IComponent) objComps[i];
+                var comp = (IComponent) objComps[i]!;
 
                 try
                 {
@@ -563,7 +563,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid) where T : IComponent
         {
-            if (!IsAlive(uid) || !_world.TryGet(uid, out T comp))
+            if (!IsAlive(uid) || !_world.TryGet(uid, out T? comp))
                 return false;
 
             return !comp!.Deleted;
@@ -583,7 +583,7 @@ namespace Robust.Shared.GameObjects
             if (!IsAlive(uid) || !_world.TryGet(uid, type, out var comp))
                 return false;
 
-            return !Unsafe.As<IComponent>(comp).Deleted;
+            return !Unsafe.As<IComponent>(comp!).Deleted;
         }
 
         /// <inheritdoc />
@@ -680,8 +680,8 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid) where T : IComponent
         {
-            if (IsAlive(uid) && _world.TryGet(uid, out T comp))
-                return comp;
+            if (IsAlive(uid) && _world.TryGet(uid, out T? comp))
+                return comp!;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
         }
@@ -761,7 +761,7 @@ namespace Robust.Shared.GameObjects
         {
             if (IsAlive(uid) && _world.TryGet(uid, type, out var comp))
             {
-                component = Unsafe.As<IComponent>(comp);
+                component = Unsafe.As<IComponent>(comp!);
                 if (!component.Deleted)
                 {
                     return true;
@@ -841,7 +841,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var obj in _world.GetAllComponents(uid))
             {
-                var comp = Unsafe.As<IComponent>(obj);
+                var comp = Unsafe.As<IComponent>(obj!);
 
                 if (comp.Deleted) continue;
 
@@ -880,9 +880,10 @@ namespace Robust.Shared.GameObjects
         {
             var comps = _world.GetAllComponents(uid);
 
-            foreach (Component comp in comps)
+            foreach (var comp in comps)
             {
-                if (comp.Deleted || comp is not T tComp) continue;
+                var component = (IComponent)comp!;
+                if (component.Deleted || component is not T tComp) continue;
 
                 yield return tComp;
             }
@@ -1349,7 +1350,7 @@ namespace Robust.Shared.GameObjects
         internal bool HasComponentInternal(EntityUid uid)
         {
             // TODO fix checking deleted
-            return _world.TryGet(uid, out TComp1 comp) && !comp.Deleted;
+            return _world.TryGet(uid, out TComp1? comp) && !comp!.Deleted;
         }
 
         /// <summary>

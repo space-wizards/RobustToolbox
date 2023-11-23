@@ -151,8 +151,10 @@ namespace Robust.Shared.GameObjects
             if (protoData.Count + 2 != comps.Length)
                 return false;
 
-            foreach (IComponent component in comps)
+            foreach (var comp in comps)
             {
+                var component = (IComponent)comp!;
+
                 if (component.Deleted)
                     return false;
 
@@ -496,8 +498,10 @@ namespace Robust.Shared.GameObjects
             // Shut down all components.
             var objComps = _world.GetAllComponents(uid);
 
-            foreach (Component component in objComps)
+            foreach (var comp in objComps)
             {
+                var component = (IComponent)comp!;
+
                 if (component.Running)
                 {
                     try
@@ -565,7 +569,7 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !IsAlive(uid) || !_world.TryGet(uid, out MetaDataComponent comp) || comp.EntityLifeStage > EntityLifeStage.Terminating;
+            return !IsAlive(uid) || !_world.TryGet(uid, out MetaDataComponent? comp) || comp!.EntityLifeStage > EntityLifeStage.Terminating;
         }
 
         /// <summary>

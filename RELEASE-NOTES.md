@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 182.0.0
+
+### Breaking changes
+
+* Add EntityUid's generation / version to the hashcode.
+
+
+## 181.0.2
+
+### Bugfixes
+
+* Fix exceptions from having too many lights on screen and causing the game to go black.
+* Fix components having events raised in ClientGameStateManager before fully set and causing nullable reference exceptions.
+* Replace tile intersection IEnumerables with TileEnumerator internally. Also made it public for external callers that wish to avoid IEnumerable.
+
+
 ## 181.0.1
 
 ### Bugfixes

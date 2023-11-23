@@ -43,15 +43,13 @@ public sealed class TileEdgeOverlay : Overlay
         _mapManager.FindGridsIntersecting(args.MapId, args.WorldBounds, ref _grids);
 
         var mapSystem = _entManager.System<SharedMapSystem>();
-        var xformQuery = _entManager.GetEntityQuery<TransformComponent>();
         var xformSystem = _entManager.System<SharedTransformSystem>();
 
         foreach (var grid in _grids)
         {
             var tileSize = grid.Comp.TileSize;
             var tileDimensions = new Vector2(tileSize, tileSize);
-            var xform = xformQuery.GetComponent(grid);
-            var (_, _, worldMatrix, invMatrix) = xformSystem.GetWorldPositionRotationMatrixWithInv(xform);
+            var (_, _, worldMatrix, invMatrix) = xformSystem.GetWorldPositionRotationMatrixWithInv(grid.Owner);
             args.WorldHandle.SetTransform(worldMatrix);
             var localAABB = invMatrix.TransformBox(args.WorldBounds);
 

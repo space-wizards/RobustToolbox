@@ -38,7 +38,7 @@ internal struct ArchetypeEnumerator
         while (--_index >= 0)
         {
             var archetype = Current;
-            if (archetype.Entities > 0)
+            if (archetype.EntityCount > 0)
             {
                 return true;
             }

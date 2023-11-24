@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.ResourceManagement;
+using Robust.Client.Graphics;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.GameObjects;
+namespace Robust.Client.ResourceManagement;
 
 /// <summary>
 /// Handles caching of <see cref="BaseResource"/>
@@ -38,5 +39,12 @@ public interface IResourceCache
         where T : BaseResource, new();
 
     IEnumerable<KeyValuePair<ResPath, T>> GetAllResources<T>() where T : BaseResource, new();
+
+    // Resource load callbacks so content can hook stuff like click maps.
+    event Action<TextureLoadedEventArgs> OnRawTextureLoaded;
+    event Action<RsiLoadedEventArgs> OnRsiLoaded;
+
+    IClyde Clyde { get; }
+    IFontManager FontManager { get; }
 }
 

@@ -6,7 +6,6 @@ using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Robust.Shared.ResourceManagement;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -35,7 +34,7 @@ namespace Robust.Client.ResourceManagement
 
             LoadPreTexture(dependencies.Resolve<IResourceManager>(), data);
             LoadTexture(dependencies.Resolve<IClyde>(), data);
-            LoadFinish(dependencies.Resolve<IClientResourceCache>(), data);
+            LoadFinish(dependencies.Resolve<IResourceCache>(), data);
         }
 
         internal static void LoadPreTexture(IResourceManager cache, LoadStepData data)
@@ -53,11 +52,11 @@ namespace Robust.Client.ResourceManagement
             data.Texture = clyde.LoadTextureFromImage(data.Image, data.Path.ToString(), data.LoadParameters);
         }
 
-        internal void LoadFinish(IClientResourceCache cache, LoadStepData data)
+        internal void LoadFinish(IResourceCache cache, LoadStepData data)
         {
             _texture = data.Texture;
 
-            if (cache is IClientResourceCacheInternal cacheInternal)
+            if (cache is IResourceCacheInternal cacheInternal)
             {
                 cacheInternal.TextureLoaded(new TextureLoadedEventArgs(data.Path, data.Image, this));
             }

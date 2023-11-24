@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -11,7 +10,6 @@ using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
-using Robust.Shared.ResourceManagement.ResourceTypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
@@ -31,7 +29,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [Dependency] protected readonly IGameTiming Timing = default!;
     [Dependency] private   readonly INetManager _netManager = default!;
     [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
-    [Dependency] private   readonly IResourceCache _resource = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
 
     /// <summary>
@@ -189,16 +186,13 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// </summary>
     public TimeSpan GetAudioLength(string filename)
     {
-        // Use direct file if found.
-        if (_resource.TryGetResource(filename, out AudioResource? resource))
-            return resource.AudioStream.Length;
+        if (!filename.StartsWith("/"))
+            throw new ArgumentException("Path must be rooted");
 
-        // Fall back to shipped metadata
-        if (ProtoMan.TryIndex(filename, out AudioMetadataPrototype? metadata))
-           return metadata.Length;
-
-        throw new FileNotFoundException($"Unable to find metadata for audio file {filename}");
+        return GetAudioLengthImpl(filename);
     }
+
+    protected abstract TimeSpan GetAudioLengthImpl(string filename);
 
     /// <summary>
     /// Stops the specified audio entity from playing.

@@ -19,7 +19,7 @@ namespace Robust.Client.UserInterface.Themes;
 [Prototype("uiTheme")]
 public sealed class UITheme : IPrototype
 {
-    private IClientResourceCache? _cache;
+    private IResourceCache? _cache;
     private IUserInterfaceManager? _uiMan;
 
     //this is used for ease of access

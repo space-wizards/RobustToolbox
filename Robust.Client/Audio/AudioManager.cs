@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio;
 
-internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
+internal sealed partial class AudioManager : IAudioInternal
 {
     [Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
     [Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;

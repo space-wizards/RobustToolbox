@@ -6,8 +6,6 @@ public sealed class RobustServerPackaging
 {
     public static IReadOnlySet<string> ServerIgnoresResources { get; } = new HashSet<string>
     {
-        // Need Audio so we can parse metadata if applicable.
-        // This will get dropped later.
         "Textures",
         "Fonts",
         "Shaders",
@@ -20,15 +18,16 @@ public sealed class RobustServerPackaging
     {
         var ignoreSet = ServerIgnoresResources.Union(RobustSharedPackaging.SharedIgnoredResources).ToHashSet();
 
-        await RobustSharedPackaging.DoResourceCopy(Path.Combine(contentDir, "Resources"),
+        await RobustSharedPackaging.DoResourceCopy(
+            Path.Combine(contentDir, "Resources"),
             pass,
             ignoreSet,
-            "Resources",
-            cancel);
-        await RobustSharedPackaging.DoResourceCopy(Path.Combine("RobustToolbox", "Resources"),
+            cancel: cancel);
+
+        await RobustSharedPackaging.DoResourceCopy(
+            Path.Combine("RobustToolbox", "Resources"),
             pass,
             ignoreSet,
-            "Resources",
-            cancel);
+            cancel: cancel);
     }
 }

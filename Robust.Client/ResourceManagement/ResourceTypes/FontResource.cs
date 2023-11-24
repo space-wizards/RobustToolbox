@@ -2,7 +2,6 @@
 using Robust.Client.Graphics;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
-using Robust.Shared.ResourceManagement;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.ResourceManagement

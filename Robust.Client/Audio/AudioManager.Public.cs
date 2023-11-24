@@ -6,6 +6,7 @@ using OpenTK.Audio.OpenAL;
 using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.AudioLoading;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
 
@@ -78,9 +79,9 @@ internal partial class AudioManager
     }
 
     /// <inheritdoc/>
-    public override AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
+    public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
     {
-        var vorbis = _readOggVorbis(stream);
+        var vorbis = AudioLoaderOgg.LoadAudioData(stream);
 
         var buffer = AL.GenBuffer();
 
@@ -119,9 +120,9 @@ internal partial class AudioManager
     }
 
     /// <inheritdoc/>
-    public override AudioStream LoadAudioWav(Stream stream, string? name = null)
+    public AudioStream LoadAudioWav(Stream stream, string? name = null)
     {
-        var wav = _readWav(stream);
+        var wav = AudioLoaderWav.LoadAudioData(stream);
 
         var buffer = AL.GenBuffer();
 
@@ -178,7 +179,7 @@ internal partial class AudioManager
     }
 
     /// <inheritdoc/>
-    public override AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null)
+    public AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null)
     {
         var fmt = channels switch
         {

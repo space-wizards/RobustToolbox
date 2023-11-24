@@ -5,7 +5,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.ResourceManagement;
 
 /// <inheritdoc />
-internal interface IClientResourceCacheInternal : IClientResourceCache
+internal interface IResourceCacheInternal : IResourceCache
 {
     void TextureLoaded(TextureLoadedEventArgs eventArgs);
     void RsiLoaded(RsiLoadedEventArgs eventArgs);

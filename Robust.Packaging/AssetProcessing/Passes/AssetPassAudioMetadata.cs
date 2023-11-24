@@ -1,5 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.AudioLoading;
 using Robust.Shared.Serialization;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -12,72 +14,44 @@ namespace Robust.Packaging.AssetProcessing.Passes;
 /// </summary>
 public sealed class AssetPassAudioMetadata : AssetPass
 {
-    private string[] _audioExtensions = new[]
-    {
-        ".ogg",
-        ".wav",
-    };
-
-    private List<AudioMetadataPrototype> _audioMetadata = new();
+    private readonly List<AudioMetadataPrototype> _audioMetadata = new();
     private readonly string _metadataPath;
 
-    private SharedAudioManager _audioManager;
-
-    public bool Enabled = false;
-
-    public AssetPassAudioMetadata(string metadataPath = "Resources/Prototypes/audio_metadata.yml")
+    public AssetPassAudioMetadata(string metadataPath = "Prototypes/_audio_metadata.yml")
     {
         _metadataPath = metadataPath;
-        _audioManager = new HeadlessAudioManager();
     }
 
     protected override AssetFileAcceptResult AcceptFile(AssetFile file)
     {
-        if (!Enabled)
+        if (!AudioLoader.IsLoadableAudioFile(file.Path))
             return AssetFileAcceptResult.Pass;
 
-        var ext = Path.GetExtension(file.Path);
+        using var stream = file.Open();
+        var metadata = AudioLoader.LoadAudioMetadata(stream, file.Path);
 
-        if (!_audioExtensions.Contains(ext))
-            return AssetFileAcceptResult.Pass;
-
-        var updatedName = file.Path;
-
-        if (updatedName.StartsWith("Resources"))
-            updatedName = updatedName[10..];
-
-        TimeSpan length;
-
-        if (ext == ".ogg")
+        lock (_audioMetadata)
         {
-            using var stream = file.Open();
-            using var vorbis = new NVorbis.VorbisReader(stream);
-            length = vorbis.TotalTime;
+            _audioMetadata.Add(new AudioMetadataPrototype()
+            {
+                ID = "/" + file.Path,
+                Length = metadata.Length,
+            });
         }
-        else if (ext == ".wav")
-        {
-            using var stream = file.Open();
-            var vorbis = _audioManager.LoadAudioWav(stream);
-            length = vorbis.Length;
-        }
-        else
-        {
-            throw new NotImplementedException($"No audio metadata processing implemented for {ext}");
-        }
-
-        _audioMetadata.Add(new AudioMetadataPrototype()
-        {
-            ID = updatedName,
-            Length = length,
-        });
 
         return AssetFileAcceptResult.Consumed;
     }
 
+    [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
     protected override void AcceptFinished()
     {
         if (_audioMetadata.Count == 0)
+        {
+            Logger?.Debug("Have no audio metadata, not writing anything");
             return;
+        }
+
+        Logger?.Debug("Writing audio metadata for {0} audio files", _audioMetadata.Count);
 
         // ReSharper disable once InconsistentlySynchronizedField
         var root = new YamlSequenceNode();

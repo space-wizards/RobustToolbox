@@ -29,7 +29,6 @@ using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
-using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
@@ -75,9 +74,8 @@ namespace Robust.Client
             deps.Register<IGameControllerInternal, GameController>();
             deps.Register<IResourceManager, ResourceManager>();
             deps.Register<IResourceManagerInternal, ResourceManager>();
-            deps.Register<IClientResourceCache, ResourceCache>();
-            deps.Register<IClientResourceCacheInternal, ResourceCache>();
             deps.Register<IResourceCache, ResourceCache>();
+            deps.Register<IResourceCacheInternal, ResourceCache>();
             deps.Register<IClientNetManager, NetManager>();
             deps.Register<EntityManager, ClientEntityManager>();
             deps.Register<ClientEntityManager>();
@@ -110,7 +108,6 @@ namespace Robust.Client
                     deps.Register<IClipboardManager, ClydeHeadless>();
                     deps.Register<IClydeInternal, ClydeHeadless>();
                     deps.Register<IAudioInternal, HeadlessAudioManager>();
-                    deps.Register<SharedAudioManager, HeadlessAudioManager>();
                     deps.Register<IInputManager, InputManager>();
                     deps.Register<IFileDialogManager, DummyFileDialogManager>();
                     deps.Register<IUriOpener, UriOpenerDummy>();
@@ -120,7 +117,6 @@ namespace Robust.Client
                     deps.Register<IClipboardManager, Clyde>();
                     deps.Register<IClydeInternal, Clyde>();
                     deps.Register<IAudioInternal, AudioManager>();
-                    deps.Register<SharedAudioManager, AudioManager>();
                     deps.Register<IInputManager, ClydeInputManager>();
                     deps.Register<IFileDialogManager, FileDialogManager>();
                     deps.Register<IUriOpener, UriOpener>();

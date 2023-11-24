@@ -1,10 +1,9 @@
 using System;
 using System.Threading;
-using Robust.Shared.Audio;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.ResourceManagement;
+namespace Robust.Client.ResourceManagement;
 
 /// <summary>
 ///     Base resource for the cache.

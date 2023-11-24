@@ -21,7 +21,6 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Replays;
-using Robust.Shared.ResourceManagement.ResourceTypes;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using AudioComponent = Robust.Shared.Audio.Components.AudioComponent;
@@ -37,7 +36,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IClientResourceCache _resourceCache = default!;
+    [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -592,5 +591,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private void OnGlobalAudio(PlayAudioGlobalMessage ev)
     {
         PlayGlobal(ev.FileName, ev.AudioParams, false);
+    }
+
+    protected override TimeSpan GetAudioLengthImpl(string filename)
+    {
+        return _resourceCache.GetResource<AudioResource>(filename).AudioStream.Length;
     }
 }

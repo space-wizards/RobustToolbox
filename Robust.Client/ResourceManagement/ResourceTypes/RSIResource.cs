@@ -8,7 +8,6 @@ using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.ResourceManagement;
 using Robust.Shared.Resources;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
@@ -47,7 +46,7 @@ namespace Robust.Client.ResourceManagement
                 loadStepData.Path.ToString());
 
             LoadPostTexture(loadStepData);
-            LoadFinish(dependencies.Resolve<IClientResourceCacheInternal>(), loadStepData);
+            LoadFinish(dependencies.Resolve<IResourceCacheInternal>(), loadStepData);
 
             loadStepData.AtlasSheet.Dispose();
         }
@@ -215,7 +214,7 @@ namespace Robust.Client.ResourceManagement
             }
         }
 
-        internal void LoadFinish(IClientResourceCacheInternal cache, LoadStepData data)
+        internal void LoadFinish(IResourceCacheInternal cache, LoadStepData data)
         {
             RSI = data.Rsi;
             cache.RsiLoaded(new RsiLoadedEventArgs(data.Path, this, data.AtlasSheet, data.CallbackOffsets));

@@ -6,7 +6,8 @@ namespace Robust.Shared.Audio;
 
 /// <summary>
 /// Stores server-side metadata about an audio file.
-/// This means you don't need to ship entire audio files with the server.
+/// These prototypes get automatically generated when packaging the server,
+/// to allow the server to know audio lengths without shipping the large audio files themselves.
 /// </summary>
 [Prototype(ProtoName)]
 public sealed class AudioMetadataPrototype : IPrototype

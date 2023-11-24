@@ -54,7 +54,7 @@ internal static partial class QueryExtensions
 {
     internal static ArchChunkIterator ChunkIterator(this in Query query, World world)
     {
-        var archetypeEnumerator = new ArchetypeEnumerator(in query, query.Matches);
+        var archetypeEnumerator = new ArchetypeEnumerator(query.Matches);
         return new ArchChunkIterator(in archetypeEnumerator);
     }
 }

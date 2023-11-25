@@ -14,6 +14,7 @@ public interface IRobustRandom
     /// </summary>
     /// <returns></returns>
     System.Random GetRandom();
+    void SetSeed(int seed);
 
     float NextFloat();
     public float NextFloat(float minValue, float maxValue)

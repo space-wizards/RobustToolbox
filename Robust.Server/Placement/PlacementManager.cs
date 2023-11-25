@@ -251,7 +251,7 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementBegin(EntityUid mob, int range, string objectType, string alignOption)
         {
-            if (!_entityManager.TryGetComponent(mob, out ActorComponent? actor))
+            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.Channel;
@@ -272,7 +272,7 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementBeginTile(EntityUid mob, int range, string tileType, string alignOption)
         {
-            if (!_entityManager.TryGetComponent(mob, out ActorComponent? actor))
+            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.Channel;
@@ -293,7 +293,7 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementCancel(EntityUid mob)
         {
-            if (!_entityManager.TryGetComponent(mob, out ActorComponent? actor))
+            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.Channel;

@@ -13,6 +13,3 @@
 [submodule "cefglue"]
 	path = cefglue
 	url = https://github.com/space-wizards/cefglue.git
-[submodule "Arch/Arch"]
-	path = Arch/Arch
-	url = https://github.com/space-wizards/Arch.git

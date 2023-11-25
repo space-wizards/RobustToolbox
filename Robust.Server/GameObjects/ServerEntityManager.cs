@@ -26,7 +26,7 @@ namespace Robust.Server.GameObjects
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
     [UsedImplicitly] // DI Container
-    public sealed partial class ServerEntityManager : EntityManager, IServerEntityManagerInternal
+    public sealed class ServerEntityManager : EntityManager, IServerEntityManagerInternal
     {
         private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
             "robust_entities_count",
@@ -62,7 +62,7 @@ namespace Robust.Server.GameObjects
 
         EntityUid IServerEntityManagerInternal.AllocEntity(EntityPrototype? prototype)
         {
-            return AllocEntity(prototype, out _, out _);
+            return AllocEntity(prototype, out _);
         }
 
         void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)
@@ -85,15 +85,15 @@ namespace Robust.Server.GameObjects
             StartEntity(entity);
         }
 
-        private protected override EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, out TransformComponent xform, IEntityLoadContext? context = null)
+        private protected override EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
-                return base.CreateEntity(prototypeName, out metadata, out xform, context);
+                return base.CreateEntity(prototypeName, out metadata, context);
 
             if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-            var entity = base.CreateEntity(prototype, out metadata, out xform, context);
+            var entity = base.CreateEntity(prototype, out metadata, context);
 
             // At this point in time, all data configure on the entity *should* be purely from the prototype.
             // As such, we can reset the modified ticks to Zero,
@@ -159,7 +159,7 @@ namespace Robust.Server.GameObjects
 
             base.TickUpdate(frameTime, noPredictions, histogram);
 
-            EntitiesCount.Set(EntityCount);
+            EntitiesCount.Set(Entities.Count);
         }
 
         public uint GetLastMessageSequence(ICommonSession session)

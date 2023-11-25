@@ -85,10 +85,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return Id.GetHashCode() * 397 ^ Version.GetHashCode();
-            }
+            return Id.GetHashCode();
         }
 
         /// <summary>

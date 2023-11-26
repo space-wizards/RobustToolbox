@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 182.1.0
+
+### New features
+
+* Add IRobustRandom.SetSeed
+
+### Other
+
+* Add Arch.TrimExcess() back to remove excess archetypes on map load / EntityManager flush.
+
+
 ## 182.0.0
 
 ### Breaking changes

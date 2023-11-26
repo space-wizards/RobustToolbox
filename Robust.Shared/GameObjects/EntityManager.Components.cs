@@ -34,7 +34,7 @@ namespace Robust.Shared.GameObjects
         private const int EntityCapacity = 1024;
         private const int NetComponentCapacity = 8;
 
-        private static readonly ComponentState DefaultComponentState = new();
+        private static readonly IComponentState DefaultComponentState = new ComponentState();
 
         private readonly Dictionary<Type, Dictionary<EntityUid, IComponent>> _entTraitDict
             = new();
@@ -1336,7 +1336,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? session, GameTick fromTick)
+        public IComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? session, GameTick fromTick)
         {
             DebugTools.Assert(component.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {component.GetType()}");
             var getState = new ComponentGetState(session, fromTick);

@@ -40,4 +40,4 @@ public sealed class AutoNetworkedFieldAttribute : Attribute
 ///     can have effects after handling state without having to redefine all replication.
 /// </summary>
 [ByRefEvent]
-public record struct AfterAutoHandleStateEvent(ComponentState State);
+public record struct AfterAutoHandleStateEvent(IComponentState State);

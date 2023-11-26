@@ -42,7 +42,7 @@ namespace Robust.Shared.GameObjects
 
         /// State data for the created/modified component, if any.
         /// </summary>
-        public readonly ComponentState State;
+        public readonly IComponentState State;
 
         /// <summary>
         ///     The Network ID of the component to remove.
@@ -51,7 +51,7 @@ namespace Robust.Shared.GameObjects
 
         public readonly GameTick LastModifiedTick;
 
-        public ComponentChange(ushort netId, ComponentState state, GameTick lastModifiedTick)
+        public ComponentChange(ushort netId, IComponentState state, GameTick lastModifiedTick)
         {
             State = state;
             NetID = netId;

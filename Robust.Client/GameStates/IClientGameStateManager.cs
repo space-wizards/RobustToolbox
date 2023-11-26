@@ -113,7 +113,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         /// Returns the full collection of cached game states that are used to reset predicted entities.
         /// </summary>
-        Dictionary<NetEntity, Dictionary<ushort, ComponentState>> GetFullRep();
+        Dictionary<NetEntity, Dictionary<ushort, IComponentState>> GetFullRep();
 
         /// <summary>
         /// This will perform some setup in order to reset the game to an earlier state. To fully reset the state

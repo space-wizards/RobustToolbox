@@ -32,14 +32,16 @@ namespace Robust.Shared.Network.Messages
             MsgSize = buffer.LengthBytes;
             var uncompressedLength = buffer.ReadVariableInt32();
             var compressedLength = buffer.ReadVariableInt32();
-            using var finalStream = RobustMemoryManager.GetMemoryStream();
+            MemoryStream finalStream;
 
             // State is compressed.
             if (compressedLength > 0)
             {
-                var stream = RobustMemoryManager.GetMemoryStream();
+                var stream = RobustMemoryManager.GetMemoryStream(compressedLength);
                 buffer.ReadAlignedMemory(stream, compressedLength);
+
                 using var decompressStream = new ZStdDecompressStream(stream);
+                finalStream = RobustMemoryManager.GetMemoryStream(uncompressedLength);
                 finalStream.SetLength(uncompressedLength);
                 decompressStream.CopyTo(finalStream, uncompressedLength);
                 finalStream.Position = 0;
@@ -47,11 +49,13 @@ namespace Robust.Shared.Network.Messages
             // State is uncompressed.
             else
             {
+                finalStream = RobustMemoryManager.GetMemoryStream(uncompressedLength);
                 buffer.ReadAlignedMemory(finalStream, uncompressedLength);
             }
 
             serializer.DeserializeDirect(finalStream, out State);
             State.PayloadSize = uncompressedLength;
+            finalStream.Dispose();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)

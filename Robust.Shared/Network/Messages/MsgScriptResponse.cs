@@ -29,7 +29,7 @@ namespace Robust.Shared.Network.Messages
             {
                 buffer.ReadPadBits();
                 var length = buffer.ReadVariableInt32();
-                using var stream = RobustMemoryManager.GetMemoryStream();
+                using var stream = RobustMemoryManager.GetMemoryStream(length);
                 buffer.ReadAlignedMemory(stream, length);
                 serializer.DeserializeDirect(stream, out Echo);
                 serializer.DeserializeDirect(stream, out Response);

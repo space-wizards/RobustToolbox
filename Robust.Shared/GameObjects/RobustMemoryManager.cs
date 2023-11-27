@@ -32,7 +32,14 @@ internal sealed class RobustMemoryManager
 
     public static MemoryStream GetMemoryStream()
     {
-        var stream = MemStreamManager.GetStream();
+        var stream = MemStreamManager.GetStream("RobustMemoryManager");
+        DebugTools.Assert(stream.Position == 0);
+        return stream;
+    }
+
+    public static MemoryStream GetMemoryStream(int length)
+    {
+        var stream = MemStreamManager.GetStream("RobustMemoryManager", length);
         DebugTools.Assert(stream.Position == 0);
         return stream;
     }

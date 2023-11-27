@@ -51,12 +51,6 @@ namespace Robust.Shared.Network.Messages
             }
 
             serializer.DeserializeDirect(finalStream, out State);
-
-            // This is just a sanity check the the pool isn't leaking.
-#if DEBUG
-            Array.Clear(finalStream.GetBuffer());
-#endif
-
             State.PayloadSize = uncompressedLength;
         }
 
@@ -91,11 +85,6 @@ namespace Robust.Shared.Network.Messages
                 buffer.WriteVariableInt32(0);
                 buffer.Write(stateStream.AsSpan());
             }
-
-            // This is just a sanity check the the pool isn't leaking.
-#if DEBUG
-            Array.Clear(stateStream.GetBuffer());
-#endif
 
             _hasWritten = true;
             MsgSize = buffer.LengthBytes;

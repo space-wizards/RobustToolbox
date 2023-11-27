@@ -4,7 +4,6 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
-using Robust.Shared.ResourceManagement;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 

@@ -10,7 +10,6 @@ using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
-using Robust.Shared.ResourceManagement.ResourceTypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
@@ -30,7 +29,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [Dependency] protected readonly IGameTiming Timing = default!;
     [Dependency] private   readonly INetManager _netManager = default!;
     [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
-    [Dependency] private   readonly IResourceCache _resource = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
 
     /// <summary>
@@ -188,9 +186,13 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// </summary>
     public TimeSpan GetAudioLength(string filename)
     {
-        var resource = _resource.GetResource<AudioResource>(filename);
-        return resource.AudioStream.Length;
+        if (!filename.StartsWith("/"))
+            throw new ArgumentException("Path must be rooted");
+
+        return GetAudioLengthImpl(filename);
     }
+
+    protected abstract TimeSpan GetAudioLengthImpl(string filename);
 
     /// <summary>
     /// Stops the specified audio entity from playing.

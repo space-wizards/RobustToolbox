@@ -1,9 +1,12 @@
+using System;
+using System.IO;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Audio;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
 
-namespace Robust.Shared.Audio;
+namespace Robust.Client.Audio;
 
 /// <summary>
 /// Handles clientside audio.
@@ -51,4 +54,10 @@ internal interface IAudioInternal
     /// Manually calculates the specified gain for an attenuation source with the specified distance.
     /// </summary>
     float GetAttenuationGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance);
+
+    AudioStream LoadAudioOggVorbis(Stream stream, string? name = null);
+
+    AudioStream LoadAudioWav(Stream stream, string? name = null);
+
+    AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null);
 }

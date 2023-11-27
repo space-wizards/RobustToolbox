@@ -50,7 +50,7 @@ namespace Robust.Client
     internal sealed partial class GameController : IGameControllerInternal
     {
         [Dependency] private readonly INetConfigurationManagerInternal _configurationManager = default!;
-        [Dependency] private readonly IClientResourceCacheInternal _resourceCache = default!;
+        [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
         [Dependency] private readonly IResourceManagerInternal _resManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;

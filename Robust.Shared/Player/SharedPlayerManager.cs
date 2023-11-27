@@ -14,6 +14,7 @@ internal abstract partial class SharedPlayerManager : ISharedPlayerManager
     [Dependency] protected readonly IEntityManager EntManager = default!;
     [Dependency] protected readonly ILogManager LogMan = default!;
     [Dependency] protected readonly IGameTiming Timing = default!;
+    [Dependency] private readonly INetManager _netMan = default!;
 
     protected ISawmill Sawmill = default!;
 
@@ -26,7 +27,7 @@ internal abstract partial class SharedPlayerManager : ISharedPlayerManager
     public int PlayerCount => InternalSessions.Count;
 
     [ViewVariables]
-    public ICommonSession? LocalSession { get; set; }
+    public ICommonSession? LocalSession { get; protected set; }
 
     [ViewVariables]
     public NetUserId? LocalUser => LocalSession?.UserId;

@@ -1,13 +1,17 @@
+using System;
+using System.IO;
 using System.Numerics;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.AudioLoading;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
 
-namespace Robust.Shared.Audio;
+namespace Robust.Client.Audio;
 
 /// <summary>
 /// Headless client audio.
 /// </summary>
-internal sealed class HeadlessAudioManager : SharedAudioManager, IAudioInternal
+internal sealed class HeadlessAudioManager : IAudioInternal
 {
     /// <inheritdoc />
     public void InitializePostWindowing()
@@ -25,7 +29,7 @@ internal sealed class HeadlessAudioManager : SharedAudioManager, IAudioInternal
     }
 
     /// <inheritdoc />
-    public IAudioSource? CreateAudioSource(AudioStream stream)
+    public IAudioSource CreateAudioSource(AudioStream stream)
     {
         return DummyAudioSource.Instance;
     }
@@ -75,5 +79,28 @@ internal sealed class HeadlessAudioManager : SharedAudioManager, IAudioInternal
     public float GetAttenuationGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance)
     {
         return 0f;
+    }
+
+    public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
+    {
+        var metadata = AudioLoaderOgg.LoadAudioMetadata(stream);
+        return AudioStreamFromMetadata(metadata, name);
+    }
+
+    public AudioStream LoadAudioWav(Stream stream, string? name = null)
+    {
+        var metadata = AudioLoaderWav.LoadAudioMetadata(stream);
+        return AudioStreamFromMetadata(metadata, name);
+    }
+
+    public AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null)
+    {
+        var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
+        return new AudioStream(null, length, channels, name);
+    }
+
+    private static AudioStream AudioStreamFromMetadata(AudioMetadata metadata, string? name)
+    {
+        return new AudioStream(null, metadata.Length, metadata.ChannelCount, name, metadata.Title, metadata.Artist);
     }
 }

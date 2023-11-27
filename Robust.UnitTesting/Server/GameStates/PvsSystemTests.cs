@@ -2,15 +2,13 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
-using cIPlayerManager = Robust.Client.Player.IPlayerManager;
-using sIPlayerManager = Robust.Server.Player.IPlayerManager;
+using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Server.GameStates;
 
@@ -30,12 +28,12 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
-        var sPlayerMan = server.ResolveDependency<sIPlayerManager>();
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
         var xforms = sEntMan.System<SharedTransformSystem>();
 
         var cEntMan = client.ResolveDependency<IEntityManager>();
         var netMan = client.ResolveDependency<IClientNetManager>();
-        var cPlayerMan = client.ResolveDependency<cIPlayerManager>();
+        var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
@@ -76,7 +74,7 @@ public sealed class PvsSystemTests : RobustIntegrationTest
 
             // Attach player.
             var session = sPlayerMan.Sessions.First();
-            sEntMan.System<ActorSystem>().Attach(player, session);
+            server.PlayerMan.SetAttachedEntity(session, player);
             sPlayerMan.JoinGame(session);
         });
 
@@ -89,7 +87,7 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         // Check player got properly attached
         await client.WaitPost(() =>
         {
-            var ent = cEntMan.GetNetEntity(cPlayerMan.LocalPlayer?.ControlledEntity);
+            var ent = cEntMan.GetNetEntity(cPlayerMan.LocalEntity);
             Assert.That(ent, Is.EqualTo(sEntMan.GetNetEntity(player)));
         });
 

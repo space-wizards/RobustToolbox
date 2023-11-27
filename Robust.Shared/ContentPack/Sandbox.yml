@@ -73,6 +73,12 @@ WhitelistedNamespaces:
 # * The API is not *relevant* to content. e.g. System.Type.IsAnsiClass.
 # * I am lazy these API lists are huge dude.
 Types:
+  NetSerializer:
+    NetListAsArray`1:
+      Fields:
+      - "System.Collections.Generic.IReadOnlyCollection`1<!0> Value"
+      Methods:
+      - "bool get_HasContents()"
   Lidgren.Network:
     NetBuffer:
       All: True

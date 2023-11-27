@@ -14,7 +14,7 @@ namespace Robust.Client.Commands;
 /// </summary>
 public sealed class ShowAudioCommand : LocalizedCommands
 {
-    [Dependency] private readonly IClientResourceCache _client = default!;
+    [Dependency] private readonly IResourceCache _client = default!;
     [Dependency] private readonly IEntityManager _entManager = default!;
     [Dependency] private readonly IOverlayManager _overlayManager = default!;
     [Dependency] private readonly IPlayerManager _playerMgr = default!;

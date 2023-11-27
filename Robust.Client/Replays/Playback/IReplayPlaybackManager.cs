@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -129,6 +130,11 @@ public interface IReplayPlaybackManager
     event Action? ReplayUnpaused;
 
     /// <summary>
+    /// Invoked just before a replay applies a game state.
+    /// </summary>
+    event Action<(GameState Current, GameState? Next)>? BeforeApplyState;
+
+    /// <summary>
     /// If currently replaying a client-side recording, this is the user that recorded the replay.
     /// Useful for setting default observer spawn positions.
     /// </summary>
@@ -137,5 +143,5 @@ public interface IReplayPlaybackManager
     /// <summary>
     /// Fetches the entity that the <see cref="Recorder"/> is currently attached to.
     /// </summary>
-    public bool TryGetRecorderEntity([NotNullWhen(true)] out EntityUid? uid);
+    bool TryGetRecorderEntity([NotNullWhen(true)] out EntityUid? uid);
 }

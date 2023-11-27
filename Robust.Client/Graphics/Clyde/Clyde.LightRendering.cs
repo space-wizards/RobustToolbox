@@ -97,6 +97,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] _lightsToRenderList = default!;
 
+        private LightCapacityComparer _lightCap = new();
+        private ShadowCapacityComparer _shadowCap = new ShadowCapacityComparer();
+
         private unsafe void InitLighting()
         {
 
@@ -332,7 +335,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawLightsAndFov(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
         {
-            if (!_lightManager.Enabled)
+            if (!_lightManager.Enabled || !eye.DrawLight)
             {
                 return;
             }
@@ -570,6 +573,28 @@ namespace Robust.Client.Graphics.Clyde
             return true;
         }
 
+        private sealed class LightCapacityComparer : IComparer<(PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
+        {
+            public int Compare(
+                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
+                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
+            {
+                if (x.light.CastShadows && !y.light.CastShadows) return 1;
+                if (!x.light.CastShadows && y.light.CastShadows) return -1;
+                return 0;
+            }
+        }
+
+        private sealed class ShadowCapacityComparer : IComparer<(PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
+        {
+            public int Compare(
+                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
+                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
+            {
+                return x.distanceSquared.CompareTo(y.distanceSquared);
+            }
+        }
+
         private (int count, Box2 expandedBounds) GetLightsToRender(
             MapId map,
             in Box2Rotated worldBounds,
@@ -595,20 +620,10 @@ namespace Robust.Client.Graphics.Clyde
 
                 // First, partition the array based on whether the lights are shadow casting or not
                 // (non shadow casting lights should be the first partition, shadow casting lights the second)
-                Array.Sort(_lightsToRenderList, 0, state.count,
-                    Comparer<(PointLightComponent light, Vector2 pos, float distanceSquared)>.Create((x, y) =>
-                    {
-                        if (x.light.CastShadows && !y.light.CastShadows) return 1;
-                        else if (!x.light.CastShadows && y.light.CastShadows) return -1;
-                        else return 0;
-                    }));
+                Array.Sort(_lightsToRenderList, 0, state.count, _lightCap);
 
                 // Next, sort just the shadow casting lights by distance.
-                Array.Sort(_lightsToRenderList, state.count - state.shadowCastingCount, state.shadowCastingCount,
-                    Comparer<(PointLightComponent light, Vector2 pos, float distanceSquared)>.Create((x, y) =>
-                    {
-                        return x.distanceSquared.CompareTo(y.distanceSquared);
-                    }));
+                Array.Sort(_lightsToRenderList, state.count - state.shadowCastingCount, state.shadowCastingCount, _shadowCap);
 
                 // Then effectively delete the furthest lights, by setting the end of the array to exclude N
                 // number of shadow casting lights (where N is the number above the max number per scene.)

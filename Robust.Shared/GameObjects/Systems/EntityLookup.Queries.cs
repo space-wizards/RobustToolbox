@@ -171,11 +171,16 @@ public sealed partial class EntityLookupSystem
 
     private void RecursiveAdd(EntityUid uid, ref ValueList<EntityUid> toAdd)
     {
-        var childEnumerator = _xformQuery.GetComponent(uid).ChildEnumerator;
+        if (!_xformQuery.TryGetComponent(uid, out var xform))
+        {
+            Log.Error($"Encountered deleted entity {uid} while performing entity lookup.");
+            return;
+        }
 
+        toAdd.Add(uid);
+        var childEnumerator = xform.ChildEnumerator;
         while (childEnumerator.MoveNext(out var child))
         {
-            toAdd.Add(child.Value);
             RecursiveAdd(child.Value, ref toAdd);
         }
     }
@@ -185,6 +190,11 @@ public sealed partial class EntityLookupSystem
         if ((flags & LookupFlags.Contained) == 0x0 || intersecting.Count == 0)
             return;
 
+        // TODO PERFORMANCE.
+        // toAdd only exists because we can't add directly to intersecting w/o enumeration issues.
+        // If we assume that there are more entities in containers than there are entities in the intersecting set, then
+        // we would be better off creating a fixed-size EntityUid array and coping all intersecting entities into that
+        // instead of creating a value list here that needs to be resized.
         var toAdd = new ValueList<EntityUid>();
 
         foreach (var uid in intersecting)
@@ -196,7 +206,6 @@ public sealed partial class EntityLookupSystem
             {
                 foreach (var contained in con.ContainedEntities)
                 {
-                    toAdd.Add(contained);
                     RecursiveAdd(contained, ref toAdd);
                 }
             }

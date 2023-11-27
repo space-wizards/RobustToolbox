@@ -355,7 +355,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class LoadResource : LocalizedCommands
     {
-        [Dependency] private readonly IClientResourceCache _res = default!;
+        [Dependency] private readonly IResourceCache _res = default!;
         [Dependency] private readonly IReflectionManager _reflection = default!;
 
         public override string Command => "ldrsc";
@@ -392,7 +392,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ReloadResource : LocalizedCommands
     {
-        [Dependency] private readonly IClientResourceCache _res = default!;
+        [Dependency] private readonly IResourceCache _res = default!;
         [Dependency] private readonly IReflectionManager _reflection = default!;
 
         public override string Command => "rldrsc";

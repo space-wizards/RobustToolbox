@@ -1,7 +1,7 @@
 using System;
 using Robust.Shared.Graphics;
 
-namespace Robust.Shared.Audio;
+namespace Robust.Client.Audio;
 
 /// <summary>
 /// Has the metadata for a particular audio stream as well as the relevant internal handle to it.

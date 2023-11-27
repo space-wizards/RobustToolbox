@@ -1,11 +1,12 @@
 using System;
 using System.IO;
+using Robust.Client.Audio;
 using Robust.Shared.Audio;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.ResourceManagement.ResourceTypes;
+namespace Robust.Client.ResourceManagement;
 
 public sealed class AudioResource : BaseResource
 {
@@ -22,13 +23,14 @@ public sealed class AudioResource : BaseResource
 
         using (var fileStream = cache.ContentFileRead(path))
         {
+            var audioManager = dependencies.Resolve<IAudioInternal>();
             if (path.Extension == "ogg")
             {
-                AudioStream = dependencies.Resolve<SharedAudioManager>().LoadAudioOggVorbis(fileStream, path.ToString());
+                AudioStream = audioManager.LoadAudioOggVorbis(fileStream, path.ToString());
             }
             else if (path.Extension == "wav")
             {
-                AudioStream = dependencies.Resolve<SharedAudioManager>().LoadAudioWav(fileStream, path.ToString());
+                AudioStream = audioManager.LoadAudioWav(fileStream, path.ToString());
             }
             else
             {

@@ -1,11 +1,15 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.AudioLoading;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -17,6 +21,9 @@ namespace Robust.Server.Audio;
 public sealed partial class AudioSystem : SharedAudioSystem
 {
     [Dependency] private readonly PvsOverrideSystem _pvs = default!;
+    [Dependency] private readonly IResourceManager _resourceManager = default!;
+
+    private readonly Dictionary<string, TimeSpan> _cachedAudioLengths = new();
 
     public override void Initialize()
     {
@@ -189,5 +196,28 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return PlayStatic(filename, actor.PlayerSession, coordinates, audioParams);
 
         return null;
+    }
+
+    protected override TimeSpan GetAudioLengthImpl(string filename)
+    {
+        // Check shipped metadata from packaging.
+        if (ProtoMan.TryIndex(filename, out AudioMetadataPrototype? metadata))
+            return metadata.Length;
+
+        // Try loading audio files directly.
+        // This is necessary in development and environments,
+        // and when working with audio files uploaded dynamically at runtime.
+        if (_cachedAudioLengths.TryGetValue(filename, out var length))
+            return length;
+
+        if (!_resourceManager.TryContentFileRead(filename, out var stream))
+            throw new FileNotFoundException($"Unable to find metadata for audio file {filename}");
+
+        using (stream)
+        {
+            var loadedMetadata = AudioLoader.LoadAudioMetadata(stream, filename);
+            _cachedAudioLengths.Add(filename, loadedMetadata.Length);
+            return loadedMetadata.Length;
+        }
     }
 }

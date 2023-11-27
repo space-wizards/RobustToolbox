@@ -54,6 +54,194 @@ END TEMPLATE-->
 *None yet*
 
 
+## 183.0.0
+
+### Breaking changes
+
+* Audio rework has been re-merged now that the issues with packaging on server have been rectified (thanks PJB!)
+* Reverted Arch pending further performance work on making TryGetComponent competitive with live.
+
+
+## 182.1.1
+
+### Internal
+
+* Remove AggressiveInlining from Arch for debugging.
+
+
+## 182.1.0
+
+### New features
+
+* Add IRobustRandom.SetSeed
+
+### Other
+
+* Add Arch.TrimExcess() back to remove excess archetypes on map load / EntityManager flush.
+
+
+## 182.0.0
+
+### Breaking changes
+
+* Add EntityUid's generation / version to the hashcode.
+
+
+## 181.0.2
+
+### Bugfixes
+
+* Fix exceptions from having too many lights on screen and causing the game to go black.
+* Fix components having events raised in ClientGameStateManager before fully set and causing nullable reference exceptions.
+* Replace tile intersection IEnumerables with TileEnumerator internally. Also made it public for external callers that wish to avoid IEnumerable.
+
+
+## 181.0.1
+
+### Bugfixes
+
+* Fix the non-generic HasComp and add a test for good measure.
+
+
+## 181.0.0
+
+### Breaking changes
+
+- Arch is merged refactoring how components are stored on engine. There's minimal changes on the API end to facilitate component nullability with much internal refactoring.
+
+
+## 180.2.1
+
+
+## 180.2.0
+
+### New features
+
+* Add EnsureEntity variants that take in collections.
+* Add more MapSystem helper methods.
+
+### Internal
+
+* Cache some more PVS data to avoid re-allocating every tick.
+
+
+## 180.1.0
+
+### New features
+
+* Add the map name to lsmap.
+* Add net.pool_size to CVars to control the message data pool size in Lidgren and to also toggle pooling.
+
+### Bugfixes
+
+* Fix physics contraints causing enormous heap allocations.
+* Fix potential error when writing a runtime log.
+* Fix shape lookups for non-hard fixtures in EntityLookupSystem from 180.0.0
+
+
+## 180.0.0
+
+### Breaking changes
+
+* Removed some obsolete methods from EntityLookupSystem.
+
+### New features
+
+* PhysicsSystem.TryGetNearest now supports chain shapes.
+* Add IPhysShape methods to EntityLookupSystem rather than relying on AABB checks.
+* Add some more helper methods to SharedTransformSystem.
+* Add GetOrNew dictionary extension that also returns a bool on whether the key existed.
+* Add a GetAnchoredEntities overload that takes in a list.
+
+### Other
+
+* Use NetEntities for the F3 debug panel to align with command usage.
+
+
+## 179.0.0
+
+### Breaking changes
+
+* EyeComponent.Eye is no longer nullable
+
+### New features
+
+* Light rendering can now be enabled or disable per eye.
+
+### Bugfixes
+
+* Deserializing old maps with empty grid chunks should now just ignore those chunks.
+
+### Other
+
+* UnknownPrototypeException now also tells you the prototype kind instead of just the unkown ID.
+* Adding or removing networked components while resetting predicted entities now results in a more informative exception.
+
+
+## 178.0.0
+
+### Breaking changes
+
+* Most methods in ActorSystem have been moved to ISharedPlayerManager. 
+* Several actor/player related components and events have been moved to shared.
+
+### New features
+
+* Added `NetListAsArray<T>.Value` to the sandbox whitelist
+
+
+## 177.0.0
+
+### Breaking changes
+
+* Removed toInsertXform and added containerXform in SharedContainerSystem.CanInsert.
+* Removed EntityQuery parameters from SharedContainerSystem.IsEntityOrParentInContainer.
+* Changed the signature of ContainsEntity in SharedTransformSystem to use Entity<T>.
+* Removed one obsoleted SharedTransformSystem.AnchorEntity method.
+* Changed signature of SharedTransformSystem.SetCoordinates to use Entity<T>.
+
+### New features
+
+* Added more Entity<T> query methods.
+* Added BeforeApplyState event to replay playback.
+
+### Bugfixes
+
+* Fixed inverted GetAllMapGrids map id check.
+* Fixed transform test warnings.
+* Fixed PlacementManager warnings.
+* Fixed reparenting bug for entities that are being deleted.
+
+### Other
+
+* Changed VerticalAlignment of RichTextLabel to Center to be consistent with Label.
+* Changed PVS error log to be a warning instead.
+* Marked insert and remove container methods as obsolete, added container system methods to replace them.
+* Marked TransformComponent.MapPosition as obsolete, added GetMapCoordinates system method to replace it.
+
+### Internal
+
+* Moved TryGetUi/TryToggleUi/ToggleUi/TryOpen/OpenUi/TryClose/CloseUi methods from UserInterfaceSystem to SharedUserInterfaceSystem.
+
+
+## 176.0.0
+
+### Breaking changes
+
+* Reverted audio rework temporarily until packaging is fixed.
+* Changes to Robust.Packaging to facilitate Content.Packaging ports from the python packaging scripts.
+
+### New features
+
+* Add a cvar for max game state buffer size.
+* Add an overload for GetEntitiesInRange that takes in a set.
+
+### Bugfixes
+
+* Fix PVS initial list capacity always being 0.
+* Fix replay lerp error spam.
+
+
 ## 175.0.0
 
 ### Breaking changes

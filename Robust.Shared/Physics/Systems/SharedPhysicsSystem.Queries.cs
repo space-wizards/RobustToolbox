@@ -457,14 +457,14 @@ namespace Robust.Shared.Physics.Systems
         }
 
         public bool TryGetNearest(EntityUid uidA, EntityUid uidB,
-            out Vector2 point,
+            out Vector2 pointA,
             out Vector2 pointB,
             out float distance,
             Transform xfA, Transform xfB,
             FixturesComponent? managerA = null, FixturesComponent? managerB = null,
             PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
-            point = Vector2.Zero;
+            pointA = Vector2.Zero;
             pointB = Vector2.Zero;
 
             if (!Resolve(uidA, ref managerA, ref bodyA) ||
@@ -477,11 +477,12 @@ namespace Robust.Shared.Physics.Systems
             }
 
             distance = float.MaxValue;
-            var input = new DistanceInput();
-
-            input.TransformA = xfA;
-            input.TransformB = xfB;
-            input.UseRadii = true;
+            var input = new DistanceInput
+            {
+                TransformA = xfA,
+                TransformB = xfB,
+                UseRadii = true
+            };
 
             // No requirement on collision being enabled so chainshapes will fail
             foreach (var fixtureA in managerA.Fixtures.Values)
@@ -489,24 +490,28 @@ namespace Robust.Shared.Physics.Systems
                 if (bodyA.Hard && !fixtureA.Hard)
                     continue;
 
-                DebugTools.Assert(fixtureA.ProxyCount <= 1);
-
-                foreach (var fixtureB in managerB.Fixtures.Values)
+                for (var i = 0; i < fixtureA.Shape.ChildCount; i++)
                 {
-                    if (bodyB.Hard && !fixtureB.Hard)
-                        continue;
+                    input.ProxyA.Set(fixtureA.Shape, i);
 
-                    DebugTools.Assert(fixtureB.ProxyCount <= 1);
-                    input.ProxyA.Set(fixtureA.Shape, 0);
-                    input.ProxyB.Set(fixtureB.Shape, 0);
-                    DistanceManager.ComputeDistance(out var output, out _, input);
+                    foreach (var fixtureB in managerB.Fixtures.Values)
+                    {
+                        if (bodyB.Hard && !fixtureB.Hard)
+                            continue;
 
-                    if (distance < output.Distance)
-                        continue;
+                        for (var j = 0; j < fixtureB.Shape.ChildCount; j++)
+                        {
+                            input.ProxyB.Set(fixtureB.Shape, j);
+                            DistanceManager.ComputeDistance(out var output, out _, input);
 
-                    point = output.PointA;
-                    pointB = output.PointB;
-                    distance = output.Distance;
+                            if (distance < output.Distance)
+                                continue;
+
+                            pointA = output.PointA;
+                            pointB = output.PointB;
+                            distance = output.Distance;
+                        }
+                    }
                 }
             }
 

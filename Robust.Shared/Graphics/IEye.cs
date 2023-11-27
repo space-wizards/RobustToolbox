@@ -18,6 +18,11 @@ namespace Robust.Shared.Graphics
         bool DrawFov { get; set; }
 
         /// <summary>
+        /// Whether to draw lights for this eye.
+        /// </summary>
+        bool DrawLight { get; set; }
+
+        /// <summary>
         /// Current position of the center of the eye in the game world.
         /// </summary>
         MapCoordinates Position { get; }

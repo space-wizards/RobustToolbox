@@ -15,7 +15,6 @@ using Robust.Server.ServerStatus;
 using Robust.Server.Upload;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
-using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
@@ -27,7 +26,6 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
-using Robust.Shared.ResourceManagement;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Upload;
@@ -66,7 +64,6 @@ namespace Robust.Server
             deps.Register<IPrototypeManagerInternal, ServerPrototypeManager>();
             deps.Register<IResourceManager, ResourceManager>();
             deps.Register<IResourceManagerInternal, ResourceManager>();
-            deps.Register<IResourceCache, SharedResourceCache>();
             deps.Register<EntityManager, ServerEntityManager>();
             deps.Register<IServerEntityManager, ServerEntityManager>();
             deps.Register<IServerEntityManagerInternal, ServerEntityManager>();
@@ -95,7 +92,6 @@ namespace Robust.Server
             deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
             deps.Register<NetworkResourceManager>();
             deps.Register<IHttpClientHolder, HttpClientHolder>();
-            deps.Register<SharedAudioManager, HeadlessAudioManager>();
         }
     }
 }

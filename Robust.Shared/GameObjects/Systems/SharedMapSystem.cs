@@ -12,6 +12,7 @@ namespace Robust.Shared.GameObjects
 {
     public abstract partial class SharedMapSystem : EntitySystem
     {
+        [Dependency] private readonly ITileDefinitionManager _tileMan = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IMapManagerInternal _mapInternal = default!;

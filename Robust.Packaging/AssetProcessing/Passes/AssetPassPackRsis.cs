@@ -61,7 +61,7 @@ internal sealed class AssetPassPackRsis : AssetPass
         foreach (var (key, dat) in _foundRsis)
         {
             if (dat.MetaJson == null)
-                return;
+                continue;
 
             RunJob(() =>
             {

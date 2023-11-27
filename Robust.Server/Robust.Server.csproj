@@ -22,7 +22,7 @@
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="6.0.0" />
     <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.2" />
     <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.20348-rc2" PrivateAssets="compile" />
-    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="7.0.0" PrivateAssets="compile" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="6.0.2" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.Sodium" Version="0.2.1" PrivateAssets="compile" />
     <PackageReference Include="SharpZstd.Interop" Version="1.5.2-beta2" PrivateAssets="compile" />
     <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" Version="1.2.0" />

@@ -525,7 +525,7 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool HasComp<T>(EntityUid uid) where T : IComponent
+    protected bool HasComp<T>(EntityUid uid)
     {
         return EntityManager.HasComponent<T>(uid);
     }
@@ -543,7 +543,7 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent
+    protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid)
     {
         return EntityManager.HasComponent<T>(uid);
     }
@@ -572,7 +572,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void AddComp<T>(EntityUid uid, T component, bool overwrite = false) where T : IComponent
     {
-        EntityManager.AddComponent(uid, component);
+        EntityManager.AddComponent(uid, component, overwrite);
     }
 
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid)"/>
@@ -612,6 +612,13 @@ public partial class EntitySystem
     protected bool RemCompDeferred(EntityUid uid, Type type)
     {
         return EntityManager.RemoveComponentDeferred(uid, type);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, Component)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemCompDeferred(EntityUid uid, Component component)
+    {
+        EntityManager.RemoveComponentDeferred(uid, component);
     }
 
     /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, IComponent)"/>
@@ -654,6 +661,13 @@ public partial class EntitySystem
     protected bool RemComp(EntityUid uid, Type type)
     {
         return EntityManager.RemoveComponent(uid, type);
+    }
+
+    /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, Component)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemComp(EntityUid uid, Component component)
+    {
+        EntityManager.RemoveComponent(uid, component);
     }
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, IComponent)"/>

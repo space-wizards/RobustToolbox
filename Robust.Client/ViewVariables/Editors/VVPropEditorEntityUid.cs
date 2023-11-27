@@ -28,7 +28,7 @@ namespace Robust.Client.ViewVariables.Editors
             if (!ReadOnly)
             {
                 lineEdit.OnTextEntered += e =>
-                    ValueChanged(EntityUid.Parse(e.Text, ", -1"));
+                    ValueChanged(EntityUid.Parse(e.Text));
             }
 
             var vvButton = new Button()

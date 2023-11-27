@@ -55,4 +55,17 @@ namespace Robust.Shared.GameObjects
             Meta = meta;
         }
     }
+
+    public readonly struct DeletedComponentEventArgs
+    {
+        public readonly ComponentEventArgs BaseArgs;
+
+        public readonly bool Terminating;
+
+        public DeletedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating)
+        {
+            BaseArgs = baseArgs;
+            Terminating = terminating;
+        }
+    }
 }

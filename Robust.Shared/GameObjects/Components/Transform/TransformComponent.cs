@@ -27,7 +27,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         private NetEntity NetParent => _entMan.GetNetEntity(_parent);
 
-        [DataField("parent")] internal EntityUid _parent = EntityUid.Invalid;
+        [DataField("parent")] internal EntityUid _parent;
         [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
         [DataField("rot")] internal Angle _localRotation; // local rotation
         [DataField("noRot")] internal bool _noLocalRotation;
@@ -733,7 +733,7 @@ namespace Robust.Shared.GameObjects
     {
         public bool IsValid() => Uid.IsValid();
         public bool Valid => IsValid();
-        public static readonly BroadphaseData Invalid = new(EntityUid.Invalid, EntityUid.Invalid, false, false);
+        public static readonly BroadphaseData Invalid = default;
 
         // TODO include MapId if ever grids are allowed to enter null-space (leave PVS).
     }

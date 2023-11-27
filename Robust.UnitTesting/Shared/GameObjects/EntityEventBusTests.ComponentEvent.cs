@@ -16,7 +16,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var compFactory = new ComponentFactory(new DynamicTypeFactory(), new ReflectionManagerTest(), new LogManager());
 
             // Arrange
-            var entUid = new EntityUid(7, -1);
+            var entUid = new EntityUid(7);
             var compInstance = new MetaDataComponent();
 
             var entManMock = new Mock<IEntityManager>();
@@ -67,7 +67,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void UnsubscribeCompEvent()
         {
             // Arrange
-            var entUid = new EntityUid(7, -1);
+            var entUid = new EntityUid(7);
             var compInstance = new MetaDataComponent();
 
             var entManMock = new Mock<IEntityManager>();
@@ -121,7 +121,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void SubscribeCompLifeEvent()
         {
             // Arrange
-            var entUid = new EntityUid(7, -1);
+            var entUid = new EntityUid(7);
             var compInstance = new MetaDataComponent();
 
             var entManMock = new Mock<IEntityManager>();
@@ -176,7 +176,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void CompEventOrdered()
         {
             // Arrange
-            var entUid = new EntityUid(7, -1);
+            var entUid = new EntityUid(7);
 
             var entManMock = new Mock<IEntityManager>();
             var compFacMock = new Mock<IComponentFactory>();

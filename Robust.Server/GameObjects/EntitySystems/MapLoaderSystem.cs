@@ -5,9 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using Arch.Core;
-using Arch.Core.Utils;
-using Collections.Pooled;
 using Robust.Server.Maps;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -157,11 +154,10 @@ public sealed class MapLoaderSystem : EntitySystem
             var sw = new Stopwatch();
             sw.Start();
             result = Deserialize(data);
+            _logLoader.Debug($"Loaded map in {sw.Elapsed}");
 
-            _logLoader.Info($"Loaded map {resPath} in {sw.Elapsed}");
-            var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
             var mapEnt = _mapManager.GetMapEntityId(mapId);
-
+            var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
             var rootEnts = new List<EntityUid>();
             // aeoeoeieioe content
 
@@ -177,8 +173,6 @@ public sealed class MapLoaderSystem : EntitySystem
                         rootEnts.Add(ent);
                 }
             }
-
-            EntityManager.CleanupArch();
 
             rootUids = rootEnts;
         }
@@ -434,10 +428,6 @@ public sealed class MapLoaderSystem : EntitySystem
         if (data.Version >= 4)
         {
             var metaEntities = data.RootMappingNode.Get<SequenceDataNode>("entities");
-            using var mapSaveCompType = new PooledSet<Type>()
-            {
-                typeof(MapSaveIdComponent)
-            };
 
             foreach (var metaDef in metaEntities.Cast<MappingDataNode>())
             {
@@ -457,30 +447,9 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 var entities = (SequenceDataNode) metaDef["entities"];
                 EntityPrototype? proto = null;
-                var count = entities.Count;
-                var entTotal = data.Entities.Count + count;
-                data.Entities.EnsureCapacity(entTotal);
-                data.UidEntityMap.EnsureCapacity(entTotal);
-                data.EntitiesToDeserialize.EnsureCapacity(entTotal);
 
                 if (type != null)
-                {
-                    if (_prototypeManager.TryIndex(type, out proto) && count > 1)
-                    {
-                        ComponentType[] compTypes;
-
-                        if (data.Options.StoreMapUids)
-                        {
-                            compTypes = EntityManager.GetComponentType(proto, mapSaveCompType);
-                        }
-                        else
-                        {
-                            compTypes = EntityManager.GetComponentType(proto);
-                        }
-
-                        EntityManager.Reserve(compTypes, count);
-                    }
-                }
+                    _prototypeManager.TryIndex(type, out proto);
 
                 foreach (var entityDef in entities.Cast<MappingDataNode>())
                 {
@@ -495,7 +464,6 @@ public sealed class MapLoaderSystem : EntitySystem
                     {
                         deletedPrototypeUids.Add(entity);
                     }
-                    // TODO: Move this elsewhere?
                     else if (data.Options.StoreMapUids)
                     {
                         var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
@@ -604,7 +572,6 @@ public sealed class MapLoaderSystem : EntitySystem
             _context.CurrentlyIgnoredComponents = missingComponentList.Cast<ValueDataNode>().Select(x => x.Value).ToHashSet();
 
         _serverEntityManager.FinishEntityLoad(uid, meta.EntityPrototype, _context);
-
         if (_context.CurrentlyIgnoredComponents.Count > 0)
             meta.LastComponentRemoved = _timing.CurTick;
     }

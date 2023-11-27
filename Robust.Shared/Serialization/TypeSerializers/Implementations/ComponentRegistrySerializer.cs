@@ -12,6 +12,7 @@ using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 using static Robust.Shared.Prototypes.EntityPrototype;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
@@ -63,8 +64,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 var copy = componentMapping.Copy()!;
                 copy.Remove("type");
 
-                var reg = factory.GetRegistration(compType);
-                var read = (IComponent)serializationManager.Read(reg.Type, copy, hookCtx, context)!;
+                var type = factory.GetRegistration(compType).Type;
+                var read = (IComponent)serializationManager.Read(type, copy, hookCtx, context)!;
 
                 components[compType] = new ComponentRegistryEntry(read, copy);
             }

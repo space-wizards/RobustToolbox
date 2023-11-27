@@ -62,7 +62,6 @@ namespace Robust.Shared.Physics.Systems
 
         public bool MetricsEnabled { get; protected set; }
 
-        private EntityQuery<CollideOnAnchorComponent> _collideAnchorQuery;
         private EntityQuery<FixturesComponent> _fixturesQuery;
         protected EntityQuery<PhysicsComponent> PhysicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;
@@ -71,12 +70,11 @@ namespace Robust.Shared.Physics.Systems
         {
             base.Initialize();
 
-            _collideAnchorQuery = GetEntityQuery<CollideOnAnchorComponent>();
             _fixturesQuery = GetEntityQuery<FixturesComponent>();
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
 
-            SubscribeLocalEvent<GridInitializeEvent>(OnGridAdd);
+            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
             SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
@@ -180,12 +178,14 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         private void HandleMapChange(EntityUid uid, TransformComponent xform, PhysicsComponent? body, MapId oldMapId, MapId newMapId)
         {
+            var bodyQuery = GetEntityQuery<PhysicsComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
             var jointQuery = GetEntityQuery<JointComponent>();
 
             TryComp(_mapManager.GetMapEntityId(oldMapId), out PhysicsMapComponent? oldMap);
             TryComp(_mapManager.GetMapEntityId(newMapId), out PhysicsMapComponent? newMap);
 
-            RecursiveMapUpdate(uid, xform, body, newMap, oldMap, jointQuery);
+            RecursiveMapUpdate(uid, xform, body, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
         }
 
         /// <summary>
@@ -197,6 +197,8 @@ namespace Robust.Shared.Physics.Systems
             PhysicsComponent? body,
             PhysicsMapComponent? newMap,
             PhysicsMapComponent? oldMap,
+            EntityQuery<PhysicsComponent> bodyQuery,
+            EntityQuery<TransformComponent> xformQuery,
             EntityQuery<JointComponent> jointQuery)
         {
             DebugTools.Assert(!Deleted(uid));
@@ -220,15 +222,15 @@ namespace Robust.Shared.Physics.Systems
             var childEnumerator = xform.ChildEnumerator;
             while (childEnumerator.MoveNext(out var child))
             {
-                if (_xformQuery.TryGetComponent(child, out var childXform))
+                if (xformQuery.TryGetComponent(child, out var childXform))
                 {
-                    PhysicsQuery.TryGetComponent(child, out var childBody);
-                    RecursiveMapUpdate(child.Value, childXform, childBody, newMap, oldMap, jointQuery);
+                    bodyQuery.TryGetComponent(child, out var childBody);
+                    RecursiveMapUpdate(child.Value, childXform, childBody, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
                 }
             }
         }
 
-        private void OnGridAdd(GridInitializeEvent ev)
+        private void OnGridAdd(GridAddEvent ev)
         {
             var guid = ev.EntityUid;
 
@@ -254,7 +256,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnWake(ref PhysicsWakeEvent @event)
         {
-            var mapId = _xformQuery.GetComponent(@event.Entity).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Entity).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
@@ -265,7 +267,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnSleep(ref PhysicsSleepEvent @event)
         {
-            var mapId = _xformQuery.GetComponent(@event.Entity).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Entity).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
@@ -280,7 +282,7 @@ namespace Robust.Shared.Physics.Systems
             if (MetaData(uid).EntityLifeStage >= EntityLifeStage.Terminating) return;
 
             // If this entity is only meant to collide when anchored, return early.
-            if (_collideAnchorQuery.TryGetComponent(uid, out var collideComp) && collideComp.Enable)
+            if (TryComp(uid, out CollideOnAnchorComponent? collideComp) && collideComp.Enable)
                 return;
 
             WakeBody(uid, body: physics);

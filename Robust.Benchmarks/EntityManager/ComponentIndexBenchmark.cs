@@ -57,7 +57,7 @@ public class ComponentIndexBenchmark
     private static class CompArrayIndex<T>
     {
         // ReSharper disable once StaticMemberInGenericType
-        public static readonly CompIdx Idx = new(Interlocked.Increment(ref _compIndexMaster), typeof(T));
+        public static readonly CompIdx Idx = new(Interlocked.Increment(ref _compIndexMaster));
     }
 
     private static CompIdx GetCompIdIndex(Type type)

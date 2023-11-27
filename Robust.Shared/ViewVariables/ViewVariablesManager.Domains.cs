@@ -86,13 +86,13 @@ internal abstract partial class ViewVariablesManager
 
         var segments = path.Split('/');
 
-        if (segments.Length < 2)
+        if (segments.Length == 0)
             return EmptyResolve;
 
-        if (!int.TryParse(segments[0], out var num) || num <= 0 || !int.TryParse(segments[1], out var numTwo) || numTwo < 0)
+        if (!int.TryParse(segments[0], out var num) || num <= 0)
             return EmptyResolve;
 
-        var uid = new EntityUid(num, numTwo);
+        var uid = new EntityUid(num);
 
         return (new ViewVariablesInstancePath(uid), segments[1..]);
     }

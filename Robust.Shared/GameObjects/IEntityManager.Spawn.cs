@@ -19,7 +19,6 @@ public partial interface IEntityManager
     EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
 
     EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames);
-    EntityUid[] SpawnEntities(MapCoordinates coordinates, string? prototype, int count);
     EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames);
     EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, List<string?> protoNames);
     EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params string?[] protoNames);
@@ -53,7 +52,7 @@ public partial interface IEntityManager
         EntityUid containerUid,
         string containerId,
         [NotNullWhen(true)] out EntityUid? uid,
-        ContainerManagerComponent? containerComp = null,
+        ContainerManagerComponent? containerComp = null, 
         ComponentRegistry? overrides = null);
 
     /// <summary>
@@ -65,7 +64,7 @@ public partial interface IEntityManager
         EntityUid containerUid,
         string containerId,
         TransformComponent? xform = null,
-        ContainerManagerComponent? containerComp = null,
+        ContainerManagerComponent? containerComp = null, 
         ComponentRegistry? overrides = null);
 
     /// <summary>
@@ -85,8 +84,8 @@ public partial interface IEntityManager
     /// instead attempt to spawn the entity next to the target's parent.
     /// </summary>
     EntityUid SpawnNextToOrDrop(
-        string? protoName,
-        EntityUid target,
-        TransformComponent? xform = null,
+        string? protoName, 
+        EntityUid target, 
+        TransformComponent? xform = null, 
         ComponentRegistry? overrides = null);
 }

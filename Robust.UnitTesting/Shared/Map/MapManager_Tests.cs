@@ -55,7 +55,7 @@ namespace Robust.UnitTesting.Shared.Map
         }
 
         /// <summary>
-        /// When entities are flushed check nullsapce is also culled.
+        /// When the map manager is restarted, Nullspace is recreated.
         /// </summary>
         [Test]
         public void Restart_NullspaceMap_IsEmptied()
@@ -64,8 +64,9 @@ namespace Robust.UnitTesting.Shared.Map
             var entMan = sim.Resolve<IEntityManager>();
             var oldEntity = entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
             entMan.InitializeComponents(oldEntity);
-            entMan.FlushEntities();
+            entMan.Shutdown();
             Assert.That(entMan.Deleted(oldEntity), Is.True);
+
         }
 
         /// <summary>

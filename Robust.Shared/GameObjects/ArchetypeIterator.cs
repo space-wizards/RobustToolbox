@@ -5,26 +5,30 @@ namespace Robust.Shared.GameObjects;
 
 internal struct ArchetypeIterator
 {
+    private readonly Query _query;
     private readonly PooledList<Archetype> _archetypes;
 
-    internal ArchetypeIterator(PooledList<Archetype> archetypes)
+    internal ArchetypeIterator(in Query query, PooledList<Archetype> archetypes)
     {
+        _query = query;
         _archetypes = archetypes;
     }
 
     public ArchetypeEnumerator GetEnumerator()
     {
-        return new ArchetypeEnumerator(_archetypes);
+        return new ArchetypeEnumerator(_query, _archetypes);
     }
 }
 
 internal struct ArchetypeEnumerator
 {
+    private readonly Query _query;
     private readonly PooledList<Archetype> _archetypes;
     private int _index;
 
-    public ArchetypeEnumerator(PooledList<Archetype> archetypes)
+    public ArchetypeEnumerator(in Query query, PooledList<Archetype> archetypes)
     {
+        _query = query;
         _archetypes = archetypes;
         _index = _archetypes.Count;
     }
@@ -34,7 +38,7 @@ internal struct ArchetypeEnumerator
         while (--_index >= 0)
         {
             var archetype = Current;
-            if (archetype.EntityCount > 0)
+            if (archetype.Entities > 0)
             {
                 return true;
             }

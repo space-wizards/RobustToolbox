@@ -29,7 +29,7 @@ internal struct ArchChunkEnumerator
 
         if (_archetypes.MoveNext())
         {
-            _chunkIndex = _archetypes.Current.ChunkCount;
+            _chunkIndex = _archetypes.Current.Size;
         }
     }
 
@@ -45,7 +45,7 @@ internal struct ArchChunkEnumerator
             return false;
         }
 
-        _chunkIndex = _archetypes.Current.ChunkCount - 1;
+        _chunkIndex = _archetypes.Current.Size - 1;
         return true;
     }
 }
@@ -54,7 +54,7 @@ internal static partial class QueryExtensions
 {
     internal static ArchChunkIterator ChunkIterator(this in Query query, World world)
     {
-        var archetypeEnumerator = new ArchetypeEnumerator(query.Matches);
+        var archetypeEnumerator = new ArchetypeEnumerator(in query, query.Matches);
         return new ArchChunkIterator(in archetypeEnumerator);
     }
 }

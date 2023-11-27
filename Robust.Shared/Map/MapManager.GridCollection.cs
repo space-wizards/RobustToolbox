@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Utility;
 
 // All the obsolete warnings about GridId are probably useless here.
@@ -89,7 +91,7 @@ internal partial class MapManager
         var query = EntityManager.AllEntityQueryEnumerator<MapGridComponent, TransformComponent>();
         while (query.MoveNext(out var grid, out var xform))
         {
-            if (xform.MapID != mapId)
+            if (xform.MapID == mapId)
                 yield return grid;
         }
     }
@@ -159,6 +161,9 @@ internal partial class MapManager
 
         var grid = EntityManager.AddComponent<MapGridComponent>(gridEnt);
         grid.ChunkSize = chunkSize;
+        EntityManager.AddComponent<PhysicsComponent>(gridEnt);
+        EntityManager.AddComponent<FixturesComponent>(gridEnt);
+        EntityManager.AddComponent<BroadphaseComponent>(gridEnt);
 
         _sawmill.Debug($"Binding new grid {gridEnt}");
 

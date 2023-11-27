@@ -55,6 +55,16 @@ namespace Robust.Shared
             CVarDef.Create("net.receivebuffersize", 131071, CVar.ARCHIVE);
 
         /// <summary>
+        /// Size of the pool for Lidgren's array buffers to send messages.
+        /// Set to 0 to disable pooling; max is 8192.
+        /// </summary>
+        /// <remarks>
+        /// Higher just means more potentially wasted space and slower pool retrieval.
+        /// </remarks>
+        public static readonly CVarDef<int> NetPoolSize =
+            CVarDef.Create("net.pool_size", 512, CVar.CLIENT | CVar.SERVER);
+
+        /// <summary>
         /// Maximum UDP payload size to send.
         /// </summary>
         /// <seealso cref="NetMtuExpand"/>

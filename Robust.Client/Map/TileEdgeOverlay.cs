@@ -42,15 +42,20 @@ public sealed class TileEdgeOverlay : Overlay
         _grids.Clear();
         _mapManager.FindGridsIntersecting(args.MapId, args.WorldBounds, ref _grids);
 
-        var xformQuery = _entManager.GetEntityQuery<TransformComponent>();
+        var mapSystem = _entManager.System<SharedMapSystem>();
+        var xformSystem = _entManager.System<SharedTransformSystem>();
+
         foreach (var grid in _grids)
         {
             var tileSize = grid.Comp.TileSize;
             var tileDimensions = new Vector2(tileSize, tileSize);
-            var xform = xformQuery.GetComponent(grid);
-            args.WorldHandle.SetTransform(xform.WorldMatrix);
+            var (_, _, worldMatrix, invMatrix) = xformSystem.GetWorldPositionRotationMatrixWithInv(grid.Owner);
+            args.WorldHandle.SetTransform(worldMatrix);
+            var localAABB = invMatrix.TransformBox(args.WorldBounds);
 
-            foreach (var tileRef in grid.Comp.GetTilesIntersecting(args.WorldBounds, false))
+            var enumerator = mapSystem.GetLocalTilesEnumerator(grid.Owner, grid.Comp, localAABB, false);
+
+            while (enumerator.MoveNext(out var tileRef))
             {
                 var tileDef = _tileDefManager[tileRef.Tile.TypeId];
 
@@ -66,7 +71,7 @@ public sealed class TileEdgeOverlay : Overlay
                             continue;
 
                         var neighborIndices = new Vector2i(tileRef.GridIndices.X + x, tileRef.GridIndices.Y + y);
-                        var neighborTile = grid.Comp.GetTileRef(neighborIndices);
+                        var neighborTile = mapSystem.GetTileRef(grid.Owner, grid.Comp, neighborIndices);
                         var neighborDef = _tileDefManager[neighborTile.Tile.TypeId];
 
                         // If it's the same tile then no edge to be drawn.
@@ -118,9 +123,9 @@ public sealed class TileEdgeOverlay : Overlay
                         }
 
                         if (angle == Angle.Zero)
-                            args.WorldHandle.DrawTextureRect(texture, box);
+                            args.WorldHandle.DrawTextureRect(texture.Texture, box);
                         else
-                            args.WorldHandle.DrawTextureRect(texture, new Box2Rotated(box, angle, box.Center));
+                            args.WorldHandle.DrawTextureRect(texture.Texture, new Box2Rotated(box, angle, box.Center));
                     }
                 }
             }

@@ -154,9 +154,26 @@ public partial class EntitySystem
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
+    protected void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent?
     {
-        EntityManager.Dirty(ent.Owner, ent.Comp, meta);
+        var comp = ent.Comp;
+        if (comp == null && !EntityManager.TryGetComponent(ent.Owner, out comp))
+            return;
+
+        EntityManager.Dirty(ent.Owner, comp, meta);
+    }
+
+    /// <summary>
+    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty<T>(Entity<T, MetaDataComponent> ent) where T : IComponent?
+    {
+        var comp = ent.Comp1;
+        if (comp == null && !EntityManager.TryGetComponent(ent.Owner, out comp))
+            return;
+
+        EntityManager.Dirty(ent.Owner, comp, ent.Comp2);
     }
 
     /// <summary>
@@ -508,7 +525,7 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool HasComp<T>(EntityUid uid)
+    protected bool HasComp<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.HasComponent<T>(uid);
     }
@@ -526,7 +543,7 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid)
+    protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent
     {
         return EntityManager.HasComponent<T>(uid);
     }
@@ -555,7 +572,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void AddComp<T>(EntityUid uid, T component, bool overwrite = false) where T : IComponent
     {
-        EntityManager.AddComponent(uid, component, overwrite);
+        EntityManager.AddComponent(uid, component);
     }
 
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid)"/>
@@ -595,13 +612,6 @@ public partial class EntitySystem
     protected bool RemCompDeferred(EntityUid uid, Type type)
     {
         return EntityManager.RemoveComponentDeferred(uid, type);
-    }
-
-    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, Component)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void RemCompDeferred(EntityUid uid, Component component)
-    {
-        EntityManager.RemoveComponentDeferred(uid, component);
     }
 
     /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, IComponent)"/>
@@ -644,13 +654,6 @@ public partial class EntitySystem
     protected bool RemComp(EntityUid uid, Type type)
     {
         return EntityManager.RemoveComponent(uid, type);
-    }
-
-    /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, Component)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void RemComp(EntityUid uid, Component component)
-    {
-        EntityManager.RemoveComponent(uid, component);
     }
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, IComponent)"/>
@@ -1008,9 +1011,21 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity, HashSet<EntityUid> entities)
+    {
+        EntityManager.EnsureEntitySet<T>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
     {
         return EntityManager.EnsureEntityList<T>(netEntities, callerEntity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities)
+    {
+        EntityManager.EnsureEntityList<T>(netEntities, callerEntity, entities);
     }
 
     /// <summary>

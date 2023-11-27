@@ -6,8 +6,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Collections.Pooled" Version="2.0.0-preview.27" PrivateAssets="compile" />
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="6.0.2" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="7.0.0" />
     <PackageReference Include="Microsoft.ILVerification" Version="6.0.0" PrivateAssets="compile" />
     <PackageReference Include="Nett" Version="0.15.0" PrivateAssets="compile" />
     <PackageReference Include="NVorbis" Version="0.10.1" PrivateAssets="compile" />
@@ -28,6 +29,7 @@
     <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
     <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
+    <ProjectReference Include="..\Arch\Arch.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Utility\TypeAbbreviations.yaml">

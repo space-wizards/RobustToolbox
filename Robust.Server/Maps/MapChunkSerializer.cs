@@ -12,6 +12,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.Maps;
 
@@ -93,6 +94,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         IDependencyCollection dependencies, bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
+        DebugTools.Assert(value.FilledTiles > 0, "Attempting to write an empty chunk");
         var root = new MappingDataNode();
         var ind = new ValueDataNode($"{value.X},{value.Y}");
         root.Add("ind", ind);

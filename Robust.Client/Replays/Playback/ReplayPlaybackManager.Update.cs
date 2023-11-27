@@ -42,7 +42,9 @@ internal sealed partial class ReplayPlaybackManager
         {
             var state = Replay.CurState;
             _gameState.UpdateFullRep(state, cloneDelta: true);
-            _gameState.ApplyGameState(state, Replay.NextState);
+            var next = Replay.NextState;
+            BeforeApplyState?.Invoke((state, next));
+            _gameState.ApplyGameState(state, next);
             DebugTools.Assert(Replay.LastApplied >= state.FromSequence);
             DebugTools.Assert(Replay.LastApplied + 1 <= state.ToSequence);
             Replay.LastApplied = state.ToSequence;

@@ -63,7 +63,9 @@ internal sealed partial class ReplayPlaybackManager
             // Clear existing lerps
             _entMan.EntitySysManager.GetEntitySystem<TransformSystem>().Reset();
 
-            _gameState.ApplyGameState(state, Replay.NextState);
+            var next = Replay.NextState;
+            BeforeApplyState?.Invoke((state, next));
+            _gameState.ApplyGameState(state, next);
             ProcessMessages(Replay.CurMessages, skipEffectEvents);
 
             // TODO REPLAYS block audio

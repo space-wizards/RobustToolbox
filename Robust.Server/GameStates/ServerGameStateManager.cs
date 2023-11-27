@@ -37,6 +37,9 @@ namespace Robust.Server.GameStates
         // Mapping of net UID of clients -> last known acked state.
         private GameTick _lastOldestAck = GameTick.Zero;
 
+        private HashSet<int>[] _playerChunks = Array.Empty<HashSet<int>>();
+        private EntityUid[][] _viewerEntities = Array.Empty<EntityUid[]>();
+
         private PvsSystem _pvs = default!;
 
         [Dependency] private readonly EntityManager _entityManager = default!;
@@ -267,7 +270,7 @@ Oldest acked clients: {string.Join(", ", players)}
 
         private PvsData? GetPVSData(ICommonSession[] players)
         {
-            var (chunks, playerChunks, viewerEntities) = _pvs.GetChunks(players);
+            var chunks= _pvs.GetChunks(players, ref _playerChunks, ref _viewerEntities);
             const int ChunkBatchSize = 2;
             var chunksCount = chunks.Count;
             var chunkBatches = (int)MathF.Ceiling((float)chunksCount / ChunkBatchSize);
@@ -310,8 +313,8 @@ Oldest acked clients: {string.Join(", ", players)}
             ArrayPool<bool>.Shared.Return(reuse);
             return new PvsData()
             {
-                PlayerChunks = playerChunks,
-                ViewerEntities = viewerEntities,
+                PlayerChunks = _playerChunks,
+                ViewerEntities = _viewerEntities,
                 ChunkCache = chunkCache,
             };
         }
@@ -378,15 +381,10 @@ Oldest acked clients: {string.Join(", ", players)}
             if (_gameTiming.CurTick.Value > lastAck.Value + _pvs.ForceAckThreshold)
             {
                 stateUpdateMessage.ForceSendReliably = true;
-
-                // Aside from the time shortly after connecting, this shouldn't be common. If it is happening.
-                // something is probably wrong (or we have a malicious client). Hence we log an error.
-                // If it is more frequent than I think, this can be downgraded to a warning.
-
 #if FULL_RELEASE
                 var connectedTime = (DateTime.UtcNow - session.ConnectedTime).TotalMinutes;
                 if (lastAck > GameTick.Zero && connectedTime > 1)
-                    _logger.Error($"Client {session} exceeded ack-tick threshold. Last ack: {lastAck}. Cur tick: {_gameTiming.CurTick}. Connect time: {connectedTime} minutes");
+                    _logger.Warning($"Client {session} exceeded ack-tick threshold. Last ack: {lastAck}. Cur tick: {_gameTiming.CurTick}. Connect time: {connectedTime} minutes");
 #endif
             }
 

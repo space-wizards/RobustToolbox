@@ -31,9 +31,9 @@ namespace Robust.Shared.GameObjects
     public readonly struct AddedComponentEventArgs
     {
         public readonly ComponentEventArgs BaseArgs;
-        public readonly CompIdx ComponentType;
+        public readonly ComponentRegistration ComponentType;
 
-        public AddedComponentEventArgs(ComponentEventArgs baseArgs, CompIdx componentType)
+        public AddedComponentEventArgs(ComponentEventArgs baseArgs, ComponentRegistration componentType)
         {
             BaseArgs = baseArgs;
             ComponentType = componentType;
@@ -53,19 +53,6 @@ namespace Robust.Shared.GameObjects
             BaseArgs = baseArgs;
             Terminating = terminating;
             Meta = meta;
-        }
-    }
-
-    public readonly struct DeletedComponentEventArgs
-    {
-        public readonly ComponentEventArgs BaseArgs;
-
-        public readonly bool Terminating;
-
-        public DeletedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating)
-        {
-            BaseArgs = baseArgs;
-            Terminating = terminating;
         }
     }
 }

@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using Arch.Core;
+using Arch.Core.Extensions;
+using Arch.Core.Utils;
+using Collections.Pooled;
 using Prometheus;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -13,6 +16,8 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System.Runtime.CompilerServices;
+using ComponentRegistry = Robust.Shared.Prototypes.ComponentRegistry;
 
 namespace Robust.Shared.GameObjects
 {
@@ -39,6 +44,8 @@ namespace Robust.Shared.GameObjects
         // positions on spawn....
         private SharedTransformSystem _xforms = default!;
 
+        private QueryDescription _archMetaQuery = new QueryDescription().WithAll<MetaDataComponent>();
+
         public EntityQuery<MetaDataComponent> MetaQuery;
         public EntityQuery<TransformComponent> TransformQuery;
 
@@ -62,14 +69,7 @@ namespace Robust.Shared.GameObjects
 
         private EntityDiffContext _context = new();
 
-        /// <summary>
-        ///     All entities currently stored in the manager.
-        /// </summary>
-        protected readonly HashSet<EntityUid> Entities = new();
-
         private EntityEventBus _eventBus = null!;
-
-        protected int NextEntityUid = (int) EntityUid.FirstUid;
 
         protected int NextNetworkId = (int) NetEntity.First;
 
@@ -116,7 +116,7 @@ namespace Robust.Shared.GameObjects
 
             _eventBus = new EntityEventBus(this);
 
-            InitializeComponents();
+            InitializeArch();
             _metaReg = _componentFactory.GetRegistration(typeof(MetaDataComponent));
             _xformReg = _componentFactory.GetRegistration(typeof(TransformComponent));
             _xformName = _xformReg.Name;
@@ -144,15 +144,17 @@ namespace Robust.Shared.GameObjects
             }
 
             var protoData = PrototypeManager.GetPrototypeData(prototype);
-            var comps = _entCompIndex[uid];
+            var comps = _world.GetAllComponents(uid);
 
             // Fast check if the component counts match.
             // Note that transform and metadata are not included in the prototype data.
-            if (protoData.Count + 2 != comps.Count)
+            if (protoData.Count + 2 != comps.Length)
                 return false;
 
-            foreach (var component in comps)
+            foreach (var comp in comps)
             {
+                var component = (IComponent)comp!;
+
                 if (component.Deleted)
                     return false;
 
@@ -208,6 +210,7 @@ namespace Robust.Shared.GameObjects
             FlushEntities();
             _eventBus.ClearEventTables();
             _entitySystemManager.Shutdown();
+            ShutdownArch();
             ClearComponents();
             ShuttingDown = false;
             Started = false;
@@ -215,12 +218,12 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Cleanup()
         {
-            _componentFactory.ComponentAdded -= OnComponentAdded;
             ShuttingDown = true;
             FlushEntities();
             _entitySystemManager.Clear();
             _eventBus.Dispose();
             _eventBus = null!;
+            ShutdownArch();
             ClearComponents();
 
             ShuttingDown = false;
@@ -269,28 +272,27 @@ namespace Robust.Shared.GameObjects
 
         public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, out _, overrides);
+            return CreateEntity(prototypeName, out _, out _, overrides);
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, out _, overrides);
+            return CreateEntity(prototypeName, out _, out _, overrides);
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName, out _, overrides);
-            _xforms.SetCoordinates(newEntity, TransformQuery.GetComponent(newEntity), coordinates, unanchor: false);
+            var newEntity = CreateEntity(prototypeName, out _, out var xform, overrides);
+            _xforms.SetCoordinates(newEntity, xform, coordinates, unanchor: false);
             return newEntity;
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName, out _, overrides);
-            var transform = TransformQuery.GetComponent(newEntity);
+            var newEntity = CreateEntity(prototypeName, out _, out var transform, overrides);
 
             if (coordinates.MapId == MapId.Nullspace)
             {
@@ -320,10 +322,19 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public int EntityCount => Entities.Count;
+        public int EntityCount => _world.Size;
 
         /// <inheritdoc />
-        public IEnumerable<EntityUid> GetEntities() => Entities;
+        public IEnumerable<EntityUid> GetEntities()
+        {
+            var ents = new List<Entity>();
+            _world.GetEntities(_archMetaQuery, ents);
+
+            foreach (var entity in ents)
+            {
+                yield return EntityUid.FromArch(_world, entity);
+            }
+        }
 
         /// <inheritdoc />
         public virtual void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null)
@@ -375,7 +386,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(EntityUid? uid)
         {
-            if (uid == null)
+            if (uid == null || uid == EntityUid.Invalid)
                 return;
             var e = uid.Value;
 
@@ -400,9 +411,9 @@ namespace Robust.Shared.GameObjects
             }
 
             // Notify all entities they are being terminated prior to detaching & deleting
-            RecursiveFlagEntityTermination(e, meta);
-
             var xform = TransformQuery.GetComponent(e);
+            RecursiveFlagEntityTermination(e, meta, xform);
+
             TransformComponent? parentXform = null;
             if (xform.ParentUid.IsValid())
                 TransformQuery.Resolve(xform.ParentUid, ref parentXform);
@@ -413,14 +424,14 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveFlagEntityTermination(
             EntityUid uid,
-            MetaDataComponent metadata)
+            MetaDataComponent metadata,
+            TransformComponent transform)
         {
-            var transform = TransformQuery.GetComponent(uid);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
 
             try
             {
-                var ev = new EntityTerminatingEvent(uid);
+                var ev = new EntityTerminatingEvent(uid, metadata);
                 EventBus.RaiseLocalEvent(uid, ref ev, true);
             }
             catch (Exception e)
@@ -437,7 +448,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                RecursiveFlagEntityTermination(child, childMeta);
+                RecursiveFlagEntityTermination(child, childMeta, TransformQuery.GetComponent(child));
             }
         }
 
@@ -485,8 +496,12 @@ namespace Robust.Shared.GameObjects
                 _sawmill.Error($"Failed to delete all children of entity: {ToPrettyString(uid)}");
 
             // Shut down all components.
-            foreach (var component in InSafeOrder(_entCompIndex[uid]))
+            var objComps = _world.GetAllComponents(uid);
+
+            foreach (var comp in objComps)
             {
+                var component = (IComponent)comp!;
+
                 if (component.Running)
                 {
                     try
@@ -501,7 +516,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Dispose all my components, in a safe order so transform is available
-            DisposeComponents(uid);
+            DisposeComponents(uid, metadata);
             metadata.EntityLifeStage = EntityLifeStage.Deleted;
 
             try
@@ -514,14 +529,14 @@ namespace Robust.Shared.GameObjects
             }
 
             _eventBus.OnEntityDeleted(uid);
-            Entities.Remove(uid);
+            DestroyArch(uid);
             // Need to get the ID above before MetadataComponent shutdown but only remove it after everything else is done.
             NetEntityLookup.Remove(metadata.NetEntity);
         }
 
         public virtual void QueueDeleteEntity(EntityUid? uid)
         {
-            if (uid == null)
+            if (uid == null || uid.Value == EntityUid.Invalid)
                 return;
 
             if (!QueuedDeletionsSet.Add(uid.Value))
@@ -535,7 +550,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return MetaQuery.HasComponentInternal(uid);
+            return IsAlive(uid);
         }
 
         public bool EntityExists(EntityUid? uid)
@@ -554,12 +569,26 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !MetaQuery.TryGetComponentInternal(uid, out var comp) || comp.EntityDeleted;
+            return !IsAlive(uid) || !_world.TryGet(uid, out MetaDataComponent? comp) || comp!.EntityLifeStage > EntityLifeStage.Terminating;
+        }
+
+        /// <summary>
+        /// Returns whether the entity is alive inside of the ECS world.
+        /// </summary>
+        internal bool IsAlive(EntityUid uid)
+        {
+            return ((EntityReference) uid).IsAlive(_world);
+        }
+
+        internal bool TryAlive(EntityUid uid, out EntityReference entity)
+        {
+            entity = uid;
+            return entity.IsAlive(_world);
         }
 
         public bool Deleted([NotNullWhen(false)] EntityUid? uid)
         {
-            return !uid.HasValue || !MetaQuery.TryGetComponentInternal(uid.Value, out var comp) || comp.EntityDeleted;
+            return !uid.HasValue || Deleted(uid.Value);
         }
 
         /// <summary>
@@ -574,7 +603,9 @@ namespace Robust.Shared.GameObjects
                 DeleteEntity(e);
             }
 
-            if (Entities.Count != 0)
+            CleanupArch();
+
+            if (_world.Size > 0)
                 _sawmill.Error("Entities were spawned while flushing entities.");
         }
 
@@ -583,9 +614,10 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private protected EntityUid AllocEntity(
             EntityPrototype? prototype,
-            out MetaDataComponent metadata)
+            out MetaDataComponent metadata,
+            out TransformComponent xform)
         {
-            var entity = AllocEntity(out metadata);
+            var entity = AllocEntity(out metadata, out xform);
             metadata._entityPrototype = prototype;
             Dirty(entity, metadata, metadata);
             return entity;
@@ -594,16 +626,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private EntityUid AllocEntity(out MetaDataComponent metadata)
+        private EntityUid AllocEntity(out MetaDataComponent metadata, out TransformComponent xform)
         {
-            var uid = GenerateEntityUid();
-
-#if DEBUG
-            if (EntityExists(uid))
-            {
-                throw new InvalidOperationException($"UID already taken: {uid}");
-            }
-#endif
+            SpawnEntityArch(out var uid);
 
             // we want this called before adding components
             EntityAdded?.Invoke(uid);
@@ -620,16 +645,15 @@ namespace Robust.Shared.GameObjects
 
             SetNetEntity(uid, netEntity, metadata);
 
-            Entities.Add(uid);
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid, metadata, _metaReg, false, true, metadata);
+            AddComponentInternal(uid, metadata, _metaReg, true, metadata);
 
             // allocate the required TransformComponent
-            var xformComp = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
+            xform = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
 #pragma warning disable CS0618 // Type or member is obsolete
-            xformComp.Owner = uid;
+            xform.Owner = uid;
 #pragma warning restore CS0618 // Type or member is obsolete
-            AddComponentInternal(uid, xformComp, false, true, metadata);
+            AddComponentInternal(uid, xform, true, metadata);
 
             return uid;
         }
@@ -637,26 +661,26 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
+        private protected virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, out TransformComponent xform, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
-                return AllocEntity(out metadata);
+                return AllocEntity(out metadata, out xform);
 
             if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-            return CreateEntity(prototype, out metadata, context);
+            return CreateEntity(prototype, out metadata, out xform, context);
         }
 
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected EntityUid CreateEntity(EntityPrototype prototype, out MetaDataComponent metadata, IEntityLoadContext? context = null)
+        private protected EntityUid CreateEntity(EntityPrototype prototype, out MetaDataComponent metadata, out TransformComponent xform, IEntityLoadContext? context = null)
         {
-            var entity = AllocEntity(prototype, out metadata);
+            var entity = AllocEntity(prototype, out metadata, out xform);
             try
             {
-                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+                LoadEntity(metadata.EntityPrototype, entity, context);
                 return entity;
             }
             catch (Exception e)
@@ -670,18 +694,105 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(MetaQuery.GetComponent(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+            LoadEntity(MetaQuery.GetComponent(entity).EntityPrototype, entity, context);
         }
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
         {
-            EntityPrototype.LoadEntity(prototype, entity, ComponentFactory, this, _serManager, context);
+            LoadEntity(prototype, entity, context);
+        }
+
+        internal void LoadEntity(EntityPrototype? prototype, EntityUid entity, IEntityLoadContext? context)
+        {
+            var count = prototype?.Components.Count ?? 2;
+            // Lort forgiv
+            using var types = new PooledList<ComponentType>(count);
+            using var comps = new PooledList<IComponent>(count);
+            using var compRegs = new PooledList<ComponentRegistration>(count);
+            Archetype arc;
+            var metadata = MetaQuery.GetComponent(entity);
+
+#if DEBUG
+            arc = _world.GetArchetype(entity);
+#endif
+
+            if (prototype != null)
+            {
+                foreach (var (name, entry) in prototype.Components)
+                {
+                    if (context != null && context.ShouldSkipComponent(name))
+                        continue;
+
+                    var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
+
+                    var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, fullData, context as ISerializationContext, metadata);
+                    var compType = comp.CompReg.Idx.Type;
+
+                    // Don't double add an existing component, just set data above.
+                    if (!comp.Add)
+                    {
+                        continue;
+                    }
+
+                    types.Add(compType);
+                    comps.Add(comp.Comp);
+                    compRegs.Add(comp.CompReg);
+                }
+            }
+
+            if (context != null)
+            {
+                foreach (var name in context.GetExtraComponentTypes())
+                {
+                    if (prototype != null && prototype.Components.ContainsKey(name))
+                    {
+                        // This component also exists in the prototype.
+                        // This means that the previous step already caught both the prototype data AND map data.
+                        // Meaning that re-running EnsureCompExistsAndDeserialize would wipe prototype data.
+                        continue;
+                    }
+
+                    if (!context.TryGetComponent(name, out var data))
+                    {
+                        throw new InvalidOperationException(
+                            $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
+                    }
+
+                    var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, data, context as ISerializationContext, metadata);
+                    var compType = comp.CompReg.Idx.Type;
+
+                    // Don't double add an existing component, just set data above.
+                    if (!comp.Add)
+                    {
+                        continue;
+                    }
+
+                    types.Add(compType);
+                    comps.Add(comp.Comp);
+                    compRegs.Add(comp.CompReg);
+                }
+            }
+
+            // Shouldn't be changing archetype above or we're having a bad time.
+            DebugTools.Assert(_world.GetArchetype(entity).Equals(arc));
+
+            // Yeah it can happen.
+            if (types.Count == 0)
+                return;
+
+            _world.AddRange(entity, types);
+
+            for (var i = 0; i < comps.Count; i++)
+            {
+                AddComponentInternal(entity, comps[i], compRegs[i], true, metadata: metadata);
+            }
         }
 
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)
         {
             try
             {
+                // TODO: Pass this + transformcomp around
                 var meta = MetaQuery.GetComponent(entity);
                 InitializeEntity(entity, meta);
                 StartEntity(entity);
@@ -758,14 +869,6 @@ namespace Robust.Shared.GameObjects
             // Part of shared the EntityManager so that systems can have convenient proxy methods, but the
             // server should never be calling this.
             DebugTools.Assert("Why are you raising predictive events on the server?");
-        }
-
-        /// <summary>
-        ///     Factory for generating a new EntityUid for an entity currently being created.
-        /// </summary>
-        internal EntityUid GenerateEntityUid()
-        {
-            return new EntityUid(NextEntityUid++);
         }
 
         /// <summary>

@@ -512,7 +512,7 @@ namespace Robust.Client.Graphics.Clyde
                         RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB, worldBounds);
                     }
 
-                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
+                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawLight && eye.DrawFov)
                     {
                         ApplyFovToBuffer(viewport, eye);
                     }

@@ -103,7 +103,7 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
             // Attach them to map / they are on an invalid grid
             if (oldGridId != null)
             {
-                _transform.SetParent(entity, xform, _mapManager.GetMapEntityIdOrThrow(xform.MapID));
+                _transform.SetParent(entity, xform, xform.MapUid!.Value);
                 var ev = new ChangedGridEvent(entity, oldGridId, null);
                 RaiseLocalEvent(entity, ref ev);
             }

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using Arch.Core.Utils;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -12,6 +14,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 using Robust.Shared.ViewVariables;
+using Component = Robust.Shared.GameObjects.Component;
 
 namespace Robust.Shared.Prototypes
 {
@@ -193,76 +196,37 @@ namespace Robust.Shared.Prototypes
             return true;
         }
 
-        internal static void LoadEntity(
-            EntityPrototype? prototype,
-            EntityUid entity,
-            IComponentFactory factory,
-            IEntityManager entityManager,
-            ISerializationManager serManager,
-            IEntityLoadContext? context) //yeah officer this method right here
-        {
-            if (prototype != null)
-            {
-                foreach (var (name, entry) in prototype.Components)
-                {
-                    if (context != null && context.ShouldSkipComponent(name))
-                        continue;
-
-                    var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
-
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
-                }
-            }
-
-            if (context != null)
-            {
-                foreach (var name in context.GetExtraComponentTypes())
-                {
-                    if (prototype != null && prototype.Components.ContainsKey(name))
-                    {
-                        // This component also exists in the prototype.
-                        // This means that the previous step already caught both the prototype data AND map data.
-                        // Meaning that re-running EnsureCompExistsAndDeserialize would wipe prototype data.
-                        continue;
-                    }
-
-                    if (!context.TryGetComponent(name, out var data))
-                    {
-                        throw new InvalidOperationException(
-                            $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
-                    }
-
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, data, context as ISerializationContext);
-                }
-            }
-        }
-
-        public static void EnsureCompExistsAndDeserialize(EntityUid entity,
+        internal static (ComponentRegistration CompReg, IComponent Comp, bool Add) EnsureCompExistsAndDeserialize(EntityUid entity,
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
             string compName,
             IComponent data,
-            ISerializationContext? context)
+            ISerializationContext? context,
+            MetaDataComponent metadata)
         {
+            // TODO optimize
             var compReg = factory.GetRegistration(compName);
+            var add = false;
 
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
                 var newComponent = factory.GetComponent(compName);
-                entityManager.AddComponent(entity, newComponent);
+                newComponent.Owner = entity;
                 component = newComponent;
+                add = true;
             }
 
             if (context is not MapSerializationContext map)
             {
                 serManager.CopyTo(data, ref component, context, notNullableOverride: true);
-                return;
+                return (compReg, component, add);
             }
 
             map.CurrentComponent = compName;
             serManager.CopyTo(data, ref component, context, notNullableOverride: true);
             map.CurrentComponent = null;
+            return (compReg, component, add);
         }
 
         public override string ToString()

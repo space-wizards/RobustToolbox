@@ -603,7 +603,8 @@ namespace Robust.Shared.GameObjects
                 DeleteEntity(e);
             }
 
-            CleanupArch();
+            // Arch bug atm
+            // CleanupArch();
 
             if (_world.Size > 0)
                 _sawmill.Error("Entities were spawned while flushing entities.");

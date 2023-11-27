@@ -178,7 +178,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 }
             }
 
-            EntityManager.CleanupArch();
+            // EntityManager.CleanupArch();
 
             rootUids = rootEnts;
         }

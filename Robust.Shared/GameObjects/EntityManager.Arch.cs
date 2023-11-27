@@ -32,14 +32,15 @@ public partial class EntityManager
 
     protected void DestroyArch(EntityUid uid)
     {
-        var reference = _world.Reference(uid);
+        var archEnt = (Entity) uid;
+        var reference = _world.Reference(archEnt);
 
-        if (!_world.IsAlive(reference))
+        if (reference.Version != (uid.Version - EntityUid.ArchVersionOffset))
         {
-            throw new InvalidOperationException("Tried to delete an invalid entity reference");
+            throw new InvalidOperationException($"Tried to delete a different matching entity for Arch.");
         }
 
-        _world.Destroy(reference);
+        _world.Destroy(archEnt);
     }
 
     private void SpawnEntityArch(out EntityUid entity)

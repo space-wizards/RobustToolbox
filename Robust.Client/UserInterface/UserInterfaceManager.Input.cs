@@ -117,7 +117,6 @@ internal partial class UserInterfaceManager
 
     public void KeyBindUp(BoundKeyEventArgs args)
     {
-        //var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation);
         if (!_focusedControls.TryGetValue(args.Function, out var control))
         {
             return;

@@ -36,6 +36,7 @@ namespace Robust.Shared.Containers
             }
         }
 
+        [Obsolete]
         public T MakeContainer<T>(EntityUid uid, string id)
             where T : BaseContainer
         {
@@ -49,16 +50,19 @@ namespace Robust.Shared.Containers
             return container;
         }
 
+        [Obsolete]
         public BaseContainer GetContainer(string id)
         {
             return Containers[id];
         }
 
+        [Obsolete]
         public bool HasContainer(string id)
         {
             return Containers.ContainsKey(id);
         }
 
+        [Obsolete]
         public bool TryGetContainer(string id, [NotNullWhen(true)] out BaseContainer? container)
         {
             var ret = Containers.TryGetValue(id, out var cont);
@@ -66,6 +70,7 @@ namespace Robust.Shared.Containers
             return ret;
         }
 
+        [Obsolete]
         public bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out BaseContainer? container)
         {
             foreach (var contain in Containers.Values)
@@ -81,6 +86,7 @@ namespace Robust.Shared.Containers
             return false;
         }
 
+        [Obsolete]
         public bool ContainsEntity(EntityUid entity)
         {
             foreach (var container in Containers.Values)
@@ -91,6 +97,7 @@ namespace Robust.Shared.Containers
             return false;
         }
 
+        [Obsolete]
         public bool Remove(EntityUid toremove,
             TransformComponent? xform = null,
             MetaDataComponent? meta = null,
@@ -108,6 +115,7 @@ namespace Robust.Shared.Containers
             return true; // If we don't contain the entity, it will always be removed
         }
 
+        [Obsolete]
         public AllContainersEnumerable GetAllContainers()
         {
             return new(this);

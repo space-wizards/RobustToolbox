@@ -43,13 +43,13 @@ namespace Robust.Shared.Network.Messages
             SessionId = buffer.ReadUInt32();
             {
                 var length = buffer.ReadInt32();
-                using var stream = RobustMemoryManager.GetMemoryStream();
+                using var stream = RobustMemoryManager.GetMemoryStream(length);
                 buffer.ReadAlignedMemory(stream, length);
                 PropertyIndex = serializer.Deserialize<object[]>(stream);
             }
             {
                 var length = buffer.ReadInt32();
-                using var stream = RobustMemoryManager.GetMemoryStream();
+                using var stream = RobustMemoryManager.GetMemoryStream(length);
                 buffer.ReadAlignedMemory(stream, length);
                 Value = serializer.Deserialize(stream);
             }

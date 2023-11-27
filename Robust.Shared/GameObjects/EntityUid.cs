@@ -117,7 +117,7 @@ namespace Robust.Shared.GameObjects
         {
             unchecked
             {
-                return Id.GetHashCode() * 397 ^ Version.GetHashCode();
+                return (Id.GetHashCode() * 397) ^ Version.GetHashCode();
             }
         }
 

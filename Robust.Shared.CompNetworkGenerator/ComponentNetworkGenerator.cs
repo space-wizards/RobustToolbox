@@ -167,7 +167,7 @@ namespace Robust.Shared.CompNetworkGenerator
                         getStateInit.Append($@"
                 {name} = GetNetEntitySet(component.{name}),");
                         handleStateSetters.Append($@"
-            component.{name} = EnsureEntitySet<{componentName}>(state.{name}, uid);");
+            EnsureEntitySet<{componentName}>(state.{name}, uid, component.{name});");
 
                         break;
                     case GlobalEntityUidListName:
@@ -177,7 +177,7 @@ namespace Robust.Shared.CompNetworkGenerator
                         getStateInit.Append($@"
                 {name} = GetNetEntityList(component.{name}),");
                         handleStateSetters.Append($@"
-            component.{name} = EnsureEntityList<{componentName}>(state.{name}, uid);");
+            EnsureEntityList<{componentName}>(state.{name}, uid, component.{name});");
 
                         break;
                     default:

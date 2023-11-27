@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.ResourceManagement;
@@ -9,7 +10,7 @@ namespace Robust.Client.ResourceManagement;
 /// <summary>
 /// Handles caching of <see cref="BaseResource"/>
 /// </summary>
-public interface IResourceCache
+public interface IResourceCache : IResourceManager
 {
     T GetResource<T>(string path, bool useFallback = true)
         where T : BaseResource, new();

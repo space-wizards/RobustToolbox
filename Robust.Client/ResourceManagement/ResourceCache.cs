@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -12,7 +13,7 @@ namespace Robust.Client.ResourceManagement;
 /// <summary>
 /// Handles caching of <see cref="BaseResource"/>
 /// </summary>
-internal sealed partial class ResourceCache : IResourceCacheInternal, IDisposable
+internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
 {
     private readonly Dictionary<Type, Dictionary<ResPath, BaseResource>> _cachedResources =
     new();

@@ -457,14 +457,14 @@ namespace Robust.Shared.Physics.Systems
         }
 
         public bool TryGetNearest(EntityUid uidA, EntityUid uidB,
-            out Vector2 point,
+            out Vector2 pointA,
             out Vector2 pointB,
             out float distance,
             Transform xfA, Transform xfB,
             FixturesComponent? managerA = null, FixturesComponent? managerB = null,
             PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
-            point = Vector2.Zero;
+            pointA = Vector2.Zero;
             pointB = Vector2.Zero;
 
             if (!Resolve(uidA, ref managerA, ref bodyA) ||
@@ -477,11 +477,12 @@ namespace Robust.Shared.Physics.Systems
             }
 
             distance = float.MaxValue;
-            var input = new DistanceInput();
-
-            input.TransformA = xfA;
-            input.TransformB = xfB;
-            input.UseRadii = true;
+            var input = new DistanceInput
+            {
+                TransformA = xfA,
+                TransformB = xfB,
+                UseRadii = true
+            };
 
             // No requirement on collision being enabled so chainshapes will fail
             foreach (var fixtureA in managerA.Fixtures.Values)

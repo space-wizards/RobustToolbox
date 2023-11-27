@@ -15,6 +15,7 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Virtual file system for all disk resources.
     /// </summary>
+    [Virtual]
     internal partial class ResourceManager : IResourceManagerInternal
     {
         [Dependency] private readonly IConfigurationManager _config = default!;

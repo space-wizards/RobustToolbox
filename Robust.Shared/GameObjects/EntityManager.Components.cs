@@ -222,9 +222,7 @@ namespace Robust.Shared.GameObjects
             AddComponentInternal(uid, component, reg, skipInit, metadata);
         }
 
-        // TODO: Clean up this mess.
-
-        internal void AddComponentInternalOnly<T>(EntityUid uid, T component, ComponentRegistration reg, MetaDataComponent? metadata = null) where T : IComponent
+        internal void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit, MetaDataComponent? metadata = null) where T : IComponent
         {
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
@@ -233,7 +231,7 @@ namespace Robust.Shared.GameObjects
 
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
-                              (metadata ?? MetaQuery.GetComponent(uid)).EntityLifeStage < EntityLifeStage.Terminating,
+                (metadata ?? MetaQuery.GetComponent(uid)).EntityLifeStage < EntityLifeStage.Terminating,
                 $"Attempted to add a {reg.Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
 
             // TODO optimize this
@@ -259,11 +257,7 @@ namespace Robust.Shared.GameObjects
             {
                 component.Networked = false;
             }
-        }
 
-        internal void AddComponentEvents<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit,
-            MetaDataComponent? metadata = null) where T : IComponent
-        {
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
             ComponentAdded?.Invoke(eventArgs);
             _eventBus.OnComponentAdded(eventArgs);
@@ -289,12 +283,6 @@ namespace Robust.Shared.GameObjects
 
             if (metadata.EntityLifeStage >= EntityLifeStage.MapInitialized)
                 EventBus.RaiseComponentEvent(component, MapInitEventInstance);
-        }
-
-        internal void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit, MetaDataComponent? metadata = null) where T : IComponent
-        {
-            AddComponentInternalOnly(uid, component, reg, metadata);
-            AddComponentEvents(uid, component, reg, skipInit, metadata);
         }
 
         /// <inheritdoc />
@@ -736,7 +724,6 @@ namespace Robust.Shared.GameObjects
         {
             if (IsAlive(uid) && _world.TryGet(uid, out component))
             {
-                DebugTools.Assert(component != null);
                 if (!component!.Deleted)
                 {
                     return true;

@@ -10,5 +10,9 @@
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NVorbis" Version="0.10.5" />
+  </ItemGroup>
+
   <Import Project="..\MSBuild\Robust.Properties.targets" />
 </Project>

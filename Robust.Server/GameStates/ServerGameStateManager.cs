@@ -37,6 +37,9 @@ namespace Robust.Server.GameStates
         // Mapping of net UID of clients -> last known acked state.
         private GameTick _lastOldestAck = GameTick.Zero;
 
+        private HashSet<int>[] _playerChunks = Array.Empty<HashSet<int>>();
+        private EntityUid[][] _viewerEntities = Array.Empty<EntityUid[]>();
+
         private PvsSystem _pvs = default!;
 
         [Dependency] private readonly EntityManager _entityManager = default!;
@@ -267,7 +270,7 @@ Oldest acked clients: {string.Join(", ", players)}
 
         private PvsData? GetPVSData(ICommonSession[] players)
         {
-            var (chunks, playerChunks, viewerEntities) = _pvs.GetChunks(players);
+            var chunks = _pvs.GetChunks(players, ref _playerChunks, ref _viewerEntities);
             var chunksCount = chunks.Count;
             var chunkCache =
                 new (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[chunksCount];
@@ -292,8 +295,8 @@ Oldest acked clients: {string.Join(", ", players)}
             ArrayPool<bool>.Shared.Return(reuse);
             return new PvsData()
             {
-                PlayerChunks = playerChunks,
-                ViewerEntities = viewerEntities,
+                PlayerChunks = _playerChunks,
+                ViewerEntities = _viewerEntities,
                 ChunkCache = chunkCache,
             };
         }

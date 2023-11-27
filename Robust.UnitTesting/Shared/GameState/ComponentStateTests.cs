@@ -8,6 +8,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.UnitTesting.Shared.GameState;
 
@@ -306,6 +307,6 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class UnknownEntityTestComponent : Component
 {
-    [AutoNetworkedField]
+    [DataField, AutoNetworkedField]
     public EntityUid? Other;
 }

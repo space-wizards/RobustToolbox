@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -283,6 +284,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             sessionData.LastSeenAt.Remove(metadata.NetEntity);
             sessionData.LastLeftView.Remove(metadata.NetEntity);
+
             if (sessionData.SentEntities.TryGetValue(previousTick, out var ents))
                 ents.Remove(metadata.NetEntity);
         }
@@ -445,10 +447,15 @@ internal sealed partial class PvsSystem : EntitySystem
 
     #endregion
 
-    public (List<(int, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(ICommonSession[] sessions)
+    public List<(int, IChunkIndexLocation)> GetChunks(
+        ICommonSession[] sessions,
+        ref HashSet<int>[] playerChunks,
+        ref EntityUid[][] viewerEntities)
     {
-        var playerChunks = new HashSet<int>[sessions.Length];
-        var viewerEntities = new EntityUid[sessions.Length][];
+        // Pass these in to avoid allocating new ones every tick, 99% of the time sessions length is going to be the same size.
+        // These values will get overridden here and the old values have already been returned to the pool by this point.
+        Array.Resize(ref playerChunks, sessions.Length);
+        Array.Resize(ref viewerEntities, sessions.Length);
 
         _chunkList.Clear();
         // Keep track of the index of each chunk we use for a faster index lookup.
@@ -471,8 +478,8 @@ internal sealed partial class PvsSystem : EntitySystem
             var session = sessions[i];
             playerChunks[i] = _playerChunkPool.Get();
 
-            var viewers = GetSessionViewers(session);
-            viewerEntities[i] = viewers;
+            ref var viewers = ref viewerEntities[i];
+            GetSessionViewers(session, ref viewers);
 
             for (var j = 0; j < viewers.Length; j++)
             {
@@ -564,7 +571,7 @@ internal sealed partial class PvsSystem : EntitySystem
             }
         }
 
-        return (_chunkList, playerChunks, viewerEntities);
+        return _chunkList;
     }
 
     public void RegisterNewPreviousChunkTrees(
@@ -581,23 +588,20 @@ internal sealed partial class PvsSystem : EntitySystem
             _reusedTrees.Add(chunks[i]);
         }
 
-        var previousIndices = _previousTrees.Keys.ToArray();
-        for (var i = 0; i < previousIndices.Length; i++)
+        foreach (var (index, chunk) in _previousTrees)
         {
-            var index = previousIndices[i];
             // ReSharper disable once InconsistentlySynchronizedField
-            if (_reusedTrees.Contains(index)) continue;
-            var chunk = _previousTrees[index];
-            if (chunk.HasValue)
+            if (_reusedTrees.Contains(index))
+                continue;
+
+            if (chunk != null)
             {
                 _chunkCachePool.Return(chunk.Value.metadata);
                 _treePool.Return(chunk.Value.tree);
             }
 
             if (!chunks.Contains(index))
-            {
                 _previousTrees.Remove(index);
-            }
         }
 
         _previousTrees.EnsureCapacity(chunks.Count);
@@ -1325,26 +1329,44 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
         return entState;
     }
 
-    private EntityUid[] GetSessionViewers(ICommonSession session)
+    private void GetSessionViewers(ICommonSession session, [NotNull] ref EntityUid[]? viewers)
     {
         if (session.Status != SessionStatus.InGame)
-            return Array.Empty<EntityUid>();
+        {
+            viewers = Array.Empty<EntityUid>();
+            return;
+        }
 
         // Fast path
         if (session.ViewSubscriptions.Count == 0)
         {
             if (session.AttachedEntity == null)
-                return Array.Empty<EntityUid>();
+            {
+                viewers = Array.Empty<EntityUid>();
+                return;
+            }
 
-            return new[] { session.AttachedEntity.Value };
+            Array.Resize(ref viewers, 1);
+            viewers[0] = session.AttachedEntity.Value;
+            return;
         }
 
-        var viewers = new HashSet<EntityUid>();
-        if (session.AttachedEntity != null)
-            viewers.Add(session.AttachedEntity.Value);
+        int i = 0;
+        if (session.AttachedEntity is { } local)
+        {
+            DebugTools.Assert(!session.ViewSubscriptions.Contains(local));
+            Array.Resize(ref viewers, session.ViewSubscriptions.Count + 1);
+            viewers[i++] = local;
+        }
+        else
+        {
+            Array.Resize(ref viewers, session.ViewSubscriptions.Count);
+        }
 
-        viewers.UnionWith(session.ViewSubscriptions);
-        return viewers.ToArray();
+        foreach (var ent in session.ViewSubscriptions)
+        {
+            viewers[i++] = ent;
+        }
     }
 
     // Read Safe

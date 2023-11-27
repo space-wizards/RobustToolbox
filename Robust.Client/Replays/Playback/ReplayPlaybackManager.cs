@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Client.Audio;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Configuration;
 using Robust.Client.GameObjects;
@@ -10,6 +11,7 @@ using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Client.Upload;
 using Robust.Shared;
+using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -28,7 +30,7 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
     [Dependency] private readonly IBaseClient _client = default!;
     [Dependency] private readonly IMidiManager _midi = default!;
     [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IClydeAudio _clydeAudio = default!;
+    [Dependency] private readonly IAudioInternal _clydeAudio = default!;
     [Dependency] private readonly IClientGameTiming _timing = default!;
     [Dependency] private readonly IClientNetManager _netMan = default!;
     [Dependency] private readonly IComponentFactory _factory = default!;

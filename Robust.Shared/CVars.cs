@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -1017,7 +1018,7 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<int> AudioAttenuation =
-            CVarDef.Create("audio.attenuation", (int) Attenuation.Default, CVar.REPLICATED | CVar.ARCHIVE);
+            CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Audio device to try to output audio to by default.
@@ -1036,6 +1037,9 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> AudioRaycastLength =
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        public static readonly CVarDef<float> AudioZOffset =
+            CVarDef.Create("audio.z_offset", -5f, CVar.REPLICATED);
 
         /*
          * PLAYER

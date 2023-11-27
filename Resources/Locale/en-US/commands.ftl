@@ -561,3 +561,7 @@ cmd-vfs_ls-hint-path = <path>
 
 cmd-reloadtiletextures-desc = Reloads the tile texture atlas to allow hot reloading tile sprites
 cmd-reloadtiletextures-help = Usage: reloadtiletextures
+
+cmd-audio_length-desc = Shows the length of an audio file
+cmd-audio_length-help = Usage: audio_length { cmd-audio_length-arg-file-name }
+cmd-audio_length-arg-file-name = <file name>

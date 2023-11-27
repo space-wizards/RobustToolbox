@@ -575,7 +575,9 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid) where T : IComponent
         {
-            if (!IsAlive(uid) || !_world.TryGet(uid, out T? comp))
+            EntityReference entRef = uid;
+
+            if (!_world.IsAlive(entRef) || !_world.TryGet(entRef.Entity, out T? comp))
                 return false;
 
             return !comp!.Deleted;
@@ -592,7 +594,9 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, Type type)
         {
-            if (!IsAlive(uid) || !_world.TryGet(uid, type, out var comp))
+            EntityReference entRef = uid;
+
+            if (!_world.IsAlive(entRef) || !_world.TryGet(entRef.Entity, type, out var comp))
                 return false;
 
             return !((IComponent)comp!).Deleted;
@@ -692,7 +696,9 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid) where T : IComponent
         {
-            if (IsAlive(uid) && _world.TryGet(uid, out T? comp))
+            EntityReference entRef = uid;
+
+            if (_world.IsAlive(entRef) && _world.TryGet(entRef.Entity, out T? comp))
                 return comp!;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
@@ -734,10 +740,12 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component) where T : IComponent?
         {
-            if (IsAlive(uid) && _world.TryGet(uid, out component))
+            EntityReference entRef = uid;
+
+            if (_world.IsAlive(entRef) && _world.TryGet(entRef.Entity, out component))
             {
                 DebugTools.Assert(component != null);
-                if (!component!.Deleted)
+                if (!component.Deleted)
                 {
                     return true;
                 }
@@ -772,9 +780,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component)
         {
-            if (IsAlive(uid) && _world.TryGet(uid, type, out var comp))
+            EntityReference entRef = uid;
+
+            if (_world.IsAlive(entRef) && _world.TryGet(entRef.Entity, type, out var comp))
             {
-                component = (IComponent)(comp!);
+                component = (IComponent)comp!;
                 if (!component.Deleted)
                 {
                     return true;
@@ -787,7 +797,9 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component)
         {
-            if (IsAlive(uid) && _world.TryGet(uid, type.Type, out var comp))
+            EntityReference entRef = uid;
+
+            if (_world.IsAlive(entRef) && _world.TryGet(entRef.Entity, type.Type, out var comp))
             {
                 component = (IComponent)comp!;
                 if (component != null! && !component.Deleted)

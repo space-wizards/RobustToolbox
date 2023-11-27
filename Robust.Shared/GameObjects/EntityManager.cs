@@ -327,6 +327,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetEntities()
         {
+            // TODO: Change signature to List not IEnumerable
             var ents = new List<Entity>();
             _world.GetEntities(_archMetaQuery, ents);
 
@@ -550,7 +551,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return IsAlive(uid);
+            return _world.IsAlive(uid);
         }
 
         public bool EntityExists(EntityUid? uid)
@@ -569,21 +570,9 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !IsAlive(uid) || !_world.TryGet(uid, out MetaDataComponent? comp) || comp!.EntityLifeStage > EntityLifeStage.Terminating;
-        }
+            EntityReference entRef = uid;
 
-        /// <summary>
-        /// Returns whether the entity is alive inside of the ECS world.
-        /// </summary>
-        internal bool IsAlive(EntityUid uid)
-        {
-            return ((EntityReference) uid).IsAlive(_world);
-        }
-
-        internal bool TryAlive(EntityUid uid, out EntityReference entity)
-        {
-            entity = uid;
-            return entity.IsAlive(_world);
+            return !_world.IsAlive(entRef) || !_world.TryGet(entRef.Entity, out MetaDataComponent? comp) || comp!.EntityLifeStage > EntityLifeStage.Terminating;
         }
 
         public bool Deleted([NotNullWhen(false)] EntityUid? uid)

@@ -14,7 +14,7 @@ public partial class EntityManager
 {
     private World _world = default!;
 
-    private static readonly ComponentType[] DefaultArchetype = new ComponentType[]
+    private static readonly ComponentType[] DefaultArchetype =
     {
         typeof(MetaDataComponent),
         typeof(TransformComponent),

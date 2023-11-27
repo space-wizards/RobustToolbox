@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 183.0.0
+
+### Breaking changes
+
+* Audio rework has been re-merged now that the issues with packaging on server have been rectified (thanks PJB!)
+* Reverted Arch pending further performance work on making TryGetComponent competitive with live.
+
+
 ## 182.1.1
 
 ### Internal

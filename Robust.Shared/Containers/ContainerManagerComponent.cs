@@ -69,15 +69,7 @@ namespace Robust.Shared.Containers
             bool force = false,
             EntityCoordinates? destination = null,
             Angle? localRotation = null)
-        {
-            foreach (var containers in Containers.Values)
-            {
-                if (containers.Contains(toremove))
-                    return containers.Remove(toremove, _entMan, xform, meta, reparent, force, destination, localRotation);
-            }
-
-            return true; // If we don't contain the entity, it will always be removed
-        }
+            => _entMan.System<SharedContainerSystem>().RemoveEntity(Owner, toremove, this, xform, meta, reparent, force, destination, localRotation);
 
         [Obsolete]
         public AllContainersEnumerable GetAllContainers()

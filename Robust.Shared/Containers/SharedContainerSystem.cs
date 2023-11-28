@@ -184,7 +184,7 @@ namespace Robust.Shared.Containers
             return false;
         }
 
-        public void RemoveEntity(
+        public bool RemoveEntity(
             EntityUid uid,
             EntityUid toremove,
             ContainerManagerComponent? containerManager = null,
@@ -196,9 +196,15 @@ namespace Robust.Shared.Containers
             Angle? localRotation = null)
         {
             if (!Resolve(uid, ref containerManager) || !Resolve(toremove, ref containedMeta, ref containedXform))
-                return;
+                return false;
 
-            containerManager.Remove(toremove, containedXform, containedMeta, reparent, force, destination, localRotation);
+            foreach (var containers in containerManager.Containers.Values)
+            {
+                if (containers.Contains(toremove))
+                    return Remove((toremove, containedXform, containedMeta), containers, reparent, force, destination, localRotation);
+            }
+
+            return true; // If we don't contain the entity, it will always be removed
         }
 
         public ContainerManagerComponent.AllContainersEnumerable GetAllContainers(EntityUid uid, ContainerManagerComponent? containerManager = null)

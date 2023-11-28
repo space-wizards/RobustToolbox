@@ -135,7 +135,7 @@ namespace Robust.Shared.Containers
             if (!Resolve(uid, ref containerManager, false))
                 return false;
 
-            return containerManager.HasContainer(id);
+            return containerManager.Containers.ContainsKey(id);
         }
 
         public bool TryGetContainer(EntityUid uid, string id, [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null)

@@ -88,7 +88,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  itemUid = sEntManager.SpawnEntity(null, mapPos);
                  sMetadataSys.SetEntityName(itemUid, "Item");
                  var container = sContainerSys.EnsureContainer<Container>(entityUid, "dummy");
-                 Assert.That(container.Insert(itemUid));
+                 Assert.That(sContainerSys.Insert(itemUid, container));
 
                  // Move item out of PVS so that it doesn't get sent to the client
                  sEntManager.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(100000, 0);
@@ -216,7 +216,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  netEnt = sEntManager.GetNetEntity(sItemUid);
                  sMetadataSys.SetEntityName(sItemUid, "Item");
                  var container = sContainerSys.GetContainer(sEntityUid, "dummy");
-                 container.Insert(sItemUid);
+                 sContainerSys.Insert(sItemUid, container);
 
                  // Move item out of PVS so that it doesn't get sent to the client
                  sEntManager.GetComponent<TransformComponent>(sItemUid).LocalPosition = new Vector2(100000, 0);
@@ -312,7 +312,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 var container = sContainerSys.MakeContainer<Container>(containerEnt, "testContainer");
                 container.OccludesLight = true;
                 container.ShowContents = true;
-                container.Insert(containeeEnt);
+                sContainerSys.Insert(containeeEnt, container);
 
                 // save the map
                 var mapLoader = sEntManager.EntitySysManager.GetEntitySystem<MapLoaderSystem>();

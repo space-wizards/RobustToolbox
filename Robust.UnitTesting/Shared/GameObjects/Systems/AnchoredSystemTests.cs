@@ -361,7 +361,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var containerSys = entMan.System<SharedContainerSystem>();
             var containerMan = entMan.AddComponent<ContainerManagerComponent>(gridId);
             var container = containerSys.MakeContainer<Container>(gridId, "TestContainer", containerMan);
-            container.Insert(ent1);
+            containerSys.Insert(ent1, container);
 
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
@@ -481,7 +481,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var containerSys = entMan.System<SharedContainerSystem>();
             var containerMan = entMan.AddComponent<ContainerManagerComponent>(gridId);
             var container = containerSys.MakeContainer<Container>(gridId, "TestContainer", containerMan);
-            container.Insert(ent1);
+            containerSys.Insert(ent1, container);
 
             // Act
             entMan.GetComponent<TransformComponent>(ent1).Anchored = true;

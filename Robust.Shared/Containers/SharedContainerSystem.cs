@@ -569,7 +569,8 @@ namespace Robust.Shared.Containers
 
         private bool TryInsertIntoContainer(Entity<TransformComponent> transform, BaseContainer container)
         {
-            if (container.Insert(transform)) return true;
+            if (Insert((transform.Owner, transform.Comp, null, null), container))
+                return true;
 
             if (Transform(container.Owner).ParentUid.IsValid()
                 && TryGetContainingContainer(container.Owner, out var newContainer))

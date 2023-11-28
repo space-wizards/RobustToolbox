@@ -46,7 +46,7 @@ public sealed class Joints_Test
         var joint = jointSystem.CreateDistanceJoint(uidA, uidB);
         jointSystem.Update(0.016f);
 
-        container.Insert(uidA, entManager);
+        containerSys.Insert(uidA, container);
         Assert.Multiple(() =>
         {
             Assert.That(container.Contains(uidA));

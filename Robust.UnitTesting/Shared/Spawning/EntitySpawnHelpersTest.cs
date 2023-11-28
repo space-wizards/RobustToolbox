@@ -58,12 +58,12 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
             GrandChildB = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
             GreatGrandChildA = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
             GreatGrandChildB = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
-            Container.EnsureContainer<TestContainer>(Parent, "childA").Insert(ChildA);
-            Container.EnsureContainer<TestContainer>(Parent, "childB").Insert(ChildB);
-            Container.EnsureContainer<TestContainer>(ChildA, "grandChildA").Insert(GrandChildA);
+            Container.Insert(ChildA, Container.EnsureContainer<TestContainer>(Parent, "childA"));
+            Container.Insert(ChildB, Container.EnsureContainer<TestContainer>(Parent, "childB"));
+            Container.Insert(GrandChildA, Container.EnsureContainer<TestContainer>(ChildA, "grandChildA"));
             Xforms.SetCoordinates(GrandChildB, new EntityCoordinates(ChildB, new(2,1)));
-            Container.EnsureContainer<TestContainer>(GrandChildA, "greatGrandChildA").Insert(GreatGrandChildA);
-            Container.EnsureContainer<TestContainer>(GrandChildB, "greatGrandChildB").Insert(GreatGrandChildB);
+            Container.Insert(GreatGrandChildA, Container.EnsureContainer<TestContainer>(GrandChildA, "greatGrandChildA"));
+            Container.Insert(GreatGrandChildB, Container.EnsureContainer<TestContainer>(GrandChildB, "greatGrandChildB"));
         });
         await Server.WaitRunTicks(5);
 

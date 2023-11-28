@@ -80,11 +80,11 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var transform = entManager.GetComponent<TransformComponent>(inserted);
 
             var container = containerSys.MakeContainer<Container>(owner, "dummy");
-            Assert.That(container.Insert(inserted), Is.True);
+            Assert.That(containerSys.Insert(inserted, container), Is.True);
             Assert.That(transform.ParentUid, Is.EqualTo(owner));
 
             var container2 = containerSys.MakeContainer<Container>(inserted, "dummy");
-            Assert.That(container2.Insert(owner), Is.False);
+            Assert.That(containerSys.Insert(owner, container2), Is.False);
 
             var success = containerSys.Remove(inserted, container);
             Assert.That(success, Is.True);
@@ -92,7 +92,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             success = containerSys.Remove(inserted, container);
             Assert.That(success, Is.False);
 
-            container.Insert(inserted);
+            containerSys.Insert(inserted, container);
             entManager.DeleteEntity(owner);
             // Make sure inserted was detached.
             Assert.That(transform.Deleted, Is.True);
@@ -111,7 +111,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
 
             var container = containerSys.MakeContainer<Container>(owner, "dummy");
-            Assert.That(container.Insert(inserted), Is.True);
+            Assert.That(containerSys.Insert(inserted, container), Is.True);
             Assert.That(transform.ParentUid, Is.EqualTo(owner));
 
             var container2 = containerSys.MakeContainer<Container>(inserted, "dummy");
@@ -143,13 +143,13 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var container2 = containerSys.MakeContainer<ContainerOnlyContainer>(entityTwo, "dummy");
             var container3 = containerSys.MakeContainer<Container>(entityThree, "dummy");
 
-            Assert.That(container.Insert(entityTwo), Is.True);
+            Assert.That(containerSys.Insert(entityTwo, container), Is.True);
             Assert.That(entMan.GetComponent<TransformComponent>(entityTwo).ParentUid, Is.EqualTo(entityOne));
 
-            Assert.That(container2.Insert(entityThree), Is.True);
+            Assert.That(containerSys.Insert(entityThree, container2), Is.True);
             Assert.That(entMan.GetComponent<TransformComponent>(entityThree).ParentUid, Is.EqualTo(entityTwo));
 
-            Assert.That(container3.Insert(entityItem), Is.True);
+            Assert.That(containerSys.Insert(entityItem, container3), Is.True);
             Assert.That(entMan.GetComponent<TransformComponent>(entityItem).ParentUid, Is.EqualTo(entityThree));
 
             Assert.That(containerSys.Remove(entityItem, container3), Is.True);
@@ -169,7 +169,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
-            Assert.That(container.Insert(entity), Is.False);
+            Assert.That(containerSys.Insert(entity, container), Is.False);
             Assert.That(containerSys.CanInsert(entity, container), Is.False);
         }
 
@@ -183,7 +183,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
-            Assert.That(container.Insert(mapEnt), Is.False);
+            Assert.That(containerSys.Insert(mapEnt, container), Is.False);
             Assert.That(containerSys.CanInsert(mapEnt, container), Is.False);
         }
 
@@ -197,7 +197,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
-            Assert.That(container.Insert(grid), Is.False);
+            Assert.That(containerSys.Insert(grid, container), Is.False);
             Assert.That(containerSys.CanInsert(grid, container), Is.False);
         }
 
@@ -212,7 +212,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var container = containerSys.MakeContainer<Container>(containerEntity, "dummy");
             var insertEntity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
 
-            var result = container.Insert(insertEntity);
+            var result = containerSys.Insert(insertEntity, container);
 
             Assert.That(result, Is.True);
             Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
@@ -251,9 +251,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entity2 = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container2 = containerSys.MakeContainer<Container>(entity2, "dummy");
             var transferEntity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
-            container1.Insert(transferEntity);
+            containerSys.Insert(transferEntity, container1);
 
-            var result = container2.Insert(transferEntity);
+            var result = containerSys.Insert(transferEntity, container2);
 
             Assert.That(result, Is.True);
             Assert.That(container1.ContainedEntities.Count, Is.EqualTo(0));
@@ -273,7 +273,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             container.OccludesLight = true;
             container.ShowContents = true;
-            container.Insert(childEnt);
+            containerSys.Insert(childEnt, container);
 
             var containerMan = entManager.GetComponent<ContainerManagerComponent>(entity);
             var getState = new ComponentGetState();

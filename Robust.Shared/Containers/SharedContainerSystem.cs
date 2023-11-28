@@ -22,6 +22,7 @@ namespace Robust.Shared.Containers
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly SharedJointSystem _joint = default!;
 
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MapComponent> _mapQuery;

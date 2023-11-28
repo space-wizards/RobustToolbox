@@ -273,75 +273,11 @@ namespace Robust.Shared.Containers
             bool reparent = true,
             bool force = false,
             EntityCoordinates? destination = null,
-            Angle? localRotation = null)
+            Angle? localRotation = null
+        )
         {
             IoCManager.Resolve(ref entMan);
-            DebugTools.AssertNotNull(Manager);
-            DebugTools.Assert(entMan.EntityExists(toRemove));
-            DebugTools.AssertOwner(toRemove, xform);
-            DebugTools.AssertOwner(toRemove, meta);
-
-            xform ??= entMan.GetComponent<TransformComponent>(toRemove);
-            meta ??= entMan.GetComponent<MetaDataComponent>(toRemove);
-
-            var sys = entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>();
-            if (!force && !sys.CanRemove(toRemove, this))
-                return false;
-
-            if (force && !Contains(toRemove))
-            {
-                DebugTools.Assert("Attempted to force remove an entity that was never inside of the container.");
-                return false;
-            }
-
-            DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating || (force && !reparent));
-            DebugTools.Assert(xform.Broadphase == null || !xform.Broadphase.Value.IsValid());
-            DebugTools.Assert(!xform.Anchored);
-            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0);
-            DebugTools.Assert(!entMan.TryGetComponent(toRemove, out PhysicsComponent? phys) || (!phys.Awake && !phys.CanCollide));
-
-            // Unset flag (before parent change events are raised).
-            meta.Flags &= ~MetaDataFlags.InContainer;
-
-            // Implementation specific remove logic
-            InternalRemove(toRemove, entMan);
-
-            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0x0);
-            var oldParent = xform.ParentUid;
-
-            if (destination != null)
-            {
-                // Container ECS when.
-                entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(toRemove, xform, destination.Value, localRotation);
-            }
-            else if (reparent)
-            {
-                // Container ECS when.
-                sys.AttachParentToContainerOrGrid((toRemove, xform));
-                if (localRotation != null)
-                    entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetLocalRotation(xform, localRotation.Value);
-            }
-
-            // Add to new broadphase
-            if (xform.ParentUid == oldParent // move event should already have handled it
-                && xform.Broadphase == null) // broadphase explicitly invalid?
-            {
-                entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>().FindAndAddToEntityTree(toRemove, xform: xform);
-            }
-
-            if (entMan.TryGetComponent<JointComponent>(toRemove, out var jointComp))
-            {
-                entMan.System<SharedJointSystem>().RefreshRelay(toRemove, jointComp);
-            }
-
-            // Raise container events (after re-parenting and internal remove).
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toRemove, this), true);
-            entMan.EventBus.RaiseLocalEvent(toRemove, new EntGotRemovedFromContainerMessage(toRemove, this), false);
-
-            DebugTools.Assert(destination == null || xform.Coordinates.Equals(destination.Value));
-
-            entMan.Dirty(Owner, Manager);
-            return true;
+            return entMan.System<SharedContainerSystem>().Remove((toRemove, xform, meta), this, reparent, force, destination, localRotation);
         }
 
         [Obsolete("Use container system method")]
@@ -381,6 +317,7 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toRemove"></param>
         /// <param name="entMan"></param>
-        protected abstract void InternalRemove(EntityUid toRemove, IEntityManager entMan);
+        [Access(typeof(SharedContainerSystem))]
+        internal abstract void InternalRemove(EntityUid toRemove, IEntityManager entMan);
     }
 }

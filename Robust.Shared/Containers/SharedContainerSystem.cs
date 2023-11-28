@@ -151,10 +151,22 @@ namespace Robust.Shared.Containers
 
         public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null, bool skipExistCheck = false)
         {
-            if (Resolve(uid, ref containerManager, false) && (skipExistCheck || Exists(containedUid)))
-                return containerManager.TryGetContainer(containedUid, out container);
+            if (!Resolve(uid, ref containerManager, false) || !(skipExistCheck || Exists(containedUid)))
+            {
+                container = null;
+                return false;
+            }
 
-            container = null;
+            foreach (var contain in containerManager.Containers.Values)
+            {
+                if (contain.Contains(containedUid))
+                {
+                    container = contain;
+                    return true;
+                }
+            }
+
+            container = default;
             return false;
         }
 

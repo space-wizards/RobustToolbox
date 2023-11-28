@@ -55,19 +55,7 @@ namespace Robust.Shared.Containers
 
         [Obsolete]
         public bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out BaseContainer? container)
-        {
-            foreach (var contain in Containers.Values)
-            {
-                if (contain.Contains(entity))
-                {
-                    container = contain;
-                    return true;
-                }
-            }
-
-            container = default;
-            return false;
-        }
+            => _entMan.System<SharedContainerSystem>().TryGetContainingContainer(Owner, entity, out container, this);
 
         [Obsolete]
         public bool ContainsEntity(EntityUid entity)

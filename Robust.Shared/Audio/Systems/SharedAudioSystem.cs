@@ -164,10 +164,32 @@ public abstract partial class SharedAudioSystem : EntitySystem
             .WithReferenceDistance(refDistance);
     }
 
+    public static float GainToVolume(float value)
+    {
+        return 10f * MathF.Log10(value);
+    }
+
+    public static float VolumeToGain(float value)
+    {
+        return MathF.Pow(10, value / 10);
+    }
+
     /// <summary>
     /// Sets the audio params volume for an entity.
     /// </summary>
-    public void SetVolume(EntityUid? entity, float value, Components.AudioComponent? component = null)
+    public void SetGain(EntityUid? entity, float value, AudioComponent? component = null)
+    {
+        if (entity == null || !Resolve(entity.Value, ref component))
+            return;
+
+        var volume = GainToVolume(value);
+        SetVolume(entity, volume, component);
+    }
+
+    /// <summary>
+    /// Sets the audio params volume for an entity.
+    /// </summary>
+    public void SetVolume(EntityUid? entity, float value, AudioComponent? component = null)
     {
         if (entity == null || !Resolve(entity.Value, ref component))
             return;

@@ -33,8 +33,9 @@ namespace Robust.Shared.Network.Messages
             {
                 case EntityMessageType.SystemMessage:
                 {
-                    int length = buffer.ReadVariableInt32();
-                    using var stream = buffer.ReadAlignedMemory(length);
+                    var length = buffer.ReadVariableInt32();
+                    using var stream = RobustMemoryManager.GetMemoryStream(length);
+                    buffer.ReadAlignedMemory(stream, length);
                     SystemMessage = serializer.Deserialize<EntityEventArgs>(stream);
                 }
                     break;

@@ -147,7 +147,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (!TryGetAudio(component.FileName, out var audioResource))
         {
             Log.Error($"Error creating audio source for {audioResource}, can't find file {component.FileName}");
-            component.Source = new DummyAudioSource();
             return;
         }
 
@@ -157,20 +156,22 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             Log.Error($"Error creating audio source for {audioResource}");
             DebugTools.Assert(false);
-            source = new DummyAudioSource();
+            source = component.Source;
         }
 
-        // Need to set all initial data for first frame.
         component.Source = source;
+
+        // Need to set all initial data for first frame.
         ApplyAudioParams(component.Params, component);
-        component.Global = component.Global;
+        source.Global = component.Global;
+
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;
 
         // If audio came into range then start playback at the correct position.
         var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % GetAudioLength(component.FileName).TotalSeconds;
 
-        if (offset != 0)
+        if (offset > 0)
         {
             component.PlaybackPosition = (float) offset;
         }
@@ -198,7 +199,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         _audio.SetRotation(eye.Rotation);
         _audio.SetPosition(eye.Position.Position);
 
-        var ourPos = eye.Position;
+        var ourPos = GetListenerCoordinates();
 
         var query = AllEntityQuery<AudioComponent, TransformComponent>();
         _streams.Clear();
@@ -221,6 +222,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
             Log.Error($"Caught exception while processing entity streams.");
             _runtimeLog.LogException(e, $"{nameof(AudioSystem)}.{nameof(FrameUpdate)}");
         }
+    }
+
+    public MapCoordinates GetListenerCoordinates()
+    {
+        return _eyeManager.CurrentEye.Position;
     }
 
     private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
@@ -328,7 +334,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             // This actually gets the tracked entity's xform & iterates up though the parents for the second time. Bit
             // inefficient.
-            var velocity = _physics.GetMapLinearVelocity(entity, physicsComp, xform, _xformQuery, _physicsQuery);
+            var velocity = _physics.GetMapLinearVelocity(entity, physicsComp, xform);
             component.Velocity = velocity;
         }
     }

@@ -15,7 +15,7 @@ namespace Robust.Shared.Audio.Components;
 /// <summary>
 /// Stores the audio data for an audio entity.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState, Access(typeof(SharedAudioSystem))]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true), Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioComponent : Component, IAudioSource
 {
     #region Filter
@@ -68,7 +68,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// Audio source that interacts with OpenAL.
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
-    internal IAudioSource Source = default!;
+    internal IAudioSource Source = new DummyAudioSource();
 
     /// <summary>
     /// Auxiliary entity to pass audio to.
@@ -115,6 +115,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <see cref="IAudioSource.Global"/>
     /// </summary>
     [AutoNetworkedField]
+    [Access(typeof(SharedAudioSystem))]
     public bool Global { get; set; }
 
     /// <summary>

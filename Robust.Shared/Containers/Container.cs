@@ -33,7 +33,7 @@ namespace Robust.Shared.Containers
         public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
 
         /// <inheritdoc />
-        protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
+        protected internal override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
         {
             DebugTools.Assert(!_containerList.Contains(toInsert));
             _containerList.Add(toInsert);

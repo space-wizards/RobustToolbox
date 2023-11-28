@@ -1,6 +1,10 @@
-using System;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Utility;
+using System;
+using System.Numerics;
 
 namespace Robust.Shared.Containers;
 
@@ -28,12 +32,109 @@ public abstract partial class SharedContainerSystem
         TransformComponent? containerXform = null,
         bool force = false)
     {
+        var (uid, transform, meta, physics) = toInsert;
+
         // Cannot Use Resolve(ref toInsert) as the physics component is optional
-        if (!Resolve(toInsert.Owner, ref toInsert.Comp1, ref toInsert.Comp2))
+        if (!Resolve(uid, ref transform, ref meta))
             return false;
 
         // TODO move logic over to the system.
-        return container.Insert(toInsert, EntityManager, toInsert, containerXform, toInsert, toInsert, force);
+
+        DebugTools.AssertOwner(container.Owner, containerXform);
+        DebugTools.AssertOwner(toInsert, physics);
+        DebugTools.Assert(!container.ExpectedEntities.Contains(GetNetEntity(toInsert)));
+        DebugTools.Assert(container.Manager.Containers.ContainsKey(container.ID));
+
+        // If someone is attempting to insert an entity into a container that is getting deleted, then we will
+        // automatically delete that entity. I.e., the insertion automatically "succeeds" and both entities get deleted.
+        // This is consistent with what happens if you attempt to attach an entity to a terminating parent.
+
+        if (!TryComp(container.Owner, out MetaDataComponent? ownerMeta))
+        {
+            Log.Error($"Attempted to insert an entity {ToPrettyString(toInsert)} into a non-existent entity.");
+            QueueDel(toInsert);
+            return false;
+        }
+
+        if (ownerMeta.EntityLifeStage >= EntityLifeStage.Terminating)
+        {
+            Log.Error($"Attempted to insert an entity {ToPrettyString(toInsert)} into an entity that is terminating. Entity: {ToPrettyString(container.Owner)}.");
+            QueueDel(toInsert);
+            return false;
+        }
+
+        //Verify we can insert into this container
+        if (!force && !CanInsert(uid, container, containerXform: containerXform))
+            return false;
+
+        if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
+        {
+            Log.Error($"Attempted to insert a terminating entity {ToPrettyString(uid)} into a container {container.ID} in entity: {ToPrettyString(container.Owner)}.");
+            return false;
+        }
+
+        // remove from any old containers.
+        if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
+            TryComp(transform.ParentUid, out ContainerManagerComponent? oldManager) &&
+            TryGetContainingContainer(transform.ParentUid, toInsert, out var oldContainer, oldManager) &&
+            !Remove((uid, transform, meta), oldContainer, reparent: false, force: false))
+        {
+            // failed to remove from container --> cannot insert.
+            return false;
+        }
+
+        // Update metadata first, so that parent change events can check IsInContainer.
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
+        meta.Flags |= MetaDataFlags.InContainer;
+
+        // Remove the entity and any children from broadphases.
+        // This is done before changing can collide to avoid unecceary updates.
+        // TODO maybe combine with RecursivelyUpdatePhysics to avoid fetching components and iterating parents twice?
+        _lookup.RemoveFromEntityTree(toInsert, transform);
+        DebugTools.Assert(transform.Broadphase == null || !transform.Broadphase.Value.IsValid());
+
+        // Avoid unnecessary broadphase updates while unanchoring, changing physics collision, and re-parenting.
+        var old = transform.Broadphase;
+        transform.Broadphase = BroadphaseData.Invalid;
+
+        // Unanchor the entity (without changing physics body types).
+        _transform.Unanchor(toInsert, transform, false);
+
+        // Next, update physics. Note that this cannot just be done in the physics system via parent change events,
+        // because the insertion may not result in a parent change. This could alternatively be done via a
+        // got-inserted event, but really that event should run after the entity was actually inserted (so that
+        // parent/map have updated). But we are better of disabling collision before doing map/parent changes.
+        PhysicsQuery.Resolve(toInsert, ref physics, logMissing: false);
+        container.RecursivelyUpdatePhysics(toInsert, transform, physics, _physics, PhysicsQuery, TransformQuery);
+
+        // Attach to new parent
+        var oldParent = transform.ParentUid;
+        _transform.SetCoordinates(toInsert, transform, new EntityCoordinates(container.Owner, Vector2.Zero), Angle.Zero);
+        transform.Broadphase = old;
+
+        // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
+
+        // Implementation specific insert logic
+        container.InternalInsert(toInsert, EntityManager);
+
+        // Update any relevant joint relays
+        // Can't be done above as the container flag isn't set yet.
+        container.RecursivelyUpdateJoints(toInsert, transform, _joint, JointQuery, TransformQuery);
+
+        // Raise container events (after re-parenting and internal remove).
+        RaiseLocalEvent(container.Owner, new EntInsertedIntoContainerMessage(toInsert, oldParent, container), true);
+        RaiseLocalEvent(toInsert, new EntGotInsertedIntoContainerMessage(toInsert, container), true);
+
+        // The sheer number of asserts tells you about how little I trust container and parenting code.
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
+        DebugTools.Assert(!transform.Anchored);
+        DebugTools.Assert(transform.LocalPosition == Vector2.Zero);
+        DebugTools.Assert(transform.LocalRotation == Angle.Zero);
+        DebugTools.Assert(!PhysicsQuery.TryGetComponent(toInsert, out var phys) || (!phys.Awake && !phys.CanCollide));
+
+        Dirty(container.Owner, container.Manager);
+        return true;
     }
 
     /// <summary>

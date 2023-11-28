@@ -303,7 +303,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
 
             /// <inheritdoc />
-            protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
+            protected internal override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
             {
                 _containerList.Add(toInsert);
             }

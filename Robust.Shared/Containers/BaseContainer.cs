@@ -90,121 +90,7 @@ namespace Robust.Shared.Containers
             bool force = false)
         {
             IoCManager.Resolve(ref entMan);
-            DebugTools.AssertOwner(toinsert, transform);
-            DebugTools.AssertOwner(Owner, ownerTransform);
-            DebugTools.AssertOwner(toinsert, physics);
-            DebugTools.Assert(!ExpectedEntities.Contains(entMan.GetNetEntity(toinsert)));
-            DebugTools.Assert(Manager.Containers.ContainsKey(ID));
-
-            var physicsQuery = entMan.GetEntityQuery<PhysicsComponent>();
-            var transformQuery = entMan.GetEntityQuery<TransformComponent>();
-            var jointQuery = entMan.GetEntityQuery<JointComponent>();
-
-            // ECS containers when
-            var physicsSys = entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
-            var jointSys = entMan.EntitySysManager.GetEntitySystem<SharedJointSystem>();
-            var containerSys = entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>();
-
-            // If someone is attempting to insert an entity into a container that is getting deleted, then we will
-            // automatically delete that entity. I.e., the insertion automatically "succeeds" and both entities get deleted.
-            // This is consistent with what happens if you attempt to attach an entity to a terminating parent.
-
-            if (!entMan.TryGetComponent(Owner, out MetaDataComponent? ownerMeta))
-            {
-                Logger.ErrorS("container",
-                    $"Attempted to insert an entity {entMan.ToPrettyString(toinsert)} into a non-existent entity.");
-                entMan.QueueDeleteEntity(toinsert);
-                return false;
-            }
-
-            if (ownerMeta.EntityLifeStage >= EntityLifeStage.Terminating)
-            {
-                Logger.ErrorS("container",
-                    $"Attempted to insert an entity {entMan.ToPrettyString(toinsert)} into an entity that is terminating. Entity: {entMan.ToPrettyString(Owner)}.");
-                entMan.QueueDeleteEntity(toinsert);
-                return false;
-            }
-
-            transform ??= transformQuery.GetComponent(toinsert);
-
-            //Verify we can insert into this container
-            if (!force && !containerSys.CanInsert(toinsert, this, containerXform: ownerTransform))
-                return false;
-
-            // Please somebody ecs containers
-            var lookupSys = entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
-            var xformSys = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
-
-            meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
-            if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
-            {
-                Logger.ErrorS("container",
-                    $"Attempted to insert a terminating entity {entMan.ToPrettyString(toinsert)} into a container {ID} in entity: {entMan.ToPrettyString(Owner)}.");
-                return false;
-            }
-
-            // remove from any old containers.
-            if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
-                entMan.TryGetComponent(transform.ParentUid, out ContainerManagerComponent? oldManager) &&
-                oldManager.TryGetContainer(toinsert, out var oldContainer) &&
-                !oldContainer.Remove(toinsert, entMan, transform, meta, false, false))
-            {
-                // failed to remove from container --> cannot insert.
-                return false;
-            }
-
-            // Update metadata first, so that parent change events can check IsInContainer.
-            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
-            meta.Flags |= MetaDataFlags.InContainer;
-
-            // Remove the entity and any children from broadphases.
-            // This is done before changing can collide to avoid unecceary updates.
-            // TODO maybe combine with RecursivelyUpdatePhysics to avoid fetching components and iterating parents twice?
-            lookupSys.RemoveFromEntityTree(toinsert, transform);
-            DebugTools.Assert(transform.Broadphase == null || !transform.Broadphase.Value.IsValid());
-
-            // Avoid unnecessary broadphase updates while unanchoring, changing physics collision, and re-parenting.
-            var old = transform.Broadphase;
-            transform.Broadphase = BroadphaseData.Invalid;
-
-            // Unanchor the entity (without changing physics body types).
-            xformSys.Unanchor(toinsert, transform, false);
-
-            // Next, update physics. Note that this cannot just be done in the physics system via parent change events,
-            // because the insertion may not result in a parent change. This could alternatively be done via a
-            // got-inserted event, but really that event should run after the entity was actually inserted (so that
-            // parent/map have updated). But we are better of disabling collision before doing map/parent changes.
-            physicsQuery.Resolve(toinsert, ref physics, false);
-            RecursivelyUpdatePhysics(toinsert, transform, physics, physicsSys, physicsQuery, transformQuery);
-
-            // Attach to new parent
-            var oldParent = transform.ParentUid;
-            xformSys.SetCoordinates(toinsert, transform, new EntityCoordinates(Owner, Vector2.Zero), Angle.Zero);
-            transform.Broadphase = old;
-
-            // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
-            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
-
-            // Implementation specific insert logic
-            InternalInsert(toinsert, entMan);
-
-            // Update any relevant joint relays
-            // Can't be done above as the container flag isn't set yet.
-            RecursivelyUpdateJoints(toinsert, transform, jointSys, jointQuery, transformQuery);
-
-            // Raise container events (after re-parenting and internal remove).
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, oldParent, this), true);
-            entMan.EventBus.RaiseLocalEvent(toinsert, new EntGotInsertedIntoContainerMessage(toinsert, this), true);
-
-            // The sheer number of asserts tells you about how little I trust container and parenting code.
-            DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
-            DebugTools.Assert(!transform.Anchored);
-            DebugTools.Assert(transform.LocalPosition == Vector2.Zero);
-            DebugTools.Assert(transform.LocalRotation == Angle.Zero);
-            DebugTools.Assert(!physicsQuery.TryGetComponent(toinsert, out var phys) || (!phys.Awake && !phys.CanCollide));
-
-            entMan.Dirty(Owner, Manager);
-            return true;
+            return entMan.System<SharedContainerSystem>().Insert((toinsert, transform, meta, physics), this, ownerTransform, force);
         }
 
         internal void RecursivelyUpdatePhysics(
@@ -310,7 +196,8 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toInsert"></param>
         /// <param name="entMan"></param>
-        protected abstract void InternalInsert(EntityUid toInsert, IEntityManager entMan);
+        [Access(typeof(SharedContainerSystem))]
+        protected internal abstract void InternalInsert(EntityUid toInsert, IEntityManager entMan);
 
         /// <summary>
         /// Implement to remove the reference you used to store the entity

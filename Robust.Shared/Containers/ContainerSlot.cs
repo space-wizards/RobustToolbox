@@ -74,7 +74,7 @@ namespace Robust.Shared.Containers
             => ContainedEntity == null || assumeEmpty;
 
         /// <inheritdoc />
-        protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
+        protected internal override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
         {
             DebugTools.Assert(ContainedEntity == null);
 

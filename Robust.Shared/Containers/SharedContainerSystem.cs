@@ -9,6 +9,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
@@ -28,6 +29,7 @@ namespace Robust.Shared.Containers
         private EntityQuery<MapComponent> _mapQuery;
         protected EntityQuery<MetaDataComponent> MetaQuery;
         protected EntityQuery<PhysicsComponent> PhysicsQuery;
+        protected EntityQuery<JointComponent> JointQuery;
         protected EntityQuery<TransformComponent> TransformQuery;
 
         /// <inheritdoc />
@@ -45,6 +47,7 @@ namespace Robust.Shared.Containers
             _mapQuery = GetEntityQuery<MapComponent>();
             MetaQuery = GetEntityQuery<MetaDataComponent>();
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
+            JointQuery = GetEntityQuery<JointComponent>();
             TransformQuery = GetEntityQuery<TransformComponent>();
         }
 

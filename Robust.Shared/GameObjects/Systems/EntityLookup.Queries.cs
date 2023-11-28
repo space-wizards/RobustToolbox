@@ -464,6 +464,17 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
+    public void GetEntitiesInRange(EntityUid uid, float range, HashSet<EntityUid> entities, LookupFlags flags = DefaultFlags)
+    {
+        var mapPos = _transform.GetMapCoordinates(uid);
+
+        if (mapPos.MapId == MapId.Nullspace)
+            return;
+
+        GetEntitiesInRange(mapPos.MapId, mapPos.Position, range, entities, flags);
+        entities.Remove(uid);
+    }
+
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid uid, LookupFlags flags = DefaultFlags)
     {
         var xform = _xformQuery.GetComponent(uid);

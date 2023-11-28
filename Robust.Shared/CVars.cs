@@ -1023,7 +1023,7 @@ namespace Robust.Shared
         /// Audio enabled. Used for tests to avoid creating audio.
         /// </summary>
         public static readonly CVarDef<bool> AudioEnabled =
-            CVarDef.Create("audio.enabled", true, CVar.REPLICATED);
+            CVarDef.Create("audio.enabled", true, CVar.ARCHIVE);
 
         public static readonly CVarDef<int> AudioAttenuation =
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);

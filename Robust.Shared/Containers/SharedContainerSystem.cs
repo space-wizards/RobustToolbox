@@ -38,7 +38,6 @@ namespace Robust.Shared.Containers
             base.Initialize();
 
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
-            SubscribeLocalEvent<ContainerManagerComponent, ComponentInit>(OnComponentInit);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartupValidation);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentGetState>(OnContainerGetState);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentRemove>(OnContainerManagerRemove);
@@ -49,16 +48,6 @@ namespace Robust.Shared.Containers
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
             JointQuery = GetEntityQuery<JointComponent>();
             TransformQuery = GetEntityQuery<TransformComponent>();
-        }
-
-        private void OnComponentInit(EntityUid uid, ContainerManagerComponent component, ComponentInit args)
-        {
-            foreach (var (id, container) in component.Containers)
-            {
-                container.Manager = component;
-                container.Owner = uid;
-                container.ID = id;
-            }
         }
 
         private void OnContainerGetState(EntityUid uid, ContainerManagerComponent component, ref ComponentGetState args)

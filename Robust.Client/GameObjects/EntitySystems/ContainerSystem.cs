@@ -91,7 +91,7 @@ namespace Robust.Client.GameObjects
                     DebugTools.Assert(!container.Contains(entity));
                 }
 
-                container.Shutdown(EntityManager, _netMan);
+                ShutdownContainer(container);
                 toDelete.Add(id);
             }
 

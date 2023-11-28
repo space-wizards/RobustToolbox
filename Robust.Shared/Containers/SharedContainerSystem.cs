@@ -85,7 +85,7 @@ namespace Robust.Shared.Containers
         {
             foreach (var container in component.Containers.Values)
             {
-                container.Shutdown(EntityManager, _net);
+                ShutdownContainer(container);
             }
 
             component.Containers.Clear();

@@ -452,7 +452,7 @@ namespace Robust.Shared.Containers
             {
                 if (((metaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) &&
                     conQuery.TryGetComponent(parent, out var conManager) &&
-                    conManager.TryGetContainer(child, out var parentContainer))
+                    TryGetContainingContainer(parent, child, out var parentContainer, conManager))
                 {
                     container = parentContainer;
                 }

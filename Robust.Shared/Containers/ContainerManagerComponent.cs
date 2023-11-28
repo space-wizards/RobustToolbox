@@ -17,7 +17,7 @@ namespace Robust.Shared.Containers
     /// </summary>
     [NetworkedComponent]
     [RegisterComponent, ComponentProtoName("ContainerContainer")]
-    public sealed partial class ContainerManagerComponent : Component, ISerializationHooks
+    public sealed partial class ContainerManagerComponent : Component
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
@@ -25,16 +25,6 @@ namespace Robust.Shared.Containers
         [DataField("containers")]
         public Dictionary<string, BaseContainer> Containers = new();
 
-        void ISerializationHooks.AfterDeserialization()
-        {
-            // TODO custom type serializer
-            foreach (var (id, container) in Containers)
-            {
-                container.Manager = this;
-                container.Owner = Owner;
-                container.ID = id;
-            }
-        }
 
         [Obsolete]
         public T MakeContainer<T>(EntityUid uid, string id)

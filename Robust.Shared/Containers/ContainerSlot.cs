@@ -87,7 +87,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        internal override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
+        protected internal override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
         {
             DebugTools.Assert(ContainedEntity == toRemove);
             ContainedEntity = null;

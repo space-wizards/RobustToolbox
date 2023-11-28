@@ -40,7 +40,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        internal override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
+        protected internal override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
         {
             _containerList.Remove(toRemove);
         }

@@ -318,6 +318,6 @@ namespace Robust.Shared.Containers
         /// <param name="toRemove"></param>
         /// <param name="entMan"></param>
         [Access(typeof(SharedContainerSystem))]
-        internal abstract void InternalRemove(EntityUid toRemove, IEntityManager entMan);
+        protected internal abstract void InternalRemove(EntityUid toRemove, IEntityManager entMan);
     }
 }

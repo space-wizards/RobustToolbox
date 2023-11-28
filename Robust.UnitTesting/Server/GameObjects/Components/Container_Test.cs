@@ -309,7 +309,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             }
 
             /// <inheritdoc />
-            internal override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
+            protected internal override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
             {
                 _containerList.Remove(toRemove);
             }

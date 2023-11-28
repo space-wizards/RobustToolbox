@@ -477,7 +477,7 @@ internal sealed partial class MidiManager : IMidiManager
             }
 
             // Update occlusion
-            var occlusion = _audioSys.GetOcclusion(renderer.TrackingEntity ?? EntityUid.Invalid, listener, delta, distance);
+            var occlusion = _audioSys.GetOcclusion(listener, delta, distance, renderer.TrackingEntity);
             renderer.Source.Occlusion = occlusion;
         }
         catch (Exception ex)

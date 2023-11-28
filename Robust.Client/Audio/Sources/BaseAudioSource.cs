@@ -5,6 +5,7 @@ using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio.Effects;
 using Robust.Shared.Audio.Effects;
 using Robust.Shared.Audio.Sources;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio.Sources;
@@ -164,10 +165,10 @@ internal abstract class BaseAudioSource : IAudioSource
         get
         {
             var gain = Gain;
-            var volume = 10f * MathF.Log10(gain);
+            var volume = SharedAudioSystem.GainToVolume(gain);
             return volume;
         }
-        set => Gain = MathF.Pow(10, value / 10);
+        set => Gain = SharedAudioSystem.VolumeToGain(value);
     }
 
     /// <inheritdoc />

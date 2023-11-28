@@ -316,7 +316,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         // Update audio occlusion
-        var occlusion = GetOcclusion(entity, listener, delta, distance);
+        var occlusion = GetOcclusion(listener, delta, distance, entity);
         component.Occlusion = occlusion;
 
         // Update audio positions.
@@ -332,7 +332,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
     }
 
-    internal float GetOcclusion(EntityUid entity, MapCoordinates listener, Vector2 delta, float distance)
+    /// <summary>
+    /// Gets the audio occlusion from the target audio entity to the listener's position.
+    /// </summary>
+    public float GetOcclusion(MapCoordinates listener, Vector2 delta, float distance, EntityUid? ignoredEnt = null)
     {
         float occlusion = 0;
 
@@ -340,7 +343,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             var rayLength = MathF.Min(distance, _maxRayLength);
             var ray = new CollisionRay(listener.Position, delta / distance, OcclusionCollisionMask);
-            occlusion = _physics.IntersectRayPenetration(listener.MapId, ray, rayLength, entity);
+            occlusion = _physics.IntersectRayPenetration(listener.MapId, ray, rayLength, ignoredEnt);
         }
 
         return occlusion;

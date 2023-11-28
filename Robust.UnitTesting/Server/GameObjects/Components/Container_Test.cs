@@ -329,14 +329,14 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             }
 
             /// <inheritdoc />
-            protected internal override void InternalShutdown(IEntityManager entMan, bool isClient)
+            protected internal override void InternalShutdown(IEntityManager entMan, SharedContainerSystem system, bool isClient)
             {
                 foreach (var entity in _containerList.ToArray())
                 {
                     if (!isClient)
                         entMan.DeleteEntity(entity);
                     else if (entMan.EntityExists(entity))
-                        Remove(entity, entMan, reparent: false, force: true);
+                        system.Remove(entity, this, reparent: false, force: true);
                 }
             }
 

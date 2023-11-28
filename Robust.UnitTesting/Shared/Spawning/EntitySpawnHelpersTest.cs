@@ -113,7 +113,7 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
         protected internal override void InternalInsert(EntityUid toInsert, IEntityManager entMan) => _ents.Add(toInsert);
         protected internal override void InternalRemove(EntityUid toRemove, IEntityManager entMan) => _ents.Remove(toRemove);
         public override bool Contains(EntityUid contained) => _ents.Contains(contained);
-        protected internal override void InternalShutdown(IEntityManager entMan, bool isClient) { }
+        protected internal override void InternalShutdown(IEntityManager entMan, SharedContainerSystem system, bool isClient) { }
         protected internal override bool CanInsert(EntityUid toinsert, bool assumeEmpty, IEntityManager entMan)
             => _ents.Count < 2 && !_ents.Contains(toinsert);
     }

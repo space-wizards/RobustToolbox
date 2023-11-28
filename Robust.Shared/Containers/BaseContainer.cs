@@ -130,7 +130,7 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         [Access(typeof(SharedContainerSystem))]
-        protected internal abstract void InternalShutdown(IEntityManager entMan, bool isClient);
+        protected internal abstract void InternalShutdown(IEntityManager entMan, SharedContainerSystem system, bool isClient);
 
         /// <summary>
         /// Implement to store the reference in whatever form you want

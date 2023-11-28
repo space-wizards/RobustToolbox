@@ -119,7 +119,7 @@ namespace Robust.Shared.Containers
 
         public void ShutdownContainer(BaseContainer container)
         {
-            container.InternalShutdown(EntityManager, _net.IsClient);
+            container.InternalShutdown(EntityManager, this, _net.IsClient);
             container.Manager.Containers.Remove(container.ID);
         }
 

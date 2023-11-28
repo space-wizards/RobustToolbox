@@ -225,10 +225,6 @@ internal sealed partial class MidiManager : IMidiManager
         _midiSawmill.Debug($"Synth Polyphony: {_settings["synth.polyphony"].IntValue}");
     }
 
-    private void OnRaycastLengthChanged(float value)
-    {
-    }
-
     private void LoggerDelegate(NFluidsynth.Logger.LogLevel level, string message, IntPtr data)
     {
         var rLevel = level switch

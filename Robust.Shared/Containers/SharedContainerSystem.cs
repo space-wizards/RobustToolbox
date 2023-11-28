@@ -140,11 +140,13 @@ namespace Robust.Shared.Containers
 
         public bool TryGetContainer(EntityUid uid, string id, [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null)
         {
-            if (Resolve(uid, ref containerManager, false))
-                return containerManager.TryGetContainer(id, out container);
+            if (!Resolve(uid, ref containerManager, false))
+            {
+                container = null;
+                return false;
+            }
 
-            container = null;
-            return false;
+            return containerManager.Containers.TryGetValue(id, out container);
         }
 
         public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null, bool skipExistCheck = false)

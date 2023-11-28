@@ -51,11 +51,7 @@ namespace Robust.Shared.Containers
 
         [Obsolete]
         public bool TryGetContainer(string id, [NotNullWhen(true)] out BaseContainer? container)
-        {
-            var ret = Containers.TryGetValue(id, out var cont);
-            container = cont!;
-            return ret;
-        }
+            => _entMan.System<SharedContainerSystem>().TryGetContainer(Owner, id, out container, this);
 
         [Obsolete]
         public bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out BaseContainer? container)

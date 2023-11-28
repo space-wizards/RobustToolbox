@@ -18,7 +18,7 @@ namespace Robust.Shared.Audio.Components;
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true), Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioComponent : Component, IAudioSource
 {
-    [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField, DataField]
+    [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField, DataField, Access(Other = AccessPermissions.ReadWriteExecute)]
     public AudioFlags Flags = AudioFlags.None;
 
     #region Filter
@@ -239,5 +239,9 @@ public sealed partial class AudioComponent : Component, IAudioSource
 public enum AudioFlags : byte
 {
     None = 0,
+
+    /// <summary>
+    /// Should the audio act as if attached to a grid?
+    /// </summary>
     GridAudio = 1 << 0,
 }

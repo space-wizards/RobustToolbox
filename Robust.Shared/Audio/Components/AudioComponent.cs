@@ -18,6 +18,9 @@ namespace Robust.Shared.Audio.Components;
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true), Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioComponent : Component, IAudioSource
 {
+    [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField, DataField]
+    public AudioFlags Flags = AudioFlags.None;
+
     #region Filter
 
     public override bool SessionSpecific => true;
@@ -27,8 +30,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// </summary>
     [DataField(customTypeSerializer:typeof(TimeOffsetSerializer)), AutoNetworkedField]
     public TimeSpan AudioStart;
-
-    #region Filters
 
     // Don't need to network these as client doesn't care.
 
@@ -44,8 +45,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// </summary>
     [DataField]
     public HashSet<EntityUid>? IncludedEntities;
-
-    #endregion
 
     #endregion
 
@@ -234,4 +233,11 @@ public sealed partial class AudioComponent : Component, IAudioSource
     {
         Source.Dispose();
     }
+}
+
+[Flags]
+public enum AudioFlags : byte
+{
+    None = 0,
+    GridAudio = 1 << 0,
 }

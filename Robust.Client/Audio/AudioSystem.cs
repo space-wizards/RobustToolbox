@@ -259,7 +259,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var gridUid = xform.ParentUid;
 
         // Handle grid audio differently by using nearest-edge instead of entity centre.
-        if (_gridQuery.HasComponent(gridUid))
+        if ((component.Flags & AudioFlags.GridAudio) != 0x0)
         {
             // It's our grid so max volume.
             if (_listenerGrid == gridUid)

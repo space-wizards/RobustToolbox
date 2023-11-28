@@ -21,8 +21,6 @@ public interface IMidiManager
     /// </summary>
     float Volume { get; set; }
 
-    public int OcclusionCollisionMask { get; set; }
-
     /// <summary>
     ///     This method tries to return a midi renderer ready to be used.
     ///     You only need to set the <see cref="IMidiRenderer.MidiProgram"/> afterwards.

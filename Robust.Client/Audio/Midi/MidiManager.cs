@@ -6,14 +6,9 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NFluidsynth;
-using Robust.Client.GameObjects;
-using Robust.Client.Graphics;
-using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
-using Robust.Shared.Audio;
 using Robust.Shared.Audio.Midi;
-using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -22,11 +17,9 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Threading;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -46,7 +39,6 @@ internal sealed partial class MidiManager : IMidiManager
     [Dependency] private readonly ILogManager _logger = default!;
     [Dependency] private readonly IParallelManager _parallel = default!;
     [Dependency] private readonly IRuntimeLog _runtime = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
 
     private AudioSystem _audioSys = default!;
     private SharedPhysicsSystem _broadPhaseSystem = default!;
@@ -131,10 +123,9 @@ internal sealed partial class MidiManager : IMidiManager
 
     private NFluidsynth.Logger.LoggerDelegate _loggerDelegate = default!;
     private ISawmill _fluidsynthSawmill = default!;
-    private float _maxCastLength;
 
-    [ViewVariables(VVAccess.ReadWrite)]
-    public int OcclusionCollisionMask { get; set; }
+    private MidiUpdateJob _updateJob;
+
 
     public MidiManager()
     {
@@ -207,12 +198,17 @@ internal sealed partial class MidiManager : IMidiManager
         _midiThread = new Thread(ThreadUpdate);
         _midiThread.Start();
 
+        _updateJob = new MidiUpdateJob()
+        {
+            Manager = this,
+            Renderers = _renderers,
+        };
+
         _audioSys = _entityManager.EntitySysManager.GetEntitySystem<AudioSystem>();
         _broadPhaseSystem = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
         _xformSystem = _entityManager.System<SharedTransformSystem>();
         _entityManager.GetEntityQuery<PhysicsComponent>();
         _entityManager.GetEntityQuery<TransformComponent>();
-        _cfgMan.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
 
         FluidsynthInitialized = true;
     }
@@ -231,7 +227,6 @@ internal sealed partial class MidiManager : IMidiManager
 
     private void OnRaycastLengthChanged(float value)
     {
-        _maxCastLength = value;
     }
 
     private void LoggerDelegate(NFluidsynth.Logger.LogLevel level, string message, IntPtr data)
@@ -378,25 +373,13 @@ internal sealed partial class MidiManager : IMidiManager
             if (_renderers.Count == 0)
                 return;
 
-            var opts = new ParallelOptions { MaxDegreeOfParallelism = _parallel.ParallelProcessCount };
-            var ourPos = _audioSys.GetListenerCoordinates();
-
-            if (_renderers.Count > _minRendererParallel)
-            {
-                Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, ourPos));
-            }
-            else
-            {
-                foreach (var renderer in _renderers)
-                {
-                    UpdateRenderer(renderer, ourPos);
-                }
-            }
-
+            _updateJob.OurPosition = _audioSys.GetListenerCoordinates();
+            _parallel.ProcessNow(_updateJob, _renderers.Count);
         }
 
         _volumeDirty = false;
     }
+
     private void UpdateRenderer(IMidiRenderer renderer, MapCoordinates listener)
     {
         // TODO: This should be sharing more code with AudioSystem.
@@ -680,4 +663,25 @@ internal sealed partial class MidiManager : IMidiManager
 
         }
     }
+
+    #region Jobs
+
+    private record struct MidiUpdateJob : IParallelRobustJob
+    {
+        public int MinimumBatchParallel => 2;
+
+        public int BatchSize => 2;
+
+        public MidiManager Manager;
+
+        public MapCoordinates OurPosition;
+        public List<IMidiRenderer> Renderers;
+
+        public void Execute(int index)
+        {
+            Manager.UpdateRenderer(Renderers[index], OurPosition);
+        }
+    }
+
+    #endregion
 }

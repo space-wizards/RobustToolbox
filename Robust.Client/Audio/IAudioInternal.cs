@@ -23,7 +23,11 @@ internal interface IAudioInternal
 
     IAudioSource? CreateAudioSource(AudioStream stream);
 
-    IBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false);
+    /// <summary>
+    /// Returns a buffered audio source.
+    /// </summary>
+    /// <returns>null if unable to create the source.</returns>
+    IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio=false);
 
     /// <summary>
     /// Sets position for the audio listener.

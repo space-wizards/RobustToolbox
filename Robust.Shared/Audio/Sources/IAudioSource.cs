@@ -11,7 +11,7 @@ namespace Robust.Shared.Audio.Sources;
 /// <remarks>
 /// This just exists so client can interact with OpenAL and server can interact with nothing.
 /// </remarks>
-internal interface IAudioSource : IDisposable
+public interface IAudioSource : IDisposable
 {
     void Pause();
 

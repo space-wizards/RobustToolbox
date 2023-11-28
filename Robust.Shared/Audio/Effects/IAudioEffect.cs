@@ -3,7 +3,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Audio.Effects;
 
-internal interface IAudioEffect
+public interface IAudioEffect
 {
     /// <summary>
     /// Gets the preset value for <see cref="EffectFloat.ReverbDensity"/>.

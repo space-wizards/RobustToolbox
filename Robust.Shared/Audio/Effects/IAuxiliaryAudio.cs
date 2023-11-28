@@ -2,7 +2,7 @@ using System;
 
 namespace Robust.Shared.Audio.Effects;
 
-internal interface IAuxiliaryAudio : IDisposable
+public interface IAuxiliaryAudio : IDisposable
 {
     /// <summary>
     /// Sets the audio effect for this auxiliary audio slot.

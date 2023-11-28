@@ -105,10 +105,16 @@ namespace Robust.Shared.Containers
                 throw new ArgumentException($"Container with specified ID already exists: '{id}'");
 
             var container = _dynFactory.CreateInstanceUnchecked<T>(typeof(T), inject: false);
-            container.Init(id, uid, containerManager);
+            InitContainer(container, (uid, containerManager), id);
             containerManager.Containers[id] = container;
             Dirty(uid, containerManager);
             return container;
+        }
+
+        protected void InitContainer(BaseContainer container, Entity<ContainerManagerComponent> containerEnt, string id)
+        {
+            DebugTools.AssertNull(container.ID);
+            ((container.Owner, container.Manager), container.ID) = (containerEnt, id);
         }
 
         public T EnsureContainer<T>(EntityUid uid, string id, out bool alreadyExisted, ContainerManagerComponent? containerManager = null)

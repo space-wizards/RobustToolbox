@@ -71,14 +71,6 @@ namespace Robust.Shared.Containers
         [DataField("showEnts")]
         public bool ShowContents { get; set; }
 
-        internal void Init(string id, EntityUid owner, ContainerManagerComponent component)
-        {
-            DebugTools.AssertNull(ID);
-            ID = id;
-            Manager = component;
-            Owner = owner;
-        }
-
         [Obsolete("Use container system method")]
         public bool Insert(
             EntityUid toinsert,

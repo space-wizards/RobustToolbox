@@ -647,10 +647,10 @@ public abstract partial class SharedPhysicsSystem
 
         var uidA = contact.EntityA;
         var uidB = contact.EntityB;
-        var bodyATransform = GetPhysicsTransform(uidA, Transform(uidA));
-        var bodyBTransform = GetPhysicsTransform(uidB, Transform(uidB));
+        var bodyATransform = GetPhysicsTransform(uidA);
+        var bodyBTransform = GetPhysicsTransform(uidB);
 
-        var contactStatus = contact.Update(bodyATransform, bodyBTransform, out wake[i]);
+        var contactStatus = contact.Update(bodyATransform, bodyBTransform, out wake[index]);
         status[index] = contactStatus;
 
         if (contactStatus == ContactStatus.StartTouching)

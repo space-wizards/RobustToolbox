@@ -50,16 +50,16 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(container.Manager, Is.EqualTo(manager));
             Assert.That(() => containerSys.MakeContainer<Container>(entity, "dummy"), Throws.ArgumentException);
 
-            Assert.That(manager.HasContainer("dummy2"), Is.False);
+            Assert.That(containerSys.HasContainer(entity, "dummy2", manager), Is.False);
             var container2 = containerSys.MakeContainer<Container>(entity, "dummy2");
 
             Assert.That(container2.Manager, Is.EqualTo(manager));
             Assert.That(container2.Owner, Is.EqualTo(entity));
             Assert.That(container2.ID, Is.EqualTo("dummy2"));
 
-            Assert.That(manager.HasContainer("dummy"), Is.True);
-            Assert.That(manager.HasContainer("dummy2"), Is.True);
-            Assert.That(manager.HasContainer("dummy3"), Is.False);
+            Assert.That(containerSys.HasContainer(entity, "dummy", manager), Is.True);
+            Assert.That(containerSys.HasContainer(entity, "dummy2",manager), Is.True);
+            Assert.That(containerSys.HasContainer(entity, "dummy3", manager), Is.False);
 
             Assert.That(containerSys.GetContainer(entity, "dummy", manager), Is.EqualTo(container));
             Assert.That(containerSys.GetContainer(entity, "dummy2", manager), Is.EqualTo(container2));

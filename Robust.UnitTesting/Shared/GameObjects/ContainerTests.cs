@@ -108,7 +108,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cEntityUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
 
@@ -133,7 +133,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cEntityUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
@@ -239,7 +239,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
 
@@ -272,7 +272,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
@@ -353,7 +353,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
                 Assert.That(container.Comp!.Containers.ContainsKey("testContainer"));
 
-                var baseContainer = container.Comp.GetContainer("testContainer");
+                var baseContainer = sContainerSys.GetContainer(containerEnt, "testContainer", container.Comp);
                 Assert.That(baseContainer.ContainedEntities, Has.Count.EqualTo(1));
 
                 var containeeEnt = baseContainer.ContainedEntities[0];

@@ -61,9 +61,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(manager.HasContainer("dummy2"), Is.True);
             Assert.That(manager.HasContainer("dummy3"), Is.False);
 
-            Assert.That(manager.GetContainer("dummy"), Is.EqualTo(container));
-            Assert.That(manager.GetContainer("dummy2"), Is.EqualTo(container2));
-            Assert.That(() => manager.GetContainer("dummy3"), Throws.TypeOf<KeyNotFoundException>());
+            Assert.That(containerSys.GetContainer(entity, "dummy", manager), Is.EqualTo(container));
+            Assert.That(containerSys.GetContainer(entity, "dummy2", manager), Is.EqualTo(container2));
+            Assert.That(() => containerSys.GetContainer(entity, "dummy3", manager), Throws.TypeOf<KeyNotFoundException>());
 
             entManager.DeleteEntity(entity);
         }

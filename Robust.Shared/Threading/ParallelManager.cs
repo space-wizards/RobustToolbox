@@ -105,6 +105,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
         }
     }
 
+    /// <inheritdoc/>
     public WaitHandle Process(IRobustJob job)
     {
         var subJob = GetJob(job);
@@ -112,6 +113,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
         return subJob.Event.WaitHandle;
     }
 
+    /// <inheritdoc/>
     public void ProcessNow(IParallelRobustJob job, int amount)
     {
         var batches = amount / (float) job.BatchSize;
@@ -128,6 +130,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
         _trackerPool.Return(tracker);
     }
 
+    /// <inheritdoc/>
     public void ProcessSerialNow(IParallelRobustJob jobs, int amount)
     {
         for (var i = 0; i < amount; i++)
@@ -136,12 +139,17 @@ internal sealed class ParallelManager : IParallelManagerInternal
         }
     }
 
+    /// <inheritdoc/>
     public WaitHandle Process(IParallelRobustJob job, int amount)
     {
         var tracker = InternalProcess(job, amount);
         return tracker.Event.WaitHandle;
     }
 
+    /// <summary>
+    /// Runs a parallel job internally. Used so we can pool the tracker task for ProcessParallelNow
+    /// and not rely on external callers to return it where they don't want to wait.
+    /// </summary>
     private ParallelTracker InternalProcess(IParallelRobustJob job, int amount)
     {
         var batches = (int) MathF.Ceiling(amount / (float) job.BatchSize);

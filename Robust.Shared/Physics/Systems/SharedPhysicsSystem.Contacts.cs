@@ -626,40 +626,36 @@ public abstract partial class SharedPhysicsSystem
 
         public void Execute(int index)
         {
-            var end = index + 1;
-            Physics.UpdateContacts(Contacts, index, end, Status, Wake, WorldPoints);
+            Physics.UpdateContact(Contacts, index, Status, Wake, WorldPoints);
         }
     }
 
-    private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
+    private void UpdateContact(Contact[] contacts, int index, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
     {
-        for (var i = start; i < end; i++)
+        var contact = contacts[index];
+
+        // TODO: Temporary measure. When Box2D 3.0 comes out expect a major refactor
+        // of everything
+        if (contact.FixtureA == null || contact.FixtureB == null)
         {
-            var contact = contacts[i];
+            Log.Error($"Found a null contact for contact at {index}");
+            status[index] = ContactStatus.NoContact;
+            wake[index] = false;
+            DebugTools.Assert(false);
+            return;
+        }
 
-            // TODO: Temporary measure. When Box2D 3.0 comes out expect a major refactor
-            // of everything
-            if (contact.FixtureA == null || contact.FixtureB == null)
-            {
-                Log.Error($"Found a null contact for contact at {i}");
-                status[i] = ContactStatus.NoContact;
-                wake[i] = false;
-                DebugTools.Assert(false);
-                continue;
-            }
+        var uidA = contact.EntityA;
+        var uidB = contact.EntityB;
+        var bodyATransform = GetPhysicsTransform(uidA, Transform(uidA));
+        var bodyBTransform = GetPhysicsTransform(uidB, Transform(uidB));
 
-            var uidA = contact.EntityA;
-            var uidB = contact.EntityB;
-            var bodyATransform = GetPhysicsTransform(uidA, Transform(uidA));
-            var bodyBTransform = GetPhysicsTransform(uidB, Transform(uidB));
+        var contactStatus = contact.Update(bodyATransform, bodyBTransform, out wake[i]);
+        status[index] = contactStatus;
 
-            var contactStatus = contact.Update(bodyATransform, bodyBTransform, out wake[i]);
-            status[i] = contactStatus;
-
-            if (contactStatus == ContactStatus.StartTouching)
-            {
-                worldPoints[i] = Physics.Transform.Mul(bodyATransform, contacts[i].Manifold.LocalPoint);
-            }
+        if (contactStatus == ContactStatus.StartTouching)
+        {
+            worldPoints[index] = Physics.Transform.Mul(bodyATransform, contacts[index].Manifold.LocalPoint);
         }
     }
 

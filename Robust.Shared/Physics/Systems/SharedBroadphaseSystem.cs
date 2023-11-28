@@ -238,47 +238,6 @@ namespace Robust.Shared.Physics.Systems
             movedGrids.Clear();
         }
 
-        private record struct BroadphaseJob : IParallelRobustJob
-        {
-            public int BatchSize => 8;
-
-            public IMapManager MapManager;
-            public SharedBroadphaseSystem Broadphase;
-
-            public MapId MapId;
-            public float BroadphaseExpand;
-            public List<FixtureProxy>[] ContactBuffer;
-            public (FixtureProxy Proxy, Box2 AABB)[] PMoveBuffer;
-
-            public void Execute(int index)
-            {
-                var (proxy, worldAABB) = PMoveBuffer[index];
-                var buffer = ContactBuffer[index];
-
-                var proxyBody = proxy.Body;
-                DebugTools.Assert(!proxyBody.Deleted);
-
-                var state = (Broadphase, proxy, worldAABB, buffer);
-
-                // Get every broadphase we may be intersecting.
-                MapManager.FindGridsIntersecting(MapId, worldAABB.Enlarged(BroadphaseExpand), ref state,
-                    static (EntityUid uid, MapGridComponent _, ref (
-                        SharedBroadphaseSystem system,
-                        FixtureProxy proxy,
-                        Box2 worldAABB,
-                        List<FixtureProxy> pairBuffer) tuple) =>
-                    {
-                        ref var buffer = ref tuple.pairBuffer;
-                        tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, uid, buffer);
-                        return true;
-                    });
-
-                // Struct ref moment, I have no idea what's fastest.
-                buffer = state.buffer;
-                Broadphase.FindPairs(proxy, worldAABB, MapManager.GetMapEntityId(MapId), buffer);
-            }
-        }
-
         private void HandleGridCollisions(
             MapId mapId,
             HashSet<EntityUid> movedGrids)
@@ -525,5 +484,50 @@ namespace Robust.Shared.Physics.Systems
                 }
             }
         }
+
+        #region Jobs
+
+        private record struct BroadphaseJob : IParallelRobustJob
+        {
+            public int BatchSize => 8;
+
+            public IMapManager MapManager;
+            public SharedBroadphaseSystem Broadphase;
+
+            public MapId MapId;
+            public float BroadphaseExpand;
+            public List<FixtureProxy>[] ContactBuffer;
+            public (FixtureProxy Proxy, Box2 AABB)[] PMoveBuffer;
+
+            public void Execute(int index)
+            {
+                var (proxy, worldAABB) = PMoveBuffer[index];
+                var buffer = ContactBuffer[index];
+
+                var proxyBody = proxy.Body;
+                DebugTools.Assert(!proxyBody.Deleted);
+
+                var state = (Broadphase, proxy, worldAABB, buffer);
+
+                // Get every broadphase we may be intersecting.
+                MapManager.FindGridsIntersecting(MapId, worldAABB.Enlarged(BroadphaseExpand), ref state,
+                    static (EntityUid uid, MapGridComponent _, ref (
+                        SharedBroadphaseSystem system,
+                        FixtureProxy proxy,
+                        Box2 worldAABB,
+                        List<FixtureProxy> pairBuffer) tuple) =>
+                    {
+                        ref var buffer = ref tuple.pairBuffer;
+                        tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, uid, buffer);
+                        return true;
+                    });
+
+                // Struct ref moment, I have no idea what's fastest.
+                buffer = state.buffer;
+                Broadphase.FindPairs(proxy, worldAABB, MapManager.GetMapEntityId(MapId), buffer);
+            }
+        }
+
+        #endregion
     }
 }

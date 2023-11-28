@@ -26,6 +26,7 @@ public sealed class TestingParallelManager : IParallelManager
         return ev.WaitHandle;
     }
 
+    /// <inheritdoc/>
     public void ProcessNow(IParallelRobustJob jobs, int amount)
     {
         for (var i = 0; i < amount; i++)
@@ -34,6 +35,7 @@ public sealed class TestingParallelManager : IParallelManager
         }
     }
 
+    /// <inheritdoc/>
     public void ProcessSerialNow(IParallelRobustJob jobs, int amount)
     {
         for (var i = 0; i < amount; i++)
@@ -42,6 +44,7 @@ public sealed class TestingParallelManager : IParallelManager
         }
     }
 
+    /// <inheritdoc/>
     public WaitHandle Process(IParallelRobustJob jobs, int amount)
     {
         ProcessSerialNow(jobs, amount);

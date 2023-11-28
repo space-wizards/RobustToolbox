@@ -175,7 +175,13 @@ namespace Robust.Shared.Containers
             if (!Resolve(uid, ref containerManager, false) || !Exists(containedUid))
                 return false;
 
-            return containerManager.ContainsEntity(containedUid);
+            foreach (var container in containerManager.Containers.Values)
+            {
+                if (container.Contains(containedUid))
+                    return true;
+            }
+
+            return false;
         }
 
         public void RemoveEntity(

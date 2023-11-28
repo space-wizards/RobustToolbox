@@ -59,14 +59,7 @@ namespace Robust.Shared.Containers
 
         [Obsolete]
         public bool ContainsEntity(EntityUid entity)
-        {
-            foreach (var container in Containers.Values)
-            {
-                if (container.Contains(entity)) return true;
-            }
-
-            return false;
-        }
+            => _entMan.System<SharedContainerSystem>().ContainsEntity(Owner, entity, this);
 
         [Obsolete]
         public bool Remove(EntityUid toremove,

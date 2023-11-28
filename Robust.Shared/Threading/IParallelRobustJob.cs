@@ -1,21 +1,16 @@
-using Schedulers;
-
 namespace Robust.Shared.Threading;
 
 /// <summary>
 /// Runs the job with the specified batch size per thread; Execute is still called per index.
 /// </summary>
-public interface IParallelRobustJob : IJobParallelFor
+public interface IParallelRobustJob
 {
-    /*
-     * Overwrite these as we don't want them exposed ot callers in case of library updates.
-     */
+    /// <summary>
+    /// Minimum amount of batches required to engage in parallelism.
+    /// </summary>
+    int MinimumBatchParallel => 2;
 
-    int IJobParallelFor.ThreadCount => 0;
+    int BatchSize => 1;
 
-    void IJobParallelFor.Finish()
-    {
-
-    }
+    void Execute(int index);
 }
-

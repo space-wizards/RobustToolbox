@@ -458,6 +458,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="audioParams"></param>
     private (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
     {
+        if (TerminatingOrDeleted(entity))
+        {
+            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entity)}");
+            return null;
+        }
+
         var playing = CreateAndStartPlayingStream(audioParams, stream);
         _xformSys.SetCoordinates(playing.Entity, new EntityCoordinates(entity, Vector2.Zero));
 
@@ -493,6 +499,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="audioParams"></param>
     private (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
+        if (TerminatingOrDeleted(coordinates.EntityId))
+        {
+            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}");
+            return null;
+        }
+
         var playing = CreateAndStartPlayingStream(audioParams, stream);
         _xformSys.SetCoordinates(playing.Entity, coordinates);
         return playing;

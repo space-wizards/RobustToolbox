@@ -204,8 +204,6 @@ namespace Robust.Server
 
             ProfileOptSetup.Setup(_config);
 
-            _parallelMgr.Initialize();
-
             //Sets up Logging
             _logHandlerFactory = logHandlerFactory;
 
@@ -268,6 +266,7 @@ namespace Robust.Server
 
             // Has to be done early because this guy's in charge of the main thread Synchronization Context.
             _taskManager.Initialize();
+            _parallelMgr.Initialize();
 
             LoadSettings();
 

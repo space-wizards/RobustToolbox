@@ -49,6 +49,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     private readonly List<(EntityUid Entity, AudioComponent Component, TransformComponent Xform)> _streams = new();
     private EntityUid? _listenerGrid;
+    private UpdateAudioJob _updateAudioJob;
 
     private EntityQuery<MapGridComponent> _gridQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -60,6 +61,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public override void Initialize()
     {
         base.Initialize();
+
+        _updateAudioJob = new UpdateAudioJob
+        {
+            System = this,
+            Streams = _streams,
+        };
 
         UpdatesOutsidePrediction = true;
         // Need to run after Eye updates so we have an accurate listener position.
@@ -193,7 +200,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         _audio.SetPosition(eye.Position.Position);
 
         var ourPos = GetListenerCoordinates();
-        var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
 
         var query = AllEntityQuery<AudioComponent, TransformComponent>();
         _streams.Clear();
@@ -208,7 +214,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         try
         {
-            Parallel.ForEach(_streams, opts, comp => ProcessStream(comp.Entity, comp.Component, comp.Xform, ourPos));
+            _updateAudioJob.OurPosition = ourPos;
+            _parMan.ProcessNow(_updateAudioJob, _streams.Count);
         }
         catch (Exception e)
         {
@@ -606,4 +613,25 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         return _resourceCache.GetResource<AudioResource>(filename).AudioStream.Length;
     }
+
+    #region Jobs
+
+    private record struct UpdateAudioJob : IParallelRobustJob
+    {
+        public int BatchSize => 2;
+
+        public AudioSystem System;
+
+        public MapCoordinates OurPosition;
+        public List<(EntityUid Entity, AudioComponent Component, TransformComponent Xform)> Streams;
+
+        public void Execute(int index)
+        {
+            var comp = Streams[index];
+
+            System.ProcessStream(comp.Entity, comp.Component, comp.Xform, OurPosition);
+        }
+    }
+
+    #endregion
 }

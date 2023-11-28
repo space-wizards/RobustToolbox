@@ -21,6 +21,7 @@
 */
 
 using System;
+using System.Buffers;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
@@ -294,11 +296,16 @@ public abstract partial class SharedPhysicsSystem
         Vector2[] linearVelocities,
         float[] angularVelocities)
     {
+        var contactCount = island.Contacts.Count;
+
+        if (contactCount == 0)
+            return;
+
         var offset = island.Offset;
 
-        for (var i = 0; i < island.Contacts.Count; ++i)
+        for (var i = 0; i < contactCount; ++i)
         {
-            var velocityConstraint = velocityConstraints[i];
+            ref var velocityConstraint = ref velocityConstraints[i];
 
             var indexA = velocityConstraint.IndexA;
             var indexB = velocityConstraint.IndexB;
@@ -329,312 +336,302 @@ public abstract partial class SharedPhysicsSystem
     }
 
     private void SolveVelocityConstraints(IslandData island,
-        ParallelOptions? options,
         ContactVelocityConstraint[] velocityConstraints,
         Vector2[] linearVelocities,
         float[] angularVelocities)
     {
         var contactCount = island.Contacts.Count;
 
-        if (options != null && contactCount > VelocityConstraintsPerThread * 2)
-        {
-            var batches = (int) Math.Ceiling((float) contactCount / VelocityConstraintsPerThread);
+        if (contactCount == 0)
+            return;
 
-            Parallel.For(0, batches, options, i =>
-            {
-                var start = i * VelocityConstraintsPerThread;
-                var end = Math.Min(start + VelocityConstraintsPerThread, contactCount);
-                SolveVelocityConstraints(island, start, end, velocityConstraints, linearVelocities, angularVelocities);
-            });
-        }
-        else
+        var job = new SolveVelocityJob()
         {
-            SolveVelocityConstraints(island, 0, contactCount, velocityConstraints, linearVelocities, angularVelocities);
-        }
+            Physics = this,
+            Island = island,
+            VelocityConstraints = velocityConstraints,
+            LinearVelocities = linearVelocities,
+            AngularVelocities = angularVelocities,
+        };
+
+        _parallel.ProcessSerialNow(job, contactCount);
     }
 
-    private void SolveVelocityConstraints(
+    private void SolveVelocityConstraint(
         IslandData island,
-        int start,
-        int end,
-        ContactVelocityConstraint[] velocityConstraints,
+        ref ContactVelocityConstraint velocityConstraint,
         Vector2[] linearVelocities,
         float[] angularVelocities)
     {
         var offset = island.Offset;
 
         // Here be dragons
-        for (var i = start; i < end; ++i)
+        var indexA = velocityConstraint.IndexA;
+        var indexB = velocityConstraint.IndexB;
+        var mA = velocityConstraint.InvMassA;
+        var iA = velocityConstraint.InvIA;
+        var mB = velocityConstraint.InvMassB;
+        var iB = velocityConstraint.InvIB;
+        var pointCount = velocityConstraint.PointCount;
+
+        ref var vA = ref linearVelocities[offset + indexA];
+        ref var wA = ref angularVelocities[offset + indexA];
+        ref var vB = ref linearVelocities[offset + indexB];
+        ref var wB = ref angularVelocities[offset + indexB];
+
+        var normal = velocityConstraint.Normal;
+        var tangent = Vector2Helpers.Cross(normal, 1.0f);
+        var friction = velocityConstraint.Friction;
+
+        DebugTools.Assert(pointCount is 1 or 2);
+
+        // Solve tangent constraints first because non-penetration is more important
+        // than friction.
+        for (var j = 0; j < pointCount; ++j)
         {
-            ref var velocityConstraint = ref velocityConstraints[i];
+            ref var velConstraintPoint = ref velocityConstraint.Points[j];
 
-            var indexA = velocityConstraint.IndexA;
-            var indexB = velocityConstraint.IndexB;
-            var mA = velocityConstraint.InvMassA;
-            var iA = velocityConstraint.InvIA;
-            var mB = velocityConstraint.InvMassB;
-            var iB = velocityConstraint.InvIB;
-            var pointCount = velocityConstraint.PointCount;
+            // Relative velocity at contact
+            var dv = vB + Vector2Helpers.Cross(wB, velConstraintPoint.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, velConstraintPoint.RelativeVelocityA);
 
-            ref var vA = ref linearVelocities[offset + indexA];
-            ref var wA = ref angularVelocities[offset + indexA];
-            ref var vB = ref linearVelocities[offset + indexB];
-            ref var wB = ref angularVelocities[offset + indexB];
+            // Compute tangent force
+            float vt = Vector2.Dot(dv, tangent) - velocityConstraint.TangentSpeed;
+            float lambda = velConstraintPoint.TangentMass * (-vt);
 
-            var normal = velocityConstraint.Normal;
-            var tangent = Vector2Helpers.Cross(normal, 1.0f);
-            var friction = velocityConstraint.Friction;
+            // b2Clamp the accumulated force
+            var maxFriction = friction * velConstraintPoint.NormalImpulse;
+            var newImpulse = Math.Clamp(velConstraintPoint.TangentImpulse + lambda, -maxFriction, maxFriction);
+            lambda = newImpulse - velConstraintPoint.TangentImpulse;
+            velConstraintPoint.TangentImpulse = newImpulse;
 
-            DebugTools.Assert(pointCount is 1 or 2);
+            // Apply contact impulse
+            Vector2 P = tangent * lambda;
 
-            // Solve tangent constraints first because non-penetration is more important
-            // than friction.
-            for (var j = 0; j < pointCount; ++j)
+            vA -= P * mA;
+            wA -= iA * Vector2Helpers.Cross(velConstraintPoint.RelativeVelocityA, P);
+
+            vB += P * mB;
+            wB += iB * Vector2Helpers.Cross(velConstraintPoint.RelativeVelocityB, P);
+        }
+
+        // Solve normal constraints
+        if (velocityConstraint.PointCount == 1)
+        {
+            ref var vcp = ref velocityConstraint.Points[0];
+
+            // Relative velocity at contact
+            Vector2 dv = vB + Vector2Helpers.Cross(wB, vcp.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, vcp.RelativeVelocityA);
+
+            // Compute normal impulse
+            float vn = Vector2.Dot(dv, normal);
+            float lambda = -vcp.NormalMass * (vn - vcp.VelocityBias);
+
+            // b2Clamp the accumulated impulse
+            float newImpulse = Math.Max(vcp.NormalImpulse + lambda, 0.0f);
+            lambda = newImpulse - vcp.NormalImpulse;
+            vcp.NormalImpulse = newImpulse;
+
+            // Apply contact impulse
+            Vector2 P = normal * lambda;
+            vA -= P * mA;
+            wA -= iA * Vector2Helpers.Cross(vcp.RelativeVelocityA, P);
+
+            vB += P * mB;
+            wB += iB * Vector2Helpers.Cross(vcp.RelativeVelocityB, P);
+        }
+        else
+        {
+            // Block solver developed in collaboration with Dirk Gregorius (back in 01/07 on Box2D_Lite).
+            // Build the mini LCP for this contact patch
+            //
+            // vn = A * x + b, vn >= 0, , vn >= 0, x >= 0 and vn_i * x_i = 0 with i = 1..2
+            //
+            // A = J * W * JT and J = ( -n, -r1 x n, n, r2 x n )
+            // b = vn0 - velocityBias
+            //
+            // The system is solved using the "Total enumeration method" (s. Murty). The complementary constraint vn_i * x_i
+            // implies that we must have in any solution either vn_i = 0 or x_i = 0. So for the 2D contact problem the cases
+            // vn1 = 0 and vn2 = 0, x1 = 0 and x2 = 0, x1 = 0 and vn2 = 0, x2 = 0 and vn1 = 0 need to be tested. The first valid
+            // solution that satisfies the problem is chosen.
+            //
+            // In order to account of the accumulated impulse 'a' (because of the iterative nature of the solver which only requires
+            // that the accumulated impulse is clamped and not the incremental impulse) we change the impulse variable (x_i).
+            //
+            // Substitute:
+            //
+            // x = a + d
+            //
+            // a := old total impulse
+            // x := new total impulse
+            // d := incremental impulse
+            //
+            // For the current iteration we extend the formula for the incremental impulse
+            // to compute the new total impulse:
+            //
+            // vn = A * d + b
+            //    = A * (x - a) + b
+            //    = A * x + b - A * a
+            //    = A * x + b'
+            // b' = b - A * a;
+
+            ref var cp1 = ref velocityConstraint.Points[0];
+            ref var cp2 = ref velocityConstraint.Points[1];
+
+            Vector2 a = new Vector2(cp1.NormalImpulse, cp2.NormalImpulse);
+            DebugTools.Assert(a.X >= 0.0f && a.Y >= 0.0f);
+
+            // Relative velocity at contact
+            Vector2 dv1 = vB + Vector2Helpers.Cross(wB, cp1.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, cp1.RelativeVelocityA);
+            Vector2 dv2 = vB + Vector2Helpers.Cross(wB, cp2.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, cp2.RelativeVelocityA);
+
+            // Compute normal velocity
+            float vn1 = Vector2.Dot(dv1, normal);
+            float vn2 = Vector2.Dot(dv2, normal);
+
+            Vector2 b = new Vector2
             {
-                ref var velConstraintPoint = ref velocityConstraint.Points[j];
+                X = vn1 - cp1.VelocityBias,
+                Y = vn2 - cp2.VelocityBias
+            };
 
-                // Relative velocity at contact
-                var dv = vB + Vector2Helpers.Cross(wB, velConstraintPoint.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, velConstraintPoint.RelativeVelocityA);
+            // Compute b'
+            b -= Physics.Transform.Mul(velocityConstraint.K, a);
 
-                // Compute tangent force
-                float vt = Vector2.Dot(dv, tangent) - velocityConstraint.TangentSpeed;
-                float lambda = velConstraintPoint.TangentMass * (-vt);
+            //const float k_errorTol = 1e-3f;
+            //B2_NOT_USED(k_errorTol);
 
-                // b2Clamp the accumulated force
-                var maxFriction = friction * velConstraintPoint.NormalImpulse;
-                var newImpulse = Math.Clamp(velConstraintPoint.TangentImpulse + lambda, -maxFriction, maxFriction);
-                lambda = newImpulse - velConstraintPoint.TangentImpulse;
-                velConstraintPoint.TangentImpulse = newImpulse;
-
-                // Apply contact impulse
-                Vector2 P = tangent * lambda;
-
-                vA -= P * mA;
-                wA -= iA * Vector2Helpers.Cross(velConstraintPoint.RelativeVelocityA, P);
-
-                vB += P * mB;
-                wB += iB * Vector2Helpers.Cross(velConstraintPoint.RelativeVelocityB, P);
-            }
-
-            // Solve normal constraints
-            if (velocityConstraint.PointCount == 1)
+            for (; ; )
             {
-                ref var vcp = ref velocityConstraint.Points[0];
-
-                // Relative velocity at contact
-                Vector2 dv = vB + Vector2Helpers.Cross(wB, vcp.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, vcp.RelativeVelocityA);
-
-                // Compute normal impulse
-                float vn = Vector2.Dot(dv, normal);
-                float lambda = -vcp.NormalMass * (vn - vcp.VelocityBias);
-
-                // b2Clamp the accumulated impulse
-                float newImpulse = Math.Max(vcp.NormalImpulse + lambda, 0.0f);
-                lambda = newImpulse - vcp.NormalImpulse;
-                vcp.NormalImpulse = newImpulse;
-
-                // Apply contact impulse
-                Vector2 P = normal * lambda;
-                vA -= P * mA;
-                wA -= iA * Vector2Helpers.Cross(vcp.RelativeVelocityA, P);
-
-                vB += P * mB;
-                wB += iB * Vector2Helpers.Cross(vcp.RelativeVelocityB, P);
-            }
-            else
-            {
-                // Block solver developed in collaboration with Dirk Gregorius (back in 01/07 on Box2D_Lite).
-                // Build the mini LCP for this contact patch
                 //
-                // vn = A * x + b, vn >= 0, , vn >= 0, x >= 0 and vn_i * x_i = 0 with i = 1..2
+                // Case 1: vn = 0
                 //
-                // A = J * W * JT and J = ( -n, -r1 x n, n, r2 x n )
-                // b = vn0 - velocityBias
+                // 0 = A * x + b'
                 //
-                // The system is solved using the "Total enumeration method" (s. Murty). The complementary constraint vn_i * x_i
-                // implies that we must have in any solution either vn_i = 0 or x_i = 0. So for the 2D contact problem the cases
-                // vn1 = 0 and vn2 = 0, x1 = 0 and x2 = 0, x1 = 0 and vn2 = 0, x2 = 0 and vn1 = 0 need to be tested. The first valid
-                // solution that satisfies the problem is chosen.
+                // Solve for x:
                 //
-                // In order to account of the accumulated impulse 'a' (because of the iterative nature of the solver which only requires
-                // that the accumulated impulse is clamped and not the incremental impulse) we change the impulse variable (x_i).
+                // x = - inv(A) * b'
                 //
-                // Substitute:
-                //
-                // x = a + d
-                //
-                // a := old total impulse
-                // x := new total impulse
-                // d := incremental impulse
-                //
-                // For the current iteration we extend the formula for the incremental impulse
-                // to compute the new total impulse:
-                //
-                // vn = A * d + b
-                //    = A * (x - a) + b
-                //    = A * x + b - A * a
-                //    = A * x + b'
-                // b' = b - A * a;
+                Vector2 x = -Physics.Transform.Mul(velocityConstraint.NormalMass, b);
 
-                ref var cp1 = ref velocityConstraint.Points[0];
-                ref var cp2 = ref velocityConstraint.Points[1];
-
-                Vector2 a = new Vector2(cp1.NormalImpulse, cp2.NormalImpulse);
-                DebugTools.Assert(a.X >= 0.0f && a.Y >= 0.0f);
-
-                // Relative velocity at contact
-                Vector2 dv1 = vB + Vector2Helpers.Cross(wB, cp1.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, cp1.RelativeVelocityA);
-                Vector2 dv2 = vB + Vector2Helpers.Cross(wB, cp2.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, cp2.RelativeVelocityA);
-
-                // Compute normal velocity
-                float vn1 = Vector2.Dot(dv1, normal);
-                float vn2 = Vector2.Dot(dv2, normal);
-
-                Vector2 b = new Vector2
+                if (x.X >= 0.0f && x.Y >= 0.0f)
                 {
-                    X = vn1 - cp1.VelocityBias,
-                    Y = vn2 - cp2.VelocityBias
-                };
+                    // Get the incremental impulse
+                    Vector2 d = x - a;
 
-                // Compute b'
-                b -= Physics.Transform.Mul(velocityConstraint.K, a);
+                    // Apply incremental impulse
+                    Vector2 P1 = normal * d.X;
+                    Vector2 P2 = normal * d.Y;
+                    vA -= (P1 + P2) * mA;
+                    wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
 
-                //const float k_errorTol = 1e-3f;
-                //B2_NOT_USED(k_errorTol);
+                    vB += (P1 + P2) * mB;
+                    wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
 
-                for (; ; )
-                {
-                    //
-                    // Case 1: vn = 0
-                    //
-                    // 0 = A * x + b'
-                    //
-                    // Solve for x:
-                    //
-                    // x = - inv(A) * b'
-                    //
-                    Vector2 x = -Physics.Transform.Mul(velocityConstraint.NormalMass, b);
+                    // Accumulate
+                    cp1.NormalImpulse = x.X;
+                    cp2.NormalImpulse = x.Y;
 
-                    if (x.X >= 0.0f && x.Y >= 0.0f)
-                    {
-                        // Get the incremental impulse
-                        Vector2 d = x - a;
-
-                        // Apply incremental impulse
-                        Vector2 P1 = normal * d.X;
-                        Vector2 P2 = normal * d.Y;
-                        vA -= (P1 + P2) * mA;
-                        wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
-
-                        vB += (P1 + P2) * mB;
-                        wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
-
-                        // Accumulate
-                        cp1.NormalImpulse = x.X;
-                        cp2.NormalImpulse = x.Y;
-
-                        break;
-                    }
-
-                    //
-                    // Case 2: vn1 = 0 and x2 = 0
-                    //
-                    //   0 = a11 * x1 + a12 * 0 + b1'
-                    // vn2 = a21 * x1 + a22 * 0 + b2'
-                    //
-                    x.X = -cp1.NormalMass * b.X;
-                    x.Y = 0.0f;
-                    vn1 = 0.0f;
-                    vn2 = velocityConstraint.K.Y * x.X + b.Y;
-
-                    if (x.X >= 0.0f && vn2 >= 0.0f)
-                    {
-                        // Get the incremental impulse
-                        Vector2 d = x - a;
-
-                        // Apply incremental impulse
-                        Vector2 P1 = normal * d.X;
-                        Vector2 P2 = normal * d.Y;
-                        vA -= (P1 + P2) * mA;
-                        wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
-
-                        vB += (P1 + P2) * mB;
-                        wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
-
-                        // Accumulate
-                        cp1.NormalImpulse = x.X;
-                        cp2.NormalImpulse = x.Y;
-
-                        break;
-                    }
-
-
-                    //
-                    // Case 3: vn2 = 0 and x1 = 0
-                    //
-                    // vn1 = a11 * 0 + a12 * x2 + b1'
-                    //   0 = a21 * 0 + a22 * x2 + b2'
-                    //
-                    x.X = 0.0f;
-                    x.Y = -cp2.NormalMass * b.Y;
-                    vn1 = velocityConstraint.K.Z * x.Y + b.X;
-                    vn2 = 0.0f;
-
-                    if (x.Y >= 0.0f && vn1 >= 0.0f)
-                    {
-                        // Resubstitute for the incremental impulse
-                        Vector2 d = x - a;
-
-                        // Apply incremental impulse
-                        Vector2 P1 = normal * d.X;
-                        Vector2 P2 = normal * d.Y;
-                        vA -= (P1 + P2) * mA;
-                        wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
-
-                        vB += (P1 + P2) * mB;
-                        wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
-
-                        // Accumulate
-                        cp1.NormalImpulse = x.X;
-                        cp2.NormalImpulse = x.Y;
-
-                        break;
-                    }
-
-                    //
-                    // Case 4: x1 = 0 and x2 = 0
-                    //
-                    // vn1 = b1
-                    // vn2 = b2;
-                    x.X = 0.0f;
-                    x.Y = 0.0f;
-                    vn1 = b.X;
-                    vn2 = b.Y;
-
-                    if (vn1 >= 0.0f && vn2 >= 0.0f)
-                    {
-                        // Resubstitute for the incremental impulse
-                        Vector2 d = x - a;
-
-                        // Apply incremental impulse
-                        Vector2 P1 = normal * d.X;
-                        Vector2 P2 = normal * d.Y;
-                        vA -= (P1 + P2) * mA;
-                        wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
-
-                        vB += (P1 + P2) * mB;
-                        wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
-
-                        // Accumulate
-                        cp1.NormalImpulse = x.X;
-                        cp2.NormalImpulse = x.Y;
-
-                        break;
-                    }
-
-                    // No solution, give up. This is hit sometimes, but it doesn't seem to matter.
                     break;
                 }
+
+                //
+                // Case 2: vn1 = 0 and x2 = 0
+                //
+                //   0 = a11 * x1 + a12 * 0 + b1'
+                // vn2 = a21 * x1 + a22 * 0 + b2'
+                //
+                x.X = -cp1.NormalMass * b.X;
+                x.Y = 0.0f;
+                vn1 = 0.0f;
+                vn2 = velocityConstraint.K.Y * x.X + b.Y;
+
+                if (x.X >= 0.0f && vn2 >= 0.0f)
+                {
+                    // Get the incremental impulse
+                    Vector2 d = x - a;
+
+                    // Apply incremental impulse
+                    Vector2 P1 = normal * d.X;
+                    Vector2 P2 = normal * d.Y;
+                    vA -= (P1 + P2) * mA;
+                    wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
+
+                    vB += (P1 + P2) * mB;
+                    wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
+
+                    // Accumulate
+                    cp1.NormalImpulse = x.X;
+                    cp2.NormalImpulse = x.Y;
+
+                    break;
+                }
+
+
+                //
+                // Case 3: vn2 = 0 and x1 = 0
+                //
+                // vn1 = a11 * 0 + a12 * x2 + b1'
+                //   0 = a21 * 0 + a22 * x2 + b2'
+                //
+                x.X = 0.0f;
+                x.Y = -cp2.NormalMass * b.Y;
+                vn1 = velocityConstraint.K.Z * x.Y + b.X;
+                vn2 = 0.0f;
+
+                if (x.Y >= 0.0f && vn1 >= 0.0f)
+                {
+                    // Resubstitute for the incremental impulse
+                    Vector2 d = x - a;
+
+                    // Apply incremental impulse
+                    Vector2 P1 = normal * d.X;
+                    Vector2 P2 = normal * d.Y;
+                    vA -= (P1 + P2) * mA;
+                    wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
+
+                    vB += (P1 + P2) * mB;
+                    wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
+
+                    // Accumulate
+                    cp1.NormalImpulse = x.X;
+                    cp2.NormalImpulse = x.Y;
+
+                    break;
+                }
+
+                //
+                // Case 4: x1 = 0 and x2 = 0
+                //
+                // vn1 = b1
+                // vn2 = b2;
+                x.X = 0.0f;
+                x.Y = 0.0f;
+                vn1 = b.X;
+                vn2 = b.Y;
+
+                if (vn1 >= 0.0f && vn2 >= 0.0f)
+                {
+                    // Resubstitute for the incremental impulse
+                    Vector2 d = x - a;
+
+                    // Apply incremental impulse
+                    Vector2 P1 = normal * d.X;
+                    Vector2 P2 = normal * d.Y;
+                    vA -= (P1 + P2) * mA;
+                    wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
+
+                    vB += (P1 + P2) * mB;
+                    wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
+
+                    // Accumulate
+                    cp1.NormalImpulse = x.X;
+                    cp2.NormalImpulse = x.Y;
+
+                    break;
+                }
+
+                // No solution, give up. This is hit sometimes, but it doesn't seem to matter.
+                break;
             }
         }
     }
@@ -658,107 +655,110 @@ public abstract partial class SharedPhysicsSystem
     private bool SolvePositionConstraints(
         SolverData data,
         in IslandData island,
-        ParallelOptions? options,
         ContactPositionConstraint[] positionConstraints,
         Vector2[] positions,
         float[] angles)
     {
         var contactCount = island.Contacts.Count;
 
-        // Parallel
-        if (options != null && contactCount > PositionConstraintsPerThread * 2)
+        if (contactCount == 0)
+            return true;
+
+        var solved = ArrayPool<bool>.Shared.Rent(contactCount);
+
+        var job = new SolvePositionJob()
         {
-            var unsolved = 0;
-            var batches = (int) Math.Ceiling((float) contactCount / PositionConstraintsPerThread);
+            Physics = this,
+            Data = data,
+            PositionConstraints = positionConstraints,
+            Positions = positions,
+            Angles = angles,
+            Solved = solved
+        };
 
-            Parallel.For(0, batches, options, i =>
-            {
-                var start = i * PositionConstraintsPerThread;
-                var end = Math.Min(start + PositionConstraintsPerThread, contactCount);
+        // Parallel
+        _parallel.ProcessSerialNow(job, contactCount);
+        var isSolved = true;
 
-                if (!SolvePositionConstraints(data, start, end, positionConstraints, positions, angles))
-                    Interlocked.Increment(ref unsolved);
-            });
+        for (var i = 0; i < contactCount; i++)
+        {
+            if (solved[i])
+                continue;
 
-            return unsolved == 0;
+            isSolved = false;
+            break;
         }
 
-        // No parallel
-        return SolvePositionConstraints(data, 0, contactCount, positionConstraints, positions, angles);
+        ArrayPool<bool>.Shared.Return(solved);
+
+        return isSolved;
     }
 
     /// <summary>
     ///     Tries to solve positions for all contacts specified.
     /// </summary>
     /// <returns>true if all positions solved</returns>
-    private bool SolvePositionConstraints(
+    private bool SolvePositionConstraint(
         SolverData data,
-        int start,
-        int end,
-        ContactPositionConstraint[] positionConstraints,
+        ref ContactPositionConstraint positionConstraint,
         Vector2[] positions,
         float[] angles)
     {
         float minSeparation = 0.0f;
 
-        for (int i = start; i < end; ++i)
+        int indexA = positionConstraint.IndexA;
+        int indexB = positionConstraint.IndexB;
+        Vector2 localCenterA = positionConstraint.LocalCenterA;
+        float mA = positionConstraint.InvMassA;
+        float iA = positionConstraint.InvIA;
+        Vector2 localCenterB = positionConstraint.LocalCenterB;
+        float mB = positionConstraint.InvMassB;
+        float iB = positionConstraint.InvIB;
+        int pointCount = positionConstraint.PointCount;
+
+        ref var centerA = ref positions[indexA];
+        ref var angleA = ref angles[indexA];
+        ref var centerB = ref positions[indexB];
+        ref var angleB = ref angles[indexB];
+
+        // Solve normal constraints
+        for (int j = 0; j < pointCount; ++j)
         {
-            var pc = positionConstraints[i];
+            Transform xfA = new Transform(angleA);
+            Transform xfB = new Transform(angleB);
+            xfA.Position = centerA - Physics.Transform.Mul(xfA.Quaternion2D, localCenterA);
+            xfB.Position = centerB - Physics.Transform.Mul(xfB.Quaternion2D, localCenterB);
 
-            int indexA = pc.IndexA;
-            int indexB = pc.IndexB;
-            Vector2 localCenterA = pc.LocalCenterA;
-            float mA = pc.InvMassA;
-            float iA = pc.InvIA;
-            Vector2 localCenterB = pc.LocalCenterB;
-            float mB = pc.InvMassB;
-            float iB = pc.InvIB;
-            int pointCount = pc.PointCount;
+            Vector2 normal;
+            Vector2 point;
+            float separation;
 
-            ref var centerA = ref positions[indexA];
-            ref var angleA = ref angles[indexA];
-            ref var centerB = ref positions[indexB];
-            ref var angleB = ref angles[indexB];
+            PositionSolverManifoldInitialize(positionConstraint, j, xfA, xfB, out normal, out point, out separation);
 
-            // Solve normal constraints
-            for (int j = 0; j < pointCount; ++j)
-            {
-                Transform xfA = new Transform(angleA);
-                Transform xfB = new Transform(angleB);
-                xfA.Position = centerA - Physics.Transform.Mul(xfA.Quaternion2D, localCenterA);
-                xfB.Position = centerB - Physics.Transform.Mul(xfB.Quaternion2D, localCenterB);
+            Vector2 rA = point - centerA;
+            Vector2 rB = point - centerB;
 
-                Vector2 normal;
-                Vector2 point;
-                float separation;
+            // Track max constraint error.
+            minSeparation = Math.Min(minSeparation, separation);
 
-                PositionSolverManifoldInitialize(pc, j, xfA, xfB, out normal, out point, out separation);
+            // Prevent large corrections and allow slop.
+            float C = Math.Clamp(data.Baumgarte * (separation + PhysicsConstants.LinearSlop), -_maxLinearCorrection, 0.0f);
 
-                Vector2 rA = point - centerA;
-                Vector2 rB = point - centerB;
+            // Compute the effective mass.
+            float rnA = Vector2Helpers.Cross(rA, normal);
+            float rnB = Vector2Helpers.Cross(rB, normal);
+            float K = mA + mB + iA * rnA * rnA + iB * rnB * rnB;
 
-                // Track max constraint error.
-                minSeparation = Math.Min(minSeparation, separation);
+            // Compute normal impulse
+            float impulse = K > 0.0f ? -C / K : 0.0f;
 
-                // Prevent large corrections and allow slop.
-                float C = Math.Clamp(data.Baumgarte * (separation + PhysicsConstants.LinearSlop), -_maxLinearCorrection, 0.0f);
+            Vector2 P = normal * impulse;
 
-                // Compute the effective mass.
-                float rnA = Vector2Helpers.Cross(rA, normal);
-                float rnB = Vector2Helpers.Cross(rB, normal);
-                float K = mA + mB + iA * rnA * rnA + iB * rnB * rnB;
+            centerA -= P * mA;
+            angleA -= iA * Vector2Helpers.Cross(rA, P);
 
-                // Compute normal impulse
-                float impulse = K > 0.0f ? -C / K : 0.0f;
-
-                Vector2 P = normal * impulse;
-
-                centerA -= P * mA;
-                angleA -= iA * Vector2Helpers.Cross(rA, P);
-
-                centerB += P * mB;
-                angleB += iB * Vector2Helpers.Cross(rB, P);
-            }
+            centerB += P * mB;
+            angleB += iB * Vector2Helpers.Cross(rB, P);
         }
 
         // We can't expect minSpeparation >= -b2_linearSlop because we don't
@@ -907,4 +907,51 @@ public abstract partial class SharedPhysicsSystem
 
             }
     }
+
+    #region Jobs
+
+    private record struct SolvePositionJob : IParallelRobustJob
+    {
+        public int BatchSize => 16;
+
+        public SharedPhysicsSystem Physics;
+        public SolverData Data;
+        public ContactPositionConstraint[] PositionConstraints;
+        public Vector2[] Positions;
+        public float[] Angles;
+        public bool[] Solved;
+
+        public void Execute(int index)
+        {
+            ref var constraint = ref PositionConstraints[index];
+
+            if (Physics.SolvePositionConstraint(Data, ref constraint, Positions, Angles))
+            {
+                Solved[index] = true;
+            }
+            else
+            {
+                Solved[index] = false;
+            }
+        }
+    }
+
+    private record struct SolveVelocityJob : IParallelRobustJob
+    {
+        public int BatchSize => 16;
+
+        public SharedPhysicsSystem Physics;
+        public IslandData Island;
+        public ContactVelocityConstraint[] VelocityConstraints;
+        public Vector2[] LinearVelocities;
+        public float[] AngularVelocities;
+
+        public void Execute(int index)
+        {
+            ref var constraint = ref VelocityConstraints[index];
+            Physics.SolveVelocityConstraint(Island, ref constraint, LinearVelocities, AngularVelocities);
+        }
+    }
+
+    #endregion
 }

@@ -31,17 +31,15 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.InteropServices.JavaScript;
-using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Events;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
@@ -582,24 +580,19 @@ public abstract partial class SharedPhysicsSystem
 
     private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
     {
+        if (count == 0)
+            return;
+
         var wake = ArrayPool<bool>.Shared.Rent(count);
 
-        if (count > ContactsPerThread * 2)
+        _parallel.ProcessNow(new ManifoldsJob()
         {
-            var batches = (int) Math.Ceiling((float) count / ContactsPerThread);
-
-            Parallel.For(0, batches, i =>
-            {
-                var start = i * ContactsPerThread;
-                var end = Math.Min(start + ContactsPerThread, count);
-                UpdateContacts(contacts, start, end, status, wake, worldPoints);
-            });
-
-        }
-        else
-        {
-            UpdateContacts(contacts, 0, count, status, wake, worldPoints);
-        }
+            Physics = this,
+            Status = status,
+            WorldPoints = worldPoints,
+            Contacts = contacts,
+            Wake = wake,
+        }, count);
 
         // Can't do this during UpdateContacts due to IoC threading issues.
         for (var i = 0; i < count; i++)
@@ -620,35 +613,49 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<bool>.Shared.Return(wake);
     }
 
-    private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
+    private record struct ManifoldsJob : IParallelRobustJob
     {
-        for (var i = start; i < end; i++)
+        public int BatchSize => ContactsPerThread;
+
+        public SharedPhysicsSystem Physics;
+
+        public Contact[] Contacts;
+        public ContactStatus[] Status;
+        public Vector2[] WorldPoints;
+        public bool[] Wake;
+
+        public void Execute(int index)
         {
-            var contact = contacts[i];
+            Physics.UpdateContact(Contacts, index, Status, Wake, WorldPoints);
+        }
+    }
 
-            // TODO: Temporary measure. When Box2D 3.0 comes out expect a major refactor
-            // of everything
-            if (contact.FixtureA == null || contact.FixtureB == null)
-            {
-                Log.Error($"Found a null contact for contact at {i}");
-                status[i] = ContactStatus.NoContact;
-                wake[i] = false;
-                DebugTools.Assert(false);
-                continue;
-            }
+    private void UpdateContact(Contact[] contacts, int index, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
+    {
+        var contact = contacts[index];
 
-            var uidA = contact.EntityA;
-            var uidB = contact.EntityB;
-            var bodyATransform = GetPhysicsTransform(uidA, Transform(uidA));
-            var bodyBTransform = GetPhysicsTransform(uidB, Transform(uidB));
+        // TODO: Temporary measure. When Box2D 3.0 comes out expect a major refactor
+        // of everything
+        if (contact.FixtureA == null || contact.FixtureB == null)
+        {
+            Log.Error($"Found a null contact for contact at {index}");
+            status[index] = ContactStatus.NoContact;
+            wake[index] = false;
+            DebugTools.Assert(false);
+            return;
+        }
 
-            var contactStatus = contact.Update(bodyATransform, bodyBTransform, out wake[i]);
-            status[i] = contactStatus;
+        var uidA = contact.EntityA;
+        var uidB = contact.EntityB;
+        var bodyATransform = GetPhysicsTransform(uidA);
+        var bodyBTransform = GetPhysicsTransform(uidB);
 
-            if (contactStatus == ContactStatus.StartTouching)
-            {
-                worldPoints[i] = Physics.Transform.Mul(bodyATransform, contacts[i].Manifold.LocalPoint);
-            }
+        var contactStatus = contact.Update(bodyATransform, bodyBTransform, out wake[index]);
+        status[index] = contactStatus;
+
+        if (contactStatus == ContactStatus.StartTouching)
+        {
+            worldPoints[index] = Physics.Transform.Mul(bodyATransform, contacts[index].Manifold.LocalPoint);
         }
     }
 

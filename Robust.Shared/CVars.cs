@@ -584,6 +584,8 @@ namespace Robust.Shared
         public static readonly CVarDef<string> WatchdogBaseUrl =
             CVarDef.Create("watchdog.baseUrl", "http://localhost:5000", CVar.SERVERONLY);
 
+
+
         /*
          * GAME
          */
@@ -1016,6 +1018,12 @@ namespace Robust.Shared
         /*
          * AUDIO
          */
+
+        /// <summary>
+        /// Audio enabled. Used for tests to avoid creating audio.
+        /// </summary>
+        public static readonly CVarDef<bool> AudioEnabled =
+            CVarDef.Create("audio.enabled", true, CVar.REPLICATED);
 
         public static readonly CVarDef<int> AudioAttenuation =
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);

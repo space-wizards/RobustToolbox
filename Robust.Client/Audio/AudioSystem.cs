@@ -152,11 +152,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
             source = component.Source;
         }
 
+        component.Source = source;
+
         // Need to set all initial data for first frame.
         ApplyAudioParams(component.Params, component);
         source.Global = component.Global;
 
-        component.Source = source;
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;
 

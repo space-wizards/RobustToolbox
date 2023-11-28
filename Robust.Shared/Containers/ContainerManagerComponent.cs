@@ -39,16 +39,7 @@ namespace Robust.Shared.Containers
         [Obsolete]
         public T MakeContainer<T>(EntityUid uid, string id)
             where T : BaseContainer
-        {
-            if (HasContainer(id))
-                throw new ArgumentException($"Container with specified ID already exists: '{id}'");
-
-            var container = _dynFactory.CreateInstanceUnchecked<T>(typeof(T), inject: false);
-            container.Init(id, uid, this);
-            Containers[id] = container;
-            _entMan.Dirty(uid, this);
-            return container;
-        }
+            => _entMan.System<SharedContainerSystem>().MakeContainer<T>(uid, id, this);
 
         [Obsolete]
         public BaseContainer GetContainer(string id)

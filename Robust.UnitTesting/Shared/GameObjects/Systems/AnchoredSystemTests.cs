@@ -358,8 +358,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // Act
             // We purposefully use the grid as container so parent stays the same, reparent will unanchor
+            var containerSys = entMan.System<SharedContainerSystem>();
             var containerMan = entMan.AddComponent<ContainerManagerComponent>(gridId);
-            var container = containerMan.MakeContainer<Container>(gridId, "TestContainer");
+            var container = containerSys.MakeContainer<Container>(gridId, "TestContainer", containerMan);
             container.Insert(ent1);
 
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).Anchored, Is.False);
@@ -477,8 +478,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
+            var containerSys = entMan.System<SharedContainerSystem>();
             var containerMan = entMan.AddComponent<ContainerManagerComponent>(gridId);
-            var container = containerMan.MakeContainer<Container>(gridId, "TestContainer");
+            var container = containerSys.MakeContainer<Container>(gridId, "TestContainer", containerMan);
             container.Insert(ent1);
 
             // Act

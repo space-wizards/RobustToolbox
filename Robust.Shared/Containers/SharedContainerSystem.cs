@@ -17,6 +17,7 @@ namespace Robust.Shared.Containers
 {
     public abstract partial class SharedContainerSystem
     {
+        [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private readonly INetManager _net = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
@@ -85,7 +86,14 @@ namespace Robust.Shared.Containers
             if (!Resolve(uid, ref containerManager, false))
                 containerManager = AddComp<ContainerManagerComponent>(uid); // Happy Vera.
 
-            return containerManager.MakeContainer<T>(uid, id);
+            if (HasContainer(uid, id, containerManager))
+                throw new ArgumentException($"Container with specified ID already exists: '{id}'");
+
+            var container = _dynFactory.CreateInstanceUnchecked<T>(typeof(T), inject: false);
+            container.Init(id, uid, containerManager);
+            containerManager.Containers[id] = container;
+            Dirty(uid, containerManager);
+            return container;
         }
 
         public T EnsureContainer<T>(EntityUid uid, string id, out bool alreadyExisted, ContainerManagerComponent? containerManager = null)

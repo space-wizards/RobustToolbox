@@ -609,6 +609,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private record struct UpdateAudioJob : IParallelRobustJob
     {
+        public int BatchSize => 2;
+
         public AudioSystem System;
 
         public MapCoordinates OurPosition;

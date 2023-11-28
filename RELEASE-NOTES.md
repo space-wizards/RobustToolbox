@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 184.0.0
+
+### Internal
+
+* Add RobustMemoryManager with RecyclableIOMemoryStream to significantly reduce MsgState allocations until better memory management is implemented.
+
+
 ## 183.0.0
 
 ### Breaking changes

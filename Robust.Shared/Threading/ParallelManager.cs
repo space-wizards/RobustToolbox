@@ -109,6 +109,8 @@ internal sealed class ParallelManager : IParallelManagerInternal
     public WaitHandle Process(IRobustJob job)
     {
         var subJob = GetJob(job);
+        // From what I can tell preferLocal is more of a !forceGlobal flag.
+        // Also UnsafeQueue should be fine as long as we don't use async locals.
         ThreadPool.UnsafeQueueUserWorkItem(subJob, true);
         return subJob.Event.WaitHandle;
     }
@@ -165,6 +167,9 @@ internal sealed class ParallelManager : IParallelManagerInternal
             var start = i * batchSize;
             var end = Math.Min(start + batchSize, amount);
             var subJob = GetParallelJob(job, start, end, tracker);
+
+            // From what I can tell preferLocal is more of a !forceGlobal flag.
+            // Also UnsafeQueue should be fine as long as we don't use async locals.
             ThreadPool.UnsafeQueueUserWorkItem(subJob, true);
         }
 
@@ -173,6 +178,9 @@ internal sealed class ParallelManager : IParallelManagerInternal
 
     #region Jobs
 
+    /// <summary>
+    /// Runs an <see cref="IRobustJob"/> and handles cleanup.
+    /// </summary>
     private sealed class InternalJob : IRobustJob
     {
         private IRobustJob _robust = default!;
@@ -194,6 +202,9 @@ internal sealed class ParallelManager : IParallelManagerInternal
         }
     }
 
+    /// <summary>
+    /// Runs an <see cref="IParallelRobustJob"/> and handles cleanup.
+    /// </summary>
     private sealed class InternalParallelJob : IRobustJob
     {
         private IParallelRobustJob _robust = default!;
@@ -226,6 +237,10 @@ internal sealed class ParallelManager : IParallelManagerInternal
         }
     }
 
+    /// <summary>
+    /// Tracks jobs internally. This is because WaitHandle has a max limit of 64 tasks.
+    /// So we'll just decrement PendingTasks in lieu.
+    /// </summary>
     private sealed class ParallelTracker
     {
         public readonly ManualResetEventSlim Event = new();

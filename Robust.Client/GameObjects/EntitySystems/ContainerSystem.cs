@@ -81,12 +81,12 @@ namespace Robust.Client.GameObjects
 
                 foreach (var entity in container.ContainedEntities.ToArray())
                 {
-                    container.Remove(entity,
-                        EntityManager,
-                        TransformQuery.GetComponent(entity),
-                        MetaQuery.GetComponent(entity),
+                    Remove(
+                        (entity, TransformQuery.GetComponent(entity), MetaQuery.GetComponent(entity)),
+                        container,
                         force: true,
-                        reparent: false);
+                        reparent: false
+                    );
 
                     DebugTools.Assert(!container.Contains(entity));
                 }
@@ -132,13 +132,12 @@ namespace Robust.Client.GameObjects
 
                 foreach (var entity in toRemove)
                 {
-                    container.Remove(
-                        entity,
-                        EntityManager,
-                        TransformQuery.GetComponent(entity),
-                        MetaQuery.GetComponent(entity),
+                    Remove(
+                        (entity, TransformQuery.GetComponent(entity), MetaQuery.GetComponent(entity)),
+                        container,
                         force: true,
-                        reparent: false);
+                        reparent: false
+                    );
 
                     DebugTools.Assert(!container.Contains(entity));
                 }

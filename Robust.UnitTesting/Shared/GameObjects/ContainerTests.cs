@@ -255,7 +255,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                      // && itemUid.TryGetContainer(out var container))
                      && sContainerSys.TryGetContainingContainer(sItemUid, out var container))
                  {
-                     container.ForceRemove(sItemUid);
+                     sContainerSys.Remove(sItemUid, container, force: true);
                  }
 
                  sEntManager.DeleteEntity(sItemUid);

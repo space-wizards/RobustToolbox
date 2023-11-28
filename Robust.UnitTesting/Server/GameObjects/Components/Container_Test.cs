@@ -86,10 +86,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var container2 = containerSys.MakeContainer<Container>(inserted, "dummy");
             Assert.That(container2.Insert(owner), Is.False);
 
-            var success = container.Remove(inserted);
+            var success = containerSys.Remove(inserted, container);
             Assert.That(success, Is.True);
 
-            success = container.Remove(inserted);
+            success = containerSys.Remove(inserted, container);
             Assert.That(success, Is.False);
 
             container.Insert(inserted);
@@ -115,10 +115,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(transform.ParentUid, Is.EqualTo(owner));
 
             var container2 = containerSys.MakeContainer<Container>(inserted, "dummy");
-            Assert.That(container2.Insert(entity), Is.True);
+            Assert.That(containerSys.Insert(entity, container2), Is.True);
             Assert.That(entManager.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(inserted));
 
-            Assert.That(container2.Remove(entity), Is.True);
+            Assert.That(containerSys.Remove(entity, container2), Is.True);
             Assert.That(container.Contains(entity), Is.True);
             Assert.That(entManager.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(owner));
 
@@ -152,7 +152,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(container3.Insert(entityItem), Is.True);
             Assert.That(entMan.GetComponent<TransformComponent>(entityItem).ParentUid, Is.EqualTo(entityThree));
 
-            Assert.That(container3.Remove(entityItem), Is.True);
+            Assert.That(containerSys.Remove(entityItem, container3), Is.True);
             Assert.That(container.Contains(entityItem), Is.True);
             Assert.That(entMan.GetComponent<TransformComponent>(entityItem).ParentUid, Is.EqualTo(entityOne));
 
@@ -235,7 +235,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var container = containerSys.MakeContainer<Container>(containerEntity, "dummy");
             var insertEntity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
 
-            var result = container.Remove(insertEntity);
+            var result = containerSys.Remove(insertEntity, container);
 
             Assert.That(result, Is.False);
         }

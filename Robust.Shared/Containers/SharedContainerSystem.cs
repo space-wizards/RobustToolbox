@@ -497,9 +497,9 @@ namespace Robust.Shared.Containers
                 wasInContainer = true;
 
                 if (!force)
-                    return container.Remove(entity);
+                    return Remove(entity, container);
 
-                container.Remove(entity, EntityManager, force: true);
+                Remove(entity, container, force: true);
                 return true;
             }
 
@@ -530,7 +530,7 @@ namespace Robust.Shared.Containers
             var removed = new List<EntityUid>(container.ContainedEntities);
             for (var i = removed.Count - 1; i >= 0; i--)
             {
-                if (container.Remove(removed[i], EntityManager, reparent: reparent, force: force, destination: destination))
+                if (Remove(removed[i], container, reparent: reparent, force: force, destination: destination))
                     continue;
 
                 // failed to remove entity.
@@ -548,8 +548,10 @@ namespace Robust.Shared.Containers
         {
             foreach (var ent in container.ContainedEntities.ToArray())
             {
-                if (Deleted(ent)) continue;
-                container.Remove(ent, EntityManager, force: true);
+                if (Deleted(ent))
+                    continue;
+
+                Remove(ent, container, force: true);
                 Del(ent);
             }
         }

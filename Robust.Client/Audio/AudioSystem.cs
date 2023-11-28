@@ -140,7 +140,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (!TryGetAudio(component.FileName, out var audioResource))
         {
             Log.Error($"Error creating audio source for {audioResource}, can't find file {component.FileName}");
-            component.Source = new DummyAudioSource();
             return;
         }
 
@@ -150,13 +149,15 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             Log.Error($"Error creating audio source for {audioResource}");
             DebugTools.Assert(false);
-            source = new DummyAudioSource();
+            source = component.Source;
         }
 
-        // Need to set all initial data for first frame.
         component.Source = source;
+
+        // Need to set all initial data for first frame.
         ApplyAudioParams(component.Params, component);
-        component.Global = component.Global;
+        source.Global = component.Global;
+
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;
 

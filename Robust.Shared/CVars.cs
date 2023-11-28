@@ -584,8 +584,6 @@ namespace Robust.Shared
         public static readonly CVarDef<string> WatchdogBaseUrl =
             CVarDef.Create("watchdog.baseUrl", "http://localhost:5000", CVar.SERVERONLY);
 
-
-
         /*
          * GAME
          */

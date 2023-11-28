@@ -127,7 +127,7 @@ namespace Robust.Shared.Containers
             if (!Resolve(uid, ref containerManager))
                 throw new ArgumentException("Entity does not have a ContainerManagerComponent!", nameof(uid));
 
-            return containerManager.GetContainer(id);
+            return containerManager.Containers[id];
         }
 
         public bool HasContainer(EntityUid uid, string id, ContainerManagerComponent? containerManager)

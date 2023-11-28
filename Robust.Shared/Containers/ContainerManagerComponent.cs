@@ -43,9 +43,7 @@ namespace Robust.Shared.Containers
 
         [Obsolete]
         public BaseContainer GetContainer(string id)
-        {
-            return Containers[id];
-        }
+            => _entMan.System<SharedContainerSystem>().GetContainer(Owner, id, this);
 
         [Obsolete]
         public bool HasContainer(string id)

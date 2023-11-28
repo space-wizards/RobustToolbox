@@ -54,6 +54,15 @@ END TEMPLATE-->
 *None yet*
 
 
+## 184.1.0
+
+### New features
+
+* Add API to get gain / volume for a provided value on SharedAudioSystem.
+* Make GetOcclusion public for AudioSystem.
+* Add SharedAudioSystem.SetGain to complement SharedAudioSystem.SetVolume
+
+
 ## 184.0.1
 
 ### Bugfixes

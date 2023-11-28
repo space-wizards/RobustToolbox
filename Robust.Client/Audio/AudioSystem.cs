@@ -191,7 +191,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         _audio.SetRotation(eye.Rotation);
         _audio.SetPosition(eye.Position.Position);
 
-        var ourPos = eye.Position;
+        var ourPos = GetListenerCoordinates();
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
 
         var query = AllEntityQuery<AudioComponent, TransformComponent>();
@@ -214,6 +214,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
             Log.Error($"Caught exception while processing entity streams.");
             _runtimeLog.LogException(e, $"{nameof(AudioSystem)}.{nameof(FrameUpdate)}");
         }
+    }
+
+    public MapCoordinates GetListenerCoordinates()
+    {
+        return _eyeManager.CurrentEye.Position;
     }
 
     private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
@@ -321,7 +326,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             // This actually gets the tracked entity's xform & iterates up though the parents for the second time. Bit
             // inefficient.
-            var velocity = _physics.GetMapLinearVelocity(entity, physicsComp, xform, _xformQuery, _physicsQuery);
+            var velocity = _physics.GetMapLinearVelocity(entity, physicsComp, xform);
             component.Velocity = velocity;
         }
     }

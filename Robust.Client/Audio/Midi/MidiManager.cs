@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Midi;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -35,13 +37,7 @@ internal sealed partial class MidiManager : IMidiManager
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
 
     private int _minRendererParallel;
-    private float _occlusionUpdateDelay;
-    private float _positionUpdateDelay;
 
-    [ViewVariables] private TimeSpan _nextOcclusionUpdate = TimeSpan.Zero;
-    [ViewVariables] private TimeSpan _nextPositionUpdate = TimeSpan.Zero;
-
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IConfigurationManager _cfgMan = default!;
@@ -52,7 +48,9 @@ internal sealed partial class MidiManager : IMidiManager
     [Dependency] private readonly IRuntimeLog _runtime = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
 
+    private AudioSystem _audioSys = default!;
     private SharedPhysicsSystem _broadPhaseSystem = default!;
+    private SharedTransformSystem _xformSystem = default!;
 
     public IReadOnlyList<IMidiRenderer> Renderers
     {
@@ -156,12 +154,6 @@ internal sealed partial class MidiManager : IMidiManager
         _cfgMan.OnValueChanged(CVars.MidiMinRendererParallel,
             value => _minRendererParallel = value, true);
 
-        _cfgMan.OnValueChanged(CVars.MidiOcclusionUpdateDelay,
-            value => _occlusionUpdateDelay = value, true);
-
-        _cfgMan.OnValueChanged(CVars.MidiPositionUpdateDelay,
-            value => _positionUpdateDelay = value, true);
-
         _midiSawmill = _logger.GetSawmill("midi");
 #if DEBUG
         _midiSawmill.Level = LogLevel.Debug;
@@ -215,7 +207,11 @@ internal sealed partial class MidiManager : IMidiManager
         _midiThread = new Thread(ThreadUpdate);
         _midiThread.Start();
 
+        _audioSys = _entityManager.EntitySysManager.GetEntitySystem<AudioSystem>();
         _broadPhaseSystem = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
+        _xformSystem = _entityManager.System<SharedTransformSystem>();
+        _entityManager.GetEntityQuery<PhysicsComponent>();
+        _entityManager.GetEntityQuery<TransformComponent>();
         _cfgMan.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
 
         FluidsynthInitialized = true;
@@ -382,35 +378,28 @@ internal sealed partial class MidiManager : IMidiManager
             if (_renderers.Count == 0)
                 return;
 
-            var transQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var physicsQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
             var opts = new ParallelOptions { MaxDegreeOfParallelism = _parallel.ParallelProcessCount };
+            var ourPos = _audioSys.GetListenerCoordinates();
 
             if (_renderers.Count > _minRendererParallel)
             {
-                Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, transQuery, physicsQuery));
+                Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, ourPos));
             }
             else
             {
                 foreach (var renderer in _renderers)
                 {
-                    UpdateRenderer(renderer, transQuery, physicsQuery);
+                    UpdateRenderer(renderer, ourPos);
                 }
             }
 
         }
 
-        if (_nextOcclusionUpdate < _timing.RealTime)
-            _nextOcclusionUpdate = _timing.RealTime.Add(TimeSpan.FromSeconds(_occlusionUpdateDelay));
-
-        if (_nextPositionUpdate < _timing.RealTime)
-            _nextPositionUpdate = _timing.RealTime.Add(TimeSpan.FromSeconds(_positionUpdateDelay));
-
         _volumeDirty = false;
     }
-    private void UpdateRenderer(IMidiRenderer renderer, EntityQuery<TransformComponent> transQuery,
-        EntityQuery<PhysicsComponent> physicsQuery)
+    private void UpdateRenderer(IMidiRenderer renderer, MapCoordinates listener)
     {
+        // TODO: This should be sharing more code with AudioSystem.
         try
         {
             if (renderer.Disposed)
@@ -427,66 +416,74 @@ internal sealed partial class MidiManager : IMidiManager
                 return;
             }
 
-            if (_nextPositionUpdate < _timing.RealTime)
+            MapCoordinates mapPos;
+
+            if (renderer.TrackingEntity is {} trackedEntity && !_entityManager.Deleted(trackedEntity))
             {
-                if (renderer.TrackingEntity is {} trackedEntity && !_entityManager.Deleted(trackedEntity))
+                renderer.TrackingCoordinates = _xformSystem.GetMapCoordinates(renderer.TrackingEntity.Value);
+
+                // Pause it if the attached entity is paused.
+                if (_entityManager.IsPaused(renderer.TrackingEntity))
                 {
-                    renderer.TrackingCoordinates = transQuery.GetComponent(renderer.TrackingEntity!.Value).MapPosition;
-                }
-                else if (renderer.TrackingCoordinates == null)
-                {
+                    renderer.Source.Pause();
                     return;
                 }
-
-                var position = renderer.TrackingCoordinates.Value;
-
-                if (position.MapId == MapId.Nullspace)
-                {
-                    return;
-                }
-
-                renderer.Source.Position = position.Position;
-
-                var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value,
-                    xformQuery: transQuery, physicsQuery: physicsQuery);
-
-                renderer.Source.Velocity = vel;
+            }
+            else if (renderer.TrackingCoordinates == null)
+            {
+                renderer.Source.Pause();
+                return;
             }
 
-            if (renderer.TrackingCoordinates != null && renderer.TrackingCoordinates.Value.MapId == _eyeManager.CurrentMap)
+            mapPos = renderer.TrackingCoordinates.Value;
+
+            // If it's on a different map then just mute it, not pause.
+            if (mapPos.MapId == MapId.Nullspace)
             {
-                if (_nextOcclusionUpdate >= _timing.RealTime)
-                    return;
+                renderer.Source.Gain = 0f;
+                return;
+            }
 
-                var pos = renderer.TrackingCoordinates.Value;
+            // Was previously muted maybe so try unmuting it?
+            if (renderer.Source.Gain == 0f)
+            {
+                renderer.Source.Volume = Volume;
+            }
 
-                var sourceRelative = pos.Position - _eyeManager.CurrentEye.Position.Position;
-                var occlusion = 0f;
-                if (sourceRelative.Length() > 0)
-                {
-                    occlusion = _broadPhaseSystem.IntersectRayPenetration(
-                        pos.MapId,
-                        new CollisionRay(
-                            _eyeManager.CurrentEye.Position.Position,
-                            sourceRelative.Normalized(),
-                            OcclusionCollisionMask),
-                        MathF.Min(sourceRelative.Length(), _maxCastLength),
-                        renderer.TrackingEntity);
-                }
+            var worldPos = mapPos.Position;
+            var delta = worldPos - listener.Position;
+            var distance = delta.Length();
 
-                renderer.Source.Occlusion = occlusion;
+            // Update position
+            // Out of range so just clip it for us.
+            if (distance > renderer.Source.MaxDistance)
+            {
+                // Still keeps the source playing, just with no volume.
+                renderer.Source.Gain = 0f;
+                return;
+            }
+
+            renderer.Source.Position = worldPos;
+
+            // Update velocity (doppler).
+            if (renderer.TrackingEntity != null)
+            {
+                var velocity = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity.Value);
+                renderer.Source.Velocity = velocity;
             }
             else
             {
-                renderer.Source.Occlusion = float.MaxValue;
+                renderer.Source.Velocity = Vector2.Zero;
             }
 
+            // Update occlusion
+            var occlusion = _audioSys.GetOcclusion(renderer.TrackingEntity ?? EntityUid.Invalid, listener, delta, distance);
+            renderer.Source.Occlusion = occlusion;
         }
         catch (Exception ex)
         {
             _runtime.LogException(ex, _midiSawmill.Name);
         }
-
     }
 
     /// <summary>

@@ -212,7 +212,7 @@ namespace Robust.Shared.Containers
             if (!Resolve(uid, ref containerManager))
                 return new ContainerManagerComponent.AllContainersEnumerable();
 
-            return containerManager.GetAllContainers();
+            return new(containerManager);
         }
 
         #endregion

@@ -73,9 +73,7 @@ namespace Robust.Shared.Containers
 
         [Obsolete]
         public AllContainersEnumerable GetAllContainers()
-        {
-            return new(this);
-        }
+            => _entMan.System<SharedContainerSystem>().GetAllContainers(Owner, this);
 
         [Serializable, NetSerializable]
         internal sealed class ContainerManagerComponentState : ComponentState

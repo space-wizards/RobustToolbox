@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 184.0.1
+
+### Bugfixes
+
+* Update MIDI position and occlusion every frame instead of at set intervals.
+* Fix global audio not being global.
+
+
 ## 184.0.0
 
 ### Internal

@@ -20,21 +20,33 @@ public sealed class TestingParallelManager : IParallelManager
 
     WaitHandle IParallelManager.Process(IRobustJob job)
     {
-        throw new NotImplementedException();
+        job.Execute();
+        var ev = new ManualResetEventSlim();
+        ev.Set();
+        return ev.WaitHandle;
     }
 
     public void ProcessNow(IParallelRobustJob jobs, int amount)
     {
-        throw new NotImplementedException();
+        for (var i = 0; i < amount; i++)
+        {
+            jobs.Execute(i);
+        }
     }
 
     public void ProcessSerialNow(IParallelRobustJob jobs, int amount)
     {
-        throw new NotImplementedException();
+        for (var i = 0; i < amount; i++)
+        {
+            jobs.Execute(i);
+        }
     }
 
     public WaitHandle Process(IParallelRobustJob jobs, int amount)
     {
-        throw new NotImplementedException();
+        ProcessSerialNow(jobs, amount);
+        var ev = new ManualResetEventSlim();
+        ev.Set();
+        return ev.WaitHandle;
     }
 }

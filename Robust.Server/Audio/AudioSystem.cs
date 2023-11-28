@@ -74,6 +74,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var entity = Spawn("Audio", MapCoordinates.Nullspace);
         var audio = SetupAudio(entity, filename, audioParams);
         AddAudioFilter(entity, audio, playerFilter);
+        audio.Global = true;
 
         return (entity, audio);
     }

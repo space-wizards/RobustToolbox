@@ -140,7 +140,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (!TryGetAudio(component.FileName, out var audioResource))
         {
             Log.Error($"Error creating audio source for {audioResource}, can't find file {component.FileName}");
-            component.Source = new DummyAudioSource();
             return;
         }
 
@@ -150,20 +149,21 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             Log.Error($"Error creating audio source for {audioResource}");
             DebugTools.Assert(false);
-            source = new DummyAudioSource();
+            source = component.Source;
         }
 
         // Need to set all initial data for first frame.
-        component.Source = source;
         ApplyAudioParams(component.Params, component);
-        component.Global = component.Global;
+        source.Global = component.Global;
+
+        component.Source = source;
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;
 
         // If audio came into range then start playback at the correct position.
         var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % GetAudioLength(component.FileName).TotalSeconds;
 
-        if (offset != 0)
+        if (offset > 0)
         {
             component.PlaybackPosition = (float) offset;
         }

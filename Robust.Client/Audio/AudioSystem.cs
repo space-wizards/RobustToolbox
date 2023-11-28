@@ -163,7 +163,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // If audio came into range then start playback at the correct position.
         var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % GetAudioLength(component.FileName).TotalSeconds;
 
-        if (offset != 0)
+        if (offset > 0)
         {
             component.PlaybackPosition = (float) offset;
         }

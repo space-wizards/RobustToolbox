@@ -94,7 +94,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        protected override void InternalShutdown(IEntityManager entMan, bool isClient)
+        protected internal override void InternalShutdown(IEntityManager entMan, bool isClient)
         {
             if (ContainedEntity is not { } entity)
                 return;

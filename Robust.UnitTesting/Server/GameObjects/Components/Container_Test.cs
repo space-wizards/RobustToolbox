@@ -329,7 +329,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             }
 
             /// <inheritdoc />
-            protected override void InternalShutdown(IEntityManager entMan, bool isClient)
+            protected internal override void InternalShutdown(IEntityManager entMan, bool isClient)
             {
                 foreach (var entity in _containerList.ToArray())
                 {

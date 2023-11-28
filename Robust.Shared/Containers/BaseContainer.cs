@@ -122,15 +122,15 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Clears the container and marks it as deleted.
         /// </summary>
-        public void Shutdown(IEntityManager? entMan = null, INetManager? netMan = null)
+        public void Shutdown(IEntityManager? entMan = null, INetManager? _ = null)
         {
-            IoCManager.Resolve(ref entMan, ref netMan);
-            InternalShutdown(entMan, netMan.IsClient);
-            Manager.Containers.Remove(ID);
+            IoCManager.Resolve(ref entMan);
+            entMan.System<SharedContainerSystem>().ShutdownContainer(this);
         }
 
         /// <inheritdoc />
-        protected abstract void InternalShutdown(IEntityManager entMan, bool isClient);
+        [Access(typeof(SharedContainerSystem))]
+        protected internal abstract void InternalShutdown(IEntityManager entMan, bool isClient);
 
         /// <summary>
         /// Implement to store the reference in whatever form you want

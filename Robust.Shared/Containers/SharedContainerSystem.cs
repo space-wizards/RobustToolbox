@@ -117,6 +117,12 @@ namespace Robust.Shared.Containers
             ((container.Owner, container.Manager), container.ID) = (containerEnt, id);
         }
 
+        public void ShutdownContainer(BaseContainer container)
+        {
+            container.InternalShutdown(EntityManager, _net.IsClient);
+            container.Manager.Containers.Remove(container.ID);
+        }
+
         public T EnsureContainer<T>(EntityUid uid, string id, out bool alreadyExisted, ContainerManagerComponent? containerManager = null)
             where T : BaseContainer
         {

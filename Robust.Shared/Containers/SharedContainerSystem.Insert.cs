@@ -105,7 +105,7 @@ public abstract partial class SharedContainerSystem
         // got-inserted event, but really that event should run after the entity was actually inserted (so that
         // parent/map have updated). But we are better of disabling collision before doing map/parent changes.
         PhysicsQuery.Resolve(toInsert, ref physics, logMissing: false);
-        container.RecursivelyUpdatePhysics(toInsert, transform, physics, _physics, PhysicsQuery, TransformQuery);
+        RecursivelyUpdatePhysics((toInsert, transform, physics));
 
         // Attach to new parent
         var oldParent = transform.ParentUid;
@@ -120,7 +120,7 @@ public abstract partial class SharedContainerSystem
 
         // Update any relevant joint relays
         // Can't be done above as the container flag isn't set yet.
-        container.RecursivelyUpdateJoints(toInsert, transform, _joint, JointQuery, TransformQuery);
+        RecursivelyUpdateJoints((toInsert, transform));
 
         // Raise container events (after re-parenting and internal remove).
         RaiseLocalEvent(container.Owner, new EntInsertedIntoContainerMessage(toInsert, oldParent, container), true);
@@ -174,5 +174,45 @@ public abstract partial class SharedContainerSystem
         RaiseLocalEvent(toInsert, gettingInsertedAttemptEvent, true);
 
         return !gettingInsertedAttemptEvent.Cancelled;
+    }
+
+    private void RecursivelyUpdatePhysics(Entity<TransformComponent, PhysicsComponent?> entity)
+    {
+        if (entity.Comp2 is { } physics)
+        {
+            // Here we intentionally don't dirty the physics comp. Client-side state handling will apply these same
+            // changes. This also ensures that the server doesn't have to send the physics comp state to every
+            // player for any entity inside of a container during init.
+            _physics.SetLinearVelocity(entity, Vector2.Zero, false, body: physics);
+            _physics.SetAngularVelocity(entity, 0, false, body: physics);
+            _physics.SetCanCollide(entity, false, false, body: physics);
+        }
+
+        var enumerator = entity.Comp1.ChildEnumerator;
+
+        while (enumerator.MoveNext(out var child))
+        {
+            var childXform = TransformQuery.GetComponent(child.Value);
+            PhysicsQuery.TryGetComponent(child.Value, out var childPhysics);
+            RecursivelyUpdatePhysics((child.Value, childXform, childPhysics));
+        }
+    }
+
+    internal void RecursivelyUpdateJoints(Entity<TransformComponent> entity)
+    {
+        if (JointQuery.TryGetComponent(entity, out var jointComp))
+        {
+            // TODO: This is going to be going up while joints going down, although these aren't too common
+            // in SS14 atm.
+            _joint.RefreshRelay(entity, jointComp);
+        }
+
+        var enumerator = entity.Comp.ChildEnumerator;
+
+        while (enumerator.MoveNext(out var child))
+        {
+            var childXform = TransformQuery.GetComponent(child.Value);
+            RecursivelyUpdateJoints((child.Value, childXform));
+        }
     }
 }

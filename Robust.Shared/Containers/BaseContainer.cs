@@ -93,57 +93,6 @@ namespace Robust.Shared.Containers
             return entMan.System<SharedContainerSystem>().Insert((toinsert, transform, meta, physics), this, ownerTransform, force);
         }
 
-        internal void RecursivelyUpdatePhysics(
-            EntityUid uid,
-            TransformComponent xform,
-            PhysicsComponent? physics,
-            SharedPhysicsSystem physicsSys,
-            EntityQuery<PhysicsComponent> physicsQuery,
-            EntityQuery<TransformComponent> transformQuery)
-        {
-            if (physics != null)
-            {
-                // Here we intentionally don't dirty the physics comp. Client-side state handling will apply these same
-                // changes. This also ensures that the server doesn't have to send the physics comp state to every
-                // player for any entity inside of a container during init.
-                physicsSys.SetLinearVelocity(uid, Vector2.Zero, false, body: physics);
-                physicsSys.SetAngularVelocity(uid,0, false, body: physics);
-                physicsSys.SetCanCollide(uid, false, false, body: physics);
-            }
-
-            var enumerator = xform.ChildEnumerator;
-
-            while (enumerator.MoveNext(out var child))
-            {
-                var childXform = transformQuery.GetComponent(child.Value);
-                physicsQuery.TryGetComponent(child.Value, out var childPhysics);
-                RecursivelyUpdatePhysics(child.Value, childXform, childPhysics, physicsSys, physicsQuery, transformQuery);
-            }
-        }
-
-        internal void RecursivelyUpdateJoints(
-            EntityUid uid,
-            TransformComponent xform,
-            SharedJointSystem jointSys,
-            EntityQuery<JointComponent> jointQuery,
-            EntityQuery<TransformComponent> transformQuery)
-        {
-            if (jointQuery.TryGetComponent(uid, out var jointComp))
-            {
-                // TODO: This is going to be going up while joints going down, although these aren't too common
-                // in SS14 atm.
-                jointSys.RefreshRelay(uid, jointComp);
-            }
-
-            var enumerator = xform.ChildEnumerator;
-
-            while (enumerator.MoveNext(out var child))
-            {
-                var childXform = transformQuery.GetComponent(child.Value);
-                RecursivelyUpdateJoints(child.Value, childXform, jointSys, jointQuery, transformQuery);
-            }
-        }
-
         /// <summary>
         /// Whether the given entity can be inserted into this container.
         /// </summary>

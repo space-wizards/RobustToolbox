@@ -42,7 +42,7 @@ public abstract partial class SharedContainerSystem : EntitySystem
                 // entities in containers without having to "re-insert" them.
                 meta.Flags |= MetaDataFlags.InContainer;
                 _lookup.RemoveFromEntityTree(ent, xform);
-                cont.RecursivelyUpdatePhysics(ent, xform, physics, _physics, PhysicsQuery, TransformQuery);
+                RecursivelyUpdatePhysics((ent, xform, physics));
 
                 // assert children have correct properties
                 ValidateChildren(xform, TransformQuery, PhysicsQuery);

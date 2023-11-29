@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using System.Threading.Tasks;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
@@ -23,7 +23,6 @@ using Robust.Shared.Player;
 using Robust.Shared.Replays;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
-using AudioComponent = Robust.Shared.Audio.Components.AudioComponent;
 
 namespace Robust.Client.Audio;
 
@@ -34,6 +33,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
      * but exposing the whole thing in an easy way is a lot of effort.
      */
 
+    [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
@@ -196,6 +196,15 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public override void FrameUpdate(float frameTime)
     {
         var eye = _eyeManager.CurrentEye;
+        var localEntity = _playerManager.LocalEntity;
+        Vector2 listenerVelocity;
+
+        if (localEntity != null)
+            listenerVelocity = _physics.GetMapLinearVelocity(localEntity.Value);
+        else
+            listenerVelocity = Vector2.Zero;
+
+        _audio.SetVelocity(listenerVelocity);
         _audio.SetRotation(eye.Rotation);
         _audio.SetPosition(eye.Position.Position);
 

@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 185.1.0
+
+### New features
+
+* Audio listener's velocity is set using the attached entity's velocity rather than ignored.
+
+### Bugfixes
+
+* Fix imprecision on audio position
+
+
 ## 185.0.0
 
 ### Breaking changes

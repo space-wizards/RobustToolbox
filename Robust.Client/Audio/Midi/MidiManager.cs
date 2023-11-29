@@ -442,6 +442,14 @@ internal sealed partial class MidiManager : IMidiManager
                 return;
             }
 
+            // Same imprecision suppression as audiosystem.
+            if (distance > 0f && distance < 0.01f)
+            {
+                worldPos = listener.Position;
+                delta = Vector2.Zero;
+                distance = 0f;
+            }
+
             renderer.Source.Position = worldPos;
 
             // Update velocity (doppler).

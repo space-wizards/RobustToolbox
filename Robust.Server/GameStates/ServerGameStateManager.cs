@@ -37,6 +37,8 @@ namespace Robust.Server.GameStates
         // Mapping of net UID of clients -> last known acked state.
         private GameTick _lastOldestAck = GameTick.Zero;
 
+        // Per-tick data.
+        private uint _oldestAck;
         private HashSet<int>[] _playerChunks = Array.Empty<HashSet<int>>();
         private EntityUid[][] _viewerEntities = Array.Empty<EntityUid[]>();
 
@@ -46,7 +48,6 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
@@ -66,6 +67,8 @@ namespace Robust.Server.GameStates
         private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
 
         public ushort TransformNetId { get; set; }
+
+        private SendStateJob _sendStateJob;
 
         public Action<ICommonSession, GameTick>? ClientAck { get; set; }
         public Action<ICommonSession, GameTick, NetEntity?>? ClientRequestFull { get; set; }
@@ -91,6 +94,16 @@ namespace Robust.Server.GameStates
 
             // temporary command for debugging PVS bugs.
             _conHost.RegisterCommand("print_pvs_ack", PrintPvsAckInfo);
+
+            _sendStateJob = new SendStateJob
+            {
+                Logger = _logger,
+                InputSystem = _entityManager.System<InputSystem>(),
+                Manager = this,
+                Replay = _replay,
+                ResourcesPool = _threadResourcesPool,
+                Timing = _gameTiming,
+            };
         }
 
         private void PrintPvsAckInfo(IConsoleShell shell, string argstr, string[] args)
@@ -229,35 +242,15 @@ Oldest acked clients: {string.Join(", ", players)}
 
         private GameTick SendStates(ICommonSession[] players, PvsData? pvsData)
         {
-            var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
-            var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
             var oldestAckValue = GameTick.MaxValue.Value;
+            _oldestAck = oldestAckValue;
 
             // Replays process game states in parallel with players
-            Parallel.For(-1, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
-
-            PvsThreadResources SendPlayer(int i, ParallelLoopState state, PvsThreadResources resource)
-            {
-                try
-                {
-                    var guid = i >= 0 ? players[i].UserId.UserId : default;
-
-                    PvsEventSource.Log.WorkStart(_gameTiming.CurTick.Value, i, guid);
-
-                    if (i >= 0)
-                        SendStateUpdate(i, resource, inputSystem, players[i], pvsData, ref oldestAckValue);
-                    else
-                        _replay.Update();
-
-                    PvsEventSource.Log.WorkStop(_gameTiming.CurTick.Value, i, guid);
-                }
-                catch (Exception e) // Catch EVERY exception
-                {
-                    _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
-                }
-                return resource;
-            }
-
+            _sendStateJob.Players = players;
+            _sendStateJob.JobPvsData = pvsData;
+            _parallelMgr.ProcessNow(_sendStateJob, players.Length);
+            // Make sure that we update this as the job update the manager's field.
+            oldestAckValue = _oldestAck;
             return new GameTick(oldestAckValue);
         }
 
@@ -423,13 +416,54 @@ Oldest acked clients: {string.Join(", ", players)}
 
         #region Jobs
 
+        private record struct SendStateJob : IParallelRobustJob
+        {
+            public int BatchSize => 2;
+
+            public ISawmill Logger;
+            public IGameTiming Timing;
+            public IServerReplayRecordingManager Replay;
+            public InputSystem InputSystem;
+            public ServerGameStateManager Manager;
+            public DefaultObjectPool<PvsThreadResources> ResourcesPool;
+
+            public PvsData? JobPvsData;
+            public ICommonSession[] Players;
+
+            public void Execute(int index)
+            {
+                var resources = ResourcesPool.Get();
+
+                try
+                {
+                    var guid = index >= 0 ? Players[index].UserId.UserId : default;
+
+                    PvsEventSource.Log.WorkStart(Timing.CurTick.Value, index, guid);
+
+                    if (index >= 0)
+                        Manager.SendStateUpdate(index, resources, InputSystem, Players[index], JobPvsData, ref Manager._oldestAck);
+                    else
+                        Replay.Update();
+
+                    PvsEventSource.Log.WorkStop(Timing.CurTick.Value, index, guid);
+                }
+                catch (Exception e) // Catch EVERY exception
+                {
+                    Logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
+                }
+                finally
+                {
+                    ResourcesPool.Return(resources);
+                }
+            }
+        }
+
         /// <summary>
         /// Pre-calculates chunk indices (Robust Tree) to be re-used per-player later on.
         /// </summary>
         private record struct PvsChunkJob : IParallelRobustJob
         {
-            public int BatchSize => 2;
-
+            public int BatchSize => 1;
 
             public IEntityManager EntManager;
             public PvsSystem Pvs;

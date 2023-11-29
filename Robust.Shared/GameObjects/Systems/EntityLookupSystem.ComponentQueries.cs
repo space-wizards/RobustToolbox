@@ -40,7 +40,7 @@ public sealed partial class EntityLookupSystem
 
                 tuple.intersecting.Add((value.Entity, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & (LookupFlags.Static)) != 0x0)
@@ -52,7 +52,7 @@ public sealed partial class EntityLookupSystem
 
                 tuple.intersecting.Add((value.Entity, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
@@ -64,7 +64,7 @@ public sealed partial class EntityLookupSystem
 
                 tuple.intersecting.Add((value, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & LookupFlags.Sundries) != 0x0)
@@ -76,7 +76,7 @@ public sealed partial class EntityLookupSystem
 
                 tuple.intersecting.Add((value, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
     }
 
@@ -123,7 +123,7 @@ public sealed partial class EntityLookupSystem
 
                 state.Intersecting.Add((value.Entity, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & (LookupFlags.Static)) != 0x0)
@@ -144,7 +144,7 @@ public sealed partial class EntityLookupSystem
 
                 state.Intersecting.Add((value.Entity, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
@@ -184,7 +184,7 @@ public sealed partial class EntityLookupSystem
                     state.Intersecting.Add((value, comp));
 
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & LookupFlags.Sundries) != 0x0)
@@ -225,7 +225,7 @@ public sealed partial class EntityLookupSystem
                     state.Intersecting.Add((value, comp));
 
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
     }
 
@@ -251,7 +251,7 @@ public sealed partial class EntityLookupSystem
 
                     tuple.found = true;
                     return false;
-                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                }, localAABB, true);
 
             if (state.found)
                 return true;
@@ -267,7 +267,7 @@ public sealed partial class EntityLookupSystem
 
                     tuple.found = true;
                     return false;
-                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                }, localAABB, true);
 
             if (state.found)
                 return true;
@@ -283,7 +283,7 @@ public sealed partial class EntityLookupSystem
 
                     tuple.found = true;
                     return false;
-                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                }, localAABB, true);
 
             if (state.found)
                 return true;
@@ -299,7 +299,7 @@ public sealed partial class EntityLookupSystem
 
                     tuple.found = true;
                     return false;
-                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                }, localAABB, true);
         }
 
         return state.found;
@@ -439,7 +439,7 @@ public sealed partial class EntityLookupSystem
                         return true;
                     tuple.found = true;
                     return false;
-                }, (flags & LookupFlags.Approximate) != 0x0);
+                }, approx: true);
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
@@ -489,7 +489,7 @@ public sealed partial class EntityLookupSystem
                 {
                     tuple.system.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.worldAABB, tuple.flags, tuple.query);
                     return true;
-                }, (flags & LookupFlags.Approximate) != 0x0);
+                }, approx: true);
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
@@ -529,7 +529,7 @@ public sealed partial class EntityLookupSystem
                 {
                     tuple.system.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.worldAABB, tuple.flags, tuple.query);
                     return true;
-                }, (flags & LookupFlags.Approximate) != 0x0);
+                }, approx: true);
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
@@ -609,7 +609,7 @@ public sealed partial class EntityLookupSystem
                 {
                     state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, state.WorldAABB, state.Flags, state.Query);
                     return true;
-                }, (flags & LookupFlags.Approximate) != 0x0);
+                }, approx: true);
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
@@ -684,7 +684,7 @@ public sealed partial class EntityLookupSystem
                 {
                     tuple.system.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.shape, tuple.worldAABB, tuple.flags, tuple.query);
                     return true;
-                }, (flags & LookupFlags.Approximate) != 0x0);
+                }, approx: true);
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);

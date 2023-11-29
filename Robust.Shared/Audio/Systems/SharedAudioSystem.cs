@@ -47,7 +47,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         base.Initialize();
         InitializeEffect();
-        ZOffset = CfgManager.GetCVar(CVars.AudioZOffset);
+        SetZOffset(CfgManager.GetCVar(CVars.AudioZOffset));
         CfgManager.OnValueChanged(CVars.AudioZOffset, SetZOffset);
         SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
         SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);

@@ -41,7 +41,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// </summary>
     public int OcclusionCollisionMask { get; set; }
 
-    public float ZOffset;
+    public virtual float ZOffset { get; protected set; }
 
     public override void Initialize()
     {
@@ -59,7 +59,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         CfgManager.UnsubValueChanged(CVars.AudioZOffset, SetZOffset);
     }
 
-    protected virtual void SetZOffset(float value)
+    protected void SetZOffset(float value)
     {
         var query = AllEntityQuery<AudioComponent>();
         var oldZOffset = ZOffset;

@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 185.0.0
+
+### Breaking changes
+
+* Added a flag for grid-based audio rather than implicitly doing it.
+
+### New features
+
+* Added IRobustJob and IParallelRobustJob (which splits out into IRobustJob). These can be passed to ParallelManager for work to be run on the threadpool without relying upon Task.Run / Parallel.For which can allocate significantly more. It also has conveniences such as being able to specify batch sizing via the interface implementation.
+
+
 ## 184.1.0
 
 ### New features

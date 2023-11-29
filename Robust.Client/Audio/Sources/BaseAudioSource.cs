@@ -189,6 +189,9 @@ internal abstract class BaseAudioSource : IAudioSource
             {
                 AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
                 priorOcclusion = priorGain / _gain;
+                if (Double.IsNaN(priorOcclusion)) {
+                    priorOcclusion = 1f
+                }
             }
 
             _gain = value;

@@ -61,6 +61,12 @@ internal partial class AudioManager
     }
 
     /// <inheritdoc/>
+    public void SetVelocity(Vector2 velocity)
+    {
+        AL.Listener(ALListener3f.Velocity, velocity.X, velocity.Y, 0f);
+    }
+
+    /// <inheritdoc/>
     public void SetPosition(Vector2 position)
     {
         AL.Listener(ALListener3f.Position, position.X, position.Y, _zOffset);

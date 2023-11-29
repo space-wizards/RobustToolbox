@@ -418,7 +418,7 @@ Oldest acked clients: {string.Join(", ", players)}
 
         private record struct SendStateJob : IParallelRobustJob
         {
-            public int BatchSize => 2;
+            public int BatchSize => 1;
 
             public ISawmill Logger;
             public IGameTiming Timing;
@@ -463,7 +463,7 @@ Oldest acked clients: {string.Join(", ", players)}
         /// </summary>
         private record struct PvsChunkJob : IParallelRobustJob
         {
-            public int BatchSize => 1;
+            public int BatchSize => 2;
 
             public IEntityManager EntManager;
             public PvsSystem Pvs;

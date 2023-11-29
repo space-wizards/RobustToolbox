@@ -73,20 +73,22 @@ internal sealed partial class MidiManager : IMidiManager
     [ViewVariables] private Settings? _settings;
     private Thread? _midiThread;
     private ISawmill _midiSawmill = default!;
-    private float _volume = 0f;
+    private float _gain = 0f;
     private bool _volumeDirty = true;
 
     // Not reliable until Fluidsynth is initialized!
     [ViewVariables(VVAccess.ReadWrite)]
-    public float Volume
+    public float Gain
     {
-        get => _volume;
+        get => _gain;
         set
         {
-            if (MathHelper.CloseToPercent(_volume, value))
+            var clamped = Math.Clamp(value, 0f, 1f);
+
+            if (MathHelper.CloseToPercent(_gain, clamped))
                 return;
 
-            _cfgMan.SetCVar(CVars.MidiVolume, value);
+            _cfgMan.SetCVar(CVars.MidiVolume, clamped);
             _volumeDirty = true;
         }
     }
@@ -138,7 +140,7 @@ internal sealed partial class MidiManager : IMidiManager
 
         _cfgMan.OnValueChanged(CVars.MidiVolume, value =>
         {
-            _volume = value;
+            _gain = value;
             _volumeDirty = true;
         }, true);
 
@@ -339,7 +341,7 @@ internal sealed partial class MidiManager : IMidiManager
                 renderer.LoadSoundfont(file.ToString());
             }
 
-            renderer.Source.Volume = _volume;
+            renderer.Source.Gain = _gain;
 
             lock (_renderers)
             {
@@ -386,7 +388,7 @@ internal sealed partial class MidiManager : IMidiManager
 
             if (_volumeDirty)
             {
-                renderer.Source.Volume = Volume;
+                renderer.Source.Gain = Gain;
             }
 
             if (!renderer.Mono)
@@ -426,7 +428,7 @@ internal sealed partial class MidiManager : IMidiManager
             // Was previously muted maybe so try unmuting it?
             if (renderer.Source.Gain == 0f)
             {
-                renderer.Source.Volume = Volume;
+                renderer.Source.Gain = Gain;
             }
 
             var worldPos = mapPos.Position;

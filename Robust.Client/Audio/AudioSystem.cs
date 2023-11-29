@@ -323,19 +323,19 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var delta = worldPos - listener.Position;
         var distance = delta.Length();
 
-        if (distance > 0f && distance < 0.01f)
-        {
-            worldPos = listener.Position;
-            delta = Vector2.Zero;
-            distance = 0f;
-        }
-
         // Out of range so just clip it for us.
         if (distance > component.MaxDistance)
         {
             // Still keeps the source playing, just with no volume.
             component.Gain = 0f;
             return;
+        }
+
+        if (distance > 0f && distance < 0.01f)
+        {
+            worldPos = listener.Position;
+            delta = Vector2.Zero;
+            distance = 0f;
         }
 
         // Update audio occlusion

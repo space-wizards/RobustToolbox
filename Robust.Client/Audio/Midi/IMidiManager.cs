@@ -19,7 +19,7 @@ public interface IMidiManager
     /// <summary>
     ///     Volume, in db.
     /// </summary>
-    float Volume { get; set; }
+    float Gain { get; set; }
 
     /// <summary>
     ///     This method tries to return a midi renderer ready to be used.

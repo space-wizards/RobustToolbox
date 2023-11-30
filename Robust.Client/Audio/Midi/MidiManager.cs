@@ -453,7 +453,7 @@ internal sealed partial class MidiManager : IMidiManager
             renderer.Source.Position = worldPos;
 
             // Update velocity (doppler).
-            if (renderer.TrackingEntity != null)
+            if (!_entityManager.Deleted(renderer.TrackingEntity))
             {
                 var velocity = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity.Value);
                 renderer.Source.Velocity = velocity;

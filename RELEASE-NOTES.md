@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 185.2.0
+
+### Bugfixes
+
+* Bandaid deleted MIDI source entities spamming velocity error logs.
+
+### Other
+
+* Reverted MIDI audio not updating every frame due to lock contention with the MIDI renderer for now.
+
+
 ## 185.1.1
 
 ### Bugfixes

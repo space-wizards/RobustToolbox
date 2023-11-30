@@ -324,7 +324,6 @@ internal partial class AudioManager
         {
             if (source.TryGetTarget(out var target))
             {
-                target.Playing = false;
                 target.Dispose();
             }
         }
@@ -335,7 +334,6 @@ internal partial class AudioManager
         {
             if (source.TryGetTarget(out var target))
             {
-                target.Playing = false;
                 target.Dispose();
             }
         }

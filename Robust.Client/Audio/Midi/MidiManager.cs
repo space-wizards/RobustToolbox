@@ -20,6 +20,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Threading;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -29,8 +30,7 @@ internal sealed partial class MidiManager : IMidiManager
 {
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
 
-    private int _minRendererParallel;
-
+    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IConfigurationManager _cfgMan = default!;
@@ -68,6 +68,10 @@ internal sealed partial class MidiManager : IMidiManager
     }
 
     [ViewVariables] private readonly List<IMidiRenderer> _renderers = new();
+
+    // To avoid lock contention for now just don't update that much fam.
+    private TimeSpan _nextUpdate;
+    private TimeSpan _updateFrequency = TimeSpan.FromSeconds(0.1f);
 
     private bool _alive = true;
     [ViewVariables] private Settings? _settings;
@@ -141,9 +145,6 @@ internal sealed partial class MidiManager : IMidiManager
             _volume = value;
             _volumeDirty = true;
         }, true);
-
-        _cfgMan.OnValueChanged(CVars.MidiMinRendererParallel,
-            value => _minRendererParallel = value, true);
 
         _midiSawmill = _logger.GetSawmill("midi");
 #if DEBUG
@@ -360,7 +361,13 @@ internal sealed partial class MidiManager : IMidiManager
             return;
         }
 
-        // Update positions of streams every frame.
+        if (_nextUpdate > _timing.RealTime)
+            return;
+
+        // I don't care for accuracy we only have this for performance for now.
+        _nextUpdate = _timing.RealTime + _updateFrequency;
+
+        // Update positions of streams occasionally.
         // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
         // so TRUE
 

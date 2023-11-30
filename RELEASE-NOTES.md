@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 185.1.1
+
+### Bugfixes
+
+* Fix Z-Offset for audio not being applied on initialization.
+
+### Internal
+
+* Flag some internal queries as approximate to avoid unnecessary AABB checks. Some of these are already covered off with TestOverlap calls and the rest will need updating to do so in a future update.
+
+
 ## 185.1.0
 
 ### New features

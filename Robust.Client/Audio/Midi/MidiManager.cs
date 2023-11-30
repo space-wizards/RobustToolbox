@@ -9,6 +9,7 @@ using NFluidsynth;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Audio.Midi;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -28,8 +29,6 @@ namespace Robust.Client.Audio.Midi;
 internal sealed partial class MidiManager : IMidiManager
 {
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
-
-    private int _minRendererParallel;
 
     [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -68,6 +67,8 @@ internal sealed partial class MidiManager : IMidiManager
     }
 
     [ViewVariables] private readonly List<IMidiRenderer> _renderers = new();
+
+    private SemaphoreSlim _updateSemaphore = new(1);
 
     private bool _alive = true;
     [ViewVariables] private Settings? _settings;
@@ -141,9 +142,6 @@ internal sealed partial class MidiManager : IMidiManager
             _volume = value;
             _volumeDirty = true;
         }, true);
-
-        _cfgMan.OnValueChanged(CVars.MidiMinRendererParallel,
-            value => _minRendererParallel = value, true);
 
         _midiSawmill = _logger.GetSawmill("midi");
 #if DEBUG
@@ -364,14 +362,16 @@ internal sealed partial class MidiManager : IMidiManager
         // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
         // so TRUE
 
-        lock (_renderers)
-        {
-            if (_renderers.Count == 0)
-                return;
+        // This semaphore is here to avoid lock contention as much as possible.
+        _updateSemaphore.Wait();
 
-            _updateJob.OurPosition = _audioSys.GetListenerCoordinates();
-            _parallel.ProcessNow(_updateJob, _renderers.Count);
-        }
+        _updateJob.OurPosition = _audioSys.GetListenerCoordinates();
+        // The ONLY time this should be contested is with ThreadUpdate.
+        // If that becomes NOT the case then just lock this, remove the semaphore, and run it every 1/10 second or whatever again.
+        // ReSharper disable once InconsistentlySynchronizedField
+        _parallel.ProcessNow(_updateJob, _renderers.Count);
+
+        _updateSemaphore.Release();
 
         _volumeDirty = false;
     }
@@ -482,21 +482,39 @@ internal sealed partial class MidiManager : IMidiManager
         {
             lock (_renderers)
             {
+                var toRemove = new ValueList<IMidiRenderer>();
+
                 for (var i = 0; i < _renderers.Count; i++)
                 {
                     var renderer = _renderers[i];
-                    if (!renderer.Disposed)
-                    {
-                        if (renderer.Master is { Disposed: true })
-                            renderer.Master = null;
 
-                        renderer.Render();
+                    lock (renderer)
+                    {
+                        if (!renderer.Disposed)
+                        {
+                            if (renderer.Master is { Disposed: true })
+                                renderer.Master = null;
+
+                            renderer.Render();
+                        }
+                        else
+                        {
+                            toRemove.Add(renderer);
+                        }
                     }
-                    else
+                }
+
+                if (toRemove.Count > 0)
+                {
+                    _updateSemaphore.Wait();
+
+                    foreach (var renderer in toRemove)
                     {
                         renderer.InternalDispose();
                         _renderers.Remove(renderer);
                     }
+
+                    _updateSemaphore.Release();
                 }
             }
 
@@ -683,7 +701,13 @@ internal sealed partial class MidiManager : IMidiManager
 
         public void Execute(int index)
         {
-            Manager.UpdateRenderer(Renderers[index], OurPosition);
+            // The indices shouldn't be able to be touched while this job is running, just the renderer itself getting locked.
+            var renderer = Renderers[index];
+
+            lock (renderer)
+            {
+                Manager.UpdateRenderer(Renderers[index], OurPosition);
+            }
         }
     }
 

@@ -106,7 +106,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var audio = SetupAudio(entity, filename, audioParams);
         AddAudioFilter(entity, audio, playerFilter);
         audio.Global = true;
-        Dirty(entity, audio);
         Log.Debug($"Spawned global audio filename {filename} at {coordinates}, global is {audio.Global}");
 
         return (entity, audio);

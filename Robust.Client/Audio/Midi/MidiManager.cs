@@ -424,7 +424,7 @@ internal sealed partial class MidiManager : IMidiManager
             mapPos = renderer.TrackingCoordinates.Value;
 
             // If it's on a different map then just mute it, not pause.
-            if (mapPos.MapId == MapId.Nullspace)
+            if (mapPos.MapId == MapId.Nullspace || mapPos.MapId != listener.MapId)
             {
                 renderer.Source.Gain = 0f;
                 return;

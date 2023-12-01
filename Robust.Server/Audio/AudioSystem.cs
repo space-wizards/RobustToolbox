@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.AudioLoading;
@@ -19,7 +20,6 @@ namespace Robust.Server.Audio;
 
 public sealed partial class AudioSystem : SharedAudioSystem
 {
-    [Dependency] private readonly MetaDataSystem _metadata = default!;
     [Dependency] private readonly PvsOverrideSystem _pvs = default!;
     [Dependency] private readonly IResourceManager _resourceManager = default!;
 
@@ -40,30 +40,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
     {
         component.Source = new DummyAudioSource();
-    }
-
-    /// <summary>
-    /// Gets or creates the global audio entity map.
-    /// </summary>
-    /// <returns></returns>
-    internal EntityUid EnsureAudioMap()
-    {
-        if (Count<GlobalAudioMapComponent>() == 0)
-        {
-            var mapId = MapManager.CreateMap();
-            var mapUid = MapManager.GetMapEntityId(mapId);
-            AddComp<GlobalAudioMapComponent>(mapUid);
-            _metadata.SetEntityName(mapUid, "Audio map");
-        }
-
-        var query = EntityQueryEnumerator<GlobalAudioMapComponent>();
-
-        while (query.MoveNext(out var uid, out _))
-        {
-            return uid;
-        }
-
-        return EntityUid.Invalid;
     }
 
     private void AddAudioFilter(EntityUid uid, AudioComponent component, Filter filter)
@@ -95,10 +71,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
-        var globalMapUid = EnsureAudioMap();
-        var coordinates = new EntityCoordinates(globalMapUid, Vector2.Zero);
-
-        var entity = Spawn("Audio", coordinates);
+        var entity = Spawn("Audio", MapCoordinates.Nullspace);
         var audio = SetupAudio(entity, filename, audioParams);
         AddAudioFilter(entity, audio, playerFilter);
         audio.Global = true;

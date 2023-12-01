@@ -11,7 +11,6 @@ using Robust.Shared.Audio.Systems;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
@@ -30,7 +29,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         base.Initialize();
         SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
-        Log.Level = LogLevel.Debug;
     }
 
     public override void Shutdown()
@@ -56,8 +54,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
             var mapUid = MapManager.GetMapEntityId(mapId);
             AddComp<GlobalAudioMapComponent>(mapUid);
             _metadata.SetEntityName(mapUid, "Audio map");
-            Log.Info($"Setup audio map at {mapId}");
-
         }
 
         var query = EntityQueryEnumerator<GlobalAudioMapComponent>();
@@ -106,8 +102,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var audio = SetupAudio(entity, filename, audioParams);
         AddAudioFilter(entity, audio, playerFilter);
         audio.Global = true;
-        Log.Debug($"Spawned global audio filename {filename} at {coordinates}, global is {audio.Global}");
-
         return (entity, audio);
     }
 

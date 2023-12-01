@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 186.1.0
+
+### New features
+
+* Add public method to get PVS session overrides for a specific session.
+
+### Internal
+
+* Add temporary audio debugging.
+
+
 ## 186.0.0
 
 ### Breaking changes

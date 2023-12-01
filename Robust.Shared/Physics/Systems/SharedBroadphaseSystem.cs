@@ -51,9 +51,18 @@ namespace Robust.Shared.Physics.Systems
         private ObjectPool<List<FixtureProxy>> _bufferPool =
             new DefaultObjectPool<List<FixtureProxy>>(new ListPolicy<FixtureProxy>(), 2048);
 
+        private BroadphaseJob _broadphaseJob;
+
         public override void Initialize()
         {
             base.Initialize();
+
+            _broadphaseJob = new BroadphaseJob()
+            {
+                Broadphase = this,
+                BroadphaseExpand = _broadphaseExpand,
+                MapManager = _mapManager,
+            };
 
             _broadphaseQuery = GetEntityQuery<BroadphaseComponent>();
             _gridQuery = GetEntityQuery<MapGridComponent>();
@@ -191,17 +200,11 @@ namespace Robust.Shared.Physics.Systems
                 pMoveBuffer[idx++] = (proxy, aabb);
             }
 
-            var job = new BroadphaseJob()
-            {
-                Broadphase = this,
-                BroadphaseExpand = _broadphaseExpand,
-                ContactBuffer = contactBuffer,
-                PMoveBuffer = pMoveBuffer,
-                MapId = mapId,
-                MapManager = _mapManager
-            };
+            _broadphaseJob.ContactBuffer = contactBuffer;
+            _broadphaseJob.PMoveBuffer = pMoveBuffer;
+            _broadphaseJob.MapId = mapId;
 
-            _parallel.ProcessNow(job, count);
+            _parallel.ProcessNow(_broadphaseJob, count);
 
             for (var i = 0; i < count; i++)
             {

@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 186.0.0
+
+### Breaking changes
+
+* Global audio is now stored on its own map to avoid contamination issues with nullspace.
+
+### Bugfixes
+
+* Fix MIDIs playing cross-map
+* Only dispose audio on game closure and don't stop playing if it's disposed elsewhere i.e. MIDIs.
+
+
 ## 185.2.0
 
 ### Bugfixes

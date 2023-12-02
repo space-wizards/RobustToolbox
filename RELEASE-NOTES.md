@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 187.1.0
+
+### Bugfixes
+
+* Apply default audio params to all audio sources not just non-buffered ones.
+* Avoid re-allocating broadphase job every tick and maybe fix a rare nullref for it.
+
+
 ## 187.0.0
 
 ### New features

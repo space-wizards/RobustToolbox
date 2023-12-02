@@ -37,6 +37,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
+    [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
     [Dependency] private readonly IAudioInternal _audio = default!;
@@ -110,20 +111,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             component.Source.SetAuxiliary(null);
         }
-    }
-
-    internal bool TryGetGlobalAudioMap([NotNullWhen(true)] out EntityUid? uid)
-    {
-        var query = EntityQueryEnumerator<GlobalAudioMapComponent>();
-
-        while (query.MoveNext(out var vUid, out _))
-        {
-            uid = vUid;
-            return true;
-        }
-
-        uid = null;
-        return false;
     }
 
     /// <summary>
@@ -233,14 +220,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
             _streams.Add((uid, comp, xform));
         }
 
-        MapManager.TryFindGridAt(ourPos, out var gridUid, out _);
+        _mapManager.TryFindGridAt(ourPos, out var gridUid, out _);
         _listenerGrid = gridUid == EntityUid.Invalid ? null : gridUid;
-        TryGetGlobalAudioMap(out var globalUid);
 
         try
         {
             _updateAudioJob.OurPosition = ourPos;
-            _updateAudioJob.GlobalAudioMap = globalUid;
             _parMan.ProcessNow(_updateAudioJob, _streams.Count);
         }
         catch (Exception e)
@@ -255,7 +240,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return _eyeManager.CurrentEye.Position;
     }
 
-    private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener, EntityUid? globalAudioMap)
+    private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
     {
         // TODO:
         // I Originally tried to be fancier here but it caused audio issues so just trying
@@ -269,7 +254,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // If it's global but on another map (that isn't nullspace) then stop playing it.
         if (component.Global)
         {
-            if (xform.MapUid != globalAudioMap && listener.MapId != xform.MapID)
+            if (xform.MapID != MapId.Nullspace && listener.MapId != xform.MapID)
             {
                 component.Gain = 0f;
                 return;
@@ -466,15 +451,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="audioParams"></param>
     private (EntityUid Entity, AudioComponent Component)? PlayGlobal(AudioStream stream, AudioParams? audioParams = null)
     {
-        var audio = CreateAndStartPlayingStream(audioParams, stream);
-
-        if (audio == null)
-            return null;
-
-        audio.Value.Component.Global = true;
-        audio.Value.Component.Source.Global = true;
-        Dirty(audio.Value.Entity, audio.Value.Component);
-        return (audio.Value.Entity, audio.Value.Component);
+        var (entity, component) = CreateAndStartPlayingStream(audioParams, stream);
+        component.Global = true;
+        component.Source.Global = true;
+        Dirty(entity, component);
+        return (entity, component);
     }
 
     /// <summary>
@@ -506,11 +487,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
     {
         var playing = CreateAndStartPlayingStream(audioParams, stream);
-
-        if (playing == null)
-            return null;
-
-        _xformSys.SetCoordinates(playing.Value.Entity, new EntityCoordinates(entity, Vector2.Zero));
+        _xformSys.SetCoordinates(playing.Entity, new EntityCoordinates(entity, Vector2.Zero));
 
         return playing;
     }
@@ -545,11 +522,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         var playing = CreateAndStartPlayingStream(audioParams, stream);
-
-        if (playing == null)
-            return null;
-
-        _xformSys.SetCoordinates(playing.Value.Entity, coordinates);
+        _xformSys.SetCoordinates(playing.Entity, coordinates);
         return playing;
     }
 
@@ -607,13 +580,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return PlayStatic(filename, coordinates, audioParams);
     }
 
-    private (EntityUid Entity, AudioComponent Component)? CreateAndStartPlayingStream(AudioParams? audioParams, AudioStream stream)
+    private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(AudioParams? audioParams, AudioStream stream)
     {
-        if (!TryGetGlobalAudioMap(out var globalUid))
-            return null;
-
         var audioP = audioParams ?? AudioParams.Default;
-        var entity = EntityManager.CreateEntityUninitialized("Audio", new EntityCoordinates(globalUid.Value, Vector2.Zero));
+        var entity = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
         var comp = SetupAudio(entity, stream.Name!, audioP);
         EntityManager.InitializeAndStartEntity(entity);
         var source = comp.Source;
@@ -671,14 +641,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
         public AudioSystem System;
 
         public MapCoordinates OurPosition;
-        public EntityUid? GlobalAudioMap;
         public List<(EntityUid Entity, AudioComponent Component, TransformComponent Xform)> Streams;
 
         public void Execute(int index)
         {
             var comp = Streams[index];
 
-            System.ProcessStream(comp.Entity, comp.Component, comp.Xform, OurPosition, GlobalAudioMap);
+            System.ProcessStream(comp.Entity, comp.Component, comp.Xform, OurPosition);
         }
     }
 

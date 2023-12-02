@@ -226,10 +226,15 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                 gridLoc.Add(index);
                 dirtyChunks.Add(gridChunkLocation);
                 break;
-            case SessionOverride sessionOverride:
-                if (!_sessionOverrides.TryGetValue(sessionOverride.Session, out var set))
-                    return;
-                set.Add(index);
+            case SessionsOverride sessionOverride:
+                foreach (var sesh in sessionOverride.Sessions)
+                {
+                    if (!_sessionOverrides.TryGetValue(sesh, out var set))
+                        continue;
+
+                    set.Add(index);
+                }
+
                 break;
             case MapChunkLocation mapChunkLocation:
                 // might be gone due to map-deletions
@@ -259,8 +264,11 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             case GridChunkLocation gridChunkLocation:
                 _gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices].Remove(index);
                 break;
-            case SessionOverride sessionOverride:
-                _sessionOverrides.GetValueOrDefault(sessionOverride.Session)?.Remove(index);
+            case SessionsOverride sessionOverride:
+                foreach (var sesh in sessionOverride.Sessions)
+                {
+                    _sessionOverrides.GetValueOrDefault(sesh)?.Remove(index);
+                }
                 break;
             case MapChunkLocation mapChunkLocation:
                 _mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices].Remove(index);
@@ -410,7 +418,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             return;
         }
 
-        if (!removeFromOverride && oldLocation is SessionOverride)
+        if (!removeFromOverride && oldLocation is SessionsOverride)
             return;
 
         if (oldLocation is GlobalOverride global &&
@@ -433,20 +441,29 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     {
         if (!TryGetLocation(index, out var oldLocation))
         {
-            RegisterUpdate(index, new SessionOverride(session));
+            RegisterUpdate(index, new SessionsOverride(new HashSet<ICommonSession>()
+            {
+                session
+            }));
             return;
         }
 
         if (!removeFromOverride && oldLocation is GlobalOverride)
             return;
 
-        if (oldLocation is SessionOverride local &&
-            (!removeFromOverride || local.Session == session))
+        if (oldLocation is SessionsOverride local)
         {
+            if (!removeFromOverride || local.Sessions.Contains(session))
+                return;
+
+            local.Sessions.Add(session);
             return;
         }
 
-        RegisterUpdate(index, new SessionOverride(session));
+        RegisterUpdate(index, new SessionsOverride(new HashSet<ICommonSession>()
+        {
+            session
+        }));
     }
 
     /// <summary>
@@ -459,7 +476,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     {
         if (!removeFromOverride
             && TryGetLocation(index, out var oldLocation)
-            && oldLocation is GlobalOverride or SessionOverride)
+            && oldLocation is GlobalOverride or SessionsOverride)
         {
             return;
         }
@@ -509,7 +526,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         _indexLocations.TryGetValue(index, out var oldLocation);
 
         //removeFromOverride is false 99% of the time.
-        if ((bufferedLocation ?? oldLocation) is GlobalOverride or SessionOverride && !removeFromOverride)
+        if ((bufferedLocation ?? oldLocation) is GlobalOverride or SessionsOverride && !removeFromOverride)
             return;
 
         if (oldLocation is GridChunkLocation oldGrid &&
@@ -540,7 +557,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         _indexLocations.TryGetValue(index, out var oldLocation);
 
         //removeFromOverride is false 99% of the time.
-        if ((bufferedLocation ?? oldLocation) is GlobalOverride or SessionOverride && !removeFromOverride)
+        if ((bufferedLocation ?? oldLocation) is GlobalOverride or SessionsOverride && !removeFromOverride)
             return;
 
         // Is this entity just returning to its old location?
@@ -640,14 +657,17 @@ public struct GlobalOverride : IIndexLocation
     }
 }
 
-public struct SessionOverride : IIndexLocation
+/// <summary>
+/// Adds overrides for the specified sessions for this entity.
+/// </summary>
+public struct SessionsOverride : IIndexLocation
 {
-    public SessionOverride(ICommonSession session)
+    public SessionsOverride(HashSet<ICommonSession> sessions)
     {
-        Session = session;
+        Sessions = sessions;
     }
 
-    public readonly ICommonSession Session;
+    public readonly HashSet<ICommonSession> Sessions;
 }
 
 #endregion

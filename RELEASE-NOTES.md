@@ -54,6 +54,21 @@ END TEMPLATE-->
 *None yet*
 
 
+## 187.0.0
+
+### New features
+
+* Improved error message for network failing to initialize.
+
+### Bugfixes
+
+* Fix not being able to add multiple PVS session overrides in a single tick without overwriting each one. This should fix issues with audio filters.
+
+### Other
+
+* Changed toolshed initialisation logs to verbose.
+
+
 ## 186.1.0
 
 ### New features

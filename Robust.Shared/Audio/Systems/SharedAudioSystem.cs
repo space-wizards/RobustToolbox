@@ -29,7 +29,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
 {
     [Dependency] protected readonly IConfigurationManager CfgManager = default!;
     [Dependency] protected readonly IGameTiming Timing = default!;
-    [Dependency] protected readonly IMapManager MapManager = default!;
     [Dependency] private   readonly INetManager _netManager = default!;
     [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
@@ -50,7 +49,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         base.Initialize();
         InitializeEffect();
-        Log.Level = LogLevel.Debug;
         ZOffset = CfgManager.GetCVar(CVars.AudioZOffset);
         CfgManager.OnValueChanged(CVars.AudioZOffset, SetZOffset);
         SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
@@ -90,23 +88,15 @@ public abstract partial class SharedAudioSystem : EntitySystem
     private void OnAudioGetStateAttempt(EntityUid uid, AudioComponent component, ref ComponentGetStateAttemptEvent args)
     {
         var playerEnt = args.Player?.AttachedEntity;
-        if (component.Global)
-        {
-            Log.Debug($"Attempting get state for global audio for audio {ToPrettyString(uid)} / player {ToPrettyString(playerEnt)}.");
-        }
 
         if (component.ExcludedEntity != null && playerEnt == component.ExcludedEntity)
         {
-            Log.Debug($"Cancelled get state for {ToPrettyString(playerEnt)} due to excluded entity.");
             args.Cancelled = true;
             return;
         }
 
         if (playerEnt != null && component.IncludedEntities != null && !component.IncludedEntities.Contains(playerEnt.Value))
         {
-            Log.Debug($"Cancelled global audio get state for {ToPrettyString(playerEnt.Value)} due to not in included entities");
-            var incEntities = string.Join(", ", component.IncludedEntities.Select(ToPrettyString));
-            Log.Debug($"Included entities has {component.IncludedEntities.Count} entities, {incEntities}");
             args.Cancelled = true;
         }
     }

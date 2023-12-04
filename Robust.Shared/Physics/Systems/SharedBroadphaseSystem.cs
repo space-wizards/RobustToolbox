@@ -419,6 +419,8 @@ namespace Robust.Shared.Physics.Systems
             if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
 
+            _physicsSystem.SetAwake(uid, body, true);
+
             foreach (var fixture in fixtures.Fixtures.Values)
             {
                 TouchProxies(xform.MapID, broadphase, fixture);

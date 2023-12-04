@@ -405,14 +405,19 @@ namespace Robust.Shared.Physics.Systems
 
         public void RegenerateContacts(EntityUid uid, PhysicsComponent body, FixturesComponent? fixtures = null, TransformComponent? xform = null)
         {
+            // If it can't collide then we can't touch proxies and add them to the movebuffer anyway.
+            if (!body.CanCollide)
+            {
+                // Sleep body may still have contacts around.
+                return;
+            }
+
             _physicsSystem.DestroyContacts(body);
             if (!Resolve(uid, ref xform, ref fixtures))
                 return;
 
             if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
-
-            _physicsSystem.SetAwake(uid, body, true);
 
             foreach (var fixture in fixtures.Fixtures.Values)
             {

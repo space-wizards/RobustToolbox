@@ -405,6 +405,7 @@ public partial class SharedPhysicsSystem
         if (updateSleepTime)
             SetSleepTime(body, 0);
 
+        UpdateMapAwakeState(uid, body);
         Dirty(ent);
     }
 

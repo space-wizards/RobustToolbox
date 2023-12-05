@@ -17,7 +17,7 @@ public interface IMidiManager
     bool IsAvailable { get; }
 
     /// <summary>
-    ///     Volume, in db.
+    ///     Gain of audio.
     /// </summary>
     float Gain { get; set; }
 

@@ -376,11 +376,11 @@ public abstract partial class SharedPhysicsSystem
             var contact = node.Value;
             node = node.Next;
 
-            // It's possible the contact was destroyed by contact in which case we just skip it.
+            // It's possible the contact was destroyed by content in which case we just skip it.
             if (!contact.Enabled)
                 continue;
 
-            // No longer pre-init.
+            // No longer pre-init and can be used in the solver.
             contact.Flags &= ~ContactFlags.PreInit;
             Fixture fixtureA = contact.FixtureA!;
             Fixture fixtureB = contact.FixtureB!;

@@ -120,6 +120,7 @@ public abstract partial class SharedPhysicsSystem
         public bool Return(Contact obj)
         {
             SetContact(obj,
+                false,
                 EntityUid.Invalid, EntityUid.Invalid,
                 string.Empty, string.Empty,
                 null, 0,
@@ -130,6 +131,7 @@ public abstract partial class SharedPhysicsSystem
     }
 
     private static void SetContact(Contact contact,
+        bool enabled,
         EntityUid uidA, EntityUid uidB,
         string fixtureAId, string fixtureBId,
         Fixture? fixtureA, int indexA,
@@ -137,9 +139,9 @@ public abstract partial class SharedPhysicsSystem
         PhysicsComponent? bodyA,
         PhysicsComponent? bodyB)
     {
-        contact.Enabled = true;
+        contact.Enabled = enabled;
         contact.IsTouching = false;
-        contact.Flags = ContactFlags.None;
+        contact.Flags = ContactFlags.None | ContactFlags.PreInit;
         // TOIFlag = false;
 
         contact.EntityA = uidA;
@@ -227,11 +229,11 @@ public abstract partial class SharedPhysicsSystem
         // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
         if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
         {
-            SetContact(contact, uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB, bodyA, bodyB);
+            SetContact(contact, true, uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB, bodyA, bodyB);
         }
         else
         {
-            SetContact(contact, uidB, uidA, fixtureBId, fixtureAId, fixtureB, indexB, fixtureA, indexA, bodyB, bodyA);
+            SetContact(contact, true, uidB, uidA, fixtureBId, fixtureAId, fixtureB, indexB, fixtureA, indexA, bodyB, bodyA);
         }
 
         contact.Type = _registers[(int)type1, (int)type2];
@@ -374,6 +376,12 @@ public abstract partial class SharedPhysicsSystem
             var contact = node.Value;
             node = node.Next;
 
+            // It's possible the contact was destroyed by content in which case we just skip it.
+            if (!contact.Enabled)
+                continue;
+
+            // No longer pre-init and can be used in the solver.
+            contact.Flags &= ~ContactFlags.PreInit;
             Fixture fixtureA = contact.FixtureA!;
             Fixture fixtureB = contact.FixtureB!;
             int indexA = contact.ChildIndexA;
@@ -502,6 +510,7 @@ public abstract partial class SharedPhysicsSystem
             {
                 Log.Error($"Insufficient contact length at 429! Index {index} and length is {contacts.Length}. Tell Sloth");
             }
+
             contacts[index++] = contact;
         }
 
@@ -521,6 +530,12 @@ public abstract partial class SharedPhysicsSystem
             }
 
             var contact = contacts[i];
+
+            // It's possible the contact was disabled above if DestroyContact lead to even more being destroyed.
+            if (!contact.Enabled)
+            {
+                continue;
+            }
 
             switch (status[i])
             {
@@ -636,12 +651,12 @@ public abstract partial class SharedPhysicsSystem
 
         // TODO: Temporary measure. When Box2D 3.0 comes out expect a major refactor
         // of everything
-        if (contact.FixtureA == null || contact.FixtureB == null)
+        // It's okay past sloth it can't hurt you anymore.
+        // This can happen if DestroyContact is called and content deletes contacts that were already processed.
+        if (!contact.Enabled)
         {
-            Log.Error($"Found a null contact for contact at {index}");
             status[index] = ContactStatus.NoContact;
             wake[index] = false;
-            DebugTools.Assert(false);
             return;
         }
 

@@ -54,6 +54,21 @@ END TEMPLATE-->
 *None yet*
 
 
+## 187.1.2
+
+### Bugfixes
+
+* Hotfix contact nullrefs if they're modified during manifold generation.
+
+
+## 187.1.1
+
+### Bugfixes
+
+* Revert physics solver job to fix crashes until box2d v3 rolls around.
+* Don't RegenerateContacts if the body isn't collidable to avoid putting non-collidable proxies on the movebuffer.
+
+
 ## 187.1.0
 
 ### Bugfixes

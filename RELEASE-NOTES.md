@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 187.1.2
+
+### Bugfixes
+
+* Hotfix contact nullrefs if they're modified during manifold generation.
+
+
 ## 187.1.1
 
 ### Bugfixes

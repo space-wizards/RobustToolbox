@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 187.2.0
+
+### New features
+
+* Added a cancellable bool to physics sleeping events where we may wish to cancel it.
+
+### Bugfixes
+
+* Fix corrupted physics awake state leading to client mispredicts.
+
+
 ## 187.1.2
 
 ### Bugfixes

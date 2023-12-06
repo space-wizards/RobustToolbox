@@ -399,12 +399,30 @@ public partial class SharedPhysicsSystem
         {
             var ev = new PhysicsSleepEvent(uid, body);
             RaiseLocalEvent(uid, ref ev, true);
+
+            // Reset the sleep timer.
+            if (ev.Cancelled)
+            {
+                if (updateSleepTime)
+                    SetSleepTime(body, 0);
+
+                return;
+            }
+
             ResetDynamics(body);
         }
 
         if (updateSleepTime)
             SetSleepTime(body, 0);
 
+        if (body.Awake != value)
+        {
+            Log.Error($"Found a corrupted physics awake state for {ToPrettyString(ent)}! Did you forget to cancel the sleep subscription? Forcing body awake");
+            DebugTools.Assert(false);
+            body.Awake = true;
+        }
+
+        UpdateMapAwakeState(uid, body);
         Dirty(ent);
     }
 

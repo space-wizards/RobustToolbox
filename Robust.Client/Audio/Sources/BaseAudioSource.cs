@@ -188,7 +188,7 @@ internal abstract class BaseAudioSource : IAudioSource
             if (!IsEfxSupported)
             {
                 AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
-                priorOcclusion = _gain == 0 ? 1f : priorGain / _gain;
+                priorOcclusion = _gain == 0 ? 0.5f : priorGain / _gain;
             }
 
             _gain = value;

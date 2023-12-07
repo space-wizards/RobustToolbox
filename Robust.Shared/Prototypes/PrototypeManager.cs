@@ -713,14 +713,8 @@ namespace Robust.Shared.Prototypes
             if (attribute == null)
                 return false;
 
-            if (attribute.Type == null)
-            {
-                kind = CalculatePrototypeName(type);
-                return true;
-            }
-
             // If the variant isn't registered, this fails.
-            if (!HasKind(attribute.Type))
+            if (attribute.Type == null || !HasKind(attribute.Type))
                 return false;
 
             kind = attribute.Type;

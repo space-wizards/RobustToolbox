@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
@@ -46,7 +47,6 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
@@ -171,15 +171,93 @@ Oldest acked clients: {string.Join(", ", players)}
         /// <inheritdoc />
         public void SendGameStateUpdate()
         {
+            /*
+             * This is it, this is PVS, the most expensive thing in the entire game that scales with player count.
+             *
+             * the tl;dr is we have the "fast" path and the "slow" path.
+             * The fast path is relying on assumptions about transform anchoring to quickly iterate entities
+             * In ss14 roughly 3/4 of all entities in a standard viewport (about 2k) are anchored
+             * This also allows us to split streaming from dynamic to static entities
+             *
+             * The 'slow' path is all other entities where we can't just skip entire chunks
+             * and need to check them all individually. We'll still batch as much work as possible
+             * but can't take easy outs.
+             */
+
             var players = _playerManager.Sessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
-            // Update entity positions in PVS chunks/collections
-            // TODO disable processing if culling is disabled? Need to check if toggling PVS breaks anything.
-            // TODO parallelize?
-            using (_usageHistogram.WithLabels("Update Collections").NewTimer())
+            // Additionally, yes I know these grafana timers won't be 'correct' due to multiple jobs running concurrently
+            // but I would rather have threads throttling to shit where possible.
+
+            WaitHandle ackHandle;
+            WaitHandle dynamicChunkSetHandle;
+            WaitHandle anchorHandle;
+            WaitHandle dynamicHandle;
+            WaitHandle stateHandle;
+
+            // Update client acks, which is used to figure out what data needs to be sent to clients
+            using (_usageHistogram.WithLabels("Pvs Process Acks").NewTimer())
             {
-                _pvs.ProcessCollections();
+                ackHandle = _pvs.ProcessQueuedAcks();
             }
+
+            // Get the viewer data for each client i.e. viewers comprising vismask, position, box2
+            // This is relatively fast and allows us to run dynamic chunkset processing
+            // and the anchoring step in parallel to each other.
+            _pvs.ProcessViewerData();
+
+            // Get the dynamic chunkset in range of every player, comprising NxN areas
+            // From here get the entities in each chunk recursively upwards that aren't anchored.
+            // This allows us to determine which entities are in range of a client and share the work
+            // so we don't have to do it per client.
+            // ChunkSet then has all of its "chunks" combined into the 1 list of entities in range.
+            // If players have the same chunk set and the same vismask then they have the same entities in range.
+
+            // This can be done in parallel with the above ack processing.
+            var dynamicChunkSetTimer = _usageHistogram.WithLabels("Pvs Chunk Sets").NewTimer();
+            dynamicChunkSetHandle = _pvs.ProcessDynamicChunksets();
+
+            // Anchoring needs to know what entities have been sent
+            ackHandle.WaitOne();
+
+            // Anchoring
+            // Iterate all grid chunks in range of viewers
+            // If the chunk is new then get states for all entities as we have chunk budgets.
+            // If the chunk is old then check if it's modified since we last observed it
+            // If it's modified then iterate all the entities and check which ones are relevant.
+            // TODO: Cache modified for last 30 ticks?
+            // Get all old chunks not in range and start detaching entities.
+            // Where chunks don't meet the budget then don't store them as sent for the client.
+            // If any entities from last tick aren't in range of our chunkset (from step 1.) then detach them too
+            // We'll also get gamestates for entities during this step as applicable.
+
+            var anchorTimer = _usageHistogram.WithLabels("Pvs Anchoring Data").NewTimer();
+            anchorHandle = _pvs.ProcessAnchoring();
+
+            anchorHandle.WaitOne();
+            anchorTimer.Dispose();
+
+            dynamicChunkSetHandle.WaitOne();
+            dynamicChunkSetTimer.Dispose();
+
+            // Process dynamic entities + any overrides
+            // If we have no budget left (due to static streaming above) then only process overrides.
+            // We do this after anchoring in case entities became anchored or were no longer anchored (i.e. if we can see their chunk assume they got sent).
+            // Also get the remaining dynamic entity states during this step (anchored ones are already processed above).
+            var dynamicDataTimer = _usageHistogram.WithLabels("Pvs Dynamic Data").NewTimer();
+            dynamicHandle = _pvs.ProcessDynamicChunksets();
+
+            dynamicHandle.WaitOne();
+            dynamicDataTimer.Dispose();
+
+            // TODO: State update
+            var stateTimer = _usageHistogram.WithLabels("Pvs State Updates").NewTimer();
+            stateHandle = SendStateUpdates();
+
+            stateHandle.WaitOne();
+            stateTimer.Dispose();
+
+            // PVS done time to cleanup.
 
             // Figure out what chunks players can see and cache some chunk data.
             PvsData? pvsData = null;
@@ -187,12 +265,6 @@ Oldest acked clients: {string.Join(", ", players)}
             {
                 using var _ = _usageHistogram.WithLabels("Get Chunks").NewTimer();
                 pvsData = GetPVSData(players);
-            }
-
-            // Update client acks, which is used to figure out what data needs to be sent to clients
-            using (_usageHistogram.WithLabels("Process Acks").NewTimer())
-            {
-                _pvs.ProcessQueuedAcks();
             }
 
             // Construct & send the game state to each player.

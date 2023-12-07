@@ -9,7 +9,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.GameObjects
 {
-    [NetworkedComponent, Access(typeof(SharedPointLightSystem))]
+    [NetworkedComponent, AutoGenerateComponentState, Access(typeof(SharedPointLightSystem))]
     public abstract partial class SharedPointLightComponent : Component
     {
         [ViewVariables(VVAccess.ReadWrite)]

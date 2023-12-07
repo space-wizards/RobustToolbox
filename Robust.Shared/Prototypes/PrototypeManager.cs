@@ -713,6 +713,12 @@ namespace Robust.Shared.Prototypes
             if (attribute == null)
                 return false;
 
+            if (attribute.Type == null)
+            {
+                kind = CalculatePrototypeName(type);
+                return true;
+            }
+
             // If the variant isn't registered, this fails.
             if (!HasKind(attribute.Type))
                 return false;
@@ -745,6 +751,16 @@ namespace Robust.Shared.Prototypes
 
         void IPrototypeManager.RegisterType(Type type) => RegisterKind(type);
 
+        static string CalculatePrototypeName(Type type)
+        {
+            const string prototype = "Prototype";
+            if (!type.Name.EndsWith(prototype))
+                throw new InvalidPrototypeNameException($"Prototype {type} must end with the word Prototype");
+
+            var name = type.Name.AsSpan();
+            return $"{char.ToLowerInvariant(name[0])}{name[1..][..^prototype.Length]}";
+        }
+
         /// <inheritdoc />
         public void RegisterKind(Type kind)
         {
@@ -759,6 +775,8 @@ namespace Robust.Shared.Prototypes
                     typeof(IPrototype),
                     "No " + nameof(PrototypeAttribute) + " to give it a type string.");
             }
+
+            attribute.Type ??= CalculatePrototypeName(kind);
 
             if (_kindNames.TryGetValue(attribute.Type, out var name))
             {
@@ -902,6 +920,14 @@ namespace Robust.Shared.Prototypes
             _context.WritingReadingPrototypes = false;
             _prototypeDataCache[prototype.ID] = data;
             return data;
+        }
+    }
+
+    [Virtual]
+    public class InvalidPrototypeNameException : Exception
+    {
+        public InvalidPrototypeNameException(string message) : base(message)
+        {
         }
     }
 }

@@ -185,7 +185,7 @@ namespace Robust.Client.GameStates
                 return;
 
             _sawmill.Error($"""
-                Added component {comp.Name} with net id {comp.NetID} while resetting predicted entities.
+                Added component {comp.Name} to entity {_entityManager.ToPrettyString(args.BaseArgs.Owner)} while resetting predicted entities.
                 Stack trace:
                 {Environment.StackTrace}
                 """);

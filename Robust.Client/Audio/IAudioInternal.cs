@@ -26,6 +26,11 @@ internal interface IAudioInternal
     IBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false);
 
     /// <summary>
+    /// Sets the velocity for the audio listener.
+    /// </summary>
+    void SetVelocity(Vector2 velocity);
+
+    /// <summary>
     /// Sets position for the audio listener.
     /// </summary>
     void SetPosition(Vector2 position);

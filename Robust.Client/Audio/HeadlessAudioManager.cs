@@ -41,6 +41,11 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     }
 
     /// <inheritdoc />
+    public void SetVelocity(Vector2 velocity)
+    {
+    }
+
+    /// <inheritdoc />
     public void SetPosition(Vector2 position)
     {
     }

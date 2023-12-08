@@ -61,6 +61,12 @@ internal partial class AudioManager
     }
 
     /// <inheritdoc/>
+    public void SetVelocity(Vector2 velocity)
+    {
+        AL.Listener(ALListener3f.Velocity, velocity.X, velocity.Y, 0f);
+    }
+
+    /// <inheritdoc/>
     public void SetPosition(Vector2 position)
     {
         AL.Listener(ALListener3f.Position, position.X, position.Y, _zOffset);
@@ -272,6 +278,7 @@ internal partial class AudioManager
 
         var audioSource = new AudioSource(this, source, stream);
         _audioSources.Add(source, new WeakReference<BaseAudioSource>(audioSource));
+        ApplyDefaultParams(audioSource);
         return audioSource;
     }
 
@@ -288,7 +295,16 @@ internal partial class AudioManager
 
         var audioSource = new BufferedAudioSource(this, source, AL.GenBuffers(buffers), floatAudio);
         _bufferedAudioSources.Add(source, new WeakReference<BufferedAudioSource>(audioSource));
+        ApplyDefaultParams(audioSource);
         return audioSource;
+    }
+
+    private void ApplyDefaultParams(IAudioSource source)
+    {
+        source.MaxDistance = AudioParams.Default.MaxDistance;
+        source.Pitch = AudioParams.Default.Pitch;
+        source.ReferenceDistance = AudioParams.Default.ReferenceDistance;
+        source.RolloffFactor = AudioParams.Default.RolloffFactor;
     }
 
     /// <inheritdoc />
@@ -318,7 +334,6 @@ internal partial class AudioManager
         {
             if (source.TryGetTarget(out var target))
             {
-                target.Playing = false;
                 target.Dispose();
             }
         }
@@ -329,7 +344,6 @@ internal partial class AudioManager
         {
             if (source.TryGetTarget(out var target))
             {
-                target.Playing = false;
                 target.Dispose();
             }
         }

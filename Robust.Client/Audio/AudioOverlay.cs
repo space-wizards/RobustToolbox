@@ -69,7 +69,7 @@ public sealed class AudioOverlay : Overlay
 
             var screenPos = args.ViewportControl.WorldToScreen(audioPos);
             var distance = audioPos - listenerPos.Position;
-            var posOcclusion = _audio.GetOcclusion(uid, listenerPos, distance, distance.Length());
+            var posOcclusion = _audio.GetOcclusion(listenerPos, distance, distance.Length(), uid);
 
             output.Clear();
             output.AppendLine("Audio Source");

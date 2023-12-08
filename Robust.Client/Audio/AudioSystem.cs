@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using System.Threading.Tasks;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
@@ -23,7 +23,6 @@ using Robust.Shared.Player;
 using Robust.Shared.Replays;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
-using AudioComponent = Robust.Shared.Audio.Components.AudioComponent;
 
 namespace Robust.Client.Audio;
 
@@ -34,6 +33,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
      * but exposing the whole thing in an easy way is a lot of effort.
      */
 
+    [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
@@ -49,25 +49,40 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     private readonly List<(EntityUid Entity, AudioComponent Component, TransformComponent Xform)> _streams = new();
     private EntityUid? _listenerGrid;
+    private UpdateAudioJob _updateAudioJob;
 
-    private EntityQuery<MapGridComponent> _gridQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
-    private EntityQuery<TransformComponent> _xformQuery;
 
     private float _maxRayLength;
+
+    public override float ZOffset
+    {
+        get => _zOffset;
+        protected set
+        {
+            _zOffset = value;
+            _audio.SetZOffset(value);
+        }
+    }
+
+    private float _zOffset;
 
     /// <inheritdoc />
     public override void Initialize()
     {
         base.Initialize();
 
+        _updateAudioJob = new UpdateAudioJob
+        {
+            System = this,
+            Streams = _streams,
+        };
+
         UpdatesOutsidePrediction = true;
         // Need to run after Eye updates so we have an accurate listener position.
         UpdatesAfter.Add(typeof(EyeSystem));
 
-        _gridQuery = GetEntityQuery<MapGridComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
-        _xformQuery = GetEntityQuery<TransformComponent>();
 
         SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
         SubscribeLocalEvent<AudioComponent, ComponentShutdown>(OnAudioShutdown);
@@ -104,12 +119,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public void SetMasterVolume(float value)
     {
         _audio.SetMasterVolume(value);
-    }
-
-    protected override void SetZOffset(float value)
-    {
-        base.SetZOffset(value);
-        _audio.SetZOffset(value);
     }
 
     public override void Shutdown()
@@ -189,11 +198,19 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public override void FrameUpdate(float frameTime)
     {
         var eye = _eyeManager.CurrentEye;
+        var localEntity = _playerManager.LocalEntity;
+        Vector2 listenerVelocity;
+
+        if (localEntity != null)
+            listenerVelocity = _physics.GetMapLinearVelocity(localEntity.Value);
+        else
+            listenerVelocity = Vector2.Zero;
+
+        _audio.SetVelocity(listenerVelocity);
         _audio.SetRotation(eye.Rotation);
         _audio.SetPosition(eye.Position.Position);
 
         var ourPos = GetListenerCoordinates();
-        var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
 
         var query = AllEntityQuery<AudioComponent, TransformComponent>();
         _streams.Clear();
@@ -208,7 +225,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         try
         {
-            Parallel.ForEach(_streams, opts, comp => ProcessStream(comp.Entity, comp.Component, comp.Xform, ourPos));
+            _updateAudioJob.OurPosition = ourPos;
+            _parMan.ProcessNow(_updateAudioJob, _streams.Count);
         }
         catch (Exception e)
         {
@@ -259,7 +277,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var gridUid = xform.ParentUid;
 
         // Handle grid audio differently by using nearest-edge instead of entity centre.
-        if (_gridQuery.HasComponent(gridUid))
+        if ((component.Flags & AudioFlags.GridAudio) != 0x0)
         {
             // It's our grid so max volume.
             if (_listenerGrid == gridUid)
@@ -307,6 +325,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var delta = worldPos - listener.Position;
         var distance = delta.Length();
 
+        if (distance > 0f && distance < 0.01f)
+        {
+            worldPos = listener.Position;
+            delta = Vector2.Zero;
+            distance = 0f;
+        }
+
         // Out of range so just clip it for us.
         if (distance > component.MaxDistance)
         {
@@ -316,7 +341,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         // Update audio occlusion
-        var occlusion = GetOcclusion(entity, listener, delta, distance);
+        var occlusion = GetOcclusion(listener, delta, distance, entity);
         component.Occlusion = occlusion;
 
         // Update audio positions.
@@ -332,7 +357,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
     }
 
-    internal float GetOcclusion(EntityUid entity, MapCoordinates listener, Vector2 delta, float distance)
+    /// <summary>
+    /// Gets the audio occlusion from the target audio entity to the listener's position.
+    /// </summary>
+    public float GetOcclusion(MapCoordinates listener, Vector2 delta, float distance, EntityUid? ignoredEnt = null)
     {
         float occlusion = 0;
 
@@ -340,7 +368,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             var rayLength = MathF.Min(distance, _maxRayLength);
             var ray = new CollisionRay(listener.Position, delta / distance, OcclusionCollisionMask);
-            occlusion = _physics.IntersectRayPenetration(listener.MapId, ray, rayLength, entity);
+            occlusion = _physics.IntersectRayPenetration(listener.MapId, ray, rayLength, ignoredEnt);
         }
 
         return occlusion;
@@ -615,4 +643,25 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         return _resourceCache.GetResource<AudioResource>(filename).AudioStream.Length;
     }
+
+    #region Jobs
+
+    private record struct UpdateAudioJob : IParallelRobustJob
+    {
+        public int BatchSize => 2;
+
+        public AudioSystem System;
+
+        public MapCoordinates OurPosition;
+        public List<(EntityUid Entity, AudioComponent Component, TransformComponent Xform)> Streams;
+
+        public void Execute(int index)
+        {
+            var comp = Streams[index];
+
+            System.ProcessStream(comp.Entity, comp.Component, comp.Xform, OurPosition);
+        }
+    }
+
+    #endregion
 }

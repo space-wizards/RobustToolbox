@@ -6,14 +6,9 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NFluidsynth;
-using Robust.Client.GameObjects;
-using Robust.Client.Graphics;
-using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
-using Robust.Shared.Audio;
 using Robust.Shared.Audio.Midi;
-using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -22,7 +17,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Threading;
@@ -36,8 +30,7 @@ internal sealed partial class MidiManager : IMidiManager
 {
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
 
-    private int _minRendererParallel;
-
+    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IConfigurationManager _cfgMan = default!;
@@ -46,7 +39,6 @@ internal sealed partial class MidiManager : IMidiManager
     [Dependency] private readonly ILogManager _logger = default!;
     [Dependency] private readonly IParallelManager _parallel = default!;
     [Dependency] private readonly IRuntimeLog _runtime = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
 
     private AudioSystem _audioSys = default!;
     private SharedPhysicsSystem _broadPhaseSystem = default!;
@@ -76,6 +68,10 @@ internal sealed partial class MidiManager : IMidiManager
     }
 
     [ViewVariables] private readonly List<IMidiRenderer> _renderers = new();
+
+    // To avoid lock contention for now just don't update that much fam.
+    private TimeSpan _nextUpdate;
+    private TimeSpan _updateFrequency = TimeSpan.FromSeconds(0.1f);
 
     private bool _alive = true;
     [ViewVariables] private Settings? _settings;
@@ -131,10 +127,9 @@ internal sealed partial class MidiManager : IMidiManager
 
     private NFluidsynth.Logger.LoggerDelegate _loggerDelegate = default!;
     private ISawmill _fluidsynthSawmill = default!;
-    private float _maxCastLength;
 
-    [ViewVariables(VVAccess.ReadWrite)]
-    public int OcclusionCollisionMask { get; set; }
+    private MidiUpdateJob _updateJob;
+
 
     public MidiManager()
     {
@@ -150,9 +145,6 @@ internal sealed partial class MidiManager : IMidiManager
             _volume = value;
             _volumeDirty = true;
         }, true);
-
-        _cfgMan.OnValueChanged(CVars.MidiMinRendererParallel,
-            value => _minRendererParallel = value, true);
 
         _midiSawmill = _logger.GetSawmill("midi");
 #if DEBUG
@@ -207,12 +199,17 @@ internal sealed partial class MidiManager : IMidiManager
         _midiThread = new Thread(ThreadUpdate);
         _midiThread.Start();
 
+        _updateJob = new MidiUpdateJob()
+        {
+            Manager = this,
+            Renderers = _renderers,
+        };
+
         _audioSys = _entityManager.EntitySysManager.GetEntitySystem<AudioSystem>();
         _broadPhaseSystem = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
         _xformSystem = _entityManager.System<SharedTransformSystem>();
         _entityManager.GetEntityQuery<PhysicsComponent>();
         _entityManager.GetEntityQuery<TransformComponent>();
-        _cfgMan.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
 
         FluidsynthInitialized = true;
     }
@@ -227,11 +224,6 @@ internal sealed partial class MidiManager : IMidiManager
 
         _midiSawmill.Debug($"Synth Cores: {_settings["synth.cpu-cores"].IntValue}");
         _midiSawmill.Debug($"Synth Polyphony: {_settings["synth.polyphony"].IntValue}");
-    }
-
-    private void OnRaycastLengthChanged(float value)
-    {
-        _maxCastLength = value;
     }
 
     private void LoggerDelegate(NFluidsynth.Logger.LogLevel level, string message, IntPtr data)
@@ -369,7 +361,13 @@ internal sealed partial class MidiManager : IMidiManager
             return;
         }
 
-        // Update positions of streams every frame.
+        if (_nextUpdate > _timing.RealTime)
+            return;
+
+        // I don't care for accuracy we only have this for performance for now.
+        _nextUpdate = _timing.RealTime + _updateFrequency;
+
+        // Update positions of streams occasionally.
         // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
         // so TRUE
 
@@ -378,25 +376,13 @@ internal sealed partial class MidiManager : IMidiManager
             if (_renderers.Count == 0)
                 return;
 
-            var opts = new ParallelOptions { MaxDegreeOfParallelism = _parallel.ParallelProcessCount };
-            var ourPos = _audioSys.GetListenerCoordinates();
-
-            if (_renderers.Count > _minRendererParallel)
-            {
-                Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, ourPos));
-            }
-            else
-            {
-                foreach (var renderer in _renderers)
-                {
-                    UpdateRenderer(renderer, ourPos);
-                }
-            }
-
+            _updateJob.OurPosition = _audioSys.GetListenerCoordinates();
+            _parallel.ProcessNow(_updateJob, _renderers.Count);
         }
 
         _volumeDirty = false;
     }
+
     private void UpdateRenderer(IMidiRenderer renderer, MapCoordinates listener)
     {
         // TODO: This should be sharing more code with AudioSystem.
@@ -438,7 +424,7 @@ internal sealed partial class MidiManager : IMidiManager
             mapPos = renderer.TrackingCoordinates.Value;
 
             // If it's on a different map then just mute it, not pause.
-            if (mapPos.MapId == MapId.Nullspace)
+            if (mapPos.MapId == MapId.Nullspace || mapPos.MapId != listener.MapId)
             {
                 renderer.Source.Gain = 0f;
                 return;
@@ -463,10 +449,18 @@ internal sealed partial class MidiManager : IMidiManager
                 return;
             }
 
+            // Same imprecision suppression as audiosystem.
+            if (distance > 0f && distance < 0.01f)
+            {
+                worldPos = listener.Position;
+                delta = Vector2.Zero;
+                distance = 0f;
+            }
+
             renderer.Source.Position = worldPos;
 
             // Update velocity (doppler).
-            if (renderer.TrackingEntity != null)
+            if (!_entityManager.Deleted(renderer.TrackingEntity))
             {
                 var velocity = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity.Value);
                 renderer.Source.Velocity = velocity;
@@ -477,7 +471,7 @@ internal sealed partial class MidiManager : IMidiManager
             }
 
             // Update occlusion
-            var occlusion = _audioSys.GetOcclusion(renderer.TrackingEntity ?? EntityUid.Invalid, listener, delta, distance);
+            var occlusion = _audioSys.GetOcclusion(listener, delta, distance, renderer.TrackingEntity);
             renderer.Source.Occlusion = occlusion;
         }
         catch (Exception ex)
@@ -680,4 +674,25 @@ internal sealed partial class MidiManager : IMidiManager
 
         }
     }
+
+    #region Jobs
+
+    private record struct MidiUpdateJob : IParallelRobustJob
+    {
+        public int MinimumBatchParallel => 2;
+
+        public int BatchSize => 2;
+
+        public MidiManager Manager;
+
+        public MapCoordinates OurPosition;
+        public List<IMidiRenderer> Renderers;
+
+        public void Execute(int index)
+        {
+            Manager.UpdateRenderer(Renderers[index], OurPosition);
+        }
+    }
+
+    #endregion
 }

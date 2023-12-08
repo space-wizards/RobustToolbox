@@ -23,6 +23,12 @@ public class PrototypeAttribute : Attribute
         Type = type;
         LoadPriority = loadPriority;
     }
+    
+    public PrototypeAttribute(int loadPriority)
+    {
+        Type = null;
+        LoadPriority = loadPriority;
+    }
 }
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]

@@ -1301,8 +1301,8 @@ public abstract partial class SharedTransformSystem
             return;
 
         EntityUid newParent;
-        var oldPos = GetWorldPosition(xform, XformQuery);
-        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, XformQuery, out var gridUid, out _)
+        var oldPos = GetWorldPosition(xform);
+        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, out var gridUid, out _)
             && !TerminatingOrDeleted(gridUid))
         {
             newParent = gridUid;
@@ -1317,17 +1317,18 @@ public abstract partial class SharedTransformSystem
             if (!_mapManager.IsMap(uid))
                 Log.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
 
+            DetachParentToNull(uid, xform);
+
             if (delete)
                 QueueDel(uid);
 
-            DetachParentToNull(uid, xform);
             return;
         }
 
-        if (newParent == xform.ParentUid)
+        if (newParent == xform.ParentUid || newParent == uid)
             return;
 
-        var newPos = GetInvWorldMatrix(newParent, XformQuery).Transform(oldPos);
+        var newPos = GetInvWorldMatrix(newParent).Transform(oldPos);
         SetCoordinates(uid, xform, new(newParent, newPos));
     }
 

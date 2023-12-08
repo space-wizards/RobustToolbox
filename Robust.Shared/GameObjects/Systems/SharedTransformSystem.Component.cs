@@ -1282,20 +1282,27 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region AttachToGridOrMap
-    public void AttachToGridOrMap(EntityUid uid, TransformComponent? xform = null)
+    /// <summary>
+    /// Attempts to re-parent the given entity to the grid or map that the entity is on.
+    /// If no valid map or grid is found, this will detach the entity to null-space and queue it for deletion.
+    /// </summary>
+    /// <param name="uid">The Entity</param>
+    /// <param name="xform">The entity's transform component</param>
+    /// <param name="delete">Whether to delete the entity if no valid map or grid is found.</param>
+    public void AttachToGridOrMap(EntityUid uid, TransformComponent? xform = null, bool delete = true)
     {
-        if (XformQuery.Resolve(uid, ref xform))
-            AttachToGridOrMap(uid, xform, XformQuery);
-    }
+        if (TerminatingOrDeleted(uid))
+            return;
 
-    public void AttachToGridOrMap(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> query)
-    {
+        if (!XformQuery.Resolve(uid, ref xform))
+            return;
+
         if (!xform.ParentUid.IsValid() || xform.ParentUid == xform.GridUid)
             return;
 
         EntityUid newParent;
-        var oldPos = GetWorldPosition(xform, query);
-        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, query, out var gridUid, out _)
+        var oldPos = GetWorldPosition(xform, XformQuery);
+        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, XformQuery, out var gridUid, out _)
             && !TerminatingOrDeleted(gridUid))
         {
             newParent = gridUid;
@@ -1310,6 +1317,9 @@ public abstract partial class SharedTransformSystem
             if (!_mapManager.IsMap(uid))
                 Log.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
 
+            if (delete)
+                QueueDel(uid);
+
             DetachParentToNull(uid, xform);
             return;
         }
@@ -1317,7 +1327,7 @@ public abstract partial class SharedTransformSystem
         if (newParent == xform.ParentUid)
             return;
 
-        var newPos = GetInvWorldMatrix(newParent, query).Transform(oldPos);
+        var newPos = GetInvWorldMatrix(newParent, XformQuery).Transform(oldPos);
         SetCoordinates(uid, xform, new(newParent, newPos));
     }
 
@@ -1361,7 +1371,19 @@ public abstract partial class SharedTransformSystem
 
     public void DetachParentToNull(EntityUid uid, TransformComponent xform, TransformComponent? oldXform)
     {
-        DebugTools.Assert(uid == xform.Owner);
+        DetachParentToNull((uid, xform, MetaData(uid)), oldXform);
+    }
+
+    public void DetachParentToNull(Entity<TransformComponent,MetaDataComponent> entity, TransformComponent? oldXform, bool terminating = false)
+    {
+        var (uid, xform, meta) = entity;
+
+        if (!terminating && meta.EntityLifeStage >= EntityLifeStage.Terminating)
+        {
+            // Something is attempting to remove the entity from this entity's parent while it is in the process of being deleted.
+            Log.Error($"Attempting to detach a terminating entity: {ToPrettyString(uid, meta)}. Trace: {Environment.StackTrace}");
+            return;
+        }
 
         var parent = xform._parent;
         if (!parent.IsValid())
@@ -1393,8 +1415,8 @@ public abstract partial class SharedTransformSystem
         xform.LerpParent = EntityUid.Invalid;
 
         if (xform.Anchored
-            && _metaQuery.TryGetComponent(xform.GridUid, out var meta)
-            && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
+            && _metaQuery.TryGetComponent(xform.GridUid, out var gridMeta)
+            && gridMeta.EntityLifeStage <= EntityLifeStage.MapInitialized)
         {
             var grid = Comp<MapGridComponent>(xform.GridUid.Value);
             var tileIndices = _map.TileIndicesFor(xform.GridUid.Value, grid, xform.Coordinates);
@@ -1404,9 +1426,9 @@ public abstract partial class SharedTransformSystem
             RaiseLocalEvent(uid, ref anchorStateChangedEvent, true);
         }
 
-        SetCoordinates(uid, xform, default, Angle.Zero, oldParent: oldXform);
+        SetCoordinates(entity, default, Angle.Zero, oldParent: oldXform);
 
-        DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0,
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0x0,
             $"Entity is in a container after having been detached to null-space? Entity: {ToPrettyString(uid)}");
     }
 

@@ -294,7 +294,14 @@ namespace Robust.Shared.Containers
                 return false;
             }
 
-            DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating || (force && !reparent));
+            // Terminating entities should not get re-parented. However, this removal will still be forced when
+            // detaching to null-space just before deletion happens.
+            if (meta.EntityLifeStage >= EntityLifeStage.Terminating && (!force || reparent))
+            {
+                Logger.Error($"Attempting to remove an entity from a container while it is terminating. Entity: {entMan.ToPrettyString(toRemove, meta)}. Container: {entMan.ToPrettyString(Owner)}. Trace: {{Environment.StackTrace}}");
+                return false;
+            }
+
             DebugTools.Assert(xform.Broadphase == null || !xform.Broadphase.Value.IsValid());
             DebugTools.Assert(!xform.Anchored);
             DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0);

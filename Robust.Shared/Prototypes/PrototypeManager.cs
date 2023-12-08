@@ -752,7 +752,7 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidPrototypeNameException($"Prototype {type} must end with the word Prototype");
 
             var name = type.Name.AsSpan();
-            return $"{char.ToLowerInvariant(name[0])}{name[1..][..^prototype.Length]}";
+            return $"{char.ToLowerInvariant(name[0])}{name[1..^prototype.Length]}";
         }
 
         /// <inheritdoc />

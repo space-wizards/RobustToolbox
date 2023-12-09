@@ -62,6 +62,18 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             _zOffset = value;
             _audio.SetZOffset(value);
+
+            var query = AllEntityQuery<AudioComponent>();
+
+            while (query.MoveNext(out var audio))
+            {
+                // Pythagoras back to normal then adjust.
+                var maxDistance = GetAudioDistance(audio.Params.MaxDistance);
+                var refDistance = GetAudioDistance(audio.Params.ReferenceDistance);
+
+                audio.MaxDistance = maxDistance;
+                audio.ReferenceDistance = refDistance;
+            }
         }
     }
 
@@ -606,7 +618,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         source.PlaybackPosition = offset;
 
         // For server we will rely on the adjusted one but locally we will have to adjust it ourselves.
-        audioP = GetAdjustedParams(audioP);
         ApplyAudioParams(audioP, comp);
         comp.Params = audioP;
         source.StartPlaying();
@@ -621,8 +632,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
         source.Pitch = audioParams.Pitch;
         source.Volume = audioParams.Volume;
         source.RolloffFactor = audioParams.RolloffFactor;
-        source.MaxDistance = audioParams.MaxDistance;
-        source.ReferenceDistance = audioParams.ReferenceDistance;
+        source.MaxDistance = GetAudioDistance(audioParams.MaxDistance);
+        source.ReferenceDistance = GetAudioDistance(audioParams.ReferenceDistance);
         source.Looping = audioParams.Loop;
     }
 

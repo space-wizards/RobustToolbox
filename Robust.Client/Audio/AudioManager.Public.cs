@@ -214,9 +214,9 @@ internal partial class AudioManager
         return new AudioStream(handle, length, channels, name);
     }
 
-    public void SetMasterVolume(float newVolume)
+    public void SetMasterGain(float newGain)
     {
-        AL.Listener(ALListenerf.Gain, newVolume);
+        AL.Listener(ALListenerf.Gain, newGain);
     }
 
     public void SetAttenuation(Attenuation attenuation)

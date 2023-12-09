@@ -118,7 +118,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     public void SetMasterVolume(float value)
     {
-        _audio.SetMasterVolume(value);
+        _audio.SetMasterGain(value);
     }
 
     public override void Shutdown()

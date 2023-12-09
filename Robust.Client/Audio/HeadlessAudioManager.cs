@@ -56,7 +56,7 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     }
 
     /// <inheritdoc />
-    public void SetMasterVolume(float value)
+    public void SetMasterGain(float newGain)
     {
     }
 

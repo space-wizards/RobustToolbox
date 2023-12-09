@@ -11,7 +11,7 @@ namespace Robust.Client.Audio;
 /// <summary>
 /// Handles clientside audio.
 /// </summary>
-internal interface IAudioInternal
+internal interface IAudioInternal : IAudioManager
 {
     void InitializePostWindowing();
     void Shutdown();
@@ -44,7 +44,6 @@ internal interface IAudioInternal
     /// </summary>
     void SetRotation(Angle angle);
 
-    void SetMasterVolume(float value);
     void SetAttenuation(Attenuation attenuation);
 
     /// <summary>

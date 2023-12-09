@@ -51,11 +51,21 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private EntityUid? _listenerGrid;
     private UpdateAudioJob _updateAudioJob;
 
-    private EntityQuery<MapGridComponent> _gridQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
-    private EntityQuery<TransformComponent> _xformQuery;
 
     private float _maxRayLength;
+
+    public override float ZOffset
+    {
+        get => _zOffset;
+        protected set
+        {
+            _zOffset = value;
+            _audio.SetZOffset(value);
+        }
+    }
+
+    private float _zOffset;
 
     /// <inheritdoc />
     public override void Initialize()
@@ -72,9 +82,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // Need to run after Eye updates so we have an accurate listener position.
         UpdatesAfter.Add(typeof(EyeSystem));
 
-        _gridQuery = GetEntityQuery<MapGridComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
-        _xformQuery = GetEntityQuery<TransformComponent>();
 
         SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
         SubscribeLocalEvent<AudioComponent, ComponentShutdown>(OnAudioShutdown);
@@ -111,12 +119,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public void SetMasterVolume(float value)
     {
         _audio.SetMasterVolume(value);
-    }
-
-    protected override void SetZOffset(float value)
-    {
-        base.SetZOffset(value);
-        _audio.SetZOffset(value);
     }
 
     public override void Shutdown()

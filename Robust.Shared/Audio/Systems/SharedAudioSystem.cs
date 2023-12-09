@@ -1,10 +1,12 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
@@ -41,7 +43,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// </summary>
     public int OcclusionCollisionMask { get; set; }
 
-    public float ZOffset;
+    public virtual float ZOffset { get; protected set; }
 
     public override void Initialize()
     {
@@ -59,7 +61,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         CfgManager.UnsubValueChanged(CVars.AudioZOffset, SetZOffset);
     }
 
-    protected virtual void SetZOffset(float value)
+    protected void SetZOffset(float value)
     {
         var query = AllEntityQuery<AudioComponent>();
         var oldZOffset = ZOffset;
@@ -87,8 +89,13 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         var playerEnt = args.Player?.AttachedEntity;
 
-        if ((component.ExcludedEntity != null && playerEnt == component.ExcludedEntity) ||
-            (playerEnt != null && component.IncludedEntities != null && !component.IncludedEntities.Contains(playerEnt.Value)))
+        if (component.ExcludedEntity != null && playerEnt == component.ExcludedEntity)
+        {
+            args.Cancelled = true;
+            return;
+        }
+
+        if (playerEnt != null && component.IncludedEntities != null && !component.IncludedEntities.Contains(playerEnt.Value))
         {
             args.Cancelled = true;
         }

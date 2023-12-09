@@ -51,9 +51,18 @@ namespace Robust.Shared.Physics.Systems
         private ObjectPool<List<FixtureProxy>> _bufferPool =
             new DefaultObjectPool<List<FixtureProxy>>(new ListPolicy<FixtureProxy>(), 2048);
 
+        private BroadphaseJob _broadphaseJob;
+
         public override void Initialize()
         {
             base.Initialize();
+
+            _broadphaseJob = new BroadphaseJob()
+            {
+                Broadphase = this,
+                BroadphaseExpand = _broadphaseExpand,
+                MapManager = _mapManager,
+            };
 
             _broadphaseQuery = GetEntityQuery<BroadphaseComponent>();
             _gridQuery = GetEntityQuery<MapGridComponent>();
@@ -191,17 +200,11 @@ namespace Robust.Shared.Physics.Systems
                 pMoveBuffer[idx++] = (proxy, aabb);
             }
 
-            var job = new BroadphaseJob()
-            {
-                Broadphase = this,
-                BroadphaseExpand = _broadphaseExpand,
-                ContactBuffer = contactBuffer,
-                PMoveBuffer = pMoveBuffer,
-                MapId = mapId,
-                MapManager = _mapManager
-            };
+            _broadphaseJob.ContactBuffer = contactBuffer;
+            _broadphaseJob.PMoveBuffer = pMoveBuffer;
+            _broadphaseJob.MapId = mapId;
 
-            _parallel.ProcessNow(job, count);
+            _parallel.ProcessNow(_broadphaseJob, count);
 
             for (var i = 0; i < count; i++)
             {
@@ -402,6 +405,13 @@ namespace Robust.Shared.Physics.Systems
 
         public void RegenerateContacts(EntityUid uid, PhysicsComponent body, FixturesComponent? fixtures = null, TransformComponent? xform = null)
         {
+            // If it can't collide then we can't touch proxies and add them to the movebuffer anyway.
+            if (!body.CanCollide)
+            {
+                // Sleep body may still have contacts around.
+                return;
+            }
+
             _physicsSystem.DestroyContacts(body);
             if (!Resolve(uid, ref xform, ref fixtures))
                 return;
@@ -520,7 +530,7 @@ namespace Robust.Shared.Physics.Systems
                         ref var buffer = ref tuple.pairBuffer;
                         tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, uid, buffer);
                         return true;
-                    });
+                    }, approx: true, includeMap: false);
 
                 // Struct ref moment, I have no idea what's fastest.
                 buffer = state.buffer;

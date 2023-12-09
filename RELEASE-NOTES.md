@@ -54,6 +54,100 @@ END TEMPLATE-->
 *None yet*
 
 
+## 187.2.0
+
+### New features
+
+* Added a cancellable bool to physics sleeping events where we may wish to cancel it.
+
+### Bugfixes
+
+* Fix corrupted physics awake state leading to client mispredicts.
+
+
+## 187.1.2
+
+### Bugfixes
+
+* Hotfix contact nullrefs if they're modified during manifold generation.
+
+
+## 187.1.1
+
+### Bugfixes
+
+* Revert physics solver job to fix crashes until box2d v3 rolls around.
+* Don't RegenerateContacts if the body isn't collidable to avoid putting non-collidable proxies on the movebuffer.
+
+
+## 187.1.0
+
+### Bugfixes
+
+* Apply default audio params to all audio sources not just non-buffered ones.
+* Avoid re-allocating broadphase job every tick and maybe fix a rare nullref for it.
+
+
+## 187.0.0
+
+### New features
+
+* Improved error message for network failing to initialize.
+
+### Bugfixes
+
+* Fix not being able to add multiple PVS session overrides in a single tick without overwriting each one. This should fix issues with audio filters.
+
+### Other
+
+* Changed toolshed initialisation logs to verbose.
+
+
+## 186.1.0
+
+### New features
+
+* Add public method to get PVS session overrides for a specific session.
+
+### Internal
+
+* Add temporary audio debugging.
+
+
+## 186.0.0
+
+### Breaking changes
+
+* Global audio is now stored on its own map to avoid contamination issues with nullspace.
+
+### Bugfixes
+
+* Fix MIDIs playing cross-map
+* Only dispose audio on game closure and don't stop playing if it's disposed elsewhere i.e. MIDIs.
+
+
+## 185.2.0
+
+### Bugfixes
+
+* Bandaid deleted MIDI source entities spamming velocity error logs.
+
+### Other
+
+* Reverted MIDI audio not updating every frame due to lock contention with the MIDI renderer for now.
+
+
+## 185.1.1
+
+### Bugfixes
+
+* Fix Z-Offset for audio not being applied on initialization.
+
+### Internal
+
+* Flag some internal queries as approximate to avoid unnecessary AABB checks. Some of these are already covered off with TestOverlap calls and the rest will need updating to do so in a future update.
+
+
 ## 185.1.0
 
 ### New features

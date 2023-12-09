@@ -1304,9 +1304,6 @@ namespace Robust.Shared
         public static readonly CVarDef<float> MidiVolume =
             CVarDef.Create("midi.volume", 0.50f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
-        public static readonly CVarDef<int> MidiMinRendererParallel =
-            CVarDef.Create("midi.min_renderers_parallel_update", 3, CVar.CLIENTONLY | CVar.ARCHIVE);
-
         /*
          * HUB
          * CVars related to public master server hub

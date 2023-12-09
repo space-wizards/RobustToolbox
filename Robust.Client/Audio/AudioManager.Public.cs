@@ -282,13 +282,15 @@ internal partial class AudioManager
         return audioSource;
     }
 
-    public IBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false)
+    /// <inheritdoc/>
+    public IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio=false)
     {
         var source = AL.GenSource();
 
         if (!AL.IsSource(source))
         {
             OpenALSawmill.Error("Failed to generate source. Too many simultaneous audio streams? {0}", Environment.StackTrace);
+            return null;
         }
 
         // ReSharper disable once PossibleInvalidOperationException

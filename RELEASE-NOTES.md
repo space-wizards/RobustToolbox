@@ -54,6 +54,23 @@ END TEMPLATE-->
 *None yet*
 
 
+## 188.0.0
+
+### Breaking changes
+
+* Return null buffered audio if there's an exception and use the dummy instance internally.
+* Use entity name then suffix for entity spawn window ordering.
+* Change MidiManager volume to gain.
+* Remove EntityQuery from the MapVelocity API.
+
+### Bugfixes
+
+* Potentially fix some audio issues by setting gain to half where EFX not found and the prior gain was 0.
+* Log errors upon trying to spawn audio attached to deleted entities instead of trying to spawn them and erroring later.
+* Fixed predicted audio spawns not applying the adjusted audio params.
+* Fix GetDimensions for the screenhandle where the text is only a single line.
+
+
 ## 187.2.0
 
 ### New features

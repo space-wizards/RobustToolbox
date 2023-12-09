@@ -403,7 +403,7 @@ namespace Robust.Shared.Maths
         /// </param>
         public static Color FromHsl(Vector4 hsl)
         {
-            var hue = hsl.X * 360.0f;
+            var hue = (hsl.X - MathF.Truncate(hsl.X)) * 360.0f;
             var saturation = hsl.Y;
             var lightness = hsl.Z;
 
@@ -514,7 +514,7 @@ namespace Robust.Shared.Maths
         /// </param>
         public static Color FromHsv(Vector4 hsv)
         {
-            var hue = hsv.X * 360.0f;
+            var hue = (hsv.X - MathF.Truncate(hsv.X)) * 360.0f;
             var saturation = hsv.Y;
             var value = hsv.Z;
 

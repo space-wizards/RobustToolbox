@@ -188,7 +188,8 @@ internal abstract class BaseAudioSource : IAudioSource
             if (!IsEfxSupported)
             {
                 AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
-                priorOcclusion = _gain == 0 ? 0.5f : priorGain / _gain;
+                // Default to 0 to avoid spiking audio, just means it will be muted for a frame in this case.
+                priorOcclusion = _gain == 0 ? 0f : priorGain / _gain;
             }
 
             _gain = value;

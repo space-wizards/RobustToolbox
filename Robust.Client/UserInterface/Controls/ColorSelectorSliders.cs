@@ -15,6 +15,15 @@ public sealed class ColorSelectorSliders : Control
         set
         {
             _currentColor = value;
+            switch (SelectorType)
+            {
+                case ColorSelectorType.Rgb:
+                    _colorData = new Vector4(_currentColor.R, _currentColor.G, _currentColor.B, _currentColor.A);
+                    break;
+                case ColorSelectorType.Hsv:
+                    _colorData = Color.ToHsv(value);
+                    break;
+            }
             Update();
         }
     }
@@ -24,6 +33,15 @@ public sealed class ColorSelectorSliders : Control
         get => _currentType;
         set
         {
+            switch ((_currentType, value))
+            {
+                case (ColorSelectorType.Rgb, ColorSelectorType.Hsv):
+                    _colorData = Color.ToHsv(Color);
+                    break;
+                case (ColorSelectorType.Hsv, ColorSelectorType.Rgb):
+                    _colorData = new Vector4(_currentColor.R, _currentColor.G, _currentColor.B, _currentColor.A);
+                    break;
+            }
             _currentType = value;
             UpdateType();
             Update();
@@ -45,6 +63,7 @@ public sealed class ColorSelectorSliders : Control
 
     private bool _updating = false;
     private Color _currentColor = Color.White;
+    private Vector4 _colorData;
     private ColorSelectorType _currentType = ColorSelectorType.Rgb;
     private bool _isAlphaVisible = false;
 
@@ -239,36 +258,34 @@ public sealed class ColorSelectorSliders : Control
         switch (SelectorType)
         {
             case ColorSelectorType.Rgb:
-                _topColorSlider.Value = Color.R;
-                _middleColorSlider.Value = Color.G;
-                _bottomColorSlider.Value = Color.B;
+                _topColorSlider.Value = _colorData.X;
+                _middleColorSlider.Value = _colorData.Y;
+                _bottomColorSlider.Value = _colorData.Z;
 
-                _topInputBox.Value = (int)(Color.R * 255.0f);
-                _middleInputBox.Value = (int)(Color.G * 255.0f);
-                _bottomInputBox.Value = (int)(Color.B * 255.0f);
+                _topInputBox.Value = (int)(_colorData.X * 255.0f);
+                _middleInputBox.Value = (int)(_colorData.Y * 255.0f);
+                _bottomInputBox.Value = (int)(_colorData.Z * 255.0f);
 
                 break;
             case ColorSelectorType.Hsv:
-                Vector4 color = Color.ToHsv(Color);
-
                 // dumb workaround because the formula for
                 // HSV calculation results in a negative
                 // number in any value past 300 degrees
-                if (color.X > 0)
+                if (_colorData.X > 0)
                 {
-                    _topColorSlider.Value = color.X;
-                    _topInputBox.Value = (int)(color.X * 360.0f);
+                    _topColorSlider.Value = _colorData.X;
+                    _topInputBox.Value = (int)(_colorData.X * 360.0f);
                 }
                 else
                 {
                     _topInputBox.Value = (int)(_topColorSlider.Value * 360.0f);
                 }
 
-                _middleColorSlider.Value = color.Y;
-                _bottomColorSlider.Value = color.Z;
+                _middleColorSlider.Value = _colorData.Y;
+                _bottomColorSlider.Value = _colorData.Z;
 
-                _middleInputBox.Value = (int)(color.Y * 100.0f);
-                _bottomInputBox.Value = (int)(color.Z * 100.0f);
+                _middleInputBox.Value = (int)(_colorData.Y * 100.0f);
+                _bottomInputBox.Value = (int)(_colorData.Z * 100.0f);
 
 
                 break;
@@ -364,7 +381,8 @@ public sealed class ColorSelectorSliders : Control
         switch (SelectorType)
         {
             case ColorSelectorType.Rgb:
-                Color rgbColor = new Color(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value);
+                _colorData = new Vector4(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value);
+                Color rgbColor = new Color(_colorData.X, _colorData.Y, _colorData.Z, _colorData.W);
 
                 _currentColor = rgbColor;
                 Update();
@@ -372,7 +390,8 @@ public sealed class ColorSelectorSliders : Control
                 OnColorChanged!(rgbColor);
                 break;
             case ColorSelectorType.Hsv:
-                Color hsvColor = Color.FromHsv(new Vector4(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value));
+                _colorData = new Vector4(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value);
+                Color hsvColor = Color.FromHsv(_colorData);
 
                 _currentColor = hsvColor;
                 Update();

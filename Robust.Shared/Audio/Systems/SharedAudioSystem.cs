@@ -63,21 +63,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     protected void SetZOffset(float value)
     {
-        var query = AllEntityQuery<AudioComponent>();
-        var oldZOffset = ZOffset;
         ZOffset = value;
-
-        while (query.MoveNext(out var uid, out var audio))
-        {
-            // Pythagoras back to normal then adjust.
-            var maxDistance = MathF.Pow(audio.Params.MaxDistance, 2) - oldZOffset;
-            var refDistance = MathF.Pow(audio.Params.ReferenceDistance, 2) - oldZOffset;
-
-            audio.Params.MaxDistance = maxDistance;
-            audio.Params.ReferenceDistance = refDistance;
-            audio.Params = GetAdjustedParams(audio.Params);
-            Dirty(uid, audio);
-        }
     }
 
     protected virtual void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
@@ -141,9 +127,9 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         DebugTools.Assert(!string.IsNullOrEmpty(fileName));
         audioParams ??= AudioParams.Default;
-        var comp = AddComp<Components.AudioComponent>(uid);
+        var comp = AddComp<AudioComponent>(uid);
         comp.FileName = fileName;
-        comp.Params = GetAdjustedParams(audioParams.Value);
+        comp.Params = audioParams.Value;
         comp.AudioStart = Timing.CurTime;
 
         if (!audioParams.Value.Loop)
@@ -156,19 +142,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
         }
 
         return comp;
-    }
-
-    /// <summary>
-    /// Accounts for ZOffset on audio distance.
-    /// </summary>
-    protected AudioParams GetAdjustedParams(AudioParams audioParams)
-    {
-        var maxDistance = GetAudioDistance(audioParams.MaxDistance);
-        var refDistance = GetAudioDistance(audioParams.ReferenceDistance);
-
-        return audioParams
-            .WithMaxDistance(maxDistance)
-            .WithReferenceDistance(refDistance);
     }
 
     public static float GainToVolume(float value)

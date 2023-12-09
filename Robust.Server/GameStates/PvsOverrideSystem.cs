@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
 
@@ -10,6 +11,21 @@ namespace Robust.Server.GameStates;
 public sealed class PvsOverrideSystem : EntitySystem
 {
     [Shared.IoC.Dependency] private readonly PvsSystem _pvs = default!;
+
+    /// <summary>
+    /// Yields the NetEntity session overrides for the specified session.
+    /// </summary>
+    /// <param name="session"></param>
+    public IEnumerable<NetEntity> GetSessionOverrides(ICommonSession session)
+    {
+        var enumerator = _pvs.EntityPVSCollection.GetSessionOverrides(session);
+
+        while (enumerator.MoveNext())
+        {
+            var current = enumerator.Current;
+            yield return current;
+        }
+    }
 
     /// <summary>
     ///     Used to ensure that an entity is always sent to every client. By default this overrides any client-specific overrides.

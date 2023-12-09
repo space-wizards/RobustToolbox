@@ -161,7 +161,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <summary>
     /// Accounts for ZOffset on audio distance.
     /// </summary>
-    private AudioParams GetAdjustedParams(AudioParams audioParams)
+    protected AudioParams GetAdjustedParams(AudioParams audioParams)
     {
         var maxDistance = GetAudioDistance(audioParams.MaxDistance);
         var refDistance = GetAudioDistance(audioParams.ReferenceDistance);
@@ -205,6 +205,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
             return;
 
         component.Params.Volume = value;
+        component.Volume = value;
         Dirty(entity.Value, component);
     }
 

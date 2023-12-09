@@ -605,6 +605,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
         offset = Math.Clamp(offset, 0f, (float) stream.Length.TotalSeconds - 0.01f);
         source.PlaybackPosition = offset;
 
+        // For server we will rely on the adjusted one but locally we will have to adjust it ourselves.
+        audioP = GetAdjustedParams(audioP);
         ApplyAudioParams(audioP, comp);
         comp.Params = audioP;
         source.StartPlaying();

@@ -361,12 +361,6 @@ internal sealed partial class MidiManager : IMidiManager
             return;
         }
 
-        if (_nextUpdate > _timing.RealTime)
-            return;
-
-        // I don't care for accuracy we only have this for performance for now.
-        _nextUpdate = _timing.RealTime + _updateFrequency;
-
         // Update positions of streams occasionally.
         // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
         // so TRUE
@@ -715,7 +709,7 @@ internal sealed partial class MidiManager : IMidiManager
 
             lock (renderer)
             {
-                Manager.UpdateRenderer(Renderers[index], OurPosition);
+                Manager.UpdateRenderer(renderer, OurPosition);
             }
         }
     }

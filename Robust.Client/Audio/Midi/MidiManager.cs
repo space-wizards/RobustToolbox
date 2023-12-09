@@ -20,6 +20,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Threading;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -29,8 +30,7 @@ internal sealed partial class MidiManager : IMidiManager
 {
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
 
-    private int _minRendererParallel;
-
+    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IConfigurationManager _cfgMan = default!;
@@ -69,24 +69,30 @@ internal sealed partial class MidiManager : IMidiManager
 
     [ViewVariables] private readonly List<IMidiRenderer> _renderers = new();
 
+    // To avoid lock contention for now just don't update that much fam.
+    private TimeSpan _nextUpdate;
+    private TimeSpan _updateFrequency = TimeSpan.FromSeconds(0.1f);
+
     private bool _alive = true;
     [ViewVariables] private Settings? _settings;
     private Thread? _midiThread;
     private ISawmill _midiSawmill = default!;
-    private float _volume = 0f;
+    private float _gain = 0f;
     private bool _volumeDirty = true;
 
     // Not reliable until Fluidsynth is initialized!
     [ViewVariables(VVAccess.ReadWrite)]
-    public float Volume
+    public float Gain
     {
-        get => _volume;
+        get => _gain;
         set
         {
-            if (MathHelper.CloseToPercent(_volume, value))
+            var clamped = Math.Clamp(value, 0f, 1f);
+
+            if (MathHelper.CloseToPercent(_gain, clamped))
                 return;
 
-            _cfgMan.SetCVar(CVars.MidiVolume, value);
+            _cfgMan.SetCVar(CVars.MidiVolume, clamped);
             _volumeDirty = true;
         }
     }
@@ -138,12 +144,9 @@ internal sealed partial class MidiManager : IMidiManager
 
         _cfgMan.OnValueChanged(CVars.MidiVolume, value =>
         {
-            _volume = value;
+            _gain = value;
             _volumeDirty = true;
         }, true);
-
-        _cfgMan.OnValueChanged(CVars.MidiMinRendererParallel,
-            value => _minRendererParallel = value, true);
 
         _midiSawmill = _logger.GetSawmill("midi");
 #if DEBUG
@@ -339,7 +342,7 @@ internal sealed partial class MidiManager : IMidiManager
                 renderer.LoadSoundfont(file.ToString());
             }
 
-            renderer.Source.Volume = _volume;
+            renderer.Source.Gain = _gain;
 
             lock (_renderers)
             {
@@ -360,7 +363,13 @@ internal sealed partial class MidiManager : IMidiManager
             return;
         }
 
-        // Update positions of streams every frame.
+        if (_nextUpdate > _timing.RealTime)
+            return;
+
+        // I don't care for accuracy we only have this for performance for now.
+        _nextUpdate = _timing.RealTime + _updateFrequency;
+
+        // Update positions of streams occasionally.
         // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
         // so TRUE
 
@@ -386,7 +395,7 @@ internal sealed partial class MidiManager : IMidiManager
 
             if (_volumeDirty)
             {
-                renderer.Source.Volume = Volume;
+                renderer.Source.Gain = Gain;
             }
 
             if (!renderer.Mono)
@@ -417,7 +426,7 @@ internal sealed partial class MidiManager : IMidiManager
             mapPos = renderer.TrackingCoordinates.Value;
 
             // If it's on a different map then just mute it, not pause.
-            if (mapPos.MapId == MapId.Nullspace)
+            if (mapPos.MapId == MapId.Nullspace || mapPos.MapId != listener.MapId)
             {
                 renderer.Source.Gain = 0f;
                 return;
@@ -426,7 +435,7 @@ internal sealed partial class MidiManager : IMidiManager
             // Was previously muted maybe so try unmuting it?
             if (renderer.Source.Gain == 0f)
             {
-                renderer.Source.Volume = Volume;
+                renderer.Source.Gain = Gain;
             }
 
             var worldPos = mapPos.Position;
@@ -453,7 +462,7 @@ internal sealed partial class MidiManager : IMidiManager
             renderer.Source.Position = worldPos;
 
             // Update velocity (doppler).
-            if (renderer.TrackingEntity != null)
+            if (!_entityManager.Deleted(renderer.TrackingEntity))
             {
                 var velocity = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity.Value);
                 renderer.Source.Velocity = velocity;

@@ -33,8 +33,7 @@ internal sealed class SessionPvsData
     public GameTick LastProcessedAck;
 }
 
-// TODO PVS turn this into a struct when this gets stored in a list/array instead of a dictionary
-internal sealed class EntityData
+internal struct EntityData
 {
     /// <summary>
     /// Tick at which this entity was last sent to a player.

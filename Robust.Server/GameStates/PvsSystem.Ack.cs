@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
@@ -88,10 +89,13 @@ internal sealed partial class PvsSystem
             return;
 
         sessionData.LastProcessedAck = ackedTick;
+        var dict = sessionData.EntityData;
         foreach (var ent in ackedData.Keys)
         {
-            var data = sessionData.EntityData.GetOrNew(ent);
+            DebugTools.Assert(dict.ContainsKey(ent));
+            ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, ent, out _);
             data.EntityLastAcked = ackedTick;
+            DebugTools.Assert(data.LastSent > ackedTick);
         }
 
         // The client acked a tick. If they requested a full state, this ack happened some time after that, so we can safely set this to false

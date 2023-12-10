@@ -824,7 +824,7 @@ internal sealed partial class PvsSystem : EntitySystem
                 $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(uid)}.");
 #endif
 
-            var data = entityData.GetOrNew(netEntity);
+            ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, netEntity, out _);
             data.LastSent = _gameTiming.CurTick;
 
             if (sessionData.RequestedFull)
@@ -908,11 +908,14 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var netEntity in lastSent.Keys)
         {
-            if (!visibleEnts.ContainsKey(netEntity))
-            {
-                leftView.Add(netEntity);
-                entityData.GetOrNew(netEntity).LastLeftView = tick;
-            }
+            if (visibleEnts.ContainsKey(netEntity))
+                continue;
+
+            leftView.Add(netEntity);
+            DebugTools.Assert(entityData.ContainsKey(netEntity));
+            ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, netEntity, out _);
+            data.LastLeftView = tick;
+            DebugTools.Assert(data.LastSent > tick && data.LastSent != GameTick.Zero);
         }
 
         return leftView.Count > 0 ? leftView : null;

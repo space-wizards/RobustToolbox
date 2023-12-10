@@ -665,14 +665,13 @@ namespace Robust.Client.GameStates
 
             foreach (var netEntity in createdEntities)
             {
-                var (createdEntity, meta) = _entityManager.GetEntityData(netEntity);
+                var (_, meta) = _entityManager.GetEntityData(netEntity);
                 var compData = _compDataPool.Get();
                 _outputData.Add(netEntity, compData);
 
                 foreach (var (netId, component) in meta.NetComponents)
                 {
-                    if (!component.NetSyncEnabled)
-                        continue;
+                    DebugTools.Assert(component.NetSyncEnabled);
 
                     var state = _entityManager.GetComponentState(bus, component, null, GameTick.Zero);
                     DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
@@ -1219,7 +1218,9 @@ namespace Robust.Client.GameStates
 
                 foreach (var (id, comp) in meta.NetComponents)
                 {
-                    if (comp.NetSyncEnabled && !curState.NetComponents.Contains(id))
+                    DebugTools.Assert(comp.NetSyncEnabled);
+
+                    if (!curState.NetComponents.Contains(id))
                         _toRemove.Add(comp);
                 }
 

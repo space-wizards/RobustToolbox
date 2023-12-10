@@ -808,6 +808,8 @@ internal sealed partial class PvsSystem : EntitySystem
 
         if (session.AttachedEntity != null)
             RaiseLocalEvent(session.AttachedEntity.Value, ref expandEvent, true);
+        else
+            RaiseLocalEvent(ref expandEvent);
 
         if (expandEvent.Entities != null)
         {

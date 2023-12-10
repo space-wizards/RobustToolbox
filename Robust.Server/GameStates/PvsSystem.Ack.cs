@@ -91,7 +91,7 @@ internal sealed partial class PvsSystem
         foreach (var ent in ackedData.Keys)
         {
             var data = sessionData.EntityData.GetOrNew(ent);
-            data.LastAcked = ackedTick;
+            data.EntityLastAcked = ackedTick;
         }
 
         // The client acked a tick. If they requested a full state, this ack happened some time after that, so we can safely set this to false

@@ -36,20 +36,25 @@ internal sealed class SessionPvsData
 // TODO PVS turn this into a struct when this gets stored in a list/array instead of a dictionary
 internal sealed class EntityData
 {
-    public PvsEntityVisibility ToSend;
-
-    public PvsEntityVisibility[] PreviouslySent = new PvsEntityVisibility[PvsSystem.DirtyBufferSize];
-
-    public (GameTick, PvsEntityVisibility) PreviouslySentOverflow;
+    /// <summary>
+    /// Tick at which this entity was last sent to a player.
+    /// </summary>
+    public GameTick LastSent;
 
     /// <summary>
-    ///     Tick at which an entity last left a player's PVS view.
+    /// Tick at which an entity last left a player's PVS view.
     /// </summary>
     public GameTick LastLeftView;
 
     /// <summary>
-    ///     Stores the last tick at which a given entity was acked by a player. Used to avoid re-sending the whole entity
-    ///     state when an item re-enters PVS.
+    /// Stores the last tick at which a given entity was acked by a player. Used to avoid re-sending the whole entity
+    /// state when an item re-enters PVS. This is only the same as the player's last acked tick if the entity was
+    /// present in that state.
     /// </summary>
-    public GameTick LastAcked;
+    public GameTick EntityLastAcked;
+
+    public override string ToString()
+    {
+        return $"{LastSent}/{LastLeftView}/{EntityLastAcked}";
+    }
 }

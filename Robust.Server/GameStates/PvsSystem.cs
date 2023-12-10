@@ -135,7 +135,6 @@ internal sealed partial class PvsSystem : EntitySystem
         _eyeQuery = GetEntityQuery<EyeComponent>();
         _metaQuery = GetEntityQuery<MetaDataComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
-        _metaQuery = GetEntityQuery<MetaDataComponent>();
 
         _entityPvsCollection = RegisterPVSCollection<NetEntity>();
 
@@ -737,7 +736,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
             foreach (var rootNode in cache.Value.tree.RootNodes)
             {
-                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, toSend, entityData, cache.Value.metadata, stack, in fromTick,
+                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, toSend, entityData, stack, in fromTick,
                         ref newEntityCount, ref enteredEntityCount, ref entStateCount,  in newEntityBudget, in enteredEntityBudget);
             }
         }
@@ -808,26 +807,24 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var netEntity in toSend)
         {
-            EntityUid uid;
-            MetaDataComponent meta;
 #if DEBUG
-            uid = GetEntity(netEntity);
+            var debugUid = GetEntity(netEntity);
             // if an entity is visible, its parents should always be visible.
-            DebugTools.Assert((_xformQuery.GetComponent(uid).ParentUid is not { Valid: true } parent) ||
+            DebugTools.Assert((_xformQuery.GetComponent(debugUid).ParentUid is not { Valid: true } parent) ||
                               toSend.Contains(_metaQuery.GetComponent(parent).NetEntity),
-                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(uid)}.");
+                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(debugUid)}.");
 #endif
 
-            DebugTools.Assert(entityData.ContainsKey(netEntity));
-            ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, netEntity, out _);
+            ref var data = ref GetEntityData(entityData, netEntity);
             DebugTools.AssertNotEqual(data.Visibility, PvsEntityVisibility.Invalid);
+
+            var (uid, meta) = data.Entity;
 
             data.LastSent = _gameTiming.CurTick;
 
             // TODO PVS move this outside of the for loop
             if (sessionData.RequestedFull)
             {
-                (uid, meta) = GetEntityData(netEntity);
                 entityStates.Add(GetFullEntityState(session, uid, meta));
                 continue;
             }
@@ -835,9 +832,7 @@ internal sealed partial class PvsSystem : EntitySystem
             if (data.Visibility == PvsEntityVisibility.StayedUnchanged)
                 continue;
 
-            (uid, meta) = GetEntityData(netEntity);
             var entered = data.Visibility == PvsEntityVisibility.Entered;
-
             var entFromTick = entered ? data.EntityLastAcked : fromTick;
 
             // TODO PVS turn into debug assert
@@ -935,7 +930,6 @@ internal sealed partial class PvsSystem : EntitySystem
         RobustTree<NetEntity> tree,
         HashSet<NetEntity> toSend,
         Dictionary<NetEntity, EntityData> entityData,
-        Dictionary<NetEntity, MetaDataComponent> metaDataCache,
         Stack<NetEntity> stack,
         in GameTick fromTick,
         ref int newEntityCount,
@@ -956,7 +950,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
             if (toSend.Add(currentNodeIndex))
             {
-                ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, currentNodeIndex, out _);
+                ref var data = ref GetOrNewEntityData(entityData, currentNodeIndex);
                 var (entered, shouldAdd) = ProcessEntry(ref data, fromTick,
                     ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
@@ -968,7 +962,7 @@ internal sealed partial class PvsSystem : EntitySystem
                     continue;
                 }
 
-                AddToSendSet(in currentNodeIndex, ref data, metaDataCache[currentNodeIndex], toSend, fromTick, in entered, ref entStateCount);
+                AddToSendSet(in currentNodeIndex, ref data, toSend, fromTick, in entered, ref entStateCount);
             }
 
             var node = tree[currentNodeIndex];
@@ -1016,9 +1010,9 @@ internal sealed partial class PvsSystem : EntitySystem
         // send the new parents, which may otherwise be delayed because of the PVS budget.
         if (toSend.Add(netEntity))
         {
-            ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, netEntity , out _);
+            ref var data = ref GetOrNewEntityData(entityData, netEntity, uid, metadata);
             var (entered, _) = ProcessEntry(ref data, fromTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-            AddToSendSet(in netEntity, ref data, metadata, toSend, fromTick, in entered, ref entStateCount);
+            AddToSendSet(in netEntity, ref data, toSend, fromTick, in entered, ref entStateCount);
         }
 
         if (addChildren)
@@ -1046,15 +1040,15 @@ internal sealed partial class PvsSystem : EntitySystem
                 continue;
 
             var metadata = _metaQuery.GetComponent(child);
-            var childNetEntity = metadata.NetEntity;
+            var netChild = metadata.NetEntity;
 
-            if (toSend.Add(childNetEntity))
+            if (toSend.Add(netChild))
             {
-                ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, childNetEntity, out _);
+                ref var data = ref GetOrNewEntityData(entityData, netChild, child, metadata);
                 var (entered, _) = ProcessEntry(ref data, fromTick, ref newEntityCount,
                     ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-                AddToSendSet(in childNetEntity, ref data, metadata, toSend, fromTick, in entered, ref entStateCount);
+                AddToSendSet(in netChild, ref data, toSend, fromTick, in entered, ref entStateCount);
             }
 
             RecursivelyAddChildren(childXform, toSend, entityData, fromTick, ref newEntityCount,
@@ -1100,17 +1094,17 @@ internal sealed partial class PvsSystem : EntitySystem
     private void AddToSendSet(
         in NetEntity netEntity,
         ref EntityData entityData,
-        MetaDataComponent metaDataComponent,
         HashSet<NetEntity> toSend,
         GameTick fromTick,
         in bool entered,
         ref int entStateCount)
     {
-        if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
+        var meta = entityData.Entity.Comp;
+        if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
             toSend.Remove(netEntity);
             var ent = GetEntity(netEntity);
-            var rep = new EntityStringRepresentation(ent, metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
+            var rep = new EntityStringRepresentation(ent, meta.EntityDeleted, meta.EntityName, meta.EntityPrototype?.ID);
             Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(ent)}. Trace:\n{Environment.StackTrace}");
 
             // This can happen if some entity was some removed from it's parent while that parent was being deleted.
@@ -1126,7 +1120,7 @@ internal sealed partial class PvsSystem : EntitySystem
             return;
         }
 
-        if (metaDataComponent.EntityLastModifiedTick <= fromTick)
+        if (meta.EntityLastModifiedTick <= fromTick)
         {
             //entity has been sent before and hasnt been updated since
             entityData.Visibility = PvsEntityVisibility.StayedUnchanged;

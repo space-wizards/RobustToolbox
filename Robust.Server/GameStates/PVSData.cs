@@ -35,6 +35,8 @@ internal sealed class SessionPvsData
 
 internal struct EntityData
 {
+    public readonly Entity<MetaDataComponent> Entity;
+
     /// <summary>
     /// Tick at which this entity was last sent to a player.
     /// </summary>
@@ -57,8 +59,14 @@ internal struct EntityData
     /// </summary>
     public PvsEntityVisibility Visibility;
 
+    public EntityData(Entity<MetaDataComponent> entity)
+    {
+        Entity = entity;
+    }
+
     public override string ToString()
     {
-        return $"{LastSent}/{LastLeftView}/{EntityLastAcked}";
+        var rep = new EntityStringRepresentation(Entity);
+        return $"PVS Entity: {rep} - {LastSent}/{LastLeftView}/{EntityLastAcked}";
     }
 }

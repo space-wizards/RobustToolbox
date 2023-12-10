@@ -31,6 +31,7 @@ internal sealed partial class MidiManager : IMidiManager
 {
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
 
+    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IConfigurationManager _cfgMan = default!;
@@ -68,6 +69,10 @@ internal sealed partial class MidiManager : IMidiManager
     }
 
     [ViewVariables] private readonly List<IMidiRenderer> _renderers = new();
+
+    // To avoid lock contention until some kind of MIDI refactor.
+    private TimeSpan _nextUpdate;
+    private TimeSpan _updateFrequency = TimeSpan.FromSeconds(0.1f);
 
     private SemaphoreSlim _updateSemaphore = new(1);
 
@@ -361,16 +366,22 @@ internal sealed partial class MidiManager : IMidiManager
             return;
         }
 
+        if (_nextUpdate > _timing.RealTime)
+            return;
+
+        _nextUpdate = _timing.RealTime + _updateFrequency;
+
         // Update positions of streams occasionally.
         // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
         // so TRUE
 
+        _updateJob.OurPosition = _audioSys.GetListenerCoordinates();
+
         // This semaphore is here to avoid lock contention as much as possible.
         _updateSemaphore.Wait();
 
-        _updateJob.OurPosition = _audioSys.GetListenerCoordinates();
         // The ONLY time this should be contested is with ThreadUpdate.
-        // If that becomes NOT the case then just lock this, remove the semaphore, and run it every 1/10 second or whatever again.
+        // If that becomes NOT the case then just lock this, remove the semaphore, and drop the update frequency even harder.
         // ReSharper disable once InconsistentlySynchronizedField
         _parallel.ProcessNow(_updateJob, _renderers.Count);
 
@@ -695,7 +706,7 @@ internal sealed partial class MidiManager : IMidiManager
     {
         public int MinimumBatchParallel => 2;
 
-        public int BatchSize => 2;
+        public int BatchSize => 1;
 
         public MidiManager Manager;
 

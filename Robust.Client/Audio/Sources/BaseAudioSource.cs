@@ -194,7 +194,7 @@ internal abstract class BaseAudioSource : IAudioSource
 
             _gain = value;
             AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
-            Master._checkAlError();
+            Master.LogALError($"Gain is {_gain:0.00} and priorOcclusion is {priorOcclusion:0.00}. EFX supported: {IsEfxSupported}");
         }
     }
 
@@ -212,7 +212,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.MaxDistance, value);
-            Master._checkAlError();
+            Master.LogALError($"MaxDistance is {value:0.00}");
         }
     }
 

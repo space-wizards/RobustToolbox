@@ -657,7 +657,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(prototype, out metadata);
             try
             {
-                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+                EntityPrototype.LoadEntity((entity, metadata), ComponentFactory, this, _serManager, context);
                 return entity;
             }
             catch (Exception e)
@@ -671,12 +671,14 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(MetaQuery.GetComponent(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+            EntityPrototype.LoadEntity((entity, MetaQuery.GetComponent(entity)), ComponentFactory, this, _serManager, context);
         }
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
         {
-            EntityPrototype.LoadEntity(prototype, entity, ComponentFactory, this, _serManager, context);
+            var meta = MetaQuery.GetComponent(entity);
+            DebugTools.Assert(meta.EntityPrototype == prototype);
+            EntityPrototype.LoadEntity((entity, meta), ComponentFactory, this, _serManager, context);
         }
 
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)

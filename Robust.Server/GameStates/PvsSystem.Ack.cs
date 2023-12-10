@@ -69,7 +69,7 @@ internal sealed partial class PvsSystem
             return;
 
         var ackedTick = sessionData.LastReceivedAck;
-        Dictionary<NetEntity, PvsEntityVisibility>? ackedData;
+        HashSet<NetEntity>? ackedData;
 
         if (sessionData.Overflow != null && sessionData.Overflow.Value.Tick <= ackedTick)
         {
@@ -81,7 +81,7 @@ internal sealed partial class PvsSystem
             // so discard it unless they happen to be equal.
             if (overflowTick != ackedTick)
             {
-                _visSetPool.Return(overflowEnts);
+                _netUidSetPool.Return(overflowEnts);
                 DebugTools.Assert(!sessionData.SentEntities.Values.Contains(overflowEnts));
                 return;
             }
@@ -91,7 +91,7 @@ internal sealed partial class PvsSystem
 
         sessionData.LastProcessedAck = ackedTick;
         var entityData = sessionData.EntityData;
-        foreach (var ent in ackedData.Keys)
+        foreach (var ent in ackedData)
         {
             ref var data = ref CollectionsMarshal.GetValueRefOrNullRef(entityData, ent);
             if (Unsafe.IsNullRef(ref data))

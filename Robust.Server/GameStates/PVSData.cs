@@ -13,14 +13,14 @@ internal sealed class SessionPvsData
     /// <summary>
     /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="PvsSystem.DirtyBufferSize"/> ticks.
     /// </summary>
-    public readonly OverflowDictionary<GameTick, Dictionary<NetEntity, PvsEntityVisibility>> SentEntities = new(PvsSystem.DirtyBufferSize);
+    public readonly OverflowDictionary<GameTick, HashSet<NetEntity>> SentEntities = new(PvsSystem.DirtyBufferSize);
 
     public readonly Dictionary<NetEntity, EntityData> EntityData = new();
 
     /// <summary>
     ///     <see cref="SentEntities"/> overflow in case a player's last ack is more than <see cref="PvsSystem.DirtyBufferSize"/> ticks behind the current tick.
     /// </summary>
-    public (GameTick Tick, Dictionary<NetEntity, PvsEntityVisibility> SentEnts)? Overflow;
+    public (GameTick Tick, HashSet<NetEntity> SentEnts)? Overflow;
 
     /// <summary>
     ///     If true, the client has explicitly requested a full state. Unlike the first state, we will send them

@@ -135,7 +135,7 @@ namespace Robust.Client.UserInterface.Controls
             if (!_entMan.TryGetComponent(uid, out SpriteComponent? sprite)
                 || !_entMan.TryGetComponent(uid, out TransformComponent? xform))
             {
-                SetEntity(null);
+                Entity = null;
                 return;
             }
 

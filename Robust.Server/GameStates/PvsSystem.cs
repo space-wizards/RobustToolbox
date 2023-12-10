@@ -90,10 +90,6 @@ internal sealed partial class PvsSystem : EntitySystem
         = new DefaultObjectPool<Stack<NetEntity>>(
             new StackPolicy<NetEntity>(), MaxVisPoolSize);
 
-    private readonly ObjectPool<Dictionary<NetEntity, MetaDataComponent>> _chunkCachePool =
-        new DefaultObjectPool<Dictionary<NetEntity, MetaDataComponent>>(
-            new DictPolicy<NetEntity, MetaDataComponent>(), MaxVisPoolSize);
-
     private readonly ObjectPool<HashSet<int>> _playerChunkPool =
         new DefaultObjectPool<HashSet<int>>(new SetPolicy<int>(), MaxVisPoolSize);
 
@@ -113,8 +109,7 @@ internal sealed partial class PvsSystem : EntitySystem
     private readonly List<(int, IChunkIndexLocation)> _chunkList = new(64);
     internal readonly HashSet<ICommonSession> PendingAcks = new();
 
-    private readonly Dictionary<(int visMask, IChunkIndexLocation location), (Dictionary<NetEntity, MetaDataComponent> metadata,
-        RobustTree<NetEntity> tree)?> _previousTrees = new();
+    private readonly Dictionary<(int visMask, IChunkIndexLocation location), RobustTree<NetEntity>?> _previousTrees = new();
 
     private readonly HashSet<(int visMask, IChunkIndexLocation location)> _reusedTrees = new();
 
@@ -552,7 +547,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     public void RegisterNewPreviousChunkTrees(
         List<(int, IChunkIndexLocation)> chunks,
-        (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] trees,
+        RobustTree<NetEntity>?[] trees,
         bool[] reuse)
     {
         // For any chunks able to re-used we'll chuck them in a dictionary for faster lookup.
@@ -571,10 +566,7 @@ internal sealed partial class PvsSystem : EntitySystem
                 continue;
 
             if (chunk != null)
-            {
-                _chunkCachePool.Return(chunk.Value.metadata);
-                _treePool.Return(chunk.Value.tree);
-            }
+                _treePool.Return(chunk);
 
             if (!chunks.Contains(index))
                 _previousTrees.Remove(index);
@@ -593,11 +585,11 @@ internal sealed partial class PvsSystem : EntitySystem
     public bool TryCalculateChunk(
         IChunkIndexLocation chunkLocation,
         int visMask,
-        out (Dictionary<NetEntity, MetaDataComponent> mData, RobustTree<NetEntity> tree)? result)
+        out RobustTree<NetEntity>? tree)
     {
-        if (!_entityPvsCollection.IsDirty(chunkLocation) && _previousTrees.TryGetValue((visMask, chunkLocation), out var previousTree))
+        if (!_entityPvsCollection.IsDirty(chunkLocation)
+            && _previousTrees.TryGetValue((visMask, chunkLocation), out tree))
         {
-            result = previousTree;
             return true;
         }
 
@@ -615,15 +607,19 @@ internal sealed partial class PvsSystem : EntitySystem
         };
         if (chunk == null)
         {
-            result = null;
+            tree = null;
             return false;
         }
-        var chunkSet = _chunkCachePool.Get();
-        var tree = _treePool.Get();
+
+        tree = _treePool.Get();
+        var set = _netUidSetPool.Get();
+        DebugTools.AssertNotNull(tree.RootNodes.Count == 0);
+        DebugTools.AssertNotNull(set.Count == 0);
+
         foreach (var netEntity in chunk)
         {
             var (uid, meta) = GetEntityData(netEntity);
-            AddToChunkSetRecursively(in uid, in netEntity, meta, visMask, tree, chunkSet);
+            AddToChunkSetRecursively(in uid, in netEntity, meta, visMask, tree, set);
 #if DEBUG
             var xform = _xformQuery.GetComponent(uid);
             if (chunkLocation is MapChunkLocation)
@@ -633,19 +629,19 @@ internal sealed partial class PvsSystem : EntitySystem
 #endif
         }
 
+        DebugTools.Assert(set.Count > 0 || tree.RootNodes.Count == 0);
+        _netUidSetPool.Return(set);
+
         if (tree.RootNodes.Count == 0)
         {
             // This can happen if the only entity in a chunk is invisible
             // (e.g., when a ghost moves from from a grid into empty space).
-            DebugTools.Assert(chunkSet.Count == 0);
             _treePool.Return(tree);
-            _chunkCachePool.Return(chunkSet);
-            result = null;
+            tree = null;
             return true;
         }
-        DebugTools.Assert(chunkSet.Count > 0);
 
-        result = (chunkSet, tree);
+        DebugTools.Assert(set.Count > 0);
         return false;
     }
 
@@ -658,14 +654,14 @@ internal sealed partial class PvsSystem : EntitySystem
     }
 
     private void AddToChunkSetRecursively(in EntityUid uid, in NetEntity netEntity, MetaDataComponent mComp,
-        int visMask, RobustTree<NetEntity> tree, Dictionary<NetEntity, MetaDataComponent> set)
+        int visMask, RobustTree<NetEntity> tree, HashSet<NetEntity> set)
     {
         // If the eye is missing ANY layer that this entity is on, or any layer that any of its parents belongs to, then
         // it is considered invisible.
         if ((visMask & mComp.VisibilityMask) != mComp.VisibilityMask)
             return;
 
-        if (!set.TryAdd(netEntity, mComp))
+        if (!set.Add(netEntity))
             return; // already sending
 
         var xform = _xformQuery.GetComponent(uid);
@@ -697,7 +693,7 @@ internal sealed partial class PvsSystem : EntitySystem
         CalculateEntityStates(ICommonSession session,
             GameTick fromTick,
             GameTick toTick,
-            (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] chunks,
+            RobustTree<NetEntity>?[] chunks,
             HashSet<int> visibleChunks,
             EntityUid[] viewers)
     {
@@ -721,22 +717,22 @@ internal sealed partial class PvsSystem : EntitySystem
         // TODO reorder chunks to prioritize those that are closest to the viewer? Helps make pop-in less visible.
         foreach (var i in visibleChunks)
         {
-            var cache = chunks[i];
-            if(!cache.HasValue) continue;
-
+            var tree = chunks[i];
+            if(tree == null)
+                continue;
 #if DEBUG
             // Each root nodes should simply be a map or a grid entity.
-            DebugTools.Assert(cache.Value.tree.RootNodes.Count == 1,
-                $"Root node count is {cache.Value.tree.RootNodes.Count} instead of 1. Session: {session}");
-            var nent = cache.Value.tree.RootNodes.FirstOrDefault();
+            DebugTools.Assert(tree.RootNodes.Count == 1,
+                $"Root node count is {tree.RootNodes.Count} instead of 1. Session: {session}");
+            var nent = tree.RootNodes.FirstOrDefault();
             var ent = GetEntity(nent);
             DebugTools.Assert(Exists(ent), $"Root node does not exist. Node {ent}. Session: {session}");
             DebugTools.Assert(HasComp<MapComponent>(ent) || HasComp<MapGridComponent>(ent));
 #endif
 
-            foreach (var rootNode in cache.Value.tree.RootNodes)
+            foreach (var rootNode in tree.RootNodes)
             {
-                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, toSend, entityData, stack, in fromTick,
+                RecursivelyAddTreeNode(in rootNode, tree, toSend, entityData, stack, in fromTick,
                         ref newEntityCount, ref enteredEntityCount, ref entStateCount,  in newEntityBudget, in enteredEntityBudget);
             }
         }

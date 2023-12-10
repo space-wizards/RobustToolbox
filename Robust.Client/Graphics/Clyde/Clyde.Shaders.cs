@@ -158,7 +158,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _defaultShader = (ClydeShaderInstance) InstanceShader(defaultLoadedShader);
 
-            _queuedShader = _defaultShader.Handle;
+            _queuedShaderInstance = _defaultShader;
         }
 
         private string ReadEmbeddedShader(string fileName)

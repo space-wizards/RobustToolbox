@@ -78,7 +78,9 @@ namespace Robust.Client.Graphics.Clyde
 
         // private LoadedTexture? _batchLoadedTexture;
         // Contains the shader instance that's currently being used by the (queue) stage for new commands.
-        private ClydeHandle _queuedShader;
+        private ClydeHandle _queuedShader => _queuedShaderInstance.Handle;
+
+        private ClydeShaderInstance _queuedShaderInstance = default!;
 
         // Current projection & view matrices that are being used ot render.
         // This gets updated to keep track during (queue) and (misc), but not during (submit).
@@ -314,7 +316,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Reset renderer state.
             _currentMatrixModel = Matrix3.Identity;
-            _queuedShader = _defaultShader.Handle;
+            _queuedShaderInstance = _defaultShader;
             SetScissorFull(null);
         }
 
@@ -531,6 +533,11 @@ namespace Robust.Client.Graphics.Clyde
             _currentMatrixModel = matrix;
         }
 
+        private Matrix3 DrawGetModelTransform()
+        {
+            return _currentMatrixModel;
+        }
+
         private void DrawSetProjViewTransform(in Matrix3 proj, in Matrix3 view)
         {
             BreakBatch();
@@ -700,9 +707,9 @@ namespace Robust.Client.Graphics.Clyde
             _currentScissorState = scissorBox;
         }
 
-        private void DrawUseShader(ClydeHandle handle)
+        private void DrawUseShader(ClydeShaderInstance instance)
         {
-            _queuedShader = handle;
+            _queuedShaderInstance = instance;
         }
 
         private void DrawClear(Color color, int stencil, ClearBufferMask mask)
@@ -875,7 +882,7 @@ namespace Robust.Client.Graphics.Clyde
             SetScissorFull(null);
             BindRenderTargetFull(_mainWindow!.RenderTarget);
             _batchMetaData = null;
-            _queuedShader = _defaultShader.Handle;
+            _queuedShaderInstance = _defaultShader;
 
             GL.Viewport(0, 0, _mainWindow!.FramebufferSize.X, _mainWindow!.FramebufferSize.Y);
         }

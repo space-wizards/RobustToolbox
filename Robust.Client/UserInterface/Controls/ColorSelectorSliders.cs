@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
-using Robust.Shared.Log;
 
 namespace Robust.Client.UserInterface.Controls;
 
@@ -87,12 +89,19 @@ public sealed class ColorSelectorSliders : Control
     private OptionButton _typeSelector;
     private List<ColorSelectorType> _types = new();
 
+    private static ShaderInstance _shader = default!;
+
+    private ColorSelectorStyleBox _topStyle;
+    private ColorSelectorStyleBox _middleStyle;
+    private ColorSelectorStyleBox _bottomStyle;
+
     public ColorSelectorSliders()
     {
         _topColorSlider = new ColorableSlider
         {
             HorizontalExpand = true,
             VerticalAlignment = VAlignment.Center,
+            BackgroundStyleBoxOverride = _topStyle = new(),
             MaxValue = 1.0f
         };
 
@@ -100,6 +109,7 @@ public sealed class ColorSelectorSliders : Control
         {
             HorizontalExpand = true,
             VerticalAlignment = VAlignment.Center,
+            BackgroundStyleBoxOverride = _middleStyle = new(),
             MaxValue = 1.0f
         };
 
@@ -107,6 +117,7 @@ public sealed class ColorSelectorSliders : Control
         {
             HorizontalExpand = true,
             VerticalAlignment = VAlignment.Center,
+            BackgroundStyleBoxOverride = _bottomStyle = new(),
             MaxValue = 1.0f
         };
 
@@ -231,7 +242,7 @@ public sealed class ColorSelectorSliders : Control
         rootBox.AddChild(bodyBox);
 
         UpdateType();
-        Update();
+        Color = _currentColor;
     }
 
     private void UpdateType()
@@ -241,6 +252,11 @@ public sealed class ColorSelectorSliders : Control
         _topSliderLabel.Text = labels.topLabel;
         _middleSliderLabel.Text = labels.middleLabel;
         _bottomSliderLabel.Text = labels.bottomLabel;
+
+        bool hsv = SelectorType == ColorSelectorType.Hsv;
+        _topStyle.ConfigureSlider( hsv ? ColorSelectorStyleBox.ColorSliderPreset.Hue : ColorSelectorStyleBox.ColorSliderPreset.Red);
+        _middleStyle.ConfigureSlider( hsv ? ColorSelectorStyleBox.ColorSliderPreset.Saturation : ColorSelectorStyleBox.ColorSliderPreset.Green);
+        _bottomStyle.ConfigureSlider( hsv ? ColorSelectorStyleBox.ColorSliderPreset.Value : ColorSelectorStyleBox.ColorSliderPreset.Blue);
     }
 
     private void Update()
@@ -251,9 +267,9 @@ public sealed class ColorSelectorSliders : Control
             return;
 
         _updating = true;
-        _topColorSlider.SetColor(_currentColor);
-        _middleColorSlider.SetColor(_currentColor);
-        _bottomColorSlider.SetColor(_currentColor);
+        _topStyle.SetBaseColor(_colorData);
+        _middleStyle.SetBaseColor(_colorData);
+        _bottomStyle.SetBaseColor(_colorData);
 
         switch (SelectorType)
         {

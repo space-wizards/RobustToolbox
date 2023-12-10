@@ -106,7 +106,7 @@ internal sealed partial class PvsSystem
             }
 
             data.EntityLastAcked = ackedTick;
-            DebugTools.Assert(data.LastSent > ackedTick);
+            DebugTools.Assert(data.LastSent >= ackedTick); // LastSent may equal ackedTick if the packet was sent reliably.
         }
 
         // The client acked a tick. If they requested a full state, this ack happened some time after that, so we can safely set this to false

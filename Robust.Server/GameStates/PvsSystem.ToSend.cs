@@ -117,6 +117,11 @@ internal sealed partial class PvsSystem
             // we may find duplicate parents with children we haven't encountered before
             // on different chunks (this is especially common with direct grid children)
 
+            // If entity is already in toSend, it must have a valid entry in entityData
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            DebugTools.Assert(!toSend.Contains(currentNodeIndex)
+                              || entityData.TryGetValue(currentNodeIndex, out var v) && v.Entity.Comp != null);
+
             if (toSend.Add(currentNodeIndex))
             {
                 ref var data = ref GetOrNewEntityData(entityData, currentNodeIndex);
@@ -176,6 +181,11 @@ internal sealed partial class PvsSystem
         var metadata = _metaQuery.GetComponent(uid);
         var netEntity = metadata.NetEntity;
 
+        // If entity is already in toSend, it must have a valid entry in entityData
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        DebugTools.Assert(!toSend.Contains(netEntity)
+                          || entityData.TryGetValue(netEntity, out var v) && v.Entity.Comp != null);
+
         // Note that we check this AFTER adding parents. This is because while this entity may already have been added
         // to the toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported
         // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
@@ -216,6 +226,11 @@ internal sealed partial class PvsSystem
 
             var metadata = _metaQuery.GetComponent(child);
             var netChild = metadata.NetEntity;
+
+            // If entity is already in toSend, it must have a valid entry in entityData
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            DebugTools.Assert(!toSend.Contains(netChild)
+                              || entityData.TryGetValue(netChild, out var v) && v.Entity.Comp != null);
 
             if (toSend.Add(netChild))
             {

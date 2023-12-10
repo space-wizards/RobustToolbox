@@ -641,7 +641,6 @@ internal sealed partial class PvsSystem : EntitySystem
             return true;
         }
 
-        DebugTools.Assert(set.Count > 0);
         return false;
     }
 
@@ -874,7 +873,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
             leftView.Add(ent);
             data.LastLeftView = tick;
-            DebugTools.Assert(data.LastSent > tick && data.LastSent != GameTick.Zero);
+            DebugTools.Assert(data.LastSent.Value == tick.Value - 1 && data.LastSent != GameTick.Zero);
         }
 
         return leftView.Count > 0 ? leftView : null;

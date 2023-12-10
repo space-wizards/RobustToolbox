@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.GameStates;
@@ -31,6 +32,13 @@ internal sealed class SessionPvsData
     public GameTick LastReceivedAck;
 
     public GameTick LastProcessedAck;
+
+    public readonly ICommonSession Session;
+
+    public SessionPvsData(ICommonSession session)
+    {
+        Session = session;
+    }
 }
 
 internal struct EntityData

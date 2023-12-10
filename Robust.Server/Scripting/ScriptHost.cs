@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
@@ -295,9 +294,9 @@ namespace Robust.Server.Scripting
                 loader: TextLoader.From(TextAndVersion.Create(SourceText.From(message.Code), VersionStamp.Create()))
             ));
 
-            var results = await (CompletionService
-                .GetService(document)?
-                .GetCompletionsAsync(document, message.Cursor) ?? Task.FromResult<CompletionList?>(null));
+            var results = await CompletionService
+                .GetService(document)
+                .GetCompletionsAsync(document, message.Cursor);
 
             if (results is not null)
             {

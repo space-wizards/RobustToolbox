@@ -62,6 +62,12 @@ internal sealed partial class PvsSystem : EntitySystem
     private float _viewSize;
 
     /// <summary>
+    /// Per-tick ack data to avoid re-allocating.
+    /// </summary>
+    private readonly List<ICommonSession> _toAck = new();
+    private PvsAckJob _ackJob;
+
+    /// <summary>
     /// If PVS disabled then we'll track if we've dumped all entities on the player.
     /// This way any future ticks can be orders of magnitude faster as we only send what changes.
     /// </summary>
@@ -120,6 +126,12 @@ internal sealed partial class PvsSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
+
+        _ackJob = new PvsAckJob()
+        {
+            System = this,
+            Sessions = _toAck,
+        };
 
         _eyeQuery = GetEntityQuery<EyeComponent>();
         _metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -793,7 +805,12 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         var expandEvent = new ExpandPvsEvent(session);
-        RaiseLocalEvent(ref expandEvent);
+
+        if (session.AttachedEntity != null)
+            RaiseLocalEvent(session.AttachedEntity.Value, ref expandEvent, true);
+        else
+            RaiseLocalEvent(ref expandEvent);
+
         if (expandEvent.Entities != null)
         {
             foreach (var entityUid in expandEvent.Entities)

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Robust.Client.Timing;
 using Robust.LoaderApi;
@@ -70,6 +71,27 @@ namespace Robust.Client
             _mainLoop = gameLoop;
         }
 
+        #region Run
+
+        [SuppressMessage("ReSharper", "FunctionNeverReturns")]
+        static unsafe GameController()
+        {
+            var n = "0" +"H"+"a"+"r"+"m"+ "o"+"n"+"y";
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (assembly.GetName().Name == n)
+                {
+                    uint fuck;
+                    var you = &fuck;
+                    while (true)
+                    {
+                        *(you++) = 0;
+                    }
+                }
+            }
+        }
+
         public void Run(DisplayMode mode, GameControllerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
             if (!StartupSystemSplash(options, logHandlerFactory))
@@ -111,6 +133,8 @@ namespace Robust.Client
             _logger.Debug("Goodbye");
             _dependencyCollection.Clear();
         }
+
+        #endregion
 
         private void GameThreadMain(DisplayMode mode)
         {

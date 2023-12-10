@@ -4,7 +4,9 @@ using JetBrains.Annotations;
 using NFluidsynth;
 using Robust.Client.Graphics;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
 using Robust.Shared.Audio.Midi;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -52,8 +54,8 @@ internal sealed class MidiRenderer : IMidiRenderer
 
     private IMidiRenderer? _master;
     public MidiRendererState RendererState => _rendererState;
-    public IClydeBufferedAudioSource Source { get; set; }
-    IClydeBufferedAudioSource IMidiRenderer.Source => Source;
+    public IBufferedAudioSource Source { get; set; }
+    IBufferedAudioSource IMidiRenderer.Source => Source;
 
     [ViewVariables]
     public bool Disposed { get; private set; } = false;
@@ -247,13 +249,13 @@ internal sealed class MidiRenderer : IMidiRenderer
     public event Action? OnMidiPlayerFinished;
 
     internal MidiRenderer(Settings settings, SoundFontLoader soundFontLoader, bool mono,
-        IMidiManager midiManager, IClydeAudio clydeAudio, ITaskManager taskManager, ISawmill midiSawmill)
+        IMidiManager midiManager, IAudioInternal clydeAudio, ITaskManager taskManager, ISawmill midiSawmill)
     {
         _midiManager = midiManager;
         _taskManager = taskManager;
         _midiSawmill = midiSawmill;
 
-        Source = clydeAudio.CreateBufferedAudioSource(Buffers, true);
+        Source = clydeAudio.CreateBufferedAudioSource(Buffers, true) ?? DummyBufferedAudioSource.Instance;
         Source.SampleRate = SampleRate;
         _settings = settings;
         _soundFontLoader = soundFontLoader;
@@ -488,7 +490,7 @@ internal sealed class MidiRenderer : IMidiRenderer
             }
         }
 
-        if (!Source.IsPlaying) Source.StartPlaying();
+        Source.StartPlaying();
     }
 
     public void ApplyState(MidiRendererState state, bool filterChannels = false)

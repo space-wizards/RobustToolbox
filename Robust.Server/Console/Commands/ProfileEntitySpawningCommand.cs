@@ -43,7 +43,6 @@ public sealed class ProfileEntitySpawningCommand : IConsoleCommand
 
         GC.Collect();
 
-        Span<EntityUid> ents = stackalloc EntityUid[amount];
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
@@ -51,17 +50,12 @@ public sealed class ProfileEntitySpawningCommand : IConsoleCommand
 
         for (var i = 0; i < amount; i++)
         {
-            ents[i] = _entities.SpawnEntity(prototype, MapCoordinates.Nullspace);
+            _entities.SpawnEntity(prototype, MapCoordinates.Nullspace);
         }
 
         MeasureProfiler.SaveData();
 
         shell.WriteLine($"Server: Profiled spawning {amount} entities in {stopwatch.Elapsed.TotalMilliseconds:N3} ms");
-
-        foreach (var ent in ents)
-        {
-            _entities.DeleteEntity(ent);
-        }
     }
 }
 #endif

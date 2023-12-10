@@ -10,7 +10,6 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
 {
-    [Virtual]
     internal partial class ResourceManager
     {
         /// <summary>

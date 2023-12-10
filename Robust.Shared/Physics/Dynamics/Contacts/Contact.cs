@@ -355,21 +355,27 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
     internal enum ContactFlags : byte
     {
         None = 0,
+
+        /// <summary>
+        /// Is the contact pending its first manifold generation.
+        /// </summary>
+        PreInit = 1 << 0,
+
         /// <summary>
         ///     Has this contact already been added to an island?
         /// </summary>
-        Island = 1 << 0,
+        Island = 1 << 1,
 
         /// <summary>
         ///     Does this contact need re-filtering?
         /// </summary>
-        Filter = 1 << 1,
+        Filter = 1 << 2,
 
         /// <summary>
         /// Is this a special contact for grid-grid collisions
         /// </summary>
-        Grid = 1 << 2,
+        Grid = 1 << 3,
 
-        Deleting = 1 << 3,
+        Deleting = 1 << 4,
     }
 }

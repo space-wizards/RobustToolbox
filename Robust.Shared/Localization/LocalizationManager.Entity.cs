@@ -25,7 +25,7 @@ namespace Robust.Shared.Localization
 
         private bool TryGetEntityLocAttrib(EntityUid entity, string attribute, [NotNullWhen(true)] out string? value)
         {
-            if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) &&
+            if (_entMan.TryGetComponent<GrammarComponent?>(entity, out var grammar) &&
                 grammar.Attributes.TryGetValue(attribute, out value))
             {
                 return true;

@@ -13,17 +13,15 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class SpriteView : Control
     {
-        private SpriteSystem? _spriteSystem;
+        private SpriteSystem? _sprite;
+        private SharedTransformSystem? _transform;
         IEntityManager _entMan;
 
         [ViewVariables]
-        public SpriteComponent? Sprite { get; private set; }
-
+        public SpriteComponent? Sprite => Entity?.Comp1;
 
         [ViewVariables]
-        public EntityUid? Entity { get; private set; }
-
-        public Entity<SpriteComponent>? Ent => Entity == null || Sprite == null ? null : (Entity.Value, Sprite);
+        public Entity<SpriteComponent, TransformComponent>? Entity { get; private set; }
 
         /// <summary>
         /// This field configures automatic scaling of the sprite. This automatic scaling is done before
@@ -118,23 +116,30 @@ namespace Robust.Client.UserInterface.Controls
 
         public SpriteView()
         {
-            _entMan = IoCManager.Resolve<IEntityManager>();
-            if (_entMan.TryGetComponent(Entity, out SpriteComponent? sprite))
-            {
-                Sprite = sprite;
-            }
-
+            IoCManager.Resolve(ref _entMan);
             RectClipContent = true;
+        }
+
+        public SpriteView(EntityUid uid, IEntityManager entMan)
+        {
+            _entMan = entMan;
+            RectClipContent = true;
+            SetEntity(uid);
         }
 
         public void SetEntity(EntityUid? uid)
         {
-            Entity = uid;
+            if (Entity?.Owner == uid)
+                return;
 
-            if (_entMan.TryGetComponent(Entity, out SpriteComponent? sprite))
+            if (!_entMan.TryGetComponent(uid, out SpriteComponent? sprite)
+                || !_entMan.TryGetComponent(uid, out TransformComponent? xform))
             {
-                Sprite = sprite;
+                Entity = null;
+                return;
             }
+
+            Entity = new(uid.Value, sprite, xform);
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
@@ -146,13 +151,13 @@ namespace Robust.Client.UserInterface.Controls
 
         private void UpdateSize()
         {
-            if (Entity == null || Sprite == null)
+            if (Entity is not { } ent)
             {
                 _spriteSize = default;
                 return;
             }
 
-            var spriteBox = Sprite.CalculateRotatedBoundingBox(default,  _worldRotation ?? Angle.Zero, _eyeRotation)
+            var spriteBox = ent.Comp1.CalculateRotatedBoundingBox(default,  _worldRotation ?? Angle.Zero, _eyeRotation)
                 .CalcBoundingBox();
 
             if (!SpriteOffset)
@@ -194,18 +199,22 @@ namespace Robust.Client.UserInterface.Controls
 
         internal override void DrawInternal(IRenderHandle renderHandle)
         {
-            if (Entity is not {} uid || Sprite == null)
+            if (Entity == null)
                 return;
 
-            if (Sprite.Deleted)
+            var (uid, sprite, xform) = Entity.Value;
+
+            if (sprite.Deleted)
             {
                 SetEntity(null);
                 return;
             }
 
+            _sprite ??= _entMan.System<SpriteSystem>();
+            _transform ??= _entMan.System<TransformSystem>();
+
             // Ensure the sprite is animated despite possible not being visible in any viewport.
-            _spriteSystem ??= _entMan.System<SpriteSystem>();
-            _spriteSystem.ForceUpdate(uid);
+            _sprite.ForceUpdate(uid);
 
             var stretchVec = Stretch switch
             {
@@ -217,11 +226,18 @@ namespace Robust.Client.UserInterface.Controls
 
             var offset = SpriteOffset
                 ? Vector2.Zero
-                : - (-_eyeRotation).RotateVec(Sprite.Offset) * new Vector2(1, -1) * EyeManager.PixelsPerMeter;
+                : - (-_eyeRotation).RotateVec(sprite.Offset) * new Vector2(1, -1) * EyeManager.PixelsPerMeter;
 
             var position = PixelSize / 2 + offset * stretch * UIScale;
             var scale = Scale * UIScale * stretch;
-            renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, Sprite);
+
+            // control modulation is applied automatically to the screen handle, but here we need to use the world handle
+            var world = renderHandle.DrawingHandleWorld;
+            var oldModulate = world.Modulate;
+            world.Modulate *= Modulate * ActualModulateSelf;
+
+            renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, sprite, xform, _transform);
+            world.Modulate = oldModulate;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -1017,7 +1018,7 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<int> AudioAttenuation =
-            CVarDef.Create("audio.attenuation", (int) Attenuation.Default, CVar.REPLICATED | CVar.ARCHIVE);
+            CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Audio device to try to output audio to by default.
@@ -1029,13 +1030,16 @@ namespace Robust.Shared
         /// Master volume for audio output.
         /// </summary>
         public static readonly CVarDef<float> AudioMasterVolume =
-            CVarDef.Create("audio.mastervolume", 1.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("audio.mastervolume", 0.50f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Maximum raycast distance for audio occlusion.
         /// </summary>
         public static readonly CVarDef<float> AudioRaycastLength =
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        public static readonly CVarDef<float> AudioZOffset =
+            CVarDef.Create("audio.z_offset", -5f, CVar.REPLICATED);
 
         /*
          * PLAYER
@@ -1298,16 +1302,7 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<float> MidiVolume =
-            CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        public static readonly CVarDef<int> MidiMinRendererParallel =
-            CVarDef.Create("midi.min_renderers_parallel_update", 3, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        public static readonly CVarDef<float> MidiPositionUpdateDelay =
-            CVarDef.Create("midi.position_update_delay", 0.125f, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        public static readonly CVarDef<float> MidiOcclusionUpdateDelay =
-            CVarDef.Create("midi.occlusion_update_delay", 0.25f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("midi.volume", 0.50f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * HUB

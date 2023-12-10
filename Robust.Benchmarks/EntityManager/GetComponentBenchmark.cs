@@ -46,7 +46,7 @@ public partial class GetComponentBenchmark
     {
         for (var i = 2; i <= N+1; i++)
         {
-            Comps[i] = _entityManager.GetComponent<A>(new EntityUid(i, -1));
+            Comps[i] = _entityManager.GetComponent<A>(new EntityUid(i));
         }
 
         // Return something so the JIT doesn't optimize out all the GetComponent calls.

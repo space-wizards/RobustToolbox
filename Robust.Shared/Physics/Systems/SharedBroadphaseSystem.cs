@@ -48,14 +48,21 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         private float _broadphaseExpand;
 
-        private const int PairBufferParallel = 8;
-
         private ObjectPool<List<FixtureProxy>> _bufferPool =
             new DefaultObjectPool<List<FixtureProxy>>(new ListPolicy<FixtureProxy>(), 2048);
+
+        private BroadphaseJob _broadphaseJob;
 
         public override void Initialize()
         {
             base.Initialize();
+
+            _broadphaseJob = new BroadphaseJob()
+            {
+                Broadphase = this,
+                BroadphaseExpand = _broadphaseExpand,
+                MapManager = _mapManager,
+            };
 
             _broadphaseQuery = GetEntityQuery<BroadphaseComponent>();
             _gridQuery = GetEntityQuery<MapGridComponent>();
@@ -188,50 +195,16 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var (proxy, aabb) in moveBuffer)
             {
+                // TODO: This should just be done inline in the job.
                 contactBuffer[idx] = _bufferPool.Get();
                 pMoveBuffer[idx++] = (proxy, aabb);
             }
 
-            var options = new ParallelOptions
-            {
-                MaxDegreeOfParallelism = _parallel.ParallelProcessCount,
-            };
+            _broadphaseJob.ContactBuffer = contactBuffer;
+            _broadphaseJob.PMoveBuffer = pMoveBuffer;
+            _broadphaseJob.MapId = mapId;
 
-            var batches = (int)MathF.Ceiling((float) count / PairBufferParallel);
-
-            Parallel.For(0, batches, options, i =>
-            {
-                var start = i * PairBufferParallel;
-                var end = Math.Min(start + PairBufferParallel, count);
-
-                for (var j = start; j < end; j++)
-                {
-                    var (proxy, worldAABB) = pMoveBuffer[j];
-                    var buffer = contactBuffer[j];
-
-                    var proxyBody = proxy.Body;
-                    DebugTools.Assert(!proxyBody.Deleted);
-
-                    var state = (this, proxy, worldAABB, buffer);
-
-                    // Get every broadphase we may be intersecting.
-                    _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_broadphaseExpand), ref state,
-                        static (EntityUid uid, MapGridComponent _, ref (
-                            SharedBroadphaseSystem system,
-                            FixtureProxy proxy,
-                            Box2 worldAABB,
-                            List<FixtureProxy> pairBuffer) tuple) =>
-                        {
-                            ref var buffer = ref tuple.pairBuffer;
-                            tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, uid, buffer);
-                            return true;
-                        });
-
-                    // Struct ref moment, I have no idea what's fastest.
-                    buffer = state.buffer;
-                    FindPairs(proxy, worldAABB, _mapManager.GetMapEntityId(mapId), buffer);
-                }
-            });
+            _parallel.ProcessNow(_broadphaseJob, count);
 
             for (var i = 0; i < count; i++)
             {
@@ -432,6 +405,13 @@ namespace Robust.Shared.Physics.Systems
 
         public void RegenerateContacts(EntityUid uid, PhysicsComponent body, FixturesComponent? fixtures = null, TransformComponent? xform = null)
         {
+            // If it can't collide then we can't touch proxies and add them to the movebuffer anyway.
+            if (!body.CanCollide)
+            {
+                // Sleep body may still have contacts around.
+                return;
+            }
+
             _physicsSystem.DestroyContacts(body);
             if (!Resolve(uid, ref xform, ref fixtures))
                 return;
@@ -514,5 +494,50 @@ namespace Robust.Shared.Physics.Systems
                 }
             }
         }
+
+        #region Jobs
+
+        private record struct BroadphaseJob : IParallelRobustJob
+        {
+            public int BatchSize => 8;
+
+            public IMapManager MapManager;
+            public SharedBroadphaseSystem Broadphase;
+
+            public MapId MapId;
+            public float BroadphaseExpand;
+            public List<FixtureProxy>[] ContactBuffer;
+            public (FixtureProxy Proxy, Box2 AABB)[] PMoveBuffer;
+
+            public void Execute(int index)
+            {
+                var (proxy, worldAABB) = PMoveBuffer[index];
+                var buffer = ContactBuffer[index];
+
+                var proxyBody = proxy.Body;
+                DebugTools.Assert(!proxyBody.Deleted);
+
+                var state = (Broadphase, proxy, worldAABB, buffer);
+
+                // Get every broadphase we may be intersecting.
+                MapManager.FindGridsIntersecting(MapId, worldAABB.Enlarged(BroadphaseExpand), ref state,
+                    static (EntityUid uid, MapGridComponent _, ref (
+                        SharedBroadphaseSystem system,
+                        FixtureProxy proxy,
+                        Box2 worldAABB,
+                        List<FixtureProxy> pairBuffer) tuple) =>
+                    {
+                        ref var buffer = ref tuple.pairBuffer;
+                        tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, uid, buffer);
+                        return true;
+                    }, approx: true, includeMap: false);
+
+                // Struct ref moment, I have no idea what's fastest.
+                buffer = state.buffer;
+                Broadphase.FindPairs(proxy, worldAABB, MapManager.GetMapEntityId(MapId), buffer);
+            }
+        }
+
+        #endregion
     }
 }

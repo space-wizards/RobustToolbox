@@ -7,12 +7,10 @@ namespace Robust.Shared.GameObjects
     public readonly struct EntityTerminatingEvent
     {
         public readonly EntityUid Entity;
-        public readonly MetaDataComponent Metadata;
 
-        public EntityTerminatingEvent(EntityUid entity, MetaDataComponent metadata)
+        public EntityTerminatingEvent(EntityUid entity)
         {
             Entity = entity;
-            Metadata = metadata;
         }
     }
 }

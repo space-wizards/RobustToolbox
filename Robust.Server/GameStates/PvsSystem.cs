@@ -807,7 +807,7 @@ internal sealed partial class PvsSystem : EntitySystem
         var expandEvent = new ExpandPvsEvent(session);
 
         if (session.AttachedEntity != null)
-            RaiseLocalEvent(session.AttachedEntity.Value, ref expandEvent);
+            RaiseLocalEvent(session.AttachedEntity.Value, ref expandEvent, true);
 
         if (expandEvent.Entities != null)
         {

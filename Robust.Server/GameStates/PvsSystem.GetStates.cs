@@ -87,8 +87,6 @@ internal sealed partial class PvsSystem
         }
     }
 
-
-
     /// <summary>
     /// Generates a network entity state for the given entity.
     /// </summary>
@@ -144,7 +142,7 @@ internal sealed partial class PvsSystem
     }
 
     /// <summary>
-    ///     Variant of <see cref="GetEntityState"/> that includes all entity data, including data that can be inferred implicitly from the entity prototype.
+    /// Variant of <see cref="GetEntityState"/> that includes all entity data, including data that can be inferred implicitly from the entity prototype.
     /// </summary>
     private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta)
     {
@@ -173,8 +171,9 @@ internal sealed partial class PvsSystem
 
         return entState;
     }
-     /// <summary>
-    ///     Gets all entity states that have been modified after and including the provided tick.
+
+    /// <summary>
+    /// Gets all entity states that have been modified after and including the provided tick.
     /// </summary>
     public (List<EntityState>?, List<NetEntity>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
     {

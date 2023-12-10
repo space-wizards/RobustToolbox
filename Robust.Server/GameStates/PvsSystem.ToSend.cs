@@ -11,15 +11,15 @@ namespace Robust.Server.GameStates;
 internal sealed partial class PvsSystem
 {
     /// <summary>
-    /// This method gets called after an entity was added to the to-send set.
-    /// It updates the entity's visibility and increments the entStateCount.
+    /// This method gets called after an entity was added to the to-send set. It updates the entity's visibility and
+    /// increments the dirty entity counter.
     /// </summary>
     private void EntityAddedToSet(
         ref EntityData entityData,
         HashSet<NetEntity> toSend,
         GameTick fromTick,
         bool entered,
-        ref int entStateCount)
+        ref int dirtyEntityCount)
     {
         var meta = entityData.Entity.Comp;
         if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
@@ -37,7 +37,7 @@ internal sealed partial class PvsSystem
         if (entered)
         {
             entityData.Visibility = PvsEntityVisibility.Entered;
-            entStateCount++;
+            dirtyEntityCount++;
             return;
         }
 
@@ -50,7 +50,7 @@ internal sealed partial class PvsSystem
 
         //add us
         entityData.Visibility = PvsEntityVisibility.StayedChanged;
-        entStateCount++;
+        dirtyEntityCount++;
     }
 
     /// <summary>
@@ -62,8 +62,8 @@ internal sealed partial class PvsSystem
         GameTick fromTick,
         ref int newEntityCount,
         ref int enteredEntityCount,
-        in int newEntityBudget,
-        in int enteredEntityBudget)
+        int newEntityBudget,
+        int enteredEntityBudget)
     {
         var enteredSinceLastSent = fromTick == GameTick.Zero
                                    || entity.LastSent == GameTick.Zero
@@ -93,19 +93,19 @@ internal sealed partial class PvsSystem
     }
 
     /// <summary>
-    /// Recursively add an entity and all of its parents to the to-send set.
+    /// Recursively add an entity and all of its children to the to-send set.
     /// </summary>
     private void RecursivelyAddTreeNode(in NetEntity nodeIndex,
         RobustTree<NetEntity> tree,
         HashSet<NetEntity> toSend,
         Dictionary<NetEntity, EntityData> entityData,
         Stack<NetEntity> stack,
-        in GameTick fromTick,
+        GameTick fromTick,
         ref int newEntityCount,
         ref int enteredEntityCount,
-        ref int entStateCount,
-        in int newEntityBudget,
-        in int enteredEntityBudget)
+        ref int dirtyEntityCount,
+        int newEntityBudget,
+        int enteredEntityBudget)
     {
         stack.Push(nodeIndex);
 
@@ -136,7 +136,7 @@ internal sealed partial class PvsSystem
                     continue;
                 }
 
-                EntityAddedToSet(ref data, toSend, fromTick, entered, ref entStateCount);
+                EntityAddedToSet(ref data, toSend, fromTick, entered, ref dirtyEntityCount);
             }
 
             var node = tree[currentNodeIndex];
@@ -156,12 +156,12 @@ internal sealed partial class PvsSystem
     public bool RecursivelyAddOverride(in EntityUid uid,
         HashSet<NetEntity> toSend,
         Dictionary<NetEntity, EntityData> entityData,
-        in GameTick fromTick,
+        GameTick fromTick,
         ref int newEntityCount,
         ref int enteredEntityCount,
-        ref int entStateCount,
-        in int newEntityBudget,
-        in int enteredEntityBudget,
+        ref int dirtyEntityCount,
+        int newEntityBudget,
+        int enteredEntityBudget,
         bool addChildren = false)
     {
         //are we valid?
@@ -171,9 +171,8 @@ internal sealed partial class PvsSystem
 
         var xform = _xformQuery.GetComponent(uid);
         var parent = xform.ParentUid;
-        if (parent.IsValid() && !RecursivelyAddOverride(in parent, toSend, entityData, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget,
-                in enteredEntityBudget))
+        if (parent.IsValid() && !RecursivelyAddOverride(in parent, toSend, entityData, fromTick,
+                ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget))
         {
             return false;
         }
@@ -194,13 +193,13 @@ internal sealed partial class PvsSystem
         {
             ref var data = ref GetOrNewEntityData(entityData, netEntity, uid, metadata);
             var (entered, _) = GetPvsEntryData(ref data, fromTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-            EntityAddedToSet(ref data, toSend, fromTick, entered, ref entStateCount);
+            EntityAddedToSet(ref data, toSend, fromTick, entered, ref dirtyEntityCount);
         }
 
         if (addChildren)
         {
             RecursivelyAddChildren(xform, toSend, entityData, fromTick, ref newEntityCount,
-                ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+                ref enteredEntityCount, ref dirtyEntityCount, in newEntityBudget, in enteredEntityBudget);
         }
 
         return true;
@@ -215,7 +214,7 @@ internal sealed partial class PvsSystem
         in GameTick fromTick,
         ref int newEntityCount,
         ref int enteredEntityCount,
-        ref int entStateCount,
+        ref int dirtyEntityCount,
         in int newEntityBudget,
         in int enteredEntityBudget)
     {
@@ -238,11 +237,11 @@ internal sealed partial class PvsSystem
                 var (entered, _) = GetPvsEntryData(ref data, fromTick, ref newEntityCount,
                     ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-                EntityAddedToSet(ref data, toSend, fromTick, entered, ref entStateCount);
+                EntityAddedToSet(ref data, toSend, fromTick, entered, ref dirtyEntityCount);
             }
 
             RecursivelyAddChildren(childXform, toSend, entityData, fromTick, ref newEntityCount,
-                ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+                ref enteredEntityCount, ref dirtyEntityCount, in newEntityBudget, in enteredEntityBudget);
         }
     }
 }

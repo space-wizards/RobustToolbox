@@ -89,7 +89,6 @@ internal sealed partial class PvsSystem
         else if (!sessionData.SentEntities.TryGetValue(ackedTick, out ackedData))
             return;
 
-        sessionData.LastProcessedAck = ackedTick;
         var entityData = sessionData.EntityData;
         foreach (var ent in ackedData)
         {

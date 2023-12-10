@@ -710,7 +710,7 @@ internal sealed partial class PvsSystem : EntitySystem
             throw new Exception("Encountered non-empty object inside of _netUidSetPool. Was the same object returned to the pool more than once?");
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-        var entStateCount = 0;
+        var dirtyEntityCount = 0;
 
         var stack = _stackPool.Get();
         // TODO reorder chunks to prioritize those that are closest to the viewer? Helps make pop-in less visible.
@@ -731,8 +731,8 @@ internal sealed partial class PvsSystem : EntitySystem
 
             foreach (var rootNode in tree.RootNodes)
             {
-                RecursivelyAddTreeNode(in rootNode, tree, toSend, entityData, stack, in fromTick,
-                        ref newEntityCount, ref enteredEntityCount, ref entStateCount,  in newEntityBudget, in enteredEntityBudget);
+                RecursivelyAddTreeNode(in rootNode, tree, toSend, entityData, stack, fromTick,
+                        ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
             }
         }
         _stackPool.Return(stack);
@@ -742,8 +742,8 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = globalEnumerator.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, toSend, entityData, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+            RecursivelyAddOverride(in uid, toSend, entityData, fromTick,
+                ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
         }
         globalEnumerator.Dispose();
 
@@ -752,8 +752,8 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = globalRecursiveEnumerator.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, toSend, entityData, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
+            RecursivelyAddOverride(in uid, toSend, entityData, fromTick,
+                ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget, true);
         }
         globalRecursiveEnumerator.Dispose();
 
@@ -762,15 +762,15 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = sessionOverrides.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, toSend, entityData, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
+            RecursivelyAddOverride(in uid, toSend, entityData, fromTick,
+                ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget, true);
         }
         sessionOverrides.Dispose();
 
         foreach (var viewerEntity in viewers)
         {
-            RecursivelyAddOverride(in viewerEntity, toSend, entityData, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+            RecursivelyAddOverride(in viewerEntity, toSend, entityData, fromTick,
+                ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
         }
 
         var expandEvent = new ExpandPvsEvent(session);
@@ -784,8 +784,8 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             foreach (var entityUid in expandEvent.Entities)
             {
-                RecursivelyAddOverride(in entityUid, toSend, entityData, in fromTick,
-                    ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+                RecursivelyAddOverride(in entityUid, toSend, entityData, fromTick,
+                    ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
             }
         }
 
@@ -793,13 +793,13 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             foreach (var entityUid in expandEvent.RecursiveEntities)
             {
-                RecursivelyAddOverride(in entityUid, toSend, entityData, in fromTick,
-                    ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
+                RecursivelyAddOverride(in entityUid, toSend, entityData, fromTick,
+                    ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget, true);
             }
         }
 
         // TODO PVS reduce allocs
-        var entityStates = new List<EntityState>(entStateCount);
+        var entityStates = new List<EntityState>(dirtyEntityCount);
         GetStateList(entityStates, toSend, sessionData, fromTick);
 
         // tell a client to detach entities that have left their view

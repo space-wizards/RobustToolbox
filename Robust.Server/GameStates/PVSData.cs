@@ -7,7 +7,7 @@ using Robust.Shared.Timing;
 namespace Robust.Server.GameStates;
 
 /// <summary>
-///     Class used to store per-session data in order to avoid having to lock dictionaries.
+/// Class for storing session specific PVS data.
 /// </summary>
 internal sealed class SessionPvsData
 {
@@ -19,19 +19,18 @@ internal sealed class SessionPvsData
     public readonly Dictionary<NetEntity, EntityData> EntityData = new();
 
     /// <summary>
-    ///     <see cref="SentEntities"/> overflow in case a player's last ack is more than <see cref="PvsSystem.DirtyBufferSize"/> ticks behind the current tick.
+    /// <see cref="SentEntities"/> overflow in case a player's last ack is more than
+    /// <see cref="PvsSystem.DirtyBufferSize"/> ticks behind the current tick.
     /// </summary>
     public (GameTick Tick, HashSet<NetEntity> SentEnts)? Overflow;
 
     /// <summary>
-    ///     If true, the client has explicitly requested a full state. Unlike the first state, we will send them
-    ///     all data, not just data that cannot be implicitly inferred from entity prototypes.
+    /// If true, the client has explicitly requested a full state. Unlike the first state, we will send them all data,
+    /// not just data that cannot be implicitly inferred from entity prototypes.
     /// </summary>
     public bool RequestedFull = false;
 
     public GameTick LastReceivedAck;
-
-    public GameTick LastProcessedAck;
 
     public readonly ICommonSession Session;
 
@@ -41,6 +40,9 @@ internal sealed class SessionPvsData
     }
 }
 
+/// <summary>
+/// Struct for storing session-specific information about when an entity was last sent to a player.
+/// </summary>
 internal struct EntityData
 {
     public readonly Entity<MetaDataComponent> Entity;

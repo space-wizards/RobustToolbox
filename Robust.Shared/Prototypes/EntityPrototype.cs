@@ -257,12 +257,20 @@ namespace Robust.Shared.Prototypes
             if (context is not MapSerializationContext map)
             {
                 serManager.CopyTo(data, ref component, context, notNullableOverride: true);
-                return;
+            }
+            else
+            {
+                map.CurrentComponent = compName;
+                serManager.CopyTo(data, ref component, context, notNullableOverride: true);
+                map.CurrentComponent = null;
             }
 
-            map.CurrentComponent = compName;
-            serManager.CopyTo(data, ref component, context, notNullableOverride: true);
-            map.CurrentComponent = null;
+            // Update internal data, probably use a C# event at some point
+            if (compReg.NetID != null && !component.NetSyncEnabled && component.Networked)
+            {
+                component.Networked = false;
+                entityManager.GetComponent<MetaDataComponent>(entity).NetComponents.Remove(compReg.NetID.Value);
+            }
         }
 
         public override string ToString()

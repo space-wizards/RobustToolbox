@@ -443,9 +443,13 @@ namespace Robust.Client.Graphics.Clyde
                 _isStencilling = false;
             }
 
-            if (!instance.ParametersDirty)
+            if (instance.Parameters.Count == 0)
                 return (program, instance);
 
+            if (shader.LastInstance == instance && !instance.ParametersDirty)
+                return (program, instance);
+
+            shader.LastInstance = instance;
             instance.ParametersDirty = false;
 
             int textureUnitVal = 0;

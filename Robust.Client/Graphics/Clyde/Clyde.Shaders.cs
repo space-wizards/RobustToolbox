@@ -48,6 +48,10 @@ namespace Robust.Client.Graphics.Clyde
 
             [ViewVariables]
             public string? Name;
+
+            // Last instance that used this shader.
+            // Used to ensure that shader uniforms get updated.
+            public LoadedShaderInstance? LastInstance;
         }
 
         private sealed class LoadedShaderInstance

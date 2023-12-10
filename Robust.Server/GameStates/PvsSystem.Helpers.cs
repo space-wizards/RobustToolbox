@@ -6,6 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
+// This partial class contains miscellaneous convenience functions
 internal sealed partial class PvsSystem
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

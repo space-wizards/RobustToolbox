@@ -953,7 +953,8 @@ internal sealed partial class PvsSystem : EntitySystem
             ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, currentNodeIndex, out var exists);
             if (!exists)
             {
-                var (entered, shouldAdd) = ProcessEntry(in currentNodeIndex, entityData, fromTick,
+                ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, currentNodeIndex, out _);
+                var (entered, shouldAdd) = ProcessEntry(ref data, fromTick,
                     ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
                 if (!shouldAdd)
@@ -1013,8 +1014,9 @@ internal sealed partial class PvsSystem : EntitySystem
         ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, netEntity, out var exists);
         if (!exists)
         {
-            var (entered, _) = ProcessEntry(in netEntity, entityData, fromTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-            AddToSendSet(in netEntity, metadata, ref value, toSend, fromTick, in entered, ref entStateCount);
+            ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, netEntity , out _);
+            var (entered, _) = ProcessEntry(ref data, fromTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
+            AddToSendSet(in netEntity , metadata, ref value, toSend, fromTick, in entered, ref entStateCount);
         }
 
         if (addChildren)
@@ -1047,7 +1049,8 @@ internal sealed partial class PvsSystem : EntitySystem
             ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, childNetEntity, out var exists);
             if (!exists)
             {
-                var (entered, _) = ProcessEntry(in childNetEntity, entityData, fromTick, ref newEntityCount,
+                ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, childNetEntity out _);
+                var (entered, _) = ProcessEntry(ref data, fromTick, ref newEntityCount,
                     ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
                 AddToSendSet(in childNetEntity, metadata, ref value, toSend, fromTick, in entered, ref entStateCount);
@@ -1058,24 +1061,22 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private (bool Entered, bool ShouldAdd) ProcessEntry(in NetEntity netEntity,
-        Dictionary<NetEntity, EntityData> entityData,
+    private (bool Entered, bool ShouldAdd) ProcessEntry(
+        ref EntityData entity,
         GameTick fromTick,
         ref int newEntityCount,
         ref int enteredEntityCount,
         in int newEntityBudget,
         in int enteredEntityBudget)
     {
-        var data = entityData.GetOrNew(netEntity);
-
         var enteredSinceLastSent = fromTick == GameTick.Zero
-                                   || data.LastSent == GameTick.Zero
-                                   || data.LastSent.Value == fromTick.Value - 1;
+                                   || entity.LastSent == GameTick.Zero
+                                   || entity.LastSent.Value == fromTick.Value - 1;
 
         var entered = enteredSinceLastSent
-                      || data.EntityLastAcked == GameTick.Zero
-                      || data.EntityLastAcked < fromTick // this entity was not in the last acked state.
-                      || data.LastLeftView >= fromTick; // entity left and re-entered sometime after the last acked tick
+                      || entity.EntityLastAcked == GameTick.Zero
+                      || entity.EntityLastAcked < fromTick // this entity was not in the last acked state.
+                      || entity.LastLeftView >= fromTick; // entity left and re-entered sometime after the last acked tick
 
         // If the entity is entering, but we already sent this entering entity in the last message, we won't add it to
         // the budget. Chances are the packet will arrive in a nice and orderly fashion, and the client will stick to
@@ -1088,7 +1089,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
             enteredEntityCount++;
 
-            if (data.EntityLastAcked == GameTick.Zero)
+            if (entity.EntityLastAcked == GameTick.Zero)
                 newEntityCount++;
         }
 

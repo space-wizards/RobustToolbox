@@ -174,19 +174,21 @@ namespace Robust.Client.GameStates
 
         private void OnComponentAdded(AddedComponentEventArgs args)
         {
-            if (_resettingPredictedEntities)
-            {
-                var comp = args.ComponentType;
+            if (!_resettingPredictedEntities)
+                return;
 
-                if (comp.NetID == null)
-                    return;
+            var comp = args.ComponentType;
+            if (comp.NetID == null)
+                return;
 
-                _sawmill.Error($"""
-                    Added component {comp.Name} with net id {comp.NetID} while resetting predicted entities.
-                    Stack trace:
-                    {Environment.StackTrace}
-                    """);
-            }
+            if (_entityManager.IsClientSide(args.BaseArgs.Owner))
+                return;
+
+            _sawmill.Error($"""
+                Added component {comp.Name} to entity {_entityManager.ToPrettyString(args.BaseArgs.Owner)} while resetting predicted entities.
+                Stack trace:
+                {Environment.StackTrace}
+                """);
         }
 
         /// <inheritdoc />

@@ -426,12 +426,12 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Matrix3 CreateTransform(float posX, float posY, float angle, float scaleX = 1, float scaleY = 1)
+        public static Matrix3 CreateTransform(float posX, float posY, double angle, float scaleX = 1, float scaleY = 1)
         {
             // returns a matrix that is equivalent to returning CreateScale(scale) * CreateRotation(angle) * CreateTranslation(posX, posY)
 
-            var sin = MathF.Sin(angle);
-            var cos = MathF.Cos(angle);
+            var sin = (float) Math.Sin(angle);
+            var cos = (float) Math.Cos(angle);
 
             return new Matrix3
             {
@@ -446,12 +446,12 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Matrix3 CreateInverseTransform(float posX, float posY, float angle, float scaleX = 1, float scaleY = 1)
+        public static Matrix3 CreateInverseTransform(float posX, float posY, double angle, float scaleX = 1, float scaleY = 1)
         {
             // returns a matrix that is equivalent to returning CreateTranslation(-posX, -posY) * CreateRotation(-angle) * CreateScale(1/scaleX, 1/scaleY)
 
-            var sin = MathF.Sin(angle);
-            var cos = MathF.Cos(angle);
+            var sin = (float) Math.Sin(angle);
+            var cos = (float) Math.Cos(angle);
 
             return new Matrix3
             {
@@ -493,7 +493,16 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 CreateInverseTransform(in Vector2 position, in Angle angle, in Vector2 scale)
         {
-            return CreateInverseTransform(position.X, position.Y, (float)angle.Theta, scale.X, scale.Y);
+            return CreateInverseTransform(position.X, position.Y, angle.Theta, scale.X, scale.Y);
+        }
+
+        /// <summary>
+        /// Gets the rotation of the Matrix. Will have some precision loss.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Angle GetRotation()
+        {
+            return Math.Asin(R1C0);
         }
 
         #endregion Constructors

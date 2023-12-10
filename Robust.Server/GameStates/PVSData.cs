@@ -52,6 +52,11 @@ internal struct EntityData
     /// </summary>
     public GameTick EntityLastAcked;
 
+    /// <summary>
+    /// Entity visibility state when it was last sent to this player.
+    /// </summary>
+    public PvsEntityVisibility Visibility;
+
     public override string ToString()
     {
         return $"{LastSent}/{LastLeftView}/{EntityLastAcked}";

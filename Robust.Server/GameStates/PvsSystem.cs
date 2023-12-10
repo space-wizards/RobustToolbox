@@ -805,7 +805,12 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         var expandEvent = new ExpandPvsEvent(session);
-        RaiseLocalEvent(ref expandEvent);
+
+        if (session.AttachedEntity != null)
+            RaiseLocalEvent(session.AttachedEntity.Value, ref expandEvent, true);
+        else
+            RaiseLocalEvent(ref expandEvent);
+
         if (expandEvent.Entities != null)
         {
             foreach (var entityUid in expandEvent.Entities)
@@ -1102,8 +1107,13 @@ internal sealed partial class PvsSystem : EntitySystem
         if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
         {
             toSend.Remove(netEntity);
-            var rep = new EntityStringRepresentation(GetEntity(netEntity), metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
-            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Trace:\n{Environment.StackTrace}");
+            var ent = GetEntity(netEntity);
+            var rep = new EntityStringRepresentation(ent, metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
+            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(ent)}. Trace:\n{Environment.StackTrace}");
+
+            // This can happen if some entity was some removed from it's parent while that parent was being deleted.
+            // As a result the entity was marked for deletion but was never actually properly deleted.
+            EntityManager.QueueDeleteEntity(ent);
             return;
         }
 
@@ -1260,8 +1270,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
         foreach (var (netId, component) in meta.NetComponents)
         {
-            if (!component.NetSyncEnabled)
-                continue;
+            DebugTools.Assert(component.NetSyncEnabled);
 
             if (component.Deleted || !component.Initialized)
             {
@@ -1309,8 +1318,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
         foreach (var (netId, component) in meta.NetComponents)
         {
-            if (!component.NetSyncEnabled)
-                continue;
+            DebugTools.Assert(component.NetSyncEnabled);
 
             if (component.SendOnlyToOwner && player.AttachedEntity != entityUid)
                 continue;

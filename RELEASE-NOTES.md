@@ -54,6 +54,28 @@ END TEMPLATE-->
 *None yet*
 
 
+## 189.0.0
+
+### Breaking changes
+
+* Use the base AudioParams for networking not the z-offset adjusted ones.
+* Modulate SpriteView sprites by the control's color modulation.
+
+### New features
+
+* Improve YAML linter error messages for parent nodes.
+* ExpandPvsEvent will also be raised directed to the session's attached entity.
+
+### Bugfixes
+
+* Client clientside entity error spam.
+
+### Internal
+
+* Set priorGain to 0 where no EFX is supported for audio rather than 0.5.
+* Try to hotfix MIDI lock contention more via a semaphore.
+
+
 ## 188.0.0
 
 ### Breaking changes

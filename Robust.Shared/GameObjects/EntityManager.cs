@@ -415,7 +415,7 @@ namespace Robust.Shared.GameObjects
             EntityUid uid,
             MetaDataComponent metadata)
         {
-            var transform = TransformQuery.GetComponent(uid);
+            DebugTools.Assert(metadata.EntityLifeStage < EntityLifeStage.Terminating);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
 
             try
@@ -428,6 +428,7 @@ namespace Robust.Shared.GameObjects
                 _sawmill.Error($"Caught exception while raising event {nameof(EntityTerminatingEvent)} on entity {ToPrettyString(uid, metadata)}\n{e}");
             }
 
+            var transform = TransformQuery.GetComponent(uid);
             foreach (var child in transform._children)
             {
                 if (!MetaQuery.TryGetComponent(child, out var childMeta) || childMeta.EntityDeleted)
@@ -458,7 +459,7 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    _xforms.DetachParentToNull(uid, transform, parentXform);
+                    _xforms.DetachParentToNull((uid, transform, metadata), parentXform, true);
                 }
                 catch (Exception e)
                 {

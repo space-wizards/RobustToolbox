@@ -20,8 +20,6 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
     private bool _float = false;
     private int FilterHandle;
 
-    private float _gain;
-
     public int SampleRate { get; set; } = 44100;
 
     private bool IsEfxSupported => _master.IsEfxSupported;
@@ -37,7 +35,6 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
             BufferMap[bufferHandle] = i;
         }
         _float = floatAudio;
-        AL.GetSource(sourceHandle, ALSourcef.Gain, out _gain);
     }
 
     /// <inheritdoc />

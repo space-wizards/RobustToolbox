@@ -62,6 +62,18 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             _zOffset = value;
             _audio.SetZOffset(value);
+
+            var query = AllEntityQuery<AudioComponent>();
+
+            while (query.MoveNext(out var audio))
+            {
+                // Pythagoras back to normal then adjust.
+                var maxDistance = GetAudioDistance(audio.Params.MaxDistance);
+                var refDistance = GetAudioDistance(audio.Params.ReferenceDistance);
+
+                audio.MaxDistance = maxDistance;
+                audio.ReferenceDistance = refDistance;
+            }
         }
     }
 
@@ -118,7 +130,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     public void SetMasterVolume(float value)
     {
-        _audio.SetMasterVolume(value);
+        _audio.SetMasterGain(value);
     }
 
     public override void Shutdown()
@@ -325,19 +337,19 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var delta = worldPos - listener.Position;
         var distance = delta.Length();
 
-        if (distance > 0f && distance < 0.01f)
-        {
-            worldPos = listener.Position;
-            delta = Vector2.Zero;
-            distance = 0f;
-        }
-
         // Out of range so just clip it for us.
         if (distance > component.MaxDistance)
         {
             // Still keeps the source playing, just with no volume.
             component.Gain = 0f;
             return;
+        }
+
+        if (distance > 0f && distance < 0.01f)
+        {
+            worldPos = listener.Position;
+            delta = Vector2.Zero;
+            distance = 0f;
         }
 
         // Update audio occlusion
@@ -486,6 +498,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="audioParams"></param>
     private (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
     {
+        if (TerminatingOrDeleted(entity))
+        {
+            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entity)}");
+            return null;
+        }
+
         var playing = CreateAndStartPlayingStream(audioParams, stream);
         _xformSys.SetCoordinates(playing.Entity, new EntityCoordinates(entity, Vector2.Zero));
 
@@ -521,6 +539,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="audioParams"></param>
     private (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
+        if (TerminatingOrDeleted(coordinates.EntityId))
+        {
+            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}");
+            return null;
+        }
+
         var playing = CreateAndStartPlayingStream(audioParams, stream);
         _xformSys.SetCoordinates(playing.Entity, coordinates);
         return playing;
@@ -593,6 +617,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         offset = Math.Clamp(offset, 0f, (float) stream.Length.TotalSeconds - 0.01f);
         source.PlaybackPosition = offset;
 
+        // For server we will rely on the adjusted one but locally we will have to adjust it ourselves.
         ApplyAudioParams(audioP, comp);
         comp.Params = audioP;
         source.StartPlaying();
@@ -607,8 +632,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
         source.Pitch = audioParams.Pitch;
         source.Volume = audioParams.Volume;
         source.RolloffFactor = audioParams.RolloffFactor;
-        source.MaxDistance = audioParams.MaxDistance;
-        source.ReferenceDistance = audioParams.ReferenceDistance;
+        source.MaxDistance = GetAudioDistance(audioParams.MaxDistance);
+        source.ReferenceDistance = GetAudioDistance(audioParams.ReferenceDistance);
         source.Looping = audioParams.Loop;
     }
 

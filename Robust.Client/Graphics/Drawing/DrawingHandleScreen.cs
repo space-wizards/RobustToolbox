@@ -116,7 +116,6 @@ namespace Robust.Client.Graphics
                 {
                     baseLine.Y += lineHeight;
                     advanceTotal.Y += lineHeight;
-                    advanceTotal.X = Math.Max(advanceTotal.X, baseLine.X);
                     baseLine.X = 0f;
                     continue;
                 }
@@ -128,6 +127,7 @@ namespace Robust.Client.Graphics
 
                 var advance = metrics.Value.Advance;
                 baseLine += new Vector2(advance, 0);
+                advanceTotal.X = MathF.Max(baseLine.X, advanceTotal.X);
             }
 
             return advanceTotal;

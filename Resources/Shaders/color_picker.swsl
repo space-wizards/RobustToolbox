@@ -15,7 +15,7 @@ void fragment()
     // I.e., if using this shader to draw a box to the screen, (0,0) is the bottom left of the box.
     
     highp float yCoords = 1.0/SCREEN_PIXEL_SIZE.y - FRAGCOORD.y;
-    highp vec2 uv = new vec2(FRAGCOORD.x - offset.x,  yCoords - offset.y);
+    highp vec2 uv = vec2(FRAGCOORD.x - offset.x,  yCoords - offset.y);
     uv /= size;
     uv.y = 1.0 - uv.y;
     

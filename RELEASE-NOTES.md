@@ -64,6 +64,7 @@ END TEMPLATE-->
 ### New features
 
 * Improve YAML linter error messages for parent nodes.
+* ExpandPvsEvent will also be raised directed to the session's attached entity.
 
 ### Bugfixes
 

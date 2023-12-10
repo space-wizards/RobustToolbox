@@ -54,6 +54,27 @@ END TEMPLATE-->
 *None yet*
 
 
+## 190.0.0
+
+### New features
+
+* Add color gradients to sliders.
+
+### Bugfixes
+
+* Fix HSV / HSL producing black colors on 360 hue.
+* Stop terminating entities from prematurely detaching to nullspace.
+* Ensure shader parameters update when swapping instances.
+
+### Other
+
+* Add more verbose logging to OpenAL errors.
+
+### Internal
+
+* Change NetSyncEnabled to an assert and fix instances where it slips through to PVS.
+
+
 ## 189.0.0
 
 ### Breaking changes

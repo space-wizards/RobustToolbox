@@ -140,6 +140,18 @@ internal sealed partial class AudioManager : IAudioInternal
         }
     }
 
+    /// <summary>
+    /// Like _checkAlError but allows custom data to be passed in as relevant.
+    /// </summary>
+    internal void LogALError(string message, [CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1)
+    {
+        var error = AL.GetError();
+        if (error != ALError.NoError)
+        {
+            OpenALSawmill.Error("[{0}:{1}] AL error: {2}, {3}", callerMember, callerLineNumber, error, message);
+        }
+    }
+
     public void _checkAlError([CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1)
     {
         var error = AL.GetError();

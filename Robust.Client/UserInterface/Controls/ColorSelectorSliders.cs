@@ -378,27 +378,16 @@ public sealed class ColorSelectorSliders : Control
             return;
         }
 
-        switch (SelectorType)
+        _colorData = new Vector4(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value);
+
+        _currentColor = SelectorType switch
         {
-            case ColorSelectorType.Rgb:
-                _colorData = new Vector4(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value);
-                Color rgbColor = new Color(_colorData.X, _colorData.Y, _colorData.Z, _colorData.W);
+            ColorSelectorType.Hsv => Color.FromHsv(_colorData),
+            _ => new Color(_colorData.X, _colorData.Y, _colorData.Z, _colorData.W)
+        };
 
-                _currentColor = rgbColor;
-                Update();
-
-                OnColorChanged!(rgbColor);
-                break;
-            case ColorSelectorType.Hsv:
-                _colorData = new Vector4(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value);
-                Color hsvColor = Color.FromHsv(_colorData);
-
-                _currentColor = hsvColor;
-                Update();
-
-                OnColorChanged!(hsvColor);
-                break;
-        }
+        Update();
+        OnColorChanged?.Invoke(_currentColor);
     }
 
     private enum ColorSliderOrder

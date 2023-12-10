@@ -1286,10 +1286,7 @@ public abstract partial class SharedTransformSystem
     /// Attempts to re-parent the given entity to the grid or map that the entity is on.
     /// If no valid map or grid is found, this will detach the entity to null-space and queue it for deletion.
     /// </summary>
-    /// <param name="uid">The Entity</param>
-    /// <param name="xform">The entity's transform component</param>
-    /// <param name="delete">Whether to delete the entity if no valid map or grid is found.</param>
-    public void AttachToGridOrMap(EntityUid uid, TransformComponent? xform = null, bool delete = true)
+    public void AttachToGridOrMap(EntityUid uid, TransformComponent? xform = null)
     {
         if (TerminatingOrDeleted(uid))
             return;
@@ -1318,10 +1315,6 @@ public abstract partial class SharedTransformSystem
                 Log.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
 
             DetachParentToNull(uid, xform);
-
-            if (delete)
-                QueueDel(uid);
-
             return;
         }
 

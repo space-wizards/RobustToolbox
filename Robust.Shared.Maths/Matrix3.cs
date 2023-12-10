@@ -30,6 +30,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
@@ -385,7 +386,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Matrix3 CreateRotation(Angle angle)
+        public static Matrix3 CreateRotation(double angle)
         {
             var cos = (float) Math.Cos(angle);
             var sin = (float) Math.Sin(angle);
@@ -499,10 +500,11 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Gets the rotation of the Matrix. Will have some precision loss.
         /// </summary>
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Angle GetRotation()
+        public readonly Angle Rotation()
         {
-            return Math.Asin(R1C0);
+            return new Vector2(R0C0, R1C0).ToAngle();
         }
 
         #endregion Constructors

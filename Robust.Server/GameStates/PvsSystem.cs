@@ -203,7 +203,7 @@ internal sealed partial class PvsSystem : EntitySystem
             sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(entity.Value)}.");
 
             if (sessionData.EntityData.TryGetValue(missingEntity.Value, out var data))
-                sb.Append($" Entity last seen: {data.LastSeenAt}");
+                sb.Append($" Entity last seen: {data.LastAcked}");
         }
 
         Log.Warning(sb.ToString());
@@ -216,14 +216,6 @@ internal sealed partial class PvsSystem : EntitySystem
             sessionData.Overflow = null;
         }
 
-        // return last acked to pool, but only if it is not still in the OverflowDictionary.
-        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(sessionData.LastAcked.Value.Tick))
-        {
-            DebugTools.Assert(!sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
-            _visSetPool.Return(sessionData.LastAcked.Value.Data);
-        }
-
-        sessionData.LastAcked = null;
         sessionData.RequestedFull = true;
     }
 
@@ -391,17 +383,10 @@ internal sealed partial class PvsSystem : EntitySystem
             _visSetPool.Return(data.Overflow.Value.SentEnts);
         data.Overflow = null;
 
-        var acked = data.LastAcked?.Data;
-        if (acked != null)
-            _visSetPool.Return(acked);
-
         foreach (var visSet in data.SentEntities.Values)
         {
-            if (visSet != acked)
-                _visSetPool.Return(visSet);
+            _visSetPool.Return(visSet);
         }
-
-        data.LastAcked = null;
     }
 
     private void OnGridRemoved(GridRemovalEvent ev)
@@ -730,7 +715,6 @@ internal sealed partial class PvsSystem : EntitySystem
         var enteredEntityCount = 0;
         var sessionData = PlayerData[session];
         sessionData.SentEntities.TryGetValue(toTick - 1, out var lastSent);
-        var lastAcked = sessionData.LastAcked?.Data;
         var visibleEnts = _visSetPool.Get();
         var entityData = sessionData.EntityData;
 
@@ -759,7 +743,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
             foreach (var rootNode in cache.Value.tree.RootNodes)
             {
-                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, lastAcked, lastSent, visibleEnts, entityData, cache.Value.metadata, stack, in fromTick,
+                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, lastSent, visibleEnts, entityData, cache.Value.metadata, stack, in fromTick,
                         ref newEntityCount, ref enteredEntityCount, ref entStateCount,  in newEntityBudget, in enteredEntityBudget);
             }
         }
@@ -770,7 +754,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = globalEnumerator.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, entityData, in fromTick,
+            RecursivelyAddOverride(in uid, lastSent, visibleEnts, entityData, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
         }
         globalEnumerator.Dispose();
@@ -780,7 +764,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = globalRecursiveEnumerator.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, entityData, in fromTick,
+            RecursivelyAddOverride(in uid, lastSent, visibleEnts, entityData, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
         }
         globalRecursiveEnumerator.Dispose();
@@ -790,14 +774,14 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = sessionOverrides.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, entityData, in fromTick,
+            RecursivelyAddOverride(in uid, lastSent, visibleEnts, entityData, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
         }
         sessionOverrides.Dispose();
 
         foreach (var viewerEntity in viewers)
         {
-            RecursivelyAddOverride(in viewerEntity, lastAcked, lastSent, visibleEnts, entityData, in fromTick,
+            RecursivelyAddOverride(in viewerEntity, lastSent, visibleEnts, entityData, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
         }
 
@@ -812,7 +796,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             foreach (var entityUid in expandEvent.Entities)
             {
-                RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, entityData, in fromTick,
+                RecursivelyAddOverride(in entityUid, lastSent, visibleEnts, entityData, in fromTick,
                     ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
             }
         }
@@ -821,7 +805,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             foreach (var entityUid in expandEvent.RecursiveEntities)
             {
-                RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, entityData, in fromTick,
+                RecursivelyAddOverride(in entityUid, lastSent, visibleEnts, entityData, in fromTick,
                     ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
             }
         }
@@ -854,7 +838,7 @@ internal sealed partial class PvsSystem : EntitySystem
             var entered = visiblity == PvsEntityVisibility.Entered;
 
             var entFromTick = entered
-                ? entityData.GetValueOrDefault(netEntity)?.LastSeenAt ?? default
+                ? entityData.GetValueOrDefault(netEntity)?.LastAcked ?? default
                 : fromTick;
 
             var state = GetEntityState(session, uid, entFromTick, meta);
@@ -889,7 +873,7 @@ internal sealed partial class PvsSystem : EntitySystem
                 Log.Debug($"Client {session} exceeded tick buffer.");
 #endif
             }
-            else if (oldEntry.Value.Value != lastAcked)
+            else
                 _visSetPool.Return(oldEntry.Value.Value);
         }
 
@@ -927,7 +911,6 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private void RecursivelyAddTreeNode(in NetEntity nodeIndex,
         RobustTree<NetEntity> tree,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastAcked,
         Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
         Dictionary<NetEntity, PvsEntityVisibility> toSend,
         Dictionary<NetEntity, EntityData> entityData,
@@ -953,7 +936,7 @@ internal sealed partial class PvsSystem : EntitySystem
             ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, currentNodeIndex, out var exists);
             if (!exists)
             {
-                var (entered, shouldAdd) = ProcessEntry(in currentNodeIndex, lastAcked, lastSent, entityData, fromTick,
+                var (entered, shouldAdd) = ProcessEntry(in currentNodeIndex, lastSent, entityData, fromTick,
                     ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
                 if (!shouldAdd)
@@ -979,7 +962,6 @@ internal sealed partial class PvsSystem : EntitySystem
     }
 
     public bool RecursivelyAddOverride(in EntityUid uid,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastAcked,
         Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
         Dictionary<NetEntity, PvsEntityVisibility> toSend,
         Dictionary<NetEntity, EntityData> entityData,
@@ -998,7 +980,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         var xform = _xformQuery.GetComponent(uid);
         var parent = xform.ParentUid;
-        if (parent.IsValid() && !RecursivelyAddOverride(in parent, lastAcked, lastSent, toSend, entityData, in fromTick,
+        if (parent.IsValid() && !RecursivelyAddOverride(in parent, lastSent, toSend, entityData, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget,
                 in enteredEntityBudget))
         {
@@ -1015,13 +997,13 @@ internal sealed partial class PvsSystem : EntitySystem
         ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, netEntity, out var exists);
         if (!exists)
         {
-            var (entered, _) = ProcessEntry(in netEntity, lastAcked, lastSent, entityData, fromTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
+            var (entered, _) = ProcessEntry(in netEntity, lastSent, entityData, fromTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
             AddToSendSet(in netEntity, metadata, ref value, toSend, fromTick, in entered, ref entStateCount);
         }
 
         if (addChildren)
         {
-            RecursivelyAddChildren(xform, lastAcked, lastSent, toSend, entityData, fromTick, ref newEntityCount,
+            RecursivelyAddChildren(xform, lastSent, toSend, entityData, fromTick, ref newEntityCount,
                 ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
         }
 
@@ -1029,7 +1011,6 @@ internal sealed partial class PvsSystem : EntitySystem
     }
 
     private void RecursivelyAddChildren(TransformComponent xform,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastAcked,
         Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
         Dictionary<NetEntity, PvsEntityVisibility> toSend,
         Dictionary<NetEntity, EntityData> entityData,
@@ -1051,19 +1032,18 @@ internal sealed partial class PvsSystem : EntitySystem
             ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, childNetEntity, out var exists);
             if (!exists)
             {
-                var (entered, _) = ProcessEntry(in childNetEntity, lastAcked, lastSent, entityData, fromTick, ref newEntityCount,
+                var (entered, _) = ProcessEntry(in childNetEntity, lastSent, entityData, fromTick, ref newEntityCount,
                     ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
                 AddToSendSet(in childNetEntity, metadata, ref value, toSend, fromTick, in entered, ref entStateCount);
             }
 
-            RecursivelyAddChildren(childXform, lastAcked, lastSent, toSend, entityData, fromTick, ref newEntityCount,
+            RecursivelyAddChildren(childXform, lastSent, toSend, entityData, fromTick, ref newEntityCount,
                 ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
         }
     }
 
     private (bool Entered, bool ShouldAdd) ProcessEntry(in NetEntity netEntity,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastAcked,
         Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
         Dictionary<NetEntity, EntityData> entityData,
         GameTick fromTick,
@@ -1076,9 +1056,9 @@ internal sealed partial class PvsSystem : EntitySystem
         var data = entityData.GetOrNew(netEntity);
 
         var entered = enteredSinceLastSent
-                      || lastAcked == null
-                      || !lastAcked.ContainsKey(netEntity) // entered since last acked
-                      || data.LastLeftView >= fromTick;
+                      || data.LastAcked == GameTick.Zero
+                      || data.LastAcked < fromTick // this entity was not in the last acked state.
+                      || data.LastLeftView >= fromTick; // entity left and re-entered sometime after the last acked tick
 
         // If the entity is entering, but we already sent this entering entity in the last message, we won't add it to
         // the budget. Chances are the packet will arrive in a nice and orderly fashion, and the client will stick to
@@ -1091,7 +1071,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
             enteredEntityCount++;
 
-            if (data.LastSeenAt == GameTick.Zero)
+            if (data.LastAcked == GameTick.Zero)
                 newEntityCount++;
         }
 

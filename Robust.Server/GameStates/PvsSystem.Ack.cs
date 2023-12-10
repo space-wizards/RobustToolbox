@@ -87,17 +87,11 @@ internal sealed partial class PvsSystem
         else if (!sessionData.SentEntities.TryGetValue(ackedTick, out ackedData))
             return;
 
-        // return last acked to pool, but only if it is not still in the OverflowDictionary.
-        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(sessionData.LastAcked.Value.Tick))
-        {
-            DebugTools.Assert(!sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
-            _visSetPool.Return(sessionData.LastAcked.Value.Data);
-        }
-
-        sessionData.LastAcked = (ackedTick, ackedData);
+        sessionData.LastProcessedAck = ackedTick;
         foreach (var ent in ackedData.Keys)
         {
-            sessionData.EntityData[ent].LastSeenAt = ackedTick;
+            var data = sessionData.EntityData.GetOrNew(ent);
+            data.LastAcked = ackedTick;
         }
 
         // The client acked a tick. If they requested a full state, this ack happened some time after that, so we can safely set this to false

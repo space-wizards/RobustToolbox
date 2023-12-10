@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
@@ -89,11 +90,21 @@ internal sealed partial class PvsSystem
             return;
 
         sessionData.LastProcessedAck = ackedTick;
-        var dict = sessionData.EntityData;
+        var entityData = sessionData.EntityData;
         foreach (var ent in ackedData.Keys)
         {
-            DebugTools.Assert(dict.ContainsKey(ent));
-            ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, ent, out _);
+            ref var data = ref CollectionsMarshal.GetValueRefOrNullRef(entityData, ent);
+            if (Unsafe.IsNullRef(ref data))
+            {
+                // This should only happen if the entity has been deleted.
+
+                // TODO PVS turn into debug assert
+                if (TryGetEntity(ent, out _))
+                    Log.Error($"Entity {ToPrettyString(ent)} is has missing entityData entry");
+
+                continue;
+            }
+
             data.EntityLastAcked = ackedTick;
             DebugTools.Assert(data.LastSent > ackedTick);
         }

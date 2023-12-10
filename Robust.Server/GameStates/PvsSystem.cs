@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
@@ -269,14 +270,9 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         _entityPvsCollection.RemoveIndex(EntityManager.CurrentTick, metadata.NetEntity);
 
-        var previousTick = _gameTiming.CurTick - 1;
-
         foreach (var sessionData in PlayerData.Values)
         {
             sessionData.EntityData.Remove(metadata.NetEntity);
-
-            if (sessionData.SentEntities.TryGetValue(previousTick, out var ents))
-                ents.Remove(metadata.NetEntity);
         }
     }
 
@@ -906,14 +902,24 @@ internal sealed partial class PvsSystem : EntitySystem
         var minSize = Math.Max(0, lastSent.Count - visibleEnts.Count);
         var leftView = new List<NetEntity>(minSize);
 
-        foreach (var netEntity in lastSent.Keys)
+        foreach (var ent in lastSent.Keys)
         {
-            if (visibleEnts.ContainsKey(netEntity))
+            if (visibleEnts.ContainsKey(ent))
                 continue;
 
-            leftView.Add(netEntity);
-            DebugTools.Assert(entityData.ContainsKey(netEntity));
-            ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, netEntity, out _);
+            ref var data = ref CollectionsMarshal.GetValueRefOrNullRef(entityData, ent);
+            if (Unsafe.IsNullRef(ref data))
+            {
+                // This should only happen if the entity has been deleted.
+
+                // TODO PVS turn into debug assert
+                if (TryGetEntity(ent, out _))
+                    Log.Error($"Entity {ToPrettyString(ent)} is has missing entityData entry");
+
+                continue;
+            }
+
+            leftView.Add(ent);
             data.LastLeftView = tick;
             DebugTools.Assert(data.LastSent > tick && data.LastSent != GameTick.Zero);
         }

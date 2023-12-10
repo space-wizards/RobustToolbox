@@ -216,6 +216,13 @@ internal partial class AudioManager
 
     public void SetMasterGain(float newGain)
     {
+        if (newGain < 0f)
+        {
+            OpenALSawmill.Error("Tried to set master gain below 0, clamping to 0");
+            AL.Listener(ALListenerf.Gain, 0f);
+            return;
+        }
+
         AL.Listener(ALListenerf.Gain, newGain);
     }
 

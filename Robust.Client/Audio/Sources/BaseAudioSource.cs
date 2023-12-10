@@ -230,7 +230,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.RolloffFactor, value);
-            Master._checkAlError();
+            Master.LogALError($"RolloffFactor is {value:0.00}");
         }
     }
 
@@ -248,7 +248,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.ReferenceDistance, value);
-            Master._checkAlError();
+            Master.LogALError($"ReferenceDistance is {value:0.00}");
         }
     }
 
@@ -294,7 +294,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.SecOffset, value);
-            Master._checkAlError();
+            Master._checkAlError($"Tried to set invalid playback position of {value:0.00}");
         }
     }
 

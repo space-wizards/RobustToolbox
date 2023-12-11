@@ -618,8 +618,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         source.PlaybackPosition = offset;
 
         // For server we will rely on the adjusted one but locally we will have to adjust it ourselves.
-        ApplyAudioParams(audioP, comp);
-        comp.Params = audioP;
+        ApplyAudioParams(comp.Params, comp);
         source.StartPlaying();
         return (entity, comp);
     }

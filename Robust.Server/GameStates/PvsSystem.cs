@@ -804,6 +804,40 @@ internal sealed partial class PvsSystem : EntitySystem
         // TODO PVS reduce allocs
         var entityStates = new List<EntityState>(dirtyEntityCount);
 
+#if DEBUG
+        // TODO PVS consider removing expensive asserts
+        var toSendSet = new HashSet<NetEntity>(toSend);
+        DebugTools.AssertEqual(toSend.Count, toSendSet.Count);
+
+        foreach (var ent in CollectionsMarshal.AsSpan(toSend))
+        {
+            ref var data = ref GetEntityData(entityData, ent);
+            DebugTools.AssertNotEqual(data.Visibility, PvsEntityVisibility.Invalid);
+            DebugTools.AssertEqual(data.LastSent, _gameTiming.CurTick);
+
+            // if an entity is visible, its parents should always be visible.
+            if (_xformQuery.GetComponent(data.Entity).ParentUid is not {Valid: true} pUid)
+                continue;
+
+            var npUid = _metaQuery.GetComponent(pUid).NetEntity;
+            DebugTools.Assert(toSendSet.Contains(npUid),
+                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(ent)}.");
+        }
+
+        foreach (var ent in CollectionsMarshal.AsSpan(lastSent))
+        {
+            ref var data = ref CollectionsMarshal.GetValueRefOrNullRef(entityData, ent);
+            if (Unsafe.IsNullRef(ref data))
+                continue;
+
+            DebugTools.Assert(data.LastSent != GameTick.Zero);
+            var isBeingSent = data.LastSent == _gameTiming.CurTick;
+            DebugTools.AssertEqual(toSendSet.Contains(ent), isBeingSent);
+            if (!isBeingSent)
+                DebugTools.Assert(data.LastSent.Value == _gameTiming.CurTick.Value - 1);
+        }
+#endif
+
         // Get entity/component states and update EntityData.LastSent
         GetStateList(entityStates, toSend, sessionData, fromTick);
 
@@ -865,11 +899,6 @@ internal sealed partial class PvsSystem : EntitySystem
         // TODO PVS reduce allocs
         var leftView = new List<NetEntity>(minSize);
 
-#if DEBUG
-        // TODO PVS consider removing expensive asserts
-        var set = new HashSet<NetEntity>(toSend);
-#endif
-
         foreach (var ent in CollectionsMarshal.AsSpan(lastSent))
         {
             // Apparently getting a dictionary entry is about as fast as checking HashSet.Contains(), and if the
@@ -880,7 +909,6 @@ internal sealed partial class PvsSystem : EntitySystem
             if (Unsafe.IsNullRef(ref data))
             {
                 // This should only happen if the entity has been deleted.
-
                 // TODO PVS turn into debug assert
                 if (TryGetEntity(ent, out _))
                     Log.Error($"Entity {ToPrettyString(ent)} is has missing entityData entry");
@@ -888,18 +916,11 @@ internal sealed partial class PvsSystem : EntitySystem
                 continue;
             }
 
-#if DEBUG
-            DebugTools.Assert(data.LastSent != GameTick.Zero);
-            var wasSent = data.LastSent == tick;
-            DebugTools.Assert(set.Contains(ent) == wasSent);
-#endif
-
             if (data.LastSent == tick)
                 continue;
 
             leftView.Add(ent);
             data.LastLeftView = tick;
-            DebugTools.Assert(data.LastSent.Value == tick.Value - 1);
         }
 
         return leftView.Count > 0 ? leftView : null;

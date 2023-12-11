@@ -18,28 +18,23 @@ internal sealed partial class PvsSystem
         GameTick fromTick)
     {
         DebugTools.Assert(states.Count == 0);
-        if (sessionData.RequestedFull)
-        {
-            GetFullStateList(states, toSend, sessionData);
-            return;
-        }
-
         var entData = sessionData.EntityData;
         var session = sessionData.Session;
 
+        if (sessionData.RequestedFull)
+        {
+            foreach (var netEntity in CollectionsMarshal.AsSpan(toSend))
+            {
+                ref var data = ref GetEntityData(entData, netEntity);
+                data.LastSent = _gameTiming.CurTick;
+                states.Add(GetFullEntityState(session, data.Entity.Owner, data.Entity.Comp));
+            }
+            return;
+        }
+
         foreach (var netEntity in CollectionsMarshal.AsSpan(toSend))
         {
-#if DEBUG
-            var debugUid = GetEntity(netEntity);
-            // if an entity is visible, its parents should always be visible.
-            DebugTools.Assert((_xformQuery.GetComponent(debugUid).ParentUid is not { Valid: true } parent) ||
-                              toSend.Contains(_metaQuery.GetComponent(parent).NetEntity),
-                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(debugUid)}.");
-#endif
-
             ref var data = ref GetEntityData(entData, netEntity);
-            DebugTools.AssertNotEqual(data.Visibility, PvsEntityVisibility.Invalid);
-            DebugTools.AssertEqual(data.LastSent, _gameTiming.CurTick);
 
             if (data.Visibility == PvsEntityVisibility.StayedUnchanged)
                 continue;
@@ -60,31 +55,6 @@ internal sealed partial class PvsSystem
 
             if (entered || !state.Empty)
                 states.Add(state);
-        }
-    }
-
-    public void GetFullStateList(
-        List<EntityState> states,
-        List<NetEntity> toSend,
-        SessionPvsData sessionData)
-    {
-        DebugTools.Assert(sessionData.RequestedFull);
-        var entData = sessionData.EntityData;
-        var session = sessionData.Session;
-
-        foreach (var netEntity in CollectionsMarshal.AsSpan(toSend))
-        {
-#if DEBUG
-            var debugUid = GetEntity(netEntity);
-            // if an entity is visible, its parents should always be visible.
-            DebugTools.Assert((_xformQuery.GetComponent(debugUid).ParentUid is not {Valid: true} parent) ||
-                              toSend.Contains(_metaQuery.GetComponent(parent).NetEntity),
-                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(debugUid)}.");
-#endif
-            ref var data = ref GetEntityData(entData, netEntity);
-            DebugTools.AssertNotEqual(data.Visibility, PvsEntityVisibility.Invalid);
-            data.LastSent = _gameTiming.CurTick;
-            states.Add(GetFullEntityState(session, data.Entity.Owner, data.Entity.Comp));
         }
     }
 

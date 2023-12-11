@@ -29,5 +29,14 @@ namespace Robust.Client.UserInterface
         /// Null if the user cancelled the action.
         /// </returns>
         Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(FileDialogFilters? filters = null);
+
+        /// <summary>
+        ///     Open a file dialog used for saving a single file.
+        /// </summary>
+        /// <returns>
+        /// The path the user chose to save to.
+        /// Null if the user cancelled the action.
+        /// </returns>
+        Task<string?> GetSaveFileName(FileDialogFilters? filters = null);
     }
 }

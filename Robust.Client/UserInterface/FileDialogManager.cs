@@ -69,7 +69,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private async Task<string?> GetSaveFileName(FileDialogFilters? filters)
+        public async Task<string?> GetSaveFileName(FileDialogFilters? filters)
         {
             if (await IsKDialogAvailable())
             {

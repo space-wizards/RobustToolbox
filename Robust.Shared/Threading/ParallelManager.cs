@@ -51,6 +51,8 @@ internal sealed class ParallelManager : IParallelManagerInternal
     public event Action? ParallelCountChanged;
     public int ParallelProcessCount { get; private set; }
 
+    public static readonly ManualResetEventSlim DummyResetEvent = new();
+
     // Without pooling it's hard to keep task allocations down for classes
     // This lets us avoid re-allocating the ManualResetEventSlims constantly when we just need a way to signal job completion.
 
@@ -68,6 +70,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
 
     public void Initialize()
     {
+        DummyResetEvent.Set();
         _cfg.OnValueChanged(CVars.ThreadParallelCount, UpdateCVar, true);
     }
 

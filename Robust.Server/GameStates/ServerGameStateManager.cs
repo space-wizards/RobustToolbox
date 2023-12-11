@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
@@ -173,6 +174,9 @@ Oldest acked clients: {string.Join(", ", players)}
         {
             var players = _playerManager.Sessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
+            // Update client acks, which is used to figure out what data needs to be sent to clients
+            var ackJob = _pvs.ProcessQueuedAcks();
+
             // Update entity positions in PVS chunks/collections
             // TODO disable processing if culling is disabled? Need to check if toggling PVS breaks anything.
             // TODO parallelize?
@@ -189,11 +193,7 @@ Oldest acked clients: {string.Join(", ", players)}
                 pvsData = GetPVSData(players);
             }
 
-            // Update client acks, which is used to figure out what data needs to be sent to clients
-            using (_usageHistogram.WithLabels("Process Acks").NewTimer())
-            {
-                _pvs.ProcessQueuedAcks();
-            }
+            ackJob.WaitOne();
 
             // Construct & send the game state to each player.
             GameTick oldestAck;

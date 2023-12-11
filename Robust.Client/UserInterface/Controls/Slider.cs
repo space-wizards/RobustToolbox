@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
@@ -13,6 +14,9 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyForeground = "foreground";
         public const string StylePropertyFill = "fill";
         public const string StylePropertyGrabber = "grabber";
+
+        public event Action<Slider>? OnGrabbed;
+        public event Action<Slider>? OnReleased;
 
         protected readonly PanelContainer _foregroundPanel;
         protected readonly PanelContainer _backgroundPanel;
@@ -135,6 +139,7 @@ namespace Robust.Client.UserInterface.Controls
 
             HandlePositionChange(args.RelativePosition);
             _grabbed = true;
+            OnGrabbed?.Invoke(this);
         }
 
         protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
@@ -144,6 +149,7 @@ namespace Robust.Client.UserInterface.Controls
             if (args.Function != EngineKeyFunctions.UIClick) return;
 
             _grabbed = false;
+            OnReleased?.Invoke(this);
         }
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)

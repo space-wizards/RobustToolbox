@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -51,6 +52,14 @@ public abstract partial class SharedContainerSystem
         if (force && !container.Contains(toRemove))
         {
             DebugTools.Assert("Attempted to force remove an entity that was never inside of the container.");
+            return false;
+        }
+
+        // Terminating entities should not get re-parented. However, this removal will still be forced when
+        // detaching to null-space just before deletion happens.
+        if (meta.EntityLifeStage >= EntityLifeStage.Terminating && (!force || reparent))
+        {
+            Log.Error($"Attempting to remove an entity from a container while it is terminating. Entity: {ToPrettyString(toRemove, meta)}. Container: {ToPrettyString(container.Owner)}. Trace: {Environment.StackTrace}");
             return false;
         }
 

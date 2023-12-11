@@ -15,9 +15,12 @@ namespace Robust.Shared.Audio.Components;
 /// <summary>
 /// Stores the audio data for an audio entity.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState, Access(typeof(SharedAudioSystem))]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true), Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioComponent : Component, IAudioSource
 {
+    [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField, DataField, Access(Other = AccessPermissions.ReadWriteExecute)]
+    public AudioFlags Flags = AudioFlags.None;
+
     #region Filter
 
     public override bool SessionSpecific => true;
@@ -27,8 +30,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// </summary>
     [DataField(customTypeSerializer:typeof(TimeOffsetSerializer)), AutoNetworkedField]
     public TimeSpan AudioStart;
-
-    #region Filters
 
     // Don't need to network these as client doesn't care.
 
@@ -44,8 +45,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// </summary>
     [DataField]
     public HashSet<EntityUid>? IncludedEntities;
-
-    #endregion
 
     #endregion
 
@@ -68,7 +67,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// Audio source that interacts with OpenAL.
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
-    internal IAudioSource Source = default!;
+    internal IAudioSource Source = new DummyAudioSource();
 
     /// <summary>
     /// Auxiliary entity to pass audio to.
@@ -115,6 +114,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <see cref="IAudioSource.Global"/>
     /// </summary>
     [AutoNetworkedField]
+    [Access(typeof(SharedAudioSystem))]
     public bool Global { get; set; }
 
     /// <summary>
@@ -233,4 +233,15 @@ public sealed partial class AudioComponent : Component, IAudioSource
     {
         Source.Dispose();
     }
+}
+
+[Flags]
+public enum AudioFlags : byte
+{
+    None = 0,
+
+    /// <summary>
+    /// Should the audio act as if attached to a grid?
+    /// </summary>
+    GridAudio = 1 << 0,
 }

@@ -5,6 +5,7 @@ using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio.Effects;
 using Robust.Shared.Audio.Effects;
 using Robust.Shared.Audio.Sources;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio.Sources;
@@ -164,10 +165,10 @@ internal abstract class BaseAudioSource : IAudioSource
         get
         {
             var gain = Gain;
-            var volume = 10f * MathF.Log10(gain);
+            var volume = SharedAudioSystem.GainToVolume(gain);
             return volume;
         }
-        set => Gain = MathF.Pow(10, value / 10);
+        set => Gain = SharedAudioSystem.VolumeToGain(value);
     }
 
     /// <inheritdoc />
@@ -187,12 +188,13 @@ internal abstract class BaseAudioSource : IAudioSource
             if (!IsEfxSupported)
             {
                 AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
-                priorOcclusion = priorGain / _gain;
+                // Default to 0 to avoid spiking audio, just means it will be muted for a frame in this case.
+                priorOcclusion = _gain == 0 ? 0f : priorGain / _gain;
             }
 
             _gain = value;
             AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
-            Master._checkAlError();
+            Master.LogALError($"Gain is {_gain:0.00} and priorOcclusion is {priorOcclusion:0.00}. EFX supported: {IsEfxSupported}");
         }
     }
 
@@ -210,7 +212,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.MaxDistance, value);
-            Master._checkAlError();
+            Master.LogALError($"MaxDistance is {value:0.00}");
         }
     }
 
@@ -228,7 +230,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.RolloffFactor, value);
-            Master._checkAlError();
+            Master.LogALError($"RolloffFactor is {value:0.00}");
         }
     }
 
@@ -246,7 +248,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.ReferenceDistance, value);
-            Master._checkAlError();
+            Master.LogALError($"ReferenceDistance is {value:0.00}");
         }
     }
 
@@ -292,7 +294,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.SecOffset, value);
-            Master._checkAlError();
+            Master._checkAlError($"Tried to set invalid playback position of {value:0.00}");
         }
     }
 

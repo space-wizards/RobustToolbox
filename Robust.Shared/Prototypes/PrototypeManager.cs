@@ -523,35 +523,43 @@ namespace Robust.Shared.Prototypes
 
             void ProcessItem(string id, InheritancePushDatum datum)
             {
-                if (tree.TryGetParents(id, out var parents))
+                try
                 {
-                    var parentNodes = new MappingDataNode[parents.Length];
-                    for (var i = 0; i < parents.Length; i++)
+                    if (tree.TryGetParents(id, out var parents))
                     {
-                        parentNodes[i] = results[parents[i]].Result;
+                        var parentNodes = new MappingDataNode[parents.Length];
+                        for (var i = 0; i < parents.Length; i++)
+                        {
+                            parentNodes[i] = results[parents[i]].Result;
+                        }
+
+                        datum.Result = _serializationManager.PushCompositionWithGenericNode(
+                            kind,
+                            parentNodes,
+                            datum.Result);
                     }
 
-                    datum.Result = _serializationManager.PushCompositionWithGenericNode(
-                        kind,
-                        parentNodes,
-                        datum.Result);
-                }
-
-                if (tree.TryGetChildren(id, out var children))
-                {
-                    foreach (var child in children)
+                    if (tree.TryGetChildren(id, out var children))
                     {
-                        var childDatum = results[child];
-                        var val = Interlocked.Decrement(ref childDatum.CountParentsRemaining);
-                        if (val == 0)
+                        foreach (var child in children)
                         {
-                            ThreadPool.QueueUserWorkItem(_ => { ProcessItem(child, childDatum); });
+                            var childDatum = results[child];
+                            var val = Interlocked.Decrement(ref childDatum.CountParentsRemaining);
+                            if (val == 0)
+                            {
+                                ThreadPool.QueueUserWorkItem(_ => { ProcessItem(child, childDatum); });
+                            }
                         }
                     }
-                }
 
-                // ReSharper disable once AccessToDisposedClosure
-                countDown.Signal();
+                    // ReSharper disable once AccessToDisposedClosure
+                    countDown.Signal();
+                }
+                catch (Exception e)
+                {
+                    Sawmill.Error($"Failed to push composition for {kind.Name} prototype with id: {id}. Exception: {e}");
+                    throw;
+                }
             }
 
             await WaitHandleHelpers.WaitOneAsync(countDown.WaitHandle);

@@ -74,15 +74,18 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var entity = Spawn("Audio", MapCoordinates.Nullspace);
         var audio = SetupAudio(entity, filename, audioParams);
         AddAudioFilter(entity, audio, playerFilter);
-
+        audio.Global = true;
         return (entity, audio);
     }
 
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
     {
-        if (!Exists(uid))
+        if (TerminatingOrDeleted(uid))
+        {
+            Log.Error($"Tried to play audio on a terminating / deleted entity {ToPrettyString(uid)}");
             return null;
+        }
 
         var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
         var audio = SetupAudio(entity, filename, audioParams);
@@ -94,8 +97,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityUid uid, AudioParams? audioParams = null)
     {
-        if (!Exists(uid))
+        if (TerminatingOrDeleted(uid))
+        {
+            Log.Error($"Tried to play audio on a terminating / deleted entity {ToPrettyString(uid)}");
             return null;
+        }
 
         var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
         var audio = SetupAudio(entity, filename, audioParams);
@@ -106,6 +112,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
+        if (TerminatingOrDeleted(coordinates.EntityId))
+        {
+            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}");
+            return null;
+        }
+
         if (!coordinates.IsValid(EntityManager))
             return null;
 
@@ -120,6 +132,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityCoordinates coordinates,
         AudioParams? audioParams = null)
     {
+        if (TerminatingOrDeleted(coordinates.EntityId))
+        {
+            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}");
+            return null;
+        }
+
         if (!coordinates.IsValid(EntityManager))
             return null;
 

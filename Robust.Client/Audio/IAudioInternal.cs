@@ -11,7 +11,7 @@ namespace Robust.Client.Audio;
 /// <summary>
 /// Handles clientside audio.
 /// </summary>
-internal interface IAudioInternal
+internal interface IAudioInternal : IAudioManager
 {
     void InitializePostWindowing();
     void Shutdown();
@@ -23,7 +23,16 @@ internal interface IAudioInternal
 
     IAudioSource? CreateAudioSource(AudioStream stream);
 
-    IBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false);
+    /// <summary>
+    /// Returns a buffered audio source.
+    /// </summary>
+    /// <returns>null if unable to create the source.</returns>
+    IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio=false);
+
+    /// <summary>
+    /// Sets the velocity for the audio listener.
+    /// </summary>
+    void SetVelocity(Vector2 velocity);
 
     /// <summary>
     /// Sets position for the audio listener.
@@ -35,7 +44,6 @@ internal interface IAudioInternal
     /// </summary>
     void SetRotation(Angle angle);
 
-    void SetMasterVolume(float value);
     void SetAttenuation(Attenuation attenuation);
 
     /// <summary>

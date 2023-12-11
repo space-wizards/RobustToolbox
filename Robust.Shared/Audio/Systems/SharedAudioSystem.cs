@@ -1,10 +1,12 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
@@ -41,7 +43,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// </summary>
     public int OcclusionCollisionMask { get; set; }
 
-    public float ZOffset;
+    public virtual float ZOffset { get; protected set; }
 
     public override void Initialize()
     {
@@ -59,23 +61,9 @@ public abstract partial class SharedAudioSystem : EntitySystem
         CfgManager.UnsubValueChanged(CVars.AudioZOffset, SetZOffset);
     }
 
-    protected virtual void SetZOffset(float value)
+    protected void SetZOffset(float value)
     {
-        var query = AllEntityQuery<AudioComponent>();
-        var oldZOffset = ZOffset;
         ZOffset = value;
-
-        while (query.MoveNext(out var uid, out var audio))
-        {
-            // Pythagoras back to normal then adjust.
-            var maxDistance = MathF.Pow(audio.Params.MaxDistance, 2) - oldZOffset;
-            var refDistance = MathF.Pow(audio.Params.ReferenceDistance, 2) - oldZOffset;
-
-            audio.Params.MaxDistance = maxDistance;
-            audio.Params.ReferenceDistance = refDistance;
-            audio.Params = GetAdjustedParams(audio.Params);
-            Dirty(uid, audio);
-        }
     }
 
     protected virtual void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
@@ -87,8 +75,13 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         var playerEnt = args.Player?.AttachedEntity;
 
-        if ((component.ExcludedEntity != null && playerEnt == component.ExcludedEntity) ||
-            (playerEnt != null && component.IncludedEntities != null && !component.IncludedEntities.Contains(playerEnt.Value)))
+        if (component.ExcludedEntity != null && playerEnt == component.ExcludedEntity)
+        {
+            args.Cancelled = true;
+            return;
+        }
+
+        if (playerEnt != null && component.IncludedEntities != null && !component.IncludedEntities.Contains(playerEnt.Value))
         {
             args.Cancelled = true;
         }
@@ -134,9 +127,9 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         DebugTools.Assert(!string.IsNullOrEmpty(fileName));
         audioParams ??= AudioParams.Default;
-        var comp = AddComp<Components.AudioComponent>(uid);
+        var comp = AddComp<AudioComponent>(uid);
         comp.FileName = fileName;
-        comp.Params = GetAdjustedParams(audioParams.Value);
+        comp.Params = audioParams.Value;
         comp.AudioStart = Timing.CurTime;
 
         if (!audioParams.Value.Loop)
@@ -151,23 +144,32 @@ public abstract partial class SharedAudioSystem : EntitySystem
         return comp;
     }
 
-    /// <summary>
-    /// Accounts for ZOffset on audio distance.
-    /// </summary>
-    private AudioParams GetAdjustedParams(AudioParams audioParams)
+    public static float GainToVolume(float value)
     {
-        var maxDistance = GetAudioDistance(audioParams.MaxDistance);
-        var refDistance = GetAudioDistance(audioParams.ReferenceDistance);
+        return 10f * MathF.Log10(value);
+    }
 
-        return audioParams
-            .WithMaxDistance(maxDistance)
-            .WithReferenceDistance(refDistance);
+    public static float VolumeToGain(float value)
+    {
+        return MathF.Pow(10, value / 10);
     }
 
     /// <summary>
     /// Sets the audio params volume for an entity.
     /// </summary>
-    public void SetVolume(EntityUid? entity, float value, Components.AudioComponent? component = null)
+    public void SetGain(EntityUid? entity, float value, AudioComponent? component = null)
+    {
+        if (entity == null || !Resolve(entity.Value, ref component))
+            return;
+
+        var volume = GainToVolume(value);
+        SetVolume(entity, volume, component);
+    }
+
+    /// <summary>
+    /// Sets the audio params volume for an entity.
+    /// </summary>
+    public void SetVolume(EntityUid? entity, float value, AudioComponent? component = null)
     {
         if (entity == null || !Resolve(entity.Value, ref component))
             return;
@@ -176,6 +178,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
             return;
 
         component.Params.Volume = value;
+        component.Volume = value;
         Dirty(entity.Value, component);
     }
 

@@ -61,6 +61,12 @@ internal partial class AudioManager
     }
 
     /// <inheritdoc/>
+    public void SetVelocity(Vector2 velocity)
+    {
+        AL.Listener(ALListener3f.Velocity, velocity.X, velocity.Y, 0f);
+    }
+
+    /// <inheritdoc/>
     public void SetPosition(Vector2 position)
     {
         AL.Listener(ALListener3f.Position, position.X, position.Y, _zOffset);
@@ -208,9 +214,16 @@ internal partial class AudioManager
         return new AudioStream(handle, length, channels, name);
     }
 
-    public void SetMasterVolume(float newVolume)
+    public void SetMasterGain(float newGain)
     {
-        AL.Listener(ALListenerf.Gain, newVolume);
+        if (newGain < 0f)
+        {
+            OpenALSawmill.Error("Tried to set master gain below 0, clamping to 0");
+            AL.Listener(ALListenerf.Gain, 0f);
+            return;
+        }
+
+        AL.Listener(ALListenerf.Gain, newGain);
     }
 
     public void SetAttenuation(Attenuation attenuation)
@@ -272,23 +285,35 @@ internal partial class AudioManager
 
         var audioSource = new AudioSource(this, source, stream);
         _audioSources.Add(source, new WeakReference<BaseAudioSource>(audioSource));
+        ApplyDefaultParams(audioSource);
         return audioSource;
     }
 
-    public IBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false)
+    /// <inheritdoc/>
+    public IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio=false)
     {
         var source = AL.GenSource();
 
         if (!AL.IsSource(source))
         {
             OpenALSawmill.Error("Failed to generate source. Too many simultaneous audio streams? {0}", Environment.StackTrace);
+            return null;
         }
 
         // ReSharper disable once PossibleInvalidOperationException
 
         var audioSource = new BufferedAudioSource(this, source, AL.GenBuffers(buffers), floatAudio);
         _bufferedAudioSources.Add(source, new WeakReference<BufferedAudioSource>(audioSource));
+        ApplyDefaultParams(audioSource);
         return audioSource;
+    }
+
+    private void ApplyDefaultParams(IAudioSource source)
+    {
+        source.MaxDistance = AudioParams.Default.MaxDistance;
+        source.Pitch = AudioParams.Default.Pitch;
+        source.ReferenceDistance = AudioParams.Default.ReferenceDistance;
+        source.RolloffFactor = AudioParams.Default.RolloffFactor;
     }
 
     /// <inheritdoc />
@@ -318,7 +343,6 @@ internal partial class AudioManager
         {
             if (source.TryGetTarget(out var target))
             {
-                target.Playing = false;
                 target.Dispose();
             }
         }
@@ -329,7 +353,6 @@ internal partial class AudioManager
         {
             if (source.TryGetTarget(out var target))
             {
-                target.Playing = false;
                 target.Dispose();
             }
         }

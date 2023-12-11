@@ -35,9 +35,14 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     }
 
     /// <inheritdoc />
-    public IBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio = false)
+    public IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio = false)
     {
         return DummyBufferedAudioSource.Instance;
+    }
+
+    /// <inheritdoc />
+    public void SetVelocity(Vector2 velocity)
+    {
     }
 
     /// <inheritdoc />
@@ -51,7 +56,7 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     }
 
     /// <inheritdoc />
-    public void SetMasterVolume(float value)
+    public void SetMasterGain(float newGain)
     {
     }
 

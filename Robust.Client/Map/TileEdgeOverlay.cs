@@ -40,7 +40,6 @@ public sealed class TileEdgeOverlay : GridOverlay
         var localAABB = invMatrix.TransformBox(args.WorldBounds);
 
         var enumerator = mapSystem.GetLocalTilesEnumerator(Grid.Owner, Grid, localAABB, false);
-        var needsFlush = false;
 
         while (enumerator.MoveNext(out var tileRef))
         {
@@ -114,13 +113,10 @@ public sealed class TileEdgeOverlay : GridOverlay
                     else
                         args.WorldHandle.DrawTextureRect(texture.Texture, new Box2Rotated(box, angle, box.Center));
 
-                    needsFlush = true;
+                    RequiresFlush = true;
                 }
             }
         }
-
-        if (needsFlush)
-            RequiresFlush = true;
 
         args.WorldHandle.SetTransform(Matrix3.Identity);
     }

@@ -40,7 +40,7 @@ public sealed partial class EntityLookupSystem
 
                 tuple.intersecting.Add((value.Entity, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & (LookupFlags.Static)) != 0x0)
@@ -52,7 +52,7 @@ public sealed partial class EntityLookupSystem
 
                 tuple.intersecting.Add((value.Entity, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
@@ -64,7 +64,7 @@ public sealed partial class EntityLookupSystem
 
                 tuple.intersecting.Add((value, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & LookupFlags.Sundries) != 0x0)
@@ -76,7 +76,7 @@ public sealed partial class EntityLookupSystem
 
                 tuple.intersecting.Add((value, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
     }
 
@@ -123,7 +123,7 @@ public sealed partial class EntityLookupSystem
 
                 state.Intersecting.Add((value.Entity, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & (LookupFlags.Static)) != 0x0)
@@ -144,7 +144,7 @@ public sealed partial class EntityLookupSystem
 
                 state.Intersecting.Add((value.Entity, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
@@ -154,36 +154,37 @@ public sealed partial class EntityLookupSystem
                 if (!state.Query.TryGetComponent(value, out var comp))
                     return true;
 
-                if (!state.FixturesQuery.TryGetComponent(value, out var fixtures))
-                {
-                    var position = state.TransformSystem.GetWorldPosition(value);
-                    if (state.Fixtures.TestPoint(state.Shape, state.Transform, position))
-                        goto found;
-
-                    return true;
-                }
-
                 var intersectingTransform = state.Physics.GetPhysicsTransform(value);
-                foreach (var fixture in fixtures.Fixtures.Values)
-                {
-                    if (!state.Sensors && !fixture.Hard)
-                        continue;
 
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                if (state.FixturesQuery.TryGetComponent(value, out var fixtures))
+                {
+                    bool anyFixture = false;
+                    foreach (var fixture in fixtures.Fixtures.Values)
                     {
-                        if (state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform, intersectingTransform))
+                        if (!state.Sensors && !fixture.Hard)
+                            continue;
+
+                        anyFixture = true;
+                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
-                            goto found;
+                            if (state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform,
+                                    intersectingTransform))
+                            {
+                                state.Intersecting.Add((value, comp));
+                                return true;
+                            }
                         }
                     }
+
+                    if (anyFixture)
+                        return true;
                 }
 
-                return true;
+                if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
+                    state.Intersecting.Add((value, comp));
 
-                found:
-                state.Intersecting.Add((value, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
 
         if ((flags & LookupFlags.Sundries) != 0x0)
@@ -194,36 +195,37 @@ public sealed partial class EntityLookupSystem
                 if (!state.Query.TryGetComponent(value, out var comp))
                     return true;
 
-                if (!state.FixturesQuery.TryGetComponent(value, out var fixtures))
-                {
-                    var position = state.TransformSystem.GetWorldPosition(value);
-                    if (state.Fixtures.TestPoint(state.Shape, state.Transform, position))
-                        goto found;
-
-                    return true;
-                }
-
                 var intersectingTransform = state.Physics.GetPhysicsTransform(value);
-                foreach (var fixture in fixtures.Fixtures.Values)
-                {
-                    if (!state.Sensors && !fixture.Hard)
-                        continue;
 
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                if (state.FixturesQuery.TryGetComponent(value, out var fixtures))
+                {
+                    bool anyFixture = false;
+                    foreach (var fixture in fixtures.Fixtures.Values)
                     {
-                        if (!state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform, intersectingTransform))
+                        if (!state.Sensors && !fixture.Hard)
+                            continue;
+
+                        anyFixture = true;
+                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
-                            goto found;
+                            if (state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform,
+                                    intersectingTransform))
+                            {
+                                state.Intersecting.Add((value, comp));
+                                return true;
+                            }
                         }
                     }
+
+                    if (anyFixture)
+                        return true;
                 }
 
-                return true;
+                if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
+                    state.Intersecting.Add((value, comp));
 
-                found:
-                state.Intersecting.Add((value, comp));
                 return true;
-            }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+            }, localAABB, true);
         }
     }
 
@@ -249,7 +251,7 @@ public sealed partial class EntityLookupSystem
 
                     tuple.found = true;
                     return false;
-                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                }, localAABB, true);
 
             if (state.found)
                 return true;
@@ -265,7 +267,7 @@ public sealed partial class EntityLookupSystem
 
                     tuple.found = true;
                     return false;
-                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                }, localAABB, true);
 
             if (state.found)
                 return true;
@@ -281,7 +283,7 @@ public sealed partial class EntityLookupSystem
 
                     tuple.found = true;
                     return false;
-                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                }, localAABB, true);
 
             if (state.found)
                 return true;
@@ -297,7 +299,7 @@ public sealed partial class EntityLookupSystem
 
                     tuple.found = true;
                     return false;
-                }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+                }, localAABB, true);
         }
 
         return state.found;
@@ -437,7 +439,7 @@ public sealed partial class EntityLookupSystem
                         return true;
                     tuple.found = true;
                     return false;
-                }, (flags & LookupFlags.Approximate) != 0x0);
+                }, approx: true);
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
@@ -487,7 +489,7 @@ public sealed partial class EntityLookupSystem
                 {
                     tuple.system.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.worldAABB, tuple.flags, tuple.query);
                     return true;
-                }, (flags & LookupFlags.Approximate) != 0x0);
+                }, approx: true);
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
@@ -527,7 +529,7 @@ public sealed partial class EntityLookupSystem
                 {
                     tuple.system.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.worldAABB, tuple.flags, tuple.query);
                     return true;
-                }, (flags & LookupFlags.Approximate) != 0x0);
+                }, approx: true);
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
@@ -554,10 +556,10 @@ public sealed partial class EntityLookupSystem
             foreach (var (uid, comp) in EntityManager.GetAllComponents(type, true))
             {
                 var xform = _xformQuery.GetComponent(uid);
-                var xFormPosition = _transform.GetWorldPosition(xform);
+                var (pos, rot) = _transform.GetWorldPositionRotation(xform);
 
                 if (xform.MapID != mapId ||
-                    !worldAABB.Contains(xFormPosition) ||
+                    !worldAABB.Contains(pos) ||
                     ((flags & LookupFlags.Contained) == 0x0 &&
                      _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform)))
                 {
@@ -566,14 +568,15 @@ public sealed partial class EntityLookupSystem
 
                 if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
                 {
-                    var xFormRotation = _transform.GetWorldRotation(xform, _xformQuery);
-                    var transform = new Transform(xFormPosition, xFormRotation);
+                    var transform = new Transform(pos, rot);
 
+                    bool anyFixture = false;
                     foreach (var fixture in fixtures.Fixtures.Values)
                     {
                         if (!sensors && !fixture.Hard)
                             continue;
 
+                        anyFixture = true;
                         for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
                             if (_manifoldManager.TestOverlap(shape, 0, fixture.Shape, i, shapeTransform, transform))
@@ -583,16 +586,14 @@ public sealed partial class EntityLookupSystem
                         }
                     }
 
-                    continue;
-                }
-                else
-                {
-                    if (!_fixtures.TestPoint(shape, shapeTransform, xFormPosition))
+                    if (anyFixture)
                         continue;
                 }
 
-                found:
+                if (!_fixtures.TestPoint(shape, shapeTransform, pos))
+                    continue;
 
+                found:
                 intersecting.Add((uid, comp));
             }
         }
@@ -608,7 +609,7 @@ public sealed partial class EntityLookupSystem
                 {
                     state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, state.WorldAABB, state.Flags, state.Query);
                     return true;
-                }, (flags & LookupFlags.Approximate) != 0x0);
+                }, approx: true);
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
@@ -630,24 +631,21 @@ public sealed partial class EntityLookupSystem
 
             while (query.MoveNext(out var uid, out var comp, out var xform))
             {
-                var xFormPosition = _transform.GetWorldPosition(xform);
+                var (pos, rot) = _transform.GetWorldPositionRotation(xform);
 
-                if (xform.MapID != mapId ||
-                    !worldAABB.Contains(xFormPosition))
-                {
+                if (xform.MapID != mapId || !worldAABB.Contains(pos))
                     continue;
-                }
 
                 if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
                 {
-                    var xFormRotation = _transform.GetWorldRotation(xform, _xformQuery);
-                    var transform = new Transform(xFormPosition, xFormRotation);
-
+                    var transform = new Transform(pos, rot);
+                    bool anyFixture = false;
                     foreach (var fixture in fixtures.Fixtures.Values)
                     {
                         if (!sensors && !fixture.Hard)
                             continue;
 
+                        anyFixture = true;
                         for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
                             if (_manifoldManager.TestOverlap(shape, 0, fixture.Shape, i, shapeTransform, transform))
@@ -657,13 +655,12 @@ public sealed partial class EntityLookupSystem
                         }
                     }
 
-                    continue;
-                }
-                else
-                {
-                    if (!_fixtures.TestPoint(shape, shapeTransform, xFormPosition))
+                    if (anyFixture)
                         continue;
                 }
+
+                if (!_fixtures.TestPoint(shape, shapeTransform, pos))
+                    continue;
 
                 found:
                 entities.Add((uid, comp));
@@ -687,7 +684,7 @@ public sealed partial class EntityLookupSystem
                 {
                     tuple.system.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.shape, tuple.worldAABB, tuple.flags, tuple.query);
                     return true;
-                }, (flags & LookupFlags.Approximate) != 0x0);
+                }, approx: true);
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);

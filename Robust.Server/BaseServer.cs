@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
@@ -204,8 +205,6 @@ namespace Robust.Server
 
             ProfileOptSetup.Setup(_config);
 
-            _parallelMgr.Initialize();
-
             //Sets up Logging
             _logHandlerFactory = logHandlerFactory;
 
@@ -268,6 +267,7 @@ namespace Robust.Server
 
             // Has to be done early because this guy's in charge of the main thread Synchronization Context.
             _taskManager.Initialize();
+            _parallelMgr.Initialize();
 
             LoadSettings();
 
@@ -279,12 +279,15 @@ namespace Robust.Server
                 _network.Initialize(true);
                 _network.StartServer();
             }
-            catch (Exception e)
+            catch (SocketException e) when (e.SocketErrorCode == SocketError.AddressAlreadyInUse)
             {
                 var port = _network.Port;
-                _logger.Fatal(
-                    "Unable to setup networking manager. Check port {0} is not already in use and that all binding addresses are correct!\n{1}",
-                    port, e);
+                _logger.Fatal("Unable to setup networking manager. Make sure that you aren't running the server twice and that port {0} is not in use by another application.\n{1}", port, e);
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.Fatal("Unable to setup networking manager!\n{0}", e);
                 return true;
             }
 
@@ -660,10 +663,14 @@ namespace Robust.Server
             {
                 // Write down exception log
                 var logPath = _config.GetCVar(CVars.LogPath);
-                var relPath = PathHelpers.ExecutableRelativeFile(logPath);
-                Directory.CreateDirectory(relPath);
-                var pathToWrite = Path.Combine(relPath,
+                if (!Path.IsPathRooted(logPath))
+                {
+                    logPath = PathHelpers.ExecutableRelativeFile(logPath);
+                }
+
+                var pathToWrite = Path.Combine(logPath,
                     "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
+                Directory.CreateDirectory(logPath);
                 File.WriteAllText(pathToWrite, _runtimeLog.Display(), EncodingHelpers.UTF8);
             }
 

@@ -385,8 +385,8 @@ public abstract partial class SharedPhysicsSystem
                     var contact = node.Value;
                     node = node.Next;
 
-                    // Has this contact already been added to an island?
-                    if ((contact.Flags & ContactFlags.Island) != 0x0) continue;
+                    // Has this contact already been added to an island / is it pre-init?
+                    if ((contact.Flags & (ContactFlags.Island | ContactFlags.PreInit)) != 0x0) continue;
 
                     // Is this contact solid and touching?
                     if (!contact.Enabled || !contact.IsTouching) continue;

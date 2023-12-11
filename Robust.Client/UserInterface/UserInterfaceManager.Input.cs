@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Client.Graphics;
@@ -40,6 +41,7 @@ internal partial class UserInterfaceManager
     private bool _showingTooltip;
     private Control? _suppliedTooltip;
     private const float TooltipDelay = 0.25f;
+    private readonly Dictionary<BoundKeyFunction, Control> _focusedControls = new();
 
     private WindowRoot? _focusedRoot;
 
@@ -109,13 +111,13 @@ internal partial class UserInterfaceManager
             args.Handle();
         }
 
+        _focusedControls[args.Function] = control;
         OnKeyBindDown?.Invoke(control);
     }
 
     public void KeyBindUp(BoundKeyEventArgs args)
     {
-        var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation);
-        if (control == null)
+        if (!_focusedControls.TryGetValue(args.Function, out var control))
         {
             return;
         }
@@ -129,6 +131,7 @@ internal partial class UserInterfaceManager
         // Always mark this as handled.
         // The only case it should not be is if we do not have a control to click on,
         // in which case we never reach this.
+        _focusedControls.Remove(args.Function);
         args.Handle();
     }
 

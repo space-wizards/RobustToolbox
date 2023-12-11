@@ -55,7 +55,11 @@ namespace Robust.Client.Graphics
 
         public abstract void SetTransform(in Matrix3 matrix);
 
+        public abstract Matrix3 GetTransform();
+
         public abstract void UseShader(ShaderInstance? shader);
+
+        public abstract ShaderInstance? GetShader();
 
         // ---- DrawPrimitives: Vector2 API ----
 

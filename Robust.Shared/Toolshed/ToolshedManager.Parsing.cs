@@ -32,19 +32,19 @@ public sealed partial class ToolshedManager
                 if (t.IsGenericType)
                 {
                     _genericTypeParsers.Add(t.GetGenericTypeDefinition(), parserType);
-                    _log.Info($"Setting up {parserType.PrettyName()}, {t.GetGenericTypeDefinition().PrettyName()}");
+                    _log.Verbose($"Setting up {parserType.PrettyName()}, {t.GetGenericTypeDefinition().PrettyName()}");
                 }
                 else if (t.IsGenericParameter)
                 {
                     _constrainedParsers.Add((t, parserType));
-                    _log.Info($"Setting up {parserType.PrettyName()}, for T where T: {string.Join(", ", t.GetGenericParameterConstraints().Select(x => x.PrettyName()))}");
+                    _log.Verbose($"Setting up {parserType.PrettyName()}, for T where T: {string.Join(", ", t.GetGenericParameterConstraints().Select(x => x.PrettyName()))}");
                 }
             }
             else
             {
                 var parser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(parserType, oneOff: true);
                 parser.PostInject();
-                _log.Info($"Setting up {parserType.PrettyName()}, {parser.Parses.PrettyName()}");
+                _log.Verbose($"Setting up {parserType.PrettyName()}, {parser.Parses.PrettyName()}");
                 _consoleTypeParsers.Add(parser.Parses, parser);
             }
         }

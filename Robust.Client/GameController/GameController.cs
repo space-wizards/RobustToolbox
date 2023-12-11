@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime;
 using System.Threading.Tasks;
+using Robust.Client.Audio;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
 using Robust.Client.GameObjects;
@@ -24,6 +25,7 @@ using Robust.Client.WebViewHook;
 using Robust.LoaderApi;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -49,6 +51,7 @@ namespace Robust.Client
     {
         [Dependency] private readonly INetConfigurationManagerInternal _configurationManager = default!;
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
+        [Dependency] private readonly IResourceManagerInternal _resManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
@@ -68,7 +71,7 @@ namespace Robust.Client
         [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariablesManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IClydeAudioInternal _clydeAudio = default!;
+        [Dependency] private readonly IAudioInternal _audio = default!;
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
@@ -111,11 +114,12 @@ namespace Robust.Client
             DebugTools.AssertNotNull(_resourceManifest);
 
             _clyde.InitializePostWindowing();
-            _clydeAudio.InitializePostWindowing();
+            _audio.InitializePostWindowing();
             _clyde.SetWindowTitle(
                 Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
 
             _taskManager.Initialize();
+            _parallelMgr.Initialize();
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
 
             // Load optional Robust modules.
@@ -148,7 +152,7 @@ namespace Robust.Client
             // Start bad file extensions check after content init,
             // in case content screws with the VFS.
             var checkBadExtensions = ProgramShared.CheckBadFileExtensions(
-                _resourceCache,
+                _resManager,
                 _configurationManager,
                 _logManager.GetSawmill("res"));
 
@@ -357,16 +361,15 @@ namespace Robust.Client
 
             ProfileOptSetup.Setup(_configurationManager);
 
-            _parallelMgr.Initialize();
             _prof.Initialize();
 
-            _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
+            _resManager.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions)
                 : Options.MountOptions;
 
-            ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory,
+            ProgramShared.DoMounts(_resManager, mountOptions, Options.ContentBuildDirectory,
                 Options.AssemblyDirectory,
                 Options.LoadContentResources, _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
 
@@ -376,16 +379,16 @@ namespace Robust.Client
                 {
                     foreach (var (api, prefix) in mounts)
                     {
-                        _resourceCache.MountLoaderApi(api, "", new(prefix));
+                        _resourceCache.MountLoaderApi(_resManager, api, "", new(prefix));
                     }
                 }
 
                 _stringSerializer.EnableCaching = false;
-                _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
+                _resourceCache.MountLoaderApi(_resManager, _loaderArgs.FileApi, "Resources/");
                 _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
             }
 
-            _resourceManifest = ResourceManifestData.LoadResourceManifest(_resourceCache);
+            _resourceManifest = ResourceManifestData.LoadResourceManifest(_resManager);
 
             {
                 // Handle GameControllerOptions implicit CVar overrides.
@@ -567,11 +570,6 @@ namespace Robust.Client
                 }
             }
 
-            using (_prof.Group("ClydeAudio"))
-            {
-                _clydeAudio.FrameProcess(frameEventArgs);
-            }
-
             using (_prof.Group("Clyde"))
             {
                 _clyde.FrameProcess(frameEventArgs);
@@ -710,7 +708,7 @@ namespace Robust.Client
         internal void CleanupWindowThread()
         {
             _clyde.Shutdown();
-            _clydeAudio.Shutdown();
+            _audio.Shutdown();
         }
 
         public event Action<FrameEventArgs>? TickUpdateOverride;

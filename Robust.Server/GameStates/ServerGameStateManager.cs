@@ -37,6 +37,9 @@ namespace Robust.Server.GameStates
         // Mapping of net UID of clients -> last known acked state.
         private GameTick _lastOldestAck = GameTick.Zero;
 
+        private HashSet<int>[] _playerChunks = Array.Empty<HashSet<int>>();
+        private EntityUid[][] _viewerEntities = Array.Empty<EntityUid[]>();
+
         private PvsSystem _pvs = default!;
 
         [Dependency] private readonly EntityManager _entityManager = default!;
@@ -267,51 +270,33 @@ Oldest acked clients: {string.Join(", ", players)}
 
         private PvsData? GetPVSData(ICommonSession[] players)
         {
-            var (chunks, playerChunks, viewerEntities) = _pvs.GetChunks(players);
-            const int ChunkBatchSize = 2;
+            var chunks = _pvs.GetChunks(players, ref _playerChunks, ref _viewerEntities);
             var chunksCount = chunks.Count;
-            var chunkBatches = (int)MathF.Ceiling((float)chunksCount / ChunkBatchSize);
             var chunkCache =
                 new (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[chunksCount];
-
             // Update the reused trees sequentially to avoid having to lock the dictionary per chunk.
             var reuse = ArrayPool<bool>.Shared.Rent(chunksCount);
 
-            Parallel.For(0, chunkBatches,
-                new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
-                i =>
+            if (chunksCount > 0)
+            {
+                var chunkJob = new PvsChunkJob()
                 {
-                    var start = i * ChunkBatchSize;
-                    var end = Math.Min(start + ChunkBatchSize, chunksCount);
+                    EntManager = _entityManager,
+                    Pvs = _pvs,
+                    ChunkCache = chunkCache,
+                    Reuse = reuse,
+                    Chunks = chunks,
+                };
 
-                    for (var j = start; j < end; ++j)
-                    {
-                        var (visMask, chunkIndexLocation) = chunks[j];
-                        reuse[j] = _pvs.TryCalculateChunk(chunkIndexLocation, visMask, out var chunk);
-                        chunkCache[j] = chunk;
-
-#if DEBUG
-                        if (chunk == null)
-                            continue;
-
-                        // Each root nodes should simply be a map or a grid entity.
-                        DebugTools.Assert(chunk.Value.tree.RootNodes.Count == 1,
-                            $"Root node count is {chunk.Value.tree.RootNodes.Count} instead of 1.");
-                        var nent = chunk.Value.tree.RootNodes.FirstOrDefault();
-                        var ent = _entityManager.GetEntity(nent);
-                        DebugTools.Assert(_entityManager.EntityExists(ent), $"Root node does not exist. Node {ent}.");
-                        DebugTools.Assert(_entityManager.HasComponent<MapComponent>(ent)
-                                          || _entityManager.HasComponent<MapGridComponent>(ent));
-#endif
-                    }
-                });
+                _parallelMgr.ProcessNow(chunkJob, chunksCount);
+            }
 
             _pvs.RegisterNewPreviousChunkTrees(chunks, chunkCache, reuse);
             ArrayPool<bool>.Shared.Return(reuse);
             return new PvsData()
             {
-                PlayerChunks = playerChunks,
-                ViewerEntities = viewerEntities,
+                PlayerChunks = _playerChunks,
+                ViewerEntities = _viewerEntities,
                 ChunkCache = chunkCache,
             };
         }
@@ -435,5 +420,46 @@ Oldest acked clients: {string.Join(", ", players)}
                 }
             }
         }
+
+        #region Jobs
+
+        /// <summary>
+        /// Pre-calculates chunk indices (Robust Tree) to be re-used per-player later on.
+        /// </summary>
+        private record struct PvsChunkJob : IParallelRobustJob
+        {
+            public int BatchSize => 2;
+
+
+            public IEntityManager EntManager;
+            public PvsSystem Pvs;
+
+            public List<(int, IChunkIndexLocation)> Chunks;
+            public bool[] Reuse;
+            public (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] ChunkCache;
+
+            public void Execute(int index)
+            {
+                var (visMask, chunkIndexLocation) = Chunks[index];
+                Reuse[index] = Pvs.TryCalculateChunk(chunkIndexLocation, visMask, out var chunk);
+                ChunkCache[index] = chunk;
+
+#if DEBUG
+                if (chunk == null)
+                    return;
+
+                // Each root nodes should simply be a map or a grid entity.
+                DebugTools.Assert(chunk.Value.tree.RootNodes.Count == 1,
+                    $"Root node count is {chunk.Value.tree.RootNodes.Count} instead of 1.");
+                var nent = chunk.Value.tree.RootNodes.FirstOrDefault();
+                var ent = EntManager.GetEntity(nent);
+                DebugTools.Assert(EntManager.EntityExists(ent), $"Root node does not exist. Node {ent}.");
+                DebugTools.Assert(EntManager.HasComponent<MapComponent>(ent)
+                                  || EntManager.HasComponent<MapGridComponent>(ent));
+#endif
+            }
+        }
+
+        #endregion
     }
 }

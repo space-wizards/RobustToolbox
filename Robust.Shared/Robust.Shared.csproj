@@ -9,7 +9,9 @@
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="6.0.2" />
     <PackageReference Include="Microsoft.ILVerification" Version="6.0.0" PrivateAssets="compile" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.3.2" />
     <PackageReference Include="Nett" Version="0.15.0" PrivateAssets="compile" />
+    <PackageReference Include="NVorbis" Version="0.10.1" PrivateAssets="compile" />
     <PackageReference Include="Pidgin" Version="2.5.0" />
     <PackageReference Include="prometheus-net" Version="4.1.1" />
     <PackageReference Include="Robust.Shared.AuthLib" Version="0.1.2" />

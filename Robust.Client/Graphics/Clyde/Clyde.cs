@@ -11,6 +11,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
@@ -36,6 +37,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly IResourceManager _resManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;

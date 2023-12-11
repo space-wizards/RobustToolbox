@@ -477,11 +477,12 @@ namespace Robust.Shared.Physics.Systems
             }
 
             distance = float.MaxValue;
-            var input = new DistanceInput();
-
-            input.TransformA = xfA;
-            input.TransformB = xfB;
-            input.UseRadii = true;
+            var input = new DistanceInput
+            {
+                TransformA = xfA,
+                TransformB = xfB,
+                UseRadii = true
+            };
 
             // No requirement on collision being enabled so chainshapes will fail
             foreach (var fixtureA in managerA.Fixtures.Values)
@@ -521,8 +522,66 @@ namespace Robust.Shared.Physics.Systems
         /// Gets the nearest points in map terms and the distance between them.
         /// If a body is hard it only considers hard fixtures.
         /// </summary>
+        public bool TryGetNearest(EntityUid uid, MapCoordinates coordinates,
+            out Vector2 point, out float distance,
+            TransformComponent? xformA = null, FixturesComponent? manager = null, PhysicsComponent? body = null)
+        {
+            if (!Resolve(uid, ref xformA) ||
+                xformA.MapID != coordinates.MapId)
+            {
+                point = Vector2.Zero;
+                distance = 0f;
+                return false;
+            }
+
+            point = Vector2.Zero;
+
+            if (!Resolve(uid, ref manager, ref body) ||
+                manager.FixtureCount == 0)
+            {
+                distance = 0f;
+                return false;
+            }
+
+            var xfA = GetPhysicsTransform(uid, xformA);
+            var xfB = new Transform(coordinates.Position, Angle.Zero);
+
+            distance = float.MaxValue;
+            var input = new DistanceInput();
+
+            input.TransformA = xfA;
+            input.TransformB = xfB;
+            input.UseRadii = true;
+            var pointShape = new PhysShapeCircle(10 * float.Epsilon, Vector2.Zero);
+
+            // No requirement on collision being enabled so chainshapes will fail
+            foreach (var fixtureA in manager.Fixtures.Values)
+            {
+                if (body.Hard && !fixtureA.Hard)
+                    continue;
+
+                DebugTools.Assert(fixtureA.ProxyCount <= 1);
+
+                input.ProxyA.Set(fixtureA.Shape, 0);
+                input.ProxyB.Set(pointShape, 0);
+                DistanceManager.ComputeDistance(out var output, out _, input);
+
+                if (distance < output.Distance)
+                    continue;
+
+                point = output.PointA;
+                distance = output.Distance;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the nearest points in map terms and the distance between them.
+        /// If a body is hard it only considers hard fixtures.
+        /// </summary>
         public bool TryGetNearest(EntityUid uidA, EntityUid uidB,
-            out Vector2 pointA,
+            out Vector2 point,
             out Vector2 pointB,
             out float distance,
             TransformComponent? xformA = null, TransformComponent? xformB = null,
@@ -532,7 +591,7 @@ namespace Robust.Shared.Physics.Systems
             if (!Resolve(uidA, ref xformA) || !Resolve(uidB, ref xformB) ||
                 xformA.MapID != xformB.MapID)
             {
-                pointA = Vector2.Zero;
+                point = Vector2.Zero;
                 pointB = Vector2.Zero;
                 distance = 0f;
                 return false;
@@ -541,7 +600,7 @@ namespace Robust.Shared.Physics.Systems
             var xfA = GetPhysicsTransform(uidA, xformA);
             var xfB = GetPhysicsTransform(uidB, xformB);
 
-            return TryGetNearest(uidA, uidB, out pointA, out pointB, out distance, xfA, xfB, managerA, managerB, bodyA, bodyB);
+            return TryGetNearest(uidA, uidB, out point, out pointB, out distance, xfA, xfB, managerA, managerB, bodyA, bodyB);
         }
 
         #endregion

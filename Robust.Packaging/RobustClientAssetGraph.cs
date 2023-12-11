@@ -21,6 +21,7 @@ public sealed class RobustClientAssetGraph
     /// </summary>
     public IReadOnlyCollection<AssetPass> AllPasses { get; }
 
+    /// <param name="parallel">Should inputs be run in parallel. Should only be turned off for debugging.</param>
     public RobustClientAssetGraph(bool parallel = true)
     {
         // The code injecting the list of source files is assumed to be pretty single-threaded.
@@ -40,7 +41,7 @@ public sealed class RobustClientAssetGraph
             Input,
             PresetPasses,
             Output,
-            NormalizeText
+            NormalizeText,
         };
     }
 }

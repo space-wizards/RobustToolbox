@@ -54,6 +54,291 @@ END TEMPLATE-->
 *None yet*
 
 
+## 190.0.0
+
+### New features
+
+* Add color gradients to sliders.
+
+### Bugfixes
+
+* Fix HSV / HSL producing black colors on 360 hue.
+* Stop terminating entities from prematurely detaching to nullspace.
+* Ensure shader parameters update when swapping instances.
+
+### Other
+
+* Add more verbose logging to OpenAL errors.
+
+### Internal
+
+* Change NetSyncEnabled to an assert and fix instances where it slips through to PVS.
+
+
+## 189.0.0
+
+### Breaking changes
+
+* Use the base AudioParams for networking not the z-offset adjusted ones.
+* Modulate SpriteView sprites by the control's color modulation.
+
+### New features
+
+* Improve YAML linter error messages for parent nodes.
+* ExpandPvsEvent will also be raised directed to the session's attached entity.
+
+### Bugfixes
+
+* Client clientside entity error spam.
+
+### Internal
+
+* Set priorGain to 0 where no EFX is supported for audio rather than 0.5.
+* Try to hotfix MIDI lock contention more via a semaphore.
+
+
+## 188.0.0
+
+### Breaking changes
+
+* Return null buffered audio if there's an exception and use the dummy instance internally.
+* Use entity name then suffix for entity spawn window ordering.
+* Change MidiManager volume to gain.
+* Remove EntityQuery from the MapVelocity API.
+
+### Bugfixes
+
+* Potentially fix some audio issues by setting gain to half where EFX not found and the prior gain was 0.
+* Log errors upon trying to spawn audio attached to deleted entities instead of trying to spawn them and erroring later.
+* Fixed predicted audio spawns not applying the adjusted audio params.
+* Fix GetDimensions for the screenhandle where the text is only a single line.
+
+
+## 187.2.0
+
+### New features
+
+* Added a cancellable bool to physics sleeping events where we may wish to cancel it.
+
+### Bugfixes
+
+* Fix corrupted physics awake state leading to client mispredicts.
+
+
+## 187.1.2
+
+### Bugfixes
+
+* Hotfix contact nullrefs if they're modified during manifold generation.
+
+
+## 187.1.1
+
+### Bugfixes
+
+* Revert physics solver job to fix crashes until box2d v3 rolls around.
+* Don't RegenerateContacts if the body isn't collidable to avoid putting non-collidable proxies on the movebuffer.
+
+
+## 187.1.0
+
+### Bugfixes
+
+* Apply default audio params to all audio sources not just non-buffered ones.
+* Avoid re-allocating broadphase job every tick and maybe fix a rare nullref for it.
+
+
+## 187.0.0
+
+### New features
+
+* Improved error message for network failing to initialize.
+
+### Bugfixes
+
+* Fix not being able to add multiple PVS session overrides in a single tick without overwriting each one. This should fix issues with audio filters.
+
+### Other
+
+* Changed toolshed initialisation logs to verbose.
+
+
+## 186.1.0
+
+### New features
+
+* Add public method to get PVS session overrides for a specific session.
+
+### Internal
+
+* Add temporary audio debugging.
+
+
+## 186.0.0
+
+### Breaking changes
+
+* Global audio is now stored on its own map to avoid contamination issues with nullspace.
+
+### Bugfixes
+
+* Fix MIDIs playing cross-map
+* Only dispose audio on game closure and don't stop playing if it's disposed elsewhere i.e. MIDIs.
+
+
+## 185.2.0
+
+### Bugfixes
+
+* Bandaid deleted MIDI source entities spamming velocity error logs.
+
+### Other
+
+* Reverted MIDI audio not updating every frame due to lock contention with the MIDI renderer for now.
+
+
+## 185.1.1
+
+### Bugfixes
+
+* Fix Z-Offset for audio not being applied on initialization.
+
+### Internal
+
+* Flag some internal queries as approximate to avoid unnecessary AABB checks. Some of these are already covered off with TestOverlap calls and the rest will need updating to do so in a future update.
+
+
+## 185.1.0
+
+### New features
+
+* Audio listener's velocity is set using the attached entity's velocity rather than ignored.
+
+### Bugfixes
+
+* Fix imprecision on audio position
+
+
+## 185.0.0
+
+### Breaking changes
+
+* Added a flag for grid-based audio rather than implicitly doing it.
+
+### New features
+
+* Added IRobustJob and IParallelRobustJob (which splits out into IRobustJob). These can be passed to ParallelManager for work to be run on the threadpool without relying upon Task.Run / Parallel.For which can allocate significantly more. It also has conveniences such as being able to specify batch sizing via the interface implementation.
+
+
+## 184.1.0
+
+### New features
+
+* Add API to get gain / volume for a provided value on SharedAudioSystem.
+* Make GetOcclusion public for AudioSystem.
+* Add SharedAudioSystem.SetGain to complement SharedAudioSystem.SetVolume
+
+
+## 184.0.1
+
+### Bugfixes
+
+* Update MIDI position and occlusion every frame instead of at set intervals.
+* Fix global audio not being global.
+
+
+## 184.0.0
+
+### Internal
+
+* Add RobustMemoryManager with RecyclableIOMemoryStream to significantly reduce MsgState allocations until better memory management is implemented.
+
+
+## 183.0.0
+
+### Breaking changes
+
+* Audio rework has been re-merged now that the issues with packaging on server have been rectified (thanks PJB!)
+* Reverted Arch pending further performance work on making TryGetComponent competitive with live.
+
+
+## 182.1.1
+
+### Internal
+
+* Remove AggressiveInlining from Arch for debugging.
+
+
+## 182.1.0
+
+### New features
+
+* Add IRobustRandom.SetSeed
+
+### Other
+
+* Add Arch.TrimExcess() back to remove excess archetypes on map load / EntityManager flush.
+
+
+## 182.0.0
+
+### Breaking changes
+
+* Add EntityUid's generation / version to the hashcode.
+
+
+## 181.0.2
+
+### Bugfixes
+
+* Fix exceptions from having too many lights on screen and causing the game to go black.
+* Fix components having events raised in ClientGameStateManager before fully set and causing nullable reference exceptions.
+* Replace tile intersection IEnumerables with TileEnumerator internally. Also made it public for external callers that wish to avoid IEnumerable.
+
+
+## 181.0.1
+
+### Bugfixes
+
+* Fix the non-generic HasComp and add a test for good measure.
+
+
+## 181.0.0
+
+### Breaking changes
+
+- Arch is merged refactoring how components are stored on engine. There's minimal changes on the API end to facilitate component nullability with much internal refactoring.
+
+
+## 180.2.1
+
+
+## 180.2.0
+
+### New features
+
+* Add EnsureEntity variants that take in collections.
+* Add more MapSystem helper methods.
+
+### Internal
+
+* Cache some more PVS data to avoid re-allocating every tick.
+
+
+## 180.1.0
+
+### New features
+
+* Add the map name to lsmap.
+* Add net.pool_size to CVars to control the message data pool size in Lidgren and to also toggle pooling.
+
+### Bugfixes
+
+* Fix physics contraints causing enormous heap allocations.
+* Fix potential error when writing a runtime log.
+* Fix shape lookups for non-hard fixtures in EntityLookupSystem from 180.0.0
+
+
 ## 180.0.0
 
 ### Breaking changes

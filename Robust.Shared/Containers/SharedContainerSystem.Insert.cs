@@ -38,8 +38,6 @@ public abstract partial class SharedContainerSystem
         if (!Resolve(uid, ref transform, ref meta))
             return false;
 
-        // TODO move logic over to the system.
-
         DebugTools.AssertOwner(container.Owner, containerXform);
         DebugTools.AssertOwner(toInsert, physics);
         DebugTools.Assert(!container.ExpectedEntities.Contains(GetNetEntity(toInsert)));

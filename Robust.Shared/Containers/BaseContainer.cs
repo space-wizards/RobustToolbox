@@ -48,7 +48,7 @@ namespace Robust.Shared.Containers
         public string ID = default!;
 
         [NonSerialized]
-        internal ContainerManagerComponent Manager = default!;
+        protected internal ContainerManagerComponent Manager = default!;
 
         /// <summary>
         /// Prevents light from escaping the container, from ex. a flashlight.
@@ -122,6 +122,7 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Clears the container and marks it as deleted.
         /// </summary>
+        [Obsolete("use system method")]
         public void Shutdown(IEntityManager? entMan = null, INetManager? _ = null)
         {
             IoCManager.Resolve(ref entMan);

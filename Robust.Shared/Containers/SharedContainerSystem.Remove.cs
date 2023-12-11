@@ -42,7 +42,6 @@ public abstract partial class SharedContainerSystem
         if (!Resolve(uid, ref xform, ref meta))
             return false;
 
-        // TODO move logic over to the system.
         DebugTools.AssertNotNull(container.Manager);
         DebugTools.Assert(Exists(toRemove));
 

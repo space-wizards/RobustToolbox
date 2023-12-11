@@ -43,7 +43,7 @@ internal sealed partial class PvsSystem
 
         if (meta.EntityLastModifiedTick <= fromTick)
         {
-            //entity has been sent before and hasnt been updated since
+            //entity has been sent before and hasn't been updated since
             entityData.Visibility = PvsEntityVisibility.StayedUnchanged;
             return;
         }

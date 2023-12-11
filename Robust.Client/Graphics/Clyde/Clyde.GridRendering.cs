@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
@@ -21,7 +23,7 @@ namespace Robust.Client.Graphics.Clyde
         private int _verticesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
-        private void _drawGrids(Viewport viewport, Box2Rotated worldBounds, IEye eye)
+        private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
         {
             var mapId = eye.Position.MapId;
             if (!_mapManager.MapExists(mapId))
@@ -30,27 +32,34 @@ namespace Robust.Client.Graphics.Clyde
                 mapId = MapId.Nullspace;
             }
 
-            SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
-            SetTexture(TextureUnit.Texture1, _lightingReady ? viewport.LightRenderTarget.Texture : _stockTextureWhite);
-
-            var gridProgram = ActivateShaderInstance(_defaultShader.Handle).Item1;
-            SetupGlobalUniformsImmediate(gridProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
-
-            gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
-            gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
-            gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
-
             var grids = new List<Entity<MapGridComponent>>();
             _mapManager.FindGridsIntersecting(mapId, worldBounds, ref grids);
+
+            var requiresFlush = true;
+            GLShaderProgram gridProgram = default!;
+
             foreach (var mapGrid in grids)
             {
-                if (!_mapChunkData.ContainsKey(mapGrid))
+                if (!_mapChunkData.TryGetValue(mapGrid, out var data))
+                {
                     continue;
+                }
+
+                if (requiresFlush)
+                {
+                    SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
+                    SetTexture(TextureUnit.Texture1, _lightingReady ? viewport.LightRenderTarget.Texture : _stockTextureWhite);
+                    gridProgram = ActivateShaderInstance(_defaultShader.Handle).Item1;
+                    SetupGlobalUniformsImmediate(gridProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
+
+                    gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+                    gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
+                    gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
+                }
 
                 var transform = _entityManager.GetComponent<TransformComponent>(mapGrid);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
                 var enumerator = mapGrid.Comp.GetMapChunks(worldBounds);
-                var data = _mapChunkData[mapGrid];
 
                 while (enumerator.MoveNext(out var chunk))
                 {
@@ -71,6 +80,25 @@ namespace Robust.Client.Graphics.Clyde
                     _debugStats.LastGLDrawCalls += 1;
                     GL.DrawElements(GetQuadGLPrimitiveType(), datum.TileCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
                     CheckGlError();
+                }
+
+                requiresFlush = false;
+
+                foreach (var overlay in GetOverlaysForSpace(OverlaySpace.WorldSpaceGrids))
+                {
+                    if (overlay is not IGridOverlay iGrid)
+                    {
+                        continue;
+                    }
+
+                    iGrid.Grid = mapGrid;
+                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceGrids, worldAABB, worldBounds);
+                    requiresFlush |= iGrid.RequiresFlush;
+                }
+
+                if (requiresFlush)
+                {
+                    FlushRenderQueue();
                 }
             }
 

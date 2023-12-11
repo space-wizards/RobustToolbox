@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 190.1.1
+
+### Bugfixes
+
+* Revert broadphase job to prevent OOM from logs.
+
+
 ## 190.1.0
 
 ### New features

@@ -175,6 +175,7 @@ Oldest acked clients: {string.Join(", ", players)}
             var players = _playerManager.Sessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
             // Update client acks, which is used to figure out what data needs to be sent to clients
+            // This only needs SessionData which isn't touched during GetPVSData or ProcessCollections.
             var ackJob = _pvs.ProcessQueuedAcks();
 
             // Update entity positions in PVS chunks/collections

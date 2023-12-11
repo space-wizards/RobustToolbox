@@ -92,6 +92,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     iGrid.Grid = mapGrid;
+                    iGrid.RequiresFlush = false;
                     RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceGrids, worldAABB, worldBounds);
                     requiresFlush |= iGrid.RequiresFlush;
                 }

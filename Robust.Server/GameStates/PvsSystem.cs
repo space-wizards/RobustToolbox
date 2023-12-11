@@ -800,9 +800,12 @@ internal sealed partial class PvsSystem : EntitySystem
 
         // TODO PVS reduce allocs
         var entityStates = new List<EntityState>(dirtyEntityCount);
+
+        // Get entity/component states and update EntityData.LastSent
         GetStateList(entityStates, toSend, sessionData, fromTick);
 
-        // tell a client to detach entities that have left their view
+        // Tell the client to detach entities that have left their view
+        // This has to be called after EntityData.LastSent is updated.
         var leftView = ProcessLeavePvs(toSend, lastSent, entityData);
 
         if (sessionData.SentEntities.Add(toTick, toSend, out var oldEntry))
@@ -856,8 +859,11 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var ent in lastSent)
         {
-            if (toSend.Contains(ent))
-                continue;
+            // Apparently getting a dictionary entry is about as fast as checking HashSet.Contains()
+            // Hence we just get the EntityData from the dictionary instead of checking toSend.Contains(ent) first.
+            // Note that the conclusion comes from comparing an equal size dictionary & hashset with a 50% lookup success rate.
+            // Here, the dictionary should have a ~100% success rate and can be larger by a factor of up to about 80.
+            // TODO PVS check a more realistic benchmark
 
             ref var data = ref CollectionsMarshal.GetValueRefOrNullRef(entityData, ent);
             if (Unsafe.IsNullRef(ref data))
@@ -871,9 +877,17 @@ internal sealed partial class PvsSystem : EntitySystem
                 continue;
             }
 
+            DebugTools.Assert(data.LastSent != GameTick.Zero);
+            if (data.LastSent == tick)
+            {
+                DebugTools.Assert(toSend.Contains(ent));
+                continue;
+            }
+
             leftView.Add(ent);
             data.LastLeftView = tick;
-            DebugTools.Assert(data.LastSent.Value == tick.Value - 1 && data.LastSent != GameTick.Zero);
+            DebugTools.Assert(!toSend.Contains(ent));
+            DebugTools.Assert(data.LastSent.Value == tick.Value - 1);
         }
 
         return leftView.Count > 0 ? leftView : null;

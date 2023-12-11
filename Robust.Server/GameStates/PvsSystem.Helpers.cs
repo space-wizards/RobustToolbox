@@ -10,19 +10,6 @@ namespace Robust.Server.GameStates;
 internal sealed partial class PvsSystem
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ref EntityData GetOrNewEntityData(
-        Dictionary<NetEntity, EntityData> entityData,
-        NetEntity entity,
-        EntityUid uid,
-        MetaDataComponent meta)
-    {
-        ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, entity, out var exists);
-        if (!exists)
-            data = new((uid, meta));
-        return ref data;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ref EntityData GetOrNewEntityData(Dictionary<NetEntity, EntityData> entityData, NetEntity entity)
     {
         ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, entity, out var exists);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
@@ -12,7 +13,7 @@ internal sealed partial class PvsSystem
 {
     public void GetStateList(
         List<EntityState> states,
-        HashSet<NetEntity> toSend,
+        List<NetEntity> toSend,
         SessionPvsData sessionData,
         GameTick fromTick)
     {
@@ -26,7 +27,7 @@ internal sealed partial class PvsSystem
         var entData = sessionData.EntityData;
         var session = sessionData.Session;
 
-        foreach (var netEntity in toSend)
+        foreach (var netEntity in CollectionsMarshal.AsSpan(toSend))
         {
 #if DEBUG
             var debugUid = GetEntity(netEntity);
@@ -38,12 +39,12 @@ internal sealed partial class PvsSystem
 
             ref var data = ref GetEntityData(entData, netEntity);
             DebugTools.AssertNotEqual(data.Visibility, PvsEntityVisibility.Invalid);
-            var (uid, meta) = data.Entity;
-            data.LastSent = _gameTiming.CurTick;
+            DebugTools.AssertEqual(data.LastSent, _gameTiming.CurTick);
 
             if (data.Visibility == PvsEntityVisibility.StayedUnchanged)
                 continue;
 
+            var (uid, meta) = data.Entity;
             var entered = data.Visibility == PvsEntityVisibility.Entered;
             var entFromTick = entered ? data.EntityLastAcked : fromTick;
 
@@ -64,14 +65,14 @@ internal sealed partial class PvsSystem
 
     public void GetFullStateList(
         List<EntityState> states,
-        HashSet<NetEntity> toSend,
+        List<NetEntity> toSend,
         SessionPvsData sessionData)
     {
         DebugTools.Assert(sessionData.RequestedFull);
         var entData = sessionData.EntityData;
         var session = sessionData.Session;
 
-        foreach (var netEntity in toSend)
+        foreach (var netEntity in CollectionsMarshal.AsSpan(toSend))
         {
 #if DEBUG
             var debugUid = GetEntity(netEntity);

@@ -47,7 +47,7 @@ internal sealed partial class PvsSystem : EntitySystem
     public int ForceAckThreshold { get; private set; }
 
     /// <summary>
-    /// Maximum number of pooled objects
+    /// Maximum number of pooled objects.
     /// </summary>
     private const int MaxVisPoolSize = 1024;
 
@@ -82,6 +82,9 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private readonly ObjectPool<HashSet<NetEntity>> _netUidSetPool
         = new DefaultObjectPool<HashSet<NetEntity>>(new SetPolicy<NetEntity>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<List<NetEntity>> _netUidListPool
+        = new DefaultObjectPool<List<NetEntity>>(new ListPolicy<NetEntity>(), MaxVisPoolSize);
 
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
@@ -205,7 +208,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         if (sessionData.Overflow != null)
         {
-            _netUidSetPool.Return(sessionData.Overflow.Value.SentEnts);
+            _netUidListPool.Return(sessionData.Overflow.Value.SentEnts);
             sessionData.Overflow = null;
         }
 
@@ -368,12 +371,12 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         if (data.Overflow != null)
-            _netUidSetPool.Return(data.Overflow.Value.SentEnts);
+            _netUidListPool.Return(data.Overflow.Value.SentEnts);
         data.Overflow = null;
 
         foreach (var visSet in data.SentEntities.Values)
         {
-            _netUidSetPool.Return(visSet);
+            _netUidListPool.Return(visSet);
         }
     }
 
@@ -703,7 +706,7 @@ internal sealed partial class PvsSystem : EntitySystem
         var enteredEntityCount = 0;
         var sessionData = PlayerData[session];
         sessionData.SentEntities.TryGetValue(toTick - 1, out var lastSent);
-        var toSend = _netUidSetPool.Get();
+        var toSend = _netUidListPool.Get();
         var entityData = sessionData.EntityData;
 
         if (toSend.Count != 0)
@@ -832,7 +835,7 @@ internal sealed partial class PvsSystem : EntitySystem
 #endif
             }
             else
-                _netUidSetPool.Return(oldEntry.Value.Value);
+                _netUidListPool.Return(oldEntry.Value.Value);
         }
 
         if (entityStates.Count == 0) entityStates = default;
@@ -844,10 +847,15 @@ internal sealed partial class PvsSystem : EntitySystem
     ///     in a separate net message.
     /// </summary>
     private List<NetEntity>? ProcessLeavePvs(
-        HashSet<NetEntity> toSend,
-        HashSet<NetEntity>? lastSent,
+        List<NetEntity> toSend,
+        List<NetEntity>? lastSent,
         Dictionary<NetEntity, EntityData> entityData)
     {
+        // TODO parallelize this with system processing.
+        // Note that this requires deferring entity-deletion processing to be applied at the beginning of PVS
+        // processing, instead of happening during system ticks. But it also would make it easy to parallelize
+        // updating it.
+
         if (lastSent == null)
             return null;
 
@@ -857,7 +865,12 @@ internal sealed partial class PvsSystem : EntitySystem
         // TODO PVS reduce allocs
         var leftView = new List<NetEntity>(minSize);
 
-        foreach (var ent in lastSent)
+#if DEBUG
+        // TODO PVS consider removing expensive asserts
+        var set = new HashSet<NetEntity>(toSend);
+#endif
+
+        foreach (var ent in CollectionsMarshal.AsSpan(lastSent))
         {
             // Apparently getting a dictionary entry is about as fast as checking HashSet.Contains(), and if the
             // entity is missing we need to get the dictionary entry anyways, so its faster to just do that.
@@ -875,16 +888,17 @@ internal sealed partial class PvsSystem : EntitySystem
                 continue;
             }
 
+#if DEBUG
             DebugTools.Assert(data.LastSent != GameTick.Zero);
+            var wasSent = data.LastSent == tick;
+            DebugTools.Assert(set.Contains(ent) == wasSent);
+#endif
+
             if (data.LastSent == tick)
-            {
-                DebugTools.Assert(toSend.Contains(ent));
                 continue;
-            }
 
             leftView.Add(ent);
             data.LastLeftView = tick;
-            DebugTools.Assert(!toSend.Contains(ent));
             DebugTools.Assert(data.LastSent.Value == tick.Value - 1);
         }
 

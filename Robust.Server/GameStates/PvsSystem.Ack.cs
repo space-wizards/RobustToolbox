@@ -69,28 +69,28 @@ internal sealed partial class PvsSystem
             return;
 
         var ackedTick = sessionData.LastReceivedAck;
-        HashSet<NetEntity>? ackedData;
+        List<NetEntity>? ackedEnts;
 
         if (sessionData.Overflow != null && sessionData.Overflow.Value.Tick <= ackedTick)
         {
             var (overflowTick, overflowEnts) = sessionData.Overflow.Value;
             sessionData.Overflow = null;
-            ackedData = overflowEnts;
+            ackedEnts = overflowEnts;
 
             // Even though the acked tick might be newer, we have no guarantee that the client received the cached tick,
             // so discard it unless they happen to be equal.
             if (overflowTick != ackedTick)
             {
-                _netUidSetPool.Return(overflowEnts);
+                _netUidListPool.Return(overflowEnts);
                 DebugTools.Assert(!sessionData.SentEntities.Values.Contains(overflowEnts));
                 return;
             }
         }
-        else if (!sessionData.SentEntities.TryGetValue(ackedTick, out ackedData))
+        else if (!sessionData.SentEntities.TryGetValue(ackedTick, out ackedEnts))
             return;
 
         var entityData = sessionData.EntityData;
-        foreach (var ent in ackedData)
+        foreach (var ent in CollectionsMarshal.AsSpan(ackedEnts))
         {
             ref var data = ref CollectionsMarshal.GetValueRefOrNullRef(entityData, ent);
             if (Unsafe.IsNullRef(ref data))

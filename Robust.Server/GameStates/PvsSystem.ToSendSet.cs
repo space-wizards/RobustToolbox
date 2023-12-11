@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -11,32 +12,39 @@ namespace Robust.Server.GameStates;
 internal sealed partial class PvsSystem
 {
     /// <summary>
-    /// This method gets called after an entity was added to the to-send set. It updates the entity's visibility and
-    /// increments the dirty entity counter.
+    /// This method adds an entity to the to-send list, updates the last-sent tick, and updates the entity's visibility.
     /// </summary>
-    private void EntityAddedToSet(
-        ref EntityData entityData,
-        HashSet<NetEntity> toSend,
+    private void AddToSendList(
+        NetEntity ent,
+        ref EntityData data,
+        List<NetEntity> list,
+        GameTick curTick,
         GameTick fromTick,
         bool entered,
         ref int dirtyEntityCount)
     {
-        var meta = entityData.Entity.Comp;
+        var meta = data.Entity.Comp;
+        DebugTools.AssertEqual(meta.NetEntity, ent);
+        DebugTools.Assert(fromTick < curTick);
+        DebugTools.AssertNotEqual(data.LastSent, curTick);
+
         if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
-            toSend.Remove(entityData.Entity.Comp.NetEntity);
-            var rep = new EntityStringRepresentation(entityData.Entity);
-            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(entityData.Entity)}. Trace:\n{Environment.StackTrace}");
+            var rep = new EntityStringRepresentation(data.Entity);
+            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(data.Entity)}. Trace:\n{Environment.StackTrace}");
 
             // This can happen if some entity was some removed from it's parent while that parent was being deleted.
             // As a result the entity was marked for deletion but was never actually properly deleted.
-            EntityManager.QueueDeleteEntity(entityData.Entity);
+            EntityManager.QueueDeleteEntity(data.Entity);
             return;
         }
 
+        data.LastSent = curTick;
+        list.Add(ent);
+
         if (entered)
         {
-            entityData.Visibility = PvsEntityVisibility.Entered;
+            data.Visibility = PvsEntityVisibility.Entered;
             dirtyEntityCount++;
             return;
         }
@@ -44,12 +52,12 @@ internal sealed partial class PvsSystem
         if (meta.EntityLastModifiedTick <= fromTick)
         {
             //entity has been sent before and hasn't been updated since
-            entityData.Visibility = PvsEntityVisibility.StayedUnchanged;
+            data.Visibility = PvsEntityVisibility.StayedUnchanged;
             return;
         }
 
         //add us
-        entityData.Visibility = PvsEntityVisibility.StayedChanged;
+        data.Visibility = PvsEntityVisibility.StayedChanged;
         dirtyEntityCount++;
     }
 
@@ -57,7 +65,7 @@ internal sealed partial class PvsSystem
     /// This method figures out whether a given entity is currently entering a player's PVS range.
     /// This method will also check that the player's PVS entry budget is not being exceeded.
     /// </summary>
-    private (bool Entered, bool ShouldAdd) GetPvsEntryData(
+    private (bool Entered, bool UnderBudget) GetPvsEntryData(
         ref EntityData entity,
         GameTick fromTick,
         ref int newEntityCount,
@@ -97,7 +105,7 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void RecursivelyAddTreeNode(in NetEntity nodeIndex,
         RobustTree<NetEntity> tree,
-        HashSet<NetEntity> toSend,
+        List<NetEntity> toSend,
         Dictionary<NetEntity, EntityData> entityData,
         Stack<NetEntity> stack,
         GameTick fromTick,
@@ -109,6 +117,8 @@ internal sealed partial class PvsSystem
     {
         stack.Push(nodeIndex);
 
+        var curTick = _gameTiming.CurTick;
+
         while (stack.TryPop(out var currentNodeIndex))
         {
             DebugTools.Assert(currentNodeIndex.IsValid());
@@ -117,26 +127,16 @@ internal sealed partial class PvsSystem
             // we may find duplicate parents with children we haven't encountered before
             // on different chunks (this is especially common with direct grid children)
 
-            // If entity is already in toSend, it must have a valid entry in entityData
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-            DebugTools.Assert(!toSend.Contains(currentNodeIndex)
-                              || entityData.TryGetValue(currentNodeIndex, out var v) && v.Entity.Comp != null);
-
-            if (toSend.Add(currentNodeIndex))
+            ref var data = ref GetOrNewEntityData(entityData, currentNodeIndex);
+            if (data.LastSent != curTick)
             {
-                ref var data = ref GetOrNewEntityData(entityData, currentNodeIndex);
-                var (entered, shouldAdd) = GetPvsEntryData(ref data, fromTick,
+                var (entered, underBudget) = GetPvsEntryData(ref data, fromTick,
                     ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-                if (!shouldAdd)
-                {
-                    // In the majority of instances entities do get added.
-                    // So its better to add and maybe remove, rather than checking ContainsKey() and then maybe adding it.
-                    toSend.Remove(currentNodeIndex);
+                if (!underBudget)
                     continue;
-                }
 
-                EntityAddedToSet(ref data, toSend, fromTick, entered, ref dirtyEntityCount);
+                AddToSendList(currentNodeIndex, ref data, toSend, curTick, fromTick, entered, ref dirtyEntityCount);
             }
 
             var node = tree[currentNodeIndex];
@@ -154,7 +154,7 @@ internal sealed partial class PvsSystem
     /// Recursively add an entity and all of its parents to the to-send set. This optionally also adds all children.
     /// </summary>
     public bool RecursivelyAddOverride(in EntityUid uid,
-        HashSet<NetEntity> toSend,
+        List<NetEntity> toSend,
         Dictionary<NetEntity, EntityData> entityData,
         GameTick fromTick,
         ref int newEntityCount,
@@ -177,23 +177,19 @@ internal sealed partial class PvsSystem
             return false;
         }
 
-        var metadata = _metaQuery.GetComponent(uid);
-        var netEntity = metadata.NetEntity;
-
-        // If entity is already in toSend, it must have a valid entry in entityData
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        DebugTools.Assert(!toSend.Contains(netEntity)
-                          || entityData.TryGetValue(netEntity, out var v) && v.Entity.Comp != null);
+        var netEntity = _metaQuery.GetComponent(uid).NetEntity;
 
         // Note that we check this AFTER adding parents. This is because while this entity may already have been added
         // to the toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported
         // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
         // send the new parents, which may otherwise be delayed because of the PVS budget.
-        if (toSend.Add(netEntity))
+
+        var curTick = _gameTiming.CurTick;
+        ref var data = ref GetOrNewEntityData(entityData, netEntity);
+        if (data.LastSent != curTick)
         {
-            ref var data = ref GetOrNewEntityData(entityData, netEntity, uid, metadata);
             var (entered, _) = GetPvsEntryData(ref data, fromTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-            EntityAddedToSet(ref data, toSend, fromTick, entered, ref dirtyEntityCount);
+            AddToSendList(netEntity, ref data, toSend, curTick, fromTick, entered, ref dirtyEntityCount);
         }
 
         if (addChildren)
@@ -209,7 +205,7 @@ internal sealed partial class PvsSystem
     /// Recursively add an entity and all of its children to the to-send set.
     /// </summary>
     private void RecursivelyAddChildren(TransformComponent xform,
-        HashSet<NetEntity> toSend,
+        List<NetEntity> toSend,
         Dictionary<NetEntity, EntityData> entityData,
         in GameTick fromTick,
         ref int newEntityCount,
@@ -218,6 +214,7 @@ internal sealed partial class PvsSystem
         in int newEntityBudget,
         in int enteredEntityBudget)
     {
+        var curTick = _gameTiming.CurTick;
         foreach (var child in xform.ChildEntities)
         {
             if (!_xformQuery.TryGetComponent(child, out var childXform))
@@ -225,19 +222,12 @@ internal sealed partial class PvsSystem
 
             var metadata = _metaQuery.GetComponent(child);
             var netChild = metadata.NetEntity;
-
-            // If entity is already in toSend, it must have a valid entry in entityData
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-            DebugTools.Assert(!toSend.Contains(netChild)
-                              || entityData.TryGetValue(netChild, out var v) && v.Entity.Comp != null);
-
-            if (toSend.Add(netChild))
+            ref var data = ref GetOrNewEntityData(entityData, netChild);
+            if (data.LastSent != curTick)
             {
-                ref var data = ref GetOrNewEntityData(entityData, netChild, child, metadata);
                 var (entered, _) = GetPvsEntryData(ref data, fromTick, ref newEntityCount,
                     ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-
-                EntityAddedToSet(ref data, toSend, fromTick, entered, ref dirtyEntityCount);
+                AddToSendList(netChild, ref data, toSend, curTick, fromTick, entered, ref dirtyEntityCount);
             }
 
             RecursivelyAddChildren(childXform, toSend, entityData, fromTick, ref newEntityCount,

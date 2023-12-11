@@ -859,11 +859,9 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var ent in lastSent)
         {
-            // Apparently getting a dictionary entry is about as fast as checking HashSet.Contains()
-            // Hence we just get the EntityData from the dictionary instead of checking toSend.Contains(ent) first.
-            // Note that the conclusion comes from comparing an equal size dictionary & hashset with a 50% lookup success rate.
-            // Here, the dictionary should have a ~100% success rate and can be larger by a factor of up to about 80.
-            // TODO PVS check a more realistic benchmark
+            // Apparently getting a dictionary entry is about as fast as checking HashSet.Contains(), and if the
+            // entity is missing we need to get the dictionary entry anyways, so its faster to just do that.
+            // See Robust.Benchmarks.Pvs.ProcessLeavePvsBenchmark
 
             ref var data = ref CollectionsMarshal.GetValueRefOrNullRef(entityData, ent);
             if (Unsafe.IsNullRef(ref data))

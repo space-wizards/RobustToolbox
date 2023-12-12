@@ -122,12 +122,20 @@ namespace Robust.Client.UserInterface
 
         public event Action<Control>? OnKeyBindDown;
 
+        // TODO: Move these to CVars
         void SetClickSound(IAudioSource? source);
 
         /// <summary>
         /// Plays the UI click sound if relevant
         /// </summary>
-        void ClickSound(Control control);
+        void ClickSound();
+
+        void SetHoverSound(IAudioSource? source);
+
+        /// <summary>
+        /// Plays the UI hover sound if relevant.
+        /// </summary>
+        void HoverSound();
     }
 
     public readonly struct PostDrawUIRootEventArgs

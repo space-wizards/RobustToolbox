@@ -124,7 +124,7 @@ namespace Robust.Client.UserInterface.Controls
             if (Pressed != value)
                 return;
 
-            _uiManager.ClickSound(this);
+            _uiManager.ClickSound();
         }
 
         /// <summary>
@@ -289,7 +289,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
                     else
                     {
-                        _uiManager.ClickSound(this);
+                        _uiManager.ClickSound();
                     }
 
                     OnPressed?.Invoke(buttonEventArgs);
@@ -343,6 +343,8 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void MouseEntered()
         {
             base.MouseEntered();
+
+            _uiManager.HoverSound();
 
             var drawMode = DrawMode;
             _beingHovered = true;

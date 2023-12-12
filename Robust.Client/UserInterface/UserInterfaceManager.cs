@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Robust.Client.Audio;
-using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -29,7 +27,6 @@ using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
@@ -59,6 +56,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IRuntimeLog _runtime = default!;
 
         private IAudioSource? _clickSource;
+        private IAudioSource? _hoverSource;
 
         /// <summary>
         /// Upper limit on the number of times that controls can be measured / arranged each tick before being deferred
@@ -410,9 +408,20 @@ namespace Robust.Client.UserInterface
             _clickSource = source;
         }
 
-        public void ClickSound(Control control)
+        public void ClickSound()
         {
             _clickSource?.Restart();
+        }
+
+        public void SetHoverSound(IAudioSource? source)
+        {
+            _hoverSource?.Dispose();
+            _hoverSource = source;
+        }
+
+        public void HoverSound()
+        {
+            _hoverSource?.Restart();
         }
 
         ~UserInterfaceManager()

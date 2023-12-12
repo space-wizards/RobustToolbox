@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Prometheus;
+using Robust.Shared.Containers;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -38,6 +39,7 @@ namespace Robust.Shared.GameObjects
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
         private SharedTransformSystem _xforms = default!;
+        private SharedContainerSystem _containers = default!;
 
         public EntityQuery<MetaDataComponent> MetaQuery;
         public EntityQuery<TransformComponent> TransformQuery;
@@ -198,6 +200,7 @@ namespace Robust.Shared.GameObjects
             _eventBus.CalcOrdering();
             _mapSystem = System<SharedMapSystem>();
             _xforms = System<SharedTransformSystem>();
+            _containers = System<SharedContainerSystem>();
             MetaQuery = GetEntityQuery<MetaDataComponent>();
             TransformQuery = GetEntityQuery<TransformComponent>();
         }

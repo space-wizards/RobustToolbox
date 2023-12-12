@@ -1130,7 +1130,7 @@ namespace Robust.Client.GameStates
                         (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
                         containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container, null, true))
                     {
-                        container.Remove(ent.Value, _entities, xform, meta, false, true);
+                        containerSys.Remove((ent.Value, xform, meta), container, false, true);
                     }
 
                     meta._flags |= MetaDataFlags.Detached;

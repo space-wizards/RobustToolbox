@@ -20,6 +20,11 @@ namespace Robust.Client.Graphics.Clyde
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
             new();
 
+        /// <summary>
+        /// To avoid spamming errors we'll just log it once and move on.
+        /// </summary>
+        private HashSet<Type> _erroredGridOverlays = new();
+
         private int _verticesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
@@ -37,6 +42,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var requiresFlush = true;
             GLShaderProgram gridProgram = default!;
+            var gridOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceGrids);
 
             foreach (var mapGrid in grids)
             {
@@ -84,10 +90,15 @@ namespace Robust.Client.Graphics.Clyde
 
                 requiresFlush = false;
 
-                foreach (var overlay in GetOverlaysForSpace(OverlaySpace.WorldSpaceGrids))
+                foreach (var overlay in gridOverlays)
                 {
                     if (overlay is not IGridOverlay iGrid)
                     {
+                        if (!_erroredGridOverlays.Add(overlay.GetType()))
+                        {
+                            _clydeSawmill.Error($"Tried to render grid overlay {overlay.GetType()} that doesn't implement {nameof(IGridOverlay)}");
+                        }
+
                         continue;
                     }
 

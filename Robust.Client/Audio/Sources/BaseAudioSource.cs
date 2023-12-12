@@ -204,7 +204,7 @@ internal abstract class BaseAudioSource : IAudioSource
             {
                 AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
                 // Default to 0 to avoid spiking audio, just means it will be muted for a frame in this case.
-                priorOcclusion = _gain == 0 ? 0f : priorGain / _gain;
+                priorOcclusion = _gain == 0 ? 1f : priorGain / _gain;
             }
 
             _gain = value;

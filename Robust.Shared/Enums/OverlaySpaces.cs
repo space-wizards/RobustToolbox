@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Robust.Shared.Enums {
+namespace Robust.Shared.Enums
+{
     /// <summary>
     ///     Determines in which canvas layers an overlay gets drawn.
     /// </summary>
     [Flags]
-    public enum OverlaySpace : byte {
+    public enum OverlaySpace : ushort
+    {
         /// <summary>
         ///     Used for matching bit flags.
         /// </summary>
@@ -35,18 +37,23 @@ namespace Robust.Shared.Enums {
         WorldSpaceEntities = 1 << 4,
 
         /// <summary>
+        ///     Drawn after every grid.
+        /// </summary>
+        WorldSpaceGrids = 1 << 5,
+
+        /// <summary>
         ///     This overlay will be drawn beneath entities, lighting, and FOV; above grids.
         /// </summary>
-        WorldSpaceBelowEntities = 1 << 5,
+        WorldSpaceBelowEntities = 1 << 6,
 
         /// <summary>
         ///     This overlay will be drawn in screen coordinates behind the world.
         /// </summary>
-        ScreenSpaceBelowWorld = 1 << 6,
+        ScreenSpaceBelowWorld = 1 << 7,
 
         /// <summary>
         ///     Overlay will be rendered below grids, entities, and everything else. In world space.
         /// </summary>
-        WorldSpaceBelowWorld = 1 << 7
+        WorldSpaceBelowWorld = 1 << 8
     }
 }

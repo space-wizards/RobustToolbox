@@ -924,7 +924,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
     #region Saving
 
-    private MappingDataNode GetSaveData(EntityUid uid)
+    public MappingDataNode GetSaveData(EntityUid uid)
     {
         var ev = new BeforeSaveEvent(uid, Transform(uid).MapUid);
         RaiseLocalEvent(ev);

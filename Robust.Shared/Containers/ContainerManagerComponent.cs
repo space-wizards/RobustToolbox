@@ -25,72 +25,43 @@ namespace Robust.Shared.Containers
         [DataField("containers")]
         public Dictionary<string, BaseContainer> Containers = new();
 
+        // Requires a custom serializer + copier to get rid of. Good luck
         void ISerializationHooks.AfterDeserialization()
         {
-            // TODO custom type serializer
             foreach (var (id, container) in Containers)
             {
-                container.Manager = this;
-                container.Owner = Owner;
                 container.ID = id;
+                container.Owner = Owner;
+                container.Manager = this;
             }
         }
 
+        [Obsolete]
         public T MakeContainer<T>(EntityUid uid, string id)
             where T : BaseContainer
-        {
-            if (HasContainer(id))
-                throw new ArgumentException($"Container with specified ID already exists: '{id}'");
+            => _entMan.System<SharedContainerSystem>().MakeContainer<T>(uid, id, this);
 
-            var container = _dynFactory.CreateInstanceUnchecked<T>(typeof(T), inject: false);
-            container.Init(id, uid, this);
-            Containers[id] = container;
-            _entMan.Dirty(uid, this);
-            return container;
-        }
-
+        [Obsolete]
         public BaseContainer GetContainer(string id)
-        {
-            return Containers[id];
-        }
+            => _entMan.System<SharedContainerSystem>().GetContainer(Owner, id, this);
 
+        [Obsolete]
         public bool HasContainer(string id)
-        {
-            return Containers.ContainsKey(id);
-        }
+            => _entMan.System<SharedContainerSystem>().HasContainer(Owner, id, this);
 
+        [Obsolete]
         public bool TryGetContainer(string id, [NotNullWhen(true)] out BaseContainer? container)
-        {
-            var ret = Containers.TryGetValue(id, out var cont);
-            container = cont!;
-            return ret;
-        }
+            => _entMan.System<SharedContainerSystem>().TryGetContainer(Owner, id, out container, this);
 
+        [Obsolete]
         public bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out BaseContainer? container)
-        {
-            foreach (var contain in Containers.Values)
-            {
-                if (contain.Contains(entity))
-                {
-                    container = contain;
-                    return true;
-                }
-            }
+            => _entMan.System<SharedContainerSystem>().TryGetContainingContainer(Owner, entity, out container, this);
 
-            container = default;
-            return false;
-        }
-
+        [Obsolete]
         public bool ContainsEntity(EntityUid entity)
-        {
-            foreach (var container in Containers.Values)
-            {
-                if (container.Contains(entity)) return true;
-            }
+            => _entMan.System<SharedContainerSystem>().ContainsEntity(Owner, entity, this);
 
-            return false;
-        }
-
+        [Obsolete]
         public bool Remove(EntityUid toremove,
             TransformComponent? xform = null,
             MetaDataComponent? meta = null,
@@ -98,20 +69,11 @@ namespace Robust.Shared.Containers
             bool force = false,
             EntityCoordinates? destination = null,
             Angle? localRotation = null)
-        {
-            foreach (var containers in Containers.Values)
-            {
-                if (containers.Contains(toremove))
-                    return containers.Remove(toremove, _entMan, xform, meta, reparent, force, destination, localRotation);
-            }
+            => _entMan.System<SharedContainerSystem>().RemoveEntity(Owner, toremove, this, xform, meta, reparent, force, destination, localRotation);
 
-            return true; // If we don't contain the entity, it will always be removed
-        }
-
+        [Obsolete]
         public AllContainersEnumerable GetAllContainers()
-        {
-            return new(this);
-        }
+            => _entMan.System<SharedContainerSystem>().GetAllContainers(Owner, this);
 
         [Serializable, NetSerializable]
         internal sealed class ContainerManagerComponentState : ComponentState

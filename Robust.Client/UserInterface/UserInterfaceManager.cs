@@ -402,6 +402,14 @@ namespace Robust.Client.UserInterface
 
         public Color GetMainClearColor() => RootControl.ActualBgColor;
 
+        /*
+         * UI Sounds.
+         * Some notes:
+         * - Did not play click sound on all button presses because other stuff setting it shouldn't implicitly play the sound
+         * Which turns this into opt-in rather than opt-out for existing behaviour.
+         * This just means we have to manually fix buttons but that's okay.
+         */
+
         public void SetClickSound(IAudioSource? source)
         {
             if (!_configurationManager.GetCVar(CVars.InterfaceAudio))

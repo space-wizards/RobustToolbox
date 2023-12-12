@@ -340,7 +340,10 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseEntered();
 
-            UserInterfaceManager.HoverSound();
+            if (!Disabled)
+            {
+                UserInterfaceManager.HoverSound();
+            }
 
             var drawMode = DrawMode;
             _beingHovered = true;

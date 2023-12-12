@@ -243,7 +243,6 @@ namespace Robust.Client.UserInterface.Controls
                         OnPressed?.Invoke(buttonEventArgs);
                         OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
                         UnsetOtherGroupButtons();
-                        UserInterfaceManager.ClickSound();
                     }
                 }
                 else

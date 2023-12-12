@@ -141,7 +141,7 @@ namespace Robust.Client.Debugging
 
                 _owner._raysWithLifeTime.RemoveAll(r => r.LifeTime < _owner._gameTimer.RealTime);
             }
-        }}
+        }
 #endif
     }
 }

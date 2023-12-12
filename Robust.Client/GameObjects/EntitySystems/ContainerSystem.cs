@@ -59,7 +59,7 @@ namespace Robust.Client.GameObjects
             if (!RemoveExpectedEntity(GetNetEntity(uid), out var container))
                 return;
 
-            container.Insert(uid, EntityManager, transform: TransformQuery.GetComponent(uid), meta: MetaQuery.GetComponent(uid));
+            Insert((uid, TransformQuery.GetComponent(uid), MetaQuery.GetComponent(uid), null), container);
         }
 
         private void HandleComponentState(EntityUid uid, ContainerManagerComponent component, ref ComponentHandleState args)
@@ -81,17 +81,17 @@ namespace Robust.Client.GameObjects
 
                 foreach (var entity in container.ContainedEntities.ToArray())
                 {
-                    container.Remove(entity,
-                        EntityManager,
-                        TransformQuery.GetComponent(entity),
-                        MetaQuery.GetComponent(entity),
+                    Remove(
+                        (entity, TransformQuery.GetComponent(entity), MetaQuery.GetComponent(entity)),
+                        container,
                         force: true,
-                        reparent: false);
+                        reparent: false
+                    );
 
                     DebugTools.Assert(!container.Contains(entity));
                 }
 
-                container.Shutdown(EntityManager, _netMan);
+                ShutdownContainer(container);
                 toDelete.Add(id);
             }
 
@@ -108,7 +108,7 @@ namespace Robust.Client.GameObjects
                 {
                     var type = _serializer.FindSerializedType(typeof(BaseContainer), data.ContainerType);
                     container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type!, inject:false);
-                    container.Init(id, uid, component);
+                    InitContainer(container, (uid, component), id);
                     component.Containers.Add(id, container);
                 }
 
@@ -132,13 +132,12 @@ namespace Robust.Client.GameObjects
 
                 foreach (var entity in toRemove)
                 {
-                    container.Remove(
-                        entity,
-                        EntityManager,
-                        TransformQuery.GetComponent(entity),
-                        MetaQuery.GetComponent(entity),
+                    Remove(
+                        (entity, TransformQuery.GetComponent(entity), MetaQuery.GetComponent(entity)),
+                        container,
                         force: true,
-                        reparent: false);
+                        reparent: false
+                    );
 
                     DebugTools.Assert(!container.Contains(entity));
                 }
@@ -188,11 +187,12 @@ namespace Robust.Client.GameObjects
                         continue;
 
                     RemoveExpectedEntity(netEnt, out _);
-                    container.Insert(entity, EntityManager,
-                        TransformQuery.GetComponent(entity),
+                    Insert(
+                        (entity, TransformQuery.GetComponent(entity), MetaQuery.GetComponent(entity), null),
+                        container,
                         xform,
-                        MetaQuery.GetComponent(entity),
-                        force: true);
+                        force: true
+                    );
 
                     DebugTools.Assert(container.Contains(entity));
                 }
@@ -222,7 +222,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            container.Insert(message.Entity, EntityManager);
+            Insert(message.Entity, container);
         }
 
         public void AddExpectedEntity(NetEntity netEntity, BaseContainer container)

@@ -1456,7 +1456,7 @@ public abstract partial class SharedTransformSystem
             if (_container.IsEntityInContainer(targetUid)
                 && _container.TryGetContainingContainer(targetXform.ParentUid, targetUid, out var container,
                     skipExistCheck: true)
-                && container.Insert(entity, EntityManager, xform))
+                && _container.Insert((entity, xform, null, null), container))
             {
                 return;
             }
@@ -1498,7 +1498,7 @@ public abstract partial class SharedTransformSystem
             if (!container.Contains(target))
                 continue;
 
-            if (!container.Insert(entity, EntityManager, xform))
+            if (!_container.Insert((entity, xform, null, null), container))
                 PlaceNextTo((entity, xform), targetXform.ParentUid);
         }
     }

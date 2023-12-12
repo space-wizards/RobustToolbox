@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Client.Audio;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
@@ -13,6 +18,8 @@ namespace Robust.Client.UserInterface.Controls
     /// <seealso cref="CheckBox"/>
     public abstract class BaseButton : Control
     {
+        private IUserInterfaceManager _uiManager;
+
         private int _attemptingPress;
         private bool _beingHovered;
         private bool _disabled;
@@ -107,6 +114,20 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
+        /// Sets the button's press state and also handles click sounds.
+        /// </summary>
+        /// <returns></returns>
+        public void SetClickPressed(bool value)
+        {
+            Pressed = value;
+
+            if (Pressed != value)
+                return;
+
+            _uiManager.ClickSound(this);
+        }
+
+        /// <summary>
         ///     Whether key functions other than <see cref="EngineKeyFunctions.UIClick"/> trigger the button.
         /// </summary>
         public bool EnableAllKeybinds
@@ -188,6 +209,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected BaseButton()
         {
+            _uiManager = IoCManager.Resolve<IUserInterfaceManager>();
             MouseFilter = MouseFilterMode.Stop;
         }
 
@@ -220,10 +242,12 @@ namespace Robust.Client.UserInterface.Controls
                     // Can't un press a radio button directly.
                     if (Group == null || !Pressed)
                     {
-                        Pressed = !Pressed;
+                        SetClickPressed(!Pressed);
                         OnPressed?.Invoke(buttonEventArgs);
                         OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
                         UnsetOtherGroupButtons();
+                        IoCManager.Resolve<IAudioInternal>()
+                            .CreateAudioSource(IoCManager.Resolve<IResourceCache>().GetResource<AudioResource>("weh"));
                     }
                 }
                 else
@@ -261,7 +285,11 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (args.Function == EngineKeyFunctions.UIClick && ToggleMode && _attemptingPress == 1)
                     {
-                        Pressed = !Pressed;
+                        SetClickPressed(!Pressed);
+                    }
+                    else
+                    {
+                        _uiManager.ClickSound(this);
                     }
 
                     OnPressed?.Invoke(buttonEventArgs);

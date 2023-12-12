@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Robust.Client.Audio;
+using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -12,6 +14,7 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.UserInterface.CustomControls.DebugMonitorControls;
 using Robust.Client.UserInterface.Stylesheets;
 using Robust.Shared;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.Configuration;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
@@ -54,6 +57,8 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IRuntimeLog _runtime = default!;
+
+        private IAudioSource? _clickSource;
 
         /// <summary>
         /// Upper limit on the number of times that controls can be measured / arranged each tick before being deferred
@@ -398,6 +403,17 @@ namespace Robust.Client.UserInterface
         }
 
         public Color GetMainClearColor() => RootControl.ActualBgColor;
+
+        public void SetClickSound(IAudioSource? source)
+        {
+            _clickSource?.Dispose();
+            _clickSource = source;
+        }
+
+        public void ClickSound(Control control)
+        {
+            _clickSource?.Restart();
+        }
 
         ~UserInterfaceManager()
         {

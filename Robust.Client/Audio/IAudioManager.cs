@@ -1,3 +1,6 @@
+using Robust.Client.Audio.Sources;
+using Robust.Shared.Audio.Sources;
+
 namespace Robust.Client.Audio;
 
 /// <summary>
@@ -5,5 +8,7 @@ namespace Robust.Client.Audio;
 /// </summary>
 public interface IAudioManager
 {
+    IAudioSource? CreateAudioSource(AudioStream stream);
+
     void SetMasterGain(float gain);
 }

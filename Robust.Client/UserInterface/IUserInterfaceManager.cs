@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.Map;
 
 namespace Robust.Client.UserInterface
@@ -119,6 +121,13 @@ namespace Robust.Client.UserInterface
         void DeferAction(Action action);
 
         public event Action<Control>? OnKeyBindDown;
+
+        void SetClickSound(IAudioSource? source);
+
+        /// <summary>
+        /// Plays the UI click sound if relevant
+        /// </summary>
+        void ClickSound(Control control);
     }
 
     public readonly struct PostDrawUIRootEventArgs

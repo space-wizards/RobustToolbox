@@ -21,8 +21,6 @@ internal interface IAudioInternal : IAudioManager
     /// </summary>
     void FlushALDisposeQueues();
 
-    IAudioSource? CreateAudioSource(AudioStream stream);
-
     /// <summary>
     /// Returns a buffered audio source.
     /// </summary>

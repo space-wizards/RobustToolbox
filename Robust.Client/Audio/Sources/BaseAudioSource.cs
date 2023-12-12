@@ -157,7 +157,22 @@ internal abstract class BaseAudioSource : IAudioSource
     }
 
     /// <inheritdoc />
-    public float Pitch { get; set; }
+    public float Pitch
+    {
+        get
+        {
+            _checkDisposed();
+            AL.GetSource(SourceHandle, ALSourcef.Pitch, out var value);
+            Master._checkAlError();
+            return value;
+        }
+        set
+        {
+            _checkDisposed();
+            AL.Source(SourceHandle, ALSourcef.Pitch, value);
+            Master._checkAlError();
+        }
+    }
 
     /// <inheritdoc />
     public float Volume

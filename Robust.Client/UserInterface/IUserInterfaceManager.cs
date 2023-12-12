@@ -122,7 +122,6 @@ namespace Robust.Client.UserInterface
 
         public event Action<Control>? OnKeyBindDown;
 
-        // TODO: Move these to CVars
         void SetClickSound(IAudioSource? source);
 
         /// <summary>

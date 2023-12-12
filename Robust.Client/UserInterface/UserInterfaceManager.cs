@@ -404,6 +404,9 @@ namespace Robust.Client.UserInterface
 
         public void SetClickSound(IAudioSource? source)
         {
+            if (!_configurationManager.GetCVar(CVars.InterfaceAudio))
+                return;
+
             _clickSource?.Dispose();
             _clickSource = source;
         }
@@ -415,6 +418,9 @@ namespace Robust.Client.UserInterface
 
         public void SetHoverSound(IAudioSource? source)
         {
+            if (!_configurationManager.GetCVar(CVars.InterfaceAudio))
+                return;
+
             _hoverSource?.Dispose();
             _hoverSource = source;
         }

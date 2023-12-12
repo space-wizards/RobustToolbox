@@ -1173,6 +1173,11 @@ namespace Robust.Shared
         public static readonly CVarDef<string> InterfaceTheme =
             CVarDef.Create("interface.theme", "", CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        /// <summary>
+        /// Should UI have audio at all.
+        /// </summary>
+        public static readonly CVarDef<bool> InterfaceAudio =
+            CVarDef.Create("interface.audio", true, CVar.REPLICATED);
 
         /// <summary>
         ///Minimum resolution to start clamping autoscale to 1

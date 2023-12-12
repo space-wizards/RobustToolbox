@@ -18,8 +18,6 @@ namespace Robust.Client.UserInterface.Controls
     /// <seealso cref="CheckBox"/>
     public abstract class BaseButton : Control
     {
-        private IUserInterfaceManager _uiManager;
-
         private int _attemptingPress;
         private bool _beingHovered;
         private bool _disabled;
@@ -124,7 +122,7 @@ namespace Robust.Client.UserInterface.Controls
             if (Pressed != value)
                 return;
 
-            _uiManager.ClickSound();
+            UserInterfaceManager.ClickSound();
         }
 
         /// <summary>
@@ -209,7 +207,6 @@ namespace Robust.Client.UserInterface.Controls
 
         protected BaseButton()
         {
-            _uiManager = IoCManager.Resolve<IUserInterfaceManager>();
             MouseFilter = MouseFilterMode.Stop;
         }
 
@@ -246,8 +243,7 @@ namespace Robust.Client.UserInterface.Controls
                         OnPressed?.Invoke(buttonEventArgs);
                         OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
                         UnsetOtherGroupButtons();
-                        IoCManager.Resolve<IAudioInternal>()
-                            .CreateAudioSource(IoCManager.Resolve<IResourceCache>().GetResource<AudioResource>("weh"));
+                        UserInterfaceManager.ClickSound();
                     }
                 }
                 else
@@ -289,7 +285,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
                     else
                     {
-                        _uiManager.ClickSound();
+                        UserInterfaceManager.ClickSound();
                     }
 
                     OnPressed?.Invoke(buttonEventArgs);
@@ -344,7 +340,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseEntered();
 
-            _uiManager.HoverSound();
+            UserInterfaceManager.HoverSound();
 
             var drawMode = DrawMode;
             _beingHovered = true;

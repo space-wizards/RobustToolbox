@@ -32,6 +32,7 @@ namespace Robust.Shared.GameObjects
 
         private readonly Queue<MoveEvent> _gridMoves = new();
         private readonly Queue<MoveEvent> _otherMoves = new();
+        private HashSet<EntityUid> _entSet = new();
 
         public override void Initialize()
         {
@@ -69,7 +70,7 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         private void DeparentAllEntsOnTile(EntityUid gridId, Vector2i tileIndices)
         {
-            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !_mapManager.TryGetGrid(gridId, out var grid))
+            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !_gridQuery.TryGetComponent(gridId, out var grid))
                 return;
 
             if (!XformQuery.TryGetComponent(gridId, out var gridXform))
@@ -79,8 +80,11 @@ namespace Robust.Shared.GameObjects
                 return;
 
             var aabb = _lookup.GetLocalBounds(tileIndices, grid.TileSize);
+            _entSet.Clear();
+            _lookup.GetLocalEntitiesIntersecting(gridId, aabb, _entSet,
+                LookupFlags.Uncontained | LookupFlags.Approximate, lookup);
 
-            foreach (var entity in _lookup.GetEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
+            foreach (var entity in _entSet)
             {
                 if (!XformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
                     continue;

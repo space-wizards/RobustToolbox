@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Robust now uses **.NET 8**. Nyoom.
 
 ### New features
 
@@ -401,7 +401,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Most methods in ActorSystem have been moved to ISharedPlayerManager. 
+* Most methods in ActorSystem have been moved to ISharedPlayerManager.
 * Several actor/player related components and events have been moved to shared.
 
 ### New features

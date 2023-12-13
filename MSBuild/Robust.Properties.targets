@@ -3,7 +3,7 @@
   <!-- Import this at the end of any project files in Robust and Content. -->
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <Import Project="Robust.Custom.targets" Condition="Exists('Robust.Custom.targets')"/>

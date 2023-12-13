@@ -39,11 +39,10 @@ namespace Robust.Shared.Map
             in MetaDataSystem system)
         {
             system.SetEntityPaused(entity, paused, metaQuery.GetComponent(entity));
-            var childEnumerator = xformQuery.GetComponent(entity).ChildEnumerator;
-
-            while (childEnumerator.MoveNext(out var child))
+            var xform = xformQuery.GetComponent(entity);
+            foreach (var child in xform._children)
             {
-                RecursiveSetPaused(child.Value, paused, in xformQuery, in metaQuery, in system);
+                RecursiveSetPaused(child, paused, in xformQuery, in metaQuery, in system);
             }
         }
 

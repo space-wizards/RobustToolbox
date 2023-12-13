@@ -178,10 +178,9 @@ public sealed partial class EntityLookupSystem
         }
 
         toAdd.Add(uid);
-        var childEnumerator = xform.ChildEnumerator;
-        while (childEnumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            RecursiveAdd(child.Value, ref toAdd);
+            RecursiveAdd(child, ref toAdd);
         }
     }
 

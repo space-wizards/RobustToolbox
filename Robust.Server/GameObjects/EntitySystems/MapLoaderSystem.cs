@@ -1075,11 +1075,10 @@ public sealed class MapLoaderSystem : EntitySystem
             withoutUid.Add(uid);
         }
 
-        var enumerator = transformQuery.GetComponent(uid).ChildEnumerator;
-
-        while (enumerator.MoveNext(out var child))
+        var xform = transformQuery.GetComponent(uid);
+        foreach (var child in xform._children)
         {
-            RecursivePopulate(child.Value, entities, uidEntityMap, withoutUid, metaQuery, transformQuery, saveCompQuery);
+            RecursivePopulate(child, entities, uidEntityMap, withoutUid, metaQuery, transformQuery, saveCompQuery);
         }
     }
 

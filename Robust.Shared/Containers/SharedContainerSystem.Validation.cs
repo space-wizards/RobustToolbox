@@ -54,18 +54,17 @@ public abstract partial class SharedContainerSystem : EntitySystem
 
     private void ValidateChildren(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> physicsQuery)
     {
-        var enumerator = xform.ChildEnumerator;
-        while (enumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
             if (!xformQuery.TryGetComponent(child, out var childXform))
                 continue;
 
             DebugTools.Assert(!xform.Anchored,
-                $"Child of contained entity is anchored, Entity: {ToPrettyString(child.Value)}");
+                $"Child of contained entity is anchored, Entity: {ToPrettyString(child)}");
             DebugTools.Assert(!physicsQuery.TryGetComponent(child, out var physics) || (!physics.Awake && !physics.CanCollide),
-                $"Child of contained entity is can collide, Entity: {ToPrettyString(child.Value)}");
+                $"Child of contained entity is can collide, Entity: {ToPrettyString(child)}");
             DebugTools.Assert(xform.Broadphase == null,
-                $"Child of contained entity is has non-null broadphase, Entity: {ToPrettyString(child.Value)}");
+                $"Child of contained entity is has non-null broadphase, Entity: {ToPrettyString(child)}");
             ValidateChildren(childXform, xformQuery, physicsQuery);
         }
     }

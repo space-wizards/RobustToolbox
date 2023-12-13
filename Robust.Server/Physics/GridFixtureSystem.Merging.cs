@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.Physics;
@@ -47,6 +48,7 @@ public sealed partial class GridFixtureSystem
         if (!Resolve(gridBUid, ref gridB, ref xformB))
             return;
 
+        var sw = new Stopwatch();
         var tiles = new List<(Vector2i Indices, Tile Tile)>();
         var enumerator = _maps.GetAllTilesEnumerator(gridBUid, gridB);
 
@@ -59,6 +61,7 @@ public sealed partial class GridFixtureSystem
         _maps.SetTiles(gridAUid, gridA, tiles);
 
         enumerator = _maps.GetAllTilesEnumerator(gridBUid, gridB);
+        var rotationDiff = matrix.Rotation();
 
         while (enumerator.MoveNext(out var tileRef))
         {
@@ -69,7 +72,7 @@ public sealed partial class GridFixtureSystem
                 continue;
             }
 
-            var chunkLocalTile = tileRef.Value.GridIndices - chunk.Indices;
+            var chunkLocalTile = SharedMapSystem.GetChunkRelative(tileRef.Value.GridIndices, gridB.ChunkSize);
             var snapgrid = chunk.GetSnapGrid((ushort) chunkLocalTile.X, (ushort) chunkLocalTile.Y);
 
             if (snapgrid == null || snapgrid.Count == 0) continue;
@@ -80,7 +83,13 @@ public sealed partial class GridFixtureSystem
             {
                 var ent = snapgrid[j];
                 var xform = _xformQuery.GetComponent(ent);
-                _xformSystem.ReAnchor(ent, xform, gridB, gridA, offsetTile.Floored(), gridBUid, gridAUid, xformB, xformA);
+                _xformSystem.ReAnchor(ent, xform,
+                    gridB, gridA,
+                    tileRef.Value.GridIndices, offsetTile.Floored(),
+                    gridBUid, gridAUid,
+                    xformB, xformA,
+                    rotationDiff);
+
                 DebugTools.Assert(xform.Anchored);
                 DebugTools.Assert(xform.ParentUid == gridAUid);
             }
@@ -103,11 +112,15 @@ public sealed partial class GridFixtureSystem
                 if (entXform.ParentUid != gridBUid ||
                     !bounds.Contains(entXform.LocalPosition)) continue;
 
-                _xformSystem.SetParent(ent, entXform, gridAUid);
+                var newPos = matrix.Transform(entXform.LocalPosition);
+
+                _xformSystem.SetCoordinates(ent, entXform, new EntityCoordinates(gridAUid, newPos), entXform.LocalRotation + rotationDiff, oldParent: xformB, newParent: xformA);
             }
         }
 
         DebugTools.Assert(xformB.ChildCount == 0);
         Del(gridBUid);
+
+        Log.Debug($"Merged grids in {sw.Elapsed.TotalMilliseconds}ms");
     }
 }

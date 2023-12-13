@@ -23,14 +23,16 @@ public abstract partial class SharedTransformSystem
         TransformComponent xform,
         MapGridComponent oldGrid,
         MapGridComponent newGrid,
+        Vector2i oldTilePos,
         Vector2i tilePos,
         EntityUid oldGridUid,
         EntityUid newGridUid,
         TransformComponent oldGridXform,
-        TransformComponent newGridXform)
+        TransformComponent newGridXform,
+        Angle rotation)
     {
         // Bypass some of the expensive stuff in unanchoring / anchoring.
-        _map.RemoveFromSnapGridCell(oldGridUid, oldGrid, tilePos, uid);
+        _map.RemoveFromSnapGridCell(oldGridUid, oldGrid, oldTilePos, uid);
         _map.AddToSnapGridCell(newGridUid, newGrid, tilePos, uid);
         // TODO: Could do this re-parent way better.
         // Unfortunately we don't want any anchoring events to go out hence... this.
@@ -39,15 +41,19 @@ public abstract partial class SharedTransformSystem
         newGridXform._children.Add(uid);
         xform._parent = newGridUid;
         xform._anchored = true;
+        var oldPos = xform._localPosition;
+        var oldRot = xform._localRotation;
+        xform._localPosition = tilePos + newGrid.TileSizeHalfVector;
+        xform._localRotation += rotation;
 
         SetGridId(uid, xform, newGridUid, XformQuery);
         var reParent = new EntParentChangedMessage(uid, oldGridUid, xform.MapID, xform);
         RaiseLocalEvent(uid, ref reParent, true);
         // TODO: Ideally shouldn't need to call the moveevent
         var movEevee = new MoveEvent(uid,
-            new EntityCoordinates(oldGridUid, xform._localPosition),
+            new EntityCoordinates(oldGridUid, oldPos),
             new EntityCoordinates(newGridUid, xform._localPosition),
-            xform.LocalRotation,
+            oldRot,
             xform.LocalRotation,
             xform,
             _gameTiming.ApplyingState);

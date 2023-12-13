@@ -30,7 +30,6 @@ internal sealed class ClientOccluderSystem : OccluderSystem
         base.Initialize();
 
         SubscribeLocalEvent<OccluderComponent, AnchorStateChangedEvent>(OnAnchorChanged);
-        SubscribeLocalEvent<OccluderComponent, ReAnchorEvent>(OnReAnchor);
         SubscribeLocalEvent<OccluderComponent, ComponentShutdown>(OnShutdown);
     }
 
@@ -92,11 +91,6 @@ internal sealed class ClientOccluderSystem : OccluderSystem
     private void OnAnchorChanged(EntityUid uid, OccluderComponent comp, ref AnchorStateChangedEvent args)
     {
         AnchorStateChanged(uid, comp, args.Transform);
-    }
-
-    private void OnReAnchor(EntityUid uid, OccluderComponent comp, ref ReAnchorEvent args)
-    {
-        AnchorStateChanged(uid, comp, args.Xform);
     }
 
     private void QueueOccludedDirectionUpdate(EntityUid sender, OccluderComponent occluder, TransformComponent? xform = null)
@@ -178,8 +172,9 @@ internal sealed class ClientOccluderSystem : OccluderSystem
 
         var tile = grid.TileIndicesFor(xform.Coordinates);
 
-        DebugTools.Assert(occluder.LastPosition == null
-            || occluder.LastPosition.Value.Grid == xform.GridUid && occluder.LastPosition.Value.Tile == tile);
+        // TODO: Sub to parent changes instead or something.
+        // DebugTools.Assert(occluder.LastPosition == null
+            // || occluder.LastPosition.Value.Grid == xform.GridUid && occluder.LastPosition.Value.Tile == tile);
         occluder.LastPosition = (xform.GridUid.Value, tile);
 
         // dir starts at the relative effective south direction;

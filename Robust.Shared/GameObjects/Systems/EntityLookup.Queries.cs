@@ -617,7 +617,7 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
-    public void GetEntitiesIntersecting(EntityUid gridId, Vector2i gridIndices, HashSet<EntityUid> entities, float enlargement = TileEnlargementRadius, LookupFlags flags = DefaultFlags)
+    public void GetLocalEntitiesIntersecting(EntityUid gridId, Vector2i gridIndices, HashSet<EntityUid> entities, float enlargement = TileEnlargementRadius, LookupFlags flags = DefaultFlags)
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_gridQuery.TryGetComponent(gridId, out var grid))
@@ -633,7 +633,7 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetLocalEntitiesIntersecting(EntityUid gridId, Vector2i gridIndices, float enlargement = TileEnlargementRadius, LookupFlags flags = DefaultFlags)
     {
         var set = new HashSet<EntityUid>();
-        GetEntitiesIntersecting(gridId, gridIndices, set, enlargement, flags);
+        GetLocalEntitiesIntersecting(gridId, gridIndices, set, enlargement, flags);
         return set;
     }
 

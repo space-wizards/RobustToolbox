@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -14,8 +15,8 @@ public sealed partial class GridFixtureSystem
     /// </summary>
     /// <param name="offset">Origin of GridB relative to GridA</param>
     public void Merge(
-        EntityUid gridUidA,
-        EntityUid gridUidB,
+        EntityUid gridAUid,
+        EntityUid gridBUid,
         Vector2i offset,
         Angle rotation,
         MapGridComponent? gridA = null,
@@ -23,29 +24,47 @@ public sealed partial class GridFixtureSystem
         TransformComponent? xformA = null,
         TransformComponent? xformB = null)
     {
-        if (!Resolve(gridUidA, ref gridA, ref xformA))
+        var matrix = Matrix3.CreateTransform(offset, rotation);
+        Merge(gridAUid, gridBUid, matrix, gridA, gridB, xformA, xformB);
+    }
+
+    /// <summary>
+    /// Merges GridB into GridA.
+    /// </summary>
+    /// <param name="offset">Origin of GridB relative to GridA</param>
+    public void Merge(
+        EntityUid gridAUid,
+        EntityUid gridBUid,
+        Matrix3 matrix,
+        MapGridComponent? gridA = null,
+        MapGridComponent? gridB = null,
+        TransformComponent? xformA = null,
+        TransformComponent? xformB = null)
+    {
+        if (!Resolve(gridAUid, ref gridA, ref xformA))
             return;
 
-        if (!Resolve(gridUidB, ref gridB, ref xformB))
+        if (!Resolve(gridBUid, ref gridB, ref xformB))
             return;
 
         var tiles = new List<(Vector2i Indices, Tile Tile)>();
-        var enumerator = gridB.GetAllTilesEnumerator();
+        var enumerator = _maps.GetAllTilesEnumerator(gridBUid, gridB);
 
         while (enumerator.MoveNext(out var tileRef))
         {
-            var offsetTile = tileRef.Value.GridIndices.Rotate(rotation);
-            offsetTile += offset;
-            tiles.Add((offsetTile, tileRef.Value.Tile));
+            var offsetTile = matrix.Transform(new Vector2(tileRef.Value.GridIndices.X, tileRef.Value.GridIndices.Y) + gridA.TileSizeHalfVector);
+            tiles.Add((offsetTile.Floored(), tileRef.Value.Tile));
         }
 
-        gridA.SetTiles(tiles);
+        _maps.SetTiles(gridAUid, gridA, tiles);
 
-        enumerator = gridB.GetAllTilesEnumerator();
+        enumerator = _maps.GetAllTilesEnumerator(gridBUid, gridB);
 
         while (enumerator.MoveNext(out var tileRef))
         {
-            if (!gridB.TryGetChunk(tileRef.Value.GridIndices, out var chunk))
+            var chunkOrigin = SharedMapSystem.GetChunkIndices(tileRef.Value.GridIndices, gridB.ChunkSize);
+
+            if (!_maps.TryGetChunk(gridBUid, gridB, chunkOrigin, out var chunk))
             {
                 continue;
             }
@@ -55,39 +74,40 @@ public sealed partial class GridFixtureSystem
 
             if (snapgrid == null || snapgrid.Count == 0) continue;
 
-            var offsetTile = tileRef.Value.GridIndices.Rotate(rotation) + offset;
+            var offsetTile = matrix.Transform(new Vector2(tileRef.Value.GridIndices.X, tileRef.Value.GridIndices.Y) + gridA.TileSizeHalfVector);
 
             for (var j = snapgrid.Count - 1; j >= 0; j--)
             {
                 var ent = snapgrid[j];
                 var xform = _xformQuery.GetComponent(ent);
-                _xformSystem.ReAnchor(ent, xform, gridB, gridA, offsetTile, gridUidB, gridUidA, xformB, xformA);
+                _xformSystem.ReAnchor(ent, xform, gridB, gridA, offsetTile.Floored(), gridBUid, gridAUid, xformB, xformA);
                 DebugTools.Assert(xform.Anchored);
+                DebugTools.Assert(xform.ParentUid == gridAUid);
             }
         }
 
-        enumerator = gridB.GetAllTilesEnumerator();
+        enumerator = _maps.GetAllTilesEnumerator(gridBUid, gridB);
 
         while (enumerator.MoveNext(out var tileRef))
         {
             var bounds = _lookup.GetLocalBounds(tileRef.Value.GridIndices, gridB.TileSize);
 
             _entSet.Clear();
-            _lookup.GetEntitiesIntersecting(gridUidB, tileRef.Value.GridIndices, _entSet);
+            _lookup.GetLocalEntitiesIntersecting(gridBUid, bounds, _entSet);
 
             foreach (var ent in _entSet)
             {
                 // Consider centre of entity position maybe?
                 var entXform = _xformQuery.GetComponent(ent);
 
-                if (entXform.ParentUid != gridUidB ||
+                if (entXform.ParentUid != gridBUid ||
                     !bounds.Contains(entXform.LocalPosition)) continue;
 
-                _xformSystem.SetParent(ent, entXform, gridUidA);
+                _xformSystem.SetParent(ent, entXform, gridAUid);
             }
         }
 
         DebugTools.Assert(xformB.ChildCount == 0);
-        Del(gridUidB);
+        Del(gridBUid);
     }
 }

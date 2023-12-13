@@ -20,10 +20,17 @@ public sealed class MergeGridsCommand : IConsoleCommand
             return;
         }
 
-        if (!EntityUid.TryParse(args[0], out var gridUidA) ||
-            !EntityUid.TryParse(args[1], out var gridUidB) ||
-            !_entManager.TryGetComponent<MapGridComponent>(gridUidA, out var gridA) ||
-            !_entManager.TryGetComponent<MapGridComponent>(gridUidB, out var gridB))
+        if (!NetEntity.TryParse(args[0], out var gridANet) ||
+            !NetEntity.TryParse(args[1], out var gridBNet))
+        {
+            return;
+        }
+
+        var gridAUid = _entManager.GetEntity(gridANet);
+        var gridBUid = _entManager.GetEntity(gridBNet);
+
+        if (!_entManager.TryGetComponent<MapGridComponent>(gridAUid, out var gridA) ||
+            !_entManager.TryGetComponent<MapGridComponent>(gridBUid, out var gridB))
         {
             return;
         }
@@ -43,6 +50,6 @@ public sealed class MergeGridsCommand : IConsoleCommand
 
         var offset = new Vector2i(x, y);
         var fixtureSystem = _entManager.System<GridFixtureSystem>();
-        fixtureSystem.Merge(gridUidA, gridUidB, offset, rotation, gridA: gridA, gridB: gridB);
+        fixtureSystem.Merge(gridAUid, gridBUid, offset, rotation, gridA: gridA, gridB: gridB);
     }
 }

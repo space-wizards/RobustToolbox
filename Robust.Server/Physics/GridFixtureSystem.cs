@@ -29,6 +29,7 @@ namespace Robust.Server.Physics
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IConGroupController _conGroup = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedMapSystem _maps = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
@@ -48,12 +49,16 @@ namespace Robust.Server.Physics
 
         private HashSet<EntityUid> _entSet = new();
 
+        private EntityQuery<MapGridComponent> _gridQuery;
+        private EntityQuery<PhysicsComponent> _bodyQuery;
         private EntityQuery<TransformComponent> _xformQuery;
 
         public override void Initialize()
         {
             base.Initialize();
 
+            _gridQuery = GetEntityQuery<MapGridComponent>();
+            _bodyQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
@@ -248,10 +253,10 @@ namespace Robust.Server.Physics
                     x.Sum(o => o.Indices.Count)
                         .CompareTo(y.Sum(o => o.Indices.Count)));
 
-                var oldGridXform = xformQuery.GetComponent(oldGridUid);
-                var (gridPos, gridRot) = _xformSystem.GetWorldPositionRotation(oldGridXform, xformQuery);
-                var mapBody = bodyQuery.GetComponent(oldGridUid);
-                var oldGridComp = gridQuery.GetComponent(oldGridUid);
+                var oldGridXform = _xformQuery.GetComponent(oldGridUid);
+                var (gridPos, gridRot) = _xformSystem.GetWorldPositionRotation(oldGridXform);
+                var mapBody = _bodyQuery.GetComponent(oldGridUid);
+                var oldGridComp = _gridQuery.GetComponent(oldGridUid);
                 var newGrids = new EntityUid[grids.Count - 1];
                 var mapId = oldGridXform.MapID;
 
@@ -260,17 +265,17 @@ namespace Robust.Server.Physics
                     var group = grids[i];
                     var newGrid = _mapManager.CreateGridEntity(mapId);
                     var newGridUid = newGrid.Owner;
-                    var newGridXform = xformQuery.GetComponent(newGridUid);
+                    var newGridXform = _xformQuery.GetComponent(newGridUid);
                     newGrids[i] = newGridUid;
 
                     // Keep same origin / velocity etc; this makes updating a lot faster and easier.
                     _xformSystem.SetWorldPosition(newGridXform, gridPos);
-                    _xformSystem.SetWorldPositionRotation(newGridXform, gridPos, gridRot);
-                    var splitBody = bodyQuery.GetComponent(newGridUid);
+                    _xformSystem.SetWorldPositionRotation(newGridUid, gridPos, gridRot, newGridXform);
+                    var splitBody = _bodyQuery.GetComponent(newGridUid);
                     _physics.SetLinearVelocity(newGridUid, mapBody.LinearVelocity, body: splitBody);
                     _physics.SetAngularVelocity(newGridUid, mapBody.AngularVelocity, body: splitBody);
 
-                    var gridComp = gridQuery.GetComponent(newGridUid);
+                    var gridComp = _gridQuery.GetComponent(newGridUid);
                     var tileData = new List<(Vector2i GridIndices, Tile Tile)>(group.Sum(o => o.Indices.Count));
 
                     // Gather all tiles up front and set once to minimise fixture change events
@@ -304,7 +309,7 @@ namespace Robust.Server.Physics
                             for (var j = snapgrid.Count - 1; j >= 0; j--)
                             {
                                 var ent = snapgrid[j];
-                                var xform = xformQuery.GetComponent(ent);
+                                var xform = _xformQuery.GetComponent(ent);
                                 _xformSystem.ReAnchor(ent, xform, oldGridComp, gridComp, tilePos, oldGridUid, newGridUid, oldGridXform, newGridXform);
                                 DebugTools.Assert(xform.Anchored);
                             }
@@ -319,18 +324,17 @@ namespace Robust.Server.Physics
                             var bounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
 
                             _entSet.Clear();
-                            _lookup.GetEntitiesIntersecting(oldGridUid, tilePos, 0f, _lookup,
-                                LookupFlags.Dynamic | LookupFlags.Sundries);
+                            _lookup.GetEntitiesIntersecting(oldGridUid, tilePos, _entSet, 0f, LookupFlags.Dynamic | LookupFlags.Sundries);
 
                             foreach (var ent in _entSet)
                             {
                                 // Consider centre of entity position maybe?
-                                var entXform = xformQuery.GetComponent(ent);
+                                var entXform = _xformQuery.GetComponent(ent);
 
                                 if (entXform.ParentUid != oldGridUid ||
                                     !bounds.Contains(entXform.LocalPosition)) continue;
 
-                                _xformSystem.SetParent(ent, entXform, newGridUid, xformQuery, newGridXform);
+                                _xformSystem.SetParent(ent, entXform, newGridUid, _xformQuery, newGridXform);
                             }
                         }
 

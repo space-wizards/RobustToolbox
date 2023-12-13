@@ -180,6 +180,17 @@ public abstract partial class SharedTransformSystem
         return ContainsEntity(parent, (child.Comp.ParentUid, parentXform));
     }
 
+    /// <summary>
+    /// Checks whether the given component is the parent of the entity without having to fetch the child's
+    /// transform component.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsParentOf(TransformComponent parent, EntityUid child)
+    {
+        return parent._children.Contains(child);
+    }
+
+
     #endregion
 
     #region Component Lifetime

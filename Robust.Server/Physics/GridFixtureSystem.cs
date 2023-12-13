@@ -35,6 +35,8 @@ namespace Robust.Server.Physics
         private ISawmill _logger = default!;
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, ChunkNodeGroup>> _nodes = new();
 
+        private HashSet<EntityUid> _entSet = new();
+
         /// <summary>
         /// Sessions to receive nodes for debug purposes.
         /// </summary>
@@ -316,8 +318,10 @@ namespace Robust.Server.Physics
                         {
                             var tilePos = offset + tile;
                             var bounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
+                            _entSet.Clear();
+                            _lookup.GetEntitiesIntersecting(oldGridUid, tilePos, _entSet, 0f, LookupFlags.Dynamic | LookupFlags.Sundries);
 
-                            foreach (var ent in _lookup.GetEntitiesIntersecting(oldGridUid, tilePos, 0f, LookupFlags.Dynamic | LookupFlags.Sundries))
+                            foreach (var ent in _entSet)
                             {
                                 // Consider centre of entity position maybe?
                                 var entXform = xformQuery.GetComponent(ent);

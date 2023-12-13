@@ -1,10 +1,9 @@
 using System;
 using System.Buffers;
-using System.Diagnostics;
 using System.IO;
 using Lidgren.Network;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -38,29 +37,30 @@ namespace Robust.Shared.Network.Messages
             // State is compressed.
             if (compressedLength > 0)
             {
-                var stream = buffer.ReadAlignedMemory(compressedLength);
+                var stream = RobustMemoryManager.GetMemoryStream(compressedLength);
+                buffer.ReadAlignedMemory(stream, compressedLength);
+
                 using var decompressStream = new ZStdDecompressStream(stream);
-                var decompressedStream = new MemoryStream(uncompressedLength);
-                decompressStream.CopyTo(decompressedStream, uncompressedLength);
-                decompressedStream.Position = 0;
-                finalStream = decompressedStream;
+                finalStream = RobustMemoryManager.GetMemoryStream(uncompressedLength);
+                finalStream.SetLength(uncompressedLength);
+                decompressStream.CopyTo(finalStream, uncompressedLength);
+                finalStream.Position = 0;
             }
             // State is uncompressed.
             else
             {
-                var stream = buffer.ReadAlignedMemory(uncompressedLength);
-                finalStream = stream;
+                finalStream = RobustMemoryManager.GetMemoryStream(uncompressedLength);
+                buffer.ReadAlignedMemory(finalStream, uncompressedLength);
             }
 
             serializer.DeserializeDirect(finalStream, out State);
-            finalStream.Dispose();
-
             State.PayloadSize = uncompressedLength;
+            finalStream.Dispose();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
-            var stateStream = new MemoryStream();
+            using var stateStream = RobustMemoryManager.GetMemoryStream();
             serializer.SerializeDirect(stateStream, State);
             buffer.WriteVariableInt32((int)stateStream.Length);
 
@@ -87,13 +87,14 @@ namespace Robust.Shared.Network.Messages
             {
                 // 0 means that the state isn't compressed.
                 buffer.WriteVariableInt32(0);
-
                 buffer.Write(stateStream.AsSpan());
             }
 
             _hasWritten = true;
             MsgSize = buffer.LengthBytes;
         }
+
+        public bool ForceSendReliably;
 
         /// <summary>
         ///     Whether this state message is large enough to warrant being sent reliably.
@@ -103,7 +104,7 @@ namespace Robust.Shared.Network.Messages
         public bool ShouldSendReliably()
         {
             DebugTools.Assert(_hasWritten, "Attempted to determine sending method before determining packet size.");
-            return MsgSize > ReliableThreshold;
+            return ForceSendReliably || MsgSize > ReliableThreshold;
         }
 
         public override NetDeliveryMethod DeliveryMethod

@@ -243,11 +243,13 @@ internal partial class UserInterfaceManager
                 }
                 else if (typeDefinition == typeof(IOnSystemLoaded<>))
                 {
+                    DebugTools.Assert(!genericType.IsAbstract, "IOnSystemLoaded<> does not support abstract shared systems.");
                     var loadedCaller = EmitSystemChangedCaller(controllerType, genericType, true);
                     _onSystemLoadedDelegates.GetOrNew(genericType).Add(controller, loadedCaller);
                 }
                 else if (typeDefinition == typeof(IOnSystemUnloaded<>))
                 {
+                    DebugTools.Assert(!genericType.IsAbstract, "IOnSystemLoaded<> does not support abstract shared systems.");
                     var unloadedCaller = EmitSystemChangedCaller(controllerType, genericType, false);
                     _onSystemUnloadedDelegates.GetOrNew(genericType).Add(controller, unloadedCaller);
                 }
@@ -283,20 +285,30 @@ internal partial class UserInterfaceManager
     // TODO hud refactor BEFORE MERGE cleanup subscriptions for all implementations when switching out of gameplay state
     private void OnStateChanged(StateChangedEventArgs args)
     {
-        if (_onStateExitedDelegates.TryGetValue(args.OldState.GetType(), out var exitedDelegates))
+        Type? oldType = args.OldState.GetType();
+        while (oldType != null)
         {
-            foreach (var (controller, caller) in exitedDelegates)
+            if (_onStateExitedDelegates.TryGetValue(oldType, out var exitedDelegates))
             {
-                caller(controller, args.OldState);
+                foreach (var (controller, caller) in exitedDelegates)
+                {
+                    caller(controller, args.OldState);
+                }
             }
+            oldType = oldType.BaseType;
         }
 
-        if (_onStateEnteredDelegates.TryGetValue(args.NewState.GetType(), out var enteredDelegates))
+        Type? newType = args.NewState.GetType();
+        while (newType != null)
         {
-            foreach (var (controller, caller) in enteredDelegates)
+            if (_onStateEnteredDelegates.TryGetValue(newType, out var enteredDelegates))
             {
-                caller(controller, args.NewState);
+                foreach (var (controller, caller) in enteredDelegates)
+                {
+                    caller(controller, args.NewState);
+                }
             }
+            newType = newType.BaseType;
         }
     }
 

@@ -1,11 +1,11 @@
+using System.Numerics;
+using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
-using System.Threading.Tasks;
-using Robust.Shared.Map.Components;
 
 namespace Robust.UnitTesting.Shared.Physics
 {
@@ -22,9 +22,10 @@ namespace Robust.UnitTesting.Shared.Physics
     bodyType: Dynamic
   - type: Fixtures
     fixtures:
-    - shape:
-        !type:PhysShapeCircle
-        radius: 0.35
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
   - type: CollisionWake
 ";
 
@@ -42,7 +43,7 @@ namespace Robust.UnitTesting.Shared.Physics
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
 
-            MapGridComponent grid = default!;
+            Entity<MapGridComponent> grid = default!;
             MapId mapId = default!;
             PhysicsComponent entityOnePhysics = default!;
             TransformComponent xform = default!;
@@ -51,15 +52,15 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
-                grid = mapManager.CreateGrid(mapId);
-                grid.SetTile(Vector2i.Zero, new Tile(1));
+                grid = mapManager.CreateGridEntity(mapId);
+                grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
 
                 var entityOne = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));
                 entityOnePhysics = entManager.GetComponent<PhysicsComponent>(entityOne);
                 xform = entManager.GetComponent<TransformComponent>(entityOne);
                 Assert.That(xform.ParentUid == mapManager.GetMapEntityId(mapId));
 
-                var entityTwo = entManager.SpawnEntity("CollisionWakeTestItem", new EntityCoordinates(grid.Owner, new Vector2(0.5f, 0.5f)));
+                var entityTwo = entManager.SpawnEntity("CollisionWakeTestItem", new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
                 entityTwoPhysics = entManager.GetComponent<PhysicsComponent>(entityTwo);
                 Assert.That(entManager.GetComponent<TransformComponent>(entityTwo).ParentUid == grid.Owner);
 
@@ -74,7 +75,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(entityOnePhysics.CanCollide, Is.EqualTo(true));
 
                 xform.LocalPosition = new Vector2(0.5f, 0.5f);
-                xform.AttachParent(grid.Owner);
+                xform.AttachParent(grid);
 
                 // Entity 2 should immediately not be collidable on spawn
                 Assert.That(entityTwoPhysics.Awake, Is.EqualTo(false));

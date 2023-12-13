@@ -3,8 +3,11 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 
@@ -52,11 +55,21 @@ namespace Robust.Shared
             CVarDef.Create("net.receivebuffersize", 131071, CVar.ARCHIVE);
 
         /// <summary>
+        /// Size of the pool for Lidgren's array buffers to send messages.
+        /// Set to 0 to disable pooling; max is 8192.
+        /// </summary>
+        /// <remarks>
+        /// Higher just means more potentially wasted space and slower pool retrieval.
+        /// </remarks>
+        public static readonly CVarDef<int> NetPoolSize =
+            CVarDef.Create("net.pool_size", 512, CVar.CLIENT | CVar.SERVER);
+
+        /// <summary>
         /// Maximum UDP payload size to send.
         /// </summary>
         /// <seealso cref="NetMtuExpand"/>
         public static readonly CVarDef<int> NetMtu =
-            CVarDef.Create("net.mtu", NetPeerConfiguration.kDefaultMTU, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu", 1000, CVar.ARCHIVE);
 
         /// <summary>
         /// If set, automatically try to detect MTU above <see cref="NetMtu"/>.
@@ -118,6 +131,13 @@ namespace Robust.Shared
             CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// The maximum size of the game state buffer. If this is exceeded the client will request a full game state.
+        /// Values less than <see cref="GameStateProcessor.MinimumMaxBufferSize"/> will be ignored.
+        /// </summary>
+        public static readonly CVarDef<int> NetMaxBufferSize =
+            CVarDef.Create("net.max_buffer_size", 512, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// Enable verbose game state/networking logging.
         /// </summary>
         public static readonly CVarDef<bool> NetLogging =
@@ -171,6 +191,13 @@ namespace Robust.Shared
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// Maximum allowed delay between the current tick and a client's last acknowledged tick before we send the
+        /// next game state reliably and simply force update the acked tick,
+        /// </summary>
+        public static readonly CVarDef<int> NetForceAckThreshold =
+            CVarDef.Create("net.force_ack_threshold", 60, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
         /// This limits the number of new entities that can be sent to a client in a single game state. This exists to
         /// avoid stuttering on the client when it has to spawn a bunch of entities in a single tick. If ever entity
         /// spawning isn't hot garbage, this can be increased.
@@ -193,10 +220,10 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_exit_budget", 75, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
-        /// ZSTD compression level to use when compressing game states.
+        /// ZSTD compression level to use when compressing game states. Used by both networking and replays.
         /// </summary>
         public static readonly CVarDef<int> NetPVSCompressLevel =
-            CVarDef.Create("net.pvs_compress_level", 3, CVar.SERVERONLY);
+            CVarDef.Create("net.pvs_compress_level", 3, CVar.ARCHIVE);
 
         /// <summary>
         /// Log late input messages from clients.
@@ -281,6 +308,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
 
+        /// <summary>
+        /// When using Happy Eyeballs to try both IPv6 over IPv4, the delay that IPv4 gets to get less priority.
+        /// </summary>
+        public static readonly CVarDef<float> NetHappyEyeballsDelay =
+            CVarDef.Create("net.happy_eyeballs_delay", 0.025f, CVar.CLIENTONLY);
+
         /**
          * SUS
          */
@@ -316,6 +349,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> SysGCCollectStart =
             CVarDef.Create("sys.gc_collect_start", true);
+
+        /// <summary>
+        /// Use precise sleeping methods in the game loop.
+        /// </summary>
+        public static readonly CVarDef<bool> SysPreciseSleep =
+            CVarDef.Create("sys.precise_sleep", true);
 
         /*
          * METRICS
@@ -476,51 +515,52 @@ namespace Robust.Shared
         /// Engine version that launcher needs to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildEngineVersion =
-            CVarDef.Create("build.engine_version", "", CVar.SERVERONLY);
+            CVarDef.Create("build.engine_version",
+                typeof(CVars).Assembly.GetName().Version?.ToString(3) ?? String.Empty);
 
         /// <summary>
         /// Fork ID, as a hint to the launcher to manage local files.
         /// This can be anything, it does not need a strict format.
         /// </summary>
         public static readonly CVarDef<string> BuildForkId =
-            CVarDef.Create("build.fork_id", "", CVar.SERVERONLY);
+            CVarDef.Create("build.fork_id", "");
 
         /// <summary>
         /// Version string, as a hint to the launcher to manage local files.
         /// This can be anything, it does not need a strict format.
         /// </summary>
         public static readonly CVarDef<string> BuildVersion =
-            CVarDef.Create("build.version", "", CVar.SERVERONLY);
+            CVarDef.Create("build.version", "");
 
         /// <summary>
         /// Content pack the launcher should download to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildDownloadUrl =
-            CVarDef.Create("build.download_url", string.Empty, CVar.SERVERONLY);
+            CVarDef.Create("build.download_url", string.Empty);
 
         /// <summary>
         /// URL of the content manifest the launcher should download to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildManifestUrl =
-            CVarDef.Create("build.manifest_url", string.Empty, CVar.SERVERONLY);
+            CVarDef.Create("build.manifest_url", string.Empty);
 
         /// <summary>
         /// URL at which the launcher can download the manifest game files.
         /// </summary>
         public static readonly CVarDef<string> BuildManifestDownloadUrl =
-            CVarDef.Create("build.manifest_download_url", string.Empty, CVar.SERVERONLY);
+            CVarDef.Create("build.manifest_download_url", string.Empty);
 
         /// <summary>
         /// SHA-256 hash of the content pack hosted at <c>build.download_url</c>
         /// </summary>
         public static readonly CVarDef<string> BuildHash =
-            CVarDef.Create("build.hash", "", CVar.SERVERONLY);
+            CVarDef.Create("build.hash", "");
 
         /// <summary>
         /// SHA-256 hash of the manifest hosted at <c>build.manifest_url</c>
         /// </summary>
         public static readonly CVarDef<string> BuildManifestHash =
-            CVarDef.Create("build.manifest_hash", "", CVar.SERVERONLY);
+            CVarDef.Create("build.manifest_hash", "");
 
         /*
          * WATCHDOG
@@ -629,7 +669,50 @@ namespace Robust.Shared
         /// outside of our viewport.
         /// </remarks>
         public static readonly CVarDef<float> MaxLightRadius =
-            CVarDef.Create("light.max_radius", 32.1f, CVar.CLIENTONLY);
+            CVarDef.Create("light.max_radius", 32.1f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum number of lights that the client will draw.
+        /// </summary>
+        public static readonly CVarDef<int> MaxLightCount =
+            CVarDef.Create("light.max_light_count", 2048, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum number of occluders that the client will draw. Values below 1024 have no effect.
+        /// </summary>
+        public static readonly CVarDef<int> MaxOccluderCount =
+            CVarDef.Create("light.max_occluder_count", 2048, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Scale used to modify the horizontal and vertical resolution of lighting framebuffers,
+        /// relative to the viewport framebuffer size.
+        /// </summary>
+        public static readonly CVarDef<float> LightResolutionScale =
+            CVarDef.Create("light.resolution_scale", 0.5f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum amount of shadow-casting lights that can be rendered in a single viewport at once.
+        /// </summary>
+        public static readonly CVarDef<int> MaxShadowcastingLights =
+            CVarDef.Create("light.max_shadowcasting_lights", 128, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Whether to give shadows a soft edge when rendering.
+        /// </summary>
+        public static readonly CVarDef<bool> LightSoftShadows =
+            CVarDef.Create("light.soft_shadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Apply a gaussian blur to the final lighting framebuffer to smoothen it out a little.
+        /// </summary>
+        public static readonly CVarDef<bool> LightBlur=
+            CVarDef.Create("light.blur", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Factor by which to blur the lighting framebuffer under <c>light.blur</c>.
+        /// </summary>
+        public static readonly CVarDef<float> LightBlurFactor =
+            CVarDef.Create("light.blur_factor", 0.001f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * Lookup
@@ -717,6 +800,9 @@ namespace Robust.Shared
         public static readonly CVarDef<double> RenderSpriteDirectionBias =
             CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);
 
+        public static readonly CVarDef<string> RenderFOVColor =
+            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.ARCHIVE | CVar.CLIENTONLY);
+
         /*
          * DISPLAY
          */
@@ -744,37 +830,6 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> DisplayHeight =
             CVarDef.Create("display.height", 720, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Factor by which to divide the horizontal and vertical resolution of lighting framebuffers,
-        /// relative to the viewport framebuffer size.
-        /// </summary>
-        public static readonly CVarDef<int> DisplayLightMapDivider =
-            CVarDef.Create("display.lightmapdivider", 2, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        /// <summary>
-        /// Maximum amount of lights that can be rendered in a single viewport at once.
-        /// </summary>
-        public static readonly CVarDef<int> DisplayMaxLightsPerScene =
-            CVarDef.Create("display.maxlightsperscene", 128, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        /// <summary>
-        /// Whether to give shadows a soft edge when rendering.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplaySoftShadows =
-            CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        /// <summary>
-        /// Apply a gaussian blur to the final lighting framebuffer to smoothen it out a little.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplayBlurLight =
-            CVarDef.Create("display.blur_light", true, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        /// <summary>
-        /// Factor by which to blur the lighting framebuffer under <c>display.blur_light</c>.
-        /// </summary>
-        public static readonly CVarDef<float> DisplayBlurLightFactor =
-            CVarDef.Create("display.blur_light_factor", 0.001f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// UI scale for all UI controls. If zero, this value is automatically calculated from the OS.
@@ -952,12 +1007,18 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayWin11ImmersiveDarkMode =
             CVarDef.Create("display.win11_immersive_dark_mode", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// If true, run the windowing system in another thread from the game thread.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayThreadWindowApi =
+            CVarDef.Create("display.thread_window_api", false, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */
 
         public static readonly CVarDef<int> AudioAttenuation =
-            CVarDef.Create("audio.attenuation", (int) Attenuation.Default, CVar.REPLICATED | CVar.ARCHIVE);
+            CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Audio device to try to output audio to by default.
@@ -969,7 +1030,16 @@ namespace Robust.Shared
         /// Master volume for audio output.
         /// </summary>
         public static readonly CVarDef<float> AudioMasterVolume =
-            CVarDef.Create("audio.mastervolume", 1.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("audio.mastervolume", 0.50f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Maximum raycast distance for audio occlusion.
+        /// </summary>
+        public static readonly CVarDef<float> AudioRaycastLength =
+            CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        public static readonly CVarDef<float> AudioZOffset =
+            CVarDef.Create("audio.z_offset", -5f, CVar.REPLICATED);
 
         /*
          * PLAYER
@@ -1024,7 +1094,7 @@ namespace Robust.Shared
             CVarDef.Create("physics.angsleeptol", 0.3f / 180.0f * MathF.PI);
 
         public static readonly CVarDef<float> LinearSleepTolerance =
-            CVarDef.Create("physics.linsleeptol", 0.1f);
+            CVarDef.Create("physics.linsleeptol", 0.01f);
 
         public static readonly CVarDef<bool> SleepAllowed =
             CVarDef.Create("physics.sleepallowed", true);
@@ -1063,18 +1133,6 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> Baumgarte =
             CVarDef.Create("physics.baumgarte", 0.2f);
-
-        /// <summary>
-        /// If true, it will run a GiftWrap convex hull on all polygon inputs.
-        /// This makes for a more stable engine when given random input,
-        /// but if speed of the creation of polygons are more important,
-        /// you might want to set this to false.
-        /// </summary>
-        public static readonly CVarDef<bool> ConvexHullPolygons =
-            CVarDef.Create("physics.convexhullpolygons", true);
-
-        public static readonly CVarDef<int> MaxPolygonVertices =
-            CVarDef.Create("physics.maxpolygonvertices", 8);
 
         public static readonly CVarDef<float> MaxLinearCorrection =
             CVarDef.Create("physics.maxlinearcorrection", 0.2f);
@@ -1164,6 +1222,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DiscordEnabled =
             CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY);
 
+        public static readonly CVarDef<string> DiscordRichPresenceMainIconId =
+            CVarDef.Create("discord.rich_main_icon_id", "devstation", CVar.SERVER | CVar.REPLICATED);
+
+        public static readonly CVarDef<string> DiscordRichPresenceSecondIconId =
+            CVarDef.Create("discord.rich_second_icon_id", "logo", CVar.SERVER | CVar.REPLICATED);
+
         /*
          * RES
          */
@@ -1179,6 +1243,13 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> ResTexturePreloadingEnabled =
             CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Upper limit on the size of the RSI atlas texture. A lower limit might waste less vram, but start to defeat
+        /// the purpose of using an atlas if it gets too small.
+        /// </summary>
+        public static readonly CVarDef<int> ResRSIAtlasSize =
+            CVarDef.Create("res.rsi_atlas_size", 8192, CVar.CLIENTONLY);
 
         // TODO: Currently unimplemented.
         /// <summary>
@@ -1207,6 +1278,15 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ResPrototypeReloadWatch =
             CVarDef.Create("res.prototype_reload_watch", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// If true, do a warning check at startup for probably-erroneous file extensions like <c>.yaml</c> in resources.
+        /// </summary>
+        /// <remarks>
+        /// This check is always skipped on <c>FULL_RELEASE</c>.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResCheckBadFileExtensions =
+            CVarDef.Create("res.check_bad_file_extensions", true);
+
         /*
          * DEBUG
          */
@@ -1222,7 +1302,7 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<float> MidiVolume =
-            CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("midi.volume", 0.50f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * HUB
@@ -1242,10 +1322,10 @@ namespace Robust.Shared
             CVarDef.Create("hub.tags", "", CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
-        /// URL of the master hub server to advertise to.
+        /// Comma-separated list of URLs of hub servers to advertise to.
         /// </summary>
-        public static readonly CVarDef<string> HubMasterUrl =
-            CVarDef.Create("hub.master_url", "https://central.spacestation14.io/hub/", CVar.SERVERONLY);
+        public static readonly CVarDef<string> HubUrls =
+            CVarDef.Create("hub.hub_urls", "https://central.spacestation14.io/hub/", CVar.SERVERONLY);
 
         /// <summary>
         /// URL of this server to advertise.
@@ -1376,6 +1456,104 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", 128);
 
         /*
+         * Replays
+         */
+
+        /// <summary>
+        /// A relative path pointing to a folder within the server data directory where all replays will be stored.
+        /// </summary>
+        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replays",
+            CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size",
+            1024 * 256, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum uncompressed size of a replay recording (in kilobytes) before recording automatically stops.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
+            1024 * 1024, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data
+        /// for one or more ticks. Actual files may be slightly larger, this is just a threshold for the file to get
+        /// written. After compressing, the files are generally ~30% of their uncompressed size.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayTickBatchSize = CVarDef.Create("replay.replay_tick_batchSize",
+            1024, CVar.ARCHIVE);
+
+        /// <summary>
+        /// The max amount of pending write commands while recording replays.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayWriteChannelSize = CVarDef.Create("replay.write_channel_size", 5);
+
+        /// <summary>
+        /// Whether or not server-side replay recording is enabled.
+        /// </summary>
+        public static readonly CVarDef<bool> ReplayServerRecordingEnabled = CVarDef.Create(
+            "replay.server_recording_enabled",
+            true,
+            CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Whether or not client-side replay recording is enabled.
+        /// </summary>
+        public static readonly CVarDef<bool> ReplayClientRecordingEnabled = CVarDef.Create(
+            "replay.client_recording_enabled",
+            true,
+            CVar.SERVER | CVar.REPLICATED | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Determines the threshold before visual events (muzzle flashes, chat pop-ups, etc) are suppressed when
+        /// jumping forward in time. Jumps larger than this will simply skip directly to the target tick.
+        /// </summary>
+        public static readonly CVarDef<int> ReplaySkipThreshold = CVarDef.Create("replay.skip_threshold", 30);
+
+        /// <summary>
+        /// Maximum number of ticks before a new checkpoint tick is generated.
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointInterval = CVarDef.Create("replay.checkpoint_interval", 200);
+
+        /// <summary>
+        /// Maximum number of entities that can be spawned before a new checkpoint tick is generated.
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 100);
+
+        /// <summary>
+        /// Maximum number of entity states that can be applied before a new checkpoint tick is generated.
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointEntityStateThreshold = CVarDef.Create("replay.checkpoint_entity_state_threshold", 50 * 600);
+
+        /// <summary>
+        /// Whether or not to constantly apply game states while using something like a slider to scrub through replays.
+        /// If false, this will only jump to a point in time when the scrubbing ends.
+        /// </summary>
+        public static readonly CVarDef<bool> ReplayDynamicalScrubbing = CVarDef.Create("replay.dynamical_scrubbing", true);
+
+        /// <summary>
+        /// When recording replays, should we attempt to make a valid content bundle that can be directly executed by
+        /// the launcher?
+        /// </summary>
+        /// <remarks>
+        /// This requires the server's build information to be sufficiently filled out.
+        /// </remarks>
+        public static readonly CVarDef<bool> ReplayMakeContentBundle =
+            CVarDef.Create("replay.make_content_bundle", true);
+
+        /// <summary>
+        /// If true, this will cause the replay client to ignore some errors while loading a replay file.
+        /// </summary>
+        /// <remarks>
+        /// This might make otherwise broken replays playable, but ignoring these errors is also very likely to
+        /// cause unexpected and confusing errors elsewhere. By default this is disabled so that users report the
+        /// original exception rather than sending people on a wild-goose chase to find a non-existent bug.
+        /// </remarks>
+        public static readonly CVarDef<bool> ReplayIgnoreErrors =
+            CVarDef.Create("replay.ignore_errors", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+        /*
          * CFG
          */
 
@@ -1389,5 +1567,43 @@ namespace Robust.Shared
         /// and will complain if anything unknown is found (probably indicating a typo of some kind).
         /// </remarks>
         public static readonly CVarDef<bool> CfgCheckUnused = CVarDef.Create("cfg.check_unused", true);
+
+        /*
+        * Network Resource Manager
+        */
+
+        /// <summary>
+        /// Controls whether new resources can be uploaded by admins.
+        /// Does not prevent already uploaded resources from being sent.
+        /// </summary>
+        public static readonly CVarDef<bool> ResourceUploadingEnabled =
+            CVarDef.Create("netres.enabled", true, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Controls the data size limit in megabytes for uploaded resources. If they're too big, they will be dropped.
+        /// Set to zero or a negative value to disable limit.
+        /// </summary>
+        public static readonly CVarDef<float> ResourceUploadingLimitMb =
+            CVarDef.Create("netres.limit", 3f, CVar.REPLICATED | CVar.SERVER);
+
+        /*
+         * LAUNCH
+         * CVars relating to how the client is launched. Primarily set from the launcher.
+         */
+
+        /// <summary>
+        /// Game was launched from the launcher.
+        /// </summary>
+        /// <remarks>
+        /// The game should not try to automatically connect to a server, there's other variables for that.
+        /// </remarks>
+        public static readonly CVarDef<bool> LaunchLauncher =
+            CVarDef.Create("launch.launcher", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Game was launched from a content bundle.
+        /// </summary>
+        public static readonly CVarDef<bool> LaunchContentBundle =
+            CVarDef.Create("launch.content_bundle", false, CVar.CLIENTONLY);
     }
 }

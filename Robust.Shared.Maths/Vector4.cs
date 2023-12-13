@@ -29,6 +29,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 using Robust.Shared.Utility;
+using Vector2 = System.Numerics.Vector2;
+using System.Numerics;
 
 namespace Robust.Shared.Maths
 {
@@ -38,7 +40,13 @@ namespace Robust.Shared.Maths
     /// </remarks>
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Vector4 : IEquatable<Vector4>, ISpanFormattable
+    public struct Vector4 :
+        IEquatable<Vector4>,
+        ISpanFormattable,
+        IAdditionOperators<Vector4, Vector4, Vector4>,
+        ISubtractionOperators<Vector4, Vector4, Vector4>,
+        IMultiplyOperators<Vector4, Vector4, Vector4>,
+        IComparisonOperators<Vector4, Vector4, bool>
     {
         #region Fields
 
@@ -985,5 +993,30 @@ namespace Robust.Shared.Maths
         }
 
         #endregion IEquatable<Vector4> Members
+
+        public static Vector4 operator *(Vector4 left, Vector4 right)
+        {
+            return new(left.X * right.X, left.Y * right.Y, left.Z * right.Z, left.W * right.W);
+        }
+
+        public static bool operator >(Vector4 left, Vector4 right)
+        {
+            return left.LengthSquared > right.LengthSquared;
+        }
+
+        public static bool operator >=(Vector4 left, Vector4 right)
+        {
+            return left.LengthSquared >= right.LengthSquared;
+        }
+
+        public static bool operator <(Vector4 left, Vector4 right)
+        {
+            return left.LengthSquared < right.LengthSquared;
+        }
+
+        public static bool operator <=(Vector4 left, Vector4 right)
+        {
+            return left.LengthSquared <= right.LengthSquared;
+        }
     }
 }

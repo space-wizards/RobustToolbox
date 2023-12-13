@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using Linguini.Bundle;
 using Linguini.Bundle.Builder;
 using Linguini.Bundle.Errors;
@@ -33,6 +32,7 @@ namespace Robust.Shared.Localization
         private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();
 
         private CultureInfo? _defaultCulture;
+        private CultureInfo? _fallbackCulture;
 
         void IPostInjectInit.PostInject()
         {
@@ -54,7 +54,6 @@ namespace Robust.Shared.Localization
             return msg;
         }
 
-
         public string GetString(string messageId, params (string, object)[] args0)
         {
             if (_defaultCulture == null)
@@ -67,6 +66,11 @@ namespace Robust.Shared.Localization
             }
 
             return msg;
+        }
+
+        public bool HasString(string messageId)
+        {
+            return HasMessage(messageId, out _);
         }
 
         public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value)
@@ -115,20 +119,23 @@ namespace Robust.Shared.Localization
             string messageId,
             [NotNullWhen(true)] out FluentBundle? bundle)
         {
-            if (_defaultCulture == null)
+            foreach (var culture in new[] { _defaultCulture, _fallbackCulture })
             {
-                bundle = null;
-                return false;
+                if (culture != null && _contexts.TryGetValue(culture, out bundle))
+                {
+                    if (messageId.Contains('.'))
+                    {
+                        var split = messageId.Split('.');
+                        if (bundle.HasMessage(split[0]))
+                            return true;
+                    }
+                    if (bundle.HasMessage(messageId))
+                        return true;
+                }
             }
 
-            bundle = _contexts[_defaultCulture];
-            if (messageId.Contains('.'))
-            {
-                var split = messageId.Split('.');
-                return bundle.HasMessage(split[0]);
-            }
-
-            return bundle.HasMessage(messageId);
+            bundle = null;
+            return false;
         }
 
         private bool TryGetMessage(
@@ -136,15 +143,18 @@ namespace Robust.Shared.Localization
             [NotNullWhen(true)] out FluentBundle? bundle,
             [NotNullWhen(true)] out AstMessage? message)
         {
-            if (_defaultCulture == null)
+            foreach (var culture in new[] { _defaultCulture, _fallbackCulture })
             {
-                bundle = null;
-                message = null;
-                return false;
+                if (culture != null && _contexts.TryGetValue(culture, out bundle))
+                {
+                    if (bundle.TryGetAstMessage(messageId, out message))
+                        return true;
+                }
             }
 
-            bundle = _contexts[_defaultCulture];
-            return bundle.TryGetAstMessage(messageId, out message);
+            bundle = null;
+            message = null;
+            return false;
         }
 
         public void ReloadLocalizations()
@@ -194,6 +204,16 @@ namespace Robust.Shared.Localization
             DefaultCulture ??= culture;
         }
 
+        public void SetFallbackCluture(CultureInfo culture)
+        {
+            if (!_contexts.ContainsKey(culture))
+            {
+                throw new ArgumentException("That culture is not loaded.", nameof(culture));
+            }
+
+            _fallbackCulture = culture;
+        }
+
         public void AddLoadedToStringSerializer(IRobustMappedStringSerializer serializer)
         {
             /*
@@ -223,7 +243,7 @@ namespace Robust.Shared.Localization
             // Load data from .ftl files.
             // Data is loaded from /Locale/<language-code>/*
 
-            var root = new ResourcePath($"/Locale/{culture.Name}/");
+            var root = new ResPath($"/Locale/{culture.Name}/");
 
             var files = resourceManager.ContentFindFiles(root)
                 .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase))
@@ -231,12 +251,17 @@ namespace Robust.Shared.Localization
 
             var resources = files.AsParallel().Select(path =>
             {
-                using var fileStream = resourceManager.ContentFileRead(path);
-                using var reader = new StreamReader(fileStream, EncodingHelpers.UTF8);
+                string contents;
 
-                var parser = new LinguiniParser(reader);
+                using (var fileStream = resourceManager.ContentFileRead(path))
+                using (var reader = new StreamReader(fileStream, EncodingHelpers.UTF8))
+                {
+                    contents = reader.ReadToEnd();
+                }
+
+                var parser = new LinguiniParser(contents);
                 var resource = parser.Parse();
-                return (path, resource, parser.GetReadonlyData);
+                return (path, resource, contents);
             });
 
             foreach (var (path, resource, data) in resources)
@@ -247,11 +272,11 @@ namespace Robust.Shared.Localization
             }
         }
 
-        private void WriteWarningForErrs(ResourcePath path, List<ParseError> errs, ReadOnlyMemory<char> resource)
+        private void WriteWarningForErrs(ResPath path, List<ParseError> errs, string resource)
         {
             foreach (var err in errs)
             {
-                _logSawmill.Warning("{path}:\n{exception}", path, err.FormatCompileErrors(resource));
+                _logSawmill.Error($"{path}:\n{err.FormatCompileErrors(resource.AsMemory())}");
             }
         }
 
@@ -259,7 +284,7 @@ namespace Robust.Shared.Localization
         {
             foreach (var err in errs)
             {
-                _logSawmill.Warning("Error extracting `{locId}`\n{e1}", locId, err);
+                _logSawmill.Error("Error extracting `{locId}`\n{e1}", locId, err);
             }
         }
     }

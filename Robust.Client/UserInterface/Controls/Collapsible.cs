@@ -56,7 +56,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private void Initialize()
         {
-            var enumerator = Children.GetEnumerator();
+            using var enumerator = Children.GetEnumerator();
             enumerator.MoveNext();
 
             // downcast

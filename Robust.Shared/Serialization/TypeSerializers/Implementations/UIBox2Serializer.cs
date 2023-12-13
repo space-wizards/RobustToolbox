@@ -67,8 +67,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public UIBox2 CreateCopy(ISerializationManager serializationManager, UIBox2 source,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source.Left, source.Top, source.Right, source.Bottom);
         }

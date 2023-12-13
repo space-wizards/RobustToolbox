@@ -1,7 +1,10 @@
 using System;
 using System.IO;
+using Moq;
 using NUnit.Framework;
+using Robust.Server.Configuration;
 using Robust.Server.Reflection;
+using Robust.Server.Serialization;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -12,6 +15,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
+using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
@@ -29,15 +33,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             var container = new DependencyCollection();
             container.Register<ILogManager, LogManager>();
-            container.Register<IConfigurationManager, ConfigurationManager>();
-            container.Register<IConfigurationManagerInternal, ConfigurationManager>();
+            container.Register<IConfigurationManager, ServerNetConfigurationManager>();
+            container.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IReflectionManager, ServerReflectionManager>();
-            container.Register<IRobustSerializer, RobustSerializer>();
+            container.Register<IRobustSerializer, ServerRobustSerializer>();
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<IGameTiming, GameTiming>();
             container.Register<ProfManager, ProfManager>();
+            container.Register<HttpClientHolder>();
+            container.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
             container.BuildGraph();
 
             var cfg = container.Resolve<IConfigurationManagerInternal>();
@@ -60,10 +66,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             using(var stream = new MemoryStream())
             {
                 var payload = new EntityState(
-                    new EntityUid(512),
+                    new NetEntity(64),
                     new []
                     {
-                        new ComponentChange(0, new MapGridComponentState(16, null), default)
+                        new ComponentChange(0, new MapGridComponentState(16, chunkData: null), default)
                     }, default);
 
                 serializer.Serialize(stream, payload);

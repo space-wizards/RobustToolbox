@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Maths;
+using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.UnitTesting.Shared.Maths
 {
@@ -9,6 +12,20 @@ namespace Robust.UnitTesting.Shared.Maths
     [TestOf(typeof(Matrix3))]
     public sealed class Matrix3_Test
     {
+        [Test]
+        public void GetRotationTest()
+        {
+            Assert.That(Matrix3.Identity.Rotation(), Is.EqualTo(Angle.Zero));
+
+            var piOver2 = new Angle(Math.PI / 2);
+            var piOver2Mat = Matrix3.CreateRotation(piOver2.Theta);
+            Assert.That(piOver2Mat.Rotation(), Is.EqualTo(piOver2));
+
+            var pi = new Angle(Math.PI);
+            var piMat = Matrix3.CreateRotation(pi.Theta);
+            Assert.That(piMat.Rotation(), Is.EqualTo(pi));
+        }
+
         [Test]
         public void TranslationTest()
         {
@@ -24,14 +41,14 @@ namespace Robust.UnitTesting.Shared.Maths
 
         private static readonly IEnumerable<(Vector2, double)> _rotationTests = new[]
         {
-            (new Vector2( 1, 0).Normalized, 0.0),
-            (new Vector2( 1, 1).Normalized, 1 * System.Math.PI / 4.0),
-            (new Vector2( 0, 1).Normalized, 1 * System.Math.PI / 2.0),
-            (new Vector2(-1, 1).Normalized, 3 * System.Math.PI / 4.0),
-            (new Vector2(-1, 0).Normalized, 1 * System.Math.PI / 1.0),
-            (new Vector2(-1,-1).Normalized, 5 * System.Math.PI / 4.0),
-            (new Vector2( 0,-1).Normalized, 3 * System.Math.PI / 2.0),
-            (new Vector2( 1,-1).Normalized, 7 * System.Math.PI / 4.0),
+            (new Vector2( 1, 0).Normalized(), 0.0),
+            (new Vector2( 1, 1).Normalized(), 1 * System.Math.PI / 4.0),
+            (new Vector2( 0, 1).Normalized(), 1 * System.Math.PI / 2.0),
+            (new Vector2(-1, 1).Normalized(), 3 * System.Math.PI / 4.0),
+            (new Vector2(-1, 0).Normalized(), 1 * System.Math.PI / 1.0),
+            (new Vector2(-1,-1).Normalized(), 5 * System.Math.PI / 4.0),
+            (new Vector2( 0,-1).Normalized(), 3 * System.Math.PI / 2.0),
+            (new Vector2( 1,-1).Normalized(), 7 * System.Math.PI / 4.0),
         };
 
         [Test]

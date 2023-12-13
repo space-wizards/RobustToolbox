@@ -22,65 +22,51 @@ internal partial class Clyde
         // TODO: to avoid having to ask the windowing thread, key names are cached.
         private readonly Dictionary<Key, string> _printableKeyNameMap = new();
 
-        private void InitKeyMap()
+        private void ReloadKeyMap()
         {
-            _printableKeyNameMap.Clear();
-            // From GLFW's source code: this is the actual list of "printable" keys
-            // that GetKeyName returns something for.
-
-            for (var k = SDL_SCANCODE_A; k <= SDL_SCANCODE_0; k++)
+            // This may be ran concurrently from the windowing thread.
+            lock (_printableKeyNameMap)
             {
-                CacheKey(k);
-            }
+                _printableKeyNameMap.Clear();
 
-            /*
-            CacheKey(Keys.KeyPadEqual);
-            for (var k = Keys.KeyPad0; k <= Keys.KeyPadAdd; k++)
-            {
-                CacheKey(k);
-            }
+                // List of mappable keys from SDL2's source appears to be:
+                // entries in SDL_default_keymap that aren't an SDLK_ enum reference.
+                // (the actual logic is more nuanced, but it appears to match the above)
+                // Comes out to these two ranges:
 
-            for (var k = Keys.Apostrophe; k <= Keys.World2; k++)
-            {
-                CacheKey(k);
-            }
-            */
-
-            void CacheKey(SDL_Scancode scancode)
-            {
-                var rKey = ConvertSdl2Scancode(scancode);
-                if (rKey == Key.Unknown)
-                    return;
-
-                string name;
-
-                if (!_clyde._cfg.GetCVar(CVars.DisplayUSQWERTYHotkeys))
+                for (var k = SDL_SCANCODE_A; k <= SDL_SCANCODE_0; k++)
                 {
-                    name = SDL_GetKeyName(SDL_GetKeyFromScancode(scancode));
-                }
-                else
-                {
-                    name = scancode.ToString();
+                    CacheKey(k);
                 }
 
-                if (!string.IsNullOrEmpty(name))
-                    _printableKeyNameMap.Add(rKey, name);
+                for (var k = SDL_SCANCODE_MINUS; k <= SDL_SCANCODE_SLASH; k++)
+                {
+                    CacheKey(k);
+                }
+
+                void CacheKey(SDL_Scancode scancode)
+                {
+                    var rKey = ConvertSdl2Scancode(scancode);
+                    if (rKey == Key.Unknown)
+                        return;
+
+                    var name = SDL_GetKeyName(SDL_GetKeyFromScancode(scancode));
+
+                    if (!string.IsNullOrEmpty(name))
+                        _printableKeyNameMap.Add(rKey, name);
+                }
             }
         }
 
-        public string KeyGetName(Key key)
+        public string? KeyGetName(Key key)
         {
-            if (_printableKeyNameMap.TryGetValue(key, out var name))
+            lock (_printableKeyNameMap)
             {
-                var textInfo = Thread.CurrentThread.CurrentCulture.TextInfo;
-                return textInfo.ToTitleCase(name);
+                if (_printableKeyNameMap.TryGetValue(key, out var name))
+                    return name;
+
+                return null;
             }
-
-            name = Keyboard.GetSpecialKeyName(key, _loc);
-            if (name != null)
-                return _loc.GetString(name);
-
-            return _loc.GetString("<unknown key>");
         }
 
         internal static Key ConvertSdl2Scancode(SDL_Scancode scancode)
@@ -205,6 +191,15 @@ internal partial class Clyde
             MapKey(SDL_SCANCODE_F13, Key.F13);
             MapKey(SDL_SCANCODE_F14, Key.F14);
             MapKey(SDL_SCANCODE_F15, Key.F15);
+            MapKey(SDL_SCANCODE_F16, Key.F16);
+            MapKey(SDL_SCANCODE_F17, Key.F17);
+            MapKey(SDL_SCANCODE_F18, Key.F18);
+            MapKey(SDL_SCANCODE_F19, Key.F19);
+            MapKey(SDL_SCANCODE_F20, Key.F20);
+            MapKey(SDL_SCANCODE_F21, Key.F21);
+            MapKey(SDL_SCANCODE_F22, Key.F22);
+            MapKey(SDL_SCANCODE_F23, Key.F23);
+            MapKey(SDL_SCANCODE_F24, Key.F24);
             MapKey(SDL_SCANCODE_PAUSE, Key.Pause);
 
             KeyMapReverse = new Dictionary<Key, SDL_Scancode>();

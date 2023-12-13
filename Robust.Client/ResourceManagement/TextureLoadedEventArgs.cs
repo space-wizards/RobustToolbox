@@ -5,14 +5,14 @@ namespace Robust.Client.ResourceManagement
 {
     public readonly struct TextureLoadedEventArgs
     {
-        internal TextureLoadedEventArgs(ResourcePath path, Image image, TextureResource resource)
+        internal TextureLoadedEventArgs(ResPath path, Image image, TextureResource resource)
         {
             Path = path;
             Image = image;
             Resource = resource;
         }
 
-        public ResourcePath Path { get; }
+        public ResPath Path { get; }
         public Image Image { get; }
         public TextureResource Resource { get; }
     }

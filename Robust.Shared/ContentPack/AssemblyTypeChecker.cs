@@ -56,10 +56,10 @@ namespace Robust.Shared.ContentPack
             // Config is huge and YAML is slow so config loading is delayed.
             // This means we can parallelize config loading with IL verification
             // (first time we need the config is when we print verifier errors).
-            _config = Task.Run(LoadConfig);
+            _config = Task.Run(() => LoadConfig(sawmill));
         }
 
-        private Resolver CreateResolver()
+        internal Resolver CreateResolver()
         {
             var dotnetDir = Path.GetDirectoryName(typeof(int).Assembly.Location)!;
             var ourPath = typeof(AssemblyTypeChecker).Assembly.Location;
@@ -71,11 +71,8 @@ namespace Robust.Shared.ContentPack
             }
             else
             {
-                _sawmill.Debug("Robust directory is {0}", ourPath);
                 loadDirs.Add(Path.GetDirectoryName(ourPath)!);
             }
-
-            _sawmill.Debug(".NET runtime directory is {0}", dotnetDir);
 
             if (EngineModuleDirectories != null)
             {
@@ -89,7 +86,7 @@ namespace Robust.Shared.ContentPack
             return new Resolver(
                 this,
                 loadDirs.ToArray(),
-                new[] {new ResourcePath("/Assemblies/")}
+                new[] {new ResPath("/Assemblies/")}
             );
         }
 
@@ -101,6 +98,19 @@ namespace Robust.Shared.ContentPack
         /// <returns></returns>
         public bool CheckAssembly(Stream assembly)
         {
+            using var resolver = CreateResolver();
+
+            return CheckAssembly(assembly, resolver);
+        }
+
+        /// <summary>
+        ///     Check the assembly for any illegal types. Any types not on the white list
+        ///     will cause the assembly to be rejected.
+        /// </summary>
+        /// <param name="assembly">Assembly to load.</param>
+        /// <returns></returns>
+        public bool CheckAssembly(Stream assembly, Resolver resolver)
+        {
             if (WouldNoOp)
             {
                 // This method is a no-op in this case so don't bother
@@ -110,8 +120,7 @@ namespace Robust.Shared.ContentPack
             _sawmill.Debug("Checking assembly...");
             var fullStopwatch = Stopwatch.StartNew();
 
-            var resolver = CreateResolver();
-            using var peReader = ModLoader.MakePEReader(assembly, leaveOpen: true);
+            using var peReader = ModLoader.MakePEReader(assembly, leaveOpen: true, PEStreamOptions.PrefetchEntireImage);
             var reader = peReader.GetMetadataReader();
 
             var asmName = reader.GetString(reader.GetAssemblyDefinition().Name);
@@ -856,14 +865,14 @@ namespace Robust.Shared.ContentPack
             return handle.IsNil ? null : reader.GetString(handle);
         }
 
-        private sealed class Resolver : IResolver
+        internal sealed class Resolver : IResolver, IDisposable
         {
             private readonly ConcurrentDictionary<string, PEReader?> _dictionary = new();
             private readonly AssemblyTypeChecker _parent;
             private readonly string[] _diskLoadPaths;
-            private readonly ResourcePath[] _resLoadPaths;
+            private readonly ResPath[] _resLoadPaths;
 
-            public Resolver(AssemblyTypeChecker parent, string[] diskLoadPaths, ResourcePath[] resLoadPaths)
+            public Resolver(AssemblyTypeChecker parent, string[] diskLoadPaths, ResPath[] resLoadPaths)
             {
                 _parent = parent;
                 _diskLoadPaths = diskLoadPaths;
@@ -873,22 +882,20 @@ namespace Robust.Shared.ContentPack
             private PEReader? ResolveCore(string simpleName)
             {
                 var dllName = $"{simpleName}.dll";
-                foreach (var diskLoadPath in _diskLoadPaths)
-                {
-                    var path = Path.Combine(diskLoadPath, dllName);
-
-                    if (!File.Exists(path))
-                    {
-                        continue;
-                    }
-
-                    return ModLoader.MakePEReader(File.OpenRead(path));
-                }
-
                 var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);
                 if (extraStream != null)
                 {
                     return ModLoader.MakePEReader(extraStream);
+                }
+
+                foreach (var diskLoadPath in _diskLoadPaths)
+                {
+                    var path = Path.Combine(diskLoadPath, dllName);
+
+                    if (!FileHelper.TryOpenFileRead(path, out var fileStream))
+                        continue;
+
+                    return ModLoader.MakePEReader(fileStream);
                 }
 
                 foreach (var resLoadPath in _resLoadPaths)
@@ -909,6 +916,14 @@ namespace Robust.Shared.ContentPack
             public PEReader? Resolve(string simpleName)
             {
                 return _dictionary.GetOrAdd(simpleName, ResolveCore);
+            }
+
+            public void Dispose()
+            {
+                foreach (var reader in _dictionary.Values)
+                {
+                    reader?.Dispose();
+                }
             }
         }
 

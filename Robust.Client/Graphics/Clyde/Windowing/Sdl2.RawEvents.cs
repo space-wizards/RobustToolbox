@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Robust.Shared.Maths;
 using TerraFX.Interop.Windows;
 using static SDL2.SDL;
 using static SDL2.SDL.SDL_EventType;
@@ -43,6 +44,9 @@ internal partial class Clyde
                 case SDL_TEXTEDITING:
                     ProcessSdl2EventTextEditing(in ev.edit);
                     break;
+                case SDL_KEYMAPCHANGED:
+                    ProcessSdl2EventKeyMapChanged();
+                    break;
                 case SDL_TEXTEDITING_EXT:
                     ProcessSdl2EventTextEditingExt(in ev.editExt);
                     break;
@@ -62,7 +66,15 @@ internal partial class Clyde
                 case SDL_SYSWMEVENT:
                     ProcessSdl2EventSysWM(in ev.syswm);
                     break;
+                case SDL_QUIT:
+                    ProcessSdl2EventQuit();
+                    break;
             }
+        }
+
+        private void ProcessSdl2EventQuit()
+        {
+            SendEvent(new EventQuit());
         }
 
         private void ProcessSdl2EventDisplay(in SDL_DisplayEvent evDisplay)
@@ -125,6 +137,12 @@ internal partial class Clyde
             SendEvent(new EventTextEditing(window, str, start, length));
         }
 
+        private void ProcessSdl2EventKeyMapChanged()
+        {
+            ReloadKeyMap();
+            SendEvent(new EventKeyMapChanged());
+        }
+
         private void ProcessSdl2KeyEvent(in SDL_KeyboardEvent ev)
         {
             SendEvent(new EventKey(
@@ -144,7 +162,7 @@ internal partial class Clyde
                 case SDL_WINDOWEVENT_SIZE_CHANGED:
                     var width = ev.data1;
                     var height = ev.data2;
-                    SDL_GL_GetDrawableSize(window, out var fbW, out var fbH);
+                    SDL_GetWindowSizeInPixels(window, out var fbW, out var fbH);
                     var (xScale, yScale) = GetWindowScale(window);
 
                     _sawmill.Debug($"{width}x{height}, {fbW}x{fbH}, {xScale}x{yScale}");
@@ -265,6 +283,9 @@ internal partial class Clyde
 
         private record EventWindowsFakeV(HWND Window,
             uint Message, WPARAM WParam) : EventBase;
+
+        private record EventKeyMapChanged : EventBase;
+        private record EventQuit : EventBase;
 
         [StructLayout(LayoutKind.Sequential)]
         [SuppressMessage("ReSharper", "InconsistentNaming")]

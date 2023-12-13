@@ -39,7 +39,7 @@ namespace Robust.UnitTesting.Shared.Resources
             File.WriteAllText(Path.Combine(_testDirPath, "dummy"), "foobar");
 
             // No, ../ does not work to read stuff in the parent dir.
-            Assert.That(() => _dirProvider.ReadAllText(new ResourcePath("/../dummy")),
+            Assert.That(() => _dirProvider.ReadAllText(new ResPath("/../dummy")),
                 Throws.InstanceOf<FileNotFoundException>());
         }
 
@@ -47,7 +47,7 @@ namespace Robust.UnitTesting.Shared.Resources
         public void TestNotRooted()
         {
             // Path must be rooted.
-            Assert.That(() => _dirProvider.OpenRead(new ResourcePath("foo.bar")),
+            Assert.That(() => _dirProvider.OpenRead(new ResPath("foo.bar")),
                 Throws.InstanceOf<ArgumentException>());
         }
 
@@ -56,10 +56,10 @@ namespace Robust.UnitTesting.Shared.Resources
         {
             File.WriteAllText(Path.Combine(_testDirPath, "dummy"), "foobar");
 
-            _dirProvider.WriteAllText(new ResourcePath("/dummy"), "pranked");
+            _dirProvider.WriteAllText(new ResPath("/dummy"), "pranked");
 
             // ../ should get clamped to /.
-            Assert.That(_dirProvider.ReadAllText(new ResourcePath("/../dummy")), Is.EqualTo("pranked"));
+            Assert.That(_dirProvider.ReadAllText(new ResPath("/../dummy")), Is.EqualTo("pranked"));
         }
     }
 }

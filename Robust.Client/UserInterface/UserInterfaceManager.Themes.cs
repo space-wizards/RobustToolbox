@@ -29,7 +29,7 @@ internal partial class UserInterfaceManager
     public void SetActiveTheme(string themeName)
     {
         if (!_themes.TryGetValue(themeName, out var theme) || (theme == CurrentTheme)) return;
-        CurrentTheme = theme;
+        UpdateTheme(theme);
     }
 
     public void SetDefaultTheme(string themeId)
@@ -37,13 +37,13 @@ internal partial class UserInterfaceManager
         if (_defaultOverriden)
         {
             //this exists to stop people from misusing default theme
-            Logger.Error("Tried to set default theme twice!");
+            _sawmillUI.Error("Tried to set default theme twice!");
             return;
         }
 
         if (!_protoManager.TryIndex(themeId, out UITheme? theme))
         {
-            Logger.Error("Could not find UI theme prototype for ID:"+ themeId);
+            _sawmillUI.Error("Could not find UI theme prototype for ID:"+ themeId);
             return;
         }
         DefaultTheme = theme;
@@ -53,9 +53,11 @@ internal partial class UserInterfaceManager
 
     private void UpdateTheme(UITheme newTheme)
     {
-        if (newTheme == CurrentTheme) return; //do not update if the theme is unchanged
+        if (newTheme == CurrentTheme)
+            return;
+
         CurrentTheme = newTheme;
-        _userInterfaceManager.RootControl.ThemeUpdateRecursive();
+        _userInterfaceManager.RootControl.ThemeUpdateRecursive(CurrentTheme);
     }
 
     //Try to set the current theme, if the theme is not found leave the previous theme

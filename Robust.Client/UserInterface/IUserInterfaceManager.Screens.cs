@@ -11,4 +11,6 @@ public partial interface IUserInterfaceManager
     public void UnloadScreen();
     public T? GetActiveUIWidgetOrNull<T>() where T : UIWidget, new();
     public T GetActiveUIWidget<T>() where T : UIWidget, new();
+
+    public event Action<(UIScreen? Old, UIScreen? New)>? OnScreenChanged;
 }

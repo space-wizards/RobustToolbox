@@ -117,6 +117,8 @@ namespace Robust.Client.UserInterface
         event Action<PostDrawUIRootEventArgs> OnPostDrawUIRoot;
 
         void DeferAction(Action action);
+
+        public event Action<Control>? OnKeyBindDown;
     }
 
     public readonly struct PostDrawUIRootEventArgs

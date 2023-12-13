@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Utility
 {
@@ -13,6 +15,7 @@ namespace Robust.Shared.Utility
         /// <param name="message">Exception message.</param>
         [Conditional("DEBUG")]
         [ContractAnnotation("=> halt")]
+        [DoesNotReturn]
         public static void Assert(string message)
         {
             throw new DebugAssertException(message);
@@ -25,11 +28,79 @@ namespace Robust.Shared.Utility
         /// <param name="condition">Condition that must be true.</param>
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void Assert([AssertionCondition(AssertionConditionType.IS_TRUE)]
+        public static void Assert(
+            [AssertionCondition(AssertionConditionType.IS_TRUE)]
+            [DoesNotReturnIf(false)]
             bool condition)
         {
             if (!condition)
                 throw new DebugAssertException();
+        }
+
+        [Conditional("DEBUG")]
+        [AssertionMethod]
+        public static void AssertEqual(object? objA, object? objB)
+        {
+            if (ReferenceEquals(objA, objB))
+                return;
+
+            if (objA == null || !objA.Equals(objB))
+                throw new DebugAssertException($"Expected: {objB ?? "null"} but was {objA ?? "null"}");
+        }
+
+        [Conditional("DEBUG")]
+        [AssertionMethod]
+        public static void AssertEqual(object? objA, object? objB, string message)
+        {
+            if (ReferenceEquals(objA, objB))
+                return;
+
+            if (objA == null || !objA.Equals(objB))
+                throw new DebugAssertException($"{message}\nExpected: {objB ?? "null"} but was {objA ?? "null"}");
+        }
+
+        [Conditional("DEBUG")]
+        [AssertionMethod]
+        public static void AssertNotEqual(object? objA, object? objB)
+        {
+            if (ReferenceEquals(objA, objB))
+                throw new DebugAssertException($"Expected: not {objB ?? "null"}");
+
+            if (objA == null || !objA.Equals(objB))
+                return;
+
+            throw new DebugAssertException($"Expected: not {objB}");
+        }
+
+        [Conditional("DEBUG")]
+        [AssertionMethod]
+        public static void AssertNotEqual(object? objA, object? objB, string message)
+        {
+            if (ReferenceEquals(objA, objB))
+                throw new DebugAssertException($"{message}\nExpected: not {objB ?? "null"}");
+
+            if (objA == null || !objA.Equals(objB))
+                return;
+
+            throw new DebugAssertException($"{message}\nExpected: not {objB}");
+        }
+
+        [Conditional("DEBUG")]
+        [AssertionMethod]
+        public static void AssertOwner(EntityUid? uid, IComponent? component)
+        {
+            if (component == null)
+                return;
+
+            if (uid == null)
+                throw new DebugAssertException($"Null entity uid cannot own a component. Component: {component.GetType().Name}");
+
+            // Whenever .owner is removed this will need to be replaced by something.
+            // As long as components are just reference types, we could just get the component and check if the references are equal?
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (component.Owner != uid)
+#pragma warning restore CS0618 // Type or member is obsolete
+                throw new DebugAssertException($"Entity {uid} is not the owner of the component. Component: {component.GetType().Name}");
         }
 
         /// <summary>
@@ -40,8 +111,11 @@ namespace Robust.Shared.Utility
         /// <param name="message">Exception message.</param>
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void Assert([AssertionCondition(AssertionConditionType.IS_TRUE)]
-            bool condition, string message)
+        public static void Assert(
+            [AssertionCondition(AssertionConditionType.IS_TRUE)]
+            [DoesNotReturnIf(false)]
+            bool condition,
+            string message)
         {
             if (!condition)
                 throw new DebugAssertException(message);
@@ -55,8 +129,12 @@ namespace Robust.Shared.Utility
         /// <param name="message">Exception message.</param>
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void Assert([AssertionCondition(AssertionConditionType.IS_TRUE)]
-            bool condition, [InterpolatedStringHandlerArgument("condition")] ref AssertInterpolatedStringHandler message)
+        public static void Assert(
+            [AssertionCondition(AssertionConditionType.IS_TRUE)]
+            [DoesNotReturnIf(false)]
+            bool condition,
+            [InterpolatedStringHandlerArgument("condition")]
+            ref AssertInterpolatedStringHandler message)
         {
             if (!condition)
                 throw new DebugAssertException(message.ToStringAndClear());

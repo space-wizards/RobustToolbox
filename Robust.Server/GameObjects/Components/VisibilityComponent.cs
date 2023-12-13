@@ -1,13 +1,11 @@
-using Robust.Shared.Analyzers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
     [Access(typeof(VisibilitySystem))]
-    public sealed class VisibilityComponent : Component
+    public sealed partial class VisibilityComponent : Component
     {
         /// <summary>
         ///     The visibility layer for the entity.
@@ -15,12 +13,5 @@ namespace Robust.Server.GameObjects
         /// </summary>
         [DataField("layer")]
         public int Layer = 1;
-
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int LayerVV
-        {
-            get => Layer;
-            set => EntitySystem.Get<VisibilitySystem>().SetLayer(this, value);
-        }
     }
 }

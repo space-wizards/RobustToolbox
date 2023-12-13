@@ -54,7 +54,7 @@ Version: {info.VersionString}");
 
             _textBuilder.Append($@"Draw Calls: Cly: {stats.LastClydeDrawCalls} GL: {stats.LastGLDrawCalls}
 Batches: {stats.LastBatches} Max size: ({stats.LargestBatchSize.vertices} vtx, {stats.LargestBatchSize.vertices} idx)
-Lights: {stats.TotalLights}");
+Lights: {stats.TotalLights}, Shadowcasting: {stats.ShadowLights}, Occluders: {stats.Occluders}, Entities: { stats.Entities}");
 
             _label.TextMemory = FormatHelpers.BuilderToMemory(_textBuilder, _textBuffer);
         }

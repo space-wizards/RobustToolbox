@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
+using Robust.Shared.Toolshed;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.Console
@@ -19,6 +20,7 @@ namespace Robust.Server.Console
         [Dependency] private readonly IConGroupController _groupController = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
+        [Dependency] private readonly ToolshedManager _toolshed = default!;
 
         public ServerConsoleHost() : base(isServer: true) {}
 
@@ -27,7 +29,7 @@ namespace Robust.Server.Console
         /// <inheritdoc />
         public override void ExecuteCommand(ICommonSession? session, string command)
         {
-            var shell = new ConsoleShell(this, session);
+            var shell = new ConsoleShell(this, session, session == null);
             ExecuteInShell(shell, command);
         }
 
@@ -39,25 +41,28 @@ namespace Robust.Server.Console
 
             var msg = new MsgConCmd();
             msg.Text = command;
-            NetManager.ServerSendMessage(msg, ((IPlayerSession)session).ConnectedClient);
+            NetManager.ServerSendMessage(msg, session.Channel);
         }
 
         /// <inheritdoc />
         public override void WriteLine(ICommonSession? session, string text)
         {
-            if (session is IPlayerSession playerSession)
-                OutputText(playerSession, text, false);
-            else
-                OutputText(null, text, false);
+            var msg = new FormattedMessage();
+            msg.AddText(text);
+            OutputText(session, msg, false);
+        }
+
+        public override void WriteLine(ICommonSession? session, FormattedMessage msg)
+        {
+            OutputText(session, msg, false);
         }
 
         /// <inheritdoc />
         public override void WriteError(ICommonSession? session, string text)
         {
-            if (session is IPlayerSession playerSession)
-                OutputText(playerSession, text, true);
-            else
-                OutputText(null, text, true);
+            var msg = new FormattedMessage();
+            msg.AddText(text);
+            OutputText(session, msg, true);
         }
 
         public bool IsCmdServer(IConsoleCommand cmd) => true;
@@ -70,13 +75,13 @@ namespace Robust.Server.Console
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
                 ExecuteInShell(sudoShell, argStr["sudo ".Length..]);
-            }, (shell, args) =>
+            }, (shell, args, argStr) =>
             {
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
 
 #pragma warning disable CA2012
-                return CalcCompletions(sudoShell, args);
+                return CalcCompletions(sudoShell, args, argStr);
 #pragma warning restore CA2012
             });
 
@@ -104,7 +109,7 @@ namespace Robust.Server.Console
 
                 string? cmdName = args[0];
 
-                if (AvailableCommands.TryGetValue(cmdName, out var conCmd)) // command registered
+                if (RegisteredCommands.TryGetValue(cmdName, out var conCmd)) // command registered
                 {
                     args.RemoveAt(0);
                     var cmdArgs = args.ToArray();
@@ -117,6 +122,19 @@ namespace Robust.Server.Console
                     AnyCommandExecuted?.Invoke(shell, cmdName, command, cmdArgs);
                     conCmd.Execute(shell, command, cmdArgs);
                 }
+                else
+                {
+                    // toolshed time
+                    _toolshed.InvokeCommand(shell, command, null, out var res, out var ctx);
+
+                    foreach (var err in ctx.GetErrors())
+                    {
+                        ctx.WriteLine(err.Describe());
+                    }
+
+                    shell.WriteLine(FormattedMessage.FromMarkupPermissive(_toolshed.PrettyPrintType(res, out var more, moreUsed: true)));
+                    ctx.WriteVar("more", more);
+                }
             }
             catch (Exception e)
             {
@@ -128,7 +146,7 @@ namespace Robust.Server.Console
 
         private bool ShellCanExecute(IConsoleShell shell, string cmdName)
         {
-            return shell.Player == null || _groupController.CanCommand((IPlayerSession)shell.Player, cmdName);
+            return shell.Player == null || _groupController.CanCommand(shell.Player, cmdName);
         }
 
         private void HandleRegistrationRequest(INetChannel senderConnection)
@@ -136,16 +154,40 @@ namespace Robust.Server.Console
             var message = new MsgConCmdReg();
 
             var counter = 0;
-            message.Commands = new MsgConCmdReg.Command[RegisteredCommands.Count];
+            var toolshedCommands = _toolshed.DefaultEnvironment.AllCommands().ToArray();
+            message.Commands = new List<MsgConCmdReg.Command>(AvailableCommands.Count + toolshedCommands.Length);
+            var commands = new HashSet<string>();
 
-            foreach (var command in RegisteredCommands.Values)
+            foreach (var command in AvailableCommands.Values)
             {
-                message.Commands[counter++] = new MsgConCmdReg.Command
+                if (!commands.Add(command.Command))
+                {
+                    Sawmill.Error($"Duplicate command: {command.Command}");
+                    continue;
+                }
+                message.Commands.Add(new MsgConCmdReg.Command
                 {
                     Name = command.Command,
                     Description = command.Description,
                     Help = command.Help
-                };
+                });
+            }
+
+            foreach (var spec in toolshedCommands)
+            {
+                var name = spec.FullName();
+                if (!commands.Add(name))
+                {
+                    Sawmill.Warning($"Duplicate toolshed command: {name}");
+                    continue;
+                }
+
+                message.Commands.Add(new MsgConCmdReg.Command
+                {
+                    Name = name,
+                    Description = spec.Cmd.Description(spec.SubCommand),
+                    Help = spec.Cmd.GetHelp(spec.SubCommand)
+                });
             }
 
             NetManager.ServerSendMessage(message, senderConnection);
@@ -162,7 +204,7 @@ namespace Robust.Server.Console
             ExecuteCommand(session, text);
         }
 
-        private void OutputText(IPlayerSession? session, string text, bool error)
+        private void OutputText(ICommonSession? session, FormattedMessage text, bool error)
         {
             if (session != null)
             {
@@ -183,10 +225,25 @@ namespace Robust.Server.Console
         private async void HandleConCompletions(MsgConCompletion message)
         {
             var session = _players.GetSessionByChannel(message.MsgChannel);
-            var shell = new ConsoleShell(this, session);
 
-            var result = await CalcCompletions(shell, message.Args);
+            var shell = new ConsoleShell(this, session, false);
 
+            var result = await CalcCompletions(shell, message.Args, message.ArgString);
+
+            if ((result.Options.Length == 0 && result.Hint is null) || message.Args.Length <= 1)
+            {
+                var parser = new ParserContext(message.ArgString, _toolshed);
+                CommandRun.TryParse(true, parser, null, null, false, out _, out var completions, out _);
+                if (completions == null)
+                {
+                    goto done;
+                }
+                var (shedRes, _) = await completions.Value;
+                shedRes ??= CompletionResult.Empty;
+                result = new CompletionResult(shedRes.Options.Concat(result.Options).ToArray(), shedRes.Hint ?? result.Hint);
+            }
+
+            done:
             var msg = new MsgConCompletionResp
             {
                 Result = result,
@@ -199,7 +256,7 @@ namespace Robust.Server.Console
             NetManager.ServerSendMessage(msg, message.MsgChannel);
         }
 
-        private ValueTask<CompletionResult> CalcCompletions(IConsoleShell shell, string[] args)
+        private ValueTask<CompletionResult> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
         {
             // Logger.Debug(string.Join(", ", args));
 
@@ -207,17 +264,17 @@ namespace Robust.Server.Console
             {
                 // Typing out command name, handle this ourselves.
                 return ValueTask.FromResult(CompletionResult.FromOptions(
-                    RegisteredCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description))));
+                    AvailableCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description))));
             }
 
             var cmdName = args[0];
-            if (!AvailableCommands.TryGetValue(cmdName, out var cmd))
+            if (!RegisteredCommands.TryGetValue(cmdName, out var cmd))
                 return ValueTask.FromResult(CompletionResult.Empty);
 
             if (!ShellCanExecute(shell, cmdName))
                 return ValueTask.FromResult(CompletionResult.Empty);
 
-            return cmd.GetCompletionAsync(shell, args[1..], default);
+            return cmd.GetCompletionAsync(shell, args[1..], argStr, default);
         }
 
         private sealed class SudoShell : IConsoleShell
@@ -236,6 +293,7 @@ namespace Robust.Server.Console
             public IConsoleHost ConsoleHost => _host;
             public bool IsServer => _owner.IsServer;
             public ICommonSession? Player => _owner.Player;
+            public bool IsLocal => _owner.IsLocal;
 
             public void ExecuteCommand(string command)
             {
@@ -251,6 +309,12 @@ namespace Robust.Server.Console
             {
                 _owner.WriteLine(text);
                 _sudoer.WriteLine(text);
+            }
+
+            public void WriteLine(FormattedMessage message)
+            {
+                _owner.WriteLine(message);
+                _sudoer.WriteLine(message);
             }
 
             public void WriteError(string text)

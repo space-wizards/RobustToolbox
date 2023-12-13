@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Robust.Client.Graphics;
+using Robust.Client.UserInterface.RichText;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -13,6 +16,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class OutputPanel : Control
     {
+        [Dependency] private readonly MarkupTagManager _tagManager = default!;
+
         public const string StylePropertyStyleBox = "stylebox";
 
         private readonly List<RichTextEntry> _entries = new();
@@ -27,6 +32,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public OutputPanel()
         {
+            IoCManager.InjectDependencies(this);
             MouseFilter = MouseFilterMode.Pass;
             RectClipContent = true;
 
@@ -83,7 +89,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public void AddMessage(FormattedMessage message)
         {
-            var entry = new RichTextEntry(message);
+            var entry = new RichTextEntry(message, this, _tagManager, null);
 
             entry.Update(_getFont(), _getContentBox().Width, UIScale);
 
@@ -118,7 +124,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var style = _getStyleBox();
             var font = _getFont();
-            style?.Draw(handle, PixelSizeBox);
+            style?.Draw(handle, PixelSizeBox, UIScale);
             var contentBox = _getContentBox();
 
             var entryOffset = -_scrollBar.Value;
@@ -126,7 +132,7 @@ namespace Robust.Client.UserInterface.Controls
             // A stack for format tags.
             // This stack contains the format tag to RETURN TO when popped off.
             // So when a new color tag gets hit this stack gets the previous color pushed on.
-            var formatStack = new Stack<FormattedMessage.Tag>(2);
+            var context = new MarkupDrawingContext(2);
 
             foreach (ref var entry in CollectionsMarshal.AsSpan(_entries))
             {
@@ -141,7 +147,7 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 }
 
-                entry.Draw(handle, font, contentBox, entryOffset, formatStack, UIScale);
+                entry.Draw(handle, font, contentBox, entryOffset, context, UIScale);
 
                 entryOffset += entry.Height + font.GetLineSeparation(UIScale);
             }
@@ -165,7 +171,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
 
-            _scrollBar.Page = PixelSize.Y - styleBoxSize;
+            _scrollBar.Page = UIScale * (Height - styleBoxSize);
             _invalidateEntries();
         }
 
@@ -218,6 +224,7 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private float _getScrollSpeed()
         {
+            // The scroll speed depends on the UI scale because the scroll bar is working with physical pixels.
             return GetScrollSpeed(_getFont(), UIScale);
         }
 
@@ -225,7 +232,9 @@ namespace Robust.Client.UserInterface.Controls
         private UIBox2 _getContentBox()
         {
             var style = _getStyleBox();
-            return style?.GetContentBox(PixelSizeBox) ?? PixelSizeBox;
+            var box = style?.GetContentBox(PixelSizeBox, UIScale) ?? PixelSizeBox;
+            box.Right = Math.Max(box.Left, box.Right - _scrollBar.DesiredPixelSize.X);
+            return box;
         }
 
         protected internal override void UIScaleChanged()
@@ -238,6 +247,15 @@ namespace Robust.Client.UserInterface.Controls
         internal static float GetScrollSpeed(Font font, float scale)
         {
             return font.GetLineHeight(scale) * 2;
+        }
+
+        protected override void EnteredTree()
+        {
+            base.EnteredTree();
+            // Due to any number of reasons the entries may be invalidated if added when not visible in the tree.
+            // e.g. the control has not had its UI scale set and the messages were added, but the
+            // existing ones were valid when the UI scale was set.
+            _invalidateEntries();
         }
     }
 }

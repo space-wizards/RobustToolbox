@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Robust.Shared.Random;
 
 namespace Robust.Shared.Map
 {
@@ -7,6 +8,14 @@ namespace Robust.Shared.Map
     /// </summary>
     public interface ITileDefinitionManager : IEnumerable<ITileDefinition>
     {
+        Tile GetVariantTile(string name, IRobustRandom random);
+
+        Tile GetVariantTile(string name, System.Random random);
+
+        Tile GetVariantTile(ITileDefinition tileDef, IRobustRandom random);
+
+        Tile GetVariantTile(ITileDefinition tileDef, System.Random random);
+
         /// <summary>
         ///     Indexer to retrieve a tile definition by name.
         ///     Note: In the presence of tile aliases, this[A].ID does not necessarily equal A.
@@ -21,6 +30,7 @@ namespace Robust.Shared.Map
         /// <param name="id">The ID of the tile definition.</param>
         /// <returns>The tile definition.</returns>
         ITileDefinition this[int id] { get; }
+        // TODO add a try get and get-or-null variant.
 
         /// <summary>
         ///     The number of tile definitions contained inside of this manager.

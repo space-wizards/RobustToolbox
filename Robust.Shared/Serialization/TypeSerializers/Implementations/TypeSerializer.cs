@@ -51,8 +51,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return new ValueDataNode(value.FullName ?? value.Name);
         }
 
-        public Type CreateCopy(ISerializationManager serializationManager, Type source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public Type CreateCopy(ISerializationManager serializationManager, Type source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return source;
         }

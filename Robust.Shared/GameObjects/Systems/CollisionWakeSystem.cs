@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<CollisionWakeComponent, ComponentRemove>(OnRemove);
+            SubscribeLocalEvent<CollisionWakeComponent, ComponentShutdown>(OnRemove);
 
             SubscribeLocalEvent<CollisionWakeComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<CollisionWakeComponent, ComponentHandleState>(OnHandleState);
@@ -38,9 +38,9 @@ namespace Robust.Shared.GameObjects
             if (component.Enabled)
                 UpdateCanCollide(uid, component);
             else if (TryComp(uid, out PhysicsComponent? physics))
-                _physics.SetCanCollide(physics, true);
+                _physics.SetCanCollide(uid, true, body: physics);
 
-            Dirty(component);
+            Dirty(uid, component);
         }
 
         private void OnHandleState(EntityUid uid, CollisionWakeComponent component, ref ComponentHandleState args)
@@ -59,13 +59,13 @@ namespace Robust.Shared.GameObjects
             args.State = new CollisionWakeComponent.CollisionWakeState(component.Enabled);
         }
 
-        private void OnRemove(EntityUid uid, CollisionWakeComponent component, ComponentRemove args)
+        private void OnRemove(EntityUid uid, CollisionWakeComponent component, ComponentShutdown args)
         {
             if (component.Enabled
                 && !Terminating(uid)
                 && TryComp(uid, out PhysicsComponent? physics))
             {
-                _physics.SetCanCollide(physics, true);
+                _physics.SetCanCollide(uid, true, body: physics);
             }
         }
 
@@ -79,14 +79,14 @@ namespace Robust.Shared.GameObjects
 
         private void OnJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)
         {
-            UpdateCanCollide(uid, component, (PhysicsComponent) args.OurBody);
+            UpdateCanCollide(uid, component, args.OurBody);
         }
 
         private void OnJointAdd(EntityUid uid, CollisionWakeComponent component, JointAddedEvent args)
         {
             // Bypass UpdateCanCollide() as joint count will always be bigger than 0:
             if (component.Enabled)
-                args.OurBody.CanCollide = true;
+                _physics.SetCanCollide(uid, true);
         }
 
         private void OnWake(EntityUid uid, CollisionWakeComponent component, ref PhysicsWakeEvent args)
@@ -123,7 +123,7 @@ namespace Robust.Shared.GameObjects
                               (TryComp(uid, out JointComponent? jointComponent) && jointComponent.JointCount > 0) ||
                               xform.GridUid == null;
 
-            _physics.SetCanCollide(body, canCollide, dirty);
+            _physics.SetCanCollide(uid, canCollide, dirty, body: body);
         }
     }
 }

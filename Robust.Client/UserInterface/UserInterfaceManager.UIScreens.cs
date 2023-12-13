@@ -14,12 +14,19 @@ internal partial class UserInterfaceManager
         get => _activeScreen;
         private set
         {
-            if (_activeScreen == value) return;
-            _activeScreen?.OnRemoved();
+            if (_activeScreen == value)
+                return;
+
+            var old = _activeScreen;
+            old?.OnRemoved();
             _activeScreen = value;
             _activeScreen?.OnAdded();
+
+            OnScreenChanged?.Invoke((old, _activeScreen));
         }
     }
+
+    public event Action<(UIScreen? Old, UIScreen? New)>? OnScreenChanged;
 
     [ViewVariables] public Control ScreenRoot { get; private set; } = default!;
 

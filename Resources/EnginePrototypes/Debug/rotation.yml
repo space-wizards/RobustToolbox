@@ -1,0 +1,34 @@
+- type: entity
+  id: debugRotation
+  abstract: true
+  categories: [ debug ]
+  components:
+  - type: Sprite
+    netsync: false
+    visible: true
+    sprite: debugRotation.rsi
+    state: direction1
+
+- type: entity
+  id: debugRotation1
+  parent: debugRotation
+  name: dbg_rotation1
+  components:
+  - type: Sprite
+    state: direction1
+
+- type: entity
+  id: debugRotation4
+  parent: debugRotation
+  name: dbg_rotation4
+  components:
+  - type: Sprite
+    state: direction4
+
+- type: entity
+  id: debugRotationTex
+  parent: debugRotation
+  name: dbg_rotationTex
+  components:
+  - type: Sprite
+    state: direction1

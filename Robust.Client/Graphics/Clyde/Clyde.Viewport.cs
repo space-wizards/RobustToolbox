@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -162,7 +164,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (Eye == null)
                     return Matrix3.Identity;
 
-                Eye.GetViewMatrix(out var viewMatrix, RenderScale * (EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter));
+                Eye.GetViewMatrix(out var viewMatrix, RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter));
                 viewMatrix.R0C2 += Size.X / 2f;
                 viewMatrix.R1C2 += Size.Y / 2f;
                 return viewMatrix;

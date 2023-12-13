@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -12,7 +12,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting
 {
-    public sealed class IntegrationMappedStringSerializer : IRobustMappedStringSerializer
+    internal sealed class IntegrationMappedStringSerializer : IRobustMappedStringSerializer
     {
         [Dependency] private readonly INetManager _net = default!;
 
@@ -74,6 +74,16 @@ namespace Robust.UnitTesting
         private void HandleServerHandshake(MsgMapStrServerHandshake message)
         {
             ClientHandshakeComplete?.Invoke();
+        }
+
+        public (byte[] mapHash, byte[] package) GeneratePackage()
+        {
+            return (Array.Empty<byte>(), Array.Empty<byte>());
+        }
+
+        public void SetPackage(byte[] hash, byte[] package)
+        {
+            throw new NotSupportedException();
         }
 
         private sealed class TypeSerializerImpl : IStaticTypeSerializer

@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -65,8 +66,17 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public readonly LinkedListNode<Contact> BodyBNode;
 
+        public EntityUid EntityA;
+        public EntityUid EntityB;
+
+        public string FixtureAId = string.Empty;
+        public string FixtureBId = string.Empty;
+
         public Fixture? FixtureA;
         public Fixture? FixtureB;
+
+        public PhysicsComponent? BodyA;
+        public PhysicsComponent? BodyB;
 
         public Manifold Manifold;
 
@@ -125,22 +135,18 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public void ResetFriction()
         {
-            Friction = MathF.Sqrt(FixtureA?.Friction ?? 0.0f * FixtureB?.Friction ?? 0.0f);
+            Friction = MathF.Sqrt((FixtureA?.Friction ?? 0.0f) * (FixtureB?.Friction ?? 0.0f));
         }
 
         /// <summary>
         /// Gets the world manifold.
         /// </summary>
-        public void GetWorldManifold(IPhysicsManager physicsManager, out Vector2 normal, Span<Vector2> points)
+        public void GetWorldManifold(Transform transformA, Transform transformB, out Vector2 normal, Span<Vector2> points)
         {
-            PhysicsComponent bodyA = FixtureA?.Body!;
-            PhysicsComponent bodyB = FixtureB?.Body!;
-            IPhysShape shapeA = FixtureA?.Shape!;
-            IPhysShape shapeB = FixtureB?.Shape!;
-            var bodyATransform = physicsManager.EnsureTransform(bodyA);
-            var bodyBTransform = physicsManager.EnsureTransform(bodyB);
+            var shapeA = FixtureA?.Shape!;
+            var shapeB = FixtureB?.Shape!;
 
-            SharedPhysicsSystem.InitializeManifold(ref Manifold, bodyATransform, bodyBTransform, shapeA.Radius, shapeB.Radius, out normal, points);
+            SharedPhysicsSystem.InitializeManifold(ref Manifold, transformA, transformB, shapeA.Radius, shapeB.Radius, out normal, points);
         }
 
         /// <summary>
@@ -149,11 +155,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         /// <param name="wake">Whether we should wake the bodies due to touching changing.</param>
         /// <returns>What current status of the contact is (e.g. start touching, end touching, etc.)</returns>
-        internal ContactStatus Update(IPhysicsManager physicsManager, out bool wake)
+        internal ContactStatus Update(Transform bodyATransform, Transform bodyBTransform, out bool wake)
         {
-            PhysicsComponent bodyA = FixtureA!.Body;
-            PhysicsComponent bodyB = FixtureB!.Body;
-
             var oldManifold = Manifold;
 
             // Re-enable this contact.
@@ -163,16 +166,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             var wasTouching = IsTouching;
 
             wake = false;
-            var sensor = !(FixtureA.Hard && FixtureB.Hard);
-
-            var bodyATransform = physicsManager.GetTransform(bodyA);
-            var bodyBTransform = physicsManager.GetTransform(bodyB);
+            var sensor = !(FixtureA!.Hard && FixtureB!.Hard);
 
             // Is this contact a sensor?
             if (sensor)
             {
-                var shapeA = FixtureA.Shape;
-                var shapeB = FixtureB.Shape;
+                var shapeA = FixtureA!.Shape;
+                var shapeB = FixtureB!.Shape;
                 touching = _manifoldManager.TestOverlap(shapeA,  ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
 
                 // Sensors don't generate manifolds.
@@ -242,6 +242,27 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         }
 
         /// <summary>
+        /// Trimmed down version of <see cref="Update"/> that only updates whether or not the contact's shapes are
+        /// touching.
+        /// </summary>
+        internal void UpdateIsTouching(Transform bodyATransform, Transform bodyBTransform)
+        {
+            var sensor = !(FixtureA!.Hard && FixtureB!.Hard);
+            if (sensor)
+            {
+                var shapeA = FixtureA!.Shape;
+                var shapeB = FixtureB!.Shape;
+                IsTouching = _manifoldManager.TestOverlap(shapeA,  ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
+            }
+            else
+            {
+                var manifold = Manifold;
+                Evaluate(ref manifold, bodyATransform, bodyBTransform);
+                IsTouching = manifold.PointCount > 0;
+            }
+        }
+
+        /// <summary>
         ///     Evaluate this contact with your own manifold and transforms.
         /// </summary>
         /// <param name="manifold">The manifold.</param>
@@ -266,19 +287,23 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     _manifoldManager.CollideEdgeAndPolygon(ref manifold, (EdgeShape) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.ChainAndCircle:
-                    throw new NotImplementedException();
-                    /*
-                    ChainShape chain = (ChainShape)FixtureA.Shape;
-                    chain.GetChildEdge(_edge, ChildIndexA);
-                    Collision.CollisionManager.CollideEdgeAndCircle(ref manifold, _edge, ref transformA, (CircleShape)FixtureB.Shape, ref transformB);
-                    */
+                {
+                    var chain = (ChainShape) FixtureA!.Shape;
+                    var edge = _manifoldManager.GetContactEdge();
+                    chain.GetChildEdge(ref edge, ChildIndexA);
+                    _manifoldManager.CollideEdgeAndCircle(ref manifold, edge, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
+                    _manifoldManager.ReturnEdge(edge);
+                    break;
+                }
                 case ContactType.ChainAndPolygon:
-                    throw new NotImplementedException();
-                    /*
-                    ChainShape loop2 = (ChainShape)FixtureA.Shape;
-                    loop2.GetChildEdge(_edge, ChildIndexA);
-                    Collision.CollisionManager.CollideEdgeAndPolygon(ref manifold, _edge, ref transformA, (PolygonShape)FixtureB.Shape, ref transformB);
-                    */
+                {
+                    var loop2 = (ChainShape) FixtureA!.Shape;
+                    var edge = _manifoldManager.GetContactEdge();
+                    loop2.GetChildEdge(ref edge, ChildIndexA);
+                    _manifoldManager.CollideEdgeAndPolygon(ref manifold, edge, in transformA, (PolygonShape) FixtureB!.Shape, in transformB);
+                    _manifoldManager.ReturnEdge(edge);
+                    break;
+                }
                 case ContactType.Circle:
                     _manifoldManager.CollideCircles(ref manifold, (PhysShapeCircle) FixtureA!.Shape, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
                     break;
@@ -322,7 +347,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public override int GetHashCode()
         {
             // TODO: Need to suss this out
-            return HashCode.Combine((FixtureA != null ? FixtureA.Body.Owner : EntityUid.Invalid), (FixtureB != null ? FixtureB.Body.Owner : EntityUid.Invalid));
+            return HashCode.Combine(EntityA, EntityB);
         }
     }
 
@@ -330,19 +355,27 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
     internal enum ContactFlags : byte
     {
         None = 0,
+
+        /// <summary>
+        /// Is the contact pending its first manifold generation.
+        /// </summary>
+        PreInit = 1 << 0,
+
         /// <summary>
         ///     Has this contact already been added to an island?
         /// </summary>
-        Island = 1 << 0,
+        Island = 1 << 1,
 
         /// <summary>
         ///     Does this contact need re-filtering?
         /// </summary>
-        Filter = 1 << 1,
+        Filter = 1 << 2,
 
         /// <summary>
         /// Is this a special contact for grid-grid collisions
         /// </summary>
-        Grid = 1 << 2,
+        Grid = 1 << 3,
+
+        Deleting = 1 << 4,
     }
 }

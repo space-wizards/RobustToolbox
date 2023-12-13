@@ -11,7 +11,7 @@ namespace Robust.Shared.Timing
         /// <summary>
         /// Counts the time (in milliseconds) before firing again.
         /// </summary>
-        private int _timeCounter;
+        private float _timeCounter;
 
         /// <summary>
         /// Time (in milliseconds) between firings.
@@ -46,7 +46,7 @@ namespace Robust.Shared.Timing
         {
             if (IsActive)
             {
-                _timeCounter -= (int)(frameTime * 1000);
+                _timeCounter -= frameTime * 1000;
 
                 if (_timeCounter <= 0)
                 {

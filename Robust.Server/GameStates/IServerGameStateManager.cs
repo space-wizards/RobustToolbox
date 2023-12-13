@@ -1,6 +1,6 @@
 using System;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.GameStates
@@ -22,8 +22,8 @@ namespace Robust.Server.GameStates
 
         ushort TransformNetId { get; set; }
 
-        Action<ICommonSession, GameTick, GameTick>? ClientAck { get; set; }
+        Action<ICommonSession, GameTick>? ClientAck { get; set; }
 
-        Action<ICommonSession, GameTick, GameTick, EntityUid?>? ClientRequestFull { get; set; }
+        Action<ICommonSession, GameTick, NetEntity?>? ClientRequestFull { get; set; }
     }
 }

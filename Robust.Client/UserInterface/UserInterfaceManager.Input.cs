@@ -1,5 +1,7 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.UserInterface.Controls;
@@ -36,10 +38,10 @@ internal partial class UserInterfaceManager
 
     // set to null when not counting down
     private float? _tooltipDelay;
-    private Tooltip _tooltip = default!;
-    private bool showingTooltip;
+    private bool _showingTooltip;
     private Control? _suppliedTooltip;
-    private const float TooltipDelay = 1;
+    private const float TooltipDelay = 0.25f;
+    private readonly Dictionary<BoundKeyFunction, Control> _focusedControls = new();
 
     private WindowRoot? _focusedRoot;
 
@@ -108,12 +110,14 @@ internal partial class UserInterfaceManager
         {
             args.Handle();
         }
+
+        _focusedControls[args.Function] = control;
+        OnKeyBindDown?.Invoke(control);
     }
 
     public void KeyBindUp(BoundKeyEventArgs args)
     {
-        var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation);
-        if (control == null)
+        if (!_focusedControls.TryGetValue(args.Function, out var control))
         {
             return;
         }
@@ -127,6 +131,7 @@ internal partial class UserInterfaceManager
         // Always mark this as handled.
         // The only case it should not be is if we do not have a control to click on,
         // in which case we never reach this.
+        _focusedControls.Remove(args.Function);
         args.Handle();
     }
 
@@ -290,8 +295,8 @@ internal partial class UserInterfaceManager
 
     private void _clearTooltip()
     {
-        if (!showingTooltip) return;
-        _tooltip.Visible = false;
+        if (!_showingTooltip) return;
+
         if (_suppliedTooltip != null)
         {
             PopupRoot.RemoveChild(_suppliedTooltip);
@@ -300,7 +305,7 @@ internal partial class UserInterfaceManager
 
         CurrentlyHovered?.PerformHideTooltip();
         _resetTooltipTimer();
-        showingTooltip = false;
+        _showingTooltip = false;
     }
 
     public void CursorChanged(Control control)
@@ -497,8 +502,8 @@ internal partial class UserInterfaceManager
 
     private void _showTooltip()
     {
-        if (showingTooltip) return;
-        showingTooltip = true;
+        if (_showingTooltip) return;
+        _showingTooltip = true;
         var hovered = CurrentlyHovered;
         if (hovered == null)
         {
@@ -509,20 +514,24 @@ internal partial class UserInterfaceManager
         if (hovered.TooltipSupplier != null)
         {
             _suppliedTooltip = hovered.TooltipSupplier.Invoke(hovered);
-            if (_suppliedTooltip != null)
-            {
-                PopupRoot.AddChild(_suppliedTooltip);
-                Tooltips.PositionTooltip(_suppliedTooltip);
-            }
         }
         else if (!String.IsNullOrWhiteSpace(hovered.ToolTip))
         {
             // show simple tooltip if there is one
-            _tooltip.Visible = true;
-            _tooltip.Text = hovered.ToolTip;
-            Tooltips.PositionTooltip(_tooltip);
+            var tooltip = new Tooltip()
+            {
+                Text = hovered.ToolTip,
+                Tracking = hovered.TrackingTooltip,
+            };
+
+            _suppliedTooltip = tooltip;
         }
 
+        if (_suppliedTooltip == null)
+            return;
+
+        PopupRoot.AddChild(_suppliedTooltip);
+        Tooltips.PositionTooltip(_suppliedTooltip);
         hovered.PerformShowTooltip();
     }
 

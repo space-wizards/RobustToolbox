@@ -1,17 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\MSBuild\Robust.Properties.targets" />
-
   <PropertyGroup>
-    <!-- Work around https://github.com/dotnet/project-system/issues/4314 -->
-    <TargetFramework>$(TargetFramework)</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>9.0</LangVersion>
+    <SkipRobustAnalyzer>true</SkipRobustAnalyzer>
   </PropertyGroup>
 
-  <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
-
-  <ItemGroup>
-    <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
-  </ItemGroup>
-
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
 </Project>

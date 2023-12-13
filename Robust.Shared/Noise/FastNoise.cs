@@ -29,8 +29,6 @@
 // Uncomment the line below to swap all the inputs/outputs/calculations of FastNoise to doubles instead of floats
 //#define FN_USE_DOUBLES
 
-#nullable disable
-
 #if FN_USE_DOUBLES
 using FN_DECIMAL = System.Double;
 #else
@@ -39,9 +37,12 @@ using FN_DECIMAL = System.Single;
 using System;
 using System.Runtime.CompilerServices;
 
+#nullable disable
+
 namespace Robust.Shared.Noise
 {
 #pragma warning disable RA0003
+    [Obsolete("Use FastNoiseLite")]
     public sealed class FastNoise
 #pragma warning restore RA0003
     {
@@ -122,103 +123,135 @@ namespace Robust.Shared.Noise
             CalculateFractalBounding();
         }
 
-        // Returns a 0 float/double
+        /// <summary>
+        /// Returns a 0 float/double
+        /// </summary>
         public static FN_DECIMAL GetDecimalType()
         {
             return 0;
         }
 
-        // Returns the seed used by this object
+        public float GetFrequency()
+        {
+            return m_frequency;
+        }
+
+        /// <summary>
+        /// Returns the seed used by this object
+        /// </summary>
         public int GetSeed()
         {
             return m_seed;
         }
 
-        // Sets seed used for all noise types
-        // Default: 1337
+        /// <summary>
+        /// Sets seed used for all noise types
+        /// Default: 1337
+        /// </summary>
+        /// <param name="seed"></param>
         public void SetSeed(int seed)
         {
             m_seed = seed;
         }
 
-        // Sets frequency for all noise types
-        // Default: 0.01
+        /// <summary>
+        /// Sets frequency for all noise types
+        /// Default: 0.01
+        /// </summary>
+        /// <param name="frequency"></param>
         public void SetFrequency(FN_DECIMAL frequency)
         {
             m_frequency = frequency;
         }
 
-        // Changes the interpolation method used to smooth between noise values
-        // Possible interpolation methods (lowest to highest quality) :
-        // - Linear
-        // - Hermite
-        // - Quintic
-        // Used in Value, Gradient Noise and Position Perturbing
-        // Default: Quintic
+        /// <summary>
+        /// Changes the interpolation method used to smooth between noise values
+        /// Possible interpolation methods (lowest to highest quality) :
+        /// - Linear
+        /// - Hermite
+        /// - Quintic
+        /// Used in Value, Gradient Noise and Position Perturbing
+        /// Default: Quintic
+        /// </summary>
         public void SetInterp(Interp interp)
         {
             m_interp = interp;
         }
 
-        // Sets noise return type of GetNoise(...)
-        // Default: Simplex
+        /// <summary>
+        /// Sets noise return type of GetNoise(...)
+        /// Default: Simplex
+        /// </summary>
+        /// <param name="noiseType"></param>
         public void SetNoiseType(NoiseType noiseType)
         {
             m_noiseType = noiseType;
         }
 
-
-        // Sets octave count for all fractal noise types
-        // Default: 3
+        /// <summary>
+        /// Sets octave count for all fractal noise types
+        /// Default: 3
+        /// </summary>
         public void SetFractalOctaves(int octaves)
         {
             m_octaves = octaves;
             CalculateFractalBounding();
         }
 
-        // Sets octave lacunarity for all fractal noise types
-        // Default: 2.0
+        /// <summary>
+        /// Sets octave lacunarity for all fractal noise types
+        /// Default: 2.0
+        /// </summary>
         public void SetFractalLacunarity(FN_DECIMAL lacunarity)
         {
             m_lacunarity = lacunarity;
         }
 
-        // Sets octave gain for all fractal noise types
-        // Default: 0.5
+        /// <summary>
+        /// Sets octave gain for all fractal noise types
+        /// Default: 0.5
+        /// </summary>
         public void SetFractalGain(FN_DECIMAL gain)
         {
             m_gain = gain;
             CalculateFractalBounding();
         }
 
-        // Sets method for combining octaves in all fractal noise types
-        // Default: FBM
+        /// <summary>
+        /// Sets method for combining octaves in all fractal noise types
+        /// Default: FBM
+        /// </summary>
         public void SetFractalType(FractalType fractalType)
         {
             m_fractalType = fractalType;
         }
 
-
-        // Sets return type from cellular noise calculations
-        // Note: NoiseLookup requires another FastNoise object be set with SetCellularNoiseLookup() to function
-        // Default: CellValue
+        /// <summary>
+        /// Sets return type from cellular noise calculations
+        /// Note: NoiseLookup requires another FastNoise object be set with SetCellularNoiseLookup() to function
+        /// Default: CellValue
+        /// </summary>
         public void SetCellularDistanceFunction(CellularDistanceFunction cellularDistanceFunction)
         {
             m_cellularDistanceFunction = cellularDistanceFunction;
         }
 
-        // Sets distance function used in cellular noise calculations
-        // Default: Euclidean
+        /// <summary>
+        /// Sets distance function used in cellular noise calculations
+        /// Default: Euclidean
+        /// </summary>
         public void SetCellularReturnType(CellularReturnType cellularReturnType)
         {
             m_cellularReturnType = cellularReturnType;
         }
 
-        // Sets the 2 distance indicies used for distance2 return types
-        // Default: 0, 1
-        // Note: index0 should be lower than index1
-        // Both indicies must be >= 0, index1 must be < 4
-        public void SetCellularDistance2Indicies(int cellularDistanceIndex0, int cellularDistanceIndex1)
+        /// <summary>
+        /// Sets the 2 distance indices used for distance2 return types
+        /// Default: 0, 1
+        /// Note: index0 should be lower than index1
+        /// Both indices must be >= 0, index1 must be < 4
+        /// </summary>
+        public void SetCellularDistance2Indices(int cellularDistanceIndex0, int cellularDistanceIndex1)
         {
             m_cellularDistanceIndex0 = Math.Min(cellularDistanceIndex0, cellularDistanceIndex1);
             m_cellularDistanceIndex1 = Math.Max(cellularDistanceIndex0, cellularDistanceIndex1);
@@ -227,24 +260,30 @@ namespace Robust.Shared.Noise
             m_cellularDistanceIndex1 = Math.Min(Math.Max(m_cellularDistanceIndex1, 0), FN_CELLULAR_INDEX_MAX);
         }
 
-        // Sets the maximum distance a cellular point can move from it's grid position
-        // Setting this high will make artifacts more common
-        // Default: 0.45
+        /// <summary>
+        /// Sets the maximum distance a cellular point can move from its grid position
+        /// Setting this high will make artifacts more common
+        /// Default: 0.45
+        /// </summary>
         public void SetCellularJitter(float cellularJitter)
         {
             m_cellularJitter = cellularJitter;
         }
 
-        // Noise used to calculate a cell value if cellular return type is NoiseLookup
-        // The lookup value is acquired through GetNoise() so ensure you SetNoiseType() on the noise lookup, value, gradient or simplex is recommended
+        /// <summary>
+        /// Noise used to calculate a cell value if cellular return type is NoiseLookup
+        /// The lookup value is acquired through GetNoise() so ensure you SetNoiseType() on the noise lookup, value, gradient or simplex is recommended
+        /// </summary>
         public void SetCellularNoiseLookup(FastNoise noise)
         {
             m_cellularNoiseLookup = noise;
         }
 
 
-        // Sets the maximum perturb distance from original location when using GradientPerturb{Fractal}(...)
-        // Default: 1.0
+        /// <summary>
+        /// Sets the maximum perturb distance from original location when using GradientPerturb{Fractal}(...)
+        /// Default: 1.0
+        /// </summary>
         public void SetGradientPerturbAmp(FN_DECIMAL gradientPerturbAmp)
         {
             m_gradientPerturbAmp = gradientPerturbAmp;
@@ -1041,7 +1080,9 @@ namespace Robust.Shared.Noise
             }
         }
 
-        // White Noise
+        /// <summary>
+        /// White Noise
+        /// </summary>
         [MethodImplAttribute(FN_INLINE)]
         private int FloatCast2Int(FN_DECIMAL f)
         {
@@ -1092,7 +1133,9 @@ namespace Robust.Shared.Noise
             return ValCoord2D(m_seed, x, y);
         }
 
-        // Value Noise
+        /// <summary>
+        /// Value Noise
+        /// </summary>
         public FN_DECIMAL GetValueFractal(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             x *= m_frequency;
@@ -1322,7 +1365,9 @@ namespace Robust.Shared.Noise
             return Lerp(xf0, xf1, ys);
         }
 
-        // Gradient Noise
+        /// <summary>
+        /// Gradient Noise
+        /// </summary>
         public FN_DECIMAL GetPerlinFractal(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             x *= m_frequency;
@@ -1569,7 +1614,9 @@ namespace Robust.Shared.Noise
             return Lerp(xf0, xf1, ys);
         }
 
-        // Simplex Noise
+        /// <summary>
+        /// Simplex Noise
+        /// </summary>
         public FN_DECIMAL GetSimplexFractal(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             x *= m_frequency;
@@ -2116,7 +2163,9 @@ namespace Robust.Shared.Noise
             return 27 * (n0 + n1 + n2 + n3 + n4);
         }
 
-        // Cubic Noise
+        /// <summary>
+        /// Cubic Noise
+        /// </summary>
         public FN_DECIMAL GetCubicFractal(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             x *= m_frequency;
@@ -2384,7 +2433,9 @@ namespace Robust.Shared.Noise
                        ys) * CUBIC_2D_BOUNDING;
         }
 
-        // Cellular Noise
+        /// <summary>
+        /// Cellular Noise
+        /// </summary>
         public FN_DECIMAL GetCellular(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             x *= m_frequency;

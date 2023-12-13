@@ -25,10 +25,12 @@ SOFTWARE.
 #endregion --- License ---
 
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
@@ -384,7 +386,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Matrix3 CreateRotation(Angle angle)
+        public static Matrix3 CreateRotation(double angle)
         {
             var cos = (float) Math.Cos(angle);
             var sin = (float) Math.Sin(angle);
@@ -425,12 +427,12 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Matrix3 CreateTransform(float posX, float posY, float angle, float scaleX = 1, float scaleY = 1)
+        public static Matrix3 CreateTransform(float posX, float posY, double angle, float scaleX = 1, float scaleY = 1)
         {
             // returns a matrix that is equivalent to returning CreateScale(scale) * CreateRotation(angle) * CreateTranslation(posX, posY)
 
-            var sin = MathF.Sin(angle);
-            var cos = MathF.Cos(angle);
+            var sin = (float) Math.Sin(angle);
+            var cos = (float) Math.Cos(angle);
 
             return new Matrix3
             {
@@ -445,12 +447,12 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Matrix3 CreateInverseTransform(float posX, float posY, float angle, float scaleX = 1, float scaleY = 1)
+        public static Matrix3 CreateInverseTransform(float posX, float posY, double angle, float scaleX = 1, float scaleY = 1)
         {
             // returns a matrix that is equivalent to returning CreateTranslation(-posX, -posY) * CreateRotation(-angle) * CreateScale(1/scaleX, 1/scaleY)
 
-            var sin = MathF.Sin(angle);
-            var cos = MathF.Cos(angle);
+            var sin = (float) Math.Sin(angle);
+            var cos = (float) Math.Cos(angle);
 
             return new Matrix3
             {
@@ -467,7 +469,14 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 CreateTransform(in Vector2 position, in Angle angle)
         {
-            return CreateTransform(position.X, position.Y, (float)angle.Theta);
+            // Rounding moment
+            return angle.Theta switch
+            {
+                -Math.PI / 2 => new Matrix3(0f, 1f, position.X, -1f, 0f, position.Y, 0f, 0f, 1f),
+                Math.PI / 2 => new Matrix3(0f, -1f, position.X, 1f, 0f, position.Y, 0f, 0f, 1f),
+                Math.PI => new Matrix3(-1f, 0f, position.X, 0f, -1f, position.Y, 0f, 0f, 1f),
+                _ => CreateTransform(position.X, position.Y, (float) angle.Theta)
+            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -485,7 +494,17 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 CreateInverseTransform(in Vector2 position, in Angle angle, in Vector2 scale)
         {
-            return CreateInverseTransform(position.X, position.Y, (float)angle.Theta, scale.X, scale.Y);
+            return CreateInverseTransform(position.X, position.Y, angle.Theta, scale.X, scale.Y);
+        }
+
+        /// <summary>
+        /// Gets the rotation of the Matrix. Will have some precision loss.
+        /// </summary>
+        [Pure]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Angle Rotation()
+        {
+            return new Vector2(R0C0, R1C0).ToAngle();
         }
 
         #endregion Constructors

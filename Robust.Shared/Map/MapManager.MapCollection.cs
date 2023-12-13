@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
@@ -39,39 +37,10 @@ internal partial class MapManager
         DebugTools.Assert(_dbgGuardRunning);
 #endif
 
-        if (!_mapEntities.TryGetValue(mapId, out var ent))
+        if (!_mapEntities.TryGetValue(mapId, out var ent) || !ent.IsValid())
             throw new InvalidOperationException($"Attempted to delete nonexistent map '{mapId}'");
 
-        if (ent != EntityUid.Invalid)
-        {
-            EntityManager.DeleteEntity(ent);
-        }
-        else
-        {
-            // unbound map
-            TrueDeleteMap(mapId);
-        }
-    }
-
-    /// <inheritdoc />
-    public void TrueDeleteMap(MapId mapId)
-    {
-        // grids are cached because Delete modifies collection
-        var grids = GetAllMapGrids(mapId).ToList();
-
-        foreach (var grid in grids)
-        {
-            DeleteGrid(grid.Owner);
-        }
-
-        if (mapId != MapId.Nullspace)
-        {
-            var args = new MapEventArgs(mapId);
-            OnMapDestroyedGridTree(args);
-            _mapEntities.Remove(mapId);
-        }
-
-        Logger.InfoS("map", $"Deleting map {mapId}");
+        EntityManager.DeleteEntity(ent);
     }
 
     /// <inheritdoc />
@@ -155,27 +124,24 @@ internal partial class MapManager
         {
             raiseEvent = true;
 
-            if (mapComp.WorldMap != mapId)
+            if (mapComp.MapId != mapId)
             {
-                Logger.WarningS("map",
-                    $"Setting map {mapId} root to entity {newMapEntity}, but entity thinks it is root node of map {mapComp.WorldMap}.");
+                _sawmill.Warning($"Setting map {mapId} root to entity {newMapEntity}, but entity thinks it is root node of map {mapComp.MapId}.");
             }
         }
 
-        Logger.DebugS("map", $"Setting map {mapId} entity to {newMapEntity}");
+        _sawmill.Debug($"Setting map {mapId} entity to {newMapEntity}");
 
         // set as new map entity
         mapComp.MapPreInit = preInit;
         mapComp.MapPaused = paused;
 
-        mapComp.WorldMap = mapId;
+        mapComp.MapId = mapId;
         _mapEntities[mapId] = newMapEntity;
 
         // Yeah this sucks but I just want to save maps for now, deal.
         if (raiseEvent)
         {
-            var args = new MapEventArgs(mapId);
-            OnMapCreatedGridTree(args);
             var ev = new MapChangedEvent(newMapEntity, mapId, true);
             EntityManager.EventBus.RaiseLocalEvent(newMapEntity, ev, true);
         }
@@ -239,27 +205,26 @@ internal partial class MapManager
         if (_highestMapId.Value < actualId.Value)
             _highestMapId = actualId;
 
-        Logger.InfoS("map", $"Creating new map {actualId}");
+        _sawmill.Info($"Creating new map {actualId}");
 
         if (actualId != MapId.Nullspace) // nullspace isn't bound to an entity
         {
-            var mapComps = EntityManager.EntityQuery<MapComponent>(true);
-
-            MapComponent? result = null;
-            foreach (var mapComp in mapComps)
+            Entity<MapComponent> result = default;
+            var query = EntityManager.AllEntityQueryEnumerator<MapComponent>();
+            while (query.MoveNext(out var uid, out var map))
             {
-                if (mapComp.WorldMap != actualId)
+                if (map.MapId != actualId)
                     continue;
 
-                result = mapComp;
+                result = (uid, map);
                 break;
             }
 
-            if (result != null)
+            if (result != default)
             {
                 DebugTools.Assert(mapId != null);
-                _mapEntities.Add(actualId, result.Owner);
-                Logger.DebugS("map", $"Rebinding map {actualId} to entity {result.Owner}");
+                _mapEntities.Add(actualId, result);
+                _sawmill.Debug($"Rebinding map {actualId} to entity {result.Owner}");
             }
             else
             {
@@ -267,16 +232,16 @@ internal partial class MapManager
                 _mapEntities.Add(actualId, newEnt);
 
                 var mapComp = EntityManager.AddComponent<MapComponent>(newEnt);
-                mapComp.WorldMap = actualId;
-                EntityManager.Dirty(mapComp);
-                EntityManager.InitializeComponents(newEnt);
+                mapComp.MapId = actualId;
+                var meta = EntityManager.GetComponent<MetaDataComponent>(newEnt);
+                EntityManager.System<MetaDataSystem>().SetEntityName(newEnt, $"map {actualId}", meta);
+                EntityManager.Dirty(newEnt, mapComp, meta);
+                EntityManager.InitializeComponents(newEnt, meta);
                 EntityManager.StartComponents(newEnt);
-                Logger.DebugS("map", $"Binding map {actualId} to entity {newEnt}");
+                _sawmill.Debug($"Binding map {actualId} to entity {newEnt}");
             }
         }
 
-        var args = new MapEventArgs(actualId);
-        OnMapCreatedGridTree(args);
         return actualId;
     }
 }

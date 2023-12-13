@@ -8,8 +8,13 @@ public sealed class DebugExceptionSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<DebugExceptionOnAddComponent, ComponentAdd>((_, _, _) => throw new NotSupportedException());
+        SubscribeLocalEvent<DebugExceptionOnAddComponent, ComponentAdd>(OnCompAdd);
         SubscribeLocalEvent<DebugExceptionInitializeComponent, ComponentInit>((_, _, _) => throw new NotSupportedException());
         SubscribeLocalEvent<DebugExceptionStartupComponent, ComponentStartup>((_, _, _) => throw new NotSupportedException());
+    }
+
+    private void OnCompAdd(EntityUid uid, DebugExceptionOnAddComponent component, ComponentAdd args)
+    {
+        throw new NotSupportedException();
     }
 }

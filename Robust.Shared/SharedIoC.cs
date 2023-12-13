@@ -17,6 +17,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed;
 
 namespace Robust.Shared
 {
@@ -25,10 +26,6 @@ namespace Robust.Shared
         public static void RegisterIoC(IDependencyCollection deps)
         {
             deps.Register<ISerializationManager, SerializationManager>();
-            deps.Register<IConfigurationManager, NetConfigurationManager>();
-            deps.Register<INetConfigurationManager, NetConfigurationManager>();
-            deps.Register<IConfigurationManagerInternal, NetConfigurationManager>();
-            deps.Register<INetConfigurationManagerInternal, NetConfigurationManager>();
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             deps.Register<IEntitySystemManager, EntitySystemManager>();
@@ -38,7 +35,6 @@ namespace Robust.Shared
             deps.Register<IModLoader, ModLoader>();
             deps.Register<IModLoaderInternal, ModLoader>();
             deps.Register<INetManager, NetManager>();
-            deps.Register<IRobustSerializer, RobustSerializer>();
             deps.Register<IRuntimeLog, RuntimeLog>();
             deps.Register<ITaskManager, TaskManager>();
             deps.Register<TaskManager, TaskManager>();
@@ -51,6 +47,9 @@ namespace Robust.Shared
             deps.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
             deps.Register<IParallelManager, ParallelManager>();
             deps.Register<IParallelManagerInternal, ParallelManager>();
+            deps.Register<ToolshedManager>();
+            deps.Register<HttpClientHolder>();
+            deps.Register<RobustMemoryManager>();
         }
     }
 }

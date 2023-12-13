@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -10,7 +11,7 @@ using Robust.UnitTesting.Server;
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, Parallelizable ,TestOf(typeof(EntityManager))]
-    public sealed class EntityManager_Components_Tests
+    public sealed partial class EntityManager_Components_Tests
     {
         private static readonly EntityCoordinates DefaultCoords = new(new EntityUid(1), Vector2.Zero);
 
@@ -186,6 +187,23 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Test]
+        public void EnsureQueuedComponentDeletion()
+        {
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = entMan.AddComponent<DummyComponent>(entity);
+
+            Assert.That(component.LifeStage, Is.LessThanOrEqualTo(ComponentLifeStage.Running));
+            entMan.RemoveComponentDeferred(entity, component);
+            Assert.That(component.LifeStage, Is.EqualTo(ComponentLifeStage.Stopped));
+
+            Assert.False(entMan.EnsureComponent<DummyComponent>(entity, out var comp2));
+            Assert.That(comp2.LifeStage, Is.LessThanOrEqualTo(ComponentLifeStage.Running));
+            Assert.That(component.LifeStage, Is.EqualTo(ComponentLifeStage.Deleted));
+        }
+
+        [Test]
         public void RemoveNetComponentTest()
         {
             // Arrange
@@ -248,6 +266,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Arrange
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var fac = sim.Resolve<IComponentFactory>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
             var component = IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
@@ -255,7 +274,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var result = entMan.GetComponents(entity);
 
             // Assert
-            var list = result.Where(c=>c.Name == "Dummy").ToList();
+            var list = result.Where(c=>fac.GetComponentName(c.GetType()) == "Dummy").ToList();
             Assert.That(list.Count, Is.EqualTo(1));
             Assert.That(list[0], Is.EqualTo(component));
         }
@@ -274,7 +293,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [NetworkedComponent()]
-        private sealed class DummyComponent : Component, ICompType1, ICompType2
+        private sealed partial class DummyComponent : Component, ICompType1, ICompType2
         {
         }
 

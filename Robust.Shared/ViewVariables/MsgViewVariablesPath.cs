@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Lidgren.Network;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
@@ -156,7 +157,8 @@ internal sealed class MsgViewVariablesListPathReq : MsgViewVariablesPathReq
     {
         base.ReadFromBuffer(buffer, serializer);
         var length = buffer.ReadInt32();
-        using var stream = buffer.ReadAlignedMemory(length);
+        using var stream = RobustMemoryManager.GetMemoryStream(length);
+        buffer.ReadAlignedMemory(stream, length);
         Options = serializer.Deserialize<VVListPathOptions>(stream);
     }
 

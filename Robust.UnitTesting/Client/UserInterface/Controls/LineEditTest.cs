@@ -139,14 +139,14 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
 
         [Test]
         // RIGHT
-        [TestCase("Foo Bar Baz", false, 0, ExpectedResult = 4)]
+        [TestCase("Foo Bar Baz", false, 0, ExpectedResult = 3)]
         [TestCase("Foo Bar Baz", false, 8, ExpectedResult = 11)]
         [TestCase("Foo[Bar[Baz", false, 0, ExpectedResult = 3)]
         [TestCase("Foo[Bar[Baz", false, 3, ExpectedResult = 4)]
         [TestCase("Foo^Bar^Baz", false, 0, ExpectedResult = 3)]
         [TestCase("Foo^Bar^Baz", false, 3, ExpectedResult = 5)]
         [TestCase("Foo^^^Bar^Baz", false, 3, ExpectedResult = 9)]
-        [TestCase("^^^ ^^^", false, 0, ExpectedResult = 7)]
+        [TestCase("^^^ ^^^", false, 0, ExpectedResult = 6)]
         [TestCase("^^^ ^^^", false, 7, ExpectedResult = 13)]
         // LEFT
         [TestCase("Foo Bar Baz", true, 4, ExpectedResult = 0)]

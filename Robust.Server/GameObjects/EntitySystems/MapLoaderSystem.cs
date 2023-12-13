@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using Robust.Server.Maps;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -11,6 +12,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -41,13 +43,14 @@ public sealed class MapLoaderSystem : EntitySystem
                  private          IServerEntityManagerInternal _serverEntityManager = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
     [Dependency] private readonly MetaDataSystem _meta = default!;
+    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
     private ISawmill _logLoader = default!;
+    private ISawmill _logWriter = default!;
 
     private static readonly MapLoadOptions DefaultLoadOptions = new();
-    private const int MapFormatVersion = 3;
+    private const int MapFormatVersion = 6;
     private const int BackwardsVersion = 2;
 
     private MapSerializationContext _context = default!;
@@ -58,7 +61,9 @@ public sealed class MapLoaderSystem : EntitySystem
         base.Initialize();
         _serverEntityManager = (IServerEntityManagerInternal)EntityManager;
         _logLoader = Logger.GetSawmill("loader");
-        _context = new MapSerializationContext();
+        _logWriter = Logger.GetSawmill("writer");
+        _logLoader.Level = LogLevel.Info;
+        _context = new MapSerializationContext(_serverEntityManager, _timing);
     }
 
     #region Public
@@ -129,7 +134,7 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         options ??= DefaultLoadOptions;
 
-        var resPath = new ResourcePath(path).ToRootedPath();
+        var resPath = new ResPath(path).ToRootedPath();
 
         if (!TryGetReader(resPath, out var reader))
         {
@@ -195,11 +200,11 @@ public sealed class MapLoaderSystem : EntitySystem
             return;
         }
 
-        _logLoader.Info($"Saving entity {ToPrettyString(uid)} to {ymlPath}");
+        _logLoader.Debug($"Saving entity {ToPrettyString(uid)} to {ymlPath}");
 
         var document = new YamlDocument(GetSaveData(uid).ToYaml());
 
-        var resPath = new ResourcePath(ymlPath).ToRootedPath();
+        var resPath = new ResPath(ymlPath).ToRootedPath();
         _resourceManager.UserData.CreateDir(resPath.Directory);
 
         using var writer = _resourceManager.UserData.OpenWriteText(resPath);
@@ -226,7 +231,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
     #region Loading
 
-    private bool TryGetReader(ResourcePath resPath, [NotNullWhen(true)] out TextReader? reader)
+    private bool TryGetReader(ResPath resPath, [NotNullWhen(true)] out TextReader? reader)
     {
         // try user
         if (!_resourceManager.UserData.Exists(resPath))
@@ -255,19 +260,22 @@ public sealed class MapLoaderSystem : EntitySystem
 
     private bool Deserialize(MapData data)
     {
-        // Verify that prototypes for all the entities exist
-        if (!VerifyEntitiesExist(data))
-            return false;
+        var ev = new BeforeEntityReadEvent();
+        RaiseLocalEvent(ev);
 
         // First we load map meta data like version.
         if (!ReadMetaSection(data))
+            return false;
+
+        // Verify that prototypes for all the entities exist
+        if (!VerifyEntitiesExist(data, ev))
             return false;
 
         // Tile map
         ReadTileMapSection(data);
 
         // Alloc entities
-        AllocEntities(data);
+        var toDelete = AllocEntities(data, ev);
 
         // Load the prototype data onto entities, e.g. transform parents, etc.
         LoadEntities(data);
@@ -282,31 +290,78 @@ public sealed class MapLoaderSystem : EntitySystem
 
         ReadGrids(data);
 
+        // grids prior to engine v175 might've been serialized with empty chunks which now throw debug asserts.
+        RemoveEmptyChunks(data);
+
         // Then, go hierarchically in order and do the entity things.
         StartupEntities(data);
+
+        // At the very end, delete entities belonging to removed prototypes. This is being done after startup just in
+        // case these entities have any children that somehow rely on startup in order to properly shut down.
+        // This is pretty cursed and might cause unexpected errors.
+        foreach (var uid in toDelete)
+        {
+           Del(uid);
+           data.Entities.Remove(uid);
+        }
 
         return true;
     }
 
-    private bool VerifyEntitiesExist(MapData data)
+    private void RemoveEmptyChunks(MapData data)
+    {
+        var gridQuery = _serverEntityManager.GetEntityQuery<MapGridComponent>();
+        foreach (var uid in data.EntitiesToDeserialize.Keys)
+        {
+            if (!gridQuery.TryGetComponent(uid, out var gridComp))
+                continue;
+
+            foreach (var (index, chunk) in gridComp.Chunks)
+            {
+                if (chunk.FilledTiles > 0)
+                    continue;
+
+                Log.Warning($"Encountered empty chunk while deserializing map. Grid: {ToPrettyString(uid)}. Chunk index: {index}");
+                gridComp.Chunks.Remove(index);
+            }
+        }
+    }
+
+    private bool VerifyEntitiesExist(MapData data, BeforeEntityReadEvent ev)
     {
         _stopwatch.Restart();
         var fail = false;
-        var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
         var reportedError = new HashSet<string>();
+        var key = data.Version >= 4 ? "proto" : "type";
+        var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
 
-        foreach (var entityDef in entities.Cast<MappingDataNode>())
+        foreach (var metaDef in entities.Cast<MappingDataNode>())
         {
-            if (entityDef.TryGet<ValueDataNode>("type", out var typeNode))
+            if (!metaDef.TryGet<ValueDataNode>(key, out var typeNode))
+                continue;
+
+            var type = typeNode.Value;
+            if (string.IsNullOrWhiteSpace(type))
+                continue;
+
+            if (ev.RenamedPrototypes.TryGetValue(type, out var newType))
+                type = newType;
+
+            if (_prototypeManager.HasIndex<EntityPrototype>(type))
+                continue;
+
+            if (!reportedError.Add(type))
+                continue;
+
+            if (ev.DeletedPrototypes.Contains(type))
             {
-                var type = typeNode.Value;
-                if (!_prototypeManager.HasIndex<EntityPrototype>(type) && !reportedError.Contains(type))
-                {
-                    Logger.ErrorS("map", "Missing prototype for map: {0}", type);
-                    fail = true;
-                    reportedError.Add(type);
-                }
+                _logLoader.Warning("Map contains an obsolete/removed prototype: {0}. This may cause unexpected errors.", type);
+                continue;
             }
+
+            _logLoader.Error("Missing prototype for map: {0}", type);
+            fail = true;
+            reportedError.Add(type);
         }
 
         _logLoader.Debug($"Verified entities in {_stopwatch.Elapsed}");
@@ -324,7 +379,7 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         var meta = data.RootMappingNode.Get<MappingDataNode>("meta");
         var ver = meta.Get<ValueDataNode>("format").AsInt();
-        if (ver != MapFormatVersion && ver != BackwardsVersion)
+        if (ver < BackwardsVersion)
         {
             _logLoader.Error($"Cannot handle this map file version, found {ver} and require {MapFormatVersion}");
             return false;
@@ -350,11 +405,11 @@ public sealed class MapLoaderSystem : EntitySystem
 
         // Load tile mapping so that we can map the stored tile IDs into the ones actually used at runtime.
         var tileMap = data.RootMappingNode.Get<MappingDataNode>("tilemap");
-        _context.TileMap = new Dictionary<ushort, string>(tileMap.Count);
+        _context.TileMap = new Dictionary<int, string>(tileMap.Count);
 
         foreach (var (key, value) in tileMap.Children)
         {
-            var tileId = (ushort) ((ValueDataNode)key).AsInt();
+            var tileId = ((ValueDataNode)key).AsInt();
             var tileDefName = ((ValueDataNode)value).Value;
             _context.TileMap.Add(tileId, tileDefName);
         }
@@ -362,47 +417,106 @@ public sealed class MapLoaderSystem : EntitySystem
         _logLoader.Debug($"Read tilemap in {_stopwatch.Elapsed}");
     }
 
-    private void AllocEntities(MapData data)
+    private HashSet<EntityUid> AllocEntities(MapData data, BeforeEntityReadEvent ev)
     {
         _stopwatch.Restart();
-        var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
         var mapUid = _mapManager.GetMapEntityId(data.TargetMap);
         var pauseTime = mapUid.IsValid() ? _meta.GetPauseTime(mapUid) : TimeSpan.Zero;
-        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), pauseTime);
-        data.Entities.EnsureCapacity(entities.Count);
-        data.UidEntityMap.EnsureCapacity(entities.Count);
-        data.EntitiesToDeserialize.EnsureCapacity(entities.Count);
+        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), data.MapIsPostInit, pauseTime, null);
+        HashSet<EntityUid> deletedPrototypeUids = new();
 
-        foreach (var entityDef in entities.Cast<MappingDataNode>())
+        if (data.Version >= 4)
         {
-            string? type = null;
-            if (entityDef.TryGet<ValueDataNode>("type", out var typeNode))
+            var metaEntities = data.RootMappingNode.Get<SequenceDataNode>("entities");
+
+            foreach (var metaDef in metaEntities.Cast<MappingDataNode>())
             {
-                type = typeNode.Value;
+                string? type = null;
+                var deletedPrototype = false;
+                if (metaDef.TryGet<ValueDataNode>("proto", out var typeNode)
+                    && !string.IsNullOrWhiteSpace(typeNode.Value))
+                {
+
+                    if (ev.DeletedPrototypes.Contains(typeNode.Value))
+                        deletedPrototype = true;
+                    else if (ev.RenamedPrototypes.TryGetValue(typeNode.Value, out var newType))
+                        type = newType;
+                    else
+                        type = typeNode.Value;
+                }
+
+                var entities = (SequenceDataNode) metaDef["entities"];
+                EntityPrototype? proto = null;
+
+                if (type != null)
+                    _prototypeManager.TryIndex(type, out proto);
+
+                foreach (var entityDef in entities.Cast<MappingDataNode>())
+                {
+                    var uid = entityDef.Get<ValueDataNode>("uid").AsInt();
+
+                    var entity = _serverEntityManager.AllocEntity(proto);
+                    data.Entities.Add(entity);
+                    data.UidEntityMap.Add(uid, entity);
+                    data.EntitiesToDeserialize.Add(entity, entityDef);
+
+                    if (deletedPrototype)
+                    {
+                        deletedPrototypeUids.Add(entity);
+                    }
+                    else if (data.Options.StoreMapUids)
+                    {
+                        var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
+                        comp.Uid = uid;
+                    }
+                }
             }
+        }
+        else
+        {
+            var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
 
-            // TODO Fix this. If the entities are ever defined out of order, and if one of them does not have a
-            // "uid" node, then defaulting to Entities.Count will error.
-            var uid = data.Entities.Count;
-
-            if (entityDef.TryGet<ValueDataNode>("uid", out var uidNode))
+            foreach (var entityDef in entities.Cast<MappingDataNode>())
             {
-                uid = uidNode.AsInt();
-            }
+                EntityUid entity;
+                if (entityDef.TryGet<ValueDataNode>("type", out var typeNode))
+                {
+                    if (ev.DeletedPrototypes.Contains(typeNode.Value))
+                    {
+                        entity = _serverEntityManager.AllocEntity(null);
+                        deletedPrototypeUids.Add(entity);
+                    }
+                    else if (ev.RenamedPrototypes.TryGetValue(typeNode.Value, out var newType))
+                    {
+                        _prototypeManager.TryIndex<EntityPrototype>(newType, out var prototype);
+                        entity = _serverEntityManager.AllocEntity(prototype);
+                    }
+                    else
+                    {
+                        _prototypeManager.TryIndex<EntityPrototype>(typeNode.Value, out var prototype);
+                        entity = _serverEntityManager.AllocEntity(prototype);
+                    }
+                }
+                else
+                {
+                    entity = _serverEntityManager.AllocEntity(null);
+                }
 
-            var entity = _serverEntityManager.AllocEntity(type);
-            data.Entities.Add(entity);
-            data.UidEntityMap.Add(uid, entity);
-            data.EntitiesToDeserialize.Add(entity, entityDef);
+                var uid = entityDef.Get<ValueDataNode>("uid").AsInt();
+                data.Entities.Add(entity);
+                data.UidEntityMap.Add(uid, entity);
+                data.EntitiesToDeserialize.Add(entity, entityDef);
 
-            if (data.Options.StoreMapUids)
-            {
-                var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
-                comp.Uid = uid;
+                if (data.Options.StoreMapUids)
+                {
+                    var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
+                    comp.Uid = uid;
+                }
             }
         }
 
         _logLoader.Debug($"Allocated {data.Entities.Count} entities in {_stopwatch.Elapsed}");
+        return deletedPrototypeUids;
     }
 
     private void LoadEntities(MapData mapData)
@@ -432,7 +546,14 @@ public sealed class MapLoaderSystem : EntitySystem
                 var datanode = compData.Copy();
                 datanode.Remove("type");
                 var value = ((ValueDataNode)compData["type"]).Value;
-                var compType = _componentFactory.GetRegistration(value).Type;
+                if (!_factory.TryGetRegistration(value, out var reg))
+                {
+                    if (!_factory.IsIgnored(value))
+                        _logLoader.Error($"Encountered unregistered component ({value}) while loading entity {ToPrettyString(uid)}");
+                    continue;
+                }
+
+                var compType = reg.Type;
                 if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protData))
                 {
                     datanode =
@@ -440,7 +561,10 @@ public sealed class MapLoaderSystem : EntitySystem
                             compType,
                             new[] { protData.Mapping }, datanode, _context);
                 }
+
+                _context.CurrentComponent = value;
                 _context.CurrentReadingEntityComponents[value] = (IComponent) _serManager.Read(compType, datanode, _context)!;
+                _context.CurrentComponent = null;
             }
         }
 
@@ -536,6 +660,7 @@ public sealed class MapLoaderSystem : EntitySystem
                     }
 
                     _mapManager.SetMapEntity(data.TargetMap, rootNode);
+                    EnsureComp<LoadedMapComponent>(rootNode);
                 }
                 // Otherwise just ignore the map in the file.
                 else
@@ -553,7 +678,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                         if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
                         {
-                            _transform.SetParent(xform, newRootUid);
+                            _transform.SetParent(ent, xform, newRootUid);
                         }
                     }
 
@@ -572,6 +697,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 }
 
                 _mapManager.SetMapEntity(data.TargetMap, rootNode);
+                EnsureComp<LoadedMapComponent>(rootNode);
 
                 // Nothing should have invalid uid except for the root node.
             }
@@ -601,7 +727,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 if (!xform.ParentUid.IsValid())
                 {
-                    _transform.SetParent(xform, mapNode);
+                    _transform.SetParent(ent, xform, mapNode);
                 }
             }
         }
@@ -628,7 +754,7 @@ public sealed class MapLoaderSystem : EntitySystem
             return;
 
         // get ents that the grids will bind to
-        var gridComps = new MapGridComponent[yamlGrids.Count];
+        var gridComps = new Entity<MapGridComponent>[yamlGrids.Count];
         var gridQuery = _serverEntityManager.GetEntityQuery<MapGridComponent>();
 
         // linear search for new grid comps
@@ -640,7 +766,7 @@ public sealed class MapLoaderSystem : EntitySystem
             // These should actually be new, pre-init
             DebugTools.Assert(gridComp.LifeStage == ComponentLifeStage.Added);
 
-            gridComps[gridComp.GridIndex] = gridComp;
+            gridComps[gridComp.GridIndex] = new Entity<MapGridComponent>(uid, gridComp);
         }
 
         for (var index = 0; index < yamlGrids.Count; index++)
@@ -659,17 +785,18 @@ public sealed class MapLoaderSystem : EntitySystem
             MappingDataNode yamlGridInfo = (MappingDataNode)yamlGrid["settings"];
             SequenceDataNode yamlGridChunks = (SequenceDataNode)yamlGrid["chunks"];
 
-            var grid = AllocateMapGrid(gridComp, yamlGridInfo);
+            AllocateMapGrid(gridComp, yamlGridInfo);
+            var gridUid = gridComp.Owner;
 
             foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
-                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY), notNullableOverride: true);
+                _serManager.Read(chunkNode, _context, instanceProvider: () => _mapSystem.GetOrAddChunk(gridUid, gridComp, chunkOffsetX, chunkOffsetY), notNullableOverride: true);
             }
         }
     }
 
-    private static MapGridComponent AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
+    private static void AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
     {
         // sane defaults
         ushort csz = 16;
@@ -689,8 +816,6 @@ public sealed class MapLoaderSystem : EntitySystem
 
         gridComp.ChunkSize = csz;
         gridComp.TileSize = tsz;
-
-        return gridComp;
     }
 
     private void StartupEntities(MapData data)
@@ -710,7 +835,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
             if (xformQuery.TryGetComponent(rootEntity, out var xform) && IsRoot(xform, mapQuery) && !HasComp<MapComponent>(rootEntity))
             {
-                xform.LocalPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
+                _transform.SetLocalPosition(xform, data.Options.TransformMatrix.Transform(xform.LocalPosition));
                 xform.LocalRotation += data.Options.Rotation;
             }
         }
@@ -723,7 +848,10 @@ public sealed class MapLoaderSystem : EntitySystem
             {
                 // Don't want to trigger events
                 xform._localPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
-                xform._localRotation += data.Options.Rotation;
+                if (!xform.NoLocalRotation)
+                    xform._localRotation += data.Options.Rotation;
+
+                DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
             }
 
             StartupEntity(entity, metaQuery.GetComponent(entity), data);
@@ -740,10 +868,22 @@ public sealed class MapLoaderSystem : EntitySystem
     private void StartupEntity(EntityUid uid, MetaDataComponent metadata, MapData data)
     {
         ResetNetTicks(uid, metadata, data.EntitiesToDeserialize[uid]);
+
+        var isPaused = data is { MapIsPaused: true, MapIsPostInit: false };
+        _meta.SetEntityPaused(uid, isPaused, metadata);
+
         // TODO: Apply map transforms if root node.
         _serverEntityManager.FinishEntityInitialization(uid, metadata);
         _serverEntityManager.FinishEntityStartup(uid);
-        MapInit(uid, metadata, data);
+
+        if (data.MapIsPostInit)
+        {
+            metadata.EntityLifeStage = EntityLifeStage.MapInitialized;
+        }
+        else if (_mapManager.IsMapInitialized(data.TargetMap))
+        {
+            _serverEntityManager.RunMapInit(uid, metadata);
+        }
     }
 
     private void ResetNetTicks(EntityUid entity, MetaDataComponent metadata, MappingDataNode data)
@@ -758,7 +898,7 @@ public sealed class MapLoaderSystem : EntitySystem
             return;
         }
 
-        foreach (var (netId, component) in EntityManager.GetNetComponents(entity))
+        foreach (var component in metadata.NetComponents.Values)
         {
             var compName = _factory.GetComponentName(component.GetType());
 
@@ -780,37 +920,17 @@ public sealed class MapLoaderSystem : EntitySystem
         }
     }
 
-    private void MapInit(EntityUid uid, MetaDataComponent metadata, MapData data)
-    {
-        var isPaused = data.MapIsPaused;
-
-        if (data.MapIsPostInit)
-        {
-            metadata.EntityLifeStage = EntityLifeStage.MapInitialized;
-        }
-        else if (_mapManager.IsMapInitialized(data.TargetMap))
-        {
-            EntityManager.RunMapInit(uid, metadata);
-
-            if (isPaused)
-                _meta.SetEntityPaused(uid, true, metadata);
-
-        }
-        else if (isPaused)
-        {
-            _meta.SetEntityPaused(uid, true, metadata);
-        }
-    }
-
     #endregion
 
     #region Saving
 
-    private MappingDataNode GetSaveData(EntityUid uid)
+    public MappingDataNode GetSaveData(EntityUid uid)
     {
+        var ev = new BeforeSaveEvent(uid, Transform(uid).MapUid);
+        RaiseLocalEvent(ev);
+
         var data = new MappingDataNode();
         WriteMetaSection(data, uid);
-        WriteTileMapSection(data);
 
         var entityUidMap = new Dictionary<EntityUid, int>();
         var uidEntityMap = new Dictionary<int, EntityUid>();
@@ -818,9 +938,22 @@ public sealed class MapLoaderSystem : EntitySystem
 
         _stopwatch.Restart();
         PopulateEntityList(uid, entities, uidEntityMap, entityUidMap);
+        WriteTileMapSection(data, entities);
+
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
-        var pauseTime = _meta.GetPauseTime(uid);
-        _context.Set(uidEntityMap, entityUidMap, pauseTime);
+        var metadata = Comp<MetaDataComponent>(uid);
+        var pauseTime = _meta.GetPauseTime(uid, metadata);
+
+        // TODO replace MapPreInit with the map's entity lifestage
+        // Yes, post-init maps do not have EntityLifeStage >= EntityLifeStage.MapInitialized
+        bool postInit;
+        if (TryComp(uid, out MapComponent? mapComp))
+            postInit = !mapComp.MapPreInit;
+        else
+            postInit = metadata.EntityLifeStage >= EntityLifeStage.MapInitialized;
+
+        var rootXform = _serverEntityManager.GetComponent<TransformComponent>(uid);
+        _context.Set(uidEntityMap, entityUidMap, postInit, pauseTime, rootXform.ParentUid);
 
         _stopwatch.Restart();
         WriteEntitySection(data, uidEntityMap, entityUidMap);
@@ -835,9 +968,6 @@ public sealed class MapLoaderSystem : EntitySystem
         var meta = new MappingDataNode();
         rootNode.Add("meta", meta);
         meta.Add("format", MapFormatVersion.ToString(CultureInfo.InvariantCulture));
-        // TODO: Make these values configurable.
-        meta.Add("name", "DemoStation");
-        meta.Add("author", "Space-Wizards");
 
         var xform = Transform(uid);
         var isPostInit = _mapManager.IsMapInitialized(xform.MapID);
@@ -845,13 +975,34 @@ public sealed class MapLoaderSystem : EntitySystem
         meta.Add("postmapinit", isPostInit ? "true" : "false");
     }
 
-    private void WriteTileMapSection(MappingDataNode rootNode)
+    private void WriteTileMapSection(MappingDataNode rootNode, List<EntityUid> entities)
     {
+        // Although we could use tiledefmanager it might write tiledata we don't need so we'll compress it
+        var gridQuery = GetEntityQuery<MapGridComponent>();
+        var tileDefs = new HashSet<int>();
+
+        foreach (var ent in entities)
+        {
+            if (!gridQuery.TryGetComponent(ent, out var grid))
+                continue;
+
+            var tileEnumerator = grid.GetAllTilesEnumerator(false);
+
+            while (tileEnumerator.MoveNext(out var tileRef))
+            {
+                tileDefs.Add(tileRef.Value.Tile.TypeId);
+            }
+        }
+
         var tileMap = new MappingDataNode();
         rootNode.Add("tilemap", tileMap);
-        foreach (var tileDefinition in _tileDefManager)
+        var ordered = new List<int>(tileDefs);
+        ordered.Sort();
+
+        foreach (var tyleId in ordered)
         {
-            tileMap.Add(tileDefinition.TileId.ToString(CultureInfo.InvariantCulture), tileDefinition.ID);
+            var tileDef = _tileDefManager[tyleId];
+            tileMap.Add(tyleId.ToString(CultureInfo.InvariantCulture), tileDef.ID);
         }
     }
 
@@ -864,7 +1015,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
         RecursivePopulate(uid, entities, uidEntityMap, withoutUid, metaCompQuery, transformCompQuery, saveCompQuery);
 
-        var uidCounter = 0;
+        var uidCounter = 1;
         foreach (var entity in withoutUid)
         {
             while (uidEntityMap.ContainsKey(uidCounter))
@@ -916,8 +1067,9 @@ public sealed class MapLoaderSystem : EntitySystem
         entities.Add(uid);
 
         // TODO: Given there's some structure to this now we can probably omit the parent / child a bit.
-        if (!saveCompQuery.TryGetComponent(uid, out var mapSaveComp) ||
-            !uidEntityMap.TryAdd(mapSaveComp.Uid, uid))
+        if (!saveCompQuery.TryGetComponent(uid, out var mapSaveComp)
+            || mapSaveComp.Uid == 0
+            || !uidEntityMap.TryAdd(mapSaveComp.Uid, uid))
         {
             // If the id was already saved before, or has no save component we need to find a new id for this entity
             withoutUid.Add(uid);
@@ -934,106 +1086,169 @@ public sealed class MapLoaderSystem : EntitySystem
     private void WriteEntitySection(MappingDataNode rootNode, Dictionary<int, EntityUid> uidEntityMap, Dictionary<EntityUid, int> entityUidMap)
     {
         var metaQuery = GetEntityQuery<MetaDataComponent>();
-        var entities = new SequenceDataNode();
-        rootNode.Add("entities", entities);
+        var metaName = _factory.GetComponentName(typeof(MetaDataComponent));
+        var xformName = _factory.GetComponentName(typeof(TransformComponent));
 
         // As metadata isn't on components we'll special-case it.
-        var metadataName = _factory.GetComponentName(typeof(MetaDataComponent));
         var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
 
-        foreach (var (saveId, entityUid) in uidEntityMap.OrderBy( e=> e.Key))
+        var emptyMetaNode = _serManager.WriteValueAs<MappingDataNode>(typeof(MetaDataComponent), new MetaDataComponent(), alwaysWrite: true, context: _context);
+
+        _context.CurrentComponent = _factory.GetComponentName(typeof(TransformComponent));
+        var emptyXformNode = _serManager.WriteValueAs<MappingDataNode>(typeof(TransformComponent), new TransformComponent(), alwaysWrite: true, context: _context);
+        _context.CurrentComponent = null;
+
+        var prototypes = new Dictionary<string, List<int>>();
+
+        foreach (var (entityUid, saveId) in entityUidMap)
         {
-            _context.CurrentWritingEntity = entityUid;
-            var mapping = new MappingDataNode
+            var meta = metaQuery.GetComponent(entityUid);
+
+            if (!_context.MapInitialized && meta.EntityLifeStage >= EntityLifeStage.MapInitialized)
+                _logWriter.Error($"Encountered a post-init entity in a pre-init map. Entity: {ToPrettyString(entityUid)}");
+
+            var id = meta.EntityPrototype?.ID;
+            id ??= string.Empty;
+            var uids = prototypes.GetOrNew(id);
+            uids.Add(saveId);
+        }
+
+        var protos = prototypes.Keys.ToList();
+        protos.Sort();
+        var entityPrototypes = new SequenceDataNode();
+        rootNode.Add("entities", entityPrototypes);
+
+        foreach (var proto in protos)
+        {
+            var saveIds = prototypes[proto];
+            saveIds.Sort();
+            var entities = new SequenceDataNode();
+
+            var node = new MappingDataNode()
             {
-                {"uid", saveId.ToString(CultureInfo.InvariantCulture)}
+                { "proto", proto },
+                { "entities", entities},
             };
 
-            var md = metaQuery.GetComponent(entityUid);
+            entityPrototypes.Add(node);
 
-            Dictionary<string, MappingDataNode>? cache = null;
-
-            if (md.EntityPrototype is {} prototype)
+            foreach (var saveId in saveIds)
             {
-                mapping.Add("type", prototype.ID);
+                var entityUid = uidEntityMap[saveId];
 
-                if (!prototypeCompCache.TryGetValue(prototype.ID, out cache))
+                _context.CurrentWritingEntity = entityUid;
+                var mapping = new MappingDataNode
                 {
-                    prototypeCompCache[prototype.ID] = cache = new Dictionary<string, MappingDataNode>(prototype.Components.Count);
+                    {"uid", saveId.ToString(CultureInfo.InvariantCulture)}
+                };
 
-                    foreach (var (compType, comp) in prototype.Components)
+                var md = metaQuery.GetComponent(entityUid);
+
+                Dictionary<string, MappingDataNode>? cache = null;
+
+                if (md.EntityPrototype is {} prototype)
+                {
+                    if (!prototypeCompCache.TryGetValue(prototype.ID, out cache))
                     {
-                        cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component));
+                        prototypeCompCache[prototype.ID] = cache = new Dictionary<string, MappingDataNode>(prototype.Components.Count);
+                        _context.WritingReadingPrototypes = true;
+
+                        foreach (var (compType, comp) in prototype.Components)
+                        {
+                            _context.CurrentComponent = compType;
+                            cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component, alwaysWrite: true, context: _context));
+                        }
+
+                        _context.CurrentComponent = null;
+                        _context.WritingReadingPrototypes = false;
+                        cache.TryAdd(metaName, emptyMetaNode);
+                        cache.TryAdd(xformName, emptyXformNode);
+                    }
+                }
+
+                var components = new SequenceDataNode();
+
+                var xform = Transform(entityUid);
+                if (xform.NoLocalRotation && xform.LocalRotation != 0)
+                {
+                    Log.Error($"Encountered a no-rotation entity with non-zero local rotation: {ToPrettyString(entityUid)}");
+                    xform._localRotation = 0;
+                }
+
+                foreach (var component in EntityManager.GetComponents(entityUid))
+                {
+                    if (component is MapSaveIdComponent)
+                        continue;
+
+                    var compType = component.GetType();
+                    var compName = _factory.GetComponentName(compType);
+                    _context.CurrentComponent = compName;
+                    MappingDataNode? compMapping;
+                    MappingDataNode? protMapping = null;
+                    if (cache != null && cache.TryGetValue(compName, out protMapping))
+                    {
+                        // If this has a prototype, we need to use alwaysWrite: true.
+                        // E.g., an anchored prototype might have anchored: true. If we we are saving an un-anchored
+                        // instance of this entity, and if we have alwaysWrite: false, then compMapping would not include
+                        // the anchored data-field (as false is the default for this bool data field), so the entity would
+                        // implicitly be saved as anchored.
+                        compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: true,
+                            context: _context);
+
+                        // This will NOT recursively call Except() on the values of the mapping. It will only remove
+                        // key-value pairs if both the keys and values are equal.
+                        compMapping = compMapping.Except(protMapping);
+                        if(compMapping == null)
+                            continue;
+                    }
+                    else
+                    {
+                        compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: false,
+                            context: _context);
                     }
 
-                    cache.GetOrNew(metadataName);
+                    // Don't need to write it if nothing was written! Note that if this entity has no associated
+                    // prototype, we ALWAYS want to write the component, because merely the fact that it exists is
+                    // information that needs to be written.
+                    if (compMapping.Children.Count != 0 || protMapping == null)
+                    {
+                        compMapping.Add("type", new ValueDataNode(compName));
+                        // Something actually got written!
+                        components.Add(compMapping);
+                    }
                 }
-            }
 
-            var components = new SequenceDataNode();
-
-            // See engine#636 for why the Distinct() call.
-            foreach (var component in EntityManager.GetComponents(entityUid))
-            {
-                if (component is MapSaveIdComponent)
-                    continue;
-
-                var compType = component.GetType();
-                var compName = _factory.GetComponentName(compType);
-                _context.CurrentWritingComponent = compName;
-                var compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, context: _context);
-
-                MappingDataNode? protMapping = null;
-                if (cache != null && cache.TryGetValue(compName, out protMapping))
+                if (components.Count != 0)
                 {
-                    // This will NOT recursively call Except() on the values of the mapping. It will only remove
-                    // key-value pairs if both the keys and values are equal.
-                    compMapping = compMapping.Except(protMapping);
-                    if(compMapping == null)
+                    mapping.Add("components", components);
+                }
+
+                if (md.EntityPrototype == null)
+                {
+                    // No prototype - we are done.
+                    entities.Add(mapping);
+                    continue;
+                }
+
+                // an entity may have less components than the original prototype, so we need to check if any are missing.
+                var missingComponents = new SequenceDataNode();
+                foreach (var (name, comp) in md.EntityPrototype.Components)
+                {
+                    // try comp instead of has-comp as it checks whether the component is supposed to have been
+                    // deleted.
+                    if (_serverEntityManager.TryGetComponent(entityUid, comp.Component.GetType(), out _))
                         continue;
+
+                    missingComponents.Add(new ValueDataNode(name));
                 }
 
-                // Don't need to write it if nothing was written! Note that if this entity has no associated
-                // prototype, we ALWAYS want to write the component, because merely the fact that it exists is
-                // information that needs to be written.
-                if (compMapping.Children.Count != 0 || protMapping == null)
+                if (missingComponents.Count != 0)
                 {
-                    compMapping.Add("type", new ValueDataNode(compName));
-                    // Something actually got written!
-                    components.Add(compMapping);
+                    mapping.Add("missingComponents", missingComponents);
                 }
-            }
 
-            if (components.Count != 0)
-            {
-                mapping.Add("components", components);
-            }
-
-            if (md.EntityPrototype == null)
-            {
-                // No prototype - we are done.
                 entities.Add(mapping);
-                continue;
             }
-
-            // an entity may have less components than the original prototype, so we need to check if any are missing.
-            var missingComponents = new SequenceDataNode();
-            foreach (var (name, comp) in md.EntityPrototype.Components)
-            {
-                // try comp instead of has-comp as it checks whether the component is supposed to have been
-                // deleted.
-                if (_serverEntityManager.TryGetComponent(entityUid, comp.Component.GetType(), out _))
-                    continue;
-
-                missingComponents.Add(new ValueDataNode(name));
-            }
-
-            if (missingComponents.Count != 0)
-            {
-                mapping.Add("missingComponents", missingComponents);
-            }
-
-            entities.Add(mapping);
         }
     }
 

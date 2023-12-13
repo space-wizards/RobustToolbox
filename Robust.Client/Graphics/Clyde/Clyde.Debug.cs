@@ -21,6 +21,9 @@ namespace Robust.Client.Graphics.Clyde
             public int LargestBatchVertices { get; set; }
             public int LargestBatchIndices { get; set; }
             public int TotalLights { get; set; }
+            public int ShadowLights { get; set; }
+            public int Occluders { get; set; }
+            public int Entities { get; set; }
 
             public void Reset()
             {
@@ -30,6 +33,9 @@ namespace Robust.Client.Graphics.Clyde
                 LargestBatchVertices = 0;
                 LargestBatchIndices = 0;
                 TotalLights = 0;
+                ShadowLights = 0;
+                Occluders = 0;
+                Entities = 0;
             }
         }
     }

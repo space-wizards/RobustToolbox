@@ -10,12 +10,11 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Server.Maps
 {
     [TestFixture]
-    public sealed class MapLoaderTest : RobustUnitTest
+    public sealed partial class MapLoaderTest : RobustUnitTest
     {
         private const string MapData = @"
 meta:
@@ -59,16 +58,17 @@ entities:
         [OneTimeSetUp]
         public void Setup()
         {
+            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            compFactory.RegisterClass<MapDeserializeTestComponent>();
+            compFactory.RegisterClass<VisibilityComponent>();
+            compFactory.RegisterClass<IgnoreUIRangeComponent>();
+            compFactory.GenerateNetIds();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
+
             // For some reason RobustUnitTest doesn't discover PVSSystem but this does here so ?
             var syssy = IoCManager.Resolve<IEntitySystemManager>();
             syssy.Shutdown();
             syssy.Initialize();
-
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
-            compFactory.RegisterClass<MapDeserializeTestComponent>();
-            compFactory.RegisterClass<VisibilityComponent>();
-            compFactory.GenerateNetIds();
-            IoCManager.Resolve<ISerializationManager>().Initialize();
 
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             resourceManager.Initialize(null);
@@ -78,8 +78,8 @@ entities:
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
             protoMan.RegisterKind(typeof(EntityPrototype));
 
-            protoMan.LoadDirectory(new ResourcePath("/EnginePrototypes"));
-            protoMan.LoadDirectory(new ResourcePath("/Prototypes"));
+            protoMan.LoadDirectory(new ("/EnginePrototypes"));
+            protoMan.LoadDirectory(new ("/Prototypes"));
             protoMan.ResolveResults();
         }
 
@@ -98,11 +98,14 @@ entities:
             entMan.EnsureComponent<BroadphaseComponent>(mapUid);
 
             var mapLoad = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>();
-            var geid = mapLoad.LoadGrid(mapId, "/TestMap.yml");
+            if (!mapLoad.TryLoad(mapId, "/TestMap.yml", out var root)
+                || root.FirstOrDefault() is not { Valid:true } geid)
+            {
+                Assert.Fail();
+                return;
+            }
 
-            Assert.That(geid, NUnit.Framework.Is.Not.Null);
-
-            var entity = entMan.GetComponent<TransformComponent>(geid!.Value).Children.Single().Owner;
+            var entity = entMan.GetComponent<TransformComponent>(geid).Children.Single().Owner;
             var c = entMan.GetComponent<MapDeserializeTestComponent>(entity);
 
             Assert.That(c.Bar, Is.EqualTo(2));
@@ -111,7 +114,7 @@ entities:
         }
 
         [DataDefinition]
-        private sealed class MapDeserializeTestComponent : Component
+        private sealed partial class MapDeserializeTestComponent : Component
         {
             [DataField("foo")] public int Foo { get; set; } = -1;
             [DataField("bar")] public int Bar { get; set; } = -1;

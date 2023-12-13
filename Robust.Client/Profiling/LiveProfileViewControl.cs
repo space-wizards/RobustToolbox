@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
@@ -23,7 +24,7 @@ public sealed class LiveProfileViewControl : Control
     {
         IoCManager.InjectDependencies(this);
 
-        if (!_resourceCache.TryGetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf", out var font))
+        if (!_resourceCache.TryGetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf", out var font))
             return;
 
         _font = font.MakeDefault();
@@ -72,7 +73,7 @@ public sealed class LiveProfileViewControl : Control
     {
         DrawSample(in data, baseline, value.StringId, value.Value);
 
-        baseline += (0, data.Font.GetLineHeight(UIScale));
+        baseline += new Vector2(0, data.Font.GetLineHeight(UIScale));
     }
 
     private void DrawSample(
@@ -126,7 +127,7 @@ public sealed class LiveProfileViewControl : Control
         var indentSize = 12 * UIScale;
 
         var startBaseline = baseline;
-        baseline += (indentSize, data.Font.GetLineHeight(UIScale));
+        baseline += new Vector2(indentSize, data.Font.GetLineHeight(UIScale));
 
         if (depth > MaxDepth)
         {
@@ -163,7 +164,7 @@ public sealed class LiveProfileViewControl : Control
 
         ref var cmdEnd = ref data.Buffer.Log(i).GroupEnd;
 
-        baseline -= (indentSize, 0);
+        baseline -= new Vector2(indentSize, 0);
 
         DrawSample(in data, startBaseline, cmdEnd.StringId, cmdEnd.Value);
     }

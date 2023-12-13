@@ -1,21 +1,21 @@
+using System.Linq;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Server;
-using System.Linq;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.GameObjects.Systems
 {
     [TestFixture, Parallelizable]
-    public sealed class AnchoredSystemTests
+    public sealed partial class AnchoredSystemTests
     {
         private static readonly MapId TestMapId = new(1);
 
@@ -45,9 +45,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             mapManager.CreateMap(TestMapId);
 
             // Add grid 1, as the default grid to anchor things to.
-            var grid = mapManager.CreateGrid(TestMapId);
+            var grid = mapManager.CreateGridEntity(TestMapId);
 
-            return (sim, grid.Owner);
+            return (sim, grid);
         }
 
         // An entity is anchored to the tile it is over on the target grid.
@@ -93,7 +93,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         }
 
         [ComponentProtoName("AnchorOnInit")]
-        private sealed class AnchorOnInitComponent : Component { };
+        private sealed partial class AnchorOnInitComponent : Component { };
 
         private sealed class AnchorOnInitTestSystem : EntitySystem
         {
@@ -129,7 +129,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
             Assert.False(entMan.GetComponent<TransformComponent>(ent1).Anchored);
-            Assert.That(grid.GetAnchoredEntities(pos).Count() == 0);
+            Assert.That(!grid.GetAnchoredEntities(pos).Any());
             entMan.DeleteEntity(ent1);
 
             var ent2 = entMan.CreateEntityUninitialized(null, coordinates);
@@ -162,9 +162,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             entMan.EventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, subscriber, ParentChangedHandler);
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.Owner));
+            Assert.That(entMan.GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.Owner));
             Assert.That(calledCount, Is.EqualTo(1));
             void ParentChangedHandler(ref EntParentChangedMessage ev)
             {
@@ -185,11 +185,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
-            var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
+            var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, Tile.Empty);
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(Tile.Empty));
@@ -208,17 +208,17 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
-            var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
+            var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
-            Assert.That(IoCManager.Resolve<IEntityManager>().HasComponent<PhysicsComponent>(ent1), Is.False);
+            Assert.That(entMan.HasComponent<PhysicsComponent>(ent1), Is.False);
             var tempQualifier = grid.Owner;
-            Assert.That(IoCManager.Resolve<IEntityManager>().HasComponent<PhysicsComponent>(tempQualifier), Is.True);
+            Assert.That(entMan.HasComponent<PhysicsComponent>(tempQualifier), Is.True);
         }
 
         /// <summary>
@@ -243,14 +243,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var subscriber = new Subscriber();
             int calledCount = 0;
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true; // Anchoring will change parent if needed, raising MoveEvent, subscribe after
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true; // Anchoring will change parent if needed, raising MoveEvent, subscribe after
             entMan.EventBus.SubscribeEvent<MoveEvent>(EventSource.Local, subscriber, MoveEventHandler);
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).WorldPosition = new Vector2(99, 99);
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).LocalPosition = new Vector2(99, 99);
+            entMan.GetComponent<TransformComponent>(ent1).WorldPosition = new Vector2(99, 99);
+            entMan.GetComponent<TransformComponent>(ent1).LocalPosition = new Vector2(99, 99);
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).MapPosition, Is.EqualTo(coordinates));
+            Assert.That(entMan.GetComponent<TransformComponent>(ent1).MapPosition, Is.EqualTo(coordinates));
             Assert.That(calledCount, Is.EqualTo(0));
             void MoveEventHandler(ref MoveEvent ev)
             {
@@ -274,14 +274,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var grid = mapMan.GetGrid(gridId);
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
-            var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
+            var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
             entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(ent1, mapMan.GetMapEntityId(TestMapId));
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored, Is.False);
+            Assert.That(entMan.GetComponent<TransformComponent>(ent1).Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(new Tile(1)));
         }
@@ -300,9 +300,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
-            var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
+            var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
             entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(ent1, grid.Owner);
@@ -323,15 +323,15 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
-            var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
+            var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
             grid.SetTile(new Vector2i(100, 100), new Tile(1)); // Prevents the grid from being deleted when the Act happens
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
             grid.SetTile(tileIndices, Tile.Empty);
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored, Is.False);
+            Assert.That(entMan.GetComponent<TransformComponent>(ent1).Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(Tile.Empty));
         }
@@ -352,17 +352,18 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
-            var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
+            var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
             // We purposefully use the grid as container so parent stays the same, reparent will unanchor
-            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(grid.Owner);
-            var container = containerMan.MakeContainer<Container>("TestContainer");
-            container.Insert(ent1);
+            var containerSys = entMan.System<SharedContainerSystem>();
+            var containerMan = entMan.AddComponent<ContainerManagerComponent>(gridId);
+            var container = containerSys.MakeContainer<Container>(gridId, "TestContainer", containerMan);
+            containerSys.Insert(ent1, container);
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored, Is.False);
+            Assert.That(entMan.GetComponent<TransformComponent>(ent1).Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(new Tile(1)));
             Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
@@ -380,13 +381,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
-            var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
+            var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
             // assumed default body is Dynamic
-            var physComp = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(ent1);
+            var physComp = entMan.AddComponent<PhysicsComponent>(ent1);
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Static));
         }
@@ -409,11 +410,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
-            var physComp = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(ent1);
-            physSystem.SetBodyType(physComp, BodyType.Dynamic);
+            var physComp = entMan.AddComponent<PhysicsComponent>(ent1);
+            physSystem.SetBodyType(ent1, BodyType.Dynamic, body: physComp);
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Static));
         }
@@ -430,13 +431,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
-            var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
+            var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            var physComp = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(ent1);
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            var physComp = entMan.AddComponent<PhysicsComponent>(ent1);
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = false;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = false;
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Dynamic));
         }
@@ -456,10 +457,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             // Act
             var ent1 = entMan.SpawnEntity("anchoredEnt", new MapCoordinates(new Vector2(7, 7), TestMapId));
 
-            var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
+            var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(Tile.Empty));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored, Is.False);
+            Assert.That(entMan.GetComponent<TransformComponent>(ent1).Anchored, Is.False);
         }
 
         /// <summary>
@@ -474,17 +475,18 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var grid = mapMan.GetGrid(gridId);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
-            var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
+            var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
-            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(grid.Owner);
-            var container = containerMan.MakeContainer<Container>("TestContainer");
-            container.Insert(ent1);
+            var containerSys = entMan.System<SharedContainerSystem>();
+            var containerMan = entMan.AddComponent<ContainerManagerComponent>(gridId);
+            var container = containerSys.MakeContainer<Container>(gridId, "TestContainer", containerMan);
+            containerSys.Insert(ent1, container);
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored, Is.False);
+            Assert.That(entMan.GetComponent<TransformComponent>(ent1).Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(new Tile(1)));
             Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
@@ -512,9 +514,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             entMan.EventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, subscriber, ParentChangedHandler);
 
             // Act
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = false;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = false;
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(mapMan.GetMapEntityId(TestMapId)));
+            Assert.That(entMan.GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(mapMan.GetMapEntityId(TestMapId)));
             Assert.That(calledCount, Is.EqualTo(0));
             void ParentChangedHandler(ref EntParentChangedMessage ev)
             {
@@ -540,9 +542,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
             var ent1 = entMan.SpawnEntity("anchoredEnt", grid.MapToGrid(coordinates));
 
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = false;
+            entMan.GetComponent<TransformComponent>(ent1).Anchored = false;
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.Owner));
+            Assert.That(entMan.GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.Owner));
         }
     }
 }

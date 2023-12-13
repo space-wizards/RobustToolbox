@@ -1,10 +1,10 @@
+using System;
 using Robust.Shared.Enums;
 using Robust.Client.Graphics;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Containers;
 using Robust.Shared.Timing;
@@ -13,17 +13,29 @@ namespace Robust.Client.GameStates
 {
     internal sealed class NetInterpOverlay : Overlay
     {
+        [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        private readonly EntityLookupSystem _lookup;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
         private readonly ShaderInstance _shader;
+        private readonly SharedContainerSystem _container;
+        private readonly SharedTransformSystem _xform;
 
-        public NetInterpOverlay()
+        /// <summary>
+        /// When an entity stops lerping the overlay will continue to draw a box around the entity for this amount of time.
+        /// </summary>
+        public static readonly TimeSpan Delay = TimeSpan.FromSeconds(2f);
+
+        public NetInterpOverlay(EntityLookupSystem lookup)
         {
             IoCManager.InjectDependencies(this);
+            _lookup = lookup;
             _shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+            _container = _entityManager.System<SharedContainerSystem>();
+            _xform = _entityManager.System<SharedTransformSystem>();
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)
@@ -32,54 +44,68 @@ namespace Robust.Client.GameStates
             handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = args.WorldAABB;
-            var timing = IoCManager.Resolve<IGameTiming>();
-            foreach (var boundingBox in _entityManager.EntityQuery<IPhysBody>(true))
+
+            var query = _entityManager.AllEntityQueryEnumerator<TransformComponent>();
+            while (query.MoveNext(out var uid, out var transform))
             {
-                // all entities have a TransformComponent
-                var transform = _entityManager.GetComponent<TransformComponent>(boundingBox.Owner);
-
                 // if not on the same map, continue
-                if (transform.MapID != _eyeManager.CurrentMap || boundingBox.Owner.IsInContainer(_entityManager))
+                if (transform.MapID != _eyeManager.CurrentMap || _container.IsEntityInContainer(uid))
                     continue;
 
-                // This entity isn't lerping, no need to draw debug info for it
-                if(transform.NextPosition == null)
+                if (transform.GridUid == uid)
                     continue;
 
-                var aabb = boundingBox.GetWorldAABB();
+                var delta = (_timing.CurTick.Value - transform.LastLerp.Value) * _timing.TickPeriod;
+                if(!transform.ActivelyLerping && delta > Delay)
+                    continue;
+
+                var aabb = _lookup.GetWorldAABB(uid);
 
                 // if not on screen, or too small, continue
                 if (!aabb.Intersects(viewport) || aabb.IsEmpty())
                     continue;
 
-                timing.InSimulation = true;
+                var (pos, rot) = _xform.GetWorldPositionRotation(transform, _entityManager.GetEntityQuery<TransformComponent>());
+                var boxOffset = transform.NextPosition != null
+                    ? transform.NextPosition.Value - transform.LocalPosition
+                    : default;
+                var worldOffset = (rot - transform.LocalRotation).RotateVec(boxOffset);
 
-                var boxOffset = transform.NextPosition.Value - transform.LocalPosition;
-                var boxPosWorld = transform.WorldPosition + boxOffset;
+                var nextPos = pos + worldOffset;
+                worldHandle.DrawLine(pos, nextPos, Color.Yellow);
 
-                timing.InSimulation = false;
+                var nextAabb = aabb.Translated(worldOffset);
 
-                worldHandle.DrawLine(transform.WorldPosition, boxPosWorld, Color.Yellow);
-                worldHandle.DrawRect(aabb.Translated(boxOffset), Color.Yellow.WithAlpha(0.5f), false);
+                Angle nextRot = rot;
+                if (transform.NextRotation.HasValue)
+                    nextRot += transform.NextRotation.Value - transform.LocalRotation;
+                var nextBox = new Box2Rotated(nextAabb, nextRot, nextAabb.Center);
+                worldHandle.DrawRect(nextBox, Color.Green.WithAlpha(0.1f), true);
+                worldHandle.DrawRect(nextBox, Color.Green, false);
+
+                var box = new Box2Rotated(aabb, rot, aabb.Center);
+                worldHandle.DrawRect(box, Color.Yellow.WithAlpha(0.1f), true);
+                worldHandle.DrawRect(box, Color.Yellow, false);
             }
         }
 
         private sealed class NetShowInterpCommand : LocalizedCommands
         {
+            [Dependency] private readonly IEntityManager _entManager = default!;
+            [Dependency] private readonly IOverlayManager _overlay = default!;
+
             public override string Command => "net_draw_interp";
 
             public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                var overlayMan = IoCManager.Resolve<IOverlayManager>();
-
-                if (!overlayMan.HasOverlay<NetInterpOverlay>())
+                if (!_overlay.HasOverlay<NetInterpOverlay>())
                 {
-                    overlayMan.AddOverlay(new NetInterpOverlay());
+                    _overlay.AddOverlay(new NetInterpOverlay(_entManager.System<EntityLookupSystem>()));
                     shell.WriteLine("Enabled network interp overlay.");
                 }
                 else
                 {
-                    overlayMan.RemoveOverlay<NetInterpOverlay>();
+                    _overlay.RemoveOverlay<NetInterpOverlay>();
                     shell.WriteLine("Disabled network interp overlay.");
                 }
             }

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -22,14 +24,8 @@ namespace Robust.Shared.Map
 
         private readonly Vector2i _gridIndices;
 
-        [ViewVariables]
-        private readonly Tile[,] _tiles;
+        [ViewVariables] internal readonly Tile[,] Tiles;
         private readonly SnapGridCell[,] _snapGrid;
-
-        /// <summary>
-        /// Invoked when a tile is modified on this chunk.
-        /// </summary>
-        public event TileModifiedDelegate? TileModified;
 
         /// <summary>
         /// Keeps a running count of the number of filled tiles in this chunk.
@@ -38,7 +34,7 @@ namespace Robust.Shared.Map
         /// This will always be between 1 and <see cref="ChunkSize"/>^2.
         /// </remarks>
         [ViewVariables]
-        internal int FilledTiles { get; private set; }
+        internal int FilledTiles { get; set; }
 
         /// <summary>
         /// Chunk-local AABB of this chunk.
@@ -48,7 +44,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Physics fixtures that make up this grid chunk.
         /// </summary>
-        public List<Fixture> Fixtures { get; } = new();
+        public Dictionary<string, Fixture> Fixtures { get; } = new();
 
         /// <summary>
         /// The last game simulation tick that a tile on this chunk was modified.
@@ -73,7 +69,7 @@ namespace Robust.Shared.Map
             _gridIndices = new Vector2i(x, y);
             ChunkSize = chunkSize;
 
-            _tiles = new Tile[ChunkSize, ChunkSize];
+            Tiles = new Tile[ChunkSize, ChunkSize];
             _snapGrid = new SnapGridCell[ChunkSize, ChunkSize];
         }
 
@@ -113,53 +109,12 @@ namespace Robust.Shared.Map
             if (yIndex >= ChunkSize)
                 throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
 
-            return _tiles[xIndex, yIndex];
+            return Tiles[xIndex, yIndex];
         }
 
-        /// <summary>
-        ///     Replaces a single tile inside of the chunk.
-        /// </summary>
-        /// <param name="xIndex">The X tile index relative to the chunk.</param>
-        /// <param name="yIndex">The Y tile index relative to the chunk.</param>
-        /// <param name="tile">The new tile to insert.</param>
-        public void SetTile(ushort xIndex, ushort yIndex, Tile tile)
+        public Tile GetTile(Vector2i indices)
         {
-            if (xIndex >= ChunkSize)
-                throw new ArgumentOutOfRangeException(nameof(xIndex), "Tile indices out of bounds.");
-
-            if (yIndex >= ChunkSize)
-                throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
-
-            // same tile, no point to continue
-            if (_tiles[xIndex, yIndex] == tile)
-                return;
-
-            var oldTile = _tiles[xIndex, yIndex];
-            var oldFilledTiles = FilledTiles;
-
-            if (oldTile.IsEmpty != tile.IsEmpty)
-            {
-                if (oldTile.IsEmpty)
-                {
-                    FilledTiles += 1;
-                }
-                else
-                {
-                    FilledTiles -= 1;
-                }
-            }
-
-            var shapeChanged = oldFilledTiles != FilledTiles;
-            DebugTools.Assert(FilledTiles >= 0);
-
-            _tiles[xIndex, yIndex] = tile;
-
-            var tileIndices = new Vector2i(xIndex, yIndex);
-
-            // God I hate C# events sometimes.
-            DebugTools.Assert(TileModified == null || TileModified.GetInvocationList().Length <= 1);
-
-            TileModified?.Invoke(this, tileIndices, tile, oldTile, shapeChanged);
+            return Tiles[indices.X, indices.Y];
         }
 
         /// <summary>
@@ -261,6 +216,61 @@ namespace Robust.Shared.Map
         {
             public List<EntityUid>? Center;
         }
+
+        /// <summary>
+        /// Sets the tile without any callbacks.
+        /// Do not call this unless you know what you are doing.
+        /// </summary>
+        internal bool TrySetTile(ushort xIndex, ushort yIndex, Tile tile, out Tile oldTile, out bool shapeChanged)
+        {
+            if (xIndex >= Tiles.Length)
+                throw new ArgumentOutOfRangeException(nameof(xIndex), "Tile indices out of bounds.");
+
+            if (yIndex >= Tiles.Length)
+                throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
+
+            shapeChanged = false;
+
+            ref var tileRef = ref Tiles[xIndex, yIndex];
+            if (tileRef == tile)
+            {
+                oldTile = default;
+                return false;
+            }
+
+            if (tileRef.IsEmpty)
+            {
+                if (!tile.IsEmpty)
+                {
+                    FilledTiles += 1;
+                    shapeChanged = true;
+                }
+            }
+            else if (tile.IsEmpty)
+            {
+                FilledTiles -= 1;
+                shapeChanged = true;
+            }
+
+            DebugTools.Assert(FilledTiles >= 0);
+
+            oldTile = tileRef;
+            tileRef = tile;
+            ValidateChunk();
+            return true;
+        }
+
+        [Conditional("DEBUG")]
+        public void ValidateChunk()
+        {
+            var totalFilled = 0;
+            foreach (var t in Tiles)
+            {
+                if (!t.IsEmpty)
+                    totalFilled += 1;
+            }
+            DebugTools.Assert(totalFilled == FilledTiles);
+        }
     }
 
     /// <summary>
@@ -271,5 +281,5 @@ namespace Robust.Shared.Map
     /// <param name="newTile">New version of the tile.</param>
     /// <param name="oldTile">Old version of the tile.</param>
     /// <param name="chunkShapeChanged">If changing this tile changed the shape of the chunk.</param>
-    internal delegate void TileModifiedDelegate(MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile, bool chunkShapeChanged);
+    internal delegate void TileModifiedDelegate(EntityUid uid, MapGridComponent grid, MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile, bool chunkShapeChanged);
 }

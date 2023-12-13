@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.ViewVariables;
 
-internal abstract partial class ViewVariablesManager : IViewVariablesManager
+internal abstract partial class ViewVariablesManager : IViewVariablesManager, IPostInjectInit
 {
     [Dependency] private readonly ISerializationManager _serMan = default!;
     [Dependency] private readonly IEntityManager _entMan = default!;
@@ -21,11 +21,14 @@ internal abstract partial class ViewVariablesManager : IViewVariablesManager
     [Dependency] private readonly IPrototypeManager _protoMan = default!;
     [Dependency] private readonly IReflectionManager _reflectionMan = default!;
     [Dependency] private readonly INetManager _netMan = default!;
+    [Dependency] private readonly ILogManager _logMan = default!;
 
     private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
 
     private const BindingFlags MembersBindings =
         BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+    protected ISawmill Sawmill = default!;
 
     public virtual void Initialize()
     {
@@ -101,12 +104,17 @@ internal abstract partial class ViewVariablesManager : IViewVariablesManager
                 traits.Add(ViewVariablesTraits.Enumerable);
             }
 
-            if (typeof(EntityUid).IsAssignableFrom(type))
+            if (typeof(NetEntity).IsAssignableFrom(type))
             {
                 traits.Add(ViewVariablesTraits.Entity);
             }
         }
 
         return traits;
+    }
+
+    void IPostInjectInit.PostInject()
+    {
+        Sawmill = _logMan.GetSawmill("vv");
     }
 }

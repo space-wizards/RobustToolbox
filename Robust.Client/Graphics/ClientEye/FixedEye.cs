@@ -1,4 +1,6 @@
-﻿namespace Robust.Client.Graphics
+﻿using Robust.Shared.Graphics;
+
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     A fixed eye is an eye which is fixed to one point, its position.

@@ -1,3 +1,4 @@
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -27,11 +28,11 @@ public sealed class Fixtures_Test
 
         var ent = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map));
         var body = entManager.AddComponent<PhysicsComponent>(ent);
-        physicsSystem.SetBodyType(body, BodyType.Dynamic);
+        physicsSystem.SetBodyType(ent, BodyType.Dynamic, body: body);
         var fixture = new Fixture();
-        fixturesSystem.CreateFixture(body, fixture);
+        fixturesSystem.CreateFixture(ent, "fix1", fixture);
 
-        physicsSystem.SetDensity(fixture, 10f);
+        physicsSystem.SetDensity(ent, "fix1", fixture, 10f);
         Assert.That(fixture.Density, Is.EqualTo(10f));
         Assert.That(body.Mass, Is.EqualTo(10f));
 

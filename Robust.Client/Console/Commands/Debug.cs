@@ -15,6 +15,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -78,14 +79,7 @@ namespace Robust.Client.Console.Commands
                     message.Append($"net ID: {registration.NetID}");
                 }
 
-                message.Append($", References:");
-
                 shell.WriteLine(message.ToString());
-
-                foreach (var type in registration.References)
-                {
-                    shell.WriteLine($"  {type}");
-                }
             }
             catch (UnknownComponentException)
             {
@@ -191,6 +185,20 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal sealed class ShowRotationsCommand : LocalizedCommands
+    {
+        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+
+        public override string Command => "showrot";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
+            mgr.DebugRotations = !mgr.DebugRotations;
+        }
+    }
+
+#if DEBUG
     internal sealed class ShowRayCommand : LocalizedCommands
     {
         [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
@@ -217,6 +225,7 @@ namespace Robust.Client.Console.Commands
             mgr.DebugRayLifetime = TimeSpan.FromSeconds(duration);
         }
     }
+#endif
 
     internal sealed class DisconnectCommand : LocalizedCommands
     {
@@ -283,6 +292,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class SnapGridGetCell : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IMapManager _map = default!;
 
         public override string Command => "sggcell";
@@ -297,7 +307,7 @@ namespace Robust.Client.Console.Commands
 
             string indices = args[1];
 
-            if (!EntityUid.TryParse(args[0], out var gridUid))
+            if (!NetEntity.TryParse(args[0], out var gridNet))
             {
                 shell.WriteError($"{args[0]} is not a valid entity UID.");
                 return;
@@ -309,7 +319,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (_map.TryGetGrid(gridUid, out var grid))
+            if (_map.TryGetGrid(_entManager.GetEntity(gridNet), out var grid))
             {
                 foreach (var entity in grid.GetAnchoredEntities(new Vector2i(
                              int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
@@ -417,6 +427,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class GridTileCount : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IMapManager _map = default!;
 
         public override string Command => "gridtc";
@@ -429,7 +440,8 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (!EntityUid.TryParse(args[0], out var gridUid))
+            if (!NetEntity.TryParse(args[0], out var gridUidNet) ||
+                !_entManager.TryGetEntity(gridUidNet, out var gridUid))
             {
                 shell.WriteLine($"{args[0]} is not a valid entity UID.");
                 return;
@@ -449,13 +461,13 @@ namespace Robust.Client.Console.Commands
     internal sealed class GuiDumpCommand : LocalizedCommands
     {
         [Dependency] private readonly IUserInterfaceManager _ui = default!;
-        [Dependency] private readonly IResourceCache _res = default!;
+        [Dependency] private readonly IResourceManager _resManager = default!;
 
         public override string Command => "guidump";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            using var writer = _res.UserData.OpenWriteText(new ResourcePath("/guidump.txt"));
+            using var writer = _resManager.UserData.OpenWriteText(new ResPath("/guidump.txt"));
 
             foreach (var root in _ui.AllRoots)
             {
@@ -608,6 +620,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ChunkInfoCommand : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IMapManager _map = default!;
         [Dependency] private readonly IEyeManager _eye = default!;
         [Dependency] private readonly IInputManager _input = default!;
@@ -616,24 +629,26 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mousePos = _eye.ScreenToMap(_input.MouseScreenPosition);
+            var mousePos = _eye.PixelToMap(_input.MouseScreenPosition);
 
-            if (!_map.TryFindGridAt(mousePos, out var grid))
+            if (!_map.TryFindGridAt(mousePos, out var gridUid, out var grid))
             {
                 shell.WriteLine("No grid under your mouse cursor.");
                 return;
             }
 
-            var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
-            var chunk = grid.GetOrAddChunk(chunkIndex);
+            var mapSystem = _entManager.System<SharedMapSystem>();
+            var chunkIndex = mapSystem.LocalToChunkIndices(gridUid, grid, grid.MapToGrid(mousePos));
+            var chunk = mapSystem.GetOrAddChunk(gridUid, grid, chunkIndex);
 
-            shell.WriteLine($"worldBounds: {grid.CalcWorldAABB(chunk)} localBounds: {chunk.CachedBounds}");
+            shell.WriteLine($"worldBounds: {mapSystem.CalcWorldAABB(gridUid, grid, chunk)} localBounds: {chunk.CachedBounds}");
         }
     }
 
     internal sealed class ReloadShadersCommand : LocalizedCommands
     {
-        [Dependency] private readonly IResourceCacheInternal _res = default!;
+        [Dependency] private readonly IResourceCache _cache = default!;
+        [Dependency] private readonly IResourceManagerInternal _resManager = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
 
         public override string Command => "rldshader";
@@ -644,7 +659,7 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var resC = _res;
+            var resC = _resManager;
             if (args.Length == 1)
             {
                 if (args[0] == "+watch")
@@ -661,21 +676,21 @@ namespace Robust.Client.Console.Commands
                         ? StringComparer.Ordinal
                         : StringComparer.OrdinalIgnoreCase;
 
-                    var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResourcePath>>(stringComparer);
+                    var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResPath>>(stringComparer);
 
                     var taskManager = _taskManager;
 
                     var shaderCount = 0;
                     var created = 0;
                     var dirs = new ConcurrentDictionary<string, SortedSet<string>>(stringComparer);
-                    foreach (var (path, src) in resC.GetAllResources<ShaderSourceResource>())
+                    foreach (var (path, src) in _cache.GetAllResources<ShaderSourceResource>())
                     {
-                        if (!resC.TryGetDiskFilePath(path, out var fullPath))
+                        if (!_resManager.TryGetDiskFilePath(path, out var fullPath))
                         {
                             throw new NotImplementedException();
                         }
 
-                        reversePathResolution.GetOrAdd(fullPath, _ => new HashSet<ResourcePath>()).Add(path);
+                        reversePathResolution.GetOrAdd(fullPath, _ => new HashSet<ResPath>()).Add(path);
 
                         var dir = Path.GetDirectoryName(fullPath)!;
                         var fileName = Path.GetFileName(fullPath);
@@ -689,7 +704,7 @@ namespace Robust.Client.Console.Commands
                                 throw new NotImplementedException();
                             }
 
-                            reversePathResolution.GetOrAdd(incFullPath, _ => new HashSet<ResourcePath>()).Add(path);
+                            reversePathResolution.GetOrAdd(incFullPath, _ => new HashSet<ResPath>()).Add(path);
 
                             var incDir = Path.GetDirectoryName(incFullPath)!;
                             var incFileName = Path.GetFileName(incFullPath);
@@ -719,7 +734,7 @@ namespace Robust.Client.Console.Commands
                                     {
                                         try
                                         {
-                                            resC.ReloadResource<ShaderSourceResource>(resPath);
+                                            _cache.ReloadResource<ShaderSourceResource>(resPath);
                                             shell.WriteLine($"Reloaded shader: {resPath}");
                                         }
                                         catch (Exception)
@@ -780,11 +795,11 @@ namespace Robust.Client.Console.Commands
 
             shell.WriteLine("Reloading content shader resources...");
 
-            foreach (var (path, _) in resC.GetAllResources<ShaderSourceResource>())
+            foreach (var (path, _) in _cache.GetAllResources<ShaderSourceResource>())
             {
                 try
                 {
-                    resC.ReloadResource<ShaderSourceResource>(path);
+                    _cache.ReloadResource<ShaderSourceResource>(path);
                 }
                 catch (Exception)
                 {
@@ -841,6 +856,16 @@ namespace Robust.Client.Console.Commands
 
                 shell.WriteLine($"name: '{name}' ");
             }
+        }
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                return CompletionResult.FromOptions(Enum.GetNames<Keyboard.Key>());
+            }
+
+            return CompletionResult.Empty;
         }
     }
 }

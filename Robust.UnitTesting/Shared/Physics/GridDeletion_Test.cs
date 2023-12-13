@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -30,17 +31,17 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
 
 
         PhysicsComponent physics = default!;
-        MapGridComponent grid = default!;
+        Entity<MapGridComponent> grid = default!;
         MapId mapId = default!;
 
         await server.WaitAssertion(() =>
         {
             mapId = mapManager.CreateMap();
-            grid = mapManager.CreateGrid(mapId);
+            grid = mapManager.CreateGridEntity(mapId);
 
-            physics = entManager.GetComponent<PhysicsComponent>(grid.Owner);
-            physSystem.SetBodyType(physics, BodyType.Dynamic);
-            physSystem.SetLinearVelocity(physics, new Vector2(50f, 0f));
+            physics = entManager.GetComponent<PhysicsComponent>(grid);
+            physSystem.SetBodyType(grid, BodyType.Dynamic, body: physics);
+            physSystem.SetLinearVelocity(grid, new Vector2(50f, 0f), body: physics);
             Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
         });
 
@@ -49,7 +50,7 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
-            entManager.DeleteEntity(grid.Owner);
+            entManager.DeleteEntity(grid);
 
             // So if gridtree is fucky then this SHOULD throw.
             foreach (var _ in mapManager.FindGridsIntersecting(mapId,

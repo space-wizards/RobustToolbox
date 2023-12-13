@@ -52,6 +52,10 @@ internal struct WordWrap
             {
                 DebugTools.Assert(WordStartBreakIndex.HasValue,
                     "wordStartBreakIndex can only be null if the word begins at a new line, in which case this branch shouldn't be reached as the word would be split due to being longer than a single line.");
+                //Ensure the assert had a chance to run and then just return
+                if (!WordStartBreakIndex.HasValue)
+                    return;
+
                 // We ran into a word boundary and the word is too big to fit the previous line.
                 // So we insert the line break BEFORE the last word.
                 breakLine = WordStartBreakIndex!.Value.index;

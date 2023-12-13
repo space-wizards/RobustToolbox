@@ -23,9 +23,9 @@ namespace Robust.Client.UserInterface.CustomControls
         /// <summary>
         /// Write a line with a specific color to the console window.
         /// </summary>
-        void AddLine(string text, Color color);
+        void AddLine(FormattedMessage text, Color color);
 
-        void AddLine(string text);
+        void AddLine(FormattedMessage text);
 
         void AddFormattedLine(FormattedMessage message);
 
@@ -39,15 +39,17 @@ namespace Robust.Client.UserInterface.CustomControls
     // And also if Update() stops firing due to an exception loop the console will still work.
     // (At least from the main thread, which is what's throwing the exceptions..)
     [GenerateTypedNameReferences]
-    public sealed partial class DebugConsole : Control, IDebugConsoleView
+    public sealed partial class DebugConsole : Control, IDebugConsoleView, IPostInjectInit
     {
         [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly ILogManager _logMan = default!;
 
-        private static readonly ResourcePath HistoryPath = new("/debug_console_history.json");
+        private static readonly ResPath HistoryPath = new("/debug_console_history.json");
 
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new();
+        private ISawmill _logger = default!;
 
         public DebugConsole()
         {
@@ -106,7 +108,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private Color DetermineColor(bool local, bool error)
         {
-            return Color.White;
+            return error ? Color.Red : Color.White;
         }
 
         protected override void FrameUpdate(FrameEventArgs args)
@@ -134,16 +136,16 @@ namespace Robust.Client.UserInterface.CustomControls
             _flushHistoryToDisk();
         }
 
-        public void AddLine(string text, Color color)
+        public void AddLine(FormattedMessage text, Color color)
         {
             var formatted = new FormattedMessage(3);
             formatted.PushColor(color);
-            formatted.AddText(text);
+            formatted.AddMessage(text);
             formatted.Pop();
             AddFormattedLine(formatted);
         }
 
-        public void AddLine(string text)
+        public void AddLine(FormattedMessage text)
         {
             AddLine(text, Color.White);
         }
@@ -190,7 +192,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private async void _loadHistoryFromDisk()
         {
-            var sawmill = Logger.GetSawmill("dbgconsole");
             var data = await Task.Run(async () =>
             {
                 Stream? stream = null;
@@ -215,7 +216,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 if (stream == null)
                 {
-                    sawmill.Warning("Failed to load debug console history!");
+                    _logger.Warning("Failed to load debug console history!");
                     return null;
                 }
 
@@ -225,7 +226,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 }
                 catch (Exception e)
                 {
-                    sawmill.Warning($"Failed to load debug console history due to exception!\n{e}");
+                    _logger.Warning($"Failed to load debug console history due to exception!\n{e}");
                     return null;
                 }
                 finally
@@ -247,7 +248,6 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             CommandBar.HistoryIndex = CommandBar.History.Count;
 
-            var sawmill = Logger.GetSawmill("dbgconsole");
             var newHistory = JsonSerializer.Serialize(CommandBar.History);
 
             await Task.Run(async () =>
@@ -270,7 +270,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 if (writer == null)
                 {
-                    sawmill.Warning("Failed to save debug console history!");
+                    _logger.Warning("Failed to save debug console history!");
                     return;
                 }
 
@@ -281,6 +281,11 @@ namespace Robust.Client.UserInterface.CustomControls
                     writer.Write(newHistory);
                 }
             });
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _logger = _logMan.GetSawmill("dbgconsole");
         }
     }
 }

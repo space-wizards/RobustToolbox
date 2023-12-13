@@ -17,6 +17,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Window loop
             void EnterWindowLoop();
+            void PollEvents();
             void TerminateWindowLoop();
 
             // Event pump
@@ -46,7 +47,7 @@ namespace Robust.Client.Graphics.Clyde
             nint? WindowGetWin32Window(WindowReg window);
 
             // Keyboard
-            string KeyGetName(Keyboard.Key key);
+            string? KeyGetName(Keyboard.Key key);
 
             // Clipboard
             Task<string> ClipboardGetText(WindowReg mainWindow);

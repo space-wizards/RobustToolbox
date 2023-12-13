@@ -8,7 +8,7 @@ using Robust.Shared.Serialization.Markdown.Value;
 
 namespace Robust.UnitTesting.Shared.Serialization;
 
-public sealed class DataRecordTest : SerializationTest
+public sealed partial class DataRecordTest : SerializationTest
 {
     [DataRecord]
     public record TwoIntRecord(int aTest, int AnotherTest);
@@ -32,7 +32,7 @@ public sealed class DataRecordTest : SerializationTest
     public record IntStructHolder(IntStruct Struct);
 
     [DataDefinition]
-    public struct IntStruct
+    public partial struct IntStruct
     {
         [DataField("value")] public int Value;
 

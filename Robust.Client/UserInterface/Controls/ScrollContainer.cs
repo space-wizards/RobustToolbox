@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.Contracts;
+using System.Numerics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -22,6 +23,21 @@ namespace Robust.Client.UserInterface.Controls
         public int ScrollSpeedX { get; set; } = 50;
         public int ScrollSpeedY { get; set; } = 50;
 
+        private bool _reserveScrollbarSpace;
+        public bool ReserveScrollbarSpace
+        {
+            get => _reserveScrollbarSpace;
+            set
+            {
+                if (value == _reserveScrollbarSpace)
+                    return;
+
+                _reserveScrollbarSpace = value;
+                _vScrollBar.ReservesSpace = value;
+                _hScrollBar.ReservesSpace = value;
+            }
+        }
+
         public bool ReturnMeasure { get; set; } = false;
 
         public event Action? OnScrolled;
@@ -34,13 +50,13 @@ namespace Robust.Client.UserInterface.Controls
             Action<Range> ev = _scrollValueChanged;
             _hScrollBar = new HScrollBar
             {
-                Visible = false,
+                Visible = _hScrollEnabled,
                 VerticalAlignment = VAlignment.Bottom,
                 HorizontalAlignment = HAlignment.Stretch
             };
             _vScrollBar = new VScrollBar
             {
-                Visible = false,
+                Visible = _vScrollEnabled,
                 VerticalAlignment = VAlignment.Stretch,
                 HorizontalAlignment = HAlignment.Right
             };
@@ -48,6 +64,8 @@ namespace Robust.Client.UserInterface.Controls
             AddChild(_vScrollBar);
             _hScrollBar.OnValueChanged += ev;
             _vScrollBar.OnValueChanged += ev;
+            _vScrollBar.ReservesSpace = ReserveScrollbarSpace;
+            _hScrollBar.ReservesSpace = ReserveScrollbarSpace;
         }
 
         public bool VScrollEnabled
@@ -92,7 +110,7 @@ namespace Robust.Client.UserInterface.Controls
             foreach (var child in Children)
             {
                 child.Measure(constraint);
-                size = Vector2.ComponentMax(size, child.DesiredSize);
+                size = Vector2.Max(size, child.DesiredSize);
             }
 
             // Unlike WPF/Avalonia we default to reporting ZERO here instead of available size. This is to fix a bunch
@@ -126,7 +144,7 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                maxChildMinSize = Vector2.ComponentMax(child.DesiredSize, maxChildMinSize);
+                maxChildMinSize = Vector2.Max(child.DesiredSize, maxChildMinSize);
             }
 
             var (cWidth, cHeight) = maxChildMinSize;
@@ -188,7 +206,7 @@ namespace Robust.Client.UserInterface.Controls
                 _hScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
             }
 
-            var realFinalSize = (
+            var realFinalSize = new Vector2(
                 _hScrollEnabled ? Math.Max(cWidth, sWidth) : sWidth,
                 _vScrollEnabled ? Math.Max(cHeight, sHeight) : sHeight);
 
@@ -199,7 +217,7 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var position = -_getScrollValue();
+                var position = -GetScrollValue();
                 var rect = UIBox2.FromDimensions(position, realFinalSize);
                 child.Arrange(rect);
             }
@@ -249,8 +267,11 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [Pure]
-        private Vector2 _getScrollValue()
+        public Vector2 GetScrollValue(bool ignoreVisible = false)
         {
+            if (ignoreVisible)
+                return new(_hScrollBar.Value, _vScrollBar.Value);
+
             var h = _hScrollBar.Value;
             var v = _vScrollBar.Value;
             if (!_hScrollVisible)
@@ -264,6 +285,16 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return new Vector2(h, v);
+        }
+
+        public void SetScrollValue(Vector2 value)
+        {
+            _suppressScrollValueChanged = true;
+            _hScrollBar.Value = value.X;
+            _vScrollBar.Value = value.Y;
+            _suppressScrollValueChanged = false;
+            InvalidateArrange();
+            _queueScrolled = true;
         }
 
         private void _scrollValueChanged(Range obj)

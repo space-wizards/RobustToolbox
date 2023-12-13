@@ -8,7 +8,6 @@ using Robust.Client.Graphics;
 using Robust.Client.Timing;
 using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -25,11 +24,12 @@ namespace Robust.Client.Prototypes
         [Dependency] private readonly INetManager _netManager = default!;
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IGameControllerInternal _controller = default!;
 
         private readonly List<FileSystemWatcher> _watchers = new();
         private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
         private CancellationTokenSource _reloadToken = new();
-        private readonly HashSet<ResourcePath> _reloadQueue = new();
+        private readonly HashSet<ResPath> _reloadQueue = new();
 
         public override void Initialize()
         {
@@ -42,9 +42,16 @@ namespace Robust.Client.Prototypes
             WatchResources();
         }
 
+        public override void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? changed = null)
+        {
+            LoadDirectory(new("/EnginePrototypes/"), changed: changed);
+            LoadDirectory(_controller.Options.PrototypeDirectory, changed: changed);
+            ResolveResults();
+        }
+
         private void WindowFocusedChanged(WindowFocusedEventArgs args)
         {
-#if !FULL_RELEASE
+#if TOOLS
             if (args.Focused && _reloadQueue.Count > 0)
             {
                 Timer.Spawn(_reloadDelay, ReloadPrototypeQueue, _reloadToken.Token);
@@ -59,7 +66,7 @@ namespace Robust.Client.Prototypes
 
         private void ReloadPrototypeQueue()
         {
-#if !FULL_RELEASE
+#if TOOLS
             var sw = Stopwatch.StartNew();
 
             var msg = new MsgReloadPrototypes();
@@ -83,7 +90,7 @@ namespace Robust.Client.Prototypes
             if (!_cfg.GetCVar(CVars.ResPrototypeReloadWatch))
                 return;
 
-#if !FULL_RELEASE
+#if TOOLS
             foreach (var path in Resources.GetContentRoots().Select(r => r.ToString())
                 .Where(r => Directory.Exists(r + "/Prototypes")).Select(p => p + "/Prototypes"))
             {
@@ -111,7 +118,7 @@ namespace Robust.Client.Prototypes
 
                     TaskManager.RunOnMainThread(() =>
                     {
-                        var file = new ResourcePath(args.FullPath);
+                        var file = new ResPath(args.FullPath);
 
                         foreach (var root in Resources.GetContentRoots())
                         {
@@ -120,7 +127,7 @@ namespace Robust.Client.Prototypes
                                 continue;
                             }
 
-                            _reloadQueue.Add(relative);
+                            _reloadQueue.Add(relative.Value);
                         }
                     });
                 };

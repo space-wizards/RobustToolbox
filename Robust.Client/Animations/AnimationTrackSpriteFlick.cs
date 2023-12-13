@@ -40,7 +40,7 @@ namespace Robust.Client.Animations
             DebugTools.AssertNotNull(LayerKey);
 
             var entity = (EntityUid) context;
-            var sprite = IoCManager.Resolve<IEntityManager>().GetComponent<ISpriteComponent>(entity);
+            var sprite = IoCManager.Resolve<IEntityManager>().GetComponent<SpriteComponent>(entity);
 
             var playingTime = prevPlayingTime + frameTime;
             var keyFrameIndex = prevKeyFrameIndex;

@@ -20,13 +20,18 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics
 {
     public sealed class FixtureProxy
     {
+        public EntityUid Entity;
+        public PhysicsComponent Body;
+
         /// <summary>
         ///     Grid-based AABB of this proxy.
         /// </summary>
@@ -35,6 +40,8 @@ namespace Robust.Shared.Physics.Dynamics
 
         [ViewVariables]
         public int ChildIndex;
+
+        public string FixtureId;
 
         /// <summary>
         ///     Our parent fixture
@@ -47,9 +54,12 @@ namespace Robust.Shared.Physics.Dynamics
         [ViewVariables]
         public DynamicTree.Proxy ProxyId = DynamicTree.Proxy.Free;
 
-        public FixtureProxy(Box2 aabb, Fixture fixture, int childIndex)
+        public FixtureProxy(EntityUid uid, PhysicsComponent body, Box2 aabb, string fixtureId, Fixture fixture, int childIndex)
         {
+            Entity = uid;
+            Body = body;
             AABB = aabb;
+            FixtureId = fixtureId;
             Fixture = fixture;
             ChildIndex = childIndex;
         }

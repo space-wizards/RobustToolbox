@@ -7,8 +7,14 @@ namespace Robust.Client.WebView.Cef
 {
     internal sealed class RobustCefApp : CefApp
     {
+        private readonly ISawmill? _sawmill;
         private readonly BrowserProcessHandler _browserProcessHandler = new();
         private readonly RenderProcessHandler _renderProcessHandler = new();
+
+        public RobustCefApp(ISawmill? sawmill)
+        {
+            _sawmill = sawmill;
+        }
 
         protected override CefBrowserProcessHandler GetBrowserProcessHandler()
         {
@@ -39,8 +45,7 @@ namespace Robust.Client.WebView.Cef
             commandLine.AppendSwitch("disable-threaded-scrolling", "1");
             commandLine.AppendSwitch("disable-features", "TouchpadAndWheelScrollLatching,AsyncWheelEvents");
 
-            if(IoCManager.Instance != null)
-                Logger.Debug($"{commandLine}");
+            _sawmill?.Debug($"CEF command line: {commandLine}");
         }
 
         protected override void OnRegisterCustomSchemes(CefSchemeRegistrar registrar)

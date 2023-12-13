@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Lidgren.Network;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -16,12 +17,17 @@ namespace Robust.Shared.Network.Messages
 
         public PlacementManagerMessage PlaceType { get; set; }
         public string Align { get; set; }
+
+        /// <summary>
+        /// Should we replace existing entities if possible
+        /// </summary>
+        public bool Replacement { get; set; }
         public bool IsTile { get; set; }
-        public ushort TileType { get; set; }
+        public int TileType { get; set; }
         public string EntityTemplateName { get; set; }
-        public EntityCoordinates EntityCoordinates { get; set; }
+        public NetCoordinates NetCoordinates { get; set; }
         public Direction DirRcv { get; set; }
-        public EntityUid EntityUid { get; set; }
+        public NetEntity EntityUid { get; set; }
 
         public int Range { get; set; }
         public string ObjType { get; set; }
@@ -36,11 +42,12 @@ namespace Robust.Shared.Network.Messages
                 case PlacementManagerMessage.RequestPlacement:
                     Align = buffer.ReadString();
                     IsTile = buffer.ReadBoolean();
+                    Replacement = buffer.ReadBoolean();
 
-                    if (IsTile) TileType = buffer.ReadUInt16();
+                    if (IsTile) TileType = buffer.ReadInt32();
                     else EntityTemplateName = buffer.ReadString();
 
-                    EntityCoordinates = buffer.ReadEntityCoordinates();
+                    NetCoordinates = buffer.ReadNetCoordinates();
                     DirRcv = (Direction)buffer.ReadByte();
                     break;
                 case PlacementManagerMessage.StartPlacement:
@@ -53,10 +60,10 @@ namespace Robust.Shared.Network.Messages
                 case PlacementManagerMessage.PlacementFailed:
                     throw new NotImplementedException();
                 case PlacementManagerMessage.RequestEntRemove:
-                    EntityUid = new EntityUid(buffer.ReadInt32());
+                    EntityUid = new NetEntity(buffer.ReadInt32());
                     break;
                 case PlacementManagerMessage.RequestRectRemove:
-                    EntityCoordinates = buffer.ReadEntityCoordinates();
+                    NetCoordinates = buffer.ReadNetCoordinates();
                     RectSize = buffer.ReadVector2();
                     break;
             }
@@ -70,11 +77,12 @@ namespace Robust.Shared.Network.Messages
                 case PlacementManagerMessage.RequestPlacement:
                     buffer.Write(Align);
                     buffer.Write(IsTile);
+                    buffer.Write(Replacement);
 
                     if(IsTile) buffer.Write(TileType);
                     else buffer.Write(EntityTemplateName);
 
-                    buffer.Write(EntityCoordinates);
+                    buffer.Write(NetCoordinates);
                     buffer.Write((byte)DirRcv);
                     break;
                 case PlacementManagerMessage.StartPlacement:
@@ -90,7 +98,7 @@ namespace Robust.Shared.Network.Messages
                     buffer.Write((int)EntityUid);
                     break;
                 case PlacementManagerMessage.RequestRectRemove:
-                    buffer.Write(EntityCoordinates);
+                    buffer.Write(NetCoordinates);
                     buffer.Write(RectSize);
                     break;
             }

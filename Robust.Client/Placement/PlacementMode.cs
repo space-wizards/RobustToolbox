@@ -1,10 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -85,10 +89,12 @@ namespace Robust.Client.Placement
 
         public virtual void Render(DrawingHandleWorld handle)
         {
-            var sce = pManager.CurrentPlacementOverlayEntity;
-            if (sce is not {} scent || pManager.EntityManager.Deleted(scent))
+            var uid = pManager.CurrentPlacementOverlayEntity;
+            if (!pManager.EntityManager.TryGetComponent(uid, out SpriteComponent? sprite) || !sprite.Visible)
+            {
+                // TODO draw something for placement of invisible & sprite-less entities.
                 return;
-            var sc = pManager.EntityManager.GetComponent<SpriteComponent>(sce!.Value);
+            }
 
             IEnumerable<EntityCoordinates> locationcollection;
             switch (pManager.PlacementType)
@@ -108,6 +114,7 @@ namespace Robust.Client.Placement
             }
 
             var dirAng = pManager.Direction.ToAngle();
+            var spriteSys = pManager.EntityManager.System<SpriteSystem>();
             foreach (var coordinate in locationcollection)
             {
                 if (!coordinate.IsValid(pManager.EntityManager))
@@ -115,8 +122,8 @@ namespace Robust.Client.Placement
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
                 var worldRot = pManager.EntityManager.GetComponent<TransformComponent>(coordinate.EntityId).WorldRotation + dirAng;
 
-                sc.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
-                sc.Render(handle, pManager.eyeManager.CurrentEye.Rotation, worldRot, worldPos);
+                sprite.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
+                spriteSys.Render(uid.Value, sprite, handle, pManager.EyeManager.CurrentEye.Rotation, worldRot, worldPos);
             }
         }
 
@@ -127,21 +134,29 @@ namespace Robust.Client.Placement
 
         public IEnumerable<EntityCoordinates> LineCoordinates()
         {
-            var (_, (x, y)) = MouseCoords.WithEntityId(pManager.StartPoint.EntityId) - pManager.StartPoint;
+            var mouseScreen = pManager.InputManager.MouseScreenPosition;
+            var mousePos = pManager.EyeManager.PixelToMap(mouseScreen);
+
+            if (mousePos.MapId == MapId.Nullspace)
+                yield break;
+
+            var (_, (x, y)) = EntityCoordinates.FromMap(pManager.StartPoint.EntityId, mousePos, pManager.EntityManager) - pManager.StartPoint;
             float iterations;
             Vector2 distance;
             if (Math.Abs(x) > Math.Abs(y))
             {
-                iterations = Math.Abs(x / GridDistancing);
-                distance = new Vector2(x > 0 ? 1 : -1, 0) * GridDistancing;
+                var xSign = Math.Sign(x);
+                iterations = MathF.Ceiling(Math.Abs((x + GridDistancing / 2f * xSign) / GridDistancing));
+                distance = new Vector2(x > 0 ? 1 : -1, 0);
             }
             else
             {
-                iterations = Math.Abs(y / GridDistancing);
-                distance = new Vector2(0, y > 0 ? 1 : -1) * GridDistancing;
+                var ySign = Math.Sign(y);
+                iterations = MathF.Ceiling(Math.Abs((y + GridDistancing / 2f * ySign) / GridDistancing));
+                distance = new Vector2(0, y > 0 ? 1 : -1);
             }
 
-            for (var i = 0; i <= iterations; i++)
+            for (var i = 0; i < iterations; i++)
             {
                 yield return new EntityCoordinates(pManager.StartPoint.EntityId, pManager.StartPoint.Position + distance * i);
             }
@@ -150,18 +165,24 @@ namespace Robust.Client.Placement
         // This name is a nice reminder of our origins. Never forget.
         public IEnumerable<EntityCoordinates> GridCoordinates()
         {
-            var placementdiff = MouseCoords.WithEntityId(pManager.StartPoint.EntityId) - pManager.StartPoint;
-            var distanceX = new Vector2(placementdiff.X > 0 ? 1 : -1, 0) * GridDistancing;
-            var distanceY = new Vector2(0, placementdiff.Y > 0 ? 1 : -1) * GridDistancing;
+            var mouseScreen = pManager.InputManager.MouseScreenPosition;
+            var mousePos = pManager.EyeManager.PixelToMap(mouseScreen);
 
-            var iterationsX = Math.Abs(placementdiff.X / GridDistancing);
-            var iterationsY = Math.Abs(placementdiff.Y / GridDistancing);
+            if (mousePos.MapId == MapId.Nullspace)
+                yield break;
 
-            for (var x = 0; x <= iterationsX; x++)
+            var placementdiff = EntityCoordinates.FromMap(pManager.StartPoint.EntityId, mousePos, pManager.EntityManager) - pManager.StartPoint;
+
+            var xSign = Math.Sign(placementdiff.X);
+            var ySign = Math.Sign(placementdiff.Y);
+            var iterationsX = Math.Ceiling(Math.Abs((placementdiff.X + GridDistancing / 2f * xSign) / GridDistancing));
+            var iterationsY = Math.Ceiling(Math.Abs((placementdiff.Y + GridDistancing / 2f * ySign) / GridDistancing));
+
+            for (var x = 0; x < iterationsX; x++)
             {
-                for (var y = 0; y <= iterationsY; y++)
+                for (var y = 0; y < iterationsY; y++)
                 {
-                    yield return new EntityCoordinates(pManager.StartPoint.EntityId, pManager.StartPoint.Position + distanceX * x + distanceY * y);
+                    yield return new EntityCoordinates(pManager.StartPoint.EntityId, pManager.StartPoint.Position + new Vector2(x * xSign, y * ySign) * GridDistancing);
                 }
             }
         }
@@ -179,12 +200,12 @@ namespace Robust.Client.Placement
 
         public TextureResource GetSprite(string key)
         {
-            return pManager.ResourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/") / key);
+            return pManager.ResourceCache.GetResource<TextureResource>(new ResPath("/Textures/") / key);
         }
 
         public bool TryGetSprite(string key, [NotNullWhen(true)] out TextureResource? sprite)
         {
-            return pManager.ResourceCache.TryGetResource(new ResourcePath(@"/Textures/") / key, out sprite);
+            return pManager.ResourceCache.TryGetResource(new ResPath(@"/Textures/") / key, out sprite);
         }
 
         /// <summary>
@@ -224,23 +245,23 @@ namespace Robust.Client.Placement
 
         protected Vector2 ScreenToWorld(Vector2 point)
         {
-            return pManager.eyeManager.ScreenToMap(point).Position;
+            return pManager.EyeManager.ScreenToMap(point).Position;
         }
 
         protected Vector2 WorldToScreen(Vector2 point)
         {
-            return pManager.eyeManager.WorldToScreen(point);
+            return pManager.EyeManager.WorldToScreen(point);
         }
 
         protected EntityCoordinates ScreenToCursorGrid(ScreenCoordinates coords)
         {
-            var mapCoords = pManager.eyeManager.ScreenToMap(coords.Position);
-            if (!pManager.MapManager.TryFindGridAt(mapCoords, out var grid))
+            var mapCoords = pManager.EyeManager.PixelToMap(coords.Position);
+            if (!pManager.MapManager.TryFindGridAt(mapCoords, out var gridUid, out var grid))
             {
                 return EntityCoordinates.FromMap(pManager.MapManager, mapCoords);
             }
 
-            return EntityCoordinates.FromMap(pManager.EntityManager, grid.Owner, mapCoords);
+            return EntityCoordinates.FromMap(pManager.EntityManager, gridUid, mapCoords);
         }
     }
 }

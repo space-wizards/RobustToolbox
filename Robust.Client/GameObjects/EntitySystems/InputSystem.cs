@@ -1,17 +1,15 @@
 using System;
+using System.Numerics;
 using Robust.Client.GameStates;
 using Robust.Client.Input;
 using Robust.Client.Player;
-using Robust.Shared;
-using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -20,13 +18,16 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
-    public sealed class InputSystem : SharedInputSystem
+    public sealed class InputSystem : SharedInputSystem, IPostInjectInit
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientGameStateManager _stateManager = default!;
         [Dependency] private readonly IConsoleHost _conHost = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+
+        private ISawmill _sawmillInputContext = default!;
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
 
@@ -48,7 +49,7 @@ namespace Robust.Client.GameObjects
         /// <param name="message">Arguments for this event.</param>
         /// <param name="replay">if true, current cmd state will not be checked or updated - use this for "replaying" an
         /// old input that was saved or buffered until further processing could be done</param>
-        public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, FullInputCmdMessage message, bool replay = false)
+        public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, IFullInputCmdMessage message, bool replay = false)
         {
             #if DEBUG
 
@@ -74,14 +75,27 @@ namespace Robust.Client.GameObjects
                     continue;
 
                 // local handlers can block sending over the network.
-                if (handler.HandleCmdMessage(session, message))
+                if (handler.HandleCmdMessage(EntityManager, session, message))
                 {
                     return true;
                 }
             }
 
             // send it off to the server
-            DispatchInputCommand(message);
+            var clientMsg = (ClientFullInputCmdMessage)message;
+            var fullMsg = new FullInputCmdMessage(
+                clientMsg.Tick,
+                clientMsg.SubTick,
+                (int)clientMsg.InputSequence,
+                clientMsg.InputFunctionId,
+                clientMsg.State,
+                GetNetCoordinates(clientMsg.Coordinates),
+                clientMsg.ScreenCoordinates)
+            {
+                Uid = GetNetEntity(clientMsg.Uid)
+            };
+
+            DispatchInputCommand(clientMsg, fullMsg);
             return false;
         }
 
@@ -89,7 +103,7 @@ namespace Robust.Client.GameObjects
         /// Handle a predicted input command.
         /// </summary>
         /// <param name="inputCmd">Input command to handle as predicted.</param>
-        public void PredictInputCommand(FullInputCmdMessage inputCmd)
+        public void PredictInputCommand(IFullInputCmdMessage inputCmd)
         {
             DebugTools.AssertNotNull(_playerManager.LocalPlayer);
 
@@ -99,21 +113,22 @@ namespace Robust.Client.GameObjects
             var session = _playerManager.LocalPlayer!.Session;
             foreach (var handler in BindRegistry.GetHandlers(keyFunc))
             {
-                if (handler.HandleCmdMessage(session, inputCmd)) break;
+                if (handler.HandleCmdMessage(EntityManager, session, inputCmd))
+                    break;
             }
             Predicted = false;
 
         }
 
-        private void DispatchInputCommand(FullInputCmdMessage message)
+        private void DispatchInputCommand(ClientFullInputCmdMessage clientMsg, FullInputCmdMessage message)
         {
-            _stateManager.InputCommandDispatched(message);
+            _stateManager.InputCommandDispatched(clientMsg, message);
             EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, message.InputSequence);
         }
 
         public override void Initialize()
         {
-            SubscribeLocalEvent<PlayerAttachSysMessage>(OnAttachedEntityChanged);
+            SubscribeLocalEvent<LocalPlayerAttachedEvent>(OnAttachedEntityChanged);
 
             _conHost.RegisterCommand("incmd",
                 "Inserts an input command into the simulation",
@@ -148,16 +163,16 @@ namespace Robust.Client.GameObjects
             var funcId = _inputManager.NetworkBindMap.KeyFunctionID(keyFunction);
 
             var message = new FullInputCmdMessage(_timing.CurTick, _timing.TickFraction, funcId, state,
-                coords, new ScreenCoordinates(0, 0, default), EntityUid.Invalid);
+                GetNetCoordinates(coords), new ScreenCoordinates(0, 0, default), NetEntity.Invalid);
 
             HandleInputCommand(localPlayer.Session, keyFunction, message);
         }
 
-        private void OnAttachedEntityChanged(PlayerAttachSysMessage message)
+        private void OnAttachedEntityChanged(LocalPlayerAttachedEvent message)
         {
-            if (message.AttachedEntity != default) // attach
+            if (message.Entity != default) // attach
             {
-                SetEntityContextActive(_inputManager, message.AttachedEntity);
+                SetEntityContextActive(_inputManager, message.Entity);
             }
             else // detach
             {
@@ -172,7 +187,7 @@ namespace Robust.Client.GameObjects
 
             if (!EntityManager.TryGetComponent(entity, out InputComponent? inputComp))
             {
-                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                _sawmillInputContext.Debug($"AttachedEnt has no InputComponent: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
                 return;
             }
@@ -183,7 +198,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                Logger.ErrorS("input.context", $"Unknown context: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                _sawmillInputContext.Error($"Unknown context: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
         }
@@ -201,45 +216,12 @@ namespace Robust.Client.GameObjects
 
             SetEntityContextActive(_inputManager, controlled);
         }
-    }
 
-    /// <summary>
-    ///     Entity system message that is raised when the player changes attached entities.
-    /// </summary>
-    public sealed class PlayerAttachSysMessage : EntityEventArgs
-    {
-        /// <summary>
-        ///     New entity the player is attached to.
-        /// </summary>
-        public EntityUid AttachedEntity { get; }
-
-        /// <summary>
-        ///     Creates a new instance of <see cref="PlayerAttachSysMessage"/>.
-        /// </summary>
-        /// <param name="attachedEntity">New entity the player is attached to.</param>
-        public PlayerAttachSysMessage(EntityUid attachedEntity)
+        protected override void PostInject()
         {
-            AttachedEntity = attachedEntity;
+            base.PostInject();
+
+            _sawmillInputContext = _logManager.GetSawmill("input.context");
         }
-    }
-
-    public sealed class PlayerAttachedEvent : EntityEventArgs
-    {
-        public PlayerAttachedEvent(EntityUid entity)
-        {
-            Entity = entity;
-        }
-
-        public EntityUid Entity { get; }
-    }
-
-    public sealed class PlayerDetachedEvent : EntityEventArgs
-    {
-        public PlayerDetachedEvent(EntityUid entity)
-        {
-            Entity = entity;
-        }
-
-        public EntityUid Entity { get; }
     }
 }

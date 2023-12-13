@@ -1,6 +1,7 @@
 using Robust.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -13,7 +14,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string LeftButtonStyle = "spinbox-left";
         public const string RightButtonStyle = "spinbox-right";
         public const string MiddleButtonStyle = "spinbox-middle";
-        private LineEdit _lineEdit;
+        public LineEdit LineEditControl { get; }
         private List<Button> _leftButtons = new();
         private List<Button> _rightButtons = new();
         private int _stepSize = 1;
@@ -34,8 +35,8 @@ namespace Robust.Client.UserInterface.Controls
                     return;
                 }
                 _value = value;
-                _lineEdit.Text = value.ToString();
-                ValueChanged?.Invoke(this, new ValueChangedEventArgs(value));
+                LineEditControl.Text = value.ToString();
+                ValueChanged?.Invoke(new ValueChangedEventArgs(value));
             }
         }
 
@@ -51,27 +52,27 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
             _value = value;
-            _lineEdit.Text = value.ToString();
+            LineEditControl.Text = value.ToString();
         }
 
-        public event EventHandler<ValueChangedEventArgs>? ValueChanged;
+        public event Action<ValueChangedEventArgs>? ValueChanged;
 
         public SpinBox()
         {
             Orientation = LayoutOrientation.Horizontal;
             MouseFilter = MouseFilterMode.Pass;
 
-            _lineEdit = new LineEdit
+            LineEditControl = new LineEdit
             {
                 MinSize = new Vector2(40, 0),
                 HorizontalExpand = true
             };
-            AddChild(_lineEdit);
+            AddChild(LineEditControl);
 
             Value = 0;
 
-            _lineEdit.IsValid = (str) => int.TryParse(str, out var i) && (IsValid == null || IsValid(i));
-            _lineEdit.OnTextChanged += (args) =>
+            LineEditControl.IsValid = (str) => int.TryParse(str, out var i) && (IsValid == null || IsValid(i));
+            LineEditControl.OnTextChanged += (args) =>
             {
                 if (int.TryParse(args.Text, out int i))
                     Value = i;
@@ -142,8 +143,8 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public bool LineEditDisabled
         {
-            get => !_lineEdit.Editable;
-            set => _lineEdit.Editable = !value;
+            get => !LineEditControl.Editable;
+            set => LineEditControl.Editable = !value;
         }
 
         /// <summary>
@@ -184,7 +185,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseWheel(args);
 
-            if (!_lineEdit.HasKeyboardFocus())
+            if (!LineEditControl.HasKeyboardFocus())
             {
                 return;
             }

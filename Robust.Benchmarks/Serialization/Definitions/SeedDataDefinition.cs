@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -10,8 +11,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
     ///     Arbitrarily large data definition for benchmarks.
     ///     Taken from content.
     /// </summary>
-    [Prototype("seed")]
-    public sealed class SeedDataDefinition : IPrototype
+    public sealed partial class SeedDataDefinition : Component
     {
         public const string Prototype = @"
 - type: seed
@@ -87,7 +87,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
         #endregion
 
         #region Cosmetics
-        [DataField("plantRsi", required: true)] public ResourcePath PlantRsi { get; set; } = default!;
+        [DataField("plantRsi", required: true)] public ResPath PlantRsi { get; set; } = default!;
         [DataField("plantIconState")] public string PlantIconState { get; set; } = "produce";
         [DataField("bioluminescent")] public bool Bioluminescent { get; set; }
         [DataField("bioluminescentColor")] public Color BioluminescentColor { get; set; } = Color.White;
@@ -106,7 +106,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
     }
 
     [DataDefinition]
-    public struct SeedChemQuantity
+    public partial struct SeedChemQuantity
     {
         [DataField("Min")]
         public int Min;

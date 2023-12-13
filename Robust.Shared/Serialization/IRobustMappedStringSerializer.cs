@@ -100,5 +100,8 @@ namespace Robust.Shared.Serialization
         void LockStrings();
 
         void Initialize();
+
+        (byte[] mapHash, byte[] package) GeneratePackage();
+        void SetPackage(byte[] hash, byte[] package);
     }
 }

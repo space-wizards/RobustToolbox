@@ -26,6 +26,7 @@ SOFTWARE.
 #endregion
 
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
@@ -41,7 +42,14 @@ namespace Robust.Shared.Maths
     /// </remarks>
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Vector3 : IEquatable<Vector3>, ISpanFormattable
+    public struct Vector3 :
+        IEquatable<Vector3>,
+        ISpanFormattable,
+        IAdditionOperators<Vector3, Vector3, Vector3>,
+        ISubtractionOperators<Vector3, Vector3, Vector3>,
+        IMultiplyOperators<Vector3, Vector3, Vector3>,
+        IMultiplyOperators<Vector3, float, Vector3>,
+        IComparisonOperators<Vector3, Vector3, bool>
     {
         #region Fields
 
@@ -1203,5 +1211,25 @@ namespace Robust.Shared.Maths
         }
 
         #endregion
+
+        public static bool operator >(Vector3 left, Vector3 right)
+        {
+            return left.LengthSquared > right.LengthSquared;
+        }
+
+        public static bool operator >=(Vector3 left, Vector3 right)
+        {
+            return left.LengthSquared >= right.LengthSquared;
+        }
+
+        public static bool operator <(Vector3 left, Vector3 right)
+        {
+            return left.LengthSquared < right.LengthSquared;
+        }
+
+        public static bool operator <=(Vector3 left, Vector3 right)
+        {
+            return left.LengthSquared <= right.LengthSquared;
+        }
     }
 }

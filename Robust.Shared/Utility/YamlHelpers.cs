@@ -5,8 +5,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using YamlDotNet.RepresentationModel;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Shared.Utility
 {
@@ -104,6 +107,44 @@ namespace Robust.Shared.Utility
         }
 
         [Pure]
+        public static Matrix3 AsMatrix3(this YamlNode node)
+        {
+            string raw = AsString(node);
+            string[] args = raw.Split(',');
+            if (args.Length != 12)
+            {
+               throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Matrix3), raw));
+            }
+            float[] parsedArgs = new float[12];
+            for(var i = 0; i < 12; i += 1) {
+                parsedArgs[i] = float.Parse(args[i],CultureInfo.InvariantCulture);
+            }
+            return new Matrix3(parsedArgs);
+        }
+
+        [Pure]
+        public static Matrix4 AsMatrix4(this YamlNode node)
+        {
+            string raw = AsString(node);
+            string[] args = raw.Split(',');
+            if (args.Length != 16)
+            {
+               throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Matrix4), raw));
+            }
+            Vector4[] vectorBlocks = new Vector4[4];
+            for(var i = 0; i < 16; i += 4) {
+                vectorBlocks.Append(new Vector4(
+                    float.Parse(args[0 + i], CultureInfo.InvariantCulture),
+                    float.Parse(args[1 + i], CultureInfo.InvariantCulture),
+                    float.Parse(args[2 + i], CultureInfo.InvariantCulture),
+                    float.Parse(args[3 + i], CultureInfo.InvariantCulture)
+                ));
+            }
+
+            return new Matrix4(vectorBlocks[0],vectorBlocks[1],vectorBlocks[2],vectorBlocks[3]);
+        }
+
+        [Pure]
         public static T AsEnum<T>(this YamlNode node)
         {
             return (T) Enum.Parse(typeof(T), node.AsString(), true);
@@ -127,7 +168,7 @@ namespace Robust.Shared.Utility
         }
 
         [Pure]
-        public static ResourcePath AsResourcePath(this YamlNode node)
+        public static ResPath AsResourcePath(this YamlNode node)
         {
             return new(node.ToString());
         }

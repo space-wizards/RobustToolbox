@@ -1,29 +1,25 @@
 using System;
 using Robust.Shared.GameStates;
-using Robust.Shared.Network;
-using Robust.Shared.Players;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
     /// <remarks>
     ///     Base component for the ECS system.
-    ///     All discoverable implementations of IComponent must override the <see cref="Name" />.
     ///     Instances are dynamically instantiated by a <c>ComponentFactory</c>, and will have their IoC Dependencies resolved.
     /// </remarks>
-    public interface IComponent
+    [ImplicitDataDefinitionForInheritors]
+    public partial interface IComponent
     {
-        /// <summary>
-        ///     Name that this component is represented with in prototypes.
-        /// </summary>
-        /// <seealso cref="IComponentRegistration.Name" />
-        string Name { get; }
-
         /// <summary>
         ///     The current lifetime stage of this component. You can use this to check
         ///     if the component is initialized or being deleted.
         /// </summary>
-        ComponentLifeStage LifeStage { get; }
+        ComponentLifeStage LifeStage { get; [Obsolete("Do not use from content")] set; }
+
+        [Obsolete("Do not use from content")]
+        bool Networked { get; set; }
 
         /// <summary>
         ///     Whether this component should be synchronized with clients when modified.
@@ -35,9 +31,24 @@ namespace Robust.Shared.GameObjects
         bool NetSyncEnabled { get; set; }
 
         /// <summary>
+        ///     If true, and if this is a networked component, then component data will only be sent to players if their
+        ///     controlled entity is the owner of this component. This is less performance intensive than <see cref="SessionSpecific"/>.
+        /// </summary>
+        bool SendOnlyToOwner { get; }
+
+        /// <summary>
+        ///     If true, and if this is a networked component, then this component will cause <see
+        ///     cref="ComponentGetStateAttemptEvent"/> events to be raised to check whether a given player should
+        ///     receive this component's state.
+        /// </summary>
+        bool SessionSpecific { get; }
+
+        /// <summary>
         ///     Entity that this component is attached to.
         /// </summary>
-        EntityUid Owner { get; }
+        /// <seealso cref="EntityQueryEnumerator{TComp1}"/>
+        [Obsolete("Update your API to allow accessing Owner through other means")]
+        EntityUid Owner { get; set; }
 
         /// <summary>
         /// Component has been (or is currently being) initialized.
@@ -62,30 +73,17 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     This is the tick the component was created.
         /// </summary>
-        GameTick CreationTick { get; }
+        GameTick CreationTick { get; [Obsolete("Do not use from content")] set; }
 
         /// <summary>
         ///     This is the last game tick Dirty() was called.
         /// </summary>
-        GameTick LastModifiedTick { get; }
+        GameTick LastModifiedTick { get; [Obsolete("Do not use from content")] set; }
 
-        /// <summary>
-        ///     Get the component's state for replicating on the client.
-        /// </summary>
-        /// <returns>ComponentState object</returns>
-        ComponentState GetComponentState();
+        [Obsolete("Do not use from content")]
+        void ClearTicks();
 
-        /// <summary>
-        ///     Handles an incoming component state from the server.
-        /// </summary>
-        /// <remarks>
-        /// This function should only be called on the client.
-        /// Both, one, or neither of the two states can be null.
-        /// On the next tick, curState will be nextState.
-        /// Passing null for both arguments should do nothing.
-        /// </remarks>
-        /// <param name="curState">Current component state for this tick.</param>
-        /// <param name="nextState">Next component state for the next tick.</param>
-        void HandleComponentState(ComponentState? curState, ComponentState? nextState);
+        [Obsolete("Do not use from content")]
+        void ClearCreationTick();
     }
 }

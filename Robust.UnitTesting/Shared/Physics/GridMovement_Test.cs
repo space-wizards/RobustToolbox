@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -31,45 +32,43 @@ public sealed class GridMovement_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            var grid = mapManager.CreateGridEntity(mapId);
 
             // Setup 1 body on grid, 1 body off grid, and assert that it's all gucci.
-            grid.SetTile(Vector2i.Zero, new Tile(1));
-            var fixtures = entManager.GetComponent<FixturesComponent>(grid.Owner);
+            grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            var fixtures = entManager.GetComponent<FixturesComponent>(grid);
             Assert.That(fixtures.FixtureCount, Is.EqualTo(1));
 
-            var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, 0.5f, 0.5f ));
+            var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid, 0.5f, 0.5f ));
             var onGridBody = entManager.AddComponent<PhysicsComponent>(onGrid);
-            physSystem.SetBodyType(onGridBody, BodyType.Dynamic);
+            physSystem.SetBodyType(onGrid, BodyType.Dynamic, body: onGridBody);
             var shapeA = new PolygonShape();
             shapeA.SetAsBox(0.5f, 0.5f);
-            var fixtureA = fixtureSystem.CreateFixture(onGridBody, shapeA);
-            physSystem.SetCollisionMask(fixtureA, 1);
+            fixtureSystem.CreateFixture(onGrid, "fix1", new Fixture(shapeA, 1, 0, false), body: onGridBody);
             Assert.That(fixtureSystem.GetFixtureCount(onGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(onGrid).ParentUid, Is.EqualTo(grid.Owner));
-            physSystem.WakeBody(onGridBody);
+            physSystem.WakeBody(onGrid, body: onGridBody);
+            Assert.That(onGridBody.Awake);
 
             var offGrid = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
             var offGridBody = entManager.AddComponent<PhysicsComponent>(offGrid);
-            physSystem.SetBodyType(offGridBody, BodyType.Dynamic);
+            physSystem.SetBodyType(offGrid, BodyType.Dynamic, body: offGridBody);
             var shapeB = new PolygonShape();
             shapeB.SetAsBox(0.5f, 0.5f);
-            var fixtureB = fixtureSystem.CreateFixture(offGridBody, shapeB);
-            physSystem.SetCollisionLayer(fixtureB, 1);
+            fixtureSystem.CreateFixture(offGrid, "fix1", new Fixture(shapeB, 0, 1, false), body: offGridBody);
             Assert.That(fixtureSystem.GetFixtureCount(offGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(offGrid).ParentUid, Is.Not.EqualTo((grid.Owner)));
-            physSystem.WakeBody(offGridBody);
+            physSystem.WakeBody(offGrid, body: offGridBody);
+            Assert.That(offGridBody.Awake);
 
             // Alright just a quick validation then we start the actual damn test.
-
-            var physicsMap = entManager.GetComponent<PhysicsMapComponent>(mapManager.GetMapEntityId(mapId));
-            physSystem.Step(physicsMap, 0.001f, false);
+            physSystem.Update(0.001f);
 
             Assert.That(onGridBody.ContactCount, Is.EqualTo(0));
 
             // Alright now move the grid on top of the off grid body, run physics for a frame and see if they contact
             entManager.GetComponent<TransformComponent>(grid.Owner).LocalPosition = new Vector2(10f, 10f);
-            physSystem.Step(physicsMap, 0.001f, false);
+            physSystem.Update(0.001f);
 
             Assert.That(onGridBody.ContactCount, Is.EqualTo(1));
         });

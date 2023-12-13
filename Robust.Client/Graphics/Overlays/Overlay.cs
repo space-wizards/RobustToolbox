@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using Robust.Shared.Timing;
 using Robust.Shared.Enums;
 using System;
+using Robust.Shared.Graphics;
 
 namespace Robust.Client.Graphics
 {
@@ -71,6 +72,10 @@ namespace Robust.Client.Graphics
         /// not get drawn to this view-port. Useful for avoiding unnecessary screen-texture fetching or frame buffer
         /// clearing.
         /// </summary>
+        /// <remarks>
+        /// If you do not use <see cref="RequestScreenTexture"/> or <see cref="OverwriteTargetFrameBuffer"/>, you don't
+        /// need to use this and can just perform these checks inside of <see cref="Draw"/> instead.
+        /// </remarks>
         protected internal virtual bool BeforeDraw(in OverlayDrawArgs args)
         {
             return true;

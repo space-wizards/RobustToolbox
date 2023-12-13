@@ -20,7 +20,7 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
-using Robust.Shared.Maths;
+using System.Numerics;
 using Robust.Shared.Physics.Collision;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts

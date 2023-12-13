@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
@@ -10,7 +11,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Utility;
-using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.Physics.Systems;
 
@@ -132,14 +132,18 @@ public abstract partial class SharedPhysicsSystem
     private readonly ObjectPool<List<Contact>> _islandContactPool =
         new DefaultObjectPool<List<Contact>>(new ListPolicy<Contact>(), MaxIslands);
 
-    private readonly ObjectPool<List<Joint>> _islandJointPool = new DefaultObjectPool<List<Joint>>(new ListPolicy<Joint>(), MaxIslands);
+    /// <summary>
+    /// Due to joint relays we need to track the dummy joint and the original joint.
+    /// </summary>
+    private readonly ObjectPool<List<(Joint Original, Joint Joint)>> _islandJointPool =
+        new DefaultObjectPool<List<(Joint Original, Joint Joint)>>(new ListPolicy<(Joint Original, Joint Joint)>(), MaxIslands);
 
     internal record struct IslandData(
         int Index,
         bool LoneIsland,
         List<PhysicsComponent> Bodies,
         List<Contact> Contacts,
-        List<Joint> Joints,
+        List<(Joint Original, Joint Joint)> Joints,
         List<(Joint Joint, float Error)> BrokenJoints)
     {
         /// <summary>
@@ -160,7 +164,7 @@ public abstract partial class SharedPhysicsSystem
 
         public readonly List<PhysicsComponent> Bodies = Bodies;
         public readonly List<Contact> Contacts = Contacts;
-        public readonly List<Joint> Joints = Joints;
+        public readonly List<(Joint Original, Joint Joint)> Joints = Joints;
         public bool PositionSolved = false;
         public readonly List<(Joint Joint, float Error)> BrokenJoints = BrokenJoints;
     }
@@ -275,26 +279,13 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Where the magic happens.
     /// </summary>
-    public void Step(PhysicsMapComponent component, float frameTime, bool prediction)
+    public void Step(EntityUid uid, PhysicsMapComponent component, float frameTime, bool prediction)
     {
-        // Box2D does this at the end of a step and also here when there's a fixture update.
-        // Given external stuff can move bodies we'll just do this here.
-        // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
-        _broadphase.FindNewContacts(component, component.MapId);
-
         var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
         var dtRatio = component._invDt0 * frameTime;
 
-        var updateBeforeSolve = new PhysicsUpdateBeforeMapSolveEvent(prediction, component, frameTime);
-        RaiseLocalEvent(ref updateBeforeSolve);
-
-        component.ContactManager.Collide();
-        // Don't run collision behaviors during FrameUpdate?
-        if (!prediction)
-            component.ContactManager.PreSolve(frameTime);
-
         // Integrate velocities, solve velocity constraints, and do integration.
-        Solve(component, frameTime, dtRatio, invDt, prediction);
+        Solve(uid, component, frameTime, dtRatio, invDt, prediction);
 
         // TODO: SolveTOI
 
@@ -318,17 +309,8 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void Solve(PhysicsMapComponent component, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void Solve(EntityUid uid, PhysicsMapComponent component, float frameTime, float dtRatio, float invDt, bool prediction)
     {
-        var contactNode = component.ContactManager._activeContacts.First;
-
-        while (contactNode != null)
-        {
-            var contact = contactNode.Value;
-            contactNode = contactNode.Next;
-            contact.Flags &= ~ContactFlags.Island;
-        }
-
         // Build and simulated islands from awake bodies.
         _bodyStack.EnsureCapacity(component.AwakeBodies.Count);
         _islandSet.EnsureCapacity(component.AwakeBodies.Count);
@@ -337,6 +319,8 @@ public abstract partial class SharedPhysicsSystem
         var bodyQuery = GetEntityQuery<PhysicsComponent>();
         var metaQuery = GetEntityQuery<MetaDataComponent>();
         var jointQuery = GetEntityQuery<JointComponent>();
+        var jointRelayQuery = GetEntityQuery<JointRelayTargetComponent>();
+
         var islandIndex = 0;
         var loneIsland = new IslandData(
             islandIndex++,
@@ -347,6 +331,7 @@ public abstract partial class SharedPhysicsSystem
             new List<(Joint Joint, float Error)>());
 
         var islands = new List<IslandData>();
+        var islandJoints = new List<(Joint Original, Joint Joint)>();
 
         // Build the relevant islands / graphs for all bodies.
         foreach (var seed in _awakeBodyList)
@@ -355,10 +340,12 @@ public abstract partial class SharedPhysicsSystem
             // when contact broke so if you want to try that then GOOD LUCK.
             if (seed.Island) continue;
 
-            if (!metaQuery.TryGetComponent(seed.Owner, out var metadata))
+            var seedUid = seed.Owner;
+
+            if (!metaQuery.TryGetComponent(seedUid, out var metadata))
             {
-                _sawmill.Error($"Found deleted entity {ToPrettyString(seed.Owner)} on map!");
-                component.RemoveSleepBody(seed);
+                Log.Error($"Found deleted entity {ToPrettyString(seedUid)} on map!");
+                RemoveSleepBody(seedUid, seed, component);
                 continue;
             }
 
@@ -380,6 +367,8 @@ public abstract partial class SharedPhysicsSystem
 
             while (_bodyStack.TryPop(out var body))
             {
+                var bodyUid = body.Owner;
+
                 bodies.Add(body);
                 _islandSet.Add(body);
 
@@ -387,7 +376,7 @@ public abstract partial class SharedPhysicsSystem
                 if (body.BodyType == BodyType.Static) continue;
 
                 // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                SetAwake(body, true, updateSleepTime: false);
+                SetAwake(bodyUid, body, true, updateSleepTime: false);
 
                 var node = body.Contacts.First;
 
@@ -396,8 +385,8 @@ public abstract partial class SharedPhysicsSystem
                     var contact = node.Value;
                     node = node.Next;
 
-                    // Has this contact already been added to an island?
-                    if ((contact.Flags & ContactFlags.Island) != 0x0) continue;
+                    // Has this contact already been added to an island / is it pre-init?
+                    if ((contact.Flags & (ContactFlags.Island | ContactFlags.PreInit)) != 0x0) continue;
 
                     // Is this contact solid and touching?
                     if (!contact.Enabled || !contact.IsTouching) continue;
@@ -407,8 +396,8 @@ public abstract partial class SharedPhysicsSystem
 
                     contacts.Add(contact);
                     contact.Flags |= ContactFlags.Island;
-                    var bodyA = contact.FixtureA!.Body;
-                    var bodyB = contact.FixtureB!.Body;
+                    var bodyA = contact.BodyA!;
+                    var bodyB = contact.BodyB!;
 
                     var other = bodyA == body ? bodyB : bodyA;
 
@@ -419,27 +408,97 @@ public abstract partial class SharedPhysicsSystem
                     other.Island = true;
                 }
 
-                if (!jointQuery.TryGetComponent(body.Owner, out var jointComponent)) continue;
-
-                foreach (var (_, joint) in jointComponent.Joints)
+                // Handle joints
+                if (jointRelayQuery.TryGetComponent(bodyUid, out var relayComp))
                 {
-                    if (joint.IslandFlag) continue;
+                    foreach (var relay in relayComp.Relayed)
+                    {
+                        if (!jointQuery.TryGetComponent(relay, out var jointComp))
+                            continue;
 
-                    var other = joint.BodyAUid == body.Owner
-                        ? bodyQuery.GetComponent(joint.BodyBUid)
-                        : bodyQuery.GetComponent(joint.BodyAUid);
+                        foreach (var joint in jointComp.GetJoints.Values)
+                        {
+                            if (joint.IslandFlag)
+                                continue;
 
-                    // Don't simulate joints connected to inactive bodies.
-                    if (!other.CanCollide) continue;
+                            var uidA = joint.BodyAUid;
+                            var uidB = joint.BodyBUid;
+                            DebugTools.AssertNotEqual(uidA, uidB);
 
-                    joints.Add(joint);
-                    joint.IslandFlag = true;
+                            if (jointQuery.TryGetComponent(uidA, out var jointCompA) &&
+                                jointCompA.Relay != null)
+                            {
+                                DebugTools.AssertNotEqual(uidB, jointCompA.Relay.Value);
+                                uidA = jointCompA.Relay.Value;
+                            }
 
-                    if (other.Island) continue;
+                            if (jointQuery.TryGetComponent(uidB, out var jointCompB) &&
+                                jointCompB.Relay != null)
+                            {
+                                DebugTools.AssertNotEqual(uidA, jointCompB.Relay.Value);
+                                uidB = jointCompB.Relay.Value;
+                            }
 
-                    _bodyStack.Push(other);
-                    other.Island = true;
+                            var copy = joint.Clone(uidA, uidB);
+                            islandJoints.Add((joint, copy));
+                            joint.IslandFlag = true;
+                        }
+                    }
                 }
+
+                if (jointQuery.TryGetComponent(bodyUid, out var jointComponent) &&
+                    jointComponent.Relay == null)
+                {
+                    foreach (var joint in jointComponent.Joints.Values)
+                    {
+                        if (joint.IslandFlag)
+                            continue;
+
+                        var uidA = joint.BodyAUid;
+                        var uidB = joint.BodyBUid;
+
+                        if (jointQuery.TryGetComponent(uidA, out var jointCompA) &&
+                            jointCompA.Relay != null)
+                        {
+                            uidA = jointCompA.Relay.Value;
+                        }
+
+                        if (jointQuery.TryGetComponent(uidB, out var jointCompB) &&
+                            jointCompB.Relay != null)
+                        {
+                            uidB = jointCompB.Relay.Value;
+                        }
+
+                        var copy = joint.Clone(uidA, uidB);
+                        islandJoints.Add((joint, copy));
+                        joint.IslandFlag = true;
+                    }
+                }
+
+                foreach (var (original, joint) in islandJoints)
+                {
+                    var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
+                    var bodyB = bodyQuery.GetComponent(joint.BodyBUid);
+
+                    if (!bodyA.CanCollide || !bodyB.CanCollide)
+                        continue;
+
+                    joints.Add((original, joint));
+
+                    if (!bodyA.Island)
+                    {
+                        _bodyStack.Push(bodyA);
+                        bodyA.Island = true;
+                    }
+
+                    if (!bodyB.Island)
+                    {
+                        _bodyStack.Push(bodyB);
+                        bodyB.Island = true;
+                    }
+                }
+
+                islandJoints.Clear();
             }
 
             int idx;
@@ -483,7 +542,7 @@ public abstract partial class SharedPhysicsSystem
             ReturnIsland(loneIsland);
         }
 
-        SolveIslands(component, islands, frameTime, dtRatio, invDt, prediction);
+        SolveIslands(uid, component, islands, frameTime, dtRatio, invDt, prediction);
 
         foreach (var island in islands)
         {
@@ -497,15 +556,22 @@ public abstract partial class SharedPhysicsSystem
     {
         foreach (var body in island.Bodies)
         {
+            DebugTools.Assert(body.IslandIndex.ContainsKey(island.Index));
             body.IslandIndex.Remove(island.Index);
         }
 
         _islandBodyPool.Return(island.Bodies);
         _islandContactPool.Return(island.Contacts);
 
-        foreach (var joint in island.Joints)
+        foreach (var (original, joint) in island.Joints)
         {
-            joint.IslandFlag = false;
+            // Do we need to copy data back to the original?
+            if (original != joint)
+            {
+                joint.CopyTo(original);
+            }
+
+            original.IslandFlag = false;
         }
 
         _islandJointPool.Return(island.Joints);
@@ -531,10 +597,10 @@ public abstract partial class SharedPhysicsSystem
         _awakeBodyList.Clear();
     }
 
-    private void SolveIslands(PhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void SolveIslands(EntityUid uid, PhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
     {
         var iBegin = 0;
-        var gravity = component.Gravity;
+        var gravity = _gravity.GetGravity(uid);
 
         var data = new SolverData(
             frameTime,
@@ -696,7 +762,7 @@ public abstract partial class SharedPhysicsSystem
                 else
                     linearVelocity += (gravity + body.Force * body.InvMass) * data.FrameTime;
 
-                angularVelocity += data.FrameTime * body.InvI * body.Torque;
+                angularVelocity += body.InvI * body.Torque * data.FrameTime;
 
                 linearVelocity *= Math.Clamp(1.0f - data.FrameTime * body.LinearDamping, 0.0f, 1.0f);
                 angularVelocity *= Math.Clamp(1.0f - data.FrameTime * body.AngularDamping, 0.0f, 1.0f);
@@ -729,7 +795,7 @@ public abstract partial class SharedPhysicsSystem
         {
             for (var i = 0; i < island.Joints.Count; i++)
             {
-                var joint = island.Joints[i];
+                var joint = island.Joints[i].Joint;
                 if (!joint.Enabled) continue;
 
                 var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
@@ -743,7 +809,7 @@ public abstract partial class SharedPhysicsSystem
         {
             for (var j = 0; j < jointCount; ++j)
             {
-                var joint = island.Joints[j];
+                var joint = island.Joints[j].Joint;
 
                 if (!joint.Enabled)
                     continue;
@@ -753,7 +819,7 @@ public abstract partial class SharedPhysicsSystem
                 var error = joint.Validate(data.InvDt);
 
                 if (error > 0.0f)
-                    island.BrokenJoints.Add((joint, error));
+                    island.BrokenJoints.Add((island.Joints[j].Original, error));
             }
 
             SolveVelocityConstraints(island, options, velocityConstraints, linearVelocities, angularVelocities);
@@ -773,7 +839,7 @@ public abstract partial class SharedPhysicsSystem
             var linearVelocity = linearVelocities[offset + i];
             var angularVelocity = angularVelocities[offset + i];
 
-            var velSqr = linearVelocity.LengthSquared;
+            var velSqr = linearVelocity.LengthSquared();
             if (velSqr > maxVelSq)
             {
                 linearVelocity *= maxVel / MathF.Sqrt(velSqr);
@@ -798,9 +864,9 @@ public abstract partial class SharedPhysicsSystem
             var contactsOkay = SolvePositionConstraints(data, in island, options, positionConstraints, positions, angles);
             var jointsOkay = true;
 
-            for (int j = 0; j < island.Joints.Count; ++j)
+            for (var j = 0; j < island.Joints.Count; ++j)
             {
-                var joint = island.Joints[j];
+                var joint = island.Joints[j].Joint;
 
                 if (!joint.Enabled)
                     continue;
@@ -962,6 +1028,7 @@ public abstract partial class SharedPhysicsSystem
             RaiseLocalEvent(joint.BodyAUid, ref ev);
             RaiseLocalEvent(joint.BodyBUid, ref ev);
             RaiseLocalEvent(ref ev);
+            joint.Dirty();
         }
 
         var offset = island.Offset;
@@ -974,9 +1041,10 @@ public abstract partial class SharedPhysicsSystem
             // Plus calcing worldpos can be costly so we skip that too which is nice.
             if (body.BodyType == BodyType.Static) continue;
 
+            var uid = body.Owner;
             var position = positions[offset + i];
             var angle = angles[offset + i];
-            var xform = xformQuery.GetComponent(body.Owner);
+            var xform = xformQuery.GetComponent(uid);
 
             // Temporary NaN guards until PVS is fixed.
             if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
@@ -988,18 +1056,18 @@ public abstract partial class SharedPhysicsSystem
 
             if (!float.IsNaN(linVelocity.X) && !float.IsNaN(linVelocity.Y))
             {
-                SetLinearVelocity(body, linVelocity, false);
+                SetLinearVelocity(uid, linVelocity, false, body: body);
             }
 
             var angVelocity = angularVelocities[offset + i];
 
             if (!float.IsNaN(angVelocity))
             {
-                SetAngularVelocity(body, angVelocity, false);
+                SetAngularVelocity(uid, angVelocity, false, body: body);
             }
 
             // TODO: Should check if the values update.
-            Dirty(body, metaQuery.GetComponent(body.Owner));
+            Dirty(body, metaQuery.GetComponent(uid));
         }
     }
 
@@ -1014,7 +1082,9 @@ public abstract partial class SharedPhysicsSystem
             if (!sleep)
                 continue;
 
-            SetAwake(island.Bodies[i], false);
+            var body = island.Bodies[i];
+
+            SetAwake(body.Owner, body, false);
         }
     }
 }

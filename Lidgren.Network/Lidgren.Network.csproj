@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>SpaceWizards.Lidgren.Network</AssemblyName>
 
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -9,6 +8,8 @@
     <DefaultItemExcludes>Lidgren.Network/**/*</DefaultItemExcludes>
     <DefineConstants>$(DefineConstants);USE_RELEASE_STATISTICS</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <SkipRobustAnalyzer>true</SkipRobustAnalyzer>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,4 +19,5 @@
     <Compile Remove="Lidgren.Network\Lidgren.Network\obj\**\*.cs" />
   </ItemGroup>
 
+  <Import Project="../MSBuild/Robust.Properties.targets" />
 </Project>

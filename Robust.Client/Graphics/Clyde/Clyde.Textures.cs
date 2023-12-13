@@ -8,6 +8,8 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Utility;
+using Robust.Shared.Graphics;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
@@ -17,6 +19,7 @@ using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 using PIF = OpenToolkit.Graphics.OpenGL4.PixelInternalFormat;
 using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
 using PT = OpenToolkit.Graphics.OpenGL4.PixelType;
+using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -653,16 +656,17 @@ namespace Robust.Client.Graphics.Clyde
                     throw new DataException("Texture not found");
                 }
 
-                Span<byte> rgba = stackalloc byte[4];
+                Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
                 unsafe
                 {
                     fixed (byte* p = rgba)
                     {
-                        GL.GetTextureImage(loaded.OpenGLObject.Handle, 0, PF.Rgba, PT.UnsignedByte, 4, (IntPtr) p);
+
+                        GL.GetTextureImage(loaded.OpenGLObject.Handle, 0, PF.Rgba, PT.UnsignedByte, 4*this.Size.X*this.Size.Y, (IntPtr) p);
                     }
                 }
-
-                return new Color(rgba[0], rgba[1], rgba[2], rgba[3]);
+                int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
+                return new Color(rgba[pixelPos+0], rgba[pixelPos+1], rgba[pixelPos+2], rgba[pixelPos+3]);
             }
         }
 

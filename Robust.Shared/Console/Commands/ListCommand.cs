@@ -17,7 +17,7 @@ internal sealed class ListCommands : LocalizedCommands
         var host = (IConsoleHostInternal)shell.ConsoleHost;
 
         var builder = new StringBuilder(Loc.GetString("cmd-list-heading"));
-        foreach (var command in host.RegisteredCommands.Values
+        foreach (var command in host.AvailableCommands.Values
                      .Where(p => p.Command.Contains(filter))
                      .OrderBy(c => c.Command))
         {

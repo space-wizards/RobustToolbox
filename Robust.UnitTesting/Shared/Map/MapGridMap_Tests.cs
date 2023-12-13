@@ -28,4 +28,27 @@ public sealed class MapGridMap_Tests
         entManager.AddComponent<MapGridComponent>(mapManager.GetMapEntityId(mapId));
         Assert.That(mapManager.FindGridsIntersecting(mapId, Box2.UnitCentered).Count() == 1);
     }
+
+    /// <summary>
+    /// Asserts that adding <see cref="MapGridComponent"/> to an existing map with a grid on it doesn't explode.
+    /// </summary>
+    [Test]
+    public void AddGridCompToMap()
+    {
+        var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var mapManager = sim.Resolve<IMapManager>();
+
+        var mapId = mapManager.CreateMap();
+        mapManager.CreateGridEntity(mapId);
+
+        Assert.DoesNotThrow(() =>
+        {
+            entManager.AddComponent<MapGridComponent>(mapManager.GetMapEntityId(mapId));
+            entManager.TickUpdate(0.016f, false);
+        });
+
+        mapManager.DeleteMap(mapId);
+    }
 }

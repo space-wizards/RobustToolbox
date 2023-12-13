@@ -1,9 +1,15 @@
+using System.Numerics;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {
     public abstract class DrawingHandleWorld : DrawingHandleBase
     {
+        protected DrawingHandleWorld(Texture white) : base(white)
+        {
+        }
+
         private const int Ppm = EyeManager.PixelsPerMeter;
 
         /// <summary>

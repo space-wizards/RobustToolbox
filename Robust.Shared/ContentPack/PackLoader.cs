@@ -15,6 +15,7 @@ namespace Robust.Shared.ContentPack
         sealed class PackLoader : IContentRoot
         {
             private readonly FileInfo? _pack;
+            private readonly ISawmill _sawmill;
             private readonly Stream? _stream;
             private ZipArchive _zip = default!;
 
@@ -22,14 +23,17 @@ namespace Robust.Shared.ContentPack
             ///     Constructor.
             /// </summary>
             /// <param name="pack">The zip file to mount in the VFS.</param>
-            public PackLoader(FileInfo pack)
+            /// <param name="sawmill">Sawmill to use for logging.</param>
+            public PackLoader(FileInfo pack, ISawmill sawmill)
             {
                 _pack = pack;
+                _sawmill = sawmill;
             }
 
-            public PackLoader(Stream stream)
+            public PackLoader(Stream stream, ISawmill sawmill)
             {
                 _stream = stream;
+                _sawmill = sawmill;
             }
 
             /// <inheritdoc />
@@ -37,7 +41,7 @@ namespace Robust.Shared.ContentPack
             {
                 if (_pack != null)
                 {
-                    Logger.InfoS("res", $"Loading ContentPack: {_pack.FullName}...");
+                    _sawmill.Info($"Loading ContentPack: {_pack.FullName}...");
 
                     _zip = ZipFile.OpenRead(_pack.FullName);
                 }
@@ -51,7 +55,7 @@ namespace Robust.Shared.ContentPack
             }
 
             /// <inheritdoc />
-            public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
+            public bool TryGetFile(ResPath relPath, [NotNullWhen(true)] out Stream? stream)
             {
                 var entry = _zip.GetEntry(relPath.ToString());
 
@@ -75,8 +79,13 @@ namespace Robust.Shared.ContentPack
                 return true;
             }
 
+            public bool FileExists(ResPath relPath)
+            {
+                return _zip.GetEntry(relPath.ToString()) != null;
+            }
+
             /// <inheritdoc />
-            public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
+            public IEnumerable<ResPath> FindFiles(ResPath path)
             {
                 var rootPath = path + "/";
                 foreach (var entry in _zip.Entries)
@@ -89,7 +98,7 @@ namespace Robust.Shared.ContentPack
 
                     if (entry.FullName.StartsWith(rootPath))
                     {
-                        yield return new ResourcePath(entry.FullName).ToRelativePath();
+                        yield return new ResPath(entry.FullName).ToRelativePath();
                     }
                 }
             }
@@ -104,7 +113,7 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    yield return new ResourcePath(entry.FullName).ToRootedPath().ToString();
+                    yield return new ResPath(entry.FullName).ToRootedPath().ToString();
                 }
             }
         }

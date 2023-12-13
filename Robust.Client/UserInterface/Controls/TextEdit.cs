@@ -12,7 +12,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using Vector2 = Robust.Shared.Maths.Vector2;
+using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.UserInterface.Controls;
 
@@ -357,6 +357,65 @@ public sealed class TextEdit : Control
                 args.Handle();
             }
         }
+        else if (args.Function == EngineKeyFunctions.TextWordBackspace)
+        {
+            if (Editable)
+            {
+                var changed = false;
+
+                // If there is a selection, we just delete the selection. Otherwise we delete the previous word
+                if (_selectionStart != _cursorPosition)
+                {
+                    TextRope = Rope.Delete(TextRope, SelectionLower.Index, SelectionLength);
+                    _cursorPosition = SelectionLower;
+                    changed = true;
+                }
+                else if (_cursorPosition.Index < TextLength)
+                {
+                    var runes = Rope.EnumerateRunesReverse(TextRope, _cursorPosition.Index);
+                    int remAmt = -TextEditShared.PrevWordPosition(runes.GetEnumerator());
+
+                    TextRope = Rope.Delete(TextRope, _cursorPosition.Index - remAmt, remAmt);
+                    _cursorPosition.Index -= remAmt;
+                    changed = true;
+                }
+
+                if (changed)
+                    _selectionStart = _cursorPosition;
+
+                InvalidateHorizontalCursorPos();
+                args.Handle();
+            }
+        }
+        else if (args.Function == EngineKeyFunctions.TextWordDelete)
+        {
+            if (Editable)
+            {
+                var changed = false;
+
+                // If there is a selection, we just delete the selection. Otherwise we delete the next word
+                if (_selectionStart != _cursorPosition)
+                {
+                    TextRope = Rope.Delete(TextRope, SelectionLower.Index, SelectionLength);
+                    _cursorPosition = SelectionLower;
+                    changed = true;
+                }
+                else if (_cursorPosition.Index < TextLength)
+                {
+                    var runes = Rope.EnumerateRunes(TextRope, _cursorPosition.Index);
+                    int endWord = _cursorPosition.Index + TextEditShared.EndWordPosition(runes.GetEnumerator());
+
+                    TextRope = Rope.Delete(TextRope, _cursorPosition.Index, endWord - _cursorPosition.Index);
+                    changed = true;
+                }
+
+                if (changed)
+                    _selectionStart = _cursorPosition;
+
+                InvalidateHorizontalCursorPos();
+                args.Handle();
+            }
+        }
         else if (args.Function == EngineKeyFunctions.TextNewline)
         {
             InsertAtCursor("\n");
@@ -545,7 +604,7 @@ public sealed class TextEdit : Control
             case MoveType.RightWord:
             {
                 var runes = Rope.EnumerateRunes(TextRope, _cursorPosition.Index);
-                var pos = _cursorPosition.Index + TextEditShared.NextWordPosition(runes.GetEnumerator());
+                var pos = _cursorPosition.Index + TextEditShared.EndWordPosition(runes.GetEnumerator());
 
                 return new CursorPos(pos, LineBreakBias.Bottom);
             }
@@ -717,9 +776,11 @@ public sealed class TextEdit : Control
     {
         var size = base.ArrangeOverride(finalSize);
 
-        _scrollBar.Page = size.Y * UIScale;
+        var renderBoxSize = _renderBox.Size;
 
-        UpdateLineBreaks((int)(size.X * UIScale));
+        _scrollBar.Page = renderBoxSize.Y * UIScale;
+
+        UpdateLineBreaks((int)(renderBoxSize.X * UIScale));
 
         return size;
     }
@@ -1112,19 +1173,19 @@ public sealed class TextEdit : Control
         // Arrow shapes/data for the debug overlay.
         private static readonly (Vector2, Vector2)[] ArrowUp =
         {
-            ((8, 14), (8, 2)),
-            ((4, 7), (8, 2)),
-            ((12, 7), (8, 2)),
+            (new(8, 14), new(8, 2)),
+            (new(4, 7), new(8, 2)),
+            (new(12, 7), new(8, 2)),
         };
 
         private static readonly (Vector2, Vector2)[] ArrowDown =
         {
-            ((8, 14), (8, 2)),
-            ((4, 9), (8, 14)),
-            ((12, 9), (8, 14)),
+            (new(8, 14), new(8, 2)),
+            (new(4, 9), new(8, 14)),
+            (new(12, 9), new(8, 14)),
         };
 
-        private static readonly Vector2 ArrowSize = (16, 16);
+        private static readonly Vector2 ArrowSize = new(16, 16);
 
         private readonly TextEdit _master;
 
@@ -1150,8 +1211,8 @@ public sealed class TextEdit : Control
             if (_master.DebugOverlay && _master._horizontalCursorPos is { } hPos)
             {
                 handle.DrawLine(
-                    (hPos + drawBox.Left, drawBox.Top),
-                    (hPos + drawBox.Left, drawBox.Bottom),
+                    new(hPos + drawBox.Left, drawBox.Top),
+                    new(hPos + drawBox.Left, drawBox.Bottom),
                     Color.Purple);
             }
 

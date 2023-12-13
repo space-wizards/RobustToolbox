@@ -9,15 +9,18 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Throws an exception in <see cref="OnAdd" />.
     /// </summary>
-    public sealed class DebugExceptionOnAddComponent : Component { }
+    [RegisterComponent]
+    public sealed partial class DebugExceptionOnAddComponent : Component { }
 
     /// <summary>
     /// Throws an exception in <see cref="Initialize" />.
     /// </summary>
-    public sealed class DebugExceptionInitializeComponent : Component { }
+    [RegisterComponent]
+    public sealed partial class DebugExceptionInitializeComponent : Component { }
 
     /// <summary>
     /// Throws an exception in <see cref="Startup" />.
     /// </summary>
-    public sealed class DebugExceptionStartupComponent : Component { }
+    [RegisterComponent]
+    public sealed partial class DebugExceptionStartupComponent : Component { }
 }

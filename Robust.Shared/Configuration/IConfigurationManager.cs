@@ -96,9 +96,11 @@ namespace Robust.Shared.Configuration
         /// </summary>
         /// <param name="name">The name of the CVar.</param>
         /// <param name="value">The value to set.</param>
-        void SetCVar(string name, object value);
+        /// <param name="force">If true, this will set the cvar even if it should not be settable (e.g., server
+        /// authoritative cvars being set by clients).</param>
+        void SetCVar(string name, object value, bool force = false);
 
-        void SetCVar<T>(CVarDef<T> def, T value) where T : notnull;
+        void SetCVar<T>(CVarDef<T> def, T value, bool force = false) where T : notnull;
 
         /// <summary>
         /// Change the default value for a CVar.

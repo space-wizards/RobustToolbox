@@ -161,7 +161,17 @@ namespace Robust.Client.Input
             F13,
             F14,
             F15,
+            F16,
+            F17,
+            F18,
+            F19,
+            F20,
+            F21,
+            F22,
+            F23,
+            F24,
             Pause,
+            World1,
         }
 
         public static bool IsMouseKey(this Key key)
@@ -189,7 +199,7 @@ namespace Robust.Client.Input
             if (loc.TryGetString(locId, out var name))
                 return name;
 
-            return loc.GetString("input-key-unknown");
+            return null;
         }
     }
 }

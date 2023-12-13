@@ -1,5 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -22,13 +21,13 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!EntityUid.TryParse(args[0], out var uid))
+            if (!NetEntity.TryParse(args[0], out var uidNet))
             {
-                shell.WriteLine($"{uid} is not a valid entity uid.");
+                shell.WriteLine($"{args[0]} is not a valid entity.");
                 return;
             }
 
-            if (!_entityManager.EntityExists(uid))
+            if (!_entityManager.TryGetEntity(uidNet, out var uid) || !_entityManager.EntityExists(uid))
             {
                 shell.WriteLine($"No entity found with id {uid}.");
                 return;
@@ -44,15 +43,13 @@ namespace Robust.Server.Console.Commands
 
             if (_entityManager.HasComponent(uid, registration.Type))
             {
-                shell.WriteLine($"Entity {_entityManager.GetComponent<MetaDataComponent>(uid).EntityName} already has a {componentName} component.");
+                shell.WriteLine($"Entity {_entityManager.GetComponent<MetaDataComponent>(uid.Value).EntityName} already has a {componentName} component.");
             }
 
-            var component = (Component) _componentFactory.GetComponent(registration.Type);
+            var component = _componentFactory.GetComponent(registration.Type);
+            _entityManager.AddComponent(uid.Value, component);
 
-            component.Owner = uid;
-            _entityManager.AddComponent(uid, component);
-
-            shell.WriteLine($"Added {componentName} component to entity {_entityManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
+            shell.WriteLine($"Added {componentName} component to entity {_entityManager.GetComponent<MetaDataComponent>(uid.Value).EntityName}.");
         }
     }
 }

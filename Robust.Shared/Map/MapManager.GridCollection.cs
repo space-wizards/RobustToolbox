@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -12,61 +10,15 @@ using Robust.Shared.Utility;
 #pragma warning disable CS0618
 
 namespace Robust.Shared.Map;
-
-/// <summary>
-///     Arguments for when a one or more tiles on a grid is changed at once.
-/// </summary>
-public sealed class GridChangedEventArgs : EventArgs
-{
-    /// <summary>
-    ///     Creates a new instance of this class.
-    /// </summary>
-    public GridChangedEventArgs(MapGridComponent grid, IReadOnlyCollection<(Vector2i position, Tile tile)> modified)
-    {
-        Grid = grid;
-        Modified = modified;
-    }
-
-    /// <summary>
-    ///     Grid being changed.
-    /// </summary>
-    public MapGridComponent Grid { get; }
-
-    public IReadOnlyCollection<(Vector2i position, Tile tile)> Modified { get; }
-}
-
-/// <summary>
-///     Arguments for when a single tile on a grid is changed locally or remotely.
-/// </summary>
-public sealed class TileChangedEventArgs : EventArgs
-{
-    /// <summary>
-    ///     Creates a new instance of this class.
-    /// </summary>
-    public TileChangedEventArgs(TileRef newTile, Tile oldTile)
-    {
-        NewTile = newTile;
-        OldTile = oldTile;
-    }
-
-    /// <summary>
-    ///     New tile that replaced the old one.
-    /// </summary>
-    public TileRef NewTile { get; }
-
-    /// <summary>
-    ///     Old tile that was replaced.
-    /// </summary>
-    public Tile OldTile { get; }
-}
-
 internal partial class MapManager
 {
+    [Obsolete("Use GetComponent<MapGridComponent>(uid)")]
     public MapGridComponent GetGridComp(EntityUid euid)
     {
         return EntityManager.GetComponent<MapGridComponent>(euid);
     }
 
+    [Obsolete("Use EntityQuery instead.")]
     public IEnumerable<MapGridComponent> GetAllGrids()
     {
         var compQuery = EntityManager.AllEntityQueryEnumerator<MapGridComponent>();
@@ -93,6 +45,13 @@ internal partial class MapManager
         return CreateGrid(currentMapId, GridCreateOptions.Default);
     }
 
+    public Entity<MapGridComponent> CreateGridEntity(MapId currentMapId, GridCreateOptions? options = null)
+    {
+        options ??= GridCreateOptions.Default;
+        return CreateGrid(currentMapId, options.Value.ChunkSize, default);
+    }
+
+    [Obsolete("Use GetComponent<MapGridComponent>(uid)")]
     public MapGridComponent GetGrid(EntityUid gridId)
     {
         DebugTools.Assert(gridId.IsValid());
@@ -100,11 +59,13 @@ internal partial class MapManager
         return GetGridComp(gridId);
     }
 
+    [Obsolete("Use HasComponent<MapGridComponent>(uid)")]
     public bool IsGrid(EntityUid uid)
     {
         return EntityManager.HasComponent<MapGridComponent>(uid);
     }
 
+    [Obsolete("Use TryGetComponent(uid, out MapGridComponent? grid)")]
     public bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [MaybeNullWhen(false)] out MapGridComponent grid)
     {
         if (EntityManager.TryGetComponent(euid, out MapGridComponent? comp))
@@ -117,6 +78,7 @@ internal partial class MapManager
         return false;
     }
 
+    [Obsolete("Use HasComponent<MapGridComponent>(uid)")]
     public bool GridExists([NotNullWhen(true)] EntityUid? euid)
     {
         return EntityManager.HasComponent<MapGridComponent>(euid);
@@ -124,11 +86,24 @@ internal partial class MapManager
 
     public IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
     {
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var query = EntityManager.AllEntityQueryEnumerator<MapGridComponent, TransformComponent>();
+        while (query.MoveNext(out var grid, out var xform))
+        {
+            if (xform.MapID == mapId)
+                yield return grid;
+        }
+    }
 
-        return EntityManager.EntityQuery<MapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(((Component) c).Owner).MapID == mapId)
-            .Select(c => c);
+    public IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId)
+    {
+        var query = EntityManager.AllEntityQueryEnumerator<MapGridComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var grid, out var xform))
+        {
+            if (xform.MapID != mapId)
+                continue;
+
+            yield return (uid, grid);
+        }
     }
 
     public virtual void DeleteGrid(EntityUid euid)
@@ -157,9 +132,6 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
-    public event EventHandler<TileChangedEventArgs>? TileChanged;
-
-    /// <inheritdoc />
     public bool SuppressOnTileChanged { get; set; }
 
     /// <summary>
@@ -167,7 +139,7 @@ internal partial class MapManager
     /// </summary>
     /// <param name="tileRef">A reference to the new tile.</param>
     /// <param name="oldTile">The old tile that got replaced.</param>
-    public void RaiseOnTileChanged(TileRef tileRef, Tile oldTile)
+    public void RaiseOnTileChanged(TileRef tileRef, Tile oldTile, Vector2i chunk)
     {
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
@@ -176,19 +148,19 @@ internal partial class MapManager
         if (SuppressOnTileChanged)
             return;
 
-        TileChanged?.Invoke(this, new TileChangedEventArgs(tileRef, oldTile));
         var euid = tileRef.GridUid;
-        EntityManager.EventBus.RaiseLocalEvent(euid, new TileChangedEvent(euid, tileRef, oldTile), true);
+        var ev = new TileChangedEvent(euid, tileRef, oldTile, chunk);
+        EntityManager.EventBus.RaiseLocalEvent(euid, ref ev, true);
     }
 
-    protected MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize, EntityUid forcedGridEuid)
+    protected Entity<MapGridComponent> CreateGrid(MapId currentMapId, ushort chunkSize, EntityUid forcedGridEuid)
     {
         var gridEnt = EntityManager.CreateEntityUninitialized(null, forcedGridEuid);
 
         var grid = EntityManager.AddComponent<MapGridComponent>(gridEnt);
         grid.ChunkSize = chunkSize;
 
-        Logger.DebugS("map", $"Binding new grid {gridEnt}");
+        _sawmill.Debug($"Binding new grid {gridEnt}");
 
         //TODO: This is a hack to get TransformComponent.MapId working before entity states
         //are applied. After they are applied the parent may be different, but the MapId will
@@ -197,8 +169,10 @@ internal partial class MapManager
         var fallbackParentEuid = GetMapEntityIdOrThrow(currentMapId);
         EntityManager.GetComponent<TransformComponent>(gridEnt).AttachParent(fallbackParentEuid);
 
-        EntityManager.InitializeComponents(gridEnt);
+        var meta = EntityManager.GetComponent<MetaDataComponent>(gridEnt);
+        EntityManager.System<MetaDataSystem>().SetEntityName(gridEnt, $"grid", meta);
+        EntityManager.InitializeComponents(gridEnt, meta);
         EntityManager.StartComponents(gridEnt);
-        return grid;
+        return (gridEnt, grid);
     }
 }

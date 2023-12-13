@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.WebViewHook
 {
@@ -18,7 +19,8 @@ namespace Robust.Client.WebViewHook
 
     internal interface IWebViewManagerHook
     {
-        void Initialize(GameController.DisplayMode mode);
+        void PreInitialize(IDependencyCollection dependencies, GameController.DisplayMode mode);
+        void Initialize();
         void Update();
         void Shutdown();
     }

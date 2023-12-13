@@ -1,20 +1,12 @@
 # Last match in file takes precedence.
 
 # Ping for all PRs
-* @Acruid @PJB3005 @Silvertorch5
+* @PJB3005 @DrSmugleaf
 
-/Robust.*/Audio/Midi/ @Zumorica
+# commands commands commands commands
+**/Toolshed/** @moonheart08
+*Command.cs @moonheart08
+*Commands.cs @moonheart08
 
-/Robust.Client.NameGenerator @PaulRitter
-/Robust.Client.Injectors @PaulRitter
-/Robust.Generators @PaulRitter
-/Robust.Analyzers @PaulRitter
-/Robust.*/GameStates @PaulRitter
-/Robust.Shared/Analyzers @PaulRitter
-/Robust.*/Serialization @PaulRitter @DrSmugleaf
-/Robust.*/Prototypes @PaulRitter
-/Robust.Shared/GameObjects/ComponentDependencies @PaulRitter
-/Robust.*/Containers @PaulRitter
-
-# Be they Fluent translations or Freemarker templates, I know them both!
-*.ftl @RemieRichards
+# Physics
+**/Robust.Shared/Physics/** @metalgearsloth

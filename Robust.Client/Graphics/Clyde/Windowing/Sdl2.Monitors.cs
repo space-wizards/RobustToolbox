@@ -45,6 +45,9 @@ internal partial class Clyde
             _winThreadMonitors.Add(id, new WinThreadMonitorReg { Id = id, DisplayIdx = displayIdx });
 
             SendEvent(new EventMonitorSetup(id, name, ConvertVideoMode(curMode), modes));
+
+            if (displayIdx == 0)
+                _clyde._primaryMonitorId = id;
         }
 
         private static VideoMode ConvertVideoMode(in SDL.SDL_DisplayMode mode)

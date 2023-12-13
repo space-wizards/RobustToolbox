@@ -332,7 +332,7 @@ namespace {nameSpace}
                                 "Usage",
                                 DiagnosticSeverity.Error,
                                 true),
-                            Location.None));
+                            candidateClass.GetLocation()));
                 }
             }
 

@@ -21,12 +21,17 @@
 // SOFTWARE.
 
 using System;
+using System.Numerics;
 using NUnit.Framework;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
+using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Physics;
 
@@ -61,7 +66,7 @@ public sealed class Collision_Test
         vertices[3] = new Vector2(center.X + hx, center.Y + hy);
 
         PolygonShape polygon2 = new();
-        polygon2.SetVertices(vertices, true);
+        polygon2.Set(vertices, 4);
 
         Assert.That(Math.Abs(polygon2.Centroid.X - center.X), Is.LessThan(absTol + relTol * Math.Abs(center.X)));
         Assert.That(Math.Abs(polygon2.Centroid.Y - center.Y), Is.LessThan(absTol + relTol * Math.Abs(center.Y)));
@@ -83,5 +88,48 @@ public sealed class Collision_Test
         Assert.That(MathF.Abs(massData2.Center.Y - center.Y), Is.LessThan(absTol + relTol * Math.Abs(center.Y)));
         Assert.That(MathF.Abs(massData2.Mass - mass), Is.LessThan(20.0f * (absTol + relTol * mass)));
         Assert.That(MathF.Abs(massData2.I - inertia), Is.LessThan(40.0f * (absTol + relTol * inertia)));
+    }
+
+    /// <summary>
+    /// Asserts that cross-map contacts correctly destroy
+    /// </summary>
+    [Test]
+    public void CrossMapContacts()
+    {
+        var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+        var entManager = sim.Resolve<IEntityManager>();
+        var mapManager = sim.Resolve<IMapManager>();
+        var fixtures = entManager.System<FixtureSystem>();
+        var physics = entManager.System<SharedPhysicsSystem>();
+        var xformSystem = entManager.System<SharedTransformSystem>();
+        var mapId = mapManager.CreateMap();
+        var mapId2 = mapManager.CreateMap();
+
+        var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+
+        var body1 = entManager.AddComponent<PhysicsComponent>(ent1);
+        physics.SetBodyType(ent1, BodyType.Dynamic, body: body1);
+        var body2 = entManager.AddComponent<PhysicsComponent>(ent2);
+        physics.SetBodyType(ent2, BodyType.Dynamic, body: body2);
+
+        fixtures.CreateFixture(ent1, "fix1", new Fixture(new PhysShapeCircle(1f), 1, 0, true), body: body1);
+        fixtures.CreateFixture(ent2, "fix1", new Fixture(new PhysShapeCircle(1f), 0, 1, true), body: body2);
+
+        physics.WakeBody(ent1, body: body1);
+        physics.WakeBody(ent2, body: body2);
+
+        Assert.That(body1.Awake && body2.Awake);
+        Assert.That(body1.ContactCount == 0 && body2.ContactCount == 0);
+
+        physics.Update(0.01f);
+
+        Assert.That(body1.ContactCount == 1 && body2.ContactCount == 1);
+
+        // Reparent body2 and assert the contact is destroyed
+        xformSystem.SetParent(ent2, mapManager.GetMapEntityId(mapId2));
+        physics.Update(0.01f);
+
+        Assert.That(body1.ContactCount == 0 && body2.ContactCount == 0);
     }
 }

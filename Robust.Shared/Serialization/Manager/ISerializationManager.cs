@@ -390,6 +390,20 @@ namespace Robust.Shared.Serialization.Manager
             bool notNullableOverride = false)
             where TCopyCreator : ITypeCopyCreator<T>;
 
+        [Obsolete]
+        bool TryGetCopierOrCreator<TType>(
+            out ITypeCopier<TType>? copier,
+            out ITypeCopyCreator<TType>? copyCreator,
+            ISerializationContext? context = null);
+
+        [Obsolete]
+        bool TryCustomCopy<T>(
+            T source,
+            ref T target,
+            SerializationHookContext hookCtx,
+            bool hasHooks,
+            ISerializationContext? context = null);
+
         #endregion
 
         #region Flags And Constants

@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\MSBuild\Robust.Properties.targets" />
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -7,7 +6,6 @@
     <OutputPath>../bin/UnitTesting</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
     <PackageReference Include="Castle.Core" Version="4.4.1" />
@@ -34,5 +32,6 @@
       <LogicalName>Robust.UnitTesting.Shared.ContentPack.ZipTest.zip</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
-  <Import Project="..\MSBuild\Robust.Engine.targets" />
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\MSBuild\Robust.CompNetworkGenerator.targets" />
 </Project>

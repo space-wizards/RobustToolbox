@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Console
@@ -24,10 +26,14 @@ namespace Robust.Shared.Console
         [Dependency] protected readonly INetManager NetManager = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
 
-        [ViewVariables] protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
+        [ViewVariables] protected readonly Dictionary<string, IConsoleCommand> RegisteredCommands = new();
 
         private readonly CommandBuffer _commandBuffer = new CommandBuffer();
+
+        // TODO add Initialize() method.
+        protected ISawmill Sawmill => LogManager.GetSawmill(SawmillName);
 
         /// <inheritdoc />
         public bool IsServer { get; }
@@ -36,14 +42,14 @@ namespace Robust.Shared.Console
         public IConsoleShell LocalShell { get; }
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => AvailableCommands;
+        public virtual IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => RegisteredCommands;
 
         public abstract event ConAnyCommandCallback? AnyCommandExecuted;
 
         protected ConsoleHost(bool isServer)
         {
             IsServer = isServer;
-            LocalShell = new ConsoleShell(this, null);
+            LocalShell = new ConsoleShell(this, null, true);
         }
 
         /// <inheritdoc />
@@ -56,27 +62,34 @@ namespace Robust.Shared.Console
             foreach (var type in ReflectionManager.GetAllChildren<IConsoleCommand>())
             {
                 var instance = (IConsoleCommand)_typeFactory.CreateInstanceUnchecked(type, true);
-                if (RegisteredCommands.TryGetValue(instance.Command, out var duplicate))
+                if (AvailableCommands.TryGetValue(instance.Command, out var duplicate))
                 {
                     throw new InvalidImplementationException(instance.GetType(), typeof(IConsoleCommand),
                         $"Command name already registered: {instance.Command}, previous: {duplicate.GetType()}");
                 }
 
-                AvailableCommands[instance.Command] = instance;
+                RegisteredCommands[instance.Command] = instance;
             }
         }
 
+        protected virtual void UpdateAvailableCommands()
+        {
+        }
+
+        #region RegisterCommand
         public void RegisterCommand(
             string command,
             string description,
             string help,
-            ConCommandCallback callback)
+            ConCommandCallback callback,
+            bool requireServerOrSingleplayer = false)
         {
-            if (AvailableCommands.ContainsKey(command))
+            if (RegisteredCommands.ContainsKey(command))
                 throw new InvalidOperationException($"Command already registered: {command}");
 
-            var newCmd = new RegisteredCommand(command, description, help, callback);
-            AvailableCommands.Add(command, newCmd);
+            var newCmd = new RegisteredCommand(command, description, help, callback, requireServerOrSingleplayer);
+            RegisteredCommands.Add(command, newCmd);
+            UpdateAvailableCommands();
         }
 
         public void RegisterCommand(
@@ -84,13 +97,15 @@ namespace Robust.Shared.Console
             string description,
             string help,
             ConCommandCallback callback,
-            ConCommandCompletionCallback completionCallback)
+            ConCommandCompletionCallback completionCallback,
+            bool requireServerOrSingleplayer = false)
         {
-            if (AvailableCommands.ContainsKey(command))
+            if (RegisteredCommands.ContainsKey(command))
                 throw new InvalidOperationException($"Command already registered: {command}");
 
-            var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback);
-            AvailableCommands.Add(command, newCmd);
+            var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback, requireServerOrSingleplayer);
+            RegisteredCommands.Add(command, newCmd);
+            UpdateAvailableCommands();
         }
 
         public void RegisterCommand(
@@ -98,26 +113,60 @@ namespace Robust.Shared.Console
             string description,
             string help,
             ConCommandCallback callback,
-            ConCommandCompletionAsyncCallback completionCallback)
+            ConCommandCompletionAsyncCallback completionCallback,
+            bool requireServerOrSingleplayer = false)
         {
-            if (AvailableCommands.ContainsKey(command))
+            if (RegisteredCommands.ContainsKey(command))
                 throw new InvalidOperationException($"Command already registered: {command}");
 
-            var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback);
-            AvailableCommands.Add(command, newCmd);
+            var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback, requireServerOrSingleplayer);
+            RegisteredCommands.Add(command, newCmd);
+            UpdateAvailableCommands();
         }
+
+        public void RegisterCommand(string command, ConCommandCallback callback,
+            bool requireServerOrSingleplayer = false)
+        {
+            var description = LocalizationManager.TryGetString($"cmd-{command}-desc", out var desc) ? desc : "";
+            var help = LocalizationManager.TryGetString($"cmd-{command}-help", out var val) ? val : "";
+            RegisterCommand(command, description, help, callback, requireServerOrSingleplayer);
+        }
+
+        public void RegisterCommand(
+            string command,
+            ConCommandCallback callback,
+            ConCommandCompletionCallback completionCallback,
+            bool requireServerOrSingleplayer = false)
+        {
+            var description = LocalizationManager.TryGetString($"cmd-{command}-desc", out var desc) ? desc : "";
+            var help = LocalizationManager.TryGetString($"cmd-{command}-help", out var val) ? val : "";
+            RegisterCommand(command, description, help, callback, completionCallback, requireServerOrSingleplayer);
+        }
+
+        public void RegisterCommand(
+            string command,
+            ConCommandCallback callback,
+            ConCommandCompletionAsyncCallback completionCallback,
+            bool requireServerOrSingleplayer = false)
+        {
+            var description = LocalizationManager.TryGetString($"cmd-{command}-desc", out var desc) ? desc : "";
+            var help = LocalizationManager.TryGetString($"cmd-{command}-help", out var val) ? val : "";
+            RegisterCommand(command, description, help, callback, completionCallback, requireServerOrSingleplayer);
+        }
+        #endregion
 
         /// <inheritdoc />
         public void UnregisterCommand(string command)
         {
-            if (!AvailableCommands.TryGetValue(command, out var cmd))
+            if (!RegisteredCommands.TryGetValue(command, out var cmd))
                 throw new KeyNotFoundException($"Command {command} is not registered.");
 
             if (cmd is not RegisteredCommand)
                 throw new InvalidOperationException(
                     "You cannot unregister commands that have been registered automatically.");
 
-            AvailableCommands.Remove(command);
+            RegisteredCommands.Remove(command);
+            UpdateAvailableCommands();
         }
 
         //TODO: Pull up
@@ -128,6 +177,8 @@ namespace Robust.Shared.Console
 
         //TODO: IConsoleOutput for [e#1225]
         public abstract void WriteLine(ICommonSession? session, string text);
+        public abstract void WriteLine(ICommonSession? session, FormattedMessage msg);
+
         public abstract void WriteError(ICommonSession? session, string text);
 
         /// <inheritdoc />
@@ -145,7 +196,7 @@ namespace Robust.Shared.Console
             if (session.Status >= SessionStatus.Disconnected)
                 throw new InvalidOperationException("Tried to get the session shell of a disconnected peer.");
 
-            return new ConsoleShell(this, session);
+            return new ConsoleShell(this, session, false);
         }
 
         /// <inheritdoc />
@@ -203,6 +254,9 @@ namespace Robust.Shared.Console
             /// <inheritdoc />
             public string Help { get; }
 
+            /// <inheritdoc />
+            public bool RequireServerOrSingleplayer { get; init; }
+
             /// <summary>
             /// Constructs a new instance of <see cref="RegisteredCommand"/>.
             /// </summary>
@@ -215,13 +269,15 @@ namespace Robust.Shared.Console
                 string command,
                 string description,
                 string help,
-                ConCommandCallback callback)
+                ConCommandCallback callback,
+                bool requireServerOrSingleplayer = false)
             {
                 Command = command;
                 // Should these two be localized somehow?
                 Description = description;
                 Help = help;
                 Callback = callback;
+                RequireServerOrSingleplayer = requireServerOrSingleplayer;
             }
 
             /// <summary>
@@ -237,7 +293,9 @@ namespace Robust.Shared.Console
                 string description,
                 string help,
                 ConCommandCallback callback,
-                ConCommandCompletionCallback completionCallback) : this(command, description, help, callback)
+                ConCommandCompletionCallback completionCallback,
+                bool requireServerOrSingleplayer = false)
+                : this(command, description, help, callback, requireServerOrSingleplayer)
             {
                 CompletionCallback = completionCallback;
             }
@@ -255,8 +313,9 @@ namespace Robust.Shared.Console
                 string description,
                 string help,
                 ConCommandCallback callback,
-                ConCommandCompletionAsyncCallback completionCallback)
-                : this(command, description, help, callback)
+                ConCommandCompletionAsyncCallback completionCallback,
+                bool requireServerOrSingleplayer = false)
+                : this(command, description, help, callback, requireServerOrSingleplayer)
             {
                 CompletionCallbackAsync = completionCallback;
             }
@@ -271,10 +330,11 @@ namespace Robust.Shared.Console
             public ValueTask<CompletionResult> GetCompletionAsync(
                 IConsoleShell shell,
                 string[] args,
+                string argStr,
                 CancellationToken cancel)
             {
                 if (CompletionCallbackAsync != null)
-                    return CompletionCallbackAsync(shell, args);
+                    return CompletionCallbackAsync(shell, args, argStr);
 
                 if (CompletionCallback != null)
                     return ValueTask.FromResult(CompletionCallback(shell, args));

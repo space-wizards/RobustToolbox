@@ -65,7 +65,7 @@ namespace Robust.Shared.Network
 
             ClientConnectState = ClientConnectionState.ResolvingHost;
 
-            Logger.DebugS("net", "Attempting to connect to {0} port {1}", host, port);
+            _logger.Debug("Attempting to connect to {0} port {1}", host, port);
 
             var resolveResult = await CCResolveHost(host, mainCancelToken);
             if (resolveResult == null)
@@ -78,7 +78,7 @@ namespace Robust.Shared.Network
 
             ClientConnectState = ClientConnectionState.EstablishingConnection;
 
-            Logger.DebugS("net", "First attempt IP address is {0}, second attempt {1}", first, second);
+            _logger.Debug("First attempt IP address is {0}, second attempt {1}", first, second);
 
             var result = await CCHappyEyeballs(port, first, second, mainCancelToken);
 
@@ -108,7 +108,7 @@ namespace Robust.Shared.Network
             catch (Exception e)
             {
                 OnConnectFailed(e.Message);
-                Logger.ErrorS("net", "Exception during handshake: {0}", e);
+                _logger.Error("Exception during handshake: {0}", e);
                 winningPeer.Peer.Shutdown("Something happened.");
                 _toCleanNetPeers.Add(winningPeer.Peer);
                 ClientConnectState = ClientConnectionState.NotConnecting;
@@ -117,7 +117,7 @@ namespace Robust.Shared.Network
 
             DebugTools.Assert(ChannelCount > 0 && winningPeer.Channels.Count > 0);
             ClientConnectState = ClientConnectionState.Connected;
-            Logger.DebugS("net", "Handshake completed, connection established.");
+            _logger.Debug("Handshake completed, connection established.");
         }
 
         private async Task CCDoHandshake(NetPeerData peer, NetConnection connection, string userNameRequest,
@@ -195,7 +195,7 @@ namespace Robust.Shared.Network
                 var request = new HttpRequestMessage(HttpMethod.Post, authServer + "api/session/join");
                 request.Content = JsonContent.Create(joinReq);
                 request.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", authToken);
-                var joinResp = await _httpClient.SendAsync(request, cancel);
+                var joinResp = await _http.Client.SendAsync(request, cancel);
 
                 joinResp.EnsureSuccessStatusCode();
 
@@ -224,9 +224,9 @@ namespace Robust.Shared.Network
             _clientEncryption = encryption;
         }
 
-        private static byte[] MakeAuthHash(byte[] sharedSecret, byte[] pkBytes)
+        private byte[] MakeAuthHash(byte[] sharedSecret, byte[] pkBytes)
         {
-            // Logger.DebugS("auth", "shared: {0}, pk: {1}", Convert.ToBase64String(sharedSecret), Convert.ToBase64String(pkBytes));
+            // _authLogger.Debug("auth", "shared: {0}, pk: {1}", Convert.ToBase64String(sharedSecret), Convert.ToBase64String(pkBytes));
 
             var incHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
             incHash.AppendData(sharedSecret);
@@ -324,7 +324,8 @@ namespace Robust.Shared.Network
             {
                 DebugTools.AssertNotNull(second);
                 // Connecting via second peer is delayed by 25ms to give an advantage to IPv6, if it works.
-                await Task.Delay(25, cancellationToken);
+                var delay = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetHappyEyeballsDelay));
+                await Task.Delay(delay, cancellationToken);
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return;
@@ -352,12 +353,12 @@ namespace Robust.Shared.Network
 
                     if (firstChange == firstPeerChanged)
                     {
-                        Logger.DebugS("net", "First peer status changed.");
+                        _logger.Debug("First peer status changed.");
                         // First peer responded first.
                         if (firstConnection.Status == NetConnectionStatus.Connected)
                         {
                             // First peer won!
-                            Logger.DebugS("net", "First peer succeeded.");
+                            _logger.Debug("First peer succeeded.");
                             cancellation.Cancel();
                             if (secondPeer != null)
                             {
@@ -371,7 +372,7 @@ namespace Robust.Shared.Network
                         else
                         {
                             // First peer failed, try the second one I guess.
-                            Logger.DebugS("net", "First peer failed.");
+                            _logger.Debug("First peer failed.");
                             firstPeer.Peer.Shutdown("You failed.");
                             _toCleanNetPeers.Add(firstPeer.Peer);
                             firstReason = await firstPeerChanged;
@@ -385,7 +386,7 @@ namespace Robust.Shared.Network
                         if (secondConnection!.Status == NetConnectionStatus.Connected)
                         {
                             // Second peer won!
-                            Logger.DebugS("net", "Second peer succeeded.");
+                            _logger.Debug("Second peer succeeded.");
                             cancellation.Cancel();
                             firstPeer.Peer.Shutdown("Second connection attempt won.");
                             _toCleanNetPeers.Add(firstPeer.Peer);
@@ -395,7 +396,7 @@ namespace Robust.Shared.Network
                         else
                         {
                             // First peer failed, try the second one I guess.
-                            Logger.DebugS("net", "Second peer failed.");
+                            _logger.Debug("Second peer failed.");
                             secondPeer!.Peer.Shutdown("You failed.");
                             _toCleanNetPeers.Add(secondPeer.Peer);
                             firstReason = await firstPeerChanged;

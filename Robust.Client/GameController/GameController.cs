@@ -1,8 +1,10 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Runtime;
 using System.Threading.Tasks;
+using Robust.Client.Audio;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
 using Robust.Client.GameObjects;
@@ -10,16 +12,20 @@ using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Placement;
+using Robust.Client.Replays.Loading;
+using Robust.Client.Replays.Playback;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
+using Robust.Client.Upload;
 using Robust.Client.UserInterface;
-using Robust.Client.UserInterface.Themes;
+using Robust.Client.UserInterface.RichText;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Client.WebViewHook;
 using Robust.LoaderApi;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -29,10 +35,13 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
+using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -42,6 +51,7 @@ namespace Robust.Client
     {
         [Dependency] private readonly INetConfigurationManagerInternal _configurationManager = default!;
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
+        [Dependency] private readonly IResourceManagerInternal _resManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
@@ -61,7 +71,7 @@ namespace Robust.Client
         [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariablesManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IClydeAudioInternal _clydeAudio = default!;
+        [Dependency] private readonly IAudioInternal _audio = default!;
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
@@ -73,6 +83,13 @@ namespace Robust.Client
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
+        [Dependency] private readonly MarkupTagManager _tagManager = default!;
+        [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
+        [Dependency] private readonly NetworkResourceManager _netResMan = default!;
+        [Dependency] private readonly IReplayLoadManager _replayLoader = default!;
+        [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
+        [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -97,11 +114,12 @@ namespace Robust.Client
             DebugTools.AssertNotNull(_resourceManifest);
 
             _clyde.InitializePostWindowing();
-            _clydeAudio.InitializePostWindowing();
+            _audio.InitializePostWindowing();
             _clyde.SetWindowTitle(
                 Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
 
             _taskManager.Initialize();
+            _parallelMgr.Initialize();
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
 
             // Load optional Robust modules.
@@ -113,12 +131,8 @@ namespace Robust.Client
             var disableSandbox = Environment.GetEnvironmentVariable("ROBUST_DISABLE_SANDBOX") == "1";
             _modLoader.SetEnableSandboxing(!disableSandbox && Options.Sandboxing);
 
-            var assemblyPrefix = Options.ContentModulePrefix ?? _resourceManifest!.AssemblyPrefix ?? "Content.";
-            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, assemblyPrefix))
-            {
-                Logger.Fatal("Errors while loading content assemblies.");
+            if (!LoadModules())
                 return false;
-            }
 
             foreach (var loadedModule in _modLoader.LoadedModules)
             {
@@ -129,17 +143,34 @@ namespace Robust.Client
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
+
+            // Finish initialization of WebView if loaded.
+            _webViewHook?.Initialize();
+
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
+
+            // Start bad file extensions check after content init,
+            // in case content screws with the VFS.
+            var checkBadExtensions = ProgramShared.CheckBadFileExtensions(
+                _resManager,
+                _configurationManager,
+                _logManager.GetSawmill("res"));
+
             _resourceCache.PreloadTextures();
             _networkManager.Initialize(false);
             _configurationManager.SetupNetworking();
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
+
+            // Make sure this is done before we try to load prototypes,
+            // avoid any possibility of race conditions causing the check to not finish
+            // before prototype load.
+            ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
+
+            _reflectionManager.Initialize();
             _prototypeManager.Initialize();
-            _prototypeManager.LoadDirectory(new ResourcePath("/EnginePrototypes/"));
-            _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
-            _prototypeManager.ResolveResults();
+            _prototypeManager.LoadDefaultPrototypes();
             _userInterfaceManager.Initialize();
             _eyeManager.Initialize();
             _entityManager.Initialize();
@@ -150,8 +181,14 @@ namespace Robust.Client
             _scriptClient.Initialize();
             _client.Initialize();
             _discord.Initialize();
-            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
+            _tagManager.Initialize();
+            _protoLoadMan.Initialize();
+            _netResMan.Initialize();
+            _replayLoader.Initialize();
+            _replayPlayback.Initialize();
+            _replayRecording.Initialize();
             _userInterfaceManager.PostInitialize();
+            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
             if (_commandLineArgs?.Username != null)
             {
@@ -169,7 +206,12 @@ namespace Robust.Client
             // Setup main loop
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_gameTiming, _runtimeLog, _prof)
+                _mainLoop = new GameLoop(
+                    _gameTiming,
+                    _runtimeLog,
+                    _prof,
+                    _logManager.GetSawmill("eng"),
+                    GameLoopOptions.FromCVars(_configurationManager))
                 {
                     SleepMode = displayMode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
                 };
@@ -221,60 +263,32 @@ namespace Robust.Client
             return true;
         }
 
-        private ResourceManifestData LoadResourceManifest()
+        private bool LoadModules()
         {
-            // Parses /manifest.yml for game-specific settings that cannot be exclusively set up by content code.
-            if (!_resourceCache.TryContentFileRead("/manifest.yml", out var stream))
-                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true);
+            DebugTools.Assert(_resourceManifest != null);
 
-            var yamlStream = new YamlStream();
-            using (stream)
+            var assemblyPrefix = Options.ContentModulePrefix ?? _resourceManifest!.AssemblyPrefix ?? "Content.";
+            var assemblyDir = Options.AssemblyDirectory;
+
+            bool result;
+            if (_resourceManifest.ClientAssemblies is { } clientAssemblies)
             {
-                using var streamReader = new StreamReader(stream, EncodingHelpers.UTF8);
-                yamlStream.Load(streamReader);
+                // We have client assemblies. Load only the assemblies listed in the content manifest.
+                var paths = clientAssemblies.Select(p => assemblyDir / $"{p}.dll");
+                result = _modLoader.TryLoadModules(paths);
+            }
+            else
+            {
+                result = _modLoader.TryLoadModulesFrom(assemblyDir, assemblyPrefix);
             }
 
-            if (yamlStream.Documents.Count == 0)
-                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true);
-
-            if (yamlStream.Documents.Count != 1 || yamlStream.Documents[0].RootNode is not YamlMappingNode mapping)
+            if (!result)
             {
-                throw new InvalidOperationException(
-                    "Expected a single YAML document with root mapping for /manifest.yml");
+                _logger.Fatal("Errors while loading content assemblies.");
+                return false;
             }
 
-            var modules = Array.Empty<string>();
-            if (mapping.TryGetNode("modules", out var modulesMap))
-            {
-                var sequence = (YamlSequenceNode)modulesMap;
-                modules = new string[sequence.Children.Count];
-                for (var i = 0; i < modules.Length; i++)
-                {
-                    modules[i] = sequence[i].AsString();
-                }
-            }
-
-            string? assemblyPrefix = null;
-            if (mapping.TryGetNode("assemblyPrefix", out var prefixNode))
-                assemblyPrefix = prefixNode.AsString();
-
-            string? defaultWindowTitle = null;
-            if (mapping.TryGetNode("defaultWindowTitle", out var winTitleNode))
-                defaultWindowTitle = winTitleNode.AsString();
-
-            string? windowIconSet = null;
-            if (mapping.TryGetNode("windowIconSet", out var iconSetNode))
-                windowIconSet = iconSetNode.AsString();
-
-            string? splashLogo = null;
-            if (mapping.TryGetNode("splashLogo", out var splashNode))
-                splashLogo = splashNode.AsString();
-
-            bool autoConnect = true;
-            if (mapping.TryGetNode("autoConnect", out var autoConnectNode))
-                autoConnect = autoConnectNode.AsBool();
-
-            return new ResourceManifestData(modules, assemblyPrefix, defaultWindowTitle, windowIconSet, splashLogo, autoConnect);
+            return true;
         }
 
         internal bool StartupSystemSplash(
@@ -347,16 +361,15 @@ namespace Robust.Client
 
             ProfileOptSetup.Setup(_configurationManager);
 
-            _parallelMgr.Initialize();
             _prof.Initialize();
 
-            _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
+            _resManager.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions)
                 : Options.MountOptions;
 
-            ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory,
+            ProgramShared.DoMounts(_resManager, mountOptions, Options.ContentBuildDirectory,
                 Options.AssemblyDirectory,
                 Options.LoadContentResources, _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
 
@@ -366,16 +379,16 @@ namespace Robust.Client
                 {
                     foreach (var (api, prefix) in mounts)
                     {
-                        _resourceCache.MountLoaderApi(api, "", new ResourcePath(prefix));
+                        _resourceCache.MountLoaderApi(_resManager, api, "", new(prefix));
                     }
                 }
 
                 _stringSerializer.EnableCaching = false;
-                _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
+                _resourceCache.MountLoaderApi(_resManager, _loaderArgs.FileApi, "Resources/");
                 _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
             }
 
-            _resourceManifest = LoadResourceManifest();
+            _resourceManifest = ResourceManifestData.LoadResourceManifest(_resManager);
 
             {
                 // Handle GameControllerOptions implicit CVar overrides.
@@ -436,7 +449,7 @@ namespace Robust.Client
 
                 if (uri.Scheme != "udp")
                 {
-                    Logger.Warning($"connect-address '{uri}' does not have URI scheme of udp://..");
+                    _logger.Warning($"connect-address '{uri}' does not have URI scheme of udp://..");
                 }
 
                 LaunchState = new InitialLaunchState(
@@ -459,11 +472,11 @@ namespace Robust.Client
 
             if (reason != null)
             {
-                Logger.Info($"Shutting down! Reason: {reason}");
+                _logger.Info($"Shutting down! Reason: {reason}");
             }
             else
             {
-                Logger.Info("Shutting down!");
+                _logger.Info("Shutting down!");
             }
 
             _mainLoop.Running = false;
@@ -484,6 +497,11 @@ namespace Robust.Client
             using (_prof.Group("Async"))
             {
                 _taskManager.ProcessPendingTasks(); // tasks like connect
+            }
+
+            using (_prof.Group("Content post engine"))
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.InputPostEngine, frameEventArgs);
             }
         }
 
@@ -523,9 +541,9 @@ namespace Robust.Client
             {
                 using (_prof.Group("Entity"))
                 {
-                    if (ContentEntityTickUpdate != null)
+                    if (TickUpdateOverride != null)
                     {
-                        ContentEntityTickUpdate.Invoke(frameEventArgs);
+                        TickUpdateOverride.Invoke(frameEventArgs);
                     }
                     else
                     {
@@ -550,11 +568,6 @@ namespace Robust.Client
                 {
                     _webViewHook?.Update();
                 }
-            }
-
-            using (_prof.Group("ClydeAudio"))
-            {
-                _clydeAudio.FrameProcess(frameEventArgs);
             }
 
             using (_prof.Group("Clyde"))
@@ -617,7 +630,6 @@ namespace Robust.Client
             logManager.GetSawmill("ogl.debug.other").Level = LogLevel.Warning;
             logManager.GetSawmill("gdparse").Level = LogLevel.Error;
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
-            logManager.GetSawmill("net.predict").Level = LogLevel.Info;
             logManager.GetSawmill("szr").Level = LogLevel.Info;
             logManager.GetSawmill("loc").Level = LogLevel.Warning;
 
@@ -681,6 +693,8 @@ namespace Robust.Client
 
         internal void CleanupGameThread()
         {
+            _replayRecording.Shutdown();
+
             _modLoader.Shutdown();
 
             // CEF specifically makes a massive silent stink of it if we don't shut it down from the correct thread.
@@ -694,18 +708,9 @@ namespace Robust.Client
         internal void CleanupWindowThread()
         {
             _clyde.Shutdown();
-            _clydeAudio.Shutdown();
+            _audio.Shutdown();
         }
 
-        private sealed record ResourceManifestData(
-            string[] Modules,
-            string? AssemblyPrefix,
-            string? DefaultWindowTitle,
-            string? WindowIconSet,
-            string? SplashLogo,
-            bool AutoConnect
-        );
-
-        public event Action<FrameEventArgs>? ContentEntityTickUpdate;
+        public event Action<FrameEventArgs>? TickUpdateOverride;
     }
 }

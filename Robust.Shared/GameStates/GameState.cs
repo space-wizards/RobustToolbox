@@ -25,8 +25,8 @@ namespace Robust.Shared.GameStates
             GameTick toSequence,
             uint lastInput,
             NetListAsArray<EntityState> entities,
-            NetListAsArray<PlayerState> players,
-            NetListAsArray<EntityUid> deletions)
+            NetListAsArray<SessionState> players,
+            NetListAsArray<NetEntity> deletions)
         {
             FromSequence = fromSequence;
             ToSequence = toSequence;
@@ -42,7 +42,7 @@ namespace Robust.Shared.GameStates
         public readonly uint LastProcessedInput;
 
         public readonly NetListAsArray<EntityState> EntityStates;
-        public readonly NetListAsArray<PlayerState> PlayerStates;
-        public readonly NetListAsArray<EntityUid> EntityDeletions;
+        public readonly NetListAsArray<SessionState> PlayerStates;
+        public readonly NetListAsArray<NetEntity> EntityDeletions;
     }
 }

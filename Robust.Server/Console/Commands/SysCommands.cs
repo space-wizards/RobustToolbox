@@ -34,18 +34,6 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class SaveConfig : LocalizedCommands
-    {
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-
-        public override string Command => "saveconfig";
-
-        public override void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-            _cfg.SaveToFile();
-        }
-    }
-
     sealed class NetworkAuditCommand : LocalizedCommands
     {
         [Dependency] private readonly INetManager _netManager = default!;

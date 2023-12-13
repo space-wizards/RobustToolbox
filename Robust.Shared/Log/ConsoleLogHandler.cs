@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Unicode;
 using System.Timers;
 using JetBrains.Annotations;
 using Serilog.Events;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.Log
 {
@@ -47,8 +47,6 @@ namespace Robust.Shared.Log
 
         private readonly Timer _timer = new(0.1);
 
-        private readonly bool _isUtf16Out = System.Console.OutputEncoding.CodePage == Encoding.Unicode.CodePage;
-
         private bool _disposed;
 
         static ConsoleLogHandler()
@@ -58,6 +56,17 @@ namespace Robust.Shared.Log
             if (WriteAnsiColors && OperatingSystem.IsWindows())
             {
                 WriteAnsiColors = WindowsConsole.TryEnableVirtualTerminalProcessing();
+            }
+
+            // Set console output on Windows to UTF-8, because .NET doesn't do it built-in.
+            // Otherwise we can't print anything that isn't just your default Windows code page.
+            try
+            {
+                System.Console.OutputEncoding = Encoding.UTF8;
+            }
+            catch
+            {
+                // If this doesn't work, RIP.
             }
         }
 
@@ -76,9 +85,7 @@ namespace Robust.Shared.Log
             };
         }
 
-#if DEBUG
         [UsedImplicitly]
-#endif
         public static void TryDetachFromConsoleWindow()
         {
             if (OperatingSystem.IsWindows())
@@ -106,9 +113,9 @@ namespace Robust.Shared.Log
                     _line.AppendLine(message.Exception.ToString());
                 }
 
-                // ReSharper disable once SuggestVarOrType_Elsewhere
-                if (!_isUtf16Out)
+                if (System.Console.OutputEncoding.CodePage == WindowsConsole.NativeMethods.CodePageUtf8)
                 {
+                    // Fast path: if we can output as UTF-8, do it.
                     Span<byte> buf = stackalloc byte[1024];
                     var totalChars = _line.Length;
                     foreach (var chunk in _line.GetChunks())
@@ -134,10 +141,8 @@ namespace Robust.Shared.Log
                 }
                 else
                 {
-                    foreach (var chunk in _line.GetChunks())
-                    {
-                        _stream.Write(MemoryMarshal.AsBytes(chunk.Span));
-                    }
+                    // Fallback path: just let .NET handle it.
+                    System.Console.Write(_line.ToString());
                 }
 
                 // ReSharper disable once InvertIf
@@ -193,14 +198,15 @@ namespace Robust.Shared.Log
     internal static class WindowsConsole
     {
 
-        public static bool TryEnableVirtualTerminalProcessing()
+        public static unsafe bool TryEnableVirtualTerminalProcessing()
         {
             try
             {
-                var stdHandle = NativeMethods.GetStdHandle(-11);
-                NativeMethods.GetConsoleMode(stdHandle, out var mode);
-                NativeMethods.SetConsoleMode(stdHandle, mode | 4);
-                NativeMethods.GetConsoleMode(stdHandle, out mode);
+                var stdHandle = Windows.GetStdHandle(unchecked((uint)-11));
+                uint mode;
+                Windows.GetConsoleMode(stdHandle, &mode);
+                Windows.SetConsoleMode(stdHandle, mode | 4);
+                Windows.GetConsoleMode(stdHandle, &mode);
                 return (mode & 4) == 4;
             }
             catch (DllNotFoundException)
@@ -219,7 +225,7 @@ namespace Robust.Shared.Log
 
         public static void TryDetachFromConsoleWindow()
         {
-            if (NativeMethods.GetConsoleWindow() == default
+            if (Windows.GetConsoleWindow() == default
                 || Debugger.IsAttached
                 || System.Console.IsOutputRedirected
                 || System.Console.IsErrorRedirected
@@ -228,27 +234,12 @@ namespace Robust.Shared.Log
                 return;
             }
 
-            _freedConsole = NativeMethods.FreeConsole();
+            _freedConsole = Windows.FreeConsole();
         }
 
         internal static class NativeMethods
         {
-
-            [DllImport("kernel32", SetLastError = true)]
-            internal static extern bool SetConsoleMode(IntPtr hConsoleHandle, int mode);
-
-            [DllImport("kernel32", SetLastError = true)]
-            internal static extern bool GetConsoleMode(IntPtr handle, out int mode);
-
-            [DllImport("kernel32", SetLastError = true)]
-            internal static extern IntPtr GetStdHandle(int handle);
-
-            [DllImport("kernel32", SetLastError = true)]
-            internal static extern bool FreeConsole();
-
-            [DllImport("kernel32", SetLastError = true)]
-            internal static extern IntPtr GetConsoleWindow();
-
+            public const int CodePageUtf8 = 65001;
         }
 
     }

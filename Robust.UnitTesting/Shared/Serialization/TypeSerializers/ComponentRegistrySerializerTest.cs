@@ -2,6 +2,7 @@ using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -56,7 +57,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         }
     }
 
-    public sealed class TestComponent : Component
+    public sealed partial class TestComponent : Component
     {
     }
 }

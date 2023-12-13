@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.Collections;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Random
@@ -29,6 +31,12 @@ namespace Robust.Shared.Random
             return list[index];
         }
 
+        public static ref T Pick<T>(this IRobustRandom random, ValueList<T> list)
+        {
+            var index = random.Next(list.Count);
+            return ref list[index];
+        }
+
         /// <summary>Picks a random element from a collection.</summary>
         /// <remarks>
         ///     This is O(n).
@@ -56,6 +64,8 @@ namespace Robust.Shared.Random
             return element;
         }
 
+        public static Angle NextAngle(this System.Random random) => NextFloat(random) * MathF.Tau;
+
         public static float NextFloat(this IRobustRandom random)
         {
             // This is pretty much the CoreFX implementation.
@@ -78,7 +88,7 @@ namespace Robust.Shared.Random
         {
             DebugTools.Assert(chance <= 1 && chance >= 0, $"Chance must be in the range 0-1. It was {chance}.");
 
-            return random.NextDouble() <= chance;
+            return random.NextDouble() < chance;
         }
 
         internal static void Shuffle<T>(Span<T> array, System.Random random)

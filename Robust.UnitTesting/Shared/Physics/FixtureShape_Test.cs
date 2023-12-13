@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -22,7 +23,7 @@ namespace Robust.UnitTesting.Shared.Physics
         [Test]
         public void TestCirclePoint()
         {
-            var circle = new PhysShapeCircle {Radius = 0.5f};
+            var circle = new PhysShapeCircle(0.5f);
             var transform = new Transform(0f);
             var posA = Vector2.One;
             var posB = Vector2.Zero;

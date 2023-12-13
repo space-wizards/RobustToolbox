@@ -14,7 +14,7 @@ namespace Robust.Benchmarks.Migrations
 {
     [DbContext(typeof(BenchmarkContext))]
     [Migration("20221009235705_db")]
-    partial class db
+    partial class DB
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

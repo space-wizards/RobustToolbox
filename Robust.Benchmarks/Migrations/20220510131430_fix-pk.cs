@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Robust.Benchmarks.Migrations
 {
-    public partial class fixpk : Migration
+    public partial class FixPK : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

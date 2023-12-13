@@ -1,15 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\MSBuild\Robust.Properties.targets" />
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>../bin/Shared.Maths</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
 
   <ItemGroup>
+    <PackageReference Include="ILReader.Core" Version="1.0.0.4" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.0.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.0.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.0.1" />
@@ -20,4 +18,6 @@
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
   </ItemGroup>
+
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
 </Project>

@@ -152,7 +152,9 @@ public sealed class DictionarySerializer<TKey, TValue> :
         return dict;
     }
 
-    public void CopyTo(ISerializationManager serializationManager, Dictionary<TKey, TValue> source, ref Dictionary<TKey, TValue> target, SerializationHookContext hookCtx,
+    public void CopyTo(ISerializationManager serializationManager, Dictionary<TKey, TValue> source, ref Dictionary<TKey, TValue> target,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
         ISerializationContext? context = null)
     {
         target.Clear();
@@ -166,7 +168,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
     }
 
     public void CopyTo(ISerializationManager serializationManager, SortedDictionary<TKey, TValue> source, ref SortedDictionary<TKey, TValue> target,
-        SerializationHookContext hookCtx, ISerializationContext? context = null)
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
         target.Clear();
         foreach (var value in source)
@@ -177,8 +179,8 @@ public sealed class DictionarySerializer<TKey, TValue> :
         }
     }
 
-    public IReadOnlyDictionary<TKey, TValue> CreateCopy(ISerializationManager serializationManager, IReadOnlyDictionary<TKey, TValue> source, SerializationHookContext hookCtx,
-        ISerializationContext? context = null)
+    public IReadOnlyDictionary<TKey, TValue> CreateCopy(ISerializationManager serializationManager, IReadOnlyDictionary<TKey, TValue> source,
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
         var target = new Dictionary<TKey, TValue>();
         target.EnsureCapacity(source.Count);

@@ -14,12 +14,14 @@ namespace Robust.Server.ViewVariables.Traits
 
         public ViewVariablesTraitEntity(IViewVariablesSession session) : base(session)
         {
-            _entity = (EntityUid) Session.Object;
+            var netEntity = (NetEntity) Session.Object;
+            _entity = IoCManager.Resolve<IEntityManager>().GetEntity(netEntity);
         }
 
         public override ViewVariablesBlob? DataRequest(ViewVariablesRequest viewVariablesRequest)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
+            var compFactory = IoCManager.Resolve<IComponentFactory>();
 
             if (viewVariablesRequest is ViewVariablesRequestMembers)
             {
@@ -38,7 +40,7 @@ namespace Robust.Server.ViewVariables.Traits
                 {
                     var type = component.GetType();
                     list.Add(new ViewVariablesBlobEntityComponents.Entry
-                        {Stringified = PrettyPrint.PrintUserFacingTypeShort(type, 2), FullName = type.FullName, ComponentName = component.Name});
+                        {Stringified = PrettyPrint.PrintUserFacingTypeShort(type, 2), FullName = type.FullName, ComponentName = compFactory.GetComponentName(type)});
                 }
 
                 return new ViewVariablesBlobEntityComponents

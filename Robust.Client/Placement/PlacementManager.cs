@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -20,30 +20,31 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.Log;
+using Direction = Robust.Shared.Maths.Direction;
 
 namespace Robust.Client.Placement
 {
     public sealed partial class PlacementManager : IPlacementManager, IDisposable, IEntityEventSubscriber
     {
-        [Dependency] private readonly IClientNetManager NetworkManager = default!;
-        [Dependency] public readonly IPlayerManager PlayerManager = default!;
-        [Dependency] public readonly IResourceCache ResourceCache = default!;
-        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
-        [Dependency] public readonly IMapManager MapManager = default!;
+        [Dependency] private readonly IClientNetManager _networkManager = default!;
+        [Dependency] internal readonly IPlayerManager PlayerManager = default!;
+        [Dependency] internal readonly IResourceCache ResourceCache = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] internal readonly IMapManager MapManager = default!;
         [Dependency] private readonly IGameTiming _time = default!;
-        [Dependency] public readonly IEyeManager eyeManager = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] internal readonly IEyeManager EyeManager = default!;
+        [Dependency] internal readonly IInputManager InputManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] public readonly IEntityManager EntityManager = default!;
+        [Dependency] internal readonly IEntityManager EntityManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IBaseClient _baseClient = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] public readonly IClyde _clyde = default!;
+        [Dependency] internal readonly IClyde Clyde = default!;
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
         /// </summary>
-        private static readonly TimeSpan _pendingTileTimeout = TimeSpan.FromSeconds(2.0);
+        private static readonly TimeSpan PendingTileTimeout = TimeSpan.FromSeconds(2.0);
 
         /// <summary>
         /// Dictionary of all placement mode types
@@ -86,6 +87,8 @@ namespace Robust.Client.Placement
         /// Determines whether we are using the mode to delete an entity on click
         /// </summary>
         public bool Eraser { get; private set; }
+
+        public bool Replacement { get; set; } = true;
 
         /// <summary>
         /// Holds the selection rectangle for the eraser
@@ -181,10 +184,10 @@ namespace Robust.Client.Placement
         {
             _drawingShader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
 
-            NetworkManager.RegisterNetMessage<MsgPlacement>(HandlePlacementMessage);
+            _networkManager.RegisterNetMessage<MsgPlacement>(HandlePlacementMessage);
 
             _modeDictionary.Clear();
-            foreach (var type in ReflectionManager.GetAllChildren<PlacementMode>())
+            foreach (var type in _reflectionManager.GetAllChildren<PlacementMode>())
             {
                 _modeDictionary.Add(type.Name, type);
             }
@@ -223,7 +226,7 @@ namespace Robust.Client.Placement
                         }
                     }))
                 .Bind(EngineKeyFunctions.EditorPlaceObject, new PointerStateInputCmdHandler(
-                    (session, coords, uid) =>
+                    (session, netCoords, nent) =>
                     {
                         if (!IsActive)
                             return false;
@@ -237,15 +240,15 @@ namespace Robust.Client.Placement
 
                         if (Eraser)
                         {
-                            if (HandleDeletion(coords))
+                            if (HandleDeletion(netCoords))
                                 return true;
 
-                            if (uid == EntityUid.Invalid)
+                            if (nent == EntityUid.Invalid)
                             {
                                 return false;
                             }
 
-                            HandleDeletion(uid);
+                            HandleDeletion(nent);
                         }
                         else
                         {
@@ -283,23 +286,17 @@ namespace Robust.Client.Placement
                     }, outsidePrediction: true))
                 .Register<PlacementManager>();
 
-            var localPlayer = PlayerManager.LocalPlayer;
-            localPlayer!.EntityAttached += OnEntityAttached;
+            PlayerManager.LocalPlayerDetached += OnDetached;
         }
 
         private void TearDownInput()
         {
             CommandBinds.Unregister<PlacementManager>();
-
-            if (PlayerManager.LocalPlayer != null)
-            {
-                PlayerManager.LocalPlayer.EntityAttached -= OnEntityAttached;
-            }
+            PlayerManager.LocalPlayerDetached -= OnDetached;
         }
 
-        private void OnEntityAttached(EntityAttachedEventArgs eventArgs)
+        private void OnDetached(EntityUid obj)
         {
-            // player attached to a new entity, basically disable the editor
             Clear();
         }
 
@@ -307,7 +304,7 @@ namespace Robust.Client.Placement
         {
             if (enabled)
             {
-                _inputManager.Contexts.SetActiveContext("editor");
+                InputManager.Contexts.SetActiveContext("editor");
             }
             else
             {
@@ -333,7 +330,7 @@ namespace Robust.Client.Placement
             }
         }
 
-        private void HandleTileChanged(TileChangedEvent args)
+        private void HandleTileChanged(ref TileChangedEvent args)
         {
             var coords = MapManager.GetGrid(args.NewTile.GridUid).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
@@ -426,17 +423,17 @@ namespace Robust.Client.Placement
 
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
-            msg.EntityUid = entity;
-            NetworkManager.ClientSendMessage(msg);
+            msg.EntityUid = EntityManager.GetNetEntity(entity);
+            _networkManager.ClientSendMessage(msg);
         }
 
         public void HandleRectDeletion(EntityCoordinates start, Box2 rect)
         {
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
-            msg.EntityCoordinates = new EntityCoordinates(StartPoint.EntityId, rect.BottomLeft);
+            msg.NetCoordinates = new NetCoordinates(EntityManager.GetNetEntity(StartPoint.EntityId), rect.BottomLeft);
             msg.RectSize = rect.Size;
-            NetworkManager.ClientSendMessage(msg);
+            _networkManager.ClientSendMessage(msg);
         }
 
         public void ToggleEraser()
@@ -498,9 +495,9 @@ namespace Robust.Client.Placement
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            if (PlayerManager.LocalPlayer?.ControlledEntity is {Valid: true} ent)
+            if (EntityManager.TryGetComponent(PlayerManager.LocalPlayer?.ControlledEntity, out TransformComponent? xform))
             {
-                map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
+                map = xform.MapID;
             }
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
@@ -509,7 +506,7 @@ namespace Robust.Client.Placement
                 return false;
             }
 
-            coordinates = _inputManager.MouseScreenPosition;
+            coordinates = InputManager.MouseScreenPosition;
             return true;
         }
 
@@ -530,7 +527,7 @@ namespace Robust.Client.Placement
                     return false;
                 }
                 coordinates = EntityCoordinates.FromMap(MapManager,
-                                                        eyeManager.ScreenToMap(_inputManager.MouseScreenPosition));
+                                                        EyeManager.PixelToMap(InputManager.MouseScreenPosition));
                 return true;
             }
         }
@@ -667,12 +664,13 @@ namespace Robust.Client.Placement
 
         private void EnsureNoPlacementOverlayEntity()
         {
-            if (CurrentPlacementOverlayEntity != null)
-            {
-                if (!EntityManager.Deleted(CurrentPlacementOverlayEntity))
-                    EntityManager.DeleteEntity(CurrentPlacementOverlayEntity.Value);
-                CurrentPlacementOverlayEntity = null;
-            }
+            if (CurrentPlacementOverlayEntity == null)
+                return;
+
+            if (!EntityManager.Deleted(CurrentPlacementOverlayEntity))
+                EntityManager.DeleteEntity(CurrentPlacementOverlayEntity.Value);
+
+            CurrentPlacementOverlayEntity = null;
         }
 
         private SpriteComponent SetupPlacementOverlayEntity()
@@ -684,12 +682,22 @@ namespace Robust.Client.Placement
 
         private void PreparePlacement(string templateName)
         {
+            EnsureNoPlacementOverlayEntity();
+
             var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
             CurrentPrototype = prototype;
             IsActive = true;
 
-            var lst = SpriteComponent.GetPrototypeTextures(prototype, ResourceCache, out var noRot).ToList();
-            PreparePlacementTexList(lst, noRot, prototype);
+            CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(templateName, MapCoordinates.Nullspace);
+            EntityManager.RunMapInit(
+                CurrentPlacementOverlayEntity.Value,
+                EntityManager.GetComponent<MetaDataComponent>(CurrentPlacementOverlayEntity.Value));
+        }
+
+        public void PreparePlacementSprite(SpriteComponent sprite)
+        {
+            var sc = SetupPlacementOverlayEntity();
+            sc.CopyFrom(sprite);
         }
 
         public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot, EntityPrototype? prototype)
@@ -714,7 +722,7 @@ namespace Robust.Client.Placement
             }
             else
             {
-                sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
+                sc.AddLayer(new ResPath("/Textures/Interface/tilebuildoverlay.png"));
             }
             sc.NoRotation = noRot;
 
@@ -728,7 +736,7 @@ namespace Robust.Client.Placement
         private void PreparePlacementTile()
         {
             var sc = SetupPlacementOverlayEntity();
-            sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
+            sc.AddLayer(new ResPath("/Textures/Interface/tilebuildoverlay.png"));
 
             IsActive = true;
         }
@@ -759,15 +767,17 @@ namespace Robust.Client.Placement
                         return;
                 }
 
-                var tuple = new Tuple<EntityCoordinates, TimeSpan>(coordinates, _time.RealTime + _pendingTileTimeout);
+                var tuple = new Tuple<EntityCoordinates, TimeSpan>(coordinates, _time.RealTime + PendingTileTimeout);
                 _pendingTileChanges.Add(tuple);
             }
 
-            var message = new MsgPlacement();
-            message.PlaceType = PlacementManagerMessage.RequestPlacement;
-
-            message.Align = CurrentMode.ModeName;
-            message.IsTile = CurrentPermission.IsTile;
+            var message = new MsgPlacement
+            {
+                PlaceType = PlacementManagerMessage.RequestPlacement,
+                Align = CurrentMode.ModeName,
+                IsTile = CurrentPermission.IsTile,
+                Replacement = Replacement
+            };
 
             if (CurrentPermission.IsTile)
                 message.TileType = CurrentPermission.TileType;
@@ -775,11 +785,11 @@ namespace Robust.Client.Placement
                 message.EntityTemplateName = CurrentPermission.EntityType;
 
             // world x and y
-            message.EntityCoordinates = coordinates;
+            message.NetCoordinates = EntityManager.GetNetCoordinates(coordinates);
 
             message.DirRcv = Direction;
 
-            NetworkManager.ClientSendMessage(message);
+            _networkManager.ClientSendMessage(message);
         }
 
         public enum PlacementTypes : byte

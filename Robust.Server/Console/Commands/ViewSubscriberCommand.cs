@@ -1,9 +1,8 @@
 using Robust.Server.GameObjects;
-using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 
 namespace Robust.Server.Console.Commands
 {
@@ -17,7 +16,7 @@ namespace Robust.Server.Console.Commands
         {
             var session = shell.Player;
 
-            if (session is not IPlayerSession playerSession)
+            if (session is not { } playerSession)
             {
                 shell.WriteError($"Unable to find {nameof(ICommonSession)} for shell");
                 return;
@@ -29,19 +28,19 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!EntityUid.TryParse(args[0], out var uid))
+            if (!NetEntity.TryParse(args[0], out var uidNet))
             {
                 shell.WriteError($"Unable to parse {args[0]} as a {nameof(EntityUid)}");
                 return;
             }
 
-            if (!_entities.EntityExists(uid))
+            if (!_entities.TryGetEntity(uidNet, out var uid) || !_entities.EntityExists(uid))
             {
                 shell.WriteError($"Unable to find entity {uid}");
                 return;
             }
 
-            _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().AddViewSubscriber(uid, playerSession);
+            _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().AddViewSubscriber(uid.Value, playerSession);
         }
 
         public sealed class RemoveViewSubscriberCommand : LocalizedCommands
@@ -54,7 +53,7 @@ namespace Robust.Server.Console.Commands
             {
                 var session = shell.Player;
 
-                if (session is not IPlayerSession playerSession)
+                if (session is not { } playerSession)
                 {
                     shell.WriteError($"Unable to find {nameof(ICommonSession)} for shell");
                     return;
@@ -66,19 +65,19 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                if (!EntityUid.TryParse(args[0], out var uid))
+                if (!NetEntity.TryParse(args[0], out var uidNet))
                 {
-                    shell.WriteError($"Unable to parse {args[0]} as a {nameof(EntityUid)}");
+                    shell.WriteError($"Unable to parse {args[0]} as a {nameof(NetEntity)}");
                     return;
                 }
 
-                if (!_entities.EntityExists(uid))
+                if (!_entities.TryGetEntity(uidNet, out var uid) || !_entities.EntityExists(uid))
                 {
                     shell.WriteError($"Unable to find entity {uid}");
                     return;
                 }
 
-                _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().RemoveViewSubscriber(uid, playerSession);
+                _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().RemoveViewSubscriber(uid.Value, playerSession);
             }
         }
     }

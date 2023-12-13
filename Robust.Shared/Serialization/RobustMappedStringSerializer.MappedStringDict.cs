@@ -76,6 +76,12 @@ namespace Robust.Shared.Serialization
                 return (hash, package);
             }
 
+            public int LoadFromPackage(byte[] package, out byte[] hash)
+            {
+                var stream = new MemoryStream(package, false);
+                return LoadFromPackage(stream, out hash);
+            }
+
             public int LoadFromPackage(Stream stream, out byte[] hash)
             {
                 _mappedStrings = ReadStringPackage(stream, out hash);
@@ -125,14 +131,12 @@ namespace Robust.Shared.Serialization
 
                 foreach (var str in strings)
                 {
-                    DebugTools.Assert(str.Length < MaxMappedStringSize);
+                    // Ok so the code checks the goddamn string size before encoding to UTF-8 to check length.
+                    // Yes, this code sucks, but I don't care to fix it right now.
+                    if (str.Length > MaxMappedStringSize || Encoding.UTF8.GetByteCount(str) > MaxMappedStringSize)
+                        throw new Exception("Attempted to map a string that exceeds the maximum length.");
 
                     var l = Encoding.UTF8.GetBytes(str, buf);
-
-                    if (l >= MaxMappedStringSize)
-                    {
-                        throw new NotImplementedException("Overly long string in strings package.");
-                    }
 
                     Primitives.WritePrimitive(hasherStream, (uint) l);
                     hasherStream.Write(buf[..l]);
@@ -170,10 +174,6 @@ namespace Robust.Shared.Serialization
             /// scoped names, this increases the likelyhood of a successful
             /// string mapping.
             /// </remarks>
-            /// <returns>
-            /// <c>true</c> if the string was added to the mapping for the first
-            /// time, <c>false</c> otherwise.
-            /// </returns>
             /// <exception cref="InvalidOperationException">
             /// Thrown if the string is not normalized (<see cref="String.IsNormalized()"/>).
             /// </exception>
@@ -392,6 +392,9 @@ namespace Robust.Shared.Serialization
 
             private bool TryAddString(string str)
             {
+                if (str.Length > MaxMappedStringSize || Encoding.UTF8.GetByteCount(str) > MaxMappedStringSize)
+                    return false;
+
                 // Yes this spends like half the CPU time of AddString in lock contention.
                 // But it's still faster than all my other attempts, so...
                 lock (_buildingStrings)

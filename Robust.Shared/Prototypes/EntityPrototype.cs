@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -19,11 +20,14 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity", -1)]
-    public sealed class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
+    public sealed partial class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
     {
         private ILocalizationManager _loc = default!;
 
         private static readonly Dictionary<string, string> LocPropertiesDefault = new();
+
+        [ValidatePrototypeId<EntityCategoryPrototype>]
+        private const string HideCategory = "hideSpawnMenu";
 
         // LOCALIZATION NOTE:
         // Localization-related properties in here are manually localized in LocalizationManager.
@@ -54,6 +58,10 @@ namespace Robust.Shared.Prototypes
 
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
+
+        [DataField("categories")]
+        [AlwaysPushInheritance]
+        public HashSet<string> Categories = new();
 
         [ViewVariables]
         public IReadOnlyDictionary<string, string> LocProperties => _locPropertiesSet ?? LocPropertiesDefault;
@@ -90,7 +98,10 @@ namespace Robust.Shared.Prototypes
         [ViewVariables]
         [NeverPushInheritance]
         [DataField("noSpawn")]
+        [Obsolete("Use the HideSpawnMenu")]
         public bool NoSpawn { get; private set; }
+
+        public bool HideSpawnMenu => Categories.Contains(HideCategory) || NoSpawn;
 
         [DataField("placement")]
         private EntityPlacementProperties PlacementProperties = new();
@@ -183,13 +194,16 @@ namespace Robust.Shared.Prototypes
         }
 
         internal static void LoadEntity(
-            EntityPrototype? prototype,
-            EntityUid entity,
+            Entity<MetaDataComponent> ent,
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
             IEntityLoadContext? context) //yeah officer this method right here
         {
+            var (entity, meta) = ent;
+            var prototype = meta.EntityPrototype;
+            var ctx = context as ISerializationContext;
+
             if (prototype != null)
             {
                 foreach (var (name, entry) in prototype.Components)
@@ -198,8 +212,11 @@ namespace Robust.Shared.Prototypes
                         continue;
 
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
+                    var compReg = factory.GetRegistration(name);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, ctx);
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
+                    if (!entry.Component.NetSyncEnabled && compReg.NetID is {} netId)
+                        meta.NetComponents.Remove(netId);
                 }
             }
 
@@ -221,12 +238,14 @@ namespace Robust.Shared.Prototypes
                             $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
                     }
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, data, context as ISerializationContext);
+                    var compReg = factory.GetRegistration(name);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, ctx);
                 }
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(EntityUid entity,
+        public static void EnsureCompExistsAndDeserialize(EntityUid entity,
+            ComponentRegistration compReg,
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
@@ -234,17 +253,22 @@ namespace Robust.Shared.Prototypes
             IComponent data,
             ISerializationContext? context)
         {
-            var compReg = factory.GetRegistration(compName);
-
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                var newComponent = (Component) factory.GetComponent(compName);
-                newComponent.Owner = entity;
+                var newComponent = factory.GetComponent(compName);
                 entityManager.AddComponent(entity, newComponent);
                 component = newComponent;
             }
 
+            if (context is not MapSerializationContext map)
+            {
+                serManager.CopyTo(data, ref component, context, notNullableOverride: true);
+                return;
+            }
+
+            map.CurrentComponent = compName;
             serManager.CopyTo(data, ref component, context, notNullableOverride: true);
+            map.CurrentComponent = null;
         }
 
         public override string ToString()
@@ -252,22 +276,11 @@ namespace Robust.Shared.Prototypes
             return $"EntityPrototype({ID})";
         }
 
-        public sealed class ComponentRegistry : Dictionary<string, ComponentRegistryEntry>
-        {
-            public ComponentRegistry()
-            {
-            }
-
-            public ComponentRegistry(Dictionary<string, ComponentRegistryEntry> components) : base(components)
-            {
-            }
-        }
-
         [DataRecord]
         public record ComponentRegistryEntry(IComponent Component, MappingDataNode Mapping);
 
         [DataDefinition]
-        public sealed class EntityPlacementProperties
+        public sealed partial class EntityPlacementProperties
         {
             public bool PlacementOverriden { get; private set; }
             public bool SnapOverriden { get; private set; }
@@ -379,5 +392,37 @@ namespace Robust.Shared.Prototypes
                 return prototype.DataCache.TryGetValue(field, out value);
             }
         }*/
+    }
+
+    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext, ISerializationContext
+    {
+        public ComponentRegistry()
+        {
+        }
+
+        public ComponentRegistry(Dictionary<string, EntityPrototype.ComponentRegistryEntry> components) : base(components)
+        {
+        }
+
+        public bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
+        {
+            var success = TryGetValue(componentName, out var comp);
+            component = comp?.Component;
+
+            return success;
+        }
+
+        public IEnumerable<string> GetExtraComponentTypes()
+        {
+            return Keys;
+        }
+
+        public bool ShouldSkipComponent(string compName)
+        {
+            return false; //Registries cannot represent the "remove this component" state.
+        }
+
+        public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
+        public bool WritingReadingPrototypes { get; } = true;
     }
 }

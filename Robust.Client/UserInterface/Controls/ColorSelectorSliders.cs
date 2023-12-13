@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
-using Robust.Shared.Log;
 
 namespace Robust.Client.UserInterface.Controls;
 
@@ -14,11 +16,17 @@ public sealed class ColorSelectorSliders : Control
         get => _currentColor;
         set
         {
-            _updating = true;
             _currentColor = value;
-
+            switch (SelectorType)
+            {
+                case ColorSelectorType.Rgb:
+                    _colorData = new Vector4(_currentColor.R, _currentColor.G, _currentColor.B, _currentColor.A);
+                    break;
+                case ColorSelectorType.Hsv:
+                    _colorData = Color.ToHsv(value);
+                    break;
+            }
             Update();
-            _updating = false;
         }
     }
 
@@ -27,12 +35,18 @@ public sealed class ColorSelectorSliders : Control
         get => _currentType;
         set
         {
-            _updating = true;
+            switch ((_currentType, value))
+            {
+                case (ColorSelectorType.Rgb, ColorSelectorType.Hsv):
+                    _colorData = Color.ToHsv(Color);
+                    break;
+                case (ColorSelectorType.Hsv, ColorSelectorType.Rgb):
+                    _colorData = new Vector4(_currentColor.R, _currentColor.G, _currentColor.B, _currentColor.A);
+                    break;
+            }
             _currentType = value;
-
             UpdateType();
             Update();
-            _updating = false;
         }
     }
 
@@ -51,6 +65,7 @@ public sealed class ColorSelectorSliders : Control
 
     private bool _updating = false;
     private Color _currentColor = Color.White;
+    private Vector4 _colorData;
     private ColorSelectorType _currentType = ColorSelectorType.Rgb;
     private bool _isAlphaVisible = false;
 
@@ -61,10 +76,10 @@ public sealed class ColorSelectorSliders : Control
 
     private BoxContainer _alphaSliderBox = new();
 
-    private FloatSpinBox _topInputBox;
-    private FloatSpinBox _middleInputBox;
-    private FloatSpinBox _bottomInputBox;
-    private FloatSpinBox _alphaInputBox;
+    private SpinBox _topInputBox;
+    private SpinBox _middleInputBox;
+    private SpinBox _bottomInputBox;
+    private SpinBox _alphaInputBox;
 
     private Label _topSliderLabel = new();
     private Label _middleSliderLabel = new();
@@ -74,12 +89,19 @@ public sealed class ColorSelectorSliders : Control
     private OptionButton _typeSelector;
     private List<ColorSelectorType> _types = new();
 
+    private static ShaderInstance _shader = default!;
+
+    private ColorSelectorStyleBox _topStyle;
+    private ColorSelectorStyleBox _middleStyle;
+    private ColorSelectorStyleBox _bottomStyle;
+
     public ColorSelectorSliders()
     {
         _topColorSlider = new ColorableSlider
         {
             HorizontalExpand = true,
             VerticalAlignment = VAlignment.Center,
+            BackgroundStyleBoxOverride = _topStyle = new(),
             MaxValue = 1.0f
         };
 
@@ -87,6 +109,7 @@ public sealed class ColorSelectorSliders : Control
         {
             HorizontalExpand = true,
             VerticalAlignment = VAlignment.Center,
+            BackgroundStyleBoxOverride = _middleStyle = new(),
             MaxValue = 1.0f
         };
 
@@ -94,6 +117,7 @@ public sealed class ColorSelectorSliders : Control
         {
             HorizontalExpand = true,
             VerticalAlignment = VAlignment.Center,
+            BackgroundStyleBoxOverride = _bottomStyle = new(),
             MaxValue = 1.0f
         };
 
@@ -109,42 +133,46 @@ public sealed class ColorSelectorSliders : Control
         _bottomColorSlider.OnValueChanged += _ => { OnColorSet(); };
         _alphaSlider.OnValueChanged += _ => { OnColorSet(); };
 
-        _topInputBox = new FloatSpinBox(1f, 2)
+        _topInputBox = new SpinBox
         {
             IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Top)
         };
+        _topInputBox.InitDefaultButtons();
 
-        _middleInputBox = new FloatSpinBox(1f, 2)
+        _middleInputBox = new SpinBox
         {
             IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Middle)
         };
+        _middleInputBox.InitDefaultButtons();
 
-        _bottomInputBox = new FloatSpinBox(1f, 2)
+        _bottomInputBox = new SpinBox
         {
             IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Bottom)
         };
+        _bottomInputBox.InitDefaultButtons();
 
-        _alphaInputBox = new FloatSpinBox(1f, 2)
+        _alphaInputBox = new SpinBox
         {
             IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Alpha)
         };
+        _alphaInputBox.InitDefaultButtons();
 
-        _topInputBox.OnValueChanged += value =>
+        _topInputBox.ValueChanged += value =>
         {
             _topColorSlider.Value = value.Value / GetColorValueDivisor(ColorSliderOrder.Top);
         };
 
-        _middleInputBox.OnValueChanged += value =>
+        _middleInputBox.ValueChanged += value =>
         {
             _middleColorSlider.Value = value.Value / GetColorValueDivisor(ColorSliderOrder.Middle);
         };
 
-        _bottomInputBox.OnValueChanged += value =>
+        _bottomInputBox.ValueChanged += value =>
         {
             _bottomColorSlider.Value = value.Value / GetColorValueDivisor(ColorSliderOrder.Bottom);
         };
 
-        _alphaInputBox.OnValueChanged += value =>
+        _alphaInputBox.ValueChanged += value =>
         {
             _alphaSlider.Value = value.Value / GetColorValueDivisor(ColorSliderOrder.Alpha);
         };
@@ -213,10 +241,8 @@ public sealed class ColorSelectorSliders : Control
 
         rootBox.AddChild(bodyBox);
 
-        _updating = true;
         UpdateType();
-        Update();
-        _updating = false;
+        Color = _currentColor;
     }
 
     private void UpdateType()
@@ -226,57 +252,67 @@ public sealed class ColorSelectorSliders : Control
         _topSliderLabel.Text = labels.topLabel;
         _middleSliderLabel.Text = labels.middleLabel;
         _bottomSliderLabel.Text = labels.bottomLabel;
+
+        bool hsv = SelectorType == ColorSelectorType.Hsv;
+        _topStyle.ConfigureSlider( hsv ? ColorSelectorStyleBox.ColorSliderPreset.Hue : ColorSelectorStyleBox.ColorSliderPreset.Red);
+        _middleStyle.ConfigureSlider( hsv ? ColorSelectorStyleBox.ColorSliderPreset.Saturation : ColorSelectorStyleBox.ColorSliderPreset.Green);
+        _bottomStyle.ConfigureSlider( hsv ? ColorSelectorStyleBox.ColorSliderPreset.Value : ColorSelectorStyleBox.ColorSliderPreset.Blue);
     }
 
     private void Update()
     {
-        _topColorSlider.SetColor(_currentColor);
-        _middleColorSlider.SetColor(_currentColor);
-        _bottomColorSlider.SetColor(_currentColor);
+        // This code is a mess of UI events causing stack overflows. Also, updating one slider triggers all sliders to
+        // update, which due to rounding errors causes them to actually change values, specifically for HSV sliders.
+        if (_updating)
+            return;
+
+        _updating = true;
+        _topStyle.SetBaseColor(_colorData);
+        _middleStyle.SetBaseColor(_colorData);
+        _bottomStyle.SetBaseColor(_colorData);
 
         switch (SelectorType)
         {
             case ColorSelectorType.Rgb:
-                _topColorSlider.Value = Color.R;
-                _middleColorSlider.Value = Color.G;
-                _bottomColorSlider.Value = Color.B;
+                _topColorSlider.Value = _colorData.X;
+                _middleColorSlider.Value = _colorData.Y;
+                _bottomColorSlider.Value = _colorData.Z;
 
-                _topInputBox.Value = Color.R * 255.0f;
-                _middleInputBox.Value = Color.G * 255.0f;
-                _bottomInputBox.Value = Color.B * 255.0f;
+                _topInputBox.Value = (int)(_colorData.X * 255.0f);
+                _middleInputBox.Value = (int)(_colorData.Y * 255.0f);
+                _bottomInputBox.Value = (int)(_colorData.Z * 255.0f);
 
                 break;
             case ColorSelectorType.Hsv:
-                Vector4 color = Color.ToHsv(Color);
-
                 // dumb workaround because the formula for
                 // HSV calculation results in a negative
                 // number in any value past 300 degrees
-                if (color.X > 0)
+                if (_colorData.X > 0)
                 {
-                    _topColorSlider.Value = color.X;
-                    _topInputBox.Value = color.X * 360.0f;
+                    _topColorSlider.Value = _colorData.X;
+                    _topInputBox.Value = (int)(_colorData.X * 360.0f);
                 }
                 else
                 {
-                    _topInputBox.Value = _topColorSlider.Value * 360.0f;
+                    _topInputBox.Value = (int)(_topColorSlider.Value * 360.0f);
                 }
 
-                _middleColorSlider.Value = color.Y;
-                _bottomColorSlider.Value = color.Z;
+                _middleColorSlider.Value = _colorData.Y;
+                _bottomColorSlider.Value = _colorData.Z;
 
-                _middleInputBox.Value = color.Y * 100.0f;
-                _bottomInputBox.Value = color.Z * 100.0f;
+                _middleInputBox.Value = (int)(_colorData.Y * 100.0f);
+                _bottomInputBox.Value = (int)(_colorData.Z * 100.0f);
 
 
                 break;
         }
 
         _alphaSlider.Value = Color.A;
-        _alphaInputBox.Value = Color.A * 100.0f;
+        _alphaInputBox.Value = (int)(Color.A * 100.0f);
+        _updating = false;
     }
 
-    private bool IsSpinBoxValid(float value, ColorSliderOrder ordering)
+    private bool IsSpinBoxValid(int value, ColorSliderOrder ordering)
     {
         if (value < 0)
         {
@@ -285,7 +321,7 @@ public sealed class ColorSelectorSliders : Control
 
         if (ordering == ColorSliderOrder.Alpha)
         {
-            return value <= 100.0f;
+            return value <= 100;
         }
 
         switch (SelectorType)
@@ -296,9 +332,9 @@ public sealed class ColorSelectorSliders : Control
                 switch (ordering)
                 {
                     case ColorSliderOrder.Top:
-                        return value <= 360.0f;
+                        return value <= 360;
                     default:
-                        return value <= 100.0f;
+                        return value <= 100;
                 }
         }
 
@@ -358,25 +394,16 @@ public sealed class ColorSelectorSliders : Control
             return;
         }
 
-        switch (SelectorType)
+        _colorData = new Vector4(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value);
+
+        _currentColor = SelectorType switch
         {
-            case ColorSelectorType.Rgb:
-                Color rgbColor = new Color(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value);
+            ColorSelectorType.Hsv => Color.FromHsv(_colorData),
+            _ => new Color(_colorData.X, _colorData.Y, _colorData.Z, _colorData.W)
+        };
 
-                _currentColor = rgbColor;
-                Update();
-
-                OnColorChanged!(rgbColor);
-                break;
-            case ColorSelectorType.Hsv:
-                Color hsvColor = Color.FromHsv(new Vector4(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value));
-
-                _currentColor = hsvColor;
-                Update();
-
-                OnColorChanged!(hsvColor);
-                break;
-        }
+        Update();
+        OnColorChanged?.Invoke(_currentColor);
     }
 
     private enum ColorSliderOrder

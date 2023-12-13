@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 using Robust.Shared.Utility;
@@ -8,10 +10,22 @@ namespace Robust.Shared.Maths
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
     // ReSharper disable once InconsistentNaming
-    public struct Vector2i : IEquatable<Vector2i>, ISpanFormattable
+    public struct Vector2i :
+        IEquatable<Vector2i>,
+        ISpanFormattable,
+        IAdditionOperators<Vector2i, Vector2i, Vector2i>,
+        ISubtractionOperators<Vector2i, Vector2i, Vector2i>,
+        IMultiplyOperators<Vector2i, Vector2i, Vector2i>,
+        IMultiplyOperators<Vector2i, int, Vector2i>,
+        IComparisonOperators<Vector2i, Vector2i, bool>
     {
         public static readonly Vector2i Zero = (0, 0);
         public static readonly Vector2i One = (1, 1);
+
+        public static readonly Vector2i Up = (0, 1);
+        public static readonly Vector2i Down = (0, -1);
+        public static readonly Vector2i Left = (-1, 0);
+        public static readonly Vector2i Right = (1, 0);
 
         /// <summary>
         /// The X component of the Vector2i.
@@ -45,6 +59,24 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        ///     Gets the length (magnitude) of the vector.
+        /// </summary>
+        public readonly float Length
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => MathF.Sqrt(LengthSquared);
+        }
+
+        /// <summary>
+        ///     Gets the squared length of the vector.
+        /// </summary>
+        public readonly float LengthSquared
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => X * X + Y * Y;
+        }
+
+        /// <summary>
         /// Compare a vector to another vector and check if they are equal.
         /// </summary>
         /// <param name="other">Other vector to check.</param>
@@ -69,7 +101,7 @@ namespace Robust.Shared.Maths
         /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>A unique hash code for this instance.</returns>
-        public override readonly int GetHashCode()
+        public readonly override int GetHashCode()
         {
             unchecked
             {
@@ -192,6 +224,26 @@ namespace Robust.Shared.Maths
                 destination,
                 out charsWritten,
                 $"({X}, {Y})");
+        }
+
+        public static bool operator >(Vector2i left, Vector2i right)
+        {
+            return left.LengthSquared > right.LengthSquared;
+        }
+
+        public static bool operator >=(Vector2i left, Vector2i right)
+        {
+            return left.LengthSquared >= right.LengthSquared;
+        }
+
+        public static bool operator <(Vector2i left, Vector2i right)
+        {
+            return left.LengthSquared < right.LengthSquared;
+        }
+
+        public static bool operator <=(Vector2i left, Vector2i right)
+        {
+            return left.LengthSquared <= right.LengthSquared;
         }
     }
 }

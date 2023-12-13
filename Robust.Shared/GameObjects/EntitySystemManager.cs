@@ -20,18 +20,21 @@ using Robust.Shared.Exceptions;
 
 namespace Robust.Shared.GameObjects
 {
-    public sealed class EntitySystemManager : IEntitySystemManager
+    public sealed class EntitySystemManager : IEntitySystemManager, IPostInjectInit
     {
         [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
         [IoC.Dependency] private readonly ProfManager _profManager = default!;
         [IoC.Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [IoC.Dependency] private readonly ILogManager _logManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
 
-        private DependencyCollection _systemDependencyCollection = default!;
+        private ISawmill _sawmill = default!;
+
+        internal DependencyCollection SystemDependencyCollection = default!;
         private readonly List<Type> _systemTypes = new();
 
         private static readonly Histogram _tickUsageHistogram = Metrics.CreateHistogram("robust_entity_systems_update_usage",
@@ -63,54 +66,54 @@ namespace Robust.Shared.GameObjects
         public T GetEntitySystem<T>()
             where T : IEntitySystem
         {
-            return _systemDependencyCollection.Resolve<T>();
+            return SystemDependencyCollection.Resolve<T>();
         }
 
         public T? GetEntitySystemOrNull<T>() where T : IEntitySystem
         {
-            _systemDependencyCollection.TryResolveType<T>(out var system);
+            SystemDependencyCollection.TryResolveType<T>(out var system);
             return system;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T>([NotNull] ref T? instance)
             where T : IEntitySystem
         {
-            _systemDependencyCollection.Resolve(ref instance);
+            SystemDependencyCollection.Resolve(ref instance);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
             where T1 : IEntitySystem
             where T2 : IEntitySystem
         {
-            _systemDependencyCollection.Resolve(ref instance1, ref instance2);
+            SystemDependencyCollection.Resolve(ref instance1, ref instance2);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3)
             where T1 : IEntitySystem
             where T2 : IEntitySystem
             where T3 : IEntitySystem
         {
-            _systemDependencyCollection.Resolve(ref instance1, ref instance2, ref instance3);
+            SystemDependencyCollection.Resolve(ref instance1, ref instance2, ref instance3);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
             where T1 : IEntitySystem
             where T2 : IEntitySystem
             where T3 : IEntitySystem
             where T4 : IEntitySystem
         {
-            _systemDependencyCollection.Resolve(ref instance1, ref instance2, ref instance3, ref instance4);
+            SystemDependencyCollection.Resolve(ref instance1, ref instance2, ref instance3, ref instance4);
         }
 
         /// <inheritdoc />
         public bool TryGetEntitySystem<T>([NotNullWhen(true)] out T? entitySystem)
             where T : IEntitySystem
         {
-            return _systemDependencyCollection.TryResolveType<T>(out entitySystem);
+            return SystemDependencyCollection.TryResolveType<T>(out entitySystem);
         }
 
         /// <inheritdoc />
@@ -122,7 +125,7 @@ namespace Robust.Shared.GameObjects
 
             var excludedTypes = new HashSet<Type>();
 
-            _systemDependencyCollection = new(_dependencyCollection);
+            SystemDependencyCollection = new(_dependencyCollection);
             var subTypes = new Dictionary<Type, Type>();
             _systemTypes.Clear();
             IEnumerable<Type> systems;
@@ -138,9 +141,9 @@ namespace Robust.Shared.GameObjects
 
             foreach (var type in systems)
             {
-                Logger.DebugS("go.sys", "Initializing entity system {0}", type);
+                _sawmill.Debug("Initializing entity system {0}", type);
 
-                _systemDependencyCollection.Register(type);
+                SystemDependencyCollection.Register(type);
                 _systemTypes.Add(type);
 
                 excludedTypes.Add(type);
@@ -173,21 +176,21 @@ namespace Robust.Shared.GameObjects
 
             foreach (var (baseType, type) in subTypes)
             {
-                _systemDependencyCollection.Register(baseType, type, overwrite: true);
+                SystemDependencyCollection.Register(baseType, type, overwrite: true);
                 _systemTypes.Remove(baseType);
             }
 
-            _systemDependencyCollection.BuildGraph();
+            SystemDependencyCollection.BuildGraph();
 
             foreach (var systemType in _systemTypes)
             {
-                var system = (IEntitySystem)_systemDependencyCollection.ResolveType(systemType);
+                var system = (IEntitySystem)SystemDependencyCollection.ResolveType(systemType);
                 system.Initialize();
                 SystemLoaded?.Invoke(this, new SystemChangedArgs(system));
             }
 
             // Create update order for entity systems.
-            var (fUpdate, update) = CalculateUpdateOrder(_systemTypes, subTypes, _systemDependencyCollection);
+            var (fUpdate, update) = CalculateUpdateOrder(_systemTypes, subTypes, SystemDependencyCollection);
 
             _frameUpdateOrder = fUpdate.ToArray();
             _updateOrder = update
@@ -263,8 +266,8 @@ namespace Robust.Shared.GameObjects
             // System.Values is modified by RemoveSystem
             foreach (var systemType in _systemTypes)
             {
-                if(_systemDependencyCollection == null) continue;
-                var system = (IEntitySystem)_systemDependencyCollection.ResolveType(systemType);
+                if(SystemDependencyCollection == null) continue;
+                var system = (IEntitySystem)SystemDependencyCollection.ResolveType(systemType);
                 SystemUnloaded?.Invoke(this, new SystemChangedArgs(system));
                 system.Shutdown();
                 _entityManager.EventBus.UnsubscribeEvents(system);
@@ -280,7 +283,7 @@ namespace Robust.Shared.GameObjects
             _updateOrder = Array.Empty<UpdateReg>();
             _frameUpdateOrder = Array.Empty<IEntitySystem>();
             _initialized = false;
-            _systemDependencyCollection?.Clear();
+            SystemDependencyCollection?.Clear();
         }
 
         /// <inheritdoc />
@@ -357,12 +360,12 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetEntitySystem(Type sysType, [NotNullWhen(true)] out object? system)
         {
-            return _systemDependencyCollection.TryResolveType(sysType, out system);
+            return SystemDependencyCollection.TryResolveType(sysType, out system);
         }
 
         public object GetEntitySystem(Type sysType)
         {
-            return _systemDependencyCollection.ResolveType(sysType);
+            return SystemDependencyCollection.ResolveType(sysType);
         }
 
         private static bool NeedsUpdate(Type type)
@@ -393,6 +396,9 @@ namespace Robust.Shared.GameObjects
             return mFrameUpdate!.DeclaringType != typeof(EntitySystem);
         }
 
+        internal IEnumerable<Type> FrameUpdateOrder => _frameUpdateOrder.Select(c => c.GetType());
+        internal IEnumerable<Type> TickUpdateOrder => _updateOrder.Select(c => c.System.GetType());
+
         private struct UpdateReg
         {
             [ViewVariables] public IEntitySystem System;
@@ -402,6 +408,11 @@ namespace Robust.Shared.GameObjects
             {
                 return System.ToString();
             }
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _sawmill = _logManager.GetSawmill("go.sys");
         }
     }
 

@@ -1,18 +1,20 @@
+using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using System.Threading.Tasks;
 using Robust.Client.ComponentTrees;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
-using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
-using System.Threading.Tasks;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -43,7 +45,7 @@ internal partial class Clyde
     private void ProcessSpriteEntities(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, RefList<SpriteData> list)
     {
         var query = _entityManager.GetEntityQuery<TransformComponent>();
-        var viewScale = eye.Scale * view.RenderScale * (EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
+        var viewScale = eye.Scale * view.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
         var treeData = new BatchData()
         {
             Sys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>(),
@@ -59,11 +61,12 @@ internal partial class Clyde
         var index = 0;
         var added = 0;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
-        foreach (var comp in _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().GetIntersectingTrees(map, worldBounds))
+        var xformSystem = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
+
+        foreach (var (treeOwner, comp) in _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().GetIntersectingTrees(map, worldBounds))
         {
-            var treeOwner = comp.Owner;
-            var treeXform = query.GetComponent(comp.Owner);
-            var bounds = treeXform.InvWorldMatrix.TransformBox(worldBounds);
+            var treeXform = query.GetComponent(treeOwner);
+            var bounds = xformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
             DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
 
             treeData = treeData with
@@ -79,6 +82,7 @@ internal partial class Clyde
                 static (ref RefList<SpriteData> state, in ComponentTreeEntry<SpriteComponent> value) =>
                 {
                     ref var entry = ref state.AllocAdd();
+                    entry.Uid = value.Uid;
                     entry.Sprite = value.Component;
                     entry.Xform = value.Transform;
                     return true;
@@ -87,7 +91,7 @@ internal partial class Clyde
             // Get bounding boxes & world positions
             added = list.Count - index;
             var batches = added/_spriteProcessingBatchSize;
-                
+
             // TODO also do sorting here & use a merge sort later on for y-sorting?
             if (batches > 1)
                 Parallel.For(0, batches, opts, (i) => ProcessSprites(list, index + i * _spriteProcessingBatchSize, _spriteProcessingBatchSize, treeData));
@@ -120,7 +124,7 @@ internal partial class Clyde
 
             // To help explain the remainder of this function, it should be functionally equivalent to the following
             // three lines of code, but has been expanded & simplified to speed up the calculation:
-            // 
+            //
             // (data.WorldPos, data.WorldRot) = batch.Sys.GetWorldPositionRotation(data.Xform, batch.Query);
             // var spriteWorldBB = data.Sprite.CalculateRotatedBoundingBox(data.WorldPos, data.WorldRot, batch.ViewRotation);
             // data.SpriteScreenBB = Viewport.GetWorldToLocalMatrix().TransformBox(spriteWorldBB);
@@ -158,16 +162,13 @@ internal partial class Clyde
     }
 
     /// <summary>
-    /// This is effectively a specialized variant of <see cref="Box2Rotated.CalcBoundingBox()"/>. It assumes that
-    /// the initial box is centered at the origin, and automatically applies an offset and scale while computing the
-    /// bounds.
-    /// </summary> 
+    /// This is effectively a specialized combination of a <see cref="Matrix3.TransformBox(in Box2Rotated)"/> and <see cref="Box2Rotated.CalcBoundingBox()"/>.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static unsafe Box2 TransformCenteredBox(in Box2 box, float angle, in Vector2 offset, in Vector2 scale)
     {
         // This function is for sprites, which flip the y axis, so here we flip the definition of t and b relative to the normal function.
         DebugTools.Assert(scale.Y < 0);
-        DebugTools.Assert(box.Center.EqualsApprox(Vector2.Zero));
 
         var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in box));
 
@@ -207,6 +208,7 @@ internal partial class Clyde
 
     private struct SpriteData
     {
+        public EntityUid Uid;
         public SpriteComponent Sprite;
         public TransformComponent Xform;
         public Vector2 WorldPos;
@@ -258,7 +260,7 @@ internal partial class Clyde
             if (cmp != 0)
                 return cmp;
 
-            return a.Sprite.Owner.CompareTo(b.Sprite.Owner);
+            return a.Uid.CompareTo(b.Uid);
         }
     }
 }

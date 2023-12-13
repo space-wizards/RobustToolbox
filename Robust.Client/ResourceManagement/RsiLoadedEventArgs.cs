@@ -8,7 +8,7 @@ namespace Robust.Client.ResourceManagement
 {
     public readonly struct RsiLoadedEventArgs
     {
-        internal RsiLoadedEventArgs(ResourcePath path, RSIResource resource, Image atlas, Dictionary<RSI.StateId, Vector2i[][]> atlasOffsets)
+        internal RsiLoadedEventArgs(ResPath path, RSIResource resource, Image atlas, Dictionary<RSI.StateId, Vector2i[][]> atlasOffsets)
         {
             Path = path;
             Resource = resource;
@@ -16,7 +16,7 @@ namespace Robust.Client.ResourceManagement
             AtlasOffsets = atlasOffsets;
         }
 
-        public ResourcePath Path { get; }
+        public ResPath Path { get; }
         public RSIResource Resource { get; }
         public Image Atlas { get; }
         public Dictionary<RSI.StateId, Vector2i[][]> AtlasOffsets { get; }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Robust.Shared.ContentPack;
@@ -10,7 +11,12 @@ namespace Robust.UnitTesting
     {
         public Assembly[] Assemblies { get; set; } = Array.Empty<Assembly>();
 
-        public bool TryLoadModulesFrom(ResourcePath mountPath, string filterPrefix)
+        public bool TryLoadModulesFrom(ResPath mountPath, string filterPrefix)
+        {
+            return TryLoadModules(Array.Empty<ResPath>());
+        }
+
+        public bool TryLoadModules(IEnumerable<ResPath> paths)
         {
             foreach (var assembly in Assemblies)
             {

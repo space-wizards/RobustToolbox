@@ -13,33 +13,33 @@ using System;
 namespace Robust.Shared.Audio;
 
 [ImplicitDataDefinitionForInheritors, Serializable, NetSerializable]
-public abstract class SoundSpecifier
+public abstract partial class SoundSpecifier
 {
     [DataField("params")]
-    public AudioParams Params { get; init; } = AudioParams.Default;
+    public AudioParams Params { get; set; } = AudioParams.Default;
 
     [Obsolete("Use SharedAudioSystem.GetSound(), or just pass sound specifier directly into SharedAudioSystem.")]
     public abstract string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null);
 }
 
 [Serializable, NetSerializable]
-public sealed class SoundPathSpecifier : SoundSpecifier
+public sealed partial class SoundPathSpecifier : SoundSpecifier
 {
     public const string Node = "path";
 
-    [DataField(Node, customTypeSerializer: typeof(ResourcePathSerializer), required: true)]
-    public ResourcePath? Path { get; }
+    [DataField(Node, customTypeSerializer: typeof(ResPathSerializer), required: true)]
+    public ResPath Path { get; private set; }
 
     [UsedImplicitly]
-    public SoundPathSpecifier()
+    private SoundPathSpecifier()
     {
     }
 
-    public SoundPathSpecifier(string path, AudioParams? @params = null) : this(new ResourcePath(path), @params)
+    public SoundPathSpecifier(string path, AudioParams? @params = null) : this(new ResPath(path), @params)
     {
     }
 
-    public SoundPathSpecifier(ResourcePath path, AudioParams? @params = null)
+    public SoundPathSpecifier(ResPath path, AudioParams? @params = null)
     {
         Path = path;
         if (@params.HasValue)
@@ -49,17 +49,17 @@ public sealed class SoundPathSpecifier : SoundSpecifier
     [Obsolete("Use SharedAudioSystem.GetSound(), or just pass sound specifier directly into SharedAudioSystem.")]
     public override string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null)
     {
-        return Path == null ? string.Empty : Path.ToString();
+        return Path.ToString();
     }
 }
 
 [Serializable, NetSerializable]
-public sealed class SoundCollectionSpecifier : SoundSpecifier
+public sealed partial class SoundCollectionSpecifier : SoundSpecifier
 {
     public const string Node = "collection";
 
     [DataField(Node, customTypeSerializer: typeof(PrototypeIdSerializer<SoundCollectionPrototype>), required: true)]
-    public string? Collection { get; }
+    public string? Collection { get; private set; }
 
     [UsedImplicitly]
     public SoundCollectionSpecifier() { }

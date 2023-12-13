@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.Tracing;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using EventSource = System.Diagnostics.Tracing.EventSource;
 
 #nullable enable
 
@@ -18,14 +20,18 @@ internal sealed partial class MetricsManager : IMetricsManager, IDisposable
 {
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+    [Dependency] private readonly ILogManager _logManager = default!;
 
     private bool _initialized;
 
     private ManagedHttpListenerMetricsServer? _metricServer;
     private IDisposable? _runtimeCollector;
+    private ISawmill _sawmill = default!;
 
     public void Initialize()
     {
+        _sawmill = _logManager.GetSawmill("metrics");
+
         _initialized = true;
 
         ValueChanged(CVars.MetricsEnabled);
@@ -58,7 +64,7 @@ internal sealed partial class MetricsManager : IMetricsManager, IDisposable
             return;
         }
 
-        Logger.InfoS("metrics", "Shutting down metrics.");
+        _sawmill.Info("Shutting down metrics.");
         await _metricServer.StopAsync();
         _metricServer = null;
         _runtimeCollector?.Dispose();
@@ -92,14 +98,14 @@ internal sealed partial class MetricsManager : IMetricsManager, IDisposable
         var host = _cfg.GetCVar(CVars.MetricsHost);
         var port = _cfg.GetCVar(CVars.MetricsPort);
 
-        Logger.InfoS("metrics", "Prometheus metrics enabled, host: {1} port: {0}", port, host);
+        _sawmill.Info("Prometheus metrics enabled, host: {1} port: {0}", port, host);
         var sawmill = Logger.GetSawmill("metrics.server");
         _metricServer = new ManagedHttpListenerMetricsServer(sawmill, host, port);
         _metricServer.Start();
 
         if (_cfg.GetCVar(CVars.MetricsRuntime))
         {
-            Logger.DebugS("metrics", "Enabling runtime metrics");
+            _sawmill.Debug("Enabling runtime metrics");
             _runtimeCollector = BuildRuntimeStats().StartCollecting();
         }
     }
@@ -163,6 +169,24 @@ internal sealed partial class MetricsManager : IMetricsManager, IDisposable
         }
 
         return builder;
+    }
+
+    [EventSource(Name = "Robust.MetricsManager")]
+    private sealed class MetricsEvents : EventSource
+    {
+        public static MetricsEvents Log { get; } = new();
+
+        [Event(1)]
+        public void ScrapeStart() => WriteEvent(1);
+
+        [Event(2)]
+        public void ScrapeStop() => WriteEvent(2);
+
+        [Event(3)]
+        public void RequestStart() => WriteEvent(3);
+
+        [Event(4)]
+        public void RequestStop() => WriteEvent(4);
     }
 }
 

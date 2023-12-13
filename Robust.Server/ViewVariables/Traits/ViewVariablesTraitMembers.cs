@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
@@ -15,9 +16,11 @@ namespace Robust.Server.ViewVariables.Traits
     internal sealed class ViewVariablesTraitMembers : ViewVariablesTrait
     {
         private readonly List<MemberInfo> _members = new();
+        private readonly ISawmill _logger;
 
-        public ViewVariablesTraitMembers(IViewVariablesSession session) : base(session)
+        public ViewVariablesTraitMembers(IViewVariablesSession session, ISawmill logger) : base(session)
         {
+            _logger = logger;
         }
 
         public override ViewVariablesBlob? DataRequest(ViewVariablesRequest messageRequestMeta)
@@ -25,10 +28,11 @@ namespace Robust.Server.ViewVariables.Traits
             if (messageRequestMeta is ViewVariablesRequestMembers)
             {
                 var members = new List<(MemberData mData, MemberInfo mInfo)>();
+                var obj = Session.Object;
+                var objType = Session.ObjectType;
 
-                foreach (var property in Session.ObjectType.GetAllProperties())
+                foreach (var property in objType.GetAllProperties())
                 {
-
                     if (!ViewVariablesUtility.TryGetViewVariablesAccess(property, out var access))
                     {
                         continue;
@@ -51,7 +55,7 @@ namespace Robust.Server.ViewVariables.Traits
                     _members.Add(property);
                 }
 
-                foreach (var field in Session.ObjectType.GetAllFields())
+                foreach (var field in objType.GetAllFields())
                 {
                     if (!ViewVariablesUtility.TryGetViewVariablesAccess(field, out var access))
                     {
@@ -64,7 +68,7 @@ namespace Robust.Server.ViewVariables.Traits
                         Name = field.Name,
                         Type = field.FieldType.AssemblyQualifiedName,
                         TypePretty = PrettyPrint.PrintUserFacingTypeShort(field.FieldType, 2),
-                        Value = field.GetValue(Session.Object),
+                        Value = field.GetValue(obj),
                         PropertyIndex = _members.Count
                     }, field));
 
@@ -114,7 +118,7 @@ namespace Robust.Server.ViewVariables.Traits
 
         public override bool TryGetRelativeObject(object property, out object? value)
         {
-            if (!(property is ViewVariablesMemberSelector selector))
+            if (property is not ViewVariablesMemberSelector selector)
             {
                 return base.TryGetRelativeObject(property, out value);
             }
@@ -136,7 +140,7 @@ namespace Robust.Server.ViewVariables.Traits
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorS("vv", "Exception while getting property {0} on session {1} object {2}: {3}",
+                        _logger.Error("Exception while getting property {0} on session {1} object {2}: {3}",
                             propertyInfo.Name, Session.SessionId, Session.Object, e);
                         value = default;
                         return false;
@@ -150,7 +154,7 @@ namespace Robust.Server.ViewVariables.Traits
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorS("vv", "Exception while modifying field {0} on session {1} object {2}: {3}",
+                        _logger.Error("Exception while modifying field {0} on session {1} object {2}: {3}",
                             field.Name, Session.SessionId, Session.Object, e);
                         value = default;
                         return false;
@@ -185,7 +189,7 @@ namespace Robust.Server.ViewVariables.Traits
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorS("vv", "Exception while modifying property {0} on session {1} object {2}: {3}",
+                        _logger.Error("Exception while modifying property {0} on session {1} object {2}: {3}",
                             propertyInfo.Name, Session.SessionId, Session.Object, e);
                         return false;
                     }
@@ -198,7 +202,7 @@ namespace Robust.Server.ViewVariables.Traits
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorS("vv", "Exception while modifying field {0} on session {1} object {2}: {3}",
+                        _logger.Error("Exception while modifying field {0} on session {1} object {2}: {3}",
                             field.Name, Session.SessionId, Session.Object, e);
                         return false;
                     }

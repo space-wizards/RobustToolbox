@@ -1,25 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\MSBuild\Robust.Properties.targets" />
-    <Import Project="..\MSBuild\Robust.Engine.props" />
-    <PropertyGroup>
-        <IsPackable>false</IsPackable>
-        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-        <OutputPath>../bin/Benchmarks</OutputPath>
-        <OutputType>Exe</OutputType>
-        <NoWarn>RA0003</NoWarn>
-    </PropertyGroup>
-    <ItemGroup>
-      <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
-      <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
-      <ProjectReference Include="..\Robust.UnitTesting\Robust.UnitTesting.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        <PrivateAssets>all</PrivateAssets>
-      </PackageReference>
-      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.4" />
-    </ItemGroup>
-    <Import Project="..\MSBuild\Robust.Engine.targets" />
+  <Import Project="..\MSBuild\Robust.Engine.props" />
+  <PropertyGroup>
+      <IsPackable>false</IsPackable>
+      <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+      <OutputPath>../bin/Benchmarks</OutputPath>
+      <OutputType>Exe</OutputType>
+      <NoWarn>RA0003</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
+    <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
+    <ProjectReference Include="..\Robust.UnitTesting\Robust.UnitTesting.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.4" />
+  </ItemGroup>
+
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
 </Project>

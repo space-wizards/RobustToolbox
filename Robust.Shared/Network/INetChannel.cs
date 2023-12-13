@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Network
 {
@@ -28,10 +29,13 @@ namespace Robust.Shared.Network
         ///     On the server, this is the session ID for this client.
         ///     On the client, this is the session ID for the client.
         /// </summary>
+        [ViewVariables]
         NetUserId UserId { get; }
 
+        [ViewVariables]
         string UserName { get; }
 
+        [ViewVariables]
         LoginType AuthType { get; }
 
         /// <summary>
@@ -47,11 +51,13 @@ namespace Robust.Shared.Network
         /// <summary>
         ///     Average round trip time in milliseconds between the remote peer and us.
         /// </summary>
+        [ViewVariables]
         short Ping { get; }
 
         /// <summary>
         ///     Whether or not the channel is currently connected to a remote peer.
         /// </summary>
+        [ViewVariables]
         bool IsConnected { get; }
 
         NetUserData UserData { get; }

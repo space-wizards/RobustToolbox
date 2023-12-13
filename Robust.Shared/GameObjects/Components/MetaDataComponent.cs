@@ -1,13 +1,12 @@
-using JetBrains.Annotations;
+using System;
+using System.Collections.Generic;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using System;
 
 namespace Robust.Shared.GameObjects
 {
@@ -56,21 +55,35 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
-    [NetworkedComponent]
-    public sealed class MetaDataComponent : Component
+    [RegisterComponent, NetworkedComponent]
+    public sealed partial class MetaDataComponent : Component
     {
         [DataField("name")] internal string? _entityName;
         [DataField("desc")] internal string? _entityDescription;
         internal EntityPrototype? _entityPrototype;
 
         /// <summary>
-        /// When this entity was paused, if applicable
+        /// The components attached to the entity that are currently networked.
+        /// </summary>
+        [ViewVariables]
+        internal readonly Dictionary<ushort, IComponent> NetComponents = new();
+
+        /// <summary>
+        /// Network identifier for this entity.
+        /// </summary>
+        [ViewVariables]
+        [Access(typeof(EntityManager), Other = AccessPermissions.ReadExecute)]
+        public NetEntity NetEntity { get; internal set; } = NetEntity.Invalid;
+
+        /// <summary>
+        /// When this entity was paused, if applicable. Note that this is the actual time, not the duration which gets
+        /// returned by <see cref="MetaDataSystem.GetPauseTime"/>.
         /// </summary>
         internal TimeSpan? PauseTime;
 
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]
-        public GameTick EntityLastModifiedTick { get; internal set; } = new(1);
+        public GameTick EntityLastModifiedTick { get; internal set; } = GameTick.First;
 
         /// <summary>
         ///     This is the tick at which the client last applied state data received from the server.
@@ -79,7 +92,8 @@ namespace Robust.Shared.GameObjects
         public GameTick LastStateApplied { get; internal set; } = GameTick.Zero;
 
         /// <summary>
-        ///     This is the most recent tick at which some component was removed from this entity.
+        ///     This is the most recent tick at which a networked component was removed from this entity.
+        ///     Currently only reliable server-side, client side prediction may cause the value to be wrong.
         /// </summary>
         [ViewVariables]
         public GameTick LastComponentRemoved { get; internal set; } = GameTick.Zero;
@@ -96,18 +110,6 @@ namespace Robust.Shared.GameObjects
                     return _entityPrototype != null ? _entityPrototype.Name : string.Empty;
                 return _entityName;
             }
-            set
-            {
-                string? newValue = value;
-                if (_entityPrototype != null && _entityPrototype.Name == newValue)
-                    newValue = null;
-
-                if (_entityName == newValue)
-                    return;
-
-                _entityName = newValue;
-                Dirty();
-            }
         }
 
         /// <summary>
@@ -122,18 +124,6 @@ namespace Robust.Shared.GameObjects
                     return _entityPrototype != null ? _entityPrototype.Description : string.Empty;
                 return _entityDescription;
             }
-            set
-            {
-                string? newValue = value;
-                if (_entityPrototype != null && _entityPrototype.Description == newValue)
-                    newValue = null;
-
-                if(_entityDescription == newValue)
-                    return;
-
-                _entityDescription = newValue;
-                Dirty();
-            }
         }
 
         /// <summary>
@@ -143,6 +133,7 @@ namespace Robust.Shared.GameObjects
         public EntityPrototype? EntityPrototype
         {
             get => _entityPrototype;
+            [Obsolete("Use MetaDataSystem.SetEntityPrototype")]
             set
             {
                 _entityPrototype = value;
@@ -163,6 +154,9 @@ namespace Robust.Shared.GameObjects
             get => _flags;
             internal set
             {
+                if (_flags == value)
+                    return;
+
                 // In container and detached to null are mutually exclusive flags.
                 DebugTools.Assert((value & (MetaDataFlags.InContainer | MetaDataFlags.Detached)) != (MetaDataFlags.InContainer | MetaDataFlags.Detached));
                 _flags = value;
@@ -177,15 +171,8 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         ///     Every entity will always have the first bit set to true.
         /// </remarks>
-        [Access(typeof(MetaDataSystem))]
-        public int VisibilityMask = 1;
-
-        [UsedImplicitly, ViewVariables(VVAccess.ReadWrite)]
-        private int VVVisibilityMask
-        {
-            get => VisibilityMask;
-            set => IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetVisibilityMask(Owner, value, this);
-        }
+        [ViewVariables] // TODO ACCESS RRestrict writing to server-side visibility system
+        public int VisibilityMask { get; internal set; }= 1;
 
         [ViewVariables]
         public bool EntityPaused => PauseTime != null;
@@ -194,7 +181,8 @@ namespace Robust.Shared.GameObjects
         public bool EntityInitializing => EntityLifeStage == EntityLifeStage.Initializing;
         public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
 
-        internal override void ClearTicks()
+        [Obsolete("Do not use from content")]
+        public override void ClearTicks()
         {
             // Do not clear modified ticks.
             // MetaDataComponent is used in the game state system to carry initial data like prototype ID.

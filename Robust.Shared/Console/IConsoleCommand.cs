@@ -36,6 +36,11 @@ namespace Robust.Shared.Console
         string Help { get; }
 
         /// <summary>
+        /// If true, this command will be unavailable to clients while they are connected to a server. Has no effect on servers.
+        /// </summary>
+        bool RequireServerOrSingleplayer => false;
+
+        /// <summary>
         /// Executes the client command.
         /// </summary>
         /// <param name="shell">The console that executed this command.</param>
@@ -73,7 +78,7 @@ namespace Robust.Shared.Console
         /// <remarks>
         /// If this method is implemented, <see cref="GetCompletion"/> will not be automatically called.
         /// </remarks>
-        ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, CancellationToken cancel)
+        ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, string argStr, CancellationToken cancel)
         {
             return ValueTask.FromResult(GetCompletion(shell, args));
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
@@ -8,6 +9,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Enums;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
@@ -112,6 +114,8 @@ namespace Robust.Client.Graphics.Clyde
                 _prof.WriteValue("Max Batch Verts", ProfData.Int32(_debugStats.LargestBatchVertices));
                 _prof.WriteValue("Max Batch Idxes", ProfData.Int32(_debugStats.LargestBatchIndices));
                 _prof.WriteValue("Lights", ProfData.Int32(_debugStats.TotalLights));
+                _prof.WriteValue("Shadow Lights", ProfData.Int32(_debugStats.ShadowLights));
+                _prof.WriteValue("Occluders", ProfData.Int32(_debugStats.Occluders));
             }
         }
 
@@ -133,7 +137,14 @@ namespace Robust.Client.Graphics.Clyde
             if (overlay.OverwriteTargetFrameBuffer)
                 ClearFramebuffer(default);
 
-            overlay.Draw(args);
+            try
+            {
+                overlay.Draw(args);
+            }
+            catch (Exception e)
+            {
+                _logManager.GetSawmill("clyde.overlay").Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+            }
         }
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
@@ -167,7 +178,26 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var overlay in list)
             {
-                overlay.Draw(args);
+                try
+                {
+                    if (!overlay.BeforeDraw(args))
+                        continue;
+
+                    if (overlay.RequestScreenTexture)
+                    {
+                        FlushRenderQueue();
+                        overlay.ScreenTexture = CopyScreenTexture(vp.RenderTarget);
+                    }
+
+                    if (overlay.OverwriteTargetFrameBuffer)
+                        ClearFramebuffer(default);
+
+                    overlay.Draw(args);
+                }
+                catch (Exception e)
+                {
+                    _logManager.GetSawmill("clyde.overlay").Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+                }
             }
         }
 
@@ -228,6 +258,7 @@ namespace Robust.Client.Graphics.Clyde
             RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB, worldBounds);
             var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
 
+            var spriteSystem = _entityManager.System<SpriteSystem>();
             GetSprites(mapId, viewport, eye, worldBounds, out var indexList);
 
             var screenSize = viewport.Size;
@@ -319,12 +350,12 @@ namespace Robust.Client.Graphics.Clyde
                         _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
 
                         if (entry.Sprite.RaiseShaderEvent)
-                            _entityManager.EventBus.RaiseLocalEvent(entry.Sprite.Owner,
+                            _entityManager.EventBus.RaiseLocalEvent(entry.Uid,
                                 new BeforePostShaderRenderEvent(entry.Sprite, viewport), false);
                     }
                 }
 
-                entry.Sprite.Render(_renderHandle.DrawingHandleWorld, eye.Rotation, in entry.WorldRot, in entry.WorldPos);
+                spriteSystem.Render(entry.Uid, entry.Sprite, _renderHandle.DrawingHandleWorld, eye.Rotation, in entry.WorldRot, in entry.WorldPos);
 
                 if (entry.Sprite.PostShader != null && entityPostRenderTarget != null)
                 {
@@ -367,6 +398,7 @@ namespace Robust.Client.Graphics.Clyde
             ArrayPool<int>.Shared.Return(indexList);
             entityPostRenderTarget?.DisposeDeferred();
 
+            _debugStats.Entities += _drawingSpriteList.Count;
             _drawingSpriteList.Clear();
             FlushRenderQueue();
         }
@@ -465,7 +497,7 @@ namespace Robust.Client.Graphics.Clyde
                     using (DebugGroup("Grids"))
                     using (_prof.Group("Grids"))
                     {
-                        _drawGrids(viewport, worldBounds, eye);
+                        _drawGrids(viewport, worldAABB, worldBounds, eye);
                     }
 
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
@@ -480,7 +512,7 @@ namespace Robust.Client.Graphics.Clyde
                         RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB, worldBounds);
                     }
 
-                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
+                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawLight && eye.DrawFov)
                     {
                         ApplyFovToBuffer(viewport, eye);
                     }
@@ -498,7 +530,7 @@ namespace Robust.Client.Graphics.Clyde
                     // So there are distortions from incorrect projection.
                     _renderHandle.UseShader(_fovDebugShaderInstance);
                     _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
-                    var pos = UIBox2.FromDimensions(viewport.Size / 2 - (200, 200), (400, 400));
+                    var pos = UIBox2.FromDimensions(viewport.Size / 2 - new Vector2(200, 200), new Vector2(400, 400));
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(FovTexture, pos);
                 }
 

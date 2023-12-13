@@ -1,14 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -74,7 +78,9 @@ namespace Robust.Client.Graphics.Clyde
 
         // private LoadedTexture? _batchLoadedTexture;
         // Contains the shader instance that's currently being used by the (queue) stage for new commands.
-        private ClydeHandle _queuedShader;
+        private ClydeHandle _queuedShader => _queuedShaderInstance.Handle;
+
+        private ClydeShaderInstance _queuedShaderInstance = default!;
 
         // Current projection & view matrices that are being used ot render.
         // This gets updated to keep track during (queue) and (misc), but not during (submit).
@@ -243,6 +249,8 @@ namespace Robust.Client.Graphics.Clyde
 
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
+            SetBlendFunc(loaded.BlendMode);
+
             var primitiveType = MapPrimitiveType(command.PrimitiveType);
             if (command.Indexed)
             {
@@ -256,6 +264,9 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGlError();
             }
 
+            ResetBlendFunc();
+            GL.BlendEquation(BlendEquationMode.FuncAdd);
+
             _debugStats.LastGLDrawCalls += 1;
         }
 
@@ -268,6 +279,7 @@ namespace Robust.Client.Graphics.Clyde
                 BatchPrimitiveType.TriangleStrip => PrimitiveType.TriangleStrip,
                 BatchPrimitiveType.LineList => PrimitiveType.Lines,
                 BatchPrimitiveType.LineStrip => PrimitiveType.LineStrip,
+                BatchPrimitiveType.LineLoop => PrimitiveType.LineLoop,
                 BatchPrimitiveType.PointList => PrimitiveType.Points,
                 _ => PrimitiveType.Triangles
             };
@@ -304,7 +316,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Reset renderer state.
             _currentMatrixModel = Matrix3.Identity;
-            _queuedShader = _defaultShader.Handle;
+            _queuedShaderInstance = _defaultShader;
             SetScissorFull(null);
         }
 
@@ -401,7 +413,7 @@ namespace Robust.Client.Graphics.Clyde
             return Color.FromSrgb(color);
         }
 
-        private (GLShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
+        private (GLShaderProgram, LoadedShaderInstance) ActivateShaderInstance(ClydeHandle handle)
         {
             var instance = _shaderInstances[handle];
             var shader = _loadedShaders[instance.ShaderHandle];
@@ -433,9 +445,13 @@ namespace Robust.Client.Graphics.Clyde
                 _isStencilling = false;
             }
 
-            if (!instance.ParametersDirty)
-                return (program, shader);
+            if (instance.Parameters.Count == 0)
+                return (program, instance);
 
+            if (shader.LastInstance == instance && !instance.ParametersDirty)
+                return (program, instance);
+
+            shader.LastInstance = instance;
             instance.ParametersDirty = false;
 
             int textureUnitVal = 0;
@@ -500,7 +516,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            return (program, shader);
+            return (program, instance);
         }
 
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
@@ -519,6 +535,11 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawSetModelTransform(in Matrix3 matrix)
         {
             _currentMatrixModel = matrix;
+        }
+
+        private Matrix3 DrawGetModelTransform()
+        {
+            return _currentMatrixModel;
         }
 
         private void DrawSetProjViewTransform(in Matrix3 proj, in Matrix3 view)
@@ -644,6 +665,7 @@ namespace Robust.Client.Graphics.Clyde
                 DrawPrimitiveTopology.TriangleStrip => BatchPrimitiveType.TriangleStrip,
                 DrawPrimitiveTopology.LineList => BatchPrimitiveType.LineList,
                 DrawPrimitiveTopology.LineStrip => BatchPrimitiveType.LineStrip,
+                DrawPrimitiveTopology.LineLoop => BatchPrimitiveType.LineLoop,
                 DrawPrimitiveTopology.PointList => BatchPrimitiveType.PointList,
                 _ => BatchPrimitiveType.TriangleList
             };
@@ -689,9 +711,9 @@ namespace Robust.Client.Graphics.Clyde
             _currentScissorState = scissorBox;
         }
 
-        private void DrawUseShader(ClydeHandle handle)
+        private void DrawUseShader(ClydeShaderInstance instance)
         {
-            _queuedShader = handle;
+            _queuedShaderInstance = instance;
         }
 
         private void DrawClear(Color color, int stencil, ClearBufferMask mask)
@@ -864,9 +886,32 @@ namespace Robust.Client.Graphics.Clyde
             SetScissorFull(null);
             BindRenderTargetFull(_mainWindow!.RenderTarget);
             _batchMetaData = null;
-            _queuedShader = _defaultShader.Handle;
+            _queuedShaderInstance = _defaultShader;
 
             GL.Viewport(0, 0, _mainWindow!.FramebufferSize.X, _mainWindow!.FramebufferSize.Y);
+        }
+
+        private void SetBlendFunc(ShaderBlendMode blend)
+        {
+            switch (blend)
+                {
+                    case ShaderBlendMode.Add:
+                        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.DstAlpha);
+                        break;
+                    case ShaderBlendMode.Subtract:
+                        GL.BlendFuncSeparate(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.DstAlpha, BlendingFactorSrc.Zero, BlendingFactorDest.DstAlpha);
+                        GL.BlendEquation(BlendEquationMode.FuncReverseSubtract);
+                        break;
+                    case ShaderBlendMode.Multiply:
+                        GL.BlendFunc(BlendingFactor.DstColor, BlendingFactor.OneMinusSrcAlpha);
+                        break;
+                    case ShaderBlendMode.None:
+                        GL.BlendFunc(BlendingFactor.One, BlendingFactor.Zero);
+                        break;
+                    case ShaderBlendMode.Normal:
+                        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+                        break;
+                }
         }
 
         private void ResetBlendFunc()
@@ -1005,6 +1050,7 @@ namespace Robust.Client.Graphics.Clyde
             TriangleStrip,
             LineList,
             LineStrip,
+            LineLoop,
             PointList,
         }
 

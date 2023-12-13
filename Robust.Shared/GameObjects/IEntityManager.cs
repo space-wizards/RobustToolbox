@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -52,35 +53,22 @@ namespace Robust.Shared.GameObjects
 
         event Action<EntityUid>? EntityAdded;
         event Action<EntityUid>? EntityInitialized;
-        event Action<EntityUid>? EntityStarted;
-        event Action<EntityUid>? EntityDeleted;
+        event Action<EntityUid, MetaDataComponent>? EntityDeleted;
         event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid);
+        EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName);
+        EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);
+        EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
+        EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
 
         void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null);
 
-        /// <summary>
-        /// Spawns an initialized entity at the default location, using the given prototype.
-        /// </summary>
-        /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
-        /// <param name="coordinates"></param>
-        /// <returns>Newly created entity.</returns>
-        EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates);
+        void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null);
 
-        /// <summary>
-        /// Spawns an entity at a specific position
-        /// </summary>
-        /// <param name="protoName"></param>
-        /// <param name="coordinates"></param>
-        /// <returns></returns>
-        EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates);
+        void StartEntity(EntityUid entity);
 
         /// <summary>
         /// How many entities are currently active.
@@ -95,9 +83,14 @@ namespace Robust.Shared.GameObjects
 
         public void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null);
 
-        public void Dirty(Component component, MetaDataComponent? metadata = null);
+        [Obsolete("use override with an EntityUid")]
+        public void Dirty(IComponent component, MetaDataComponent? metadata = null);
 
-        public void QueueDeleteEntity(EntityUid uid);
+        public void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null);
+
+        public void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent;
+
+        public void QueueDeleteEntity(EntityUid? uid);
 
         public bool IsQueuedForDeletion(EntityUid uid);
 
@@ -105,7 +98,7 @@ namespace Robust.Shared.GameObjects
         /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.
         /// </summary>
         /// <param name="uid">Uid of entity to remove.</param>
-        void DeleteEntity(EntityUid uid);
+        void DeleteEntity(EntityUid? uid);
 
         /// <summary>
         /// Checks whether an entity with the specified ID exists.
@@ -116,6 +109,11 @@ namespace Robust.Shared.GameObjects
         /// Checks whether an entity with the specified ID exists.
         /// </summary>
         bool EntityExists([NotNullWhen(true)] EntityUid? uid);
+
+        /// <summary>
+        /// Returns true if entity is valid and paused.
+        /// </summary>
+        bool IsPaused([NotNullWhen(true)] EntityUid? uid, MetaDataComponent? metadata = null);
 
         /// <summary>
         /// Checks whether an entity with the specified ID has been deleted or is nonexistent.
@@ -132,7 +130,24 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns a string representation of an entity with various information regarding it.
         /// </summary>
-        EntityStringRepresentation ToPrettyString(EntityUid uid);
+        EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata = null);
+
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        EntityStringRepresentation ToPrettyString(NetEntity netEntity);
+
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        [return: NotNullIfNotNull("uid")]
+        EntityStringRepresentation? ToPrettyString(EntityUid? uid, MetaDataComponent? metadata = null);
+
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        [return: NotNullIfNotNull("netEntity")]
+        EntityStringRepresentation? ToPrettyString(NetEntity? netEntity);
 
         #endregion Entity Management
 

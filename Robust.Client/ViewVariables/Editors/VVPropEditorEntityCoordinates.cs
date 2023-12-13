@@ -1,10 +1,11 @@
 using System.Globalization;
+using System.Numerics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
+using Robust.Shared.Map.Components;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
@@ -66,13 +67,13 @@ namespace Robust.Client.ViewVariables.Editors
                 var xVal = float.Parse(x.Text, CultureInfo.InvariantCulture);
                 var yVal = float.Parse(y.Text, CultureInfo.InvariantCulture);
 
-                if (!mapManager.TryGetGrid(gridVal, out var grid))
+                if (!entityManager.HasComponent<MapGridComponent>(gridVal))
                 {
-                    ValueChanged(new EntityCoordinates(EntityUid.Invalid, (xVal, yVal)));
+                    ValueChanged(new EntityCoordinates(EntityUid.Invalid, new(xVal, yVal)));
                     return;
                 }
 
-                ValueChanged(new EntityCoordinates(grid.Owner, (xVal, yVal)));
+                ValueChanged(new EntityCoordinates(gridVal, new(xVal, yVal)));
             }
 
             if (!ReadOnly)

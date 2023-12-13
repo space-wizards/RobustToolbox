@@ -25,6 +25,15 @@ namespace Robust.Client.UserInterface.Controls
         public int ItemCount => _buttonDataList.Count;
 
         /// <summary>
+        /// Called when creating a Button Control for each radio item.
+        /// The default creates a regular Button.
+        /// </summary>
+        public Func<string, T, Button> GenerateItem = (itemLabel, _) => new Button
+        {
+            Text = itemLabel,
+        };
+
+        /// <summary>
         /// Called whenever you select a button.
         ///
         /// Note: You should add optionButtons.Select(args.Id); if you want to actually select the button.
@@ -55,12 +64,9 @@ namespace Robust.Client.UserInterface.Controls
 
         public int AddItem(string label, T value, Action<RadioOptionItemSelectedEventArgs<T>>? itemSelectedAction = null)
         {
-            var button = new Button
-            {
-                Text = label,
-                Group = _buttonGroup
-            };
+            var button = GenerateItem.Invoke(label, value);
 
+            button.Group = _buttonGroup;
             button.OnPressed += ButtonOnPressed;
 
             var data = new RadioOptionButtonData<T>(label, value, button)

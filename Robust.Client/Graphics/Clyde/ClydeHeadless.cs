@@ -1,17 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Input;
+using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -25,19 +30,19 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeWindow MainWindow { get; }
         public Vector2i ScreenSize => (1280, 720);
         public IEnumerable<IClydeWindow> AllWindows => _windows;
-        public Vector2 DefaultWindowScale => (1, 1);
+        public Vector2 DefaultWindowScale => new Vector2(1, 1);
         public bool IsFocused => true;
         private readonly List<IClydeWindow> _windows = new();
         private int _nextWindowId = 2;
 
-        public ShaderInstance InstanceShader(ClydeHandle handle)
+        public ShaderInstance InstanceShader(ShaderSourceResource handle, bool? light = null, ShaderBlendMode? blend = null)
         {
             return new DummyShaderInstance();
         }
 
         public ClydeHeadless()
         {
-            Configuration.Default.PreferContiguousImageBuffers = true;
+            SixLabors.ImageSharp.Configuration.Default.PreferContiguousImageBuffers = true;
 
             var mainRt = new DummyRenderWindow(this);
             var window = new DummyWindow(mainRt) {Id = new WindowId(1)};
@@ -82,6 +87,11 @@ namespace Robust.Client.Graphics.Clyde
         public void RegisterGridEcsEvents()
         {
             // Nada.
+        }
+
+        public void ShutdownGridEcsEvents()
+        {
+
         }
 
         public void SetWindowTitle(string title)
@@ -282,123 +292,6 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        [Virtual]
-        private class DummyAudioSource : IClydeAudioSource
-        {
-            public static DummyAudioSource Instance { get; } = new();
-
-            public bool IsPlaying => default;
-            public bool IsLooping { get; set; }
-
-            public void Dispose()
-            {
-                // Nada.
-            }
-
-            public void StartPlaying()
-            {
-                // Nada.
-            }
-
-            public void StopPlaying()
-            {
-                // Nada.
-            }
-
-            public bool IsGlobal { get; }
-
-            public bool SetPosition(Vector2 position)
-            {
-                return true;
-            }
-
-            public void SetPitch(float pitch)
-            {
-                // Nada.
-            }
-
-            public void SetGlobal()
-            {
-                // Nada.
-            }
-
-            public void SetVolume(float decibels)
-            {
-                // Nada.
-            }
-
-            public void SetVolumeDirect(float gain)
-            {
-                // Nada.
-            }
-
-            public void SetMaxDistance(float maxDistance)
-            {
-                // Nada.
-            }
-
-            public void SetRolloffFactor(float rolloffFactor)
-            {
-                // Nada.
-            }
-
-            public void SetReferenceDistance(float refDistance)
-            {
-                // Nada.
-            }
-
-            public void SetOcclusion(float blocks)
-            {
-                // Nada.
-            }
-
-            public void SetPlaybackPosition(float seconds)
-            {
-                // Nada.
-            }
-
-            public void SetVelocity(Vector2 velocity)
-            {
-                // Nada.
-            }
-        }
-
-        private sealed class DummyBufferedAudioSource : DummyAudioSource, IClydeBufferedAudioSource
-        {
-            public new static DummyBufferedAudioSource Instance { get; } = new();
-            public int SampleRate { get; set; } = 0;
-
-            public void WriteBuffer(int handle, ReadOnlySpan<ushort> data)
-            {
-                // Nada.
-            }
-
-            public void WriteBuffer(int handle, ReadOnlySpan<float> data)
-            {
-                // Nada.
-            }
-
-            public void QueueBuffers(ReadOnlySpan<int> handles)
-            {
-                // Nada.
-            }
-
-            public void EmptyBuffers()
-            {
-                // Nada.
-            }
-
-            public void GetBuffersProcessed(Span<int> handles)
-            {
-                // Nada.
-            }
-
-            public int GetNumberOfBuffersProcessed()
-            {
-                return 0;
-            }
-        }
-
         private sealed class DummyTexture : OwnedTexture
         {
             public DummyTexture(Vector2i size) : base(size)
@@ -480,27 +373,11 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
-            private protected override void SetStencilOpImpl(StencilOp op)
+            private protected override void SetStencilImpl(StencilParameters value)
             {
             }
 
-            private protected override void SetStencilFuncImpl(StencilFunc func)
-            {
-            }
-
-            private protected override void SetStencilTestEnabledImpl(bool enabled)
-            {
-            }
-
-            private protected override void SetStencilRefImpl(int @ref)
-            {
-            }
-
-            private protected override void SetStencilWriteMaskImpl(int mask)
-            {
-            }
-
-            private protected override void SetStencilReadMaskRefImpl(int mask)
+            public override void Dispose()
             {
             }
         }
@@ -557,6 +434,9 @@ namespace Robust.Client.Graphics.Clyde
             public int LastBatches => 0;
             public (int vertices, int indices) LargestBatchSize => (0, 0);
             public int TotalLights => 0;
+            public int ShadowLights => 0;
+            public int Occluders => 0;
+            public int Entities => 0;
         }
 
         private sealed class DummyDebugInfo : IClydeDebugInfo

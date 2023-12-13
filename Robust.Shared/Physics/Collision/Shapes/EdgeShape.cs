@@ -21,9 +21,9 @@
 // SOFTWARE.
 
 using System;
-using Robust.Shared.Configuration;
-using Robust.Shared.IoC;
+using System.Numerics;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -31,44 +31,47 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
-    public sealed class EdgeShape : IPhysShape
+    [DataDefinition]
+    public sealed partial class EdgeShape : IPhysShape, IEquatable<EdgeShape>
     {
-        internal Vector2 Centroid { get; set; } = Vector2.Zero;
-
         // Note that the normal is from Vertex 2 to Vertex 1 CCW
 
         /// <summary>
         ///     Edge start vertex
         /// </summary>
+        [DataField("vertex1"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         internal Vector2 Vertex1;
 
         /// <summary>
         ///     Edge end vertex
         /// </summary>
+        [DataField("vertex2"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         internal Vector2 Vertex2;
 
         // Optional adjacent vertices for smooth collision.
 
+        [DataField("vertex0"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         internal Vector2 Vertex0;
 
+        [DataField("vertex3"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         internal Vector2 Vertex3;
 
+        [DataField("oneSided"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public bool OneSided;
 
         public int ChildCount => 1;
 
         public ShapeType ShapeType => ShapeType.Edge;
 
-        /// <inheritdoc />
-        public Box2 LocalBounds => CalcLocalBounds();
+        [DataField("radius"),
+         Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+             Other = AccessPermissions.Read)]
+        public float Radius { get; set; } = PhysicsConstants.PolygonRadius;
 
-        public float Radius
+        public EdgeShape()
         {
-            get => _radius;
-            set => _radius = PhysicsConstants.PolygonRadius;
-        }
 
-        private float _radius = PhysicsConstants.PolygonRadius;
+        }
 
         /// <summary>
         ///     Create a 1-sided edge.
@@ -118,19 +121,10 @@ namespace Robust.Shared.Physics.Collision.Shapes
             var v1 = Transform.Mul(transform, Vertex1);
             var v2 = Transform.Mul(transform, Vertex2);
 
-            var lower = Vector2.ComponentMin(v1, v2);
-            var upper = Vector2.ComponentMax(v1, v2);
+            var lower = Vector2.Min(v1, v2);
+            var upper = Vector2.Max(v1, v2);
 
-            var radius = new Vector2(PhysicsConstants.PolygonRadius, PhysicsConstants.PolygonRadius);
-            return new Box2(lower - radius, upper + radius);
-        }
-
-        private Box2 CalcLocalBounds()
-        {
-            var lower = Vector2.ComponentMin(Vertex1, Vertex2);
-            var upper = Vector2.ComponentMax(Vertex1, Vertex2);
-
-            var radius = new Vector2(PhysicsConstants.PolygonRadius, PhysicsConstants.PolygonRadius);
+            var radius = new Vector2(Radius, Radius);
             return new Box2(lower - radius, upper + radius);
         }
 
@@ -138,6 +132,31 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             // It's a line
             return 0f;
+        }
+
+        public bool Equals(EdgeShape? other)
+        {
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
+
+            return OneSided == other.OneSided &&
+                   Vertex1.Equals(other.Vertex1) &&
+                   Vertex2.Equals(other.Vertex2) &&
+                   Vertex0.Equals(other.Vertex0) &&
+                   Vertex3.Equals(other.Vertex3) &&
+                   Radius.Equals(other.Radius);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return ReferenceEquals(this, obj) || obj is EdgeShape other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(OneSided, Vertex1, Vertex2, Vertex0, Vertex3, Radius);
         }
     }
 }

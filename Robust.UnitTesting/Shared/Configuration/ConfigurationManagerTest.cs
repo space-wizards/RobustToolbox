@@ -1,7 +1,11 @@
-﻿using NUnit.Framework;
+using Moq;
+using NUnit.Framework;
+using Robust.Server.Configuration;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
+using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.Configuration
@@ -70,7 +74,10 @@ namespace Robust.UnitTesting.Shared.Configuration
         private ConfigurationManager MakeCfg()
         {
             var collection = new DependencyCollection();
-            collection.Register<ConfigurationManager, ConfigurationManager>();
+            collection.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
+            collection.RegisterInstance<INetManager>(new Mock<INetManager>().Object);
+            collection.Register<ConfigurationManager, ServerNetConfigurationManager>();
+            collection.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
             collection.Register<IGameTiming, GameTiming>();
             collection.Register<ILogManager, LogManager>();
             collection.BuildGraph();

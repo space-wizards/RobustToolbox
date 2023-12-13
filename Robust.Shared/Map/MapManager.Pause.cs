@@ -2,7 +2,6 @@ using System;
 using System.Globalization;
 using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Map
@@ -18,21 +17,20 @@ namespace Robust.Shared.Map
             if(!MapExists(mapId))
                 throw new ArgumentException("That map does not exist.");
 
-            if (paused)
-            {
-                SetMapPause(mapId);
-            }
-            else
-            {
-                ClearMapPause(mapId);
-            }
+            var mapUid = GetMapEntityId(mapId);
+            var mapComp = EntityManager.GetComponent<MapComponent>(mapUid);
 
-            var mapEnt = GetMapEntityId(mapId);
+            if (mapComp.MapPaused == paused)
+                return;
+
+            mapComp.MapPaused = paused;
+            EntityManager.Dirty(mapUid, mapComp);
+
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
             var metaSystem = EntityManager.EntitySysManager.GetEntitySystem<MetaDataSystem>();
 
-            RecursiveSetPaused(mapEnt, paused, in xformQuery, in metaQuery, in metaSystem);
+            RecursiveSetPaused(mapUid, paused, in xformQuery, in metaQuery, in metaSystem);
         }
 
         private static void RecursiveSetPaused(EntityUid entity, bool paused,
@@ -66,6 +64,7 @@ namespace Robust.Shared.Map
 
             mapComp.MapPreInit = false;
             mapComp.MapPaused = false;
+            EntityManager.Dirty(mapEnt, mapComp);
 
             RecursiveDoMapInit(mapEnt, in xformQuery, in metaQuery, in metaSystem);
         }
@@ -95,16 +94,6 @@ namespace Robust.Shared.Map
             SetMapPreInit(mapId);
         }
 
-        private void SetMapPause(MapId mapId)
-        {
-            if(mapId == MapId.Nullspace)
-                return;
-
-            var mapEuid = GetMapEntityId(mapId);
-            var mapComp = EntityManager.GetComponent<MapComponent>(mapEuid);
-            mapComp.MapPaused = true;
-        }
-
         private bool CheckMapPause(MapId mapId)
         {
             if(mapId == MapId.Nullspace)
@@ -112,21 +101,10 @@ namespace Robust.Shared.Map
 
             var mapEuid = GetMapEntityId(mapId);
 
-            if (mapEuid == EntityUid.Invalid)
+            if (!EntityManager.TryGetComponent<MapComponent>(mapEuid, out var map))
                 return false;
 
-            var mapComp = EntityManager.GetComponent<MapComponent>(mapEuid);
-            return mapComp.MapPaused;
-        }
-
-        private void ClearMapPause(MapId mapId)
-        {
-            if(mapId == MapId.Nullspace)
-                return;
-
-            var mapEuid = GetMapEntityId(mapId);
-            var mapComp = EntityManager.GetComponent<MapComponent>(mapEuid);
-            mapComp.MapPaused = false;
+            return map.MapPaused;
         }
 
         private void SetMapPreInit(MapId mapId)
@@ -146,17 +124,24 @@ namespace Robust.Shared.Map
 
             var mapEuid = GetMapEntityId(mapId);
 
-            if (mapEuid == EntityUid.Invalid)
+            if (!EntityManager.TryGetComponent<MapComponent>(mapEuid, out var map))
                 return false;
 
-            var mapComp = EntityManager.GetComponent<MapComponent>(mapEuid);
-            return mapComp.MapPreInit;
+            return map.MapPreInit;
         }
 
         /// <inheritdoc />
         public bool IsMapPaused(MapId mapId)
         {
-            return CheckMapPause(mapId) || CheckMapPreInit(mapId);
+            if(mapId == MapId.Nullspace)
+                return false;
+
+            var mapEuid = GetMapEntityId(mapId);
+
+            if (!EntityManager.TryGetComponent<MapComponent>(mapEuid, out var map))
+                return false;
+
+            return map.MapPaused || map.MapPreInit;
         }
 
         /// <inheritdoc />

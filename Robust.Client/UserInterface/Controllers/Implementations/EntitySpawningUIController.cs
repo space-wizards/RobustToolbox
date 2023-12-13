@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
@@ -9,6 +10,7 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using static Robust.Client.UserInterface.Controls.BaseButton;
 using static Robust.Client.UserInterface.Controls.LineEdit;
@@ -37,6 +39,17 @@ public sealed class EntitySpawningUIController : UIController
     // The indices of the visible prototypes last time UpdateVisiblePrototypes was ran.
     // This is inclusive, so end is the index of the last prototype, not right after it.
     private (int start, int end) _lastEntityIndices;
+
+    private void OnEntityReplaceToggled(ButtonToggledEventArgs args)
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        if (args.Pressed)
+            _placement.Replacement ^= true;
+
+        args.Button.Pressed = args.Pressed;
+    }
 
     private void OnEntityEraseToggled(ButtonToggledEventArgs args)
     {
@@ -76,6 +89,8 @@ public sealed class EntitySpawningUIController : UIController
         _window = UIManager.CreateWindow<EntitySpawnWindow>();
         LayoutContainer.SetAnchorPreset(_window,LayoutContainer.LayoutPreset.CenterLeft);
         _window.OnClose += WindowClosed;
+        _window.ReplaceButton.Pressed = _placement.Replacement;
+        _window.ReplaceButton.OnToggled += OnEntityReplaceToggled;
         _window.EraseButton.Pressed = _placement.Eraser;
         _window.EraseButton.OnToggled += OnEntityEraseToggled;
         _window.OverrideMenu.OnItemSelected += OnEntityOverrideSelected;
@@ -185,7 +200,7 @@ public sealed class EntitySpawningUIController : UIController
                 continue;
             }
 
-            if (prototype.NoSpawn)
+            if (prototype.HideSpawnMenu)
             {
                 continue;
             }
@@ -198,9 +213,15 @@ public sealed class EntitySpawningUIController : UIController
             _shownEntities.Add(prototype);
         }
 
-        _shownEntities.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+        _shownEntities.Sort((a, b) => {
+                var namesComparation = string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+                if (namesComparation == 0)
+                    return string.Compare(a.EditorSuffix, b.EditorSuffix, StringComparison.Ordinal);
+                return namesComparation;
+        });
 
         _window.PrototypeList.TotalItemCount = _shownEntities.Count;
+        _window.PrototypeScrollContainer.SetScrollValue(new Vector2(0, 0));
         UpdateVisiblePrototypes();
     }
 

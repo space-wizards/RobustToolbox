@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Robust.Shared.Network;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
@@ -95,7 +97,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     }
 
                     call = Expression.Switch(ExpressionUtils.GetTypeExpression(nodeVariable),
-                        ExpressionUtils.ThrowExpression<InvalidOperationException>(),
+                        ExpressionUtils.ThrowExpression<InvalidOperationException>($"Unable to read node for {fieldDefinition} as valid."),
                         switchCases.ToArray());
 
                     call = Expression.IfThenElse(

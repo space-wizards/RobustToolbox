@@ -7,31 +7,36 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics;
+
+[RegisterComponent]
+[NetworkedComponent]
+public sealed partial class JointComponent : Component
 {
-    [RegisterComponent]
-    [NetworkedComponent]
-    // [Friend(typeof(SharedJointSystem))]
-    [ComponentProtoName("Joint")]
-    public sealed class JointComponent : Component
+    /// <summary>
+    /// Are we relaying our joints to a parent entity.
+    /// </summary>
+    [DataField("relay")]
+    public EntityUid? Relay;
+
+    [ViewVariables]
+    public int JointCount => Joints.Count;
+
+    public IReadOnlyDictionary<string, Joint> GetJoints => Joints;
+
+    [DataField("joints")]
+    internal Dictionary<string, Joint> Joints = new();
+}
+
+[Serializable, NetSerializable]
+public sealed class JointComponentState : ComponentState
+{
+    public NetEntity? Relay;
+    public Dictionary<string, JointState> Joints;
+
+    public JointComponentState(NetEntity? relay, Dictionary<string, JointState> joints)
     {
-        [ViewVariables]
-        public int JointCount => Joints.Count;
-
-        public IReadOnlyDictionary<string, Joint> GetJoints => Joints;
-
-        [DataField("joints")]
-        internal Dictionary<string, Joint> Joints = new();
-
-        [Serializable, NetSerializable]
-        public sealed class JointComponentState : ComponentState
-        {
-            public Dictionary<string, JointState> Joints;
-
-            public JointComponentState(Dictionary<string, JointState> joints)
-            {
-                Joints = joints;
-            }
-        }
+        Relay = relay;
+        Joints = joints;
     }
 }

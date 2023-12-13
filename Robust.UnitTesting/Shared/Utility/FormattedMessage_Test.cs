@@ -15,13 +15,13 @@ namespace Robust.UnitTesting.Shared.Utility
         {
             var msg = FormattedMessage.FromMarkup("foo[color=#aabbcc]bar[/color]baz");
 
-            Assert.That(msg.Tags, NUnit.Framework.Is.EquivalentTo(new FormattedMessage.Tag[]
+            Assert.That(msg.Nodes, NUnit.Framework.Is.EquivalentTo(new MarkupNode[]
             {
-                new FormattedMessage.TagText("foo"),
-                new FormattedMessage.TagColor(Color.FromHex("#aabbcc")),
-                new FormattedMessage.TagText("bar"),
-                FormattedMessage.TagPop.Instance,
-                new FormattedMessage.TagText("baz")
+                new("foo"),
+                new("color", new MarkupParameter(Color.FromHex("#aabbcc")), null),
+                new("bar"),
+                new("color", null, null, true),
+                new("baz")
             }));
         }
 
@@ -30,26 +30,24 @@ namespace Robust.UnitTesting.Shared.Utility
         {
             var msg = FormattedMessage.FromMarkup("foo[color=orange]bar[/color]baz");
 
-            Assert.That(msg.Tags, NUnit.Framework.Is.EquivalentTo(new FormattedMessage.Tag[]
+            Assert.That(msg.Nodes, NUnit.Framework.Is.EquivalentTo(new MarkupNode[]
             {
-                new FormattedMessage.TagText("foo"),
-                new FormattedMessage.TagColor(Color.Orange),
-                new FormattedMessage.TagText("bar"),
-                FormattedMessage.TagPop.Instance,
-                new FormattedMessage.TagText("baz")
+                new("foo"),
+                new("color", new MarkupParameter(Color.Orange), null),
+                new("bar"),
+                new("color", null, null, true),
+                new("baz")
             }));
         }
 
         [Test]
         [TestCase("foo[color=#aabbcc bar")]
-        [TestCase("foo[color #aabbcc] bar")]
-        [TestCase("foo[stinky] bar")]
         public static void TestParsePermissiveMarkup(string text)
         {
             var msg = FormattedMessage.FromMarkupPermissive(text);
 
             Assert.That(
-                string.Join("", msg.Tags.Cast<FormattedMessage.TagText>().Select(p => p.Text)),
+                string.Join("", msg.Nodes.Where(p => p.Name == null).Select(p => p.Value.StringValue ?? "")),
                 NUnit.Framework.Is.EqualTo(text));
         }
 
@@ -65,7 +63,7 @@ namespace Robust.UnitTesting.Shared.Utility
         [Test]
         [TestCase("Foo")]
         [TestCase("[color=#FF000000]Foo[/color]")]
-        [TestCase("[color=#00FF00FF]Foo[/color]bar")]
+        [TestCase("[color=lime]Foo[/color]bar")]
         public static void TestToMarkup(string text)
         {
             var message = FormattedMessage.FromMarkup(text);

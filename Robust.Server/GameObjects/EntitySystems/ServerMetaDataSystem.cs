@@ -1,12 +1,14 @@
 using Robust.Server.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Player;
 
 namespace Robust.Server.GameObjects;
 
 public sealed class ServerMetaDataSystem : MetaDataSystem
 {
-    [Dependency] private readonly PVSSystem _pvsSystem = default!;
+    [Dependency] private readonly PvsSystem _pvsSystem = default!;
+    private EntityQuery<MetaDataComponent> _mQuery;
 
     public override void Initialize()
     {
@@ -16,6 +18,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
 
         EntityManager.ComponentAdded += OnComponentAdded;
         EntityManager.ComponentRemoved += OnComponentRemoved;
+        _mQuery = GetEntityQuery<MetaDataComponent>();
     }
 
     public override void Shutdown()
@@ -45,7 +48,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
         if (obj.Terminating || !removed.NetSyncEnabled || (!removed.SessionSpecific && !removed.SendOnlyToOwner))
             return;
 
-        foreach (var (_, comp) in EntityManager.GetNetComponents(obj.BaseArgs.Owner))
+        foreach (var comp in obj.Meta.NetComponents.Values)
         {
             if (comp.LifeStage >= ComponentLifeStage.Removing)
                 continue;
@@ -55,31 +58,22 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
         }
 
         // remove the flag
-        MetaData(obj.BaseArgs.Owner).Flags &= ~MetaDataFlags.SessionSpecific;
+        obj.Meta.Flags &= ~MetaDataFlags.SessionSpecific;
     }
 
     /// <summary>
     ///     If a new player gets attached to an entity, this will ensure that the player receives session-restricted
-    ///     component states by dirtying any restricted components. 
+    ///     component states by dirtying any restricted components.
     /// </summary>
     private void OnActorPlayerAttach(EntityUid uid, MetaDataComponent meta, PlayerAttachedEvent args)
     {
         if ((meta.Flags & MetaDataFlags.SessionSpecific) == 0)
             return;
 
-        foreach (var (_, comp) in EntityManager.GetNetComponents(uid))
+        foreach (var (_, comp) in meta.NetComponents)
         {
             if (comp.SessionSpecific || comp.SendOnlyToOwner)
-                Dirty(comp);
+                Dirty(uid, comp);
         }
-    }
-
-    public override void SetVisibilityMask(EntityUid uid, int value, MetaDataComponent? meta = null)
-    {
-        if (!Resolve(uid, ref meta) || meta.VisibilityMask == value)
-            return;
-
-        base.SetVisibilityMask(uid, value, meta);
-        _pvsSystem.MarkDirty(uid);
     }
 }

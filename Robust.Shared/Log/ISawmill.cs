@@ -44,6 +44,18 @@ namespace Robust.Shared.Log
         void Log(LogLevel level, string message);
 
         /// <summary>
+        ///     Log a message as <see cref="LogLevel.Verbose"/>, taking in a format string and format list using the regular <see cref="Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="Serilog.Log" />
+        void Verbose(string message, params object?[] args) => Log(LogLevel.Verbose, message, args);
+
+        /// <summary>
+        ///     Log a message as <see cref="LogLevel.Verbose"/>.
+        /// </summary>
+        /// <seealso cref="Serilog.Log" />
+        void Verbose(string message) => Log(LogLevel.Verbose, message);
+
+        /// <summary>
         ///     Log a message as debug, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Serilog.Log" />

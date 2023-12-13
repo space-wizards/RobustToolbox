@@ -1,46 +1,70 @@
+using System;
 using System.Collections.Generic;
 using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
     public sealed class AnimationPlayerSystem : EntitySystem
     {
-        private readonly List<AnimationPlayerComponent> _activeAnimations = new();
+        private readonly List<Entity<AnimationPlayerComponent>> _activeAnimations = new();
+
+        private EntityQuery<MetaDataComponent> _metaQuery;
 
         [Dependency] private readonly IComponentFactory _compFact = default!;
 
+        public override void Initialize()
+        {
+            base.Initialize();
+            _metaQuery = GetEntityQuery<MetaDataComponent>();
+        }
+
         public override void FrameUpdate(float frameTime)
         {
-            for (var i = _activeAnimations.Count - 1; i >= 0; i--)
+            // TODO: Active or something idk.
+            for (var i = 0; i < _activeAnimations.Count; i++)
             {
                 var anim = _activeAnimations[i];
-                if (!Update(anim, frameTime)) continue;
+                var uid = anim.Owner;
+
+                if (!_metaQuery.TryGetComponent(uid, out var metadata) ||
+                    metadata.EntityPaused)
+                {
+                    continue;
+                }
+
+                if (!Update(uid, anim.Comp, frameTime))
+                {
+                    continue;
+                }
+
                 _activeAnimations.RemoveSwap(i);
-                anim.HasPlayingAnimation = false;
+                i--;
+                anim.Comp.HasPlayingAnimation = false;
             }
         }
 
-        internal void AddComponent(AnimationPlayerComponent component)
+        internal void AddComponent(Entity<AnimationPlayerComponent> ent)
         {
-            if (component.HasPlayingAnimation) return;
-            _activeAnimations.Add(component);
-            component.HasPlayingAnimation = true;
+            if (ent.Comp.HasPlayingAnimation) return;
+            _activeAnimations.Add(ent);
+            ent.Comp.HasPlayingAnimation = true;
         }
 
-        private bool Update(AnimationPlayerComponent component, float frameTime)
+        private bool Update(EntityUid uid, AnimationPlayerComponent component, float frameTime)
         {
             if (component.PlayingAnimationCount == 0 ||
                 component.Deleted)
+            {
                 return true;
+            }
 
             var remie = new RemQueue<string>();
             foreach (var (key, playback) in component.PlayingAnimations)
             {
-                var keep = AnimationPlaybackShared.UpdatePlayback(component.Owner, playback, frameTime);
+                var keep = AnimationPlaybackShared.UpdatePlayback(uid, playback, frameTime);
                 if (!keep)
                 {
                     remie.Add(key);
@@ -50,8 +74,7 @@ namespace Robust.Client.GameObjects
             foreach (var key in remie)
             {
                 component.PlayingAnimations.Remove(key);
-                EntityManager.EventBus.RaiseLocalEvent(component.Owner, new AnimationCompletedEvent {Uid = component.Owner, Key = key}, true);
-                component.AnimationComplete(key);
+                EntityManager.EventBus.RaiseLocalEvent(uid, new AnimationCompletedEvent {Uid = uid, Key = key}, true);
             }
 
             return false;
@@ -62,22 +85,29 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void Play(EntityUid uid, Animation animation, string key)
         {
-            var component = EntityManager.EnsureComponent<AnimationPlayerComponent>(uid);
-            Play(component, animation, key);
+            var component = EnsureComp<AnimationPlayerComponent>(uid);
+            Play(new Entity<AnimationPlayerComponent>(uid, component), animation, key);
         }
 
+        [Obsolete("Use Play(EntityUid<AnimationPlayerComponent> ent, Animation animation, string key) instead")]
         public void Play(EntityUid uid, AnimationPlayerComponent? component, Animation animation, string key)
         {
             component ??= EntityManager.EnsureComponent<AnimationPlayerComponent>(uid);
-            Play(component, animation, key);
+            Play(new Entity<AnimationPlayerComponent>(uid, component), animation, key);
         }
 
         /// <summary>
         ///     Start playing an animation.
         /// </summary>
+        [Obsolete("Use Play(EntityUid<AnimationPlayerComponent> ent, Animation animation, string key) instead")]
         public void Play(AnimationPlayerComponent component, Animation animation, string key)
         {
-            AddComponent(component);
+            Play(new Entity<AnimationPlayerComponent>(component.Owner, component), animation, key);
+        }
+
+        public void Play(Entity<AnimationPlayerComponent> ent, Animation animation, string key)
+        {
+            AddComponent(ent);
             var playback = new AnimationPlaybackShared.AnimationPlayback(animation);
 
 #if DEBUG
@@ -89,18 +119,18 @@ namespace Robust.Client.GameObjects
 
                 if (compTrack.ComponentType == null)
                 {
-                    Logger.Error($"Attempted to play a component animation without any component specified.");
+                    Log.Error("Attempted to play a component animation without any component specified.");
                     return;
                 }
 
-                if (!EntityManager.TryGetComponent(component.Owner, compTrack.ComponentType, out var animatedComp))
+                if (!EntityManager.TryGetComponent(ent, compTrack.ComponentType, out var animatedComp))
                 {
-                    Logger.Error(
-                        $"Attempted to play a component animation, but the entity {ToPrettyString(component.Owner)} does not have the component to be animated: {compTrack.ComponentType}.");
+                    Log.Error(
+                        $"Attempted to play a component animation, but the entity {ToPrettyString(ent)} does not have the component to be animated: {compTrack.ComponentType}.");
                     return;
                 }
 
-                if (component.Owner.IsClientSide() || !animatedComp.NetSyncEnabled)
+                if (IsClientSide(ent) || !animatedComp.NetSyncEnabled)
                     continue;
 
                 var reg = _compFact.GetRegistration(animatedComp);
@@ -108,12 +138,18 @@ namespace Robust.Client.GameObjects
                 // In principle there is nothing wrong with this, as long as the property of the component being
                 // animated is not part of the networked state and setting it does not dirty the component. Hence only a
                 // warning in debug mode.
-                if (reg.NetID != null)
-                    Logger.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(component.Owner)}");
+                if (reg.NetID != null && compTrack.Property != null)
+                {
+                    if (animatedComp.GetType().GetProperty(compTrack.Property) is { } property &&
+                        property.HasCustomAttribute<AutoNetworkedFieldAttribute>())
+                    {
+                        Log.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(ent)}");
+                    }
+                }
             }
 #endif
 
-            component.PlayingAnimations.Add(key, playback);
+            ent.Comp.PlayingAnimations.Add(key, playback);
         }
 
         public bool HasRunningAnimation(EntityUid uid, string key)
@@ -142,13 +178,17 @@ namespace Robust.Client.GameObjects
 
         public void Stop(EntityUid uid, string key)
         {
-            if (!TryComp<AnimationPlayerComponent>(uid, out var player)) return;
+            if (!TryComp<AnimationPlayerComponent>(uid, out var player))
+                return;
+
             player.PlayingAnimations.Remove(key);
         }
 
         public void Stop(EntityUid uid, AnimationPlayerComponent? component, string key)
         {
-            if (!Resolve(uid, ref component, false)) return;
+            if (!Resolve(uid, ref component, false))
+                return;
+
             component.PlayingAnimations.Remove(key);
         }
     }

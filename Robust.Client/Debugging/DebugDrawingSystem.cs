@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -12,11 +13,10 @@ namespace Robust.Client.Debugging
     public sealed class DebugDrawingSystem : EntitySystem
     {
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
 
         private bool _debugPositions;
+        private bool _debugRotations;
 
         /// <summary>
         /// Toggles the visual overlay of the local origin for each entity on screen.
@@ -35,7 +35,7 @@ namespace Robust.Client.Debugging
 
                 if (value && !_overlayManager.HasOverlay<EntityPositionOverlay>())
                 {
-                    _overlayManager.AddOverlay(new EntityPositionOverlay(_lookup, _eyeManager, _entityManager));
+                    _overlayManager.AddOverlay(new EntityPositionOverlay(_lookup, EntityManager));
                 }
                 else
                 {
@@ -44,18 +44,42 @@ namespace Robust.Client.Debugging
             }
         }
 
+        /// <summary>
+        /// Toggles the visual overlay of the local rotation.
+        /// </summary>
+        public bool DebugRotations
+        {
+            get => _debugRotations;
+            set
+            {
+                if (value == DebugRotations)
+                {
+                    return;
+                }
+
+                _debugRotations = value;
+
+                if (value && !_overlayManager.HasOverlay<EntityRotationOverlay>())
+                {
+                    _overlayManager.AddOverlay(new EntityRotationOverlay(_lookup, EntityManager));
+                }
+                else
+                {
+                    _overlayManager.RemoveOverlay<EntityRotationOverlay>();
+                }
+            }
+        }
+
         private sealed class EntityPositionOverlay : Overlay
         {
             private readonly EntityLookupSystem _lookup;
-            private readonly IEyeManager _eyeManager;
             private readonly IEntityManager _entityManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public EntityPositionOverlay(EntityLookupSystem lookup, IEyeManager eyeManager, IEntityManager entityManager)
+            public EntityPositionOverlay(EntityLookupSystem lookup, IEntityManager entityManager)
             {
                 _lookup = lookup;
-                _eyeManager = eyeManager;
                 _entityManager = entityManager;
             }
 
@@ -64,10 +88,9 @@ namespace Robust.Client.Debugging
                 const float stubLength = 0.25f;
 
                 var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
-                var viewport = _eyeManager.GetWorldViewport();
                 var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
 
-                foreach (var entity in _lookup.GetEntitiesIntersecting(_eyeManager.CurrentMap, viewport))
+                foreach (var entity in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
                 {
                     var (center, worldRotation) = xformQuery.GetComponent(entity).GetWorldPositionRotation();
 
@@ -76,6 +99,36 @@ namespace Robust.Client.Debugging
 
                     worldHandle.DrawLine(center, center + xLine * stubLength, Color.Red);
                     worldHandle.DrawLine(center, center + yLine * stubLength, Color.Green);
+                }
+            }
+        }
+
+        private sealed class EntityRotationOverlay : Overlay
+        {
+            private readonly EntityLookupSystem _lookup;
+            private readonly IEntityManager _entityManager;
+
+            public override OverlaySpace Space => OverlaySpace.WorldSpace;
+
+            public EntityRotationOverlay(EntityLookupSystem lookup, IEntityManager entityManager)
+            {
+                _lookup = lookup;
+                _entityManager = entityManager;
+            }
+
+            protected internal override void Draw(in OverlayDrawArgs args)
+            {
+                const float stubLength = 0.25f;
+                var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
+                var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+
+                foreach (var entity in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
+                {
+                    var (center, worldRotation) = xformQuery.GetComponent(entity).GetWorldPositionRotation();
+
+                    var drawLine = worldRotation.RotateVec(-Vector2.UnitY);
+
+                    worldHandle.DrawLine(center, center + drawLine * stubLength, Color.Red);
                 }
             }
         }

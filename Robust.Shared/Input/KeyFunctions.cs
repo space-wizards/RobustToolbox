@@ -43,6 +43,10 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction GuiTabNavigateNext = "GuiTabNavigateNext";
         public static readonly BoundKeyFunction GuiTabNavigatePrev = "GuiTabNavigatePrev";
 
+        // Buttons to navigate UI windows
+        public static readonly BoundKeyFunction WindowCloseRecent = "WindowCloseRecent";
+        public static readonly BoundKeyFunction WindowCloseAll = "WindowCloseAll";
+
         // Cursor keys in LineEdit and such.
         public static readonly BoundKeyFunction TextCursorLeft = "TextCursorLeft";
         public static readonly BoundKeyFunction TextCursorRight = "TextCursorRight";
@@ -65,8 +69,12 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction TextCursorSelectEnd = "TextCursorSelectEnd";
 
         public static readonly BoundKeyFunction TextBackspace = "TextBackspace";
+        public static readonly BoundKeyFunction TextDelete = "TextDelete";
+        public static readonly BoundKeyFunction TextWordBackspace = "TextWordBackspace";
+        public static readonly BoundKeyFunction TextWordDelete = "TextWordDelete";
         public static readonly BoundKeyFunction TextNewline = "TextNewline";
         public static readonly BoundKeyFunction TextSubmit = "TextSubmit";
+        public static readonly BoundKeyFunction MultilineTextSubmit = "MultilineTextSubmit";
         public static readonly BoundKeyFunction TextSelectAll = "TextSelectAll";
         public static readonly BoundKeyFunction TextCopy = "TextCopy";
         public static readonly BoundKeyFunction TextCut = "TextCut";
@@ -75,7 +83,6 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction TextHistoryNext = "TextHistoryNext";
         public static readonly BoundKeyFunction TextReleaseFocus = "TextReleaseFocus";
         public static readonly BoundKeyFunction TextScrollToBottom = "TextScrollToBottom";
-        public static readonly BoundKeyFunction TextDelete = "TextDelete";
         public static readonly BoundKeyFunction TextTabComplete = "TextTabComplete";
         public static readonly BoundKeyFunction TextCompleteNext = "TextCompleteNext";
         public static readonly BoundKeyFunction TextCompletePrev = "TextCompletePrev";

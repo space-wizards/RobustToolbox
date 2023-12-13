@@ -1,12 +1,14 @@
-﻿namespace Robust.Client.Graphics
+using Robust.Shared.Graphics.RSI;
+
+namespace Robust.Client.Graphics
 {
     public interface IRsiStateLike : IDirectionalTextureProvider
     {
-        RSI.State.DirectionType Directions { get; }
+        RsiDirectionType RsiDirections { get; }
         bool IsAnimated { get; }
         int AnimationFrameCount { get; }
 
         float GetDelay(int frame);
-        Texture GetFrame(RSI.State.Direction dir, int frame);
+        Texture GetFrame(RsiDirection dir, int frame);
     }
 }

@@ -300,7 +300,7 @@ namespace Robust.Server.ServerStatus
         private static bool RequestWantsZStd(IStatusHandlerContext context)
         {
             // Yeah this isn't a good parser for Accept-Encoding but who cares.
-            return context.RequestHeaders.TryGetValue("Accept-Encoding", out var ac) && ac[0].Contains("zstd");
+            return context.RequestHeaders.TryGetValue("Accept-Encoding", out var ac) && ac.Count > 0 && ac[0].Contains("zstd");
         }
 
         // Only call this if the download URL is not available!

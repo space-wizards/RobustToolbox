@@ -1,14 +1,15 @@
 using System;
+using System.Diagnostics.Tracing;
 using System.Threading;
 using Robust.Shared.Log;
 using Robust.Shared.Exceptions;
-using Robust.Shared.Maths;
 using Prometheus;
+using Robust.Shared.Configuration;
 using Robust.Shared.Profiling;
 
 namespace Robust.Shared.Timing
 {
-    public interface IGameLoop
+    internal interface IGameLoop
     {
         event EventHandler<FrameEventArgs> Input;
         event EventHandler<FrameEventArgs> Tick;
@@ -46,8 +47,10 @@ namespace Robust.Shared.Timing
     /// <summary>
     ///     Manages the main game loop for a GameContainer.
     /// </summary>
-    public sealed class GameLoop : IGameLoop
+    internal sealed class GameLoop : IGameLoop
     {
+        private static readonly TimeSpan DelayTime = TimeSpan.FromMilliseconds(1);
+
         public const string ProfTextStartFrame = "Start Frame";
 
         private static readonly Histogram _frameTimeHistogram = Metrics.CreateHistogram(
@@ -98,6 +101,9 @@ namespace Robust.Shared.Timing
         // ReSharper disable once NotAccessedField.Local
         private readonly IRuntimeLog _runtimeLog;
         private readonly ProfManager _prof;
+        private readonly ISawmill _sawmill;
+
+        private readonly PrecisionSleep _precisionSleep;
 
 #if EXCEPTION_TOLERANCE
         private int _tickExceptions;
@@ -105,11 +111,19 @@ namespace Robust.Shared.Timing
         private const int MaxSoftLockExceptions = 10;
 #endif
 
-        public GameLoop(IGameTiming timing, IRuntimeLog runtimeLog, ProfManager prof)
+        public GameLoop(
+            IGameTiming timing,
+            IRuntimeLog runtimeLog,
+            ProfManager prof,
+            ISawmill sawmill,
+            GameLoopOptions options)
         {
             _timing = timing;
             _runtimeLog = runtimeLog;
             _prof = prof;
+            _sawmill = sawmill;
+
+            _precisionSleep = options.Precise ? PrecisionSleep.Create() : new PrecisionSleepUniversal();
         }
 
         /// <summary>
@@ -154,13 +168,15 @@ namespace Robust.Shared.Timing
                     // announce we are falling behind
                     if ((_timing.RealTime - _lastKeepUp).TotalSeconds >= 15.0)
                     {
-                        Logger.WarningS("eng", "MainLoop: Cannot keep up!");
+                        GameLoopEventSource.Log.CannotKeepUp();
+                        _sawmill.Warning("MainLoop: Cannot keep up!");
                         _lastKeepUp = _timing.RealTime;
                     }
                 }
 
                 _timing.StartFrame();
                 realFrameEvent = new FrameEventArgs((float)_timing.RealFrameTime.TotalSeconds);
+                GameLoopEventSource.Log.InputStart();
 #if EXCEPTION_TOLERANCE
                 try
 #endif
@@ -176,6 +192,8 @@ namespace Robust.Shared.Timing
                     _runtimeLog.LogException(exp, "GameLoop Input");
                 }
 #endif
+                GameLoopEventSource.Log.InputStop();
+
                 _timing.InSimulation = true;
                 var tickPeriod = _timing.CalcAdjustedTickPeriod();
 
@@ -203,8 +221,12 @@ namespace Robust.Shared.Timing
                     try
                     {
 #endif
+                        GameLoopEventSource.Log.TickStart(_timing.CurTick.Value);
+
                         using var tickGroup = _prof.Group("Tick");
                         _prof.WriteValue("Tick", ProfData.Int64(_timing.CurTick.Value));
+
+                        // System.Console.WriteLine($"Tick started at: {_timing.RealTime - _timing.LastTick}");
 
                         if (EnableMetrics)
                         {
@@ -217,6 +239,8 @@ namespace Robust.Shared.Timing
                         {
                             Tick?.Invoke(this, simFrameEvent);
                         }
+
+                        GameLoopEventSource.Log.TickStop(_timing.CurTick.Value);
 #if EXCEPTION_TOLERANCE
                     }
                     catch (Exception exp)
@@ -227,7 +251,7 @@ namespace Robust.Shared.Timing
 
                         if (_tickExceptions > MaxSoftLockExceptions && DetectSoftLock)
                         {
-                            Logger.FatalS("eng",
+                            _sawmill.Fatal(
                                 "MainLoop: 10 consecutive exceptions inside GameLoop Tick, shutting down!");
                             Running = false;
                         }
@@ -256,6 +280,7 @@ namespace Robust.Shared.Timing
 
                 // update out of the simulation
 
+                GameLoopEventSource.Log.UpdateStart();
 #if EXCEPTION_TOLERANCE
                 try
 #endif
@@ -270,6 +295,7 @@ namespace Robust.Shared.Timing
                     _runtimeLog.LogException(exp, "GameLoop Update");
                 }
 #endif
+                GameLoopEventSource.Log.UpdateStop();
 
                 // render the simulation
 #if EXCEPTION_TOLERANCE
@@ -299,12 +325,40 @@ namespace Robust.Shared.Timing
                 _prof.WriteGroupEnd(profFrameGroupStart, "Frame", profFrameSw);
                 _prof.MarkIndex(profFrameStart, ProfIndexType.Frame);
 
+                GameLoopEventSource.Log.SleepStart();
+
                 // Set sleep to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
                 // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
                 // do not call sleep if you want to be 'that thread' and hog 100% cpu.
-                if (SleepMode != SleepMode.None)
-                    Thread.Sleep((int)SleepMode);
+                switch (SleepMode)
+                {
+                    case SleepMode.Yield:
+                        Thread.Sleep(0);
+                        break;
+
+                    case SleepMode.Delay:
+                        // We try to sleep exactly until the next tick.
+                        // But no longer than 1ms so input can keep processing.
+                        var timeToSleep = (_timing.LastTick + _timing.TickPeriod) - _timing.RealTime;
+                        if (timeToSleep > DelayTime)
+                            timeToSleep = DelayTime;
+
+                        if (timeToSleep.Ticks > 0)
+                            _precisionSleep.Sleep(timeToSleep);
+
+                        break;
+                }
+
+                GameLoopEventSource.Log.SleepStop();
             }
+        }
+    }
+
+    internal sealed record GameLoopOptions(bool Precise)
+    {
+        public static GameLoopOptions FromCVars(IConfigurationManager cfg)
+        {
+            return new GameLoopOptions(cfg.GetCVar(CVars.SysPreciseSleep));
         }
     }
 
@@ -330,5 +384,38 @@ namespace Robust.Shared.Timing
         ///     have low CPU usage. You should use this on a dedicated server.
         /// </summary>
         Delay = 1,
+    }
+
+    [EventSource(Name = "Robust.GameLoop")]
+    internal sealed class GameLoopEventSource : EventSource
+    {
+        public static GameLoopEventSource Log { get; } = new();
+
+        [Event(1)]
+        public void CannotKeepUp() => WriteEvent(1);
+
+        [Event(2)]
+        public void InputStart() => WriteEvent(2);
+
+        [Event(3)]
+        public void InputStop() => WriteEvent(3);
+
+        [Event(4)]
+        public void TickStart(uint tick) => WriteEvent(4, tick);
+
+        [Event(5)]
+        public void TickStop(uint tick) => WriteEvent(5, tick);
+
+        [Event(6)]
+        public void UpdateStart() => WriteEvent(6);
+
+        [Event(7)]
+        public void UpdateStop() => WriteEvent(7);
+
+        [Event(8)]
+        public void SleepStart() => WriteEvent(8);
+
+        [Event(9)]
+        public void SleepStop() => WriteEvent(9);
     }
 }

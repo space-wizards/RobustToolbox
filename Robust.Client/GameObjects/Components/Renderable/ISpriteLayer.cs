@@ -1,4 +1,7 @@
-﻿using Robust.Client.Graphics;
+﻿using System.Numerics;
+using Robust.Client.Graphics;
+using Robust.Shared.Graphics;
+using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
@@ -23,7 +26,7 @@ namespace Robust.Client.GameObjects
         int AnimationFrame { get; }
         bool AutoAnimated { get; set; }
 
-        RSI.State.Direction EffectiveDirection(Angle worldRotation);
+        RsiDirection EffectiveDirection(Angle worldRotation);
 
         /// <summary>
         ///     Layer size in pixels.

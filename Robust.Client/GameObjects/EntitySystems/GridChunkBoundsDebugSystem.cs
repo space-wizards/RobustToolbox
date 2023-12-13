@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -57,6 +59,8 @@ namespace Robust.Client.GameObjects
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
+        private List<Entity<MapGridComponent>> _grids = new();
+
         public GridChunkBoundsOverlay(IEntityManager entManager, IEyeManager eyeManager, IMapManager mapManager)
         {
             _entityManager = entManager;
@@ -70,23 +74,25 @@ namespace Robust.Client.GameObjects
             var viewport = args.WorldBounds;
             var worldHandle = args.WorldHandle;
 
-            foreach (var grid in _mapManager.FindGridsIntersecting(currentMap, viewport))
+            _grids.Clear();
+            _mapManager.FindGridsIntersecting(currentMap, viewport, ref _grids);
+            foreach (var grid in _grids)
             {
-                var worldMatrix = _entityManager.GetComponent<TransformComponent>(grid.Owner).WorldMatrix;
+                var worldMatrix = _entityManager.GetComponent<TransformComponent>(grid).WorldMatrix;
                 worldHandle.SetTransform(worldMatrix);
                 var transform = new Transform(Vector2.Zero, Angle.Zero);
 
-                var chunkEnumerator = grid.GetMapChunks(viewport);
+                var chunkEnumerator = grid.Comp.GetMapChunks(viewport);
 
                 while (chunkEnumerator.MoveNext(out var chunk))
                 {
-                    foreach (var fixture in chunk.Fixtures)
+                    foreach (var fixture in chunk.Fixtures.Values)
                     {
                         var poly = (PolygonShape) fixture.Shape;
 
-                        var verts = new Vector2[poly.Vertices.Length];
+                        var verts = new Vector2[poly.VertexCount];
 
-                        for (var i = 0; i < poly.Vertices.Length; i++)
+                        for (var i = 0; i < poly.VertexCount; i++)
                         {
                             verts[i] = Transform.Mul(transform, poly.Vertices[i]);
                         }

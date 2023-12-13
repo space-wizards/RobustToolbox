@@ -1,8 +1,13 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Log;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared;
@@ -40,7 +45,7 @@ internal static class ProgramShared
         sawmill.Debug($"OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}");
     }
 
-    internal static void DoMounts(IResourceManagerInternal res, MountOptions? options, string contentBuildDir, ResourcePath assembliesPath, bool loadContentResources = true,
+    internal static void DoMounts(IResourceManagerInternal res, MountOptions? options, string contentBuildDir, ResPath assembliesPath, bool loadContentResources = true,
         bool loader = false, bool contentStart = false)
     {
 #if FULL_RELEASE
@@ -69,5 +74,30 @@ internal static class ProgramShared
         {
             res.MountContentPack(diskPath);
         }
+    }
+
+    internal static Task CheckBadFileExtensions(IResourceManager res, IConfigurationManager cfg, ISawmill sawmill)
+    {
+#if !DEBUG
+        return Task.CompletedTask;
+#else
+        if (!cfg.GetCVar(CVars.ResCheckBadFileExtensions))
+            return Task.CompletedTask;
+
+        // Run on thread pool to avoid slowing down init.
+        return Task.Run(() =>
+        {
+            foreach (var file in res.ContentFindFiles("/"))
+            {
+                if (file.Extension == "yaml")
+                    sawmill.Warning($"{file} has extension \".yaml\". Robust only loads .yml files by convention, file will be ignored for prototypes and similar.");
+            }
+        });
+#endif
+    }
+
+    internal static void FinishCheckBadFileExtensions(Task task)
+    {
+        task.Wait();
     }
 }

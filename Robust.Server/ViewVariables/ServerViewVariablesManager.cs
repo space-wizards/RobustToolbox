@@ -6,13 +6,13 @@ using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.ViewVariables
@@ -31,6 +31,8 @@ namespace Robust.Server.ViewVariables
         private readonly Dictionary<uint, ViewVariablesSession>
             _sessions = new();
 
+        private readonly Dictionary<NetUserId, List<uint>> _users = new();
+
         private uint _nextSessionId = 1;
 
         public override void Initialize()
@@ -44,6 +46,22 @@ namespace Robust.Server.ViewVariables
             _netManager.RegisterNetMessage<MsgViewVariablesDenySession>();
             _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>();
             _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>();
+
+            _playerManager.PlayerStatusChanged += OnStatusChanged;
+        }
+
+        private void OnStatusChanged(object? sender, SessionStatusEventArgs e)
+        {
+            if (e.NewStatus != SessionStatus.Disconnected)
+                return;
+
+            if (!_users.TryGetValue(e.Session.UserId, out var vvSessions))
+                return;
+
+            foreach (var id in vvSessions)
+            {
+                _closeSession(id, false);
+            }
         }
 
         private void _msgCloseSession(MsgViewVariablesCloseSession message)
@@ -73,7 +91,7 @@ namespace Robust.Server.ViewVariables
 
                 if (message.ReinterpretValue && !TryReinterpretValue(value, out value))
                 {
-                    Logger.WarningS("vv", $"Couldn't reinterpret value \"{message.Value}\" sent by {session.PlayerUser}!");
+                    Sawmill.Warning($"Couldn't reinterpret value \"{message.Value}\" sent by {session.PlayerUser}!");
                     return;
                 }
 
@@ -112,7 +130,7 @@ namespace Robust.Server.ViewVariables
             }
 
             var player = _playerManager.GetSessionByChannel(message.MsgChannel);
-            if (!_groupController.CanViewVar(player))
+            if (!_groupController.CanCommand(player, "vv"))
             {
                 Deny(ViewVariablesResponseCode.NoAccess);
                 return;
@@ -125,8 +143,10 @@ namespace Robust.Server.ViewVariables
                 case ViewVariablesComponentSelector componentSelector:
                 {
                     var compType = _reflectionManager.GetType(componentSelector.ComponentType);
+                    var entity = _entityManager.GetEntity(componentSelector.Entity);
+
                     if (compType == null ||
-                        !_entityManager.TryGetComponent(componentSelector.Entity, compType, out var component))
+                        !_entityManager.TryGetComponent(entity, compType, out var component))
                     {
                         Deny(ViewVariablesResponseCode.NoObject);
                         return;
@@ -137,7 +157,9 @@ namespace Robust.Server.ViewVariables
                 }
                 case ViewVariablesEntitySelector entitySelector:
                 {
-                    if (!_entityManager.EntityExists(entitySelector.Entity))
+                    var entity = _entityManager.GetEntity(entitySelector.Entity);
+
+                    if (!_entityManager.EntityExists(entity))
                     {
                         Deny(ViewVariablesResponseCode.NoObject);
                         return;
@@ -172,7 +194,7 @@ namespace Robust.Server.ViewVariables
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorS("vv", "Exception while retrieving value for session. {0}", e);
+                        Sawmill.Error("Exception while retrieving value for session. {0}", e);
                         Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }
@@ -228,22 +250,16 @@ namespace Robust.Server.ViewVariables
 
             var sessionId = _nextSessionId++;
             var session = new ViewVariablesSession(message.MsgChannel.UserId, theObject, sessionId, this,
-                _robustSerializer);
+                _robustSerializer, _entityManager, Sawmill);
 
             _sessions.Add(sessionId, session);
+            _users.GetOrNew(session.PlayerUser).Add(sessionId);
 
             var allowMsg = new MsgViewVariablesOpenSession();
             allowMsg.RequestId = message.RequestId;
             allowMsg.SessionId = session.SessionId;
             _netManager.ServerSendMessage(allowMsg, message.MsgChannel);
 
-            player.PlayerStatusChanged += (_, args) =>
-            {
-                if (args.NewStatus == SessionStatus.Disconnected)
-                {
-                    _closeSession(session.SessionId, false);
-                }
-            };
         }
 
         private void _closeSession(uint sessionId, bool sendMsg)
@@ -272,7 +288,7 @@ namespace Robust.Server.ViewVariables
             switch (input)
             {
                 case ViewVariablesBlobMembers.PrototypeReferenceToken token:
-                    if (!_prototypeManager.TryGetVariantType(token.Variant, out var variantType))
+                    if (!_prototypeManager.TryGetKindType(token.Variant, out var variantType))
                         return false;
 
                     if (!_prototypeManager.TryIndex(variantType, token.ID, out var prototype))
@@ -286,16 +302,16 @@ namespace Robust.Server.ViewVariables
             }
         }
 
-        protected override bool CheckPermissions(INetChannel channel)
+        protected override bool CheckPermissions(INetChannel channel, string command)
         {
-            return _playerManager.TryGetSessionByChannel(channel, out var session) && _groupController.CanViewVar(session);
+            return _playerManager.TryGetSessionByChannel(channel, out var session) && _groupController.CanCommand(session, command);
         }
 
         protected override bool TryGetSession(Guid guid, [NotNullWhen(true)] out ICommonSession? session)
         {
             if (guid != Guid.Empty
                 && _playerManager.TryGetSessionById(new NetUserId(guid), out var player)
-                && !_groupController.CanViewVar(player)) // Can't VV other admins.
+                && !_groupController.CanCommand(player, "vv")) // Can't VV other admins.
             {
                 session = player;
                 return true;

@@ -47,6 +47,7 @@ namespace Robust.Server.Console
         private long _lastReceivedBytes;
         private long _lastSentBytes;
 
+        private bool _hasCancelled;
 
         public void Dispose()
         {
@@ -195,7 +196,7 @@ namespace Robust.Server.Console
                             break;
 
                         case ConsoleKey.Backspace:
-                            if (currentBuffer.Length > 0)
+                            if (currentBuffer.Length > 0 && internalCursor > 0)
                             {
                                 currentBuffer = currentBuffer.Remove(internalCursor - 1, 1);
                                 internalCursor--;
@@ -299,7 +300,7 @@ namespace Robust.Server.Console
 
             if (tabCompleteList.Count == 0)
             {
-                tabCompleteList = _conShell.RegisteredCommands.Keys.Where(key => key.StartsWith(currentBuffer))
+                tabCompleteList = _conShell.AvailableCommands.Keys.Where(key => key.StartsWith(currentBuffer))
                     .ToList();
                 if (tabCompleteList.Count == 0)
                 {
@@ -319,8 +320,15 @@ namespace Robust.Server.Console
 
         private void CancelKeyHandler(object? sender, ConsoleCancelEventArgs args)
         {
+            if (_hasCancelled)
+            {
+                Con.WriteLine("Double CancelKey, terminating process.");
+                return;
+            }
+
             // Handle process exiting ourselves.
             args.Cancel = true;
+            _hasCancelled = true;
 
             _taskManager.RunOnMainThread(() => { _baseServer.Shutdown("CancelKey"); });
         }

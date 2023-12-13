@@ -190,7 +190,6 @@ public abstract partial class SharedTransformSystem
         return parent._children.Contains(child);
     }
 
-
     #endregion
 
     #region Component Lifetime

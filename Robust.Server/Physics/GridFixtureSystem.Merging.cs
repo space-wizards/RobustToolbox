@@ -7,7 +7,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.Physics;
 
-internal sealed partial class GridFixtureSystem
+public sealed partial class GridFixtureSystem
 {
     /// <summary>
     /// Merges GridB into GridA.
@@ -31,7 +31,6 @@ internal sealed partial class GridFixtureSystem
 
         var tiles = new List<(Vector2i Indices, Tile Tile)>();
         var enumerator = gridB.GetAllTilesEnumerator();
-        var xformQuery = GetEntityQuery<TransformComponent>();
 
         while (enumerator.MoveNext(out var tileRef))
         {
@@ -61,8 +60,8 @@ internal sealed partial class GridFixtureSystem
             for (var j = snapgrid.Count - 1; j >= 0; j--)
             {
                 var ent = snapgrid[j];
-                var xform = xformQuery.GetComponent(ent);
-                _xformSystem.ReAnchor(xform, gridB, gridA, offsetTile, xformB, xformA, xformQuery);
+                var xform = _xformQuery.GetComponent(ent);
+                _xformSystem.ReAnchor(ent, xform, gridB, gridA, offsetTile, gridUidB, gridUidA, xformB, xformA);
                 DebugTools.Assert(xform.Anchored);
             }
         }
@@ -73,19 +72,22 @@ internal sealed partial class GridFixtureSystem
         {
             var bounds = _lookup.GetLocalBounds(tileRef.Value.GridIndices, gridB.TileSize);
 
-            foreach (var ent in _lookup.GetEntitiesIntersecting(gridB.Owner, tileRef.Value.GridIndices))
+            _entSet.Clear();
+            _lookup.GetEntitiesIntersecting(gridUidB, tileRef.Value.GridIndices, _entSet);
+
+            foreach (var ent in _entSet)
             {
                 // Consider centre of entity position maybe?
-                var entXform = xformQuery.GetComponent(ent);
+                var entXform = _xformQuery.GetComponent(ent);
 
-                if (entXform.ParentUid != gridB.Owner ||
+                if (entXform.ParentUid != gridUidB ||
                     !bounds.Contains(entXform.LocalPosition)) continue;
 
-                _xformSystem.SetParent(entXform, gridA.Owner, xformQuery, xformA);
+                _xformSystem.SetParent(ent, entXform, gridUidA);
             }
         }
 
         DebugTools.Assert(xformB.ChildCount == 0);
-        Del(gridB.Owner);
+        Del(gridUidB);
     }
 }

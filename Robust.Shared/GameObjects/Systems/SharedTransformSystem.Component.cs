@@ -27,8 +27,7 @@ public abstract partial class SharedTransformSystem
         EntityUid oldGridUid,
         EntityUid newGridUid,
         TransformComponent oldGridXform,
-        TransformComponent newGridXform,
-        EntityQuery<TransformComponent> xformQuery)
+        TransformComponent newGridXform)
     {
         // Bypass some of the expensive stuff in unanchoring / anchoring.
         _map.RemoveFromSnapGridCell(oldGridUid, oldGrid, tilePos, uid);
@@ -41,7 +40,7 @@ public abstract partial class SharedTransformSystem
         xform._parent = newGridUid;
         xform._anchored = true;
 
-        SetGridId(uid, xform, newGridUid, xformQuery);
+        SetGridId(uid, xform, newGridUid, XformQuery);
         var reParent = new EntParentChangedMessage(uid, oldGridUid, xform.MapID, xform);
         RaiseLocalEvent(uid, ref reParent, true);
         // TODO: Ideally shouldn't need to call the moveevent
@@ -54,7 +53,7 @@ public abstract partial class SharedTransformSystem
             _gameTiming.ApplyingState);
         RaiseLocalEvent(uid, ref movEevee, true);
 
-        DebugTools.Assert(xformQuery.GetComponent(oldGridUid).MapID == xformQuery.GetComponent(newGridUid).MapID);
+        DebugTools.Assert(XformQuery.GetComponent(oldGridUid).MapID == XformQuery.GetComponent(newGridUid).MapID);
         DebugTools.Assert(xform._anchored);
 
         Dirty(uid, xform);

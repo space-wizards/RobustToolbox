@@ -17,10 +17,12 @@ namespace Robust.Shared.Utility
         private const int NotAnnotatedNullableFlag = 1;
 
         private static readonly Type? BclNullableCache;
+        private static readonly Type? BclNullableContextCache;
 
         static NullableHelper()
         {
             BclNullableCache = Type.GetType("System.Runtime.CompilerServices.NullableAttribute");
+            BclNullableContextCache = Type.GetType("System.Runtime.CompilerServices.NullableContextAttribute");
         }
 
         private static readonly Dictionary<Assembly, (Type AttributeType, FieldInfo NullableFlagsField)?>
@@ -165,6 +167,7 @@ namespace Robust.Shared.Utility
         {
             var nullableContextAttributeType =
                 assembly.GetType("System.Runtime.CompilerServices.NullableContextAttribute");
+            nullableContextAttributeType ??= BclNullableContextCache;
             if (nullableContextAttributeType == null)
             {
                 _nullableContextAttributeTypeCache.Add(assembly, null);

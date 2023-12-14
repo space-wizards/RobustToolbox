@@ -97,42 +97,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public void DeferMoveEvent(ref MoveEvent moveEvent)
-        {
-            if (EntityManager.HasComponent<MapGridComponent>(moveEvent.Sender))
-                _gridMoves.Enqueue(moveEvent);
-            else
-                _otherMoves.Enqueue(moveEvent);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-
-            // Process grid moves first.
-            Process(_gridMoves);
-            Process(_otherMoves);
-
-            void Process(Queue<MoveEvent> queue)
-            {
-                while (queue.TryDequeue(out var ev))
-                {
-                    if (EntityManager.Deleted(ev.Sender))
-                    {
-                        continue;
-                    }
-
-                    // Hopefully we can remove this when PVS gets updated to not use NaNs
-                    if (!ev.NewPosition.IsValid(EntityManager))
-                    {
-                        continue;
-                    }
-
-                    RaiseLocalEvent(ev.Sender, ref ev, true);
-                }
-            }
-        }
-
         public EntityCoordinates GetMoverCoordinates(EntityUid uid)
         {
             return GetMoverCoordinates(uid, XformQuery.GetComponent(uid));

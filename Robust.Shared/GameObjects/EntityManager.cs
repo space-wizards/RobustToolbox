@@ -452,7 +452,7 @@ namespace Robust.Shared.GameObjects
             TransformComponent? parentXform)
         {
             DebugTools.Assert(transform.ParentUid.IsValid() == (parentXform != null));
-            DebugTools.Assert(parentXform == null || parentXform.ChildEntities.Contains(uid));
+            DebugTools.Assert(parentXform == null || parentXform._children.Contains(uid));
 
             // Note about this method: #if EXCEPTION_TOLERANCE is not used here because we're gonna it in the future...
 

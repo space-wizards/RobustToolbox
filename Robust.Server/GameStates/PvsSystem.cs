@@ -1041,7 +1041,7 @@ internal sealed partial class PvsSystem : EntitySystem
         in int newEntityBudget,
         in int enteredEntityBudget)
     {
-        foreach (var child in xform.ChildEntities)
+        foreach (var child in xform._children)
         {
             if (!_xformQuery.TryGetComponent(child, out var childXform))
                 continue;

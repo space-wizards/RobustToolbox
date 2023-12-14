@@ -374,7 +374,8 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        [ViewVariables] public IEnumerable<EntityUid> ChildEntities => _children;
+        [Obsolete("Use ChildEnumerator")]
+        public IEnumerable<EntityUid> ChildEntities => _children;
 
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
 

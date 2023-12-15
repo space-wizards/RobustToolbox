@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Robust now uses **.NET 8**. Nyoom.
+*None yet*
 
 ### New features
 
@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* `IResourceCache.TryGetResource<T>` won't silently eat all exceptions anymore.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,17 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 191.0.0
+
+### Breaking changes
+
+* Robust now uses **.NET 8**. Nyoom.
+
+### Bugfixes
+
+* `IResourceCache.TryGetResource<T>` won't silently eat all exceptions anymore.
 
 
 ## 190.1.1

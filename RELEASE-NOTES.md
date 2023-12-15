@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Robust now uses **.NET 8**. Nyoom.
 
 ### New features
 

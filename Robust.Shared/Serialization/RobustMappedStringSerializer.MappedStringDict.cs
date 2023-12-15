@@ -14,6 +14,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -54,7 +55,7 @@ namespace Robust.Shared.Serialization
                 _stringMapping = GenMapDict(_mappedStrings);
             }
 
-            private static FrozenDictionary<string, int> GenMapDict(string[] strings)
+            private FrozenDictionary<string, int> GenMapDict(string[] strings)
             {
                 var dict = new Dictionary<string, int>();
                 for (var i = 0; i < strings.Length; i++)
@@ -62,7 +63,11 @@ namespace Robust.Shared.Serialization
                     dict.Add(strings[i], i);
                 }
 
-                return dict.ToFrozenDictionary();
+                var st = new Stopwatch();
+                st.Start();
+                var frozen = dict.ToFrozenDictionary();
+                _sawmill.Info($"Freezing mapped strings took {st.Elapsed.TotalMilliseconds:f2}ms");
+                return frozen;
             }
 
             public (byte[] mapHash, byte[] package) GeneratePackage()

@@ -97,11 +97,11 @@ internal partial class AudioManager
         // check the git history, I originally used libvorbisfile which worked and loaded 16 bit LPCM.
         if (vorbis.Channels == 1)
         {
-            format = ALFormat.MonoFloat32Ext;
+            format = ALFormat.Mono16;
         }
         else if (vorbis.Channels == 2)
         {
-            format = ALFormat.StereoFloat32Ext;
+            format = ALFormat.Stereo16;
         }
         else
         {
@@ -110,9 +110,9 @@ internal partial class AudioManager
 
         unsafe
         {
-            fixed (float* ptr = vorbis.Data.Span)
+            fixed (short* ptr = vorbis.Data.Span)
             {
-                AL.BufferData(buffer, format, (IntPtr) ptr, vorbis.Data.Length * sizeof(float),
+                AL.BufferData(buffer, format, (IntPtr) ptr, vorbis.Data.Length * sizeof(short),
                     (int) vorbis.SampleRate);
             }
         }

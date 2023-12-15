@@ -141,6 +141,11 @@ public abstract partial class SharedAudioSystem : EntitySystem
             despawn.Lifetime = (float) length.TotalSeconds + 0.01f;
         }
 
+        if (comp.Params.Variation != null && comp.Params.Variation.Value != 0f)
+        {
+            comp.Params.Pitch *= (float) RandMan.NextGaussian(1, comp.Params.Variation.Value);
+        }
+
         return comp;
     }
 

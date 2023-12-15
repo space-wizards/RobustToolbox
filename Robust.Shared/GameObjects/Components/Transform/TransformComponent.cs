@@ -374,24 +374,8 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        [ViewVariables]
-        public IEnumerable<TransformComponent> Children
-        {
-            get
-            {
-                if (_children.Count == 0) yield break;
-
-                var xforms = _entMan.GetEntityQuery<TransformComponent>();
-                var children = ChildEnumerator;
-
-                while (children.MoveNext(out var child))
-                {
-                    yield return xforms.GetComponent(child.Value);
-                }
-            }
-        }
-
-        [ViewVariables] public IEnumerable<EntityUid> ChildEntities => _children;
+        [Obsolete("Use ChildEnumerator")]
+        public IEnumerable<EntityUid> ChildEntities => _children;
 
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
 

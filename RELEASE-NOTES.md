@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `EntitySystem.TryGetEntity` is now `protected`.
 
 ### New features
 

@@ -113,6 +113,17 @@ namespace Robust.Shared.IoC
 
         private bool TryResolveType(
             Type objectType,
+            FrozenDictionary<Type, object> services,
+            [MaybeNullWhen(false)] out object instance)
+        {
+            if (!services.TryGetValue(objectType, out instance))
+                return _parentCollection is not null && _parentCollection.TryResolveType(objectType, out instance);
+
+            return true;
+        }
+
+        private bool TryResolveType(
+            Type objectType,
             IReadOnlyDictionary<Type, object> services,
             [MaybeNullWhen(false)] out object instance)
         {
@@ -435,14 +446,14 @@ namespace Robust.Shared.IoC
                 // delegates. Also we need to free the delegates because lambdas capture variables.
                 _resolveFactories.Clear();
 
+                // Atomically set the new dict of services.
+                _services = newDeps.ToFrozenDictionary();
+
                 // Graph built, go over ones that need injection.
                 foreach (var implementation in injectList)
                 {
-                    InjectDependenciesReflection(implementation, newDeps);
+                    InjectDependenciesReflection(implementation, _services);
                 }
-
-                // Atomically set the new dict of services.
-                _services = newDeps.ToFrozenDictionary();
 
                 foreach (var injectedItem in injectList.OfType<IPostInjectInit>())
                 {
@@ -488,7 +499,7 @@ namespace Robust.Shared.IoC
             InjectDependenciesReflection(obj, _services);
         }
 
-        private void InjectDependenciesReflection(object obj, IReadOnlyDictionary<Type, object> services)
+        private void InjectDependenciesReflection(object obj, FrozenDictionary<Type, object> services)
         {
             var type = obj.GetType();
             foreach (var field in type.GetAllFields())

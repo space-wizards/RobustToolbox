@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,7 +29,7 @@ namespace Robust.Shared.Serialization
             // All the mapped strings.
             // The dict is an array of indices into the array.
             private string[]? _mappedStrings;
-            private Dictionary<string, int>? _stringMapping;
+            private FrozenDictionary<string, int>? _stringMapping;
 
             // HashSet<string> of strings that we are currently building.
             // This should be added to in a thread-safe manner with TryAddString during building.
@@ -53,7 +54,7 @@ namespace Robust.Shared.Serialization
                 _stringMapping = GenMapDict(_mappedStrings);
             }
 
-            private static Dictionary<string, int> GenMapDict(string[] strings)
+            private static FrozenDictionary<string, int> GenMapDict(string[] strings)
             {
                 var dict = new Dictionary<string, int>();
                 for (var i = 0; i < strings.Length; i++)
@@ -61,7 +62,7 @@ namespace Robust.Shared.Serialization
                     dict.Add(strings[i], i);
                 }
 
-                return dict;
+                return dict.ToFrozenDictionary();
             }
 
             public (byte[] mapHash, byte[] package) GeneratePackage()

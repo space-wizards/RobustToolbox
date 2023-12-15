@@ -117,7 +117,7 @@ internal partial class AudioManager
             }
         }
 
-        _checkAlError();
+        LogALError($"Stream name: ${name}");
 
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
         _audioSampleBuffers.Add(new LoadedAudioSample(buffer));

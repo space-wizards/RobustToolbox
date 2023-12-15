@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio.Effects;
@@ -73,7 +74,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             var state = AL.GetSourceState(SourceHandle);
-            Master._checkAlError();
+            _checkAlError();
             return state == ALSourceState.Playing;
         }
         set
@@ -90,7 +91,7 @@ internal abstract class BaseAudioSource : IAudioSource
             }
 
 
-            Master._checkAlError();
+            _checkAlError();
         }
     }
 
@@ -101,14 +102,14 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSourceb.Looping, out var ret);
-            Master._checkAlError();
+            _checkAlError();
             return ret;
         }
         set
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourceb.Looping, value);
-            Master._checkAlError();
+            _checkAlError();
         }
     }
 
@@ -119,14 +120,14 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSourceb.SourceRelative, out var value);
-            Master._checkAlError();
+            _checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourceb.SourceRelative, value);
-            Master._checkAlError();
+            _checkAlError();
         }
     }
 
@@ -137,7 +138,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSource3f.Position, out var x, out var y, out _);
-            Master._checkAlError();
+            _checkAlError();
             return new Vector2(x, y);
         }
         set
@@ -152,7 +153,7 @@ internal abstract class BaseAudioSource : IAudioSource
             }
 
             AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
-            Master._checkAlError();
+            _checkAlError();
         }
     }
 
@@ -163,14 +164,14 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSourcef.Pitch, out var value);
-            Master._checkAlError();
+            _checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.Pitch, value);
-            Master._checkAlError();
+            _checkAlError();
         }
     }
 
@@ -193,7 +194,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSourcef.Gain, out var gain);
-            Master._checkAlError();
+            _checkAlError();
             return gain;
         }
         set
@@ -209,7 +210,7 @@ internal abstract class BaseAudioSource : IAudioSource
 
             _gain = value;
             AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
-            Master.LogALError($"Gain is {_gain:0.00} and priorOcclusion is {priorOcclusion:0.00}. EFX supported: {IsEfxSupported}");
+            _checkAlErrorMessage("Gain is {_gain:0.00} and priorOcclusion is {priorOcclusion:0.00}. EFX supported: {IsEfxSupported}");
         }
     }
 
@@ -220,14 +221,14 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSourcef.MaxDistance, out var value);
-            Master._checkAlError();
+            _checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.MaxDistance, value);
-            Master.LogALError($"MaxDistance is {value:0.00}");
+            _checkAlErrorMessage($"MaxDistance is {value:0.00}");
         }
     }
 
@@ -238,14 +239,14 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSourcef.RolloffFactor, out var value);
-            Master._checkAlError();
+            _checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.RolloffFactor, value);
-            Master.LogALError($"RolloffFactor is {value:0.00}");
+            _checkAlErrorMessage($"RolloffFactor is {value:0.00}");
         }
     }
 
@@ -256,14 +257,14 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSourcef.ReferenceDistance, out var value);
-            Master._checkAlError();
+            _checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.ReferenceDistance, value);
-            Master.LogALError($"ReferenceDistance is {value:0.00}");
+            _checkAlErrorMessage($"ReferenceDistance is {value:0.00}");
         }
     }
 
@@ -274,7 +275,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSourcef.MaxDistance, out var value);
-            Master._checkAlError();
+            _checkAlError();
             return value;
         }
         set
@@ -291,7 +292,7 @@ internal abstract class BaseAudioSource : IAudioSource
                 gain *= gain * gain;
                 AL.Source(SourceHandle, ALSourcef.Gain, _gain * gain);
             }
-            Master._checkAlError();
+            _checkAlError();
         }
     }
 
@@ -302,7 +303,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSourcef.SecOffset, out var value);
-            Master._checkAlError();
+            _checkAlError();
             return value;
         }
         set
@@ -321,7 +322,7 @@ internal abstract class BaseAudioSource : IAudioSource
             _checkDisposed();
 
             AL.GetSource(SourceHandle, ALSource3f.Velocity, out var x, out var y, out _);
-            Master._checkAlError();
+            _checkAlError();
             return new Vector2(x, y);
         }
         set
@@ -336,7 +337,7 @@ internal abstract class BaseAudioSource : IAudioSource
             }
 
             AL.Source(SourceHandle, ALSource3f.Velocity, x, y, 0);
-            Master._checkAlError();
+            _checkAlError();
         }
     }
 
@@ -353,7 +354,7 @@ internal abstract class BaseAudioSource : IAudioSource
             EFX.Source(SourceHandle, EFXSourceInteger3.AuxiliarySendFilter, 0, 0, 0);
         }
 
-        Master._checkAlError();
+        _checkAlError();
     }
 
     private void SetOcclusionEfx(float gain, float cutoff)
@@ -404,4 +405,8 @@ internal abstract class BaseAudioSource : IAudioSource
             throw new ObjectDisposedException(nameof(BaseAudioSource));
         }
     }
+
+    protected abstract void _checkAlError([CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1);
+
+    protected abstract void _checkAlErrorMessage(string message, [CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1);
 }

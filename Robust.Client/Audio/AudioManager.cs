@@ -152,6 +152,24 @@ internal sealed partial class AudioManager : IAudioInternal
         }
     }
 
+    internal void LogALError(string message, AudioStream sourceStream, string callerMember = "", int callerLineNumber = -1)
+    {
+        var error = AL.GetError();
+        if (error != ALError.NoError)
+        {
+            OpenALSawmill.Error("[{0}:{1}] AL error: {2}, {3}, Streamfile: {4}", callerMember, callerLineNumber, error, message, sourceStream.Name);
+        }
+    }
+
+    internal void LogALError(AudioStream sourceStream, string callerMember = "", int callerLineNumber = -1)
+    {
+        var error = AL.GetError();
+        if (error != ALError.NoError)
+        {
+            OpenALSawmill.Error("[{0}:{1}] AL error: {2}, Streamfile: {3}", callerMember, callerLineNumber, error, sourceStream.Name);
+        }
+    }
+
     public void _checkAlError([CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1)
     {
         var error = AL.GetError();

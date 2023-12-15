@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Shared.Audio;
@@ -86,5 +87,15 @@ internal sealed class AudioSource : BaseAudioSource
 
         FilterHandle = 0;
         SourceHandle = -1;
+    }
+
+    protected override void _checkAlErrorMessage(string message, [CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1)
+    {
+        Master.LogALError(message, _sourceStream, callerMember, callerLineNumber);
+    }
+
+    protected override void _checkAlError([CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1)
+    {
+        Master.LogALError(_sourceStream, callerMember, callerLineNumber);
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Graphics;
@@ -100,6 +101,16 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
 
         FilterHandle = 0;
         SourceHandle = null;
+    }
+
+    protected override void _checkAlErrorMessage(string message, [CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1)
+    {
+        Master.LogALError($"Buffered audio, Additional info: ${message}", callerMember, callerLineNumber);
+    }
+
+    protected override void _checkAlError([CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1)
+    {
+        Master.LogALError("Buffered audio ",callerMember, callerLineNumber);
     }
 
     public int GetNumberOfBuffersProcessed()

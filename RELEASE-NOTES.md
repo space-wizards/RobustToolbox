@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 191.0.0
+
+### Breaking changes
+
+* Robust now uses **.NET 8**. Nyoom.
+
+### Bugfixes
+
+* `IResourceCache.TryGetResource<T>` won't silently eat all exceptions anymore.
+
+
 ## 190.1.1
 
 ### Bugfixes
@@ -401,7 +412,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Most methods in ActorSystem have been moved to ISharedPlayerManager. 
+* Most methods in ActorSystem have been moved to ISharedPlayerManager.
 * Several actor/player related components and events have been moved to shared.
 
 ### New features

@@ -63,8 +63,11 @@ internal static class AudioLoaderOgg
         return read;
     }
 
-    private static unsafe void ConvertToShort(ReadOnlySpan<float> src, Span<short> dst)
+    private static void ConvertToShort(ReadOnlySpan<float> src, Span<short> dst)
     {
+        if (src.Length != dst.Length)
+            throw new InvalidOperationException("Invalid lengths!");
+
         var simdSamples = (src.Length / Vector<short>.Count) * Vector<short>.Count;
 
         // Note: I think according to spec we'd actually need to multiply negative values with 2^15 instead of 2^15-1.
@@ -72,24 +75,23 @@ internal static class AudioLoaderOgg
         // Can't be arsed though
         var factor = new Vector<float>(short.MaxValue);
 
-        fixed (float* pSrc = src)
-        fixed (short* pDst = dst)
+        ref readonly var srcBase = ref src[0];
+        ref var dstBase = ref dst[0];
+
+        for (var i = 0; i < simdSamples; i += Vector<short>.Count)
         {
-            for (var i = 0; i < simdSamples; i += Vector<short>.Count)
-            {
-                var lower = *(Vector<float>*)(pSrc + i);
-                var upper = *(Vector<float>*)(pSrc + i + Vector<float>.Count);
+            var lower = Vector.LoadUnsafe(in srcBase, (nuint) i);
+            var upper = Vector.LoadUnsafe(in srcBase, (nuint) (i + Vector<float>.Count));
 
-                lower *= factor;
-                upper *= factor;
+            lower *= factor;
+            upper *= factor;
 
-                var lowerInt = Vector.ConvertToInt32(lower);
-                var upperInt = Vector.ConvertToInt32(upper);
+            var lowerInt = Vector.ConvertToInt32(lower);
+            var upperInt = Vector.ConvertToInt32(upper);
 
-                var merged = Vector.Narrow(lowerInt, upperInt);
+            var merged = Vector.Narrow(lowerInt, upperInt);
 
-                *(Vector<short>*)(pDst + i) = merged;
-            }
+            merged.StoreUnsafe(ref dstBase, (nuint) i);
         }
 
         for (var i = simdSamples; i < src.Length; i++)

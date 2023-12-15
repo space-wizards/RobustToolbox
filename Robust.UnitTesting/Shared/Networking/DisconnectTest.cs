@@ -56,7 +56,7 @@ public sealed class DisconnectTest : RobustIntegrationTest
         AssertConnected();
 
         // Disconnect again, but using the server-channel
-        session.ConnectedClient.Disconnect("test 2");
+        session.Channel.Disconnect("test 2");
         await RunTicks();
         AssertDisconnected();
 

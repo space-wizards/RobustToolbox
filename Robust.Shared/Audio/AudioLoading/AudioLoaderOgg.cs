@@ -38,7 +38,6 @@ internal static class AudioLoaderOgg
         var totalValues = totalSamples * channels;
         var readValues = 0;
         var buffer = new short[totalSamples * channels];
-        // Note: has to be a multiple of Vector<short>.Count. So keep it POT.
         Span<float> readBuffer = stackalloc float[32768];
 
         while (readValues < totalValues)

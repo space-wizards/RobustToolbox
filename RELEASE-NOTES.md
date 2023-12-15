@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+.* Fix sandbox being broken thanks to .NET 8.
 
 ### Other
 

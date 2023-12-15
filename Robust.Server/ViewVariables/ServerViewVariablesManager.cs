@@ -278,7 +278,7 @@ namespace Robust.Server.ViewVariables
 
             var closeMsg = new MsgViewVariablesCloseSession();
             closeMsg.SessionId = session.SessionId;
-            _netManager.ServerSendMessage(closeMsg, player.ConnectedClient);
+            _netManager.ServerSendMessage(closeMsg, player.Channel);
         }
 
         private bool TryReinterpretValue(object? input, [NotNullWhen(true)] out object? output)

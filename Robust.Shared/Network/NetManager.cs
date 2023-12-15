@@ -1153,12 +1153,6 @@ namespace Robust.Shared.Network
             public ClientDisconnectedException(string message, Exception inner) : base(message, inner)
             {
             }
-
-            protected ClientDisconnectedException(
-                SerializationInfo info,
-                StreamingContext context) : base(info, context)
-            {
-            }
         }
 
         private sealed class NetPeerData

@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `EntitySystem.TryGetEntity` is now `protected`.
 
 ### New features
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 191.0.1
+
+### Bugfixes
+
+.* Fix sandbox being broken thanks to .NET 8.
 
 
 ## 191.0.0

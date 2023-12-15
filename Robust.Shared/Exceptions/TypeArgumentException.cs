@@ -32,24 +32,5 @@ namespace Robust.Shared.Exceptions
         {
             TypeArgumentName = name;
         }
-
-        private TypeArgumentException(
-          SerializationInfo info,
-          StreamingContext context) : base(info, context)
-        {
-            TypeArgumentName = info.GetString("TypeArgumentName");
-        }
-
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            if (info == null)
-            {
-                throw new ArgumentNullException(nameof(info));
-            }
-
-            info.AddValue("TypeArgumentName", TypeArgumentName);
-
-            base.GetObjectData(info, context);
-        }
     }
 }

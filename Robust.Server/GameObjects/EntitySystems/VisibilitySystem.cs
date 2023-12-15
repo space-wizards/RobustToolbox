@@ -105,15 +105,15 @@ namespace Robust.Server.GameObjects
             meta.VisibilityMask = mask;
             _pvs.MarkDirty(uid, xform);
 
-            foreach (var child in xform.ChildEntities)
+            foreach (var child in xform._children)
             {
                 if (!_metaQuery.TryGetComponent(child, out var childMeta))
                     continue;
 
                 var childMask = mask;
 
-                if (_visiblityQuery.TryGetComponent(child, out VisibilityComponent? hildVis))
-                    childMask |= hildVis.Layer;
+                if (_visiblityQuery.TryGetComponent(child, out var childVis))
+                    childMask |= childVis.Layer;
 
                 RecursivelyApplyVisibility(child, childMask, childMeta);
             }

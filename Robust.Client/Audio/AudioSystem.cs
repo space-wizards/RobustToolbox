@@ -423,7 +423,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
     {
-        if (Timing.IsFirstTimePredicted || sound == null)
+        if (Timing.IsFirstTimePredicted && sound != null)
             return PlayEntity(sound, Filter.Local(), source, false, audioParams);
 
         return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
@@ -431,7 +431,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user, AudioParams? audioParams = null)
     {
-        if (Timing.IsFirstTimePredicted || sound == null)
+        if (Timing.IsFirstTimePredicted && sound != null)
             return PlayStatic(sound, Filter.Local(), coordinates, false, audioParams);
 
         return null;
@@ -618,8 +618,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         source.PlaybackPosition = offset;
 
         // For server we will rely on the adjusted one but locally we will have to adjust it ourselves.
-        ApplyAudioParams(audioP, comp);
-        comp.Params = audioP;
+        ApplyAudioParams(comp.Params, comp);
         source.StartPlaying();
         return (entity, comp);
     }

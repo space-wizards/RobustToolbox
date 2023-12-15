@@ -1130,7 +1130,7 @@ namespace Robust.Client.GameStates
                         (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
                         containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container, null, true))
                     {
-                        container.Remove(ent.Value, _entities, xform, meta, false, true);
+                        containerSys.Remove((ent.Value, xform, meta), container, false, true);
                     }
 
                     meta._flags |= MetaDataFlags.Detached;
@@ -1430,7 +1430,7 @@ namespace Robust.Client.GameStates
             void _recursiveRemoveState(NetEntity netEntity, TransformComponent xform, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery)
             {
                 _processor._lastStateFullRep.Remove(netEntity);
-                foreach (var child in xform.ChildEntities)
+                foreach (var child in xform._children)
                 {
                     if (xformQuery.TryGetComponent(child, out var childXform) &&
                         metaQuery.TryGetComponent(child, out var childMeta))

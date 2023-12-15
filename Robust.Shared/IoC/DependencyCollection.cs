@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -35,7 +35,7 @@ namespace Robust.Shared.IoC
         /// <remarks>
         /// Immutable and atomically swapped to provide thread safety guarantees.
         /// </remarks>
-        private ImmutableDictionary<Type, object> _services = ImmutableDictionary<Type, object>.Empty;
+        private FrozenDictionary<Type, object> _services = FrozenDictionary<Type, object>.Empty;
 
         // Start fields used for building new services.
 
@@ -310,7 +310,7 @@ namespace Robust.Shared.IoC
                 service.Dispose();
             }
 
-            _services = ImmutableDictionary<Type, object>.Empty;
+            _services = FrozenDictionary<Type, object>.Empty;
 
             lock (_serviceBuildLock)
             {
@@ -394,7 +394,7 @@ namespace Robust.Shared.IoC
                 // List of all objects we need to inject dependencies into.
                 var injectList = new List<object>();
 
-                var newDeps = _services.ToBuilder();
+                var newDeps = _services.ToDictionary();
 
                 // First we build every type we have registered but isn't yet built.
                 // This allows us to run this after the content assembly has been loaded.
@@ -442,7 +442,7 @@ namespace Robust.Shared.IoC
                 }
 
                 // Atomically set the new dict of services.
-                _services = newDeps.ToImmutable();
+                _services = newDeps.ToFrozenDictionary();
 
                 foreach (var injectedItem in injectList.OfType<IPostInjectInit>())
                 {

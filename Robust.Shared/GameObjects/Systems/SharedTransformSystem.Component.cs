@@ -180,6 +180,16 @@ public abstract partial class SharedTransformSystem
         return ContainsEntity(parent, (child.Comp.ParentUid, parentXform));
     }
 
+    /// <summary>
+    /// Checks whether the given component is the parent of the entity without having to fetch the child's
+    /// transform component.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsParentOf(TransformComponent parent, EntityUid child)
+    {
+        return parent._children.Contains(child);
+    }
+
     #endregion
 
     #region Component Lifetime
@@ -1456,7 +1466,7 @@ public abstract partial class SharedTransformSystem
             if (_container.IsEntityInContainer(targetUid)
                 && _container.TryGetContainingContainer(targetXform.ParentUid, targetUid, out var container,
                     skipExistCheck: true)
-                && container.Insert(entity, EntityManager, xform))
+                && _container.Insert((entity, xform, null, null), container))
             {
                 return;
             }
@@ -1498,7 +1508,7 @@ public abstract partial class SharedTransformSystem
             if (!container.Contains(target))
                 continue;
 
-            if (!container.Insert(entity, EntityManager, xform))
+            if (!_container.Insert((entity, xform, null, null), container))
                 PlaceNextTo((entity, xform), targetXform.ParentUid);
         }
     }

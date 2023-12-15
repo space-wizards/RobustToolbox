@@ -198,6 +198,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+#if DEBUG
     internal sealed class ShowRayCommand : LocalizedCommands
     {
         [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
@@ -224,6 +225,7 @@ namespace Robust.Client.Console.Commands
             mgr.DebugRayLifetime = TimeSpan.FromSeconds(duration);
         }
     }
+#endif
 
     internal sealed class DisconnectCommand : LocalizedCommands
     {

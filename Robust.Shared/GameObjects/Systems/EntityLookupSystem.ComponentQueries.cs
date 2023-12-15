@@ -353,7 +353,7 @@ public sealed partial class EntityLookupSystem
         {
             if (!_containerQuery.TryGetComponent(comp, out var conManager)) continue;
 
-            foreach (var con in conManager.GetAllContainers())
+            foreach (var con in _container.GetAllContainers(comp, conManager))
             {
                 foreach (var contained in con.ContainedEntities)
                 {

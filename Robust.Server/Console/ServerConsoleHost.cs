@@ -211,7 +211,7 @@ namespace Robust.Server.Console
                 var replyMsg = new MsgConCmdAck();
                 replyMsg.Error = error;
                 replyMsg.Text = text;
-                NetManager.ServerSendMessage(replyMsg, session.ConnectedClient);
+                NetManager.ServerSendMessage(replyMsg, session.Channel);
             }
             else
                 _systemConsole.Print(text + "\n");

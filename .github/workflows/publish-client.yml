@@ -23,7 +23,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3.2.0
       with:
-        dotnet-version: 7.0.x
+        dotnet-version: 8.0.x
 
     - name: Package client
       run: Tools/package_client_build.py -p windows mac linux

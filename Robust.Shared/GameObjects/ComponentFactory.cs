@@ -503,9 +503,6 @@ namespace Robust.Shared.GameObjects
         public UnknownComponentException(string message, Exception inner) : base(message, inner)
         {
         }
-        protected UnknownComponentException(
-          SerializationInfo info,
-          StreamingContext context) : base(info, context) { }
     }
 
     [Virtual]

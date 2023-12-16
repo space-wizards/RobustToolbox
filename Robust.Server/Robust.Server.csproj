@@ -26,6 +26,7 @@
     <PackageReference Include="SpaceWizards.Sodium" Version="0.2.1" PrivateAssets="compile" />
     <PackageReference Include="SharpZstd.Interop" Version="1.5.2-beta2" PrivateAssets="compile" />
     <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" Version="1.2.0" />
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />

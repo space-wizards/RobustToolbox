@@ -66,7 +66,7 @@ namespace Robust.Shared.Serialization
                 var st = new Stopwatch();
                 st.Start();
                 var frozen = dict.ToFrozenDictionary();
-                _sawmill.Info($"Freezing mapped strings took {st.Elapsed.TotalMilliseconds:f2}ms");
+                _sawmill.Verbose($"Freezing mapped strings took {st.Elapsed.TotalMilliseconds:f2}ms");
                 return frozen;
             }
 

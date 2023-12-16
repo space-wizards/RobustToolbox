@@ -365,11 +365,9 @@ public abstract partial class SharedTransformSystem
 
         DebugTools.Assert(!HasComp<MapGridComponent>(uid) || gridId == uid);
         xform._gridUid = gridId;
-        var childEnumerator = xform.ChildEnumerator;
-
-        while (childEnumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            SetGridId(child.Value, XformQuery.GetComponent(child.Value), gridId);
+            SetGridId(child, XformQuery.GetComponent(child), gridId);
         }
     }
 

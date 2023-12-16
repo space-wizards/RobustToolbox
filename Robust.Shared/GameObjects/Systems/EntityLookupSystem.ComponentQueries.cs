@@ -307,31 +307,29 @@ public sealed partial class EntityLookupSystem
 
     private void RecursiveAdd<T>(EntityUid uid, ref ValueList<T> toAdd, EntityQuery<T> query) where T : IComponent
     {
-        var childEnumerator = _xformQuery.GetComponent(uid).ChildEnumerator;
-
-        while (childEnumerator.MoveNext(out var child))
+        var xform = _xformQuery.GetComponent(uid);
+        foreach (var child in xform._children)
         {
-            if (query.TryGetComponent(child.Value, out var compies))
+            if (query.TryGetComponent(child, out var compies))
             {
                 toAdd.Add(compies);
             }
 
-            RecursiveAdd(child.Value, ref toAdd, query);
+            RecursiveAdd(child, ref toAdd, query);
         }
     }
 
     private void RecursiveAdd<T>(EntityUid uid, ref ValueList<Entity<T>> toAdd, EntityQuery<T> query) where T : IComponent
     {
-        var childEnumerator = _xformQuery.GetComponent(uid).ChildEnumerator;
-
-        while (childEnumerator.MoveNext(out var child))
+        var xform = _xformQuery.GetComponent(uid);
+        foreach (var child in xform._children)
         {
-            if (query.TryGetComponent(child.Value, out var compies))
+            if (query.TryGetComponent(child, out var compies))
             {
-                toAdd.Add((child.Value, compies));
+                toAdd.Add((child, compies));
             }
 
-            RecursiveAdd(child.Value, ref toAdd, query);
+            RecursiveAdd(child, ref toAdd, query);
         }
     }
 

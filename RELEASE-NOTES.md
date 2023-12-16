@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `EntitySystem.TryGetEntity` is now `protected`.
+*None yet*
 
 ### New features
 
@@ -52,6 +52,18 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 192.0.0
+
+### Breaking changes
+
+* `EntitySystem.TryGetEntity` is now `protected`.
+
+### Internal
+
+* PVS message ack processing now happens asynchronously 
+* Dependency collections now use a `FrozenDictionary`
 
 
 ## 191.0.1

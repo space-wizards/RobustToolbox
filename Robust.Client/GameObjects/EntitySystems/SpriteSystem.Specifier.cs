@@ -122,14 +122,13 @@ public sealed partial class SpriteSystem
         return GetFallbackState();
     }
 
-    private void OnPrototypesReloaded(PrototypesReloadedEventArgs protoReloaded)
+    private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
-        // Check if any EntityPrototype has been changed.
-        if (!protoReloaded.ByType.TryGetValue(typeof(EntityPrototype), out var changedSet))
+        if (!args.TryGetModified<EntityPrototype>(out var modified))
             return;
 
         // Remove all changed prototypes from the cache, if they're there.
-        foreach (var (prototype, _) in changedSet.Modified)
+        foreach (var prototype in modified)
         {
             // Let's be lazy and not regenerate them until something needs them again.
             _cachedPrototypeIcons.Remove(prototype);

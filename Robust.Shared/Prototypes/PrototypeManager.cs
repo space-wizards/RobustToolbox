@@ -34,6 +34,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly ILocalizationManager _locMan = default!;
         [Dependency] private readonly IComponentFactory _factory = default!;
+        [Dependency] private readonly IEntityManager _entMan = default!;
 
         private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
         private EntityDiffContext _context = new();
@@ -354,15 +355,20 @@ namespace Robust.Shared.Prototypes
 #endif
 
             //todo paul i hate it but i am not opening that can of worms in this refactor
-            PrototypesReloaded?.Invoke(
-                new PrototypesReloadedEventArgs(
-                    modified
-                        .ToDictionary(
-                            g => g.Key,
-                            g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
-                                g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
-                                    .ToDictionary(a => a, a => _kinds[g.Key].Instances[a]))),
-                    removed));
+            var byType = modified
+                .ToDictionary(
+                    g => g.Key,
+                    g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
+                        g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
+                            .ToDictionary(a => a, a => _kinds[g.Key].Instances[a])));
+
+            var modifiedTypes = new HashSet<Type>(byType.Keys);
+            if (removed != null)
+                modifiedTypes.UnionWith(removed.Keys);
+
+            var ev = new PrototypesReloadedEventArgs(modifiedTypes, byType, removed);
+            PrototypesReloaded?.Invoke(ev);
+            _entMan.EventBus.RaiseEvent(EventSource.Local, ev);
         }
 
         private void Freeze(HashSet<KindData> kinds)

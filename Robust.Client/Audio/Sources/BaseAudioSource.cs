@@ -343,17 +343,16 @@ internal abstract class BaseAudioSource : IAudioSource
     public void SetAuxiliary(IAuxiliaryAudio? audio)
     {
         _checkDisposed();
+        if (!IsEfxSupported)
+            return;
 
-        if (IsEfxSupported)
+        if (audio is AuxiliaryAudio impAudio)
         {
-            if (audio is AuxiliaryAudio impAudio)
-            {
-                EFX.Source(SourceHandle, EFXSourceInteger3.AuxiliarySendFilter, impAudio.Handle, 0, 0);
-            }
-            else
-            {
-                EFX.Source(SourceHandle, EFXSourceInteger3.AuxiliarySendFilter, 0, 0, 0);
-            }
+            EFX.Source(SourceHandle, EFXSourceInteger3.AuxiliarySendFilter, impAudio.Handle, 0, 0);
+        }
+        else
+        {
+            EFX.Source(SourceHandle, EFXSourceInteger3.AuxiliarySendFilter, 0, 0, 0);
         }
 
         Master._checkAlError();

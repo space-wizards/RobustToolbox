@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.IoC;
@@ -16,42 +17,19 @@ public sealed class DictionarySerializer<TKey, TValue> :
     ITypeSerializer<Dictionary<TKey, TValue>, MappingDataNode>,
     ITypeSerializer<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>,
     ITypeSerializer<SortedDictionary<TKey, TValue>, MappingDataNode>,
+    ITypeSerializer<FrozenDictionary<TKey, TValue>, MappingDataNode>,
     ITypeCopier<Dictionary<TKey, TValue>>,
+    ITypeCopier<SortedDictionary<TKey, TValue>>,
     ITypeCopyCreator<IReadOnlyDictionary<TKey, TValue>>,
-    ITypeCopier<SortedDictionary<TKey, TValue>> where TKey : notnull
-
+    ITypeCopyCreator<FrozenDictionary<TKey, TValue>>
+    where TKey : notnull
 {
-    private MappingDataNode InterfaceWrite(
-        ISerializationManager serializationManager,
-        IDictionary<TKey, TValue> value,
-        bool alwaysWrite = false,
-        ISerializationContext? context = null)
+    #region Validate
+
+    public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
+        IDependencyCollection dependencies, ISerializationContext? context = null)
     {
-        var mappingNode = new MappingDataNode();
-
-        foreach (var (key, val) in value)
-        {
-            mappingNode.Add(
-                serializationManager.WriteValue(key, alwaysWrite, context),
-                serializationManager.WriteValue(val, alwaysWrite, context));
-        }
-
-        return mappingNode;
-    }
-
-    public Dictionary<TKey, TValue> Read(ISerializationManager serializationManager,
-        MappingDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context,
-        ISerializationManager.InstantiationDelegate<Dictionary<TKey, TValue>>? instanceProvider)
-    {
-        var dict = instanceProvider != null ? instanceProvider() : new Dictionary<TKey, TValue>();
-
-        foreach (var (key, value) in node.Children)
-        {
-            dict.Add(serializationManager.Read<TKey>(key, hookCtx, context),
-                serializationManager.Read<TValue>(value, hookCtx, context));
-        }
-
-        return dict;
+        return Validate(serializationManager, node, context);
     }
 
     ValidationNode ITypeValidator<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
@@ -88,6 +66,34 @@ public sealed class DictionarySerializer<TKey, TValue> :
         return new ValidatedMappingNode(mapping);
     }
 
+    #endregion
+
+    #region Write
+
+    private MappingDataNode InterfaceWrite(
+        ISerializationManager serializationManager,
+        IReadOnlyDictionary<TKey, TValue> value,
+        bool alwaysWrite = false,
+        ISerializationContext? context = null)
+    {
+        var mappingNode = new MappingDataNode();
+        foreach (var (key, val) in value)
+        {
+            mappingNode.Add(
+                serializationManager.WriteValue(key, alwaysWrite, context),
+                serializationManager.WriteValue(val, alwaysWrite, context));
+        }
+
+        return mappingNode;
+    }
+
+
+    public DataNode Write(ISerializationManager serializationManager, FrozenDictionary<TKey, TValue> value, IDependencyCollection dependencies,
+        bool alwaysWrite = false, ISerializationContext? context = null)
+    {
+        return InterfaceWrite(serializationManager, value, alwaysWrite, context);
+    }
+
     public DataNode Write(ISerializationManager serializationManager, Dictionary<TKey, TValue> value,
         IDependencyCollection dependencies,
         bool alwaysWrite = false,
@@ -111,6 +117,48 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         return InterfaceWrite(serializationManager, value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
     }
+
+    #endregion
+
+    #region Read
+
+    public Dictionary<TKey, TValue> Read(ISerializationManager serializationManager,
+        MappingDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context,
+        ISerializationManager.InstantiationDelegate<Dictionary<TKey, TValue>>? instanceProvider)
+    {
+        var dict = instanceProvider != null ? instanceProvider() : new Dictionary<TKey, TValue>();
+
+        foreach (var (key, value) in node.Children)
+        {
+            dict.Add(serializationManager.Read<TKey>(key, hookCtx, context),
+                serializationManager.Read<TValue>(value, hookCtx, context));
+        }
+
+        return dict;
+    }
+
+    public FrozenDictionary<TKey, TValue> Read(ISerializationManager serializationManager, MappingDataNode node,
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<FrozenDictionary<TKey, TValue>>? instanceProvider = null)
+    {
+        if (instanceProvider != null)
+        {
+            Logger.Warning(
+                $"Provided value to a Read-call for a {nameof(FrozenDictionary<TKey, TValue>)}. Ignoring...");
+        }
+
+        var array = new KeyValuePair<TKey, TValue>[node.Children.Count];
+        int i = 0;
+        foreach (var (key, value) in node.Children)
+        {
+            var k = serializationManager.Read<TKey>(key, hookCtx, context);
+            var v = serializationManager.Read<TValue>(value, hookCtx, context);
+            array[i++] = new(k,v);
+        }
+
+        return array.ToFrozenDictionary();
+    }
+
 
     IReadOnlyDictionary<TKey, TValue> ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
         ISerializationManager serializationManager, MappingDataNode node,
@@ -152,6 +200,10 @@ public sealed class DictionarySerializer<TKey, TValue> :
         return dict;
     }
 
+    #endregion
+
+    #region Copy
+
     public void CopyTo(ISerializationManager serializationManager, Dictionary<TKey, TValue> source, ref Dictionary<TKey, TValue> target,
         IDependencyCollection dependencies,
         SerializationHookContext hookCtx,
@@ -182,8 +234,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
     public IReadOnlyDictionary<TKey, TValue> CreateCopy(ISerializationManager serializationManager, IReadOnlyDictionary<TKey, TValue> source,
         IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
-        var target = new Dictionary<TKey, TValue>();
-        target.EnsureCapacity(source.Count);
+        var target = new Dictionary<TKey, TValue>(source.Count);
         foreach (var value in source)
         {
             target.Add(
@@ -193,4 +244,21 @@ public sealed class DictionarySerializer<TKey, TValue> :
 
         return target;
     }
+
+    public FrozenDictionary<TKey, TValue> CreateCopy(ISerializationManager serializationManager, FrozenDictionary<TKey, TValue> source,
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
+    {
+        var array = new KeyValuePair<TKey, TValue>[source.Count];
+        int i = 0;
+        foreach (var value in source)
+        {
+            var k = serializationManager.CreateCopy(value.Key, hookCtx, context);
+            var v = serializationManager.CreateCopy(value.Value, hookCtx, context);
+            array[i++] = new(k, v);
+        }
+
+        return array.ToFrozenDictionary();
+    }
+
+    #endregion
 }

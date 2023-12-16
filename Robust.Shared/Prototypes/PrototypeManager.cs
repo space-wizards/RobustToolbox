@@ -771,8 +771,7 @@ namespace Robust.Shared.Prototypes
 
         private void Freeze(Dictionary<Type, KindData> dict)
         {
-            var st = new Stopwatch();
-            st.Start();
+            var st = RStopwatch.StartNew();
             _kinds = dict.ToFrozenDictionary();
 
             // fun fact: Sawmill can be null in tests????

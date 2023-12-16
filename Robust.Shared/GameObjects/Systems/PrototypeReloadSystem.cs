@@ -16,17 +16,10 @@ internal sealed class PrototypeReloadSystem : EntitySystem
 
     public override void Initialize()
     {
-        _prototypes.PrototypesReloaded += OnPrototypesReloaded;
+        SubscribeLocalEvent<PrototypesReloadedEvent>(OnPrototypesReloaded);
     }
 
-    public override void Shutdown()
-    {
-        base.Shutdown();
-
-        _prototypes.PrototypesReloaded -= OnPrototypesReloaded;
-    }
-
-    private void OnPrototypesReloaded(PrototypesReloadedEventArgs eventArgs)
+    private void OnPrototypesReloaded(PrototypesReloadedEvent eventArgs)
     {
         if (!eventArgs.ByType.TryGetValue(typeof(EntityPrototype), out var set))
             return;

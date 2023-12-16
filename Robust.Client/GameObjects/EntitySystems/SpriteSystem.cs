@@ -58,7 +58,7 @@ namespace Robust.Client.GameObjects
 
             UpdatesAfter.Add(typeof(SpriteTreeSystem));
 
-            _proto.PrototypesReloaded += OnPrototypesReloaded;
+            SubscribeLocalEvent<PrototypesReloadedEvent>(OnPrototypesReloaded);
             SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
@@ -75,7 +75,6 @@ namespace Robust.Client.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
-            _proto.PrototypesReloaded -= OnPrototypesReloaded;
             _cfg.UnsubValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged);
         }
 

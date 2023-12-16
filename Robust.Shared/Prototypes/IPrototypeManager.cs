@@ -334,7 +334,7 @@ public interface IPrototypeManager
     /// <remarks>
     ///     This does NOT fire on initial prototype load.
     /// </remarks>
-    event Action<PrototypesReloadedEventArgs> PrototypesReloaded;
+    event Action<PrototypesReloadedEvent> PrototypesReloaded;
 
     /// <summary>
     /// Get the yaml data for a given prototype.
@@ -347,9 +347,40 @@ internal interface IPrototypeManagerInternal : IPrototypeManager
     event Action<DataNodeDocument>? LoadedData;
 }
 
-public sealed record PrototypesReloadedEventArgs(
-    IReadOnlyDictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet> ByType,
+/// <summary>
+/// This is event contains information about prototypes that have been modified. It is broadcast as a system event,
+/// whenever <see cref="IPrototypeManager.PrototypesReloaded"/> gets invoked.
+/// </summary>
+public sealed record PrototypesReloadedEvent(HashSet<Type> Modified,
+    IReadOnlyDictionary<Type, PrototypesReloadedEvent.PrototypeChangeSet> ByType,
     IReadOnlyDictionary<Type, HashSet<string>>? Removed = null)
 {
     public sealed record PrototypeChangeSet(IReadOnlyDictionary<string, IPrototype> Modified);
+
+    /// <summary>
+    /// Checks whether a given prototype kind was modified at all. This includes both changes and removals.
+    /// </summary>
+    public bool WasModified<T>() where T : IPrototype
+    {
+        return Modified.Contains(typeof(T));
+    }
+
+    /// <summary>
+    /// Returns a set of all modified prototype instances of a given kind. This includes both changes and removals.
+    /// </summary>
+    public bool TryGetModified<T>([NotNullWhen(true)] out HashSet<string>? modified) where T : IPrototype
+    {
+        modified = null;
+        if (!WasModified<T>())
+            return false;
+
+        modified = new();
+        if (ByType.TryGetValue(typeof(T), out var mod))
+            modified.UnionWith(mod.Modified.Keys);
+
+        if (Removed != null && Removed.TryGetValue(typeof(T), out var rem))
+            modified.UnionWith(rem);
+
+        return true;
+    }
 }

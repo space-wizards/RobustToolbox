@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
@@ -70,37 +72,43 @@ internal sealed partial class PvsSystem
             return;
 
         var ackedTick = sessionData.LastReceivedAck;
-        Dictionary<NetEntity, PvsEntityVisibility>? ackedData;
+        List<NetEntity>? ackedEnts;
 
         if (sessionData.Overflow != null && sessionData.Overflow.Value.Tick <= ackedTick)
         {
             var (overflowTick, overflowEnts) = sessionData.Overflow.Value;
             sessionData.Overflow = null;
-            ackedData = overflowEnts;
+            ackedEnts = overflowEnts;
 
             // Even though the acked tick might be newer, we have no guarantee that the client received the cached tick,
             // so discard it unless they happen to be equal.
             if (overflowTick != ackedTick)
             {
-                _visSetPool.Return(overflowEnts);
+                _netUidListPool.Return(overflowEnts);
                 DebugTools.Assert(!sessionData.SentEntities.Values.Contains(overflowEnts));
                 return;
             }
         }
-        else if (!sessionData.SentEntities.TryGetValue(ackedTick, out ackedData))
+        else if (!sessionData.SentEntities.TryGetValue(ackedTick, out ackedEnts))
             return;
 
-        // return last acked to pool, but only if it is not still in the OverflowDictionary.
-        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(sessionData.LastAcked.Value.Tick))
+        var entityData = sessionData.EntityData;
+        foreach (var ent in CollectionsMarshal.AsSpan(ackedEnts))
         {
-            DebugTools.Assert(!sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
-            _visSetPool.Return(sessionData.LastAcked.Value.Data);
-        }
+            ref var data = ref CollectionsMarshal.GetValueRefOrNullRef(entityData, ent);
+            if (Unsafe.IsNullRef(ref data))
+            {
+                // This should only happen if the entity has been deleted.
 
-        sessionData.LastAcked = (ackedTick, ackedData);
-        foreach (var ent in ackedData.Keys)
-        {
-            sessionData.LastSeenAt[ent] = ackedTick;
+                // TODO PVS turn into debug assert
+                if (TryGetEntity(ent, out _))
+                    Log.Error($"Entity {ToPrettyString(ent)} is has missing entityData entry");
+
+                continue;
+            }
+
+            data.EntityLastAcked = ackedTick;
+            DebugTools.Assert(data.LastSent >= ackedTick); // LastSent may equal ackedTick if the packet was sent reliably.
         }
 
         // The client acked a tick. If they requested a full state, this ack happened some time after that, so we can safely set this to false

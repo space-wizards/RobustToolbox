@@ -598,11 +598,7 @@ namespace Robust.Shared.Prototypes
             {
                 RegisterKind(type, dict);
             }
-
-            var st = new Stopwatch();
-            st.Start();
-            _kinds = dict.ToFrozenDictionary();
-            Sawmill.Info($"Freezing prototype kinds took {st.Elapsed.TotalMilliseconds:f2}ms");
+            Freeze(dict);
         }
 
         /// <inheritdoc />
@@ -769,7 +765,16 @@ namespace Robust.Shared.Prototypes
             {
                 RegisterKind(kind, dict);
             }
+
+            Freeze(dict);
+        }
+
+        private void Freeze(Dictionary<Type, KindData> dict)
+        {
+            var st = new Stopwatch();
+            st.Start();
             _kinds = dict.ToFrozenDictionary();
+            Sawmill.Info($"Freezing prototype kinds took {st.Elapsed.TotalMilliseconds:f2}ms");
         }
 
         private void RegisterKind(Type kind, Dictionary<Type, KindData> kinds)

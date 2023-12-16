@@ -324,32 +324,30 @@ namespace Robust.Client.GameObjects
             if (_pointLightQuery.TryGetComponent(entity, out var light))
                 _lightSys.SetContainerOccluded(entity, lightOccluded, light);
 
-            var childEnumerator = xform.ChildEnumerator;
-
             // Try to avoid TryComp if we already know stuff is occluded.
             if ((!spriteOccluded || !lightOccluded) && TryComp<ContainerManagerComponent>(entity, out var manager))
             {
-                while (childEnumerator.MoveNext(out var child))
+                foreach (var child in xform._children)
                 {
                     // Thank god it's by value and not by ref.
                     var childSpriteOccluded = spriteOccluded;
                     var childLightOccluded = lightOccluded;
 
                     // We already know either sprite or light is not occluding so need to check container.
-                    if (manager.TryGetContainer(child.Value, out var container))
+                    if (manager.TryGetContainer(child, out var container))
                     {
                         childSpriteOccluded = childSpriteOccluded || !container.ShowContents;
                         childLightOccluded = childLightOccluded || container.OccludesLight;
                     }
 
-                    UpdateEntity(child.Value, TransformQuery.GetComponent(child.Value), childSpriteOccluded, childLightOccluded);
+                    UpdateEntity(child, TransformQuery.GetComponent(child), childSpriteOccluded, childLightOccluded);
                 }
             }
             else
             {
-                while (childEnumerator.MoveNext(out var child))
+                foreach (var child in xform._children)
                 {
-                    UpdateEntity(child.Value, TransformQuery.GetComponent(child.Value), spriteOccluded, lightOccluded);
+                    UpdateEntity(child, TransformQuery.GetComponent(child), spriteOccluded, lightOccluded);
                 }
             }
         }

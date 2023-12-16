@@ -320,13 +320,13 @@ public interface IPrototypeManager
     void RegisterType(Type protoClass);
 
     /// <summary>
-    /// Loads a single prototype kind into the manager.
+    /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.
     /// </summary>
     /// <param name="kind">
     /// The type of the prototype kind that implements <see cref="IPrototype"/>. This type also
     /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.
     /// </param>
-    void RegisterKind(Type kind);
+    void RegisterKind(params Type[] kinds);
 
     /// <summary>
     ///     Fired when prototype are reloaded. The event args contain the modified and removed prototypes.

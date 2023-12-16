@@ -48,7 +48,7 @@ namespace Robust.Shared.Prototypes
 
         #region IPrototypeManager members
 
-        private readonly Dictionary<Type, KindData> _kinds = new();
+        private FrozenDictionary<Type, KindData> _kinds = FrozenDictionary<Type, KindData>.Empty;
 
         private readonly HashSet<string> _ignoredPrototypeTypes = new();
 
@@ -230,7 +230,7 @@ namespace Robust.Shared.Prototypes
         public void Clear()
         {
             _kindNames.Clear();
-            _kinds.Clear();
+            _kinds = FrozenDictionary<Type, KindData>.Empty;
         }
 
         /// <inheritdoc />
@@ -617,10 +617,12 @@ namespace Robust.Shared.Prototypes
         public void ReloadPrototypeKinds()
         {
             Clear();
+            var dict = new Dictionary<Type, KindData>();
             foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
             {
-                RegisterKind(type);
+                RegisterKind(type, dict);
             }
+            Freeze(dict);
         }
 
         /// <inheritdoc />
@@ -807,7 +809,27 @@ namespace Robust.Shared.Prototypes
         void IPrototypeManager.RegisterType(Type type) => RegisterKind(type);
 
         /// <inheritdoc />
-        public void RegisterKind(Type kind)
+        public void RegisterKind(params Type[] kinds)
+        {
+            var dict = _kinds.ToDictionary();
+            foreach (var kind in kinds)
+            {
+                RegisterKind(kind, dict);
+            }
+
+            Freeze(dict);
+        }
+
+        private void Freeze(Dictionary<Type, KindData> dict)
+        {
+            var st = RStopwatch.StartNew();
+            _kinds = dict.ToFrozenDictionary();
+
+            // fun fact: Sawmill can be null in tests????
+            Sawmill?.Verbose($"Freezing prototype kinds took {st.Elapsed.TotalMilliseconds:f2}ms");
+        }
+
+        private void RegisterKind(Type kind, Dictionary<Type, KindData> kinds)
         {
             if (!(typeof(IPrototype).IsAssignableFrom(kind)))
                 throw new InvalidOperationException("Type must implement IPrototype.");
@@ -897,7 +919,7 @@ namespace Robust.Shared.Prototypes
             _kindPriorities[kind] = attribute.LoadPriority;
 
             var kindData = new KindData(kind);
-            _kinds[kind] = kindData;
+            kinds[kind] = kindData;
 
             if (kind.IsAssignableTo(typeof(IInheritingPrototype)))
                 kindData.Inheritance = new MultiRootInheritanceGraph<string>();

@@ -186,13 +186,11 @@ public abstract partial class SharedContainerSystem
             _physics.SetCanCollide(entity, false, false, body: physics);
         }
 
-        var enumerator = entity.Comp1.ChildEnumerator;
-
-        while (enumerator.MoveNext(out var child))
+        foreach (var child in entity.Comp1._children)
         {
-            var childXform = TransformQuery.GetComponent(child.Value);
-            PhysicsQuery.TryGetComponent(child.Value, out var childPhysics);
-            RecursivelyUpdatePhysics((child.Value, childXform, childPhysics));
+            var childXform = TransformQuery.GetComponent(child);
+            PhysicsQuery.TryGetComponent(child, out var childPhysics);
+            RecursivelyUpdatePhysics((child, childXform, childPhysics));
         }
     }
 
@@ -205,12 +203,10 @@ public abstract partial class SharedContainerSystem
             _joint.RefreshRelay(entity, jointComp);
         }
 
-        var enumerator = entity.Comp.ChildEnumerator;
-
-        while (enumerator.MoveNext(out var child))
+        foreach (var child in entity.Comp._children)
         {
-            var childXform = TransformQuery.GetComponent(child.Value);
-            RecursivelyUpdateJoints((child.Value, childXform));
+            var childXform = TransformQuery.GetComponent(child);
+            RecursivelyUpdateJoints((child, childXform));
         }
     }
 }

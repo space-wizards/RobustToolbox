@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -18,6 +19,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes
@@ -45,7 +47,7 @@ namespace Robust.Shared.Prototypes
 
         #region IPrototypeManager members
 
-        private readonly Dictionary<Type, KindData> _kinds = new();
+        private FrozenDictionary<Type, KindData> _kinds = FrozenDictionary<Type, KindData>.Empty;
 
         private readonly HashSet<string> _ignoredPrototypeTypes = new();
 
@@ -227,7 +229,7 @@ namespace Robust.Shared.Prototypes
         public void Clear()
         {
             _kindNames.Clear();
-            _kinds.Clear();
+            _kinds = FrozenDictionary<Type, KindData>.Empty;
         }
 
         /// <inheritdoc />
@@ -591,10 +593,16 @@ namespace Robust.Shared.Prototypes
         public void ReloadPrototypeKinds()
         {
             Clear();
+            var dict = new Dictionary<Type, KindData>();
             foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
             {
-                RegisterKind(type);
+                RegisterKind(type, dict);
             }
+
+            var st = new Stopwatch();
+            st.Start();
+            _kinds = dict.ToFrozenDictionary();
+            Sawmill.Info($"Freezing prototype kinds took {st.Elapsed.TotalMilliseconds:f2}ms");
         }
 
         /// <inheritdoc />
@@ -754,7 +762,17 @@ namespace Robust.Shared.Prototypes
         void IPrototypeManager.RegisterType(Type type) => RegisterKind(type);
 
         /// <inheritdoc />
-        public void RegisterKind(Type kind)
+        public void RegisterKind(params Type[] kinds)
+        {
+            var dict = _kinds.ToDictionary();
+            foreach (var kind in kinds)
+            {
+                RegisterKind(kind, dict);
+            }
+            _kinds = dict.ToFrozenDictionary();
+        }
+
+        private void RegisterKind(Type kind, Dictionary<Type, KindData> kinds)
         {
             if (!(typeof(IPrototype).IsAssignableFrom(kind)))
                 throw new InvalidOperationException("Type must implement IPrototype.");
@@ -844,7 +862,7 @@ namespace Robust.Shared.Prototypes
             _kindPriorities[kind] = attribute.LoadPriority;
 
             var kindData = new KindData();
-            _kinds[kind] = kindData;
+            kinds[kind] = kindData;
 
             if (kind.IsAssignableTo(typeof(IInheritingPrototype)))
                 kindData.Inheritance = new MultiRootInheritanceGraph<string>();

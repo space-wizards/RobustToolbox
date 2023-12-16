@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Robust.Shared;
@@ -65,7 +66,7 @@ namespace Robust.Client.Graphics.Clyde
                 return MouseButtonMap[button];
             }
 
-            private static readonly Dictionary<GlfwButton, Button> MouseButtonMap = new()
+            private static readonly FrozenDictionary<GlfwButton, Button> MouseButtonMap = new Dictionary<GlfwButton, Button>()
             {
                 {GlfwButton.Left, Button.Left},
                 {GlfwButton.Middle, Button.Middle},
@@ -75,10 +76,10 @@ namespace Robust.Client.Graphics.Clyde
                 {GlfwButton.Button6, Button.Button6},
                 {GlfwButton.Button7, Button.Button7},
                 {GlfwButton.Button8, Button.Button8},
-            };
+            }.ToFrozenDictionary();
 
-            private static readonly Dictionary<GlfwKey, Key> KeyMap;
-            private static readonly Dictionary<Key, GlfwKey> KeyMapReverse;
+            private static readonly FrozenDictionary<GlfwKey, Key> KeyMap;
+            private static readonly FrozenDictionary<Key, GlfwKey> KeyMapReverse;
 
 
             internal static Key ConvertGlfwKey(GlfwKey key)
@@ -218,14 +219,16 @@ namespace Robust.Client.Graphics.Clyde
                     {GlfwKey.F24, Key.F24},
                     {GlfwKey.Pause, Key.Pause},
                     {GlfwKey.World1, Key.World1},
-                };
+                }.ToFrozenDictionary();
 
-                KeyMapReverse = new Dictionary<Key, GlfwKey>();
+                var keyMapReverse = new Dictionary<Key, GlfwKey>();
 
                 foreach (var (key, value) in KeyMap)
                 {
-                    KeyMapReverse[value] = key;
+                    keyMapReverse[value] = key;
                 }
+
+                KeyMapReverse = keyMapReverse.ToFrozenDictionary();
             }
         }
     }

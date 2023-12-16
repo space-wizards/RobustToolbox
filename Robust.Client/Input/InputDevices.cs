@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using Robust.Shared.Localization;
 
@@ -28,7 +29,7 @@ namespace Robust.Client.Input
             return _mouseKeyMap[button];
         }
 
-        private static readonly Dictionary<Button, Keyboard.Key> _mouseKeyMap = new()
+        private static readonly FrozenDictionary<Button, Keyboard.Key> _mouseKeyMap = new Dictionary<Button, Keyboard.Key>()
         {
             {Button.Left, Keyboard.Key.MouseLeft},
             {Button.Middle, Keyboard.Key.MouseMiddle},
@@ -40,7 +41,7 @@ namespace Robust.Client.Input
             {Button.Button8, Keyboard.Key.MouseButton8},
             {Button.Button9, Keyboard.Key.MouseButton9},
             {Button.LastButton, Keyboard.Key.Unknown},
-        };
+        }.ToFrozenDictionary();
 
     }
 

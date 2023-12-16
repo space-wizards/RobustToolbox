@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -1777,7 +1778,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         public static Color YellowGreen => new(154, 205, 50, 255);
 
-        private static readonly Dictionary<string, Color> DefaultColors = new()
+        private static readonly FrozenDictionary<string, Color> DefaultColors = new Dictionary<string, Color>()
         {
             ["transparent"] = Transparent,
             ["aliceblue"] = AliceBlue,
@@ -1924,12 +1925,12 @@ namespace Robust.Shared.Maths
             ["whitesmoke"] = WhiteSmoke,
             ["yellow"] = Yellow,
             ["yellowgreen"] = YellowGreen,
-        };
+        }.ToFrozenDictionary();
 
         #endregion
 
-        private static readonly Dictionary<Color, string> DefaultColorsInverted =
-            DefaultColors.ToLookup(pair => pair.Value).ToDictionary(i => i.Key, i => i.First().Key);
+        private static readonly FrozenDictionary<Color, string> DefaultColorsInverted =
+            DefaultColors.ToLookup(pair => pair.Value).ToFrozenDictionary(i => i.Key, i => i.First().Key);
 
         public readonly string? Name()
         {

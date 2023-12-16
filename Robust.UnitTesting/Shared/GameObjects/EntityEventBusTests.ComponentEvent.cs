@@ -81,7 +81,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var compFacMock = new Mock<IComponentFactory>();
 
             compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<MetaDataComponent>())).Returns(compRegistration);
-            compFacMock.Setup(m => m.GetAllRefTypes()).Returns(new[] { (CompIdx.Index<MetaDataComponent>(), typeof(MetaDataComponent)) });
+            compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { (CompIdx.Index<MetaDataComponent>(), typeof(MetaDataComponent)) });
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
@@ -137,7 +137,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var compFacMock = new Mock<IComponentFactory>();
 
             compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<MetaDataComponent>())).Returns(compRegistration);
-            compFacMock.Setup(m => m.GetAllRefTypes()).Returns(new[] { ( CompIdx.Index<MetaDataComponent>(), typeof(MetaDataComponent)) });
+            compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { ( CompIdx.Index<MetaDataComponent>(), typeof(MetaDataComponent)) });
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
@@ -202,7 +202,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Setup<OrderBComponent>(out var instB);
             Setup<OrderCComponent>(out var instC);
 
-            compFacMock.Setup(m => m.GetAllRefTypes()).Returns(allRefTypes.ToArray());
+            compFacMock.Setup(m => m.GetAllRegistrations()).Returns(allRefTypes.ToArray());
 
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
             var bus = new EntityEventBus(entManMock.Object);

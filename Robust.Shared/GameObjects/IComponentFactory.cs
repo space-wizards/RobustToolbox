@@ -87,7 +87,7 @@ namespace Robust.Shared.GameObjects
         /// Registers a component name as being ignored.
         /// </summary>
         /// <param name="names">The names to be ignored.</param>
-        void RegisterIgnore(string[] names);
+        void RegisterIgnore(params string[] names);
 
         /// <summary>
         /// Disables throwing on missing components. Missing components will instead be treated as ignored.
@@ -269,7 +269,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         void DoAutoRegistrations();
 
-        IEnumerable<(CompIdx, Type)> GetAllRefTypes();
+        IEnumerable<ComponentRegistration> GetAllRegistrations();
         void GenerateNetIds();
 
         Type IdxToType(CompIdx idx);

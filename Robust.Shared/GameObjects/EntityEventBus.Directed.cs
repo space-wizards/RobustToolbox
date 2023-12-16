@@ -128,9 +128,9 @@ namespace Robust.Shared.GameObjects
 
         private void InitEntSubscriptionsArray()
         {
-            foreach (var (idx, type) in _comFac.GetAllRefTypes())
+            foreach (var reg in _comFac.GetAllRegistrations())
             {
-                CompIdx.AssignArray(ref _entSubscriptions, idx, new Dictionary<Type, DirectedRegistration>());
+                CompIdx.AssignArray(ref _entSubscriptions, reg.Idx, new Dictionary<Type, DirectedRegistration>());
             }
         }
 

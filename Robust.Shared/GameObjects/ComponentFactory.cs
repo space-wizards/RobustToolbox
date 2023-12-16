@@ -422,7 +422,7 @@ namespace Robust.Shared.GameObjects
             RegisterClasses(new []{typeof(T)}, overwrite);
         }
 
-        public IEnumerable<(CompIdx, Type)> GetAllRefTypes()
+        public IEnumerable<(CompIdx, Type)> GetAllRegistrations()
         {
             return _types.Values.Select(x => (x.Idx, x.Type));
         }

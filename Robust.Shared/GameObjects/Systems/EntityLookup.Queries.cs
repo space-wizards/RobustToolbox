@@ -178,10 +178,9 @@ public sealed partial class EntityLookupSystem
         }
 
         toAdd.Add(uid);
-        var childEnumerator = xform.ChildEnumerator;
-        while (childEnumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            RecursiveAdd(child.Value, ref toAdd);
+            RecursiveAdd(child, ref toAdd);
         }
     }
 
@@ -202,7 +201,7 @@ public sealed partial class EntityLookupSystem
             if (!_containerQuery.TryGetComponent(uid, out var conManager))
                 continue;
 
-            foreach (var con in conManager.GetAllContainers())
+            foreach (var con in _container.GetAllContainers(uid, conManager))
             {
                 foreach (var contained in con.ContainedEntities)
                 {

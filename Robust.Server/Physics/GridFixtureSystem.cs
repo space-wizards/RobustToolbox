@@ -156,7 +156,7 @@ namespace Robust.Server.Physics
 
             foreach (var session in _subscribedSessions)
             {
-                RaiseNetworkEvent(msg, session.ConnectedClient);
+                RaiseNetworkEvent(msg, session.Channel);
             }
         }
 

@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -20,6 +21,7 @@ namespace Robust.Shared.Physics.Systems
     public partial class SharedPhysicsSystem
     {
         [Dependency] private readonly SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
+        [Dependency] private readonly INetManager _netMan = default!;
 
         /// <summary>
         /// Checks to see if the specified collision rectangle collides with any of the physBodies under management.
@@ -300,7 +302,9 @@ namespace Robust.Shared.Physics.Systems
                     // Need to convert it back to world-space.
                     var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
                     results.Add(result);
-                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, result));
+#if DEBUG
+                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, result, _netMan.IsServer, mapId));
+#endif
                     return true;
                 }, gridRay);
 
@@ -326,15 +330,19 @@ namespace Robust.Shared.Physics.Systems
                     // Need to convert it back to world-space.
                     var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
                     results.Add(result);
-                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, result));
+#if DEBUG
+                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, result, _netMan.IsServer, mapId));
+#endif
                     return true;
                 }, gridRay);
             }
 
+#if DEBUG
             if (results.Count == 0)
             {
-                _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
+                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, null, _netMan.IsServer, mapId));
             }
+#endif
 
             results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
             return results;
@@ -423,7 +431,9 @@ namespace Robust.Shared.Physics.Systems
             }
 
             // This hid rays that didn't penetrate something. Don't hide those because that causes rays to disappear that shouldn't.
-            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
+#if DEBUG
+            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, null, _netMan.IsServer, mapId));
+#endif
 
             return penetration;
         }

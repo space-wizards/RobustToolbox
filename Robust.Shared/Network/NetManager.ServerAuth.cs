@@ -329,6 +329,7 @@ namespace Robust.Shared.Network
 
         private async void HandleApproval(NetIncomingMessage message)
         {
+            DebugTools.Assert(message.SenderConnection != null);
             // TODO: Maybe preemptively refuse connections here in some cases?
             if (message.SenderConnection.Status != NetConnectionStatus.RespondedAwaitingApproval)
             {

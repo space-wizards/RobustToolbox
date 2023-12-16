@@ -150,11 +150,9 @@ public sealed partial class EntityLookupSystem : EntitySystem
         BroadphaseComponent component,
         PhysicsMapComponent? map)
     {
-        var childEnum = xform.ChildEnumerator;
-
-        while (childEnum.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            if (!_xformQuery.TryGetComponent(child.Value, out var childXform))
+            if (!_xformQuery.TryGetComponent(child, out var childXform))
                 continue;
 
             if (childXform.GridUid == child)
@@ -164,9 +162,9 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 continue;
 
             DebugTools.Assert(childXform.Broadphase.Value.Uid == component.Owner);
-            DebugTools.Assert(!_mapManager.IsGrid(child.Value));
+            DebugTools.Assert(!_mapManager.IsGrid(child));
 
-            if (childXform.Broadphase.Value.CanCollide && _fixturesQuery.TryGetComponent(child.Value, out var fixtures))
+            if (childXform.Broadphase.Value.CanCollide && _fixturesQuery.TryGetComponent(child, out var fixtures))
             {
                 if (map == null)
                     _mapQuery.TryGetComponent(childXform.Broadphase.Value.PhysicsMap, out map);
@@ -492,10 +490,10 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var oldBuffer = CompOrNull<PhysicsMapComponent>(oldMap)?.MoveBuffer;
         var newBuffer = CompOrNull<PhysicsMapComponent>(newMap)?.MoveBuffer;
 
-        var enumerator = args.Component.ChildEnumerator;
-        while (enumerator.MoveNext(out var child))
+
+        foreach (var child in args.Component._children)
         {
-            RecursiveOnGridChangedMap(child.Value, oldMap, newMap, oldBuffer, newBuffer, xformQuery, fixturesQuery);
+            RecursiveOnGridChangedMap(child, oldMap, newMap, oldBuffer, newBuffer, xformQuery, fixturesQuery);
         }
     }
 
@@ -511,10 +509,10 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (!xformQuery.TryGetComponent(uid, out var xform))
             return;
 
-        var enumerator = xform.ChildEnumerator;
-        while (enumerator.MoveNext(out var child))
+
+        foreach (var child in xform._children)
         {
-            RecursiveOnGridChangedMap(child.Value, oldMap, newMap, oldBuffer, newBuffer, xformQuery, fixturesQuery);
+            RecursiveOnGridChangedMap(child, oldMap, newMap, oldBuffer, newBuffer, xformQuery, fixturesQuery);
         }
 
         if (xform.Broadphase == null || !xform.Broadphase.Value.CanCollide)
@@ -697,7 +695,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
             AddOrUpdatePhysicsTree(uid, broadUid, broadphase, broadphaseXform, physicsMap, xform, body, _fixturesQuery.GetComponent(uid), _xformQuery);
         }
 
-        var childEnumerator = xform.ChildEnumerator;
         if (xform.ChildCount == 0 || !recursive)
             return;
 
@@ -705,21 +702,21 @@ public sealed partial class EntityLookupSystem : EntitySystem
         // AFAIK the separate container check is redundant now that we check for an invalid broadphase at the beginning of this function.
         if (!_containerQuery.HasComponent(uid))
         {
-            while (childEnumerator.MoveNext(out var child))
+            foreach (var child in xform._children)
             {
-                var childXform = _xformQuery.GetComponent(child.Value);
-                AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, recursive);
+                var childXform = _xformQuery.GetComponent(child);
+                AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child, childXform, recursive);
             }
             return;
         }
 
-        while (childEnumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            if ((_metaQuery.GetComponent(child.Value).Flags & MetaDataFlags.InContainer) != 0x0)
+            if ((_metaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) != 0x0)
                 continue;
 
-            var childXform = _xformQuery.GetComponent(child.Value);
-            AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, recursive);
+            var childXform = _xformQuery.GetComponent(child);
+            AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child, childXform, recursive);
         }
     }
 
@@ -788,15 +785,14 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (!recursive)
             return;
 
-        var childEnumerator = xform.ChildEnumerator;
-        while (childEnumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
             RemoveFromEntityTree(
                 broadUid,
                 broadphase,
                 ref physicsMap,
-                child.Value,
-                _xformQuery.GetComponent(child.Value));
+                child,
+                _xformQuery.GetComponent(child));
         }
     }
 

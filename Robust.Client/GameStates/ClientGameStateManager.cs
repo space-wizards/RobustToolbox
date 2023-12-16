@@ -982,16 +982,15 @@ namespace Robust.Client.GameStates
                 xformSys.DetachParentToNull(ent, xform);
 
                 // Then detach all children.
-                var childEnumerator = xform.ChildEnumerator;
-                while (childEnumerator.MoveNext(out var child))
+                foreach (var child in xform._children)
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
+                    xformSys.DetachParentToNull(child, xforms.GetComponent(child), xform);
 
                     if (deleteClientChildren
                         && !deleteClientEntities // don't add duplicates
-                        && _entities.IsClientSide(child.Value))
+                        && _entities.IsClientSide(child))
                     {
-                        _toDelete.Add(child.Value);
+                        _toDelete.Add(child);
                     }
                 }
 
@@ -1039,7 +1038,7 @@ namespace Robust.Client.GameStates
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
+                    xformSys.DetachParentToNull(child, xforms.GetComponent(child), xform);
                 }
 
                 // Finally, delete the entity.
@@ -1130,7 +1129,7 @@ namespace Robust.Client.GameStates
                         (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
                         containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container, null, true))
                     {
-                        container.Remove(ent.Value, _entities, xform, meta, false, true);
+                        containerSys.Remove((ent.Value, xform, meta), container, false, true);
                     }
 
                     meta._flags |= MetaDataFlags.Detached;
@@ -1430,7 +1429,7 @@ namespace Robust.Client.GameStates
             void _recursiveRemoveState(NetEntity netEntity, TransformComponent xform, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery)
             {
                 _processor._lastStateFullRep.Remove(netEntity);
-                foreach (var child in xform.ChildEntities)
+                foreach (var child in xform._children)
                 {
                     if (xformQuery.TryGetComponent(child, out var childXform) &&
                         metaQuery.TryGetComponent(child, out var childMeta))

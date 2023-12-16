@@ -58,11 +58,10 @@ internal sealed class RecursiveMoveSystem : EntitySystem
         // annoyingly, containers aren't guaranteed to occlude sprites & lights
         // but AFAIK thats currently unused???
 
-        var childEnumerator = xform.ChildEnumerator;
-        while (childEnumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            if (_xformQuery.TryGetComponent(child.Value, out var childXform))
-                AnythingMovedSubHandler(child.Value, childXform);
+            if (_xformQuery.TryGetComponent(child, out var childXform))
+                AnythingMovedSubHandler(child, childXform);
         }
     }
 }

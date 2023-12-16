@@ -492,8 +492,12 @@ Types:
     IsByRefLikeAttribute: { All: True }
     IsExternalInit: { All: True }
     IsReadOnlyAttribute: { All: True }
+    IsUnmanagedAttribute: { All: True }
     IteratorStateMachineAttribute: { All: True }
+    NullableAttribute: { All: True }
+    NullableContextAttribute: { All: True }
     PreserveBaseOverridesAttribute: { All: True }
+    RefSafetyRulesAttribute: { All: True }
     RuntimeCompatibilityAttribute: { All: True }
     RuntimeHelpers: { All: True }
     TaskAwaiter: { All: True }

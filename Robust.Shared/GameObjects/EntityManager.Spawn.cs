@@ -119,7 +119,7 @@ public partial class EntityManager
                 continue;
 
             uid = Spawn(protoName, overrides);
-            if (container.Insert(uid.Value, this))
+            if (_containers.Insert(uid.Value, container))
                 return true;
 
             DeleteEntity(uid.Value);
@@ -147,7 +147,7 @@ public partial class EntityManager
 
         uid = Spawn(protoName, overrides);
 
-        if (container.Insert(uid.Value, this))
+        if (_containers.Insert(uid.Value, container))
             return true;
 
         DeleteEntity(uid.Value);
@@ -178,7 +178,7 @@ public partial class EntityManager
 
         if ((containerComp == null && !TryGetComponent(containerUid, out containerComp))
              || !containerComp.Containers.TryGetValue(containerId, out var container)
-             || !container.Insert(uid, this))
+             || !_containers.Insert(uid, container))
         {
 
             xform ??= TransformQuery.GetComponent(containerUid);

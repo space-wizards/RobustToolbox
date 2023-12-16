@@ -60,7 +60,7 @@ namespace Robust.UnitTesting.Shared
                 var player = playerManager.Sessions.Single();
 
                 Assert.That(player.Status, Is.EqualTo(SessionStatus.Connected));
-                Assert.That(player.ConnectedClient.IsConnected, Is.True);
+                Assert.That(player.Channel.IsConnected, Is.True);
             });
 
             await client.WaitAssertion(() =>

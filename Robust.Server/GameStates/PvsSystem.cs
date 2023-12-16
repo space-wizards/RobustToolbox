@@ -331,15 +331,13 @@ internal sealed partial class PvsSystem : EntitySystem
         else
             _entityPvsCollection.UpdateIndex(metadata.NetEntity, xform.MapID, indices, forceDirty: forceDirty);
 
-        var children = xform.ChildEnumerator;
-
         // TODO PERFORMANCE
         // Given uid is the parent of its children, we already know that the child xforms will have to be relative to
         // coordinates.EntityId. So instead of calling GetMoverCoordinates() for each child we should just calculate it
         // directly.
-        while (children.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            UpdateEntityRecursive(child.Value, _metaQuery.GetComponent(child.Value), _xformQuery.GetComponent(child.Value), coordinates, true, forceDirty);
+            UpdateEntityRecursive(child, _metaQuery.GetComponent(child), _xformQuery.GetComponent(child), coordinates, true, forceDirty);
         }
     }
 

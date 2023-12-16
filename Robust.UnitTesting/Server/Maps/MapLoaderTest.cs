@@ -105,7 +105,7 @@ entities:
                 return;
             }
 
-            var entity = entMan.GetComponent<TransformComponent>(geid).Children.Single().Owner;
+            var entity = entMan.GetComponent<TransformComponent>(geid)._children.Single();
             var c = entMan.GetComponent<MapDeserializeTestComponent>(entity);
 
             Assert.That(c.Bar, Is.EqualTo(2));

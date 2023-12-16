@@ -180,6 +180,16 @@ public abstract partial class SharedTransformSystem
         return ContainsEntity(parent, (child.Comp.ParentUid, parentXform));
     }
 
+    /// <summary>
+    /// Checks whether the given component is the parent of the entity without having to fetch the child's
+    /// transform component.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsParentOf(TransformComponent parent, EntityUid child)
+    {
+        return parent._children.Contains(child);
+    }
+
     #endregion
 
     #region Component Lifetime
@@ -353,25 +363,11 @@ public abstract partial class SharedTransformSystem
         if (!xform._gridInitialized || xform._gridUid == gridId || xform.GridUid == uid)
             return;
 
-        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
-        DebugTools.Assert(gridId == null || HasComp<MapGridComponent>(gridId));
-
-        xformQuery ??= XformQuery;
-        SetGridIdRecursive(uid, xform, gridId, xformQuery.Value);
-    }
-
-    private void SetGridIdRecursive(EntityUid uid, TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent> xformQuery)
-    {
-        if (!xform._gridInitialized || xform._gridUid == gridId || xform.GridUid == uid)
-            return;
-
-        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
+        DebugTools.Assert(!HasComp<MapGridComponent>(uid) || gridId == uid);
         xform._gridUid = gridId;
-        var childEnumerator = xform.ChildEnumerator;
-
-        while (childEnumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            SetGridIdRecursive(child.Value, xformQuery.GetComponent(child.Value), gridId, xformQuery);
+            SetGridId(child, XformQuery.GetComponent(child), gridId);
         }
     }
 
@@ -1430,11 +1426,13 @@ public abstract partial class SharedTransformSystem
 
     private void OnGridAdd(EntityUid uid, TransformComponent component, GridAddEvent args)
     {
+        // Added to existing map so need to update all children too.
         if (LifeStage(uid) > EntityLifeStage.Initialized)
         {
             SetGridId(uid, component, uid, XformQuery);
             return;
         }
+
         component._gridInitialized = true;
         component._gridUid = uid;
     }
@@ -1466,7 +1464,7 @@ public abstract partial class SharedTransformSystem
             if (_container.IsEntityInContainer(targetUid)
                 && _container.TryGetContainingContainer(targetXform.ParentUid, targetUid, out var container,
                     skipExistCheck: true)
-                && container.Insert(entity, EntityManager, xform))
+                && _container.Insert((entity, xform, null, null), container))
             {
                 return;
             }
@@ -1508,7 +1506,7 @@ public abstract partial class SharedTransformSystem
             if (!container.Contains(target))
                 continue;
 
-            if (!container.Insert(entity, EntityManager, xform))
+            if (!_container.Insert((entity, xform, null, null), container))
                 PlaceNextTo((entity, xform), targetXform.ParentUid);
         }
     }

@@ -157,7 +157,22 @@ internal abstract class BaseAudioSource : IAudioSource
     }
 
     /// <inheritdoc />
-    public float Pitch { get; set; }
+    public float Pitch
+    {
+        get
+        {
+            _checkDisposed();
+            AL.GetSource(SourceHandle, ALSourcef.Pitch, out var value);
+            Master._checkAlError();
+            return value;
+        }
+        set
+        {
+            _checkDisposed();
+            AL.Source(SourceHandle, ALSourcef.Pitch, value);
+            Master._checkAlError();
+        }
+    }
 
     /// <inheritdoc />
     public float Volume
@@ -189,7 +204,7 @@ internal abstract class BaseAudioSource : IAudioSource
             {
                 AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
                 // Default to 0 to avoid spiking audio, just means it will be muted for a frame in this case.
-                priorOcclusion = _gain == 0 ? 0f : priorGain / _gain;
+                priorOcclusion = _gain == 0 ? 1f : priorGain / _gain;
             }
 
             _gain = value;
@@ -328,6 +343,8 @@ internal abstract class BaseAudioSource : IAudioSource
     public void SetAuxiliary(IAuxiliaryAudio? audio)
     {
         _checkDisposed();
+        if (!IsEfxSupported)
+            return;
 
         if (audio is AuxiliaryAudio impAudio)
         {

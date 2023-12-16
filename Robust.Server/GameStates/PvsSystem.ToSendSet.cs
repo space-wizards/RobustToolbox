@@ -215,7 +215,7 @@ internal sealed partial class PvsSystem
         in int enteredEntityBudget)
     {
         var curTick = _gameTiming.CurTick;
-        foreach (var child in xform.ChildEntities)
+        foreach (var child in xform._children)
         {
             if (!_xformQuery.TryGetComponent(child, out var childXform))
                 continue;

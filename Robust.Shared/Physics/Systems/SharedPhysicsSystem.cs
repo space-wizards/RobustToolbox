@@ -217,13 +217,13 @@ namespace Robust.Shared.Physics.Systems
             if (jointQuery.TryGetComponent(uid, out var joint))
                 _joints.ClearJoints(uid, joint);
 
-            var childEnumerator = xform.ChildEnumerator;
-            while (childEnumerator.MoveNext(out var child))
+
+            foreach (var child in xform._children)
             {
                 if (xformQuery.TryGetComponent(child, out var childXform))
                 {
                     bodyQuery.TryGetComponent(child, out var childBody);
-                    RecursiveMapUpdate(child.Value, childXform, childBody, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
+                    RecursiveMapUpdate(child, childXform, childBody, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
                 }
             }
         }

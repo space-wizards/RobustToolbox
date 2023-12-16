@@ -54,6 +54,55 @@ END TEMPLATE-->
 *None yet*
 
 
+## 192.0.0
+
+### Breaking changes
+
+* `EntitySystem.TryGetEntity` is now `protected`.
+
+### Internal
+
+* PVS message ack processing now happens asynchronously 
+* Dependency collections now use a `FrozenDictionary`
+
+
+## 191.0.1
+
+### Bugfixes
+
+.* Fix sandbox being broken thanks to .NET 8.
+
+
+## 191.0.0
+
+### Breaking changes
+
+* Robust now uses **.NET 8**. Nyoom.
+
+### Bugfixes
+
+* `IResourceCache.TryGetResource<T>` won't silently eat all exceptions anymore.
+
+
+## 190.1.1
+
+### Bugfixes
+
+* Revert broadphase job to prevent OOM from logs.
+
+
+## 190.1.0
+
+### New features
+
+* Add OnGrabbed / OnReleased to slider controls.
+* Add Rotation method for matrices and also make the precision slightly better when angles are passed in by taking double-precision not single-precision floats.
+
+### Bugfixes
+
+* Fix some grid setting asserts when adding gridcomponent to existing maps.
+
+
 ## 190.0.0
 
 ### New features
@@ -382,7 +431,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Most methods in ActorSystem have been moved to ISharedPlayerManager. 
+* Most methods in ActorSystem have been moved to ISharedPlayerManager.
 * Several actor/player related components and events have been moved to shared.
 
 ### New features

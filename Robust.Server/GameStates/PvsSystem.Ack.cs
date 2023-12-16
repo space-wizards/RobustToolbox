@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
@@ -31,10 +32,12 @@ internal sealed partial class PvsSystem
     /// <summary>
     ///     Processes queued client acks in parallel
     /// </summary>
-    internal void ProcessQueuedAcks()
+    internal WaitHandle ProcessQueuedAcks()
     {
         if (PendingAcks.Count == 0)
-            return;
+        {
+            return ParallelManager.DummyResetEvent.WaitHandle;
+        }
 
         _toAck.Clear();
 
@@ -43,8 +46,8 @@ internal sealed partial class PvsSystem
             _toAck.Add(session);
         }
 
-        _parallelManager.ProcessNow(_ackJob, _toAck.Count);
         PendingAcks.Clear();
+        return _parallelManager.Process(_ackJob, _toAck.Count);
     }
 
     private record struct PvsAckJob : IParallelRobustJob

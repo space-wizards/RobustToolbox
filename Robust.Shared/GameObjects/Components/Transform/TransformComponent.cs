@@ -374,24 +374,8 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        [ViewVariables]
-        public IEnumerable<TransformComponent> Children
-        {
-            get
-            {
-                if (_children.Count == 0) yield break;
-
-                var xforms = _entMan.GetEntityQuery<TransformComponent>();
-                var children = ChildEnumerator;
-
-                while (children.MoveNext(out var child))
-                {
-                    yield return xforms.GetComponent(child.Value);
-                }
-            }
-        }
-
-        [ViewVariables] public IEnumerable<EntityUid> ChildEntities => _children;
+        [Obsolete("Use ChildEnumerator")]
+        public IEnumerable<EntityUid> ChildEntities => _children;
 
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
 
@@ -446,15 +430,13 @@ namespace Robust.Shared.GameObjects
             EntityQuery<MetaDataComponent> metaQuery,
             MetaDataSystem system)
         {
-            var childEnumerator = ChildEnumerator;
-
-            while (childEnumerator.MoveNext(out var child))
+            foreach (var child in _children)
             {
                 //Set Paused state
-                var metaData = metaQuery.GetComponent(child.Value);
-                system.SetEntityPaused(child.Value, mapPaused, metaData);
+                var metaData = metaQuery.GetComponent(child);
+                system.SetEntityPaused(child, mapPaused, metaData);
 
-                var concrete = xformQuery.GetComponent(child.Value);
+                var concrete = xformQuery.GetComponent(child);
 
                 concrete.MapUid = newUid;
                 concrete.MapID = newMapId;
@@ -655,11 +637,11 @@ namespace Robust.Shared.GameObjects
             _children = children;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out EntityUid? child)
+        public bool MoveNext(out EntityUid child)
         {
             if (!_children.MoveNext())
             {
-                child = null;
+                child = default;
                 return false;
             }
 

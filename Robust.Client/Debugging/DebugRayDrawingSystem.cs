@@ -4,18 +4,17 @@ using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.Debugging;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Physics;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Debugging
 {
     internal sealed class DebugRayDrawingSystem : SharedDebugRayDrawingSystem
     {
+#if DEBUG
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IGameTiming _gameTimer = default!;
 
@@ -28,6 +27,8 @@ namespace Robust.Client.Debugging
             public Vector2 RayHit;
             public TimeSpan LifeTime;
             public bool DidActuallyHit;
+            public bool Server;
+            public MapId Map;
         }
 
         public bool DebugDrawRays
@@ -73,7 +74,8 @@ namespace Robust.Client.Debugging
                 DidActuallyHit = ev.Results != null,
                 RayOrigin = ev.Ray.Position,
                 RayHit = ev.Results?.HitPos ?? ev.Ray.Direction * ev.MaxLength + ev.Ray.Position,
-                LifeTime = _gameTimer.RealTime + DebugRayLifetime
+                LifeTime = _gameTimer.RealTime + DebugRayLifetime,
+                Map = ev.Map
             };
 
             _raysWithLifeTime.Add(newRayWithLifetime);
@@ -93,7 +95,9 @@ namespace Robust.Client.Debugging
                 DidActuallyHit = msg.DidHit,
                 RayOrigin = msg.RayOrigin,
                 RayHit = msg.RayHit,
-                LifeTime = _gameTimer.RealTime + DebugRayLifetime
+                LifeTime = _gameTimer.RealTime + DebugRayLifetime,
+                Server = true,
+                Map = msg.Map
             };
 
             _raysWithLifeTime.Add(newRayWithLifetime);
@@ -114,10 +118,20 @@ namespace Robust.Client.Debugging
                 var handle = args.WorldHandle;
                 foreach (var ray in _owner._raysWithLifeTime)
                 {
+                    if (args.MapId != ray.Map)
+                        continue;
+
+                    Color color;
+                    if (ray.Server)
+                        color = ray.DidActuallyHit ? Color.Cyan : Color.Orange;
+                    else
+                        color = ray.DidActuallyHit ? Color.Blue : Color.Red;
+
                     handle.DrawLine(
                         ray.RayOrigin,
                         ray.RayHit,
-                        ray.DidActuallyHit ? Color.Yellow : Color.Magenta);
+                        color
+                        );
                 }
             }
 
@@ -128,5 +142,6 @@ namespace Robust.Client.Debugging
                 _owner._raysWithLifeTime.RemoveAll(r => r.LifeTime < _owner._gameTimer.RealTime);
             }
         }
+#endif
     }
 }

@@ -97,11 +97,11 @@ internal partial class AudioManager
         // check the git history, I originally used libvorbisfile which worked and loaded 16 bit LPCM.
         if (vorbis.Channels == 1)
         {
-            format = ALFormat.MonoFloat32Ext;
+            format = ALFormat.Mono16;
         }
         else if (vorbis.Channels == 2)
         {
-            format = ALFormat.StereoFloat32Ext;
+            format = ALFormat.Stereo16;
         }
         else
         {
@@ -110,9 +110,9 @@ internal partial class AudioManager
 
         unsafe
         {
-            fixed (float* ptr = vorbis.Data.Span)
+            fixed (short* ptr = vorbis.Data.Span)
             {
-                AL.BufferData(buffer, format, (IntPtr) ptr, vorbis.Data.Length * sizeof(float),
+                AL.BufferData(buffer, format, (IntPtr) ptr, vorbis.Data.Length * sizeof(short),
                     (int) vorbis.SampleRate);
             }
         }
@@ -223,6 +223,18 @@ internal partial class AudioManager
             return;
         }
 
+
+        #region Platform hack for MacOS
+        // HACK/BUG: Apple's OpenAL implementation has a bug where values of 0f for listener gain don't actually
+        // HACK/BUG: prevent sound playback. Workaround is to cap the minimum gain at a value just above 0.
+        if (OperatingSystem.IsMacOS() && newGain == 0f)
+        {
+            OpenALSawmill.Verbose("Not setting gain to 0 because Apple can't write an OpenAL implementation");
+            AL.Listener(ALListenerf.Gain, float.Epsilon);
+            return;
+        }
+        #endregion Platform hack for MacOS
+
         AL.Listener(ALListenerf.Gain, newGain);
     }
 
@@ -269,7 +281,7 @@ internal partial class AudioManager
         _bufferedAudioSources.Remove(handle);
     }
 
-    public IAudioSource? CreateAudioSource(AudioStream stream)
+    IAudioSource? IAudioInternal.CreateAudioSource(AudioStream stream)
     {
         var source = AL.GenSource();
 
@@ -290,7 +302,7 @@ internal partial class AudioManager
     }
 
     /// <inheritdoc/>
-    public IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio=false)
+    IBufferedAudioSource? IAudioInternal.CreateBufferedAudioSource(int buffers, bool floatAudio=false)
     {
         var source = AL.GenSource();
 

@@ -757,10 +757,10 @@ namespace Robust.Shared.Prototypes
             return true;
         }
 
-        public bool TryGetKindInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)
+        public bool TryGetInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)
             where T : IPrototype
         {
-            if (!TryGetKindInstances(typeof(T), out var dict))
+            if (!TryGetInstances(typeof(T), out var dict))
             {
                 instances = null;
                 return false;
@@ -771,7 +771,7 @@ namespace Robust.Shared.Prototypes
             return instances != null;
         }
 
-        private bool TryGetKindInstances(Type kind, [NotNullWhen(true)] out object? instances)
+        private bool TryGetInstances(Type kind, [NotNullWhen(true)] out object? instances)
         {
             DebugTools.Assert(kind.IsAssignableTo(typeof(IPrototype)));
             if (!_kinds.TryGetValue(kind, out var kindData))

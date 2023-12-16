@@ -24,6 +24,7 @@ namespace Robust.Shared.GameObjects
 
         // Bunch of dictionaries to allow lookups in all directions.
         /// <summary>
+        /// <summary>
         /// Mapping of component name to type.
         /// </summary>
         private FrozenDictionary<string, ComponentRegistration> _names
@@ -63,7 +64,7 @@ namespace Robust.Shared.GameObjects
             = FrozenDictionary<CompIdx, Type>.Empty;
 
         /// <inheritdoc />
-        public event Action<ComponentRegistration>? ComponentAdded;
+        public event Action<ComponentRegistration[]>? ComponentsAdded;
 
         /// <inheritdoc />
         public event Action<string>? ComponentIgnoreAdded;
@@ -76,7 +77,7 @@ namespace Robust.Shared.GameObjects
 
         private IEnumerable<ComponentRegistration> AllRegistrations => _types.Values;
 
-        private void Register(Type type,
+        private ComponentRegistration Register(Type type,
             Dictionary<string, ComponentRegistration> names,
             Dictionary<string, string> lowerCaseNames,
             Dictionary<Type, ComponentRegistration> types,
@@ -87,21 +88,14 @@ namespace Robust.Shared.GameObjects
             if (_networkedComponents is not null)
                 throw new ComponentRegistrationLockException();
 
-            if (!typeof(IComponent).IsAssignableFrom(type))
-            {
-                _sawmill.Error("Type {0} has RegisterComponentAttribute but does not implement IComponent.", type);
-                return;
-            }
-
             if (types.ContainsKey(type))
-            {
                 throw new InvalidOperationException($"Type is already registered: {type}");
-            }
 
             if (!type.IsSubclassOf(typeof(Component)))
-            {
                 throw new InvalidOperationException($"Type is not derived from component: {type}");
-            }
+
+            if (!typeof(IComponent).IsAssignableFrom(type))
+                throw new InvalidOperationException($"Type {type} has RegisterComponentAttribute but does not implement IComponent.");
 
             var name = CalculateComponentName(type);
             var lowerCaseName = name.ToLowerInvariant();
@@ -109,9 +103,7 @@ namespace Robust.Shared.GameObjects
             if (ignored.Contains(name))
             {
                 if (!overwrite)
-                {
                     throw new InvalidOperationException($"{name} is already marked as ignored component");
-                }
 
                 ignored.Remove(name);
             }
@@ -130,15 +122,15 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"{lowerCaseName} is already registered, previous: {prevName}");
 
             var idx = CompIdx.Index(type);
-            idxToType[idx] = type;
 
             var registration = new ComponentRegistration(name, type, idx);
 
+            idxToType[idx] = type;
             names[name] = registration;
             lowerCaseNames[lowerCaseName] = name;
             types[type] = registration;
             CompIdx.AssignArray(ref _array, idx, registration);
-            ComponentAdded?.Invoke(registration);
+            return registration;
         }
 
         private static string CalculateComponentName(Type type)
@@ -407,9 +399,10 @@ namespace Robust.Shared.GameObjects
             var idxToType = _idxToType.ToDictionary();
             var ignored = _ignored.ToHashSet();
 
-            foreach (var t in types)
+            var added = new ComponentRegistration[types.Length];
+            for (int i = 0; i < types.Length; i++)
             {
-                Register(t, names, lowerCaseNames, typesDict, idxToType, ignored);
+                added[i] = Register(types[i], names, lowerCaseNames, typesDict, idxToType, ignored, overwrite);
             }
 
             var st = RStopwatch.StartNew();
@@ -419,6 +412,7 @@ namespace Robust.Shared.GameObjects
             _idxToType = idxToType.ToFrozenDictionary();
             _ignored = ignored.ToFrozenSet();
             _sawmill.Verbose($"Freezing component factory took {st.Elapsed.TotalMilliseconds:f2}ms");
+            ComponentsAdded?.Invoke(added);
         }
 
         /// <inheritdoc />
@@ -428,9 +422,9 @@ namespace Robust.Shared.GameObjects
             RegisterClasses(new []{typeof(T)}, overwrite);
         }
 
-        public IEnumerable<CompIdx> GetAllRefTypes()
+        public IEnumerable<(CompIdx, Type)> GetAllRefTypes()
         {
-            return AllRegistrations.Select(x => x.Idx).Distinct();
+            return _types.Values.Select(x => (x.Idx, x.Type));
         }
 
         /// <inheritdoc />

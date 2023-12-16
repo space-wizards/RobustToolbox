@@ -51,7 +51,7 @@ namespace Robust.Shared.GameObjects
     /// <seealso cref="IComponent" />
     public interface IComponentFactory
     {
-        event Action<ComponentRegistration> ComponentAdded;
+        event Action<ComponentRegistration[]> ComponentsAdded;
         event Action<string> ComponentIgnoreAdded;
 
         /// <summary>
@@ -269,7 +269,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         void DoAutoRegistrations();
 
-        IEnumerable<CompIdx> GetAllRefTypes();
+        IEnumerable<(CompIdx, Type)> GetAllRefTypes();
         void GenerateNetIds();
 
         Type IdxToType(CompIdx idx);

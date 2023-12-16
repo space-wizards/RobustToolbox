@@ -59,7 +59,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Already initialized.");
 
             FillComponentDict();
-            _componentFactory.ComponentAdded += OnComponentAdded;
+            _componentFactory.ComponentsAdded += OnComponentsAdded;
         }
 
         /// <summary>
@@ -76,16 +76,19 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void AddComponentRefType(CompIdx type)
+        private void AddComponentRefType(CompIdx idx, Type type)
         {
             var dict = new Dictionary<EntityUid, IComponent>();
-            _entTraitDict.Add(_componentFactory.IdxToType(type), dict);
-            CompIdx.AssignArray(ref _entTraitArray, type, dict);
+            _entTraitDict.Add(type, dict);
+            CompIdx.AssignArray(ref _entTraitArray, idx, dict);
         }
 
-        private void OnComponentAdded(ComponentRegistration obj)
+        private void OnComponentsAdded(ComponentRegistration[] regs)
         {
-            AddComponentRefType(obj.Idx);
+            foreach (var reg in regs)
+            {
+                AddComponentRefType(reg.Idx, reg.Type);
+            }
         }
 
         #region Component Management
@@ -1360,9 +1363,9 @@ namespace Robust.Shared.GameObjects
             _entTraitDict.Clear();
             Array.Fill(_entTraitArray, null);
 
-            foreach (var refType in _componentFactory.GetAllRefTypes())
+            foreach (var (idx, type) in _componentFactory.GetAllRefTypes())
             {
-                AddComponentRefType(refType);
+                AddComponentRefType(idx, type);
             }
         }
     }

@@ -253,6 +253,7 @@ public partial class PrototypeManager
     {
         var reader = new StringReader(prototypes);
 
+        var modified = new HashSet<KindData>();
         foreach (var document in DataNodeParser.ParseYamlStream(reader))
         {
             var root = (SequenceDataNode)document.Root;
@@ -271,10 +272,14 @@ public partial class PrototypeManager
                 if (kindData.Inheritance is { } tree)
                     tree.Remove(id, true);
 
-                kindData.Instances.Remove(id);
+                kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
+                kindData.UnfrozenInstances.Remove(id);
                 kindData.Results.Remove(id);
+                modified.Add(kindData);
             }
         }
+
+        Freeze(modified);
     }
 
     // All these fields can be null in case the

@@ -280,6 +280,11 @@ Types:
     SortedList`2: { All: True }
     SortedSet`1: { All: True }
     Stack`1: { All: True }
+  System.Collections.Frozen:
+    FrozenDictionary: { All: True }
+    FrozenSet: { All: True }
+    FrozenDictionary`2: { All: True }
+    FrozenSet`1: { All: True }
   System.Collections.Immutable:
     IImmutableDictionary`2: { All: True }
     IImmutableList`1: { All: True }

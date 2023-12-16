@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Frozen;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Robust.Client.Input;
@@ -16,7 +17,7 @@ internal partial class Clyde
     {
         // Indices are values of SDL_Scancode
         private static readonly Key[] KeyMap;
-        private static readonly Dictionary<Key, SDL_Scancode> KeyMapReverse;
+        private static readonly FrozenDictionary<Key, SDL_Scancode> KeyMapReverse;
         private static readonly Button[] MouseButtonMap;
 
         // TODO: to avoid having to ask the windowing thread, key names are cached.
@@ -202,14 +203,16 @@ internal partial class Clyde
             MapKey(SDL_SCANCODE_F24, Key.F24);
             MapKey(SDL_SCANCODE_PAUSE, Key.Pause);
 
-            KeyMapReverse = new Dictionary<Key, SDL_Scancode>();
+            var keyMapReverse = new Dictionary<Key, SDL_Scancode>();
 
             for (var code = 0; code < KeyMap.Length; code++)
             {
                 var key = KeyMap[code];
                 if (key != Key.Unknown)
-                    KeyMapReverse[key] = (SDL_Scancode) code;
+                    keyMapReverse[key] = (SDL_Scancode) code;
             }
+
+            KeyMapReverse = keyMapReverse.ToFrozenDictionary();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             static void MapKey(SDL_Scancode code, Key key)

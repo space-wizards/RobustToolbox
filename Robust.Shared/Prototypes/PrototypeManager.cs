@@ -377,8 +377,7 @@ namespace Robust.Shared.Prototypes
 
         private void Freeze(HashSet<KindData> kinds)
         {
-            var st = new Stopwatch();
-            st.Start();
+            var st = RStopwatch.StartNew();
             foreach (var kind in kinds)
             {
                 kind.Freeze();

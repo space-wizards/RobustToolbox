@@ -385,7 +385,7 @@ namespace Robust.Shared.Prototypes
             }
 
             // fun fact: Sawmill can be null in tests????
-            Sawmill?.Info($"Freezing prototype instances took {st.Elapsed.TotalMilliseconds:f2}ms");
+            Sawmill?.Verbose($"Freezing prototype instances took {st.Elapsed.TotalMilliseconds:f2}ms");
         }
 
         /// <summary>

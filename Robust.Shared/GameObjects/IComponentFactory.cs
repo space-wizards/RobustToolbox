@@ -270,6 +270,7 @@ namespace Robust.Shared.GameObjects
         void DoAutoRegistrations();
 
         IEnumerable<ComponentRegistration> GetAllRegistrations();
+        IEnumerable<CompIdx> GetAllRefTypes();
         void GenerateNetIds();
 
         Type IdxToType(CompIdx idx);

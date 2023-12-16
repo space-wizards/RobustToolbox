@@ -765,6 +765,7 @@ namespace Robust.Shared.Prototypes
                 return false;
             }
 
+            DebugTools.Assert(dict is FrozenDictionary<string, T>);
             instances = dict as FrozenDictionary<string, T>;
             return instances != null;
         }

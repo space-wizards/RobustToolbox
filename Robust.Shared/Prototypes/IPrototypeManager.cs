@@ -111,8 +111,18 @@ public interface IPrototypeManager
     bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
     bool TryIndex(Type kind, string id, [NotNullWhen(true)] out IPrototype? prototype);
 
+    /// <summary>
+    /// Attempts to get a dictionary containing all current instances of a given prototype kind.
+    /// The dictionary will be valid up until prototypes are next reloaded.
+    /// </summary>
     bool TryGetInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)
         where T : IPrototype;
+
+    /// <summary>
+    /// Gets a dictionary containing all current instances of a given prototype kind.
+    /// The dictionary will be valid up until prototypes are next reloaded.
+    /// </summary>
+    FrozenDictionary<string, T> GetInstances<T>() where T : IPrototype;
 
     /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
     bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);

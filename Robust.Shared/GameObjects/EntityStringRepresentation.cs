@@ -19,6 +19,15 @@ namespace Robust.Shared.GameObjects;
 public readonly record struct EntityStringRepresentation
     (EntityUid Uid, bool Deleted, string? Name = null, string? Prototype = null, ICommonSession? Session = null) : IFormattable
 {
+    public EntityStringRepresentation(Entity<MetaDataComponent> entity) : this(entity.Owner, entity.Comp)
+    {
+    }
+
+    public EntityStringRepresentation(EntityUid uid, MetaDataComponent meta)
+        : this(uid, meta.EntityDeleted, meta.EntityName, meta.EntityPrototype?.ID)
+    {
+    }
+
     public override string ToString()
     {
         if (Deleted && Name == null)

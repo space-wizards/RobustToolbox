@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -18,6 +20,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes
@@ -45,7 +48,7 @@ namespace Robust.Shared.Prototypes
 
         #region IPrototypeManager members
 
-        private readonly Dictionary<Type, KindData> _kinds = new();
+        private FrozenDictionary<Type, KindData> _kinds = FrozenDictionary<Type, KindData>.Empty;
 
         private readonly HashSet<string> _ignoredPrototypeTypes = new();
 
@@ -227,7 +230,7 @@ namespace Robust.Shared.Prototypes
         public void Clear()
         {
             _kindNames.Clear();
-            _kinds.Clear();
+            _kinds = FrozenDictionary<Type, KindData>.Empty;
         }
 
         /// <inheritdoc />
@@ -285,6 +288,7 @@ namespace Robust.Shared.Prototypes
             prototypeTypeOrder.Sort(SortPrototypesByPriority);
 
             var pushed = new Dictionary<Type, HashSet<string>>();
+            var modifiedKinds = new HashSet<KindData>();
 
             foreach (var kind in prototypeTypeOrder)
             {
@@ -294,7 +298,9 @@ namespace Robust.Shared.Prototypes
                     foreach (var id in modified[kind])
                     {
                         var prototype = (IPrototype)_serializationManager.Read(kind, kindData.Results[id])!;
-                        kindData.Instances[id] = prototype;
+                        kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
+                        kindData.UnfrozenInstances[id] = prototype;
+                        modifiedKinds.Add(kindData);
                     }
 
                     continue;
@@ -345,13 +351,16 @@ namespace Robust.Shared.Prototypes
                     var prototype = TryReadPrototype(kind, id, kindData.Results[id], SerializationHookContext.DontSkipHooks);
                     if (prototype != null)
                     {
-                        kindData.Instances[id] = prototype;
+                        kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
+                        kindData.UnfrozenInstances[id] = prototype;
+                        modifiedKinds.Add(kindData);
                     }
 
                     pushedSet.Add(id);
                 }
             }
 
+            Freeze(modifiedKinds);
 #endif
 
             //todo paul i hate it but i am not opening that can of worms in this refactor
@@ -364,6 +373,18 @@ namespace Robust.Shared.Prototypes
                                 g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
                                     .ToDictionary(a => a, a => _kinds[g.Key].Instances[a]))),
                     removed));
+        }
+
+        private void Freeze(HashSet<KindData> kinds)
+        {
+            var st = RStopwatch.StartNew();
+            foreach (var kind in kinds)
+            {
+                kind.Freeze();
+            }
+
+            // fun fact: Sawmill can be null in tests????
+            Sawmill?.Verbose($"Freezing prototype instances took {st.Elapsed.TotalMilliseconds:f2}ms");
         }
 
         /// <summary>
@@ -451,10 +472,15 @@ namespace Robust.Shared.Prototypes
                                 protoChannel.Writer.TryWrite((item.KindData, item.Id, prototype));
                         });
 
+                        var modifiedKinds = new HashSet<KindData>();
                         while (protoChannel.Reader.TryRead(out var item))
                         {
-                            item.KindData.Instances[item.Id] = item.Prototype;
+                            var kind = item.KindData;
+                            kind.UnfrozenInstances ??= kind.Instances.ToDictionary();
+                            kind.UnfrozenInstances[item.Id] = item.Prototype;
+                            modifiedKinds.Add(kind);
                         }
+                        Freeze(modifiedKinds);
                     }
                     finally
                     {
@@ -591,10 +617,12 @@ namespace Robust.Shared.Prototypes
         public void ReloadPrototypeKinds()
         {
             Clear();
+            var dict = new Dictionary<Type, KindData>();
             foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
             {
-                RegisterKind(type);
+                RegisterKind(type, dict);
             }
+            Freeze(dict);
         }
 
         /// <inheritdoc />
@@ -729,6 +757,33 @@ namespace Robust.Shared.Prototypes
             return true;
         }
 
+        public bool TryGetInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)
+            where T : IPrototype
+        {
+            if (!TryGetInstances(typeof(T), out var dict))
+            {
+                instances = null;
+                return false;
+            }
+
+            DebugTools.Assert(dict is FrozenDictionary<string, T>);
+            instances = dict as FrozenDictionary<string, T>;
+            return instances != null;
+        }
+
+        private bool TryGetInstances(Type kind, [NotNullWhen(true)] out object? instances)
+        {
+            DebugTools.Assert(kind.IsAssignableTo(typeof(IPrototype)));
+            if (!_kinds.TryGetValue(kind, out var kindData))
+            {
+                instances = null;
+                return false;
+            }
+
+            instances = kindData.InstancesDirect;
+            return true;
+        }
+
         public bool TryGetKindFrom(IPrototype prototype, [NotNullWhen(true)] out string? kind)
         {
             return TryGetKindFrom(prototype.GetType(), out kind);
@@ -754,7 +809,27 @@ namespace Robust.Shared.Prototypes
         void IPrototypeManager.RegisterType(Type type) => RegisterKind(type);
 
         /// <inheritdoc />
-        public void RegisterKind(Type kind)
+        public void RegisterKind(params Type[] kinds)
+        {
+            var dict = _kinds.ToDictionary();
+            foreach (var kind in kinds)
+            {
+                RegisterKind(kind, dict);
+            }
+
+            Freeze(dict);
+        }
+
+        private void Freeze(Dictionary<Type, KindData> dict)
+        {
+            var st = RStopwatch.StartNew();
+            _kinds = dict.ToFrozenDictionary();
+
+            // fun fact: Sawmill can be null in tests????
+            Sawmill?.Verbose($"Freezing prototype kinds took {st.Elapsed.TotalMilliseconds:f2}ms");
+        }
+
+        private void RegisterKind(Type kind, Dictionary<Type, KindData> kinds)
         {
             if (!(typeof(IPrototype).IsAssignableFrom(kind)))
                 throw new InvalidOperationException("Type must implement IPrototype.");
@@ -843,8 +918,8 @@ namespace Robust.Shared.Prototypes
             _kindNames[attribute.Type] = kind;
             _kindPriorities[kind] = attribute.LoadPriority;
 
-            var kindData = new KindData();
-            _kinds[kind] = kindData;
+            var kindData = new KindData(kind);
+            kinds[kind] = kindData;
 
             if (kind.IsAssignableTo(typeof(IInheritingPrototype)))
                 kindData.Inheritance = new MultiRootInheritanceGraph<string>();
@@ -853,13 +928,45 @@ namespace Robust.Shared.Prototypes
         /// <inheritdoc />
         public event Action<PrototypesReloadedEventArgs>? PrototypesReloaded;
 
-        private sealed class KindData
+        private sealed class KindData(Type kind)
         {
-            public readonly Dictionary<string, IPrototype> Instances = new();
+            public Dictionary<string, IPrototype>? UnfrozenInstances;
+
+            public FrozenDictionary<string, IPrototype> Instances = FrozenDictionary<string, IPrototype>.Empty;
+
             public readonly Dictionary<string, MappingDataNode> Results = new();
+
+            public readonly Type Type = kind;
 
             // Only initialized if prototype is inheriting.
             public MultiRootInheritanceGraph<string>? Inheritance;
+
+            /// <summary>
+            /// Variant of <see cref="Instances"/> that has a direct mapping to the prototype kind. I.e., no IPrototype interface.
+            /// </summary>
+            public object InstancesDirect = default!;
+
+            private MethodInfo _freezeDirectInfo = typeof(KindData)
+                .GetMethod(nameof(FreezeDirect), BindingFlags.Instance | BindingFlags.NonPublic)!
+                .MakeGenericMethod(kind);
+
+            private void FreezeDirect<T>()
+            {
+                var dict = new Dictionary<string, T>();
+                foreach (var (id, instance) in Instances)
+                {
+                    dict.Add(id, (T) instance);
+                }
+                InstancesDirect = dict.ToFrozenDictionary();
+            }
+
+            public void Freeze()
+            {
+                DebugTools.AssertNotNull(UnfrozenInstances);
+                Instances = UnfrozenInstances?.ToFrozenDictionary() ?? FrozenDictionary<string, IPrototype>.Empty;
+                UnfrozenInstances = null;
+                _freezeDirectInfo.Invoke(this, null);
+            }
         }
 
         private void OnReload(PrototypesReloadedEventArgs args)

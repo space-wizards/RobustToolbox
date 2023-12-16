@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -109,6 +110,9 @@ public interface IPrototypeManager
 
     bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
     bool TryIndex(Type kind, string id, [NotNullWhen(true)] out IPrototype? prototype);
+
+    bool TryGetInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)
+        where T : IPrototype;
 
     /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
     bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
@@ -316,13 +320,13 @@ public interface IPrototypeManager
     void RegisterType(Type protoClass);
 
     /// <summary>
-    /// Loads a single prototype kind into the manager.
+    /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.
     /// </summary>
     /// <param name="kind">
     /// The type of the prototype kind that implements <see cref="IPrototype"/>. This type also
     /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.
     /// </param>
-    void RegisterKind(Type kind);
+    void RegisterKind(params Type[] kinds);
 
     /// <summary>
     ///     Fired when prototype are reloaded. The event args contain the modified and removed prototypes.

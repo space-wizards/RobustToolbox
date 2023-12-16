@@ -738,7 +738,7 @@ namespace Robust.Shared.GameObjects
             if (!MetaQuery.Resolve(uid, ref metadata, false))
                 return new EntityStringRepresentation(uid, true);
 
-            return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);
+            return new EntityStringRepresentation(uid, metadata);
         }
 
         /// <inheritdoc />

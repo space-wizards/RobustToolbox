@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `EntitySystem.TryGetEntity` is now `protected`.
+*None yet*
 
 ### New features
 
@@ -52,6 +52,40 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 193.0.0
+
+### Breaking changes
+
+* The `TransformChildrenEnumerator`'s out values are now non-nullable
+
+### New features
+
+* Added `IPrototypeManager.TryGetInstances()`, which returns a dictionary of prototype instances for a given prototype kind/type.
+
+### Bugfixes
+
+* Fixed `BaseAudioSource.SetAuxiliary()` throwing errors on non-EFX systems
+
+### Internal
+
+
+* The internals of PVS system have been reworked to reduce the number of dictionary lookups.
+* `RobustMappedStringSerializer` now uses frozen dictionaries
+* `IPrototypeManager` now uses frozen dictionaries
+
+
+## 192.0.0
+
+### Breaking changes
+
+* `EntitySystem.TryGetEntity` is now `protected`.
+
+### Internal
+
+* PVS message ack processing now happens asynchronously 
+* Dependency collections now use a `FrozenDictionary`
 
 
 ## 191.0.1

@@ -343,6 +343,8 @@ internal abstract class BaseAudioSource : IAudioSource
     public void SetAuxiliary(IAuxiliaryAudio? audio)
     {
         _checkDisposed();
+        if (!IsEfxSupported)
+            return;
 
         if (audio is AuxiliaryAudio impAudio)
         {

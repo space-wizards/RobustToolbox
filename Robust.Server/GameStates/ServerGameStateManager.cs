@@ -266,15 +266,14 @@ Oldest acked clients: {string.Join(", ", players)}
         {
             public HashSet<int>[] PlayerChunks;
             public EntityUid[][] ViewerEntities;
-            public (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] ChunkCache;
+            public RobustTree<NetEntity>?[] ChunkCache;
         }
 
         private PvsData? GetPVSData(ICommonSession[] players)
         {
             var chunks = _pvs.GetChunks(players, ref _playerChunks, ref _viewerEntities);
             var chunksCount = chunks.Count;
-            var chunkCache =
-                new (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[chunksCount];
+            var chunkCache = new RobustTree<NetEntity>?[chunksCount];
             // Update the reused trees sequentially to avoid having to lock the dictionary per chunk.
             var reuse = ArrayPool<bool>.Shared.Rent(chunksCount);
 
@@ -437,22 +436,22 @@ Oldest acked clients: {string.Join(", ", players)}
 
             public List<(int, IChunkIndexLocation)> Chunks;
             public bool[] Reuse;
-            public (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] ChunkCache;
+            public RobustTree<NetEntity>?[] ChunkCache;
 
             public void Execute(int index)
             {
                 var (visMask, chunkIndexLocation) = Chunks[index];
-                Reuse[index] = Pvs.TryCalculateChunk(chunkIndexLocation, visMask, out var chunk);
-                ChunkCache[index] = chunk;
+                Reuse[index] = Pvs.TryCalculateChunk(chunkIndexLocation, visMask, out var tree);
+                ChunkCache[index] = tree;
 
 #if DEBUG
-                if (chunk == null)
+                if (tree == null)
                     return;
 
                 // Each root nodes should simply be a map or a grid entity.
-                DebugTools.Assert(chunk.Value.tree.RootNodes.Count == 1,
-                    $"Root node count is {chunk.Value.tree.RootNodes.Count} instead of 1.");
-                var nent = chunk.Value.tree.RootNodes.FirstOrDefault();
+                DebugTools.Assert(tree.RootNodes.Count == 1,
+                    $"Root node count is {tree.RootNodes.Count} instead of 1.");
+                var nent = tree.RootNodes.FirstOrDefault();
                 var ent = EntManager.GetEntity(nent);
                 DebugTools.Assert(EntManager.EntityExists(ent), $"Root node does not exist. Node {ent}.");
                 DebugTools.Assert(EntManager.HasComponent<MapComponent>(ent)

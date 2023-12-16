@@ -430,15 +430,13 @@ namespace Robust.Shared.GameObjects
             EntityQuery<MetaDataComponent> metaQuery,
             MetaDataSystem system)
         {
-            var childEnumerator = ChildEnumerator;
-
-            while (childEnumerator.MoveNext(out var child))
+            foreach (var child in _children)
             {
                 //Set Paused state
-                var metaData = metaQuery.GetComponent(child.Value);
-                system.SetEntityPaused(child.Value, mapPaused, metaData);
+                var metaData = metaQuery.GetComponent(child);
+                system.SetEntityPaused(child, mapPaused, metaData);
 
-                var concrete = xformQuery.GetComponent(child.Value);
+                var concrete = xformQuery.GetComponent(child);
 
                 concrete.MapUid = newUid;
                 concrete.MapID = newMapId;
@@ -639,11 +637,11 @@ namespace Robust.Shared.GameObjects
             _children = children;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out EntityUid? child)
+        public bool MoveNext(out EntityUid child)
         {
             if (!_children.MoveNext())
             {
-                child = null;
+                child = default;
                 return false;
             }
 

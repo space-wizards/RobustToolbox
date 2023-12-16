@@ -334,7 +334,7 @@ public interface IPrototypeManager
     /// <remarks>
     ///     This does NOT fire on initial prototype load.
     /// </remarks>
-    event Action<PrototypesReloadedEvent> PrototypesReloaded;
+    event Action<PrototypesReloadedEventArgs> PrototypesReloaded;
 
     /// <summary>
     /// Get the yaml data for a given prototype.
@@ -351,8 +351,8 @@ internal interface IPrototypeManagerInternal : IPrototypeManager
 /// This is event contains information about prototypes that have been modified. It is broadcast as a system event,
 /// whenever <see cref="IPrototypeManager.PrototypesReloaded"/> gets invoked.
 /// </summary>
-public sealed record PrototypesReloadedEvent(HashSet<Type> Modified,
-    IReadOnlyDictionary<Type, PrototypesReloadedEvent.PrototypeChangeSet> ByType,
+public sealed record PrototypesReloadedEventArgs(HashSet<Type> Modified,
+    IReadOnlyDictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet> ByType,
     IReadOnlyDictionary<Type, HashSet<string>>? Removed = null)
 {
     public sealed record PrototypeChangeSet(IReadOnlyDictionary<string, IPrototype> Modified);

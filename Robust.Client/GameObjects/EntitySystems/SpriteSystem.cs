@@ -58,7 +58,7 @@ namespace Robust.Client.GameObjects
 
             UpdatesAfter.Add(typeof(SpriteTreeSystem));
 
-            SubscribeLocalEvent<PrototypesReloadedEvent>(OnPrototypesReloaded);
+            SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
             SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 

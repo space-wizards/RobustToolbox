@@ -368,7 +368,7 @@ namespace Robust.Shared.Prototypes
             var byType = modified
                 .ToDictionary(
                     g => g.Key,
-                    g => new PrototypesReloadedEvent.PrototypeChangeSet(
+                    g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
                         g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
                             .ToDictionary(a => a, a => _kinds[g.Key].Instances[a])));
 
@@ -376,7 +376,7 @@ namespace Robust.Shared.Prototypes
             if (removed != null)
                 modifiedTypes.UnionWith(removed.Keys);
 
-            var ev = new PrototypesReloadedEvent(modifiedTypes, byType, removed);
+            var ev = new PrototypesReloadedEventArgs(modifiedTypes, byType, removed);
             PrototypesReloaded?.Invoke(ev);
             _entMan.EventBus.RaiseEvent(EventSource.Local, ev);
         }
@@ -932,7 +932,7 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public event Action<PrototypesReloadedEvent>? PrototypesReloaded;
+        public event Action<PrototypesReloadedEventArgs>? PrototypesReloaded;
 
         private sealed class KindData(Type kind)
         {
@@ -975,7 +975,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private void OnReload(PrototypesReloadedEvent args)
+        private void OnReload(PrototypesReloadedEventArgs args)
         {
             if (args.ByType.TryGetValue(typeof(EntityPrototype), out var modified))
             {

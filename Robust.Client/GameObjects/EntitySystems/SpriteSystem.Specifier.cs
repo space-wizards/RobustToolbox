@@ -122,7 +122,7 @@ public sealed partial class SpriteSystem
         return GetFallbackState();
     }
 
-    private void OnPrototypesReloaded(PrototypesReloadedEvent args)
+    private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
         if (!args.TryGetModified<EntityPrototype>(out var modified))
             return;

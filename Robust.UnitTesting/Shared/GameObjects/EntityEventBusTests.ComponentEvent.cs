@@ -81,7 +81,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var compFacMock = new Mock<IComponentFactory>();
 
             compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<MetaDataComponent>())).Returns(compRegistration);
-            compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { (CompIdx.Index<MetaDataComponent>(), typeof(MetaDataComponent)) });
+            compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { compRegistration });
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
@@ -137,7 +137,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var compFacMock = new Mock<IComponentFactory>();
 
             compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<MetaDataComponent>())).Returns(compRegistration);
-            compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { ( CompIdx.Index<MetaDataComponent>(), typeof(MetaDataComponent)) });
+            compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { compRegistration });
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
@@ -182,7 +182,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entManMock = new Mock<IEntityManager>();
             var compFacMock = new Mock<IComponentFactory>();
 
-            List<(CompIdx, Type)> allRefTypes = new();
+            List<ComponentRegistration> allRefTypes = new();
             void Setup<T>(out T instance) where T : IComponent, new()
             {
                 IComponent? inst = instance = new T();
@@ -195,7 +195,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 entManMock.Setup(m => m.TryGetComponent(entUid, CompIdx.Index<T>(), out inst)).Returns(true);
                 entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<T>())).Returns(inst);
                 entManMock.Setup(m => m.GetComponentInternal(entUid, CompIdx.Index<T>())).Returns(inst);
-                allRefTypes.Add((CompIdx.Index<T>(), typeof(T)));
+                allRefTypes.Add(reg);
             }
 
             Setup<OrderAComponent>(out var instA);

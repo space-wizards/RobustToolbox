@@ -776,7 +776,7 @@ namespace Robust.Shared.Prototypes
             _kinds = dict.ToFrozenDictionary();
 
             // fun fact: Sawmill can be null in tests????
-            Sawmill?.Info($"Freezing prototype kinds took {st.Elapsed.TotalMilliseconds:f2}ms");
+            Sawmill?.Verbose($"Freezing prototype kinds took {st.Elapsed.TotalMilliseconds:f2}ms");
         }
 
         private void RegisterKind(Type kind, Dictionary<Type, KindData> kinds)

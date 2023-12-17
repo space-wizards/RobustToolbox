@@ -310,7 +310,7 @@ Oldest acked clients: {string.Join(", ", players)}
         {
             var channel = session.Channel;
             var sessionData = _pvs.PlayerData[session];
-            var lastAck = sessionData.LastReceivedAck;
+            var from = sessionData.RequestedFull ? GameTick.Zero : sessionData.LastReceivedAck;
             List<NetEntity>? leftPvs = null;
             List<EntityState>? entStates;
             List<NetEntity>? deletions;
@@ -321,7 +321,7 @@ Oldest acked clients: {string.Join(", ", players)}
             {
                 (entStates, deletions, leftPvs, fromTick) = _pvs.CalculateEntityStates(
                     session,
-                    lastAck,
+                    from,
                     _gameTiming.CurTick,
                     pvsData.Value.ChunkCache,
                     pvsData.Value.PlayerChunks[i],
@@ -329,7 +329,7 @@ Oldest acked clients: {string.Join(", ", players)}
             }
             else
             {
-                (entStates, deletions, fromTick) = _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
+                (entStates, deletions, fromTick) = _pvs.GetAllEntityStates(session, from, _gameTiming.CurTick);
             }
 
             var playerStates = _playerManager.GetPlayerStates(fromTick);
@@ -346,7 +346,7 @@ Oldest acked clients: {string.Join(", ", players)}
                 playerStates,
                 deletions);
 
-            InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
+            InterlockedHelper.Min(ref oldestAckValue, from.Value);
 
             // actually send the state
             var stateUpdateMessage = new MsgState();
@@ -360,7 +360,7 @@ Oldest acked clients: {string.Join(", ", players)}
             // We also do this if the client's last ack is too old. This helps prevent things like the entity deletion
             // history from becoming too bloated if a bad client fails to send acks for whatever reason.
 
-            if (_gameTiming.CurTick.Value > lastAck.Value + _pvs.ForceAckThreshold)
+            if (_gameTiming.CurTick.Value > from.Value + _pvs.ForceAckThreshold)
             {
                 stateUpdateMessage.ForceSendReliably = true;
 #if FULL_RELEASE

@@ -26,7 +26,7 @@ internal sealed partial class PvsSystem
             foreach (var netEntity in CollectionsMarshal.AsSpan(toSend))
             {
                 ref var data = ref GetEntityData(entData, netEntity);
-                data.LastSent = _gameTiming.CurTick;
+                DebugTools.Assert(data.LastSent == _gameTiming.CurTick);
                 states.Add(GetFullEntityState(session, data.Entity.Owner, data.Entity.Comp));
             }
             return;
@@ -35,6 +35,7 @@ internal sealed partial class PvsSystem
         foreach (var netEntity in CollectionsMarshal.AsSpan(toSend))
         {
             ref var data = ref GetEntityData(entData, netEntity);
+            DebugTools.Assert(data.LastSent == _gameTiming.CurTick);
 
             if (data.Visibility == PvsEntityVisibility.StayedUnchanged)
                 continue;
@@ -152,6 +153,8 @@ internal sealed partial class PvsSystem
         var toSend = _uidSetPool.Get();
         DebugTools.Assert(toSend.Count == 0);
         bool enumerateAll = false;
+        DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
+        DebugTools.Assert(toTick > fromTick);
 
         if (player == null)
         {
@@ -163,7 +166,7 @@ internal sealed partial class PvsSystem
             fromTick = GameTick.Zero;
         }
 
-        if (_gameTiming.CurTick.Value - fromTick.Value > DirtyBufferSize)
+        if (toTick.Value - fromTick.Value > DirtyBufferSize)
         {
             // Fall back to enumerating over all entities.
             enumerateAll = true;
@@ -185,7 +188,7 @@ internal sealed partial class PvsSystem
                 if (state.Empty)
                 {
                     Log.Error($@"{nameof(GetEntityState)} returned an empty state while enumerating entities.
-Tick: {fromTick}--{_gameTiming.CurTick}
+Tick: {fromTick}--{toTick}
 Entity: {ToPrettyString(uid)}
 Last modified: {md.EntityLastModifiedTick}
 Metadata last modified: {md.LastModifiedTick}
@@ -221,7 +224,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                     if (state.Empty)
                     {
                         Log.Error($@"{nameof(GetEntityState)} returned an empty state for a new entity.
-Tick: {fromTick}--{_gameTiming.CurTick}
+Tick: {fromTick}--{toTick}
 Entity: {ToPrettyString(uid)}
 Last modified: {md.EntityLastModifiedTick}
 Metadata last modified: {md.LastModifiedTick}

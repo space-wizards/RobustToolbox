@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
@@ -85,6 +86,9 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private readonly ObjectPool<List<NetEntity>> _netUidListPool
         = new DefaultObjectPool<List<NetEntity>>(new ListPolicy<NetEntity>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<List<EntityData>> _entDataListPool
+        = new DefaultObjectPool<List<EntityData>>(new ListPolicy<EntityData>(), MaxVisPoolSize);
 
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
@@ -180,7 +184,7 @@ internal sealed partial class PvsSystem : EntitySystem
         ShutdownDirty();
     }
 
-    // TODO rate limit this?
+    // TODO PVS rate limit this?
     private void OnClientRequestFull(ICommonSession session, GameTick tick, NetEntity? missingEntity)
     {
         if (!PlayerData.TryGetValue(session, out var sessionData))
@@ -204,11 +208,18 @@ internal sealed partial class PvsSystem : EntitySystem
 
         Log.Warning(sb.ToString());
 
-        // TODO PVS return to pool.
+        if (sessionData.Overflow != null)
+            _entDataListPool.Return(sessionData.Overflow.Value.SentEnts);
         sessionData.Overflow = null;
-        sessionData.EntityData.Clear();
+
+        foreach (var visSet in sessionData.SentEntities.Values)
+        {
+            _entDataListPool.Return(visSet);
+        }
         sessionData.SentEntities.Clear();
+
         sessionData.RequestedFull = true;
+        sessionData.EntityData.Clear();
     }
 
     private void OnViewsizeChanged(float obj)
@@ -365,12 +376,12 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         if (data.Overflow != null)
-            _netUidListPool.Return(data.Overflow.Value.SentEnts);
+            _entDataListPool.Return(data.Overflow.Value.SentEnts);
         data.Overflow = null;
 
         foreach (var visSet in data.SentEntities.Values)
         {
-            _netUidListPool.Return(visSet);
+            _entDataListPool.Return(visSet);
         }
     }
 
@@ -700,7 +711,7 @@ internal sealed partial class PvsSystem : EntitySystem
         var enteredEntityCount = 0;
         var sessionData = PlayerData[session];
         sessionData.SentEntities.TryGetValue(toTick - 1, out var lastSent);
-        var toSend = _netUidListPool.Get();
+        var toSend = _entDataListPool.Get();
         var entityData = sessionData.EntityData;
 
         if (toSend.Count != 0)
@@ -801,35 +812,35 @@ internal sealed partial class PvsSystem : EntitySystem
 
 #if DEBUG
         // TODO PVS consider removing expensive asserts
-        var toSendSet = new HashSet<NetEntity>(toSend);
+        var toSendSet = new HashSet<EntityUid>(toSend.Count);
+        foreach (var data in toSend)
+        {
+            toSendSet.Add(data.Entity.Owner);
+        }
         DebugTools.AssertEqual(toSend.Count, toSendSet.Count);
 
-        foreach (var ent in CollectionsMarshal.AsSpan(toSend))
+        foreach (var data in CollectionsMarshal.AsSpan(toSend))
         {
-            ref var data = ref GetEntityData(entityData, ent);
             DebugTools.AssertNotEqual(data.Visibility, PvsEntityVisibility.Invalid);
             DebugTools.AssertEqual(data.LastSent, _gameTiming.CurTick);
+            DebugTools.Assert(ReferenceEquals(data, entityData[data.NetEntity]));
 
             // if an entity is visible, its parents should always be visible.
             if (_xformQuery.GetComponent(data.Entity).ParentUid is not {Valid: true} pUid)
                 continue;
 
-            var npUid = _metaQuery.GetComponent(pUid).NetEntity;
-            DebugTools.Assert(toSendSet.Contains(npUid),
-                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(ent)}.");
+            DebugTools.Assert(toSendSet.Contains(pUid),
+                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(pUid)}.");
         }
 
-        foreach (var ent in CollectionsMarshal.AsSpan(lastSent))
+        foreach (var data in CollectionsMarshal.AsSpan(lastSent))
         {
-            ref var data = ref CollectionsMarshal.GetValueRefOrNullRef(entityData, ent);
-            if (Unsafe.IsNullRef(ref data))
-                continue;
-
+            DebugTools.AssertNotEqual(data.Visibility, PvsEntityVisibility.Invalid);
+            DebugTools.Assert(ReferenceEquals(data, entityData[data.NetEntity]));
             DebugTools.Assert(data.LastSent != GameTick.Zero);
-            var isBeingSent = data.LastSent == _gameTiming.CurTick;
-            DebugTools.AssertEqual(toSendSet.Contains(ent), isBeingSent);
-            if (!isBeingSent)
-                DebugTools.Assert(data.LastSent.Value == _gameTiming.CurTick.Value - 1);
+            DebugTools.AssertEqual(toSendSet.Contains(data.Entity), data.LastSent == _gameTiming.CurTick);
+            DebugTools.Assert(data.LastSent == _gameTiming.CurTick
+                              || data.LastSent == _gameTiming.CurTick - 1);
         }
 #endif
 
@@ -838,7 +849,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         // Tell the client to detach entities that have left their view
         // This has to be called after EntityData.LastSent is updated.
-        var leftView = ProcessLeavePvs(toSend, lastSent, entityData, fromTick, toTick);
+        var leftView = ProcessLeavePvs(lastSent, toTick, toSend.Count);
 
         if (sessionData.SentEntities.Add(toTick, toSend, out var oldEntry))
         {
@@ -864,20 +875,22 @@ internal sealed partial class PvsSystem : EntitySystem
 #endif
             }
             else
-                _netUidListPool.Return(oldEntry.Value.Value);
+                _entDataListPool.Return(oldEntry.Value.Value);
         }
 
-        if (entityStates.Count == 0) entityStates = default;
-        return (entityStates, deletions, leftView, sessionData.RequestedFull ? GameTick.Zero : fromTick);
+        DebugTools.Assert(!sessionData.RequestedFull || fromTick == GameTick.Zero);
+
+        if (entityStates.Count == 0)
+            entityStates = default;
+
+        return (entityStates, deletions, leftView, fromTick);
     }
 
     /// <summary>
     ///     Figure out what entities are no longer visible to the client. These entities are sent reliably to the client
     ///     in a separate net message.
     /// </summary>
-    private List<NetEntity>? ProcessLeavePvs(List<NetEntity> toSend,
-        List<NetEntity>? lastSent,
-        Dictionary<NetEntity, EntityData> entityData, GameTick fromTick, GameTick toTick)
+    private List<NetEntity>? ProcessLeavePvs(List<EntityData>? lastSent, GameTick toTick, int toSendCount)
     {
         // TODO parallelize this with system processing.
         // Note that this requires deferring entity-deletion processing to be applied at the beginning of PVS
@@ -887,29 +900,17 @@ internal sealed partial class PvsSystem : EntitySystem
         if (lastSent == null)
             return null;
 
-        var minSize = Math.Max(0, lastSent.Count - toSend.Count);
+        var minSize = Math.Max(0, lastSent.Count - toSendCount);
 
         // TODO PVS reduce allocs
         var leftView = new List<NetEntity>(minSize);
 
-        DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
-        foreach (var ent in CollectionsMarshal.AsSpan(lastSent))
+        foreach (var data in CollectionsMarshal.AsSpan(lastSent))
         {
-            ref var data = ref CollectionsMarshal.GetValueRefOrNullRef(entityData, ent);
-            if (Unsafe.IsNullRef(ref data))
-            {
-                // This should only happen if the entity has been deleted.
-                // TODO PVS turn into debug assert
-                if (TryGetEntity(ent, out _))
-                    Log.Error($"Departing entity {ToPrettyString(ent)} is missing entityData entry");
-
-                continue;
-            }
-
             if (data.LastSent == toTick)
                 continue;
 
-            leftView.Add(ent);
+            leftView.Add(data.NetEntity);
             data.LastLeftView = toTick;
         }
 
@@ -954,6 +955,16 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             viewers[i++] = ent;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal EntityData GetOrNewEntityData(Dictionary<NetEntity, EntityData> entityData, NetEntity entity)
+    {
+        ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, entity, out var exists);
+        if (!exists)
+            data = new(GetEntityData(entity));
+        DebugTools.AssertEqual(data!.NetEntity, entity);
+        return data!;
     }
 
     // Read Safe

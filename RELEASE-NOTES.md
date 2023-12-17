@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The `IComponentFactory.ComponentsAdded` event now provides arrays of component registrations, instead of a one at a time. The arguments of IComponentFactory.RegisterIgnore(). have also changed.
 
 ### New features
 

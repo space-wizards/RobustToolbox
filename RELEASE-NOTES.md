@@ -54,6 +54,24 @@ END TEMPLATE-->
 *None yet*
 
 
+## 193.1.0
+
+### New features
+
+* Added FrozenDictionary and FrozenHashSet to sandbox whitelist
+* Added yaml type serializers for FrozenDictionary and FrozenHashSet
+* Added `IPrototypeManager.GetInstances<T>()`
+* `IPrototypeManager` now also raises `PrototypesReloadedEventArgs` as a system event.
+
+### Bugfixes
+
+* Might fix some PVS bugs added in the last version.
+
+### Internal
+
+* Various static dictionaries have been converted into FrozenDictionary. 
+
+
 ## 193.0.0
 
 ### Breaking changes

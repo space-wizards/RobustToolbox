@@ -111,8 +111,18 @@ public interface IPrototypeManager
     bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
     bool TryIndex(Type kind, string id, [NotNullWhen(true)] out IPrototype? prototype);
 
+    /// <summary>
+    /// Attempts to get a dictionary containing all current instances of a given prototype kind.
+    /// The dictionary will be valid up until prototypes are next reloaded.
+    /// </summary>
     bool TryGetInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)
         where T : IPrototype;
+
+    /// <summary>
+    /// Gets a dictionary containing all current instances of a given prototype kind.
+    /// The dictionary will be valid up until prototypes are next reloaded.
+    /// </summary>
+    FrozenDictionary<string, T> GetInstances<T>() where T : IPrototype;
 
     /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
     bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
@@ -347,9 +357,40 @@ internal interface IPrototypeManagerInternal : IPrototypeManager
     event Action<DataNodeDocument>? LoadedData;
 }
 
-public sealed record PrototypesReloadedEventArgs(
+/// <summary>
+/// This is event contains information about prototypes that have been modified. It is broadcast as a system event,
+/// whenever <see cref="IPrototypeManager.PrototypesReloaded"/> gets invoked.
+/// </summary>
+public sealed record PrototypesReloadedEventArgs(HashSet<Type> Modified,
     IReadOnlyDictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet> ByType,
     IReadOnlyDictionary<Type, HashSet<string>>? Removed = null)
 {
     public sealed record PrototypeChangeSet(IReadOnlyDictionary<string, IPrototype> Modified);
+
+    /// <summary>
+    /// Checks whether a given prototype kind was modified at all. This includes both changes and removals.
+    /// </summary>
+    public bool WasModified<T>() where T : IPrototype
+    {
+        return Modified.Contains(typeof(T));
+    }
+
+    /// <summary>
+    /// Returns a set of all modified prototype instances of a given kind. This includes both changes and removals.
+    /// </summary>
+    public bool TryGetModified<T>([NotNullWhen(true)] out HashSet<string>? modified) where T : IPrototype
+    {
+        modified = null;
+        if (!WasModified<T>())
+            return false;
+
+        modified = new();
+        if (ByType.TryGetValue(typeof(T), out var mod))
+            modified.UnionWith(mod.Modified.Keys);
+
+        if (Removed != null && Removed.TryGetValue(typeof(T), out var rem))
+            modified.UnionWith(rem);
+
+        return true;
+    }
 }

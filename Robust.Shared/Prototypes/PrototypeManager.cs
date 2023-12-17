@@ -34,6 +34,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly ILocalizationManager _locMan = default!;
         [Dependency] private readonly IComponentFactory _factory = default!;
+        [Dependency] private readonly IEntityManager _entMan = default!;
 
         private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
         private EntityDiffContext _context = new();
@@ -79,17 +80,7 @@ namespace Robust.Shared.Prototypes
         /// <inheritdoc />
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
-            if (!_hasEverBeenReloaded)
-            {
-                throw new InvalidOperationException("No prototypes have been loaded yet.");
-            }
-
-            var data = _kinds[typeof(T)];
-
-            foreach (var proto in data.Instances.Values)
-            {
-                yield return (T)proto;
-            }
+            return GetInstances<T>().Values;
         }
 
         /// <inheritdoc />
@@ -364,15 +355,20 @@ namespace Robust.Shared.Prototypes
 #endif
 
             //todo paul i hate it but i am not opening that can of worms in this refactor
-            PrototypesReloaded?.Invoke(
-                new PrototypesReloadedEventArgs(
-                    modified
-                        .ToDictionary(
-                            g => g.Key,
-                            g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
-                                g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
-                                    .ToDictionary(a => a, a => _kinds[g.Key].Instances[a]))),
-                    removed));
+            var byType = modified
+                .ToDictionary(
+                    g => g.Key,
+                    g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
+                        g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
+                            .ToDictionary(a => a, a => _kinds[g.Key].Instances[a])));
+
+            var modifiedTypes = new HashSet<Type>(byType.Keys);
+            if (removed != null)
+                modifiedTypes.UnionWith(removed.Keys);
+
+            var ev = new PrototypesReloadedEventArgs(modifiedTypes, byType, removed);
+            PrototypesReloaded?.Invoke(ev);
+            _entMan.EventBus.RaiseEvent(EventSource.Local, ev);
         }
 
         private void Freeze(HashSet<KindData> kinds)
@@ -757,6 +753,14 @@ namespace Robust.Shared.Prototypes
             return true;
         }
 
+        public FrozenDictionary<string, T> GetInstances<T>() where T : IPrototype
+        {
+            if (TryGetInstances<T>(out var dict))
+                return dict;
+
+            throw new Exception($"Failed to fetch instances for kind {nameof(T)}");
+        }
+
         public bool TryGetInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)
             where T : IPrototype
         {
@@ -773,6 +777,9 @@ namespace Robust.Shared.Prototypes
 
         private bool TryGetInstances(Type kind, [NotNullWhen(true)] out object? instances)
         {
+            if (!_hasEverBeenReloaded)
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+
             DebugTools.Assert(kind.IsAssignableTo(typeof(IPrototype)));
             if (!_kinds.TryGetValue(kind, out var kindData))
             {

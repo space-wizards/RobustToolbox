@@ -84,6 +84,11 @@ namespace Robust.Shared.GameObjects
         void RegisterClass<T>(bool overwrite = false) where T : IComponent, new();
 
         /// <summary>
+        /// Registers component types with the factory.
+        /// </summary>
+        void RegisterTypes(params Type[] type);
+
+        /// <summary>
         /// Registers a component name as being ignored.
         /// </summary>
         /// <param name="names">The names to be ignored.</param>

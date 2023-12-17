@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -19,12 +20,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
     [TestOf(typeof(ComponentRegistrySerializer))]
     public sealed class ComponentRegistrySerializerTest : SerializationTest
     {
-        [OneTimeSetUp]
-        public new void OneTimeSetup()
-        {
-            var componentFactory = IoCManager.Resolve<IComponentFactory>();
-            componentFactory.RegisterClass<TestComponent>();
-        }
+        protected override Type[]? ExtraComponents => new[] {typeof(TestComponent)};
 
         [Test]
         public void SerializationTest()

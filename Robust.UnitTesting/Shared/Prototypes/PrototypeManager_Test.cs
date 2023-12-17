@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using JetBrains.Annotations;
 using NUnit.Framework;
@@ -21,13 +22,11 @@ namespace Robust.UnitTesting.Shared.Prototypes
         private const string LoadStringTestDummyId = "LoadStringTestDummy";
         private IPrototypeManager manager = default!;
 
+        protected override Type[] ExtraComponents => new[] {typeof(TestBasicPrototypeComponent), typeof(PointLightComponent)};
+
         [OneTimeSetUp]
         public void Setup()
         {
-            var factory = IoCManager.Resolve<IComponentFactory>();
-            factory.RegisterClass<TestBasicPrototypeComponent>();
-            factory.RegisterClass<PointLightComponent>();
-
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.RegisterKind(typeof(EntityPrototype));

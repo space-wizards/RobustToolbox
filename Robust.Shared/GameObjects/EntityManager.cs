@@ -197,7 +197,7 @@ namespace Robust.Shared.GameObjects
             // TODO: Probably better to call this on its own given it's so infrequent.
             _entitySystemManager.Initialize();
             Started = true;
-            _eventBus.CalcOrdering();
+            _eventBus.LockSubscriptions();
             _mapSystem = System<SharedMapSystem>();
             _xforms = System<SharedTransformSystem>();
             _containers = System<SharedContainerSystem>();
@@ -209,7 +209,7 @@ namespace Robust.Shared.GameObjects
         {
             ShuttingDown = true;
             FlushEntities();
-            _eventBus.ClearEventTables();
+            _eventBus.ClearSubscriptions();
             _entitySystemManager.Shutdown();
             ClearComponents();
             ShuttingDown = false;

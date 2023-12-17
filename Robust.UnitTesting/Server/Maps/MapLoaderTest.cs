@@ -58,17 +58,14 @@ entities:
         [OneTimeSetUp]
         public void Setup()
         {
+            IoCManager.Resolve<IEntityManager>().Shutdown();
             var compFactory = IoCManager.Resolve<IComponentFactory>();
             compFactory.RegisterClass<MapDeserializeTestComponent>();
             compFactory.RegisterClass<VisibilityComponent>();
             compFactory.RegisterClass<IgnoreUIRangeComponent>();
             compFactory.GenerateNetIds();
+            IoCManager.Resolve<IEntityManager>().Startup();
             IoCManager.Resolve<ISerializationManager>().Initialize();
-
-            // For some reason RobustUnitTest doesn't discover PVSSystem but this does here so ?
-            var syssy = IoCManager.Resolve<IEntitySystemManager>();
-            syssy.Shutdown();
-            syssy.Initialize();
 
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             resourceManager.Initialize(null);

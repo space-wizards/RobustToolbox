@@ -37,6 +37,31 @@ namespace Robust.UnitTesting
     [Parallelizable]
     public abstract partial class RobustUnitTest
     {
+        protected virtual Type[]? ExtraComponents => null;
+        private static Type[] _components = new []
+            {
+                typeof(EyeComponent),
+                typeof(MapComponent),
+                typeof(MapGridComponent),
+                typeof(ContainerManagerComponent),
+                typeof(MetaDataComponent),
+                typeof(TransformComponent),
+                typeof(PhysicsComponent),
+                typeof(PhysicsMapComponent),
+                typeof(BroadphaseComponent),
+                typeof(FixturesComponent),
+                typeof(JointComponent),
+                typeof(GridTreeComponent),
+                typeof(MovedGridsComponent),
+                typeof(JointRelayTargetComponent),
+                typeof(OccluderComponent),
+                typeof(OccluderTreeComponent),
+                typeof(SpriteTreeComponent),
+                typeof(LightTreeComponent),
+                typeof(Gravity2DComponent),
+                typeof(ActorComponent)
+            };
+
         public virtual UnitTestProject Project => UnitTestProject.Server;
 
         [OneTimeSetUp]
@@ -127,114 +152,18 @@ namespace Robust.UnitTesting
             // Required components for the engine to work
             // Why are we still here? Just to suffer? Why can't we just use [RegisterComponent] magic?
             // TODO End Suffering.
+            // suffering has been alleviated, but still present
             var compFactory = deps.Resolve<IComponentFactory>();
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(EyeComponent)))
-            {
-                compFactory.RegisterClass<EyeComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(MapComponent)))
-            {
-                compFactory.RegisterClass<MapComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(MapGridComponent)))
-            {
-                compFactory.RegisterClass<MapGridComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(ContainerManagerComponent)))
-            {
-                compFactory.RegisterClass<ContainerManagerComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(MetaDataComponent)))
-            {
-                compFactory.RegisterClass<MetaDataComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(TransformComponent)))
-            {
-                compFactory.RegisterClass<TransformComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(PhysicsComponent)))
-            {
-                compFactory.RegisterClass<PhysicsComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(PhysicsMapComponent)))
-            {
-                compFactory.RegisterClass<PhysicsMapComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(BroadphaseComponent)))
-            {
-                compFactory.RegisterClass<BroadphaseComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(FixturesComponent)))
-            {
-                compFactory.RegisterClass<FixturesComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(JointComponent)))
-            {
-                compFactory.RegisterClass<JointComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(GridTreeComponent)))
-            {
-                compFactory.RegisterClass<GridTreeComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(MovedGridsComponent)))
-            {
-                compFactory.RegisterClass<MovedGridsComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(JointRelayTargetComponent)))
-            {
-                compFactory.RegisterClass<JointRelayTargetComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(OccluderComponent)))
-            {
-                compFactory.RegisterClass<OccluderComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(OccluderTreeComponent)))
-            {
-                compFactory.RegisterClass<OccluderTreeComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(SpriteTreeComponent)))
-            {
-                compFactory.RegisterClass<SpriteTreeComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(LightTreeComponent)))
-            {
-                compFactory.RegisterClass<LightTreeComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(Gravity2DComponent)))
-            {
-                compFactory.RegisterClass<Gravity2DComponent>();
-            }
-
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(ActorComponent)))
-            {
-                compFactory.RegisterClass<ActorComponent>();
-            }
+            compFactory.RegisterTypes(_components);
+            if (ExtraComponents != null)
+                compFactory.RegisterTypes(ExtraComponents);
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.
             // We want to bypass this and load our own systems hence we will manually initialize it here.
             entMan.Initialize();
             // RobustUnitTest is complete hot garbage.
             // This makes EventTables ignore *all* the screwed up component abuse it causes.
-            entMan.EventBus.OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
+            entMan.EventBus.OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();  // The nightmare never ends
             mapMan.Initialize();
             systems.Initialize();
 

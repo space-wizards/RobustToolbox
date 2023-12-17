@@ -33,19 +33,15 @@ namespace Robust.UnitTesting.Shared.Prototypes
     value: 10
   - type: {HotReloadTestComponentTwoId}";
 
-        private IComponentFactory _components = default!;
         private PrototypeManager _prototypes = default!;
         private IMapManager _maps = default!;
         private IEntityManager _entities = default!;
 
+        protected override Type[]? ExtraComponents => new[] {typeof(HotReloadTestOneComponent), typeof(HotReloadTestTwoComponent)};
+
         [OneTimeSetUp]
         public void Setup()
         {
-            _components = IoCManager.Resolve<IComponentFactory>();
-            _components.RegisterClass<HotReloadTestOneComponent>();
-            _components.RegisterClass<HotReloadTestTwoComponent>();
-            _components.GenerateNetIds();
-
             IoCManager.Resolve<ISerializationManager>().Initialize();
             _prototypes = (PrototypeManager) IoCManager.Resolve<IPrototypeManager>();
             _prototypes.RegisterKind(typeof(EntityPrototype));

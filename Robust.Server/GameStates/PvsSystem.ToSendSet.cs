@@ -91,13 +91,13 @@ internal sealed partial class PvsSystem
         // 2x or more times the normal entity creation budget.
         if (enteredSinceLastSent)
         {
+            if (newEntityCount >= newEntityBudget || enteredEntityCount >= enteredEntityBudget)
+                return (entered, true);
+
             enteredEntityCount++;
 
             if (entity.EntityLastAcked == GameTick.Zero)
                 newEntityCount++;
-
-            if (newEntityCount >= newEntityBudget || enteredEntityCount >= enteredEntityBudget)
-                return (entered, true);
         }
 
         return (entered, false);

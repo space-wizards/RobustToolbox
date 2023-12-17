@@ -93,11 +93,13 @@ internal sealed partial class PvsSystem
         else if (!sessionData.SentEntities.TryGetValue(ackedTick, out ackedEnts))
             return;
 
-        var entityData = sessionData.EntityData;
         foreach (var data in CollectionsMarshal.AsSpan(ackedEnts))
         {
             data.EntityLastAcked = ackedTick;
+            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
             DebugTools.Assert(data.LastSent >= ackedTick); // LastSent may equal ackedTick if the packet was sent reliably.
+            DebugTools.Assert(!sessionData.EntityData.TryGetValue(data.NetEntity, out var old)
+                              || ReferenceEquals(data, old));
         }
 
         // The client acked a tick. If they requested a full state, this ack happened some time after that, so we can safely set this to false

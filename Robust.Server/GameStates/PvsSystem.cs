@@ -821,7 +821,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var data in CollectionsMarshal.AsSpan(toSend))
         {
-            DebugTools.AssertNotEqual(data.Visibility, PvsEntityVisibility.Invalid);
+            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
             DebugTools.AssertEqual(data.LastSent, _gameTiming.CurTick);
             DebugTools.Assert(ReferenceEquals(data, entityData[data.NetEntity]));
 
@@ -835,8 +835,8 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var data in CollectionsMarshal.AsSpan(lastSent))
         {
-            DebugTools.AssertNotEqual(data.Visibility, PvsEntityVisibility.Invalid);
-            DebugTools.Assert(ReferenceEquals(data, entityData[data.NetEntity]));
+            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
+            DebugTools.Assert(!entityData.TryGetValue(data.NetEntity, out var old) || ReferenceEquals(data, old));
             DebugTools.Assert(data.LastSent != GameTick.Zero);
             DebugTools.AssertEqual(toSendSet.Contains(data.Entity), data.LastSent == _gameTiming.CurTick);
             DebugTools.Assert(data.LastSent == _gameTiming.CurTick
@@ -963,7 +963,9 @@ internal sealed partial class PvsSystem : EntitySystem
         ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, entity, out var exists);
         if (!exists)
             data = new(GetEntityData(entity));
+
         DebugTools.AssertEqual(data!.NetEntity, entity);
+        DebugTools.AssertEqual(data.LastSent == GameTick.Zero, data.Visibility <= PvsEntityVisibility.Unsent);
         return data!;
     }
 

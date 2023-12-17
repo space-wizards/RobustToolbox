@@ -27,6 +27,7 @@ internal sealed partial class PvsSystem
             {
                 DebugTools.AssertNotNull(data.Entity.Comp);
                 DebugTools.Assert(data.LastSent == _gameTiming.CurTick);
+                DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
                 DebugTools.Assert(ReferenceEquals(data, entData[data.NetEntity]));
                 states.Add(GetFullEntityState(session, data.Entity.Owner, data.Entity.Comp));
             }
@@ -37,9 +38,10 @@ internal sealed partial class PvsSystem
         {
             DebugTools.AssertNotNull(data.Entity.Comp);
             DebugTools.Assert(data.LastSent == _gameTiming.CurTick);
+            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
             DebugTools.Assert(ReferenceEquals(data, entData[data.NetEntity]));
 
-            if (data.Visibility == PvsEntityVisibility.StayedUnchanged)
+            if (data.Visibility == PvsEntityVisibility.Unchanged)
                 continue;
 
             var (uid, meta) = data.Entity;

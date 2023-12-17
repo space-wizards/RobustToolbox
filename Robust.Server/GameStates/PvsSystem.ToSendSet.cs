@@ -51,12 +51,12 @@ internal sealed partial class PvsSystem
         if (meta.EntityLastModifiedTick <= fromTick)
         {
             //entity has been sent before and hasn't been updated since
-            data.Visibility = PvsEntityVisibility.StayedUnchanged;
+            data.Visibility = PvsEntityVisibility.Unchanged;
             return;
         }
 
         //add us
-        data.Visibility = PvsEntityVisibility.StayedChanged;
+        data.Visibility = PvsEntityVisibility.Dirty;
         dirtyEntityCount++;
     }
 
@@ -73,6 +73,7 @@ internal sealed partial class PvsSystem
         int enteredEntityBudget)
     {
         DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
+        DebugTools.AssertEqual(entity.LastSent == GameTick.Zero, entity.Visibility <= PvsEntityVisibility.Unsent);
 
         var enteredSinceLastSent = fromTick == GameTick.Zero
                                    || entity.LastSent == GameTick.Zero
@@ -133,20 +134,27 @@ internal sealed partial class PvsSystem
                 var (entered, budgetExceeded) = IsEnteringPvsRange(data, fromTick, toTick,
                     ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-
                 if (budgetExceeded)
                 {
-                    // should be false for the majority of entities
-                    if (data.LastSent == GameTick.Zero)
-                        entityData.Remove(currentNodeIndex);
+                    if (data.Visibility == PvsEntityVisibility.Invalid)
+                    {
+                        // This entity was never sent to the player, and isn't being sent now.
+                        // However, the data has already been added to the entityData dictionary.
+                        // In order for debug asserts and other sanity checks to keep working, we mark the entity as
+                        // explicitly unsent.
+                        data.Visibility = PvsEntityVisibility.Unsent;
+                    }
 
-                    // TODO PVS avoid dictionary remove
-                    // We continue, but do not stop iterating this or other chunks.
-                    // This is to avoid sending bad pvs-leave messages. I.e., other entities may have just stayed in view, and we can send them without exceeding our budget.
+                    // Sending this entity would go over the player's budget, so we will not add it. However, we  do not
+                    // stop iterating over this (or other chunks). This is to avoid sending bad pvs-leave messages.
+                    // I.e., other entities may have just stayed in view, and we can send them without exceeding our
+                    // budget. E.g., this might be the very first chunk we are iterating over, and it just so happens
+                    // to be a chunk that just entered their PVS range.
                     continue;
                 }
 
                 AddToSendList(data, toSend, fromTick, toTick, entered, ref dirtyEntityCount);
+                DebugTools.AssertNotEqual(data.LastSent, GameTick.Zero);
             }
 
             var node = tree[currentNodeIndex];

@@ -86,6 +86,6 @@ internal sealed class EntityData(Entity<MetaDataComponent> entity) : IEquatable<
     public override string ToString()
     {
         var rep = new EntityStringRepresentation(Entity);
-        return $"PVS Entity: {rep} - {LastSent}/{LastLeftView}/{EntityLastAcked}";
+        return $"PVS Entity: {rep} - {LastSent}/{LastLeftView}/{EntityLastAcked} - {Visibility}";
     }
 }

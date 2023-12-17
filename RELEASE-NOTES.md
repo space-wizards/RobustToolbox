@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 193.1.1
+
+### Bugfixes
+
+* Fixed an exception when building in FULL_RELEASE
+
+
 ## 193.1.0
 
 ### New features

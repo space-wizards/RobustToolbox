@@ -15,6 +15,7 @@ internal sealed partial class PvsSystem
         ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, entity, out var exists);
         if (!exists)
             data = new(GetEntityData(entity));
+        DebugTools.AssertEqual(data.Entity.Comp.NetEntity, entity);
         return ref data;
     }
 
@@ -24,6 +25,7 @@ internal sealed partial class PvsSystem
         DebugTools.Assert(entityData.ContainsKey(entity));
         ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, entity, out _);
         DebugTools.AssertNotNull(data.Entity.Comp);
+        DebugTools.AssertEqual(data.Entity.Comp.NetEntity, entity);
         return ref data;
     }
 }

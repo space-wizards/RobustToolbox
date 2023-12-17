@@ -19,6 +19,7 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void OnClientAck(ICommonSession session, GameTick ackedTick)
     {
+        DebugTools.Assert(ackedTick < _gameTiming.CurTick);
         if (!PlayerData.TryGetValue(session, out var sessionData))
             return;
 
@@ -102,7 +103,7 @@ internal sealed partial class PvsSystem
 
                 // TODO PVS turn into debug assert
                 if (TryGetEntity(ent, out _))
-                    Log.Error($"Entity {ToPrettyString(ent)} is has missing entityData entry");
+                    Log.Error($"Acked entity {ToPrettyString(ent)} is missing entityData entry");
 
                 continue;
             }

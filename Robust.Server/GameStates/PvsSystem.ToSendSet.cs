@@ -18,15 +18,16 @@ internal sealed partial class PvsSystem
         NetEntity ent,
         ref EntityData data,
         List<NetEntity> list,
-        GameTick curTick,
         GameTick fromTick,
+        GameTick toTick,
         bool entered,
         ref int dirtyEntityCount)
     {
         var meta = data.Entity.Comp;
         DebugTools.AssertEqual(meta.NetEntity, ent);
-        DebugTools.Assert(fromTick < curTick);
-        DebugTools.AssertNotEqual(data.LastSent, curTick);
+        DebugTools.Assert(fromTick < toTick);
+        DebugTools.AssertNotEqual(data.LastSent, toTick);
+        DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
 
         if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
@@ -39,7 +40,7 @@ internal sealed partial class PvsSystem
             return;
         }
 
-        data.LastSent = curTick;
+        data.LastSent = toTick;
         list.Add(ent);
 
         if (entered)
@@ -65,17 +66,19 @@ internal sealed partial class PvsSystem
     /// This method figures out whether a given entity is currently entering a player's PVS range.
     /// This method will also check that the player's PVS entry budget is not being exceeded.
     /// </summary>
-    private (bool Entered, bool UnderBudget) GetPvsEntryData(
-        ref EntityData entity,
+    private (bool Entered, bool BudgetExceeded) GetPvsEntryData(ref EntityData entity,
         GameTick fromTick,
+        GameTick toTick,
         ref int newEntityCount,
         ref int enteredEntityCount,
         int newEntityBudget,
         int enteredEntityBudget)
     {
+        DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
+
         var enteredSinceLastSent = fromTick == GameTick.Zero
                                    || entity.LastSent == GameTick.Zero
-                                   || entity.LastSent.Value == fromTick.Value - 1;
+                                   || entity.LastSent.Value != toTick.Value - 1;
 
         var entered = enteredSinceLastSent
                       || entity.EntityLastAcked == GameTick.Zero
@@ -89,7 +92,7 @@ internal sealed partial class PvsSystem
         if (enteredSinceLastSent)
         {
             if (newEntityCount >= newEntityBudget || enteredEntityCount >= enteredEntityBudget)
-                return (entered, false);
+                return (entered, true);
 
             enteredEntityCount++;
 
@@ -97,7 +100,7 @@ internal sealed partial class PvsSystem
                 newEntityCount++;
         }
 
-        return (entered, true);
+        return (entered, false);
     }
 
     /// <summary>
@@ -109,6 +112,7 @@ internal sealed partial class PvsSystem
         Dictionary<NetEntity, EntityData> entityData,
         Stack<NetEntity> stack,
         GameTick fromTick,
+        GameTick toTick,
         ref int newEntityCount,
         ref int enteredEntityCount,
         ref int dirtyEntityCount,
@@ -116,8 +120,6 @@ internal sealed partial class PvsSystem
         int enteredEntityBudget)
     {
         stack.Push(nodeIndex);
-
-        var curTick = _gameTiming.CurTick;
 
         while (stack.TryPop(out var currentNodeIndex))
         {
@@ -128,15 +130,24 @@ internal sealed partial class PvsSystem
             // on different chunks (this is especially common with direct grid children)
 
             ref var data = ref GetOrNewEntityData(entityData, currentNodeIndex);
-            if (data.LastSent != curTick)
+            if (data.LastSent != toTick)
             {
-                var (entered, underBudget) = GetPvsEntryData(ref data, fromTick,
+                var (entered, budgetExceeded) = GetPvsEntryData(ref data, fromTick, toTick,
                     ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-                if (!underBudget)
-                    continue;
 
-                AddToSendList(currentNodeIndex, ref data, toSend, curTick, fromTick, entered, ref dirtyEntityCount);
+                if (budgetExceeded)
+                {
+                    // should be false for the majority of entities
+                    if (data.LastSent == GameTick.Zero)
+                        entityData.Remove(currentNodeIndex);
+
+                    // We continue, but do not stop iterating this or other chunks.
+                    // This is to avoid sending bad pvs-leave messages. I.e., other entities may have just stayed in view, and we can send them without exceeding our budget.
+                    continue;
+                }
+
+                AddToSendList(currentNodeIndex, ref data, toSend, fromTick, toTick, entered, ref dirtyEntityCount);
             }
 
             var node = tree[currentNodeIndex];
@@ -157,6 +168,7 @@ internal sealed partial class PvsSystem
         List<NetEntity> toSend,
         Dictionary<NetEntity, EntityData> entityData,
         GameTick fromTick,
+        GameTick toTick,
         ref int newEntityCount,
         ref int enteredEntityCount,
         ref int dirtyEntityCount,
@@ -171,7 +183,7 @@ internal sealed partial class PvsSystem
 
         var xform = _xformQuery.GetComponent(uid);
         var parent = xform.ParentUid;
-        if (parent.IsValid() && !RecursivelyAddOverride(in parent, toSend, entityData, fromTick,
+        if (parent.IsValid() && !RecursivelyAddOverride(in parent, toSend, entityData, fromTick, toTick,
                 ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget))
         {
             return false;
@@ -188,13 +200,13 @@ internal sealed partial class PvsSystem
         ref var data = ref GetOrNewEntityData(entityData, netEntity);
         if (data.LastSent != curTick)
         {
-            var (entered, _) = GetPvsEntryData(ref data, fromTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-            AddToSendList(netEntity, ref data, toSend, curTick, fromTick, entered, ref dirtyEntityCount);
+            var (entered, _) = GetPvsEntryData(ref data, fromTick, toTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
+            AddToSendList(netEntity, ref data, toSend, fromTick, toTick, entered, ref dirtyEntityCount);
         }
 
         if (addChildren)
         {
-            RecursivelyAddChildren(xform, toSend, entityData, fromTick, ref newEntityCount,
+            RecursivelyAddChildren(xform, toSend, entityData, fromTick, toTick, ref newEntityCount,
                 ref enteredEntityCount, ref dirtyEntityCount, in newEntityBudget, in enteredEntityBudget);
         }
 
@@ -208,13 +220,13 @@ internal sealed partial class PvsSystem
         List<NetEntity> toSend,
         Dictionary<NetEntity, EntityData> entityData,
         in GameTick fromTick,
+        in GameTick toTick,
         ref int newEntityCount,
         ref int enteredEntityCount,
         ref int dirtyEntityCount,
         in int newEntityBudget,
         in int enteredEntityBudget)
     {
-        var curTick = _gameTiming.CurTick;
         foreach (var child in xform._children)
         {
             if (!_xformQuery.TryGetComponent(child, out var childXform))
@@ -223,14 +235,14 @@ internal sealed partial class PvsSystem
             var metadata = _metaQuery.GetComponent(child);
             var netChild = metadata.NetEntity;
             ref var data = ref GetOrNewEntityData(entityData, netChild);
-            if (data.LastSent != curTick)
+            if (data.LastSent != toTick)
             {
-                var (entered, _) = GetPvsEntryData(ref data, fromTick, ref newEntityCount,
+                var (entered, _) = GetPvsEntryData(ref data, fromTick, toTick, ref newEntityCount,
                     ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-                AddToSendList(netChild, ref data, toSend, curTick, fromTick, entered, ref dirtyEntityCount);
+                AddToSendList(netChild, ref data, toSend, fromTick, toTick, entered, ref dirtyEntityCount);
             }
 
-            RecursivelyAddChildren(childXform, toSend, entityData, fromTick, ref newEntityCount,
+            RecursivelyAddChildren(childXform, toSend, entityData, fromTick, toTick, ref newEntityCount,
                 ref enteredEntityCount, ref dirtyEntityCount, in newEntityBudget, in enteredEntityBudget);
         }
     }

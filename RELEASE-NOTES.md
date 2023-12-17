@@ -35,11 +35,14 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Event bus subscriptions are now locked after `IEntityManager` has started, instead of after the first component gets added. Any event subscriptions now need to happen before startup (but after init).
+* Event bus subscriptions must now be locked before raising any events.
 
 ### New features
 
-*None yet*
+* `RobustUnitTest` now has a `ExtraComponents` field for automatically registering additional components.
+* `IComponentFactory.RegisterIgnore()` now accepts more than one string. 
+* Added `IComponentFactory.RegisterTypes` for simultaneously registering multiple components. 
 
 ### Bugfixes
 

@@ -144,6 +144,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<DebugRayDrawingSystem>();
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<DebugPhysicsSystem>();
+                systems.LoadExtraSystemType<MapLoaderSystem>();
             }
 
             var entMan = deps.Resolve<IEntityManager>();

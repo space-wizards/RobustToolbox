@@ -349,14 +349,36 @@ namespace Robust.Shared.GameObjects
         internal void LockSubscriptions()
         {
             _subscriptionLock = true;
+            _eventData = _eventDataUnfrozen.ToFrozenDictionary();
 
             _entSubscriptions = _entSubscriptionsUnfrozen
                 .Select(x => x?.ToFrozenDictionary())
                 .ToArray();
 
-            _eventData = _eventDataUnfrozen.ToFrozenDictionary();
+            _entSubscriptionsNoCompEv = _entSubscriptionsUnfrozen.Select(FreezeWithoutComponentEvent).ToArray();
 
             CalcOrdering();
+        }
+
+        /// <summary>
+        /// Freezes a dictionary while committing events with the <see cref="ComponentEventAttribute"/>.
+        /// This avoids unnecessarily adding one-off events to the list of subscriptions.
+        /// </summary>
+        private FrozenDictionary<Type, DirectedRegistration>? FreezeWithoutComponentEvent(
+            Dictionary<Type, DirectedRegistration>? input)
+        {
+            if (input == null)
+                return null;
+
+            return input.Where(x => !IsComponentEvent(x.Key))
+                .ToFrozenDictionary();
+        }
+
+        private bool IsComponentEvent(Type t)
+        {
+            var isCompEv = _eventData[t].ComponentEvent;
+            DebugTools.Assert(isCompEv == t.HasCustomAttribute<ComponentEventAttribute>());
+            return isCompEv;
         }
 
         public void OnComponentRemoved(in RemovedComponentEventArgs e)
@@ -447,14 +469,11 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(_subscriptionLock);
 
             var eventTable = _entEventTables[euid];
-            var compSubs = _entSubscriptions[compType.Value]!;
+            var compSubs = _entSubscriptionsNoCompEv[compType.Value]!;
 
             foreach (var evType in compSubs.Keys)
             {
-                // Skip adding this to significantly reduce memory use and GC noise on entity create.
-                // TODO PERFORMANCE create a variant of _entSubscriptions that omits these to avoid this dictionary lookup.
-                if (_eventData[evType].ComponentEvent)
-                    continue;
+                DebugTools.Assert(!_eventData[evType].ComponentEvent);
 
                 if (eventTable.Free < 0)
                     GrowEventTable(eventTable);
@@ -626,6 +645,7 @@ namespace Robust.Shared.GameObjects
             _entEventTables.Clear();
             _inverseEventSubscriptions.Clear();
             _entSubscriptions = default!;
+            _entSubscriptionsNoCompEv = default!;
             _eventData = FrozenDictionary<Type, EventData>.Empty;
             foreach (var sub in _entSubscriptionsUnfrozen)
             {
@@ -642,6 +662,7 @@ namespace Robust.Shared.GameObjects
             _comFac = null!;
             _entEventTables = null!;
             _entSubscriptions = null!;
+            _entSubscriptionsNoCompEv = null!;
             _entSubscriptionsUnfrozen = null!;
             _entSubscriptionsInv = null!;
         }

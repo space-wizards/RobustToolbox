@@ -32,6 +32,9 @@ internal sealed partial class EntityEventBus : IEventBus
     // CompType -> EventType -> Handler
     internal FrozenDictionary<Type, DirectedRegistration>?[] _entSubscriptions = default!;
 
+    // Variant of _entSubscriptions that omits any events with the ComponentEventAttribute
+    internal FrozenDictionary<Type, DirectedRegistration>?[] _entSubscriptionsNoCompEv = default!;
+
     // pre-freeze _entSubscriptions data
     internal Dictionary<Type, DirectedRegistration>?[] _entSubscriptionsUnfrozen =
         Array.Empty<Dictionary<Type, DirectedRegistration>?>();

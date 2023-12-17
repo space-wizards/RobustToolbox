@@ -365,8 +365,8 @@ Oldest acked clients: {string.Join(", ", players)}
                 stateUpdateMessage.ForceSendReliably = true;
 #if FULL_RELEASE
                 var connectedTime = (DateTime.UtcNow - session.ConnectedTime).TotalMinutes;
-                if (lastAck > GameTick.Zero && connectedTime > 1)
-                    _logger.Warning($"Client {session} exceeded ack-tick threshold. Last ack: {lastAck}. Cur tick: {_gameTiming.CurTick}. Connect time: {connectedTime} minutes");
+                if (sessionData.LastReceivedAck > GameTick.Zero && connectedTime > 1)
+                    _logger.Warning($"Client {session} exceeded ack-tick threshold. Last ack: {sessionData.LastReceivedAck}. Cur tick: {_gameTiming.CurTick}. Connect time: {connectedTime} minutes");
 #endif
             }
 

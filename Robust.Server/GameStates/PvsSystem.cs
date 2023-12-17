@@ -191,7 +191,7 @@ internal sealed partial class PvsSystem : EntitySystem
         sessionData.LastReceivedAck = _gameTiming.CurTick;
 
         var sb = new StringBuilder();
-        sb.Append($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}.");
+        sb.Append($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}. Curtick: {_gameTiming.CurTick}.");
 
         if (missingEntity != null)
         {
@@ -204,14 +204,10 @@ internal sealed partial class PvsSystem : EntitySystem
 
         Log.Warning(sb.ToString());
 
+        // TODO PVS return to pool.
+        sessionData.Overflow = null;
         sessionData.EntityData.Clear();
-
-        if (sessionData.Overflow != null)
-        {
-            _netUidListPool.Return(sessionData.Overflow.Value.SentEnts);
-            sessionData.Overflow = null;
-        }
-
+        sessionData.SentEntities.Clear();
         sessionData.RequestedFull = true;
     }
 
@@ -714,6 +710,7 @@ internal sealed partial class PvsSystem : EntitySystem
         var dirtyEntityCount = 0;
 
         var stack = _stackPool.Get();
+
         // TODO reorder chunks to prioritize those that are closest to the viewer? Helps make pop-in less visible.
         foreach (var i in visibleChunks)
         {
@@ -732,7 +729,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
             foreach (var rootNode in tree.RootNodes)
             {
-                RecursivelyAddTreeNode(in rootNode, tree, toSend, entityData, stack, fromTick,
+                RecursivelyAddTreeNode(in rootNode, tree, toSend, entityData, stack, fromTick, toTick,
                         ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
             }
         }
@@ -743,7 +740,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = globalEnumerator.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, toSend, entityData, fromTick,
+            RecursivelyAddOverride(in uid, toSend, entityData, fromTick, toTick,
                 ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
         }
         globalEnumerator.Dispose();
@@ -753,7 +750,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = globalRecursiveEnumerator.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, toSend, entityData, fromTick,
+            RecursivelyAddOverride(in uid, toSend, entityData, fromTick, toTick,
                 ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget, true);
         }
         globalRecursiveEnumerator.Dispose();
@@ -763,14 +760,14 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = sessionOverrides.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, toSend, entityData, fromTick,
+            RecursivelyAddOverride(in uid, toSend, entityData, fromTick, toTick,
                 ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget, true);
         }
         sessionOverrides.Dispose();
 
         foreach (var viewerEntity in viewers)
         {
-            RecursivelyAddOverride(in viewerEntity, toSend, entityData, fromTick,
+            RecursivelyAddOverride(in viewerEntity, toSend, entityData, fromTick, toTick,
                 ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
         }
 
@@ -785,7 +782,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             foreach (var entityUid in expandEvent.Entities)
             {
-                RecursivelyAddOverride(in entityUid, toSend, entityData, fromTick,
+                RecursivelyAddOverride(in entityUid, toSend, entityData, fromTick, toTick,
                     ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
             }
         }
@@ -794,7 +791,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             foreach (var entityUid in expandEvent.RecursiveEntities)
             {
-                RecursivelyAddOverride(in entityUid, toSend, entityData, fromTick,
+                RecursivelyAddOverride(in entityUid, toSend, entityData, fromTick, toTick,
                     ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget, true);
             }
         }
@@ -841,7 +838,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         // Tell the client to detach entities that have left their view
         // This has to be called after EntityData.LastSent is updated.
-        var leftView = ProcessLeavePvs(toSend, lastSent, entityData);
+        var leftView = ProcessLeavePvs(toSend, lastSent, entityData, fromTick, toTick);
 
         if (sessionData.SentEntities.Add(toTick, toSend, out var oldEntry))
         {
@@ -878,10 +875,9 @@ internal sealed partial class PvsSystem : EntitySystem
     ///     Figure out what entities are no longer visible to the client. These entities are sent reliably to the client
     ///     in a separate net message.
     /// </summary>
-    private List<NetEntity>? ProcessLeavePvs(
-        List<NetEntity> toSend,
+    private List<NetEntity>? ProcessLeavePvs(List<NetEntity> toSend,
         List<NetEntity>? lastSent,
-        Dictionary<NetEntity, EntityData> entityData)
+        Dictionary<NetEntity, EntityData> entityData, GameTick fromTick, GameTick toTick)
     {
         // TODO parallelize this with system processing.
         // Note that this requires deferring entity-deletion processing to be applied at the beginning of PVS
@@ -891,12 +887,12 @@ internal sealed partial class PvsSystem : EntitySystem
         if (lastSent == null)
             return null;
 
-        var tick = _gameTiming.CurTick;
         var minSize = Math.Max(0, lastSent.Count - toSend.Count);
 
         // TODO PVS reduce allocs
         var leftView = new List<NetEntity>(minSize);
 
+        DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
         foreach (var ent in CollectionsMarshal.AsSpan(lastSent))
         {
             ref var data = ref CollectionsMarshal.GetValueRefOrNullRef(entityData, ent);
@@ -905,16 +901,16 @@ internal sealed partial class PvsSystem : EntitySystem
                 // This should only happen if the entity has been deleted.
                 // TODO PVS turn into debug assert
                 if (TryGetEntity(ent, out _))
-                    Log.Error($"Entity {ToPrettyString(ent)} is has missing entityData entry");
+                    Log.Error($"Departing entity {ToPrettyString(ent)} is missing entityData entry");
 
                 continue;
             }
 
-            if (data.LastSent == tick)
+            if (data.LastSent == toTick)
                 continue;
 
             leftView.Add(ent);
-            data.LastLeftView = tick;
+            data.LastLeftView = toTick;
         }
 
         return leftView.Count > 0 ? leftView : null;

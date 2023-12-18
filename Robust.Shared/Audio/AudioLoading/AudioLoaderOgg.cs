@@ -11,6 +11,8 @@ namespace Robust.Shared.Audio.AudioLoading;
 /// <seealso cref="AudioLoaderOgg"/>
 internal static class AudioLoaderOgg
 {
+    private const int ReadBufferLength = short.MaxValue + 1;
+
     /// <summary>
     /// Load metadata for an ogg audio file.
     /// </summary>
@@ -38,11 +40,17 @@ internal static class AudioLoaderOgg
         var totalValues = totalSamples * channels;
         var readValues = 0;
         var buffer = new short[totalSamples * channels];
-        Span<float> readBuffer = stackalloc float[32768];
+        Span<float> readBuffer = stackalloc float[ReadBufferLength];
 
+        int read;
         while (readValues < totalValues)
         {
-            var read = ReadSamples(buffer.AsSpan(readValues), readBuffer, channels, vorbis);
+            var remaining = totalValues - readValues;
+            if (remaining > ReadBufferLength)
+                read = ReadSamples(buffer.AsSpan(readValues), readBuffer, channels, vorbis);
+            else
+                read = ReadSamples(buffer.AsSpan(readValues, (int)remaining), readBuffer[..(int)remaining], channels, vorbis);
+
             if (read == 0)
                 break;
 

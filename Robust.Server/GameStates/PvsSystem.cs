@@ -962,7 +962,16 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, entity, out var exists);
         if (!exists)
-            data = new(GetEntityData(entity));
+        {
+            if (TryGetEntityData(entity, out var uid, out var meta))
+            {
+                data = new((uid.Value, meta));
+            }
+            else
+            {
+                Log.Error($"Attempted to add deleted entity. NetUid: {entity}");
+            }
+        }
 
         DebugTools.AssertEqual(data!.NetEntity, entity);
         DebugTools.AssertEqual(data.LastSent == GameTick.Zero, data.Visibility <= PvsEntityVisibility.Unsent);

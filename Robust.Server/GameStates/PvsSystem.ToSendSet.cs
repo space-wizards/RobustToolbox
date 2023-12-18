@@ -27,6 +27,13 @@ internal sealed partial class PvsSystem
         DebugTools.AssertNotEqual(data.LastSent, toTick);
         DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
 
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (meta == null)
+        {
+            Log.Error($"Encountered null metadata in EntityData");
+            return;
+        }
+
         if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
             var rep = new EntityStringRepresentation(data.Entity);
@@ -157,7 +164,12 @@ internal sealed partial class PvsSystem
                 DebugTools.AssertNotEqual(data.LastSent, GameTick.Zero);
             }
 
-            var node = tree[currentNodeIndex];
+            if (!tree.TryGet(currentNodeIndex, out var node))
+            {
+                Log.Error($"tree is missing the current node! Node: {currentNodeIndex}");
+                continue;
+            }
+
             if (node.Children == null)
                 continue;
 

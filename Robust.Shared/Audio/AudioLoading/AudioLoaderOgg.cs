@@ -42,15 +42,9 @@ internal static class AudioLoaderOgg
         var buffer = new short[totalSamples * channels];
         Span<float> readBuffer = stackalloc float[ReadBufferLength];
 
-        int read;
         while (readValues < totalValues)
         {
-            var remaining = totalValues - readValues;
-            if (remaining > ReadBufferLength)
-                read = ReadSamples(buffer.AsSpan(readValues), readBuffer, channels, vorbis);
-            else
-                read = ReadSamples(buffer.AsSpan(readValues, (int)remaining), readBuffer[..(int)remaining], channels, vorbis);
-
+            var read = ReadSamples(buffer.AsSpan(readValues), readBuffer, channels, vorbis);
             if (read == 0)
                 break;
 
@@ -62,6 +56,13 @@ internal static class AudioLoaderOgg
 
     private static int ReadSamples(Span<short> dest, Span<float> readBuffer, int channels, VorbisReader reader)
     {
+        // Work around https://github.com/space-wizards/space-station-14/issues/22676
+        // This is a bug in NVorbis/VorbisPizza: some malformed ogg vorbis files cause an infinite loop.
+        // On the problematic files we've run into, making sure we only ask VorbisReader
+        // for exactly as many samples as reported avoids this.
+        if (readBuffer.Length > dest.Length)
+            readBuffer = readBuffer[..dest.Length];
+
         var read = reader.ReadSamples(readBuffer);
         read *= channels;
 

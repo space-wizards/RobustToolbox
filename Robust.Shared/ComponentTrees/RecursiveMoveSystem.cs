@@ -15,6 +15,10 @@ internal sealed class RecursiveMoveSystem : EntitySystem
 {
     [Dependency] private readonly IMapManager _mapManager = default!;
 
+    public delegate void TreeRecursiveMoveEventHandler(EntityUid uid, TransformComponent xform);
+
+    public event TreeRecursiveMoveEventHandler? OnTreeRecursiveMove;
+
     private EntityQuery<TransformComponent> _xformQuery;
 
     bool Subscribed = false;
@@ -49,10 +53,7 @@ internal sealed class RecursiveMoveSystem : EntitySystem
         EntityUid uid,
         TransformComponent xform)
     {
-        // TODO maybe use a c# event? This event gets raised a lot.
-        // Would probably help with server performance and is also the main bottleneck for replay scrubbing.
-        var ev = new TreeRecursiveMoveEvent(xform);
-        RaiseLocalEvent(uid, ref ev);
+        OnTreeRecursiveMove?.Invoke(uid, xform);
 
         // TODO only enumerate over entities in containers if necessary?
         // annoyingly, containers aren't guaranteed to occlude sprites & lights

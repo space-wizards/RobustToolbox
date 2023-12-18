@@ -65,7 +65,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
         if (Recursive)
         {
-            SubscribeLocalEvent<TComp, TreeRecursiveMoveEvent>(HandleRecursiveMove);
+            _recursiveMoveSys.OnTreeRecursiveMove += HandleRecursiveMove;
             _recursiveMoveSys.AddSubscription();
         }
         else
@@ -78,9 +78,21 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         SubscribeLocalEvent<TTreeComp, ComponentRemove>(OnTreeRemove);
     }
 
+    public override void Shutdown()
+    {
+        if (Recursive)
+        {
+            _recursiveMoveSys.OnTreeRecursiveMove -= HandleRecursiveMove;
+        }
+    }
+
     #region Queue Update
-    private void HandleRecursiveMove(EntityUid uid, TComp component, ref TreeRecursiveMoveEvent args)
-        => QueueTreeUpdate(uid, component, args.Xform);
+
+    private void HandleRecursiveMove(EntityUid uid, TransformComponent xform)
+    {
+        if (TryComp<TComp>(uid, out var component))
+            QueueTreeUpdate(uid, component, xform);
+    }
 
     private void HandleMove(EntityUid uid, TComp component, ref MoveEvent args)
         => QueueTreeUpdate(uid, component, args.Component);

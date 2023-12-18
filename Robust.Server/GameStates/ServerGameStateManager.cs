@@ -254,7 +254,8 @@ Oldest acked clients: {string.Join(", ", players)}
                 }
                 catch (Exception e) // Catch EVERY exception
                 {
-                    _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
+                    var source = i >= 0 ? players[i].ToString() : "replays";
+                    _logger.Log(LogLevel.Error, e, $"Caught exception while generating mail for {source}.");
                 }
                 return resource;
             }

@@ -154,7 +154,7 @@ public partial class EntitySystem
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent?
+    protected void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
     {
         var comp = ent.Comp;
         if (comp == null && !EntityManager.TryGetComponent(ent.Owner, out comp))
@@ -167,7 +167,7 @@ public partial class EntitySystem
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty<T>(Entity<T, MetaDataComponent> ent) where T : IComponent?
+    protected void Dirty<T>(Entity<T, MetaDataComponent> ent) where T : IComponent
     {
         var comp = ent.Comp1;
         if (comp == null && !EntityManager.TryGetComponent(ent.Owner, out comp))
@@ -480,6 +480,7 @@ public partial class EntitySystem
     /// <inheritdoc cref="IEntityManager.GetComponents&lt;T&gt;"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<T> AllComps<T>(EntityUid uid)
+        where T: IComponent
     {
         return EntityManager.GetComponents<T>(uid);
     }
@@ -526,6 +527,7 @@ public partial class EntitySystem
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool HasComp<T>(EntityUid uid)
+        where T: IComponent
     {
         return EntityManager.HasComponent<T>(uid);
     }
@@ -544,6 +546,7 @@ public partial class EntitySystem
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid)
+        where T: IComponent
     {
         return EntityManager.HasComponent<T>(uid);
     }

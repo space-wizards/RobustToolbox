@@ -58,7 +58,9 @@ public abstract class SharedEyeSystem : EntitySystem
 
         entity.Comp.DrawLight = value;
         entity.Comp.Eye.DrawLight = value;
-        Dirty(entity);
+
+        var e = new Entity<EyeComponent>(entity.Owner, entity.Comp);
+        Dirty(e);
     }
 
     public void SetRotation(EntityUid uid, Angle rotation, EyeComponent? eyeComponent = null)

@@ -27,6 +27,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
     private readonly Queue<ComponentTreeEntry<TComp>> _updateQueue = new();
     private readonly HashSet<EntityUid> _updated = new();
+    private EntityQuery<TComp> _query;
 
     /// <summary>
     ///     If true, this system will update the tree positions every frame update. See also <see cref="DoTickUpdate"/>. Some systems may need to do both.
@@ -76,6 +77,8 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         SubscribeLocalEvent<TTreeComp, EntityTerminatingEvent>(OnTerminating);
         SubscribeLocalEvent<TTreeComp, ComponentAdd>(OnTreeAdd);
         SubscribeLocalEvent<TTreeComp, ComponentRemove>(OnTreeRemove);
+
+        _query = GetEntityQuery<TComp>();
     }
 
     public override void Shutdown()
@@ -90,7 +93,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
     private void HandleRecursiveMove(EntityUid uid, TransformComponent xform)
     {
-        if (TryComp<TComp>(uid, out var component))
+        if (_query.TryGetComponent(uid, out var component))
             QueueTreeUpdate(uid, component, xform);
     }
 

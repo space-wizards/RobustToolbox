@@ -29,7 +29,8 @@ internal sealed partial class PvsSystem
         DebugTools.AssertNotEqual(data.LastSent, toTick);
         DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
 
-        if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        if (meta == null || meta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
             var rep = new EntityStringRepresentation(data.Entity);
             Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(data.Entity)}. Trace:\n{Environment.StackTrace}");
@@ -135,7 +136,6 @@ internal sealed partial class PvsSystem
                 var (entered, budgetExceeded) = GetPvsEntryData(ref data, fromTick, toTick,
                     ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-
                 if (budgetExceeded)
                 {
                     // should be false for the majority of entities
@@ -150,7 +150,12 @@ internal sealed partial class PvsSystem
                 AddToSendList(currentNodeIndex, ref data, toSend, fromTick, toTick, entered, ref dirtyEntityCount);
             }
 
-            var node = tree[currentNodeIndex];
+            if (!tree.TryGet(currentNodeIndex, out var node))
+            {
+                Log.Error($"tree is missing the current node! Node: {currentNodeIndex}");
+                continue;
+            }
+
             if (node.Children == null)
                 continue;
 

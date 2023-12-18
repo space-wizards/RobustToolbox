@@ -736,7 +736,7 @@ namespace Robust.Shared.GameObjects
         public virtual EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata = null)
         {
             if (!MetaQuery.Resolve(uid, ref metadata, false))
-                return new EntityStringRepresentation(uid, true);
+                return new EntityStringRepresentation(uid, default, true);
 
             return new EntityStringRepresentation(uid, metadata);
         }
@@ -752,7 +752,7 @@ namespace Robust.Shared.GameObjects
         public EntityStringRepresentation ToPrettyString(NetEntity netEntity)
         {
             if (!TryGetEntityData(netEntity, out var uid, out var meta))
-                return new EntityStringRepresentation(EntityUid.Invalid, true);
+                return new EntityStringRepresentation(EntityUid.Invalid, netEntity, true);
 
             return ToPrettyString(uid.Value, meta);
         }

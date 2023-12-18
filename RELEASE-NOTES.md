@@ -40,7 +40,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `IComponentFactory.GetAllRegistrations()`
 
 ### Bugfixes
 

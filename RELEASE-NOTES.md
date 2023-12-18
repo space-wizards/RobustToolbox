@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 193.2.0
+
+### Other
+
+* Added more PVS error logs
+
+
 ## 193.1.1
 
 ### Bugfixes

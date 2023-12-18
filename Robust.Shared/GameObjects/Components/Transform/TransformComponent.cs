@@ -342,7 +342,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
                 _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
             }
         }

@@ -15,8 +15,9 @@ namespace Robust.Client.UserInterface.Controls
         public Label Label { get; }
         public TextureRect TextureRect { get; }
 
-        private BoxContainer _hBox;
-
+        /// <summary>
+        /// Should the checkbox be to the left or the right of the label.
+        /// </summary>
         public bool LeftAlign
         {
             get => _leftAlign;
@@ -43,21 +44,17 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private bool _leftAlign = true;
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="leftAlign">Should the texture be to the left of the label.</param>
+        
         public CheckBox()
         {
             ToggleMode = true;
 
-            _hBox = new BoxContainer
+            var hBox = new BoxContainer
             {
                 Orientation = BoxContainer.LayoutOrientation.Horizontal,
                 StyleClasses = { StyleClassCheckBox },
             };
-            AddChild(_hBox);
+            AddChild(hBox);
 
             TextureRect = new TextureRect
             {
@@ -69,14 +66,14 @@ namespace Robust.Client.UserInterface.Controls
             if (LeftAlign)
             {
                 Label.HorizontalExpand = false;
-                _hBox.AddChild(TextureRect);
-                _hBox.AddChild(Label);
+                hBox.AddChild(TextureRect);
+                hBox.AddChild(Label);
             }
             else
             {
                 Label.HorizontalExpand = true;
-                _hBox.AddChild(Label);
-                _hBox.AddChild(TextureRect);
+                hBox.AddChild(Label);
+                hBox.AddChild(TextureRect);
             }
         }
 

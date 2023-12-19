@@ -15,25 +15,69 @@ namespace Robust.Client.UserInterface.Controls
         public Label Label { get; }
         public TextureRect TextureRect { get; }
 
+        private BoxContainer _hBox;
+
+        public bool LeftAlign
+        {
+            get => _leftAlign;
+            set
+            {
+                if (_leftAlign == value)
+                    return;
+
+                _leftAlign = value;
+
+                if (value)
+                {
+                    Label.HorizontalExpand = false;
+                    TextureRect.SetPositionFirst();
+                    Label.SetPositionInParent(1);
+                }
+                else
+                {
+                    Label.HorizontalExpand = true;
+                    Label.SetPositionFirst();
+                    TextureRect.SetPositionInParent(1);
+                }
+            }
+        }
+
+        private bool _leftAlign = true;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="leftAlign">Should the texture be to the left of the label.</param>
         public CheckBox()
         {
             ToggleMode = true;
 
-            var hBox = new BoxContainer
+            _hBox = new BoxContainer
             {
                 Orientation = BoxContainer.LayoutOrientation.Horizontal,
                 StyleClasses = { StyleClassCheckBox },
             };
-            AddChild(hBox);
+            AddChild(_hBox);
 
             TextureRect = new TextureRect
             {
                 StyleClasses = { StyleClassCheckBox },
             };
-            hBox.AddChild(TextureRect);
 
             Label = new Label();
-            hBox.AddChild(Label);
+
+            if (LeftAlign)
+            {
+                Label.HorizontalExpand = false;
+                _hBox.AddChild(TextureRect);
+                _hBox.AddChild(Label);
+            }
+            else
+            {
+                Label.HorizontalExpand = true;
+                _hBox.AddChild(Label);
+                _hBox.AddChild(TextureRect);
+            }
         }
 
         protected override void DrawModeChanged()

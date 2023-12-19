@@ -157,7 +157,8 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 var moveEvent = new MoveEvent(Owner, Coordinates, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
             }
         }
 
@@ -341,7 +342,8 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
             }
         }
 
@@ -593,12 +595,10 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
-    ///     Raised whenever an entity translates or rotates relative to their parent.
+    /// Raised directed at an entity whenever is position or rotation changes relative to their parent, or if their
+    /// parent changed. Note that this event does not get broadcast. If you need to receive information about ALL
+    /// move events, subscribe to the <see cref="SharedTransformSystem.OnGlobalMoveEvent"/>.
     /// </summary>
-    /// <remarks>
-    ///     This will also get raised if the entity's parent changes, even if the local position and rotation remains
-    ///     unchanged.
-    /// </remarks>
     [ByRefEvent]
     public readonly struct MoveEvent
     {

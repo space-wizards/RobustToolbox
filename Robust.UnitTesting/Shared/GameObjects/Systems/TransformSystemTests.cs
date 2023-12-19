@@ -31,15 +31,16 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var xform = entMan.System<SharedTransformSystem>();
 
-            var subscriber = new Subscriber();
             int calledCount = 0;
-            entMan.EventBus.SubscribeEvent<MoveEvent>(EventSource.Local, subscriber, MoveEventHandler);
+            xform.OnGlobalMoveEvent += MoveEventHandler;
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(Vector2.Zero, new MapId(1)));
 
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).LocalPosition = Vector2.One;
 
             Assert.That(calledCount, Is.EqualTo(1));
+            xform.OnGlobalMoveEvent -= MoveEventHandler;
             void MoveEventHandler(ref MoveEvent ev)
             {
                 calledCount++;

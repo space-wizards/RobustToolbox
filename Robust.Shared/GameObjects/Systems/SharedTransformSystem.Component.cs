@@ -52,7 +52,8 @@ public abstract partial class SharedTransformSystem
             xform.LocalRotation,
             xform,
             _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref movEevee, true);
+        RaiseLocalEvent(uid, ref movEevee);
+        InvokeGlobalMoveEvent(ref movEevee);
 
         DebugTools.Assert(xformQuery.GetComponent(oldGridUid).MapID == xformQuery.GetComponent(newGridUid).MapID);
         DebugTools.Assert(xform._anchored);
@@ -598,7 +599,8 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid || xform.GridUid == xform.MapUid);
 #endif
         var moveEvent = new MoveEvent(uid, oldPosition, newPosition, oldRotation, xform._localRotation, xform, _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref moveEvent, true);
+        RaiseLocalEvent(uid, ref moveEvent);
+        InvokeGlobalMoveEvent(ref moveEvent);
     }
 
     public void SetCoordinates(
@@ -1147,7 +1149,8 @@ public abstract partial class SharedTransformSystem
             return;
 
         var moveEvent = new MoveEvent(uid, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref moveEvent, true);
+        RaiseLocalEvent(uid, ref moveEvent);
+        InvokeGlobalMoveEvent(ref moveEvent);
     }
 
     #endregion

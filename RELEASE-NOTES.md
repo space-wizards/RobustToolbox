@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* MoveEvent is no longer raised broadcast, subscribe to the SharedTransformSystem.OnGlobalMoveEvent C# event instead
 
 ### New features
 
@@ -83,7 +83,7 @@ END TEMPLATE-->
 
 ### Internal
 
-* Various static dictionaries have been converted into FrozenDictionary. 
+* Various static dictionaries have been converted into FrozenDictionary.
 
 
 ## 193.0.0
@@ -116,7 +116,7 @@ END TEMPLATE-->
 
 ### Internal
 
-* PVS message ack processing now happens asynchronously 
+* PVS message ack processing now happens asynchronously
 * Dependency collections now use a `FrozenDictionary`
 
 

@@ -14,6 +14,7 @@ namespace Robust.Shared.ComponentTrees;
 internal sealed class RecursiveMoveSystem : EntitySystem
 {
     [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     public delegate void TreeRecursiveMoveEventHandler(EntityUid uid, TransformComponent xform);
 
@@ -29,13 +30,21 @@ internal sealed class RecursiveMoveSystem : EntitySystem
         _xformQuery = GetEntityQuery<TransformComponent>();
     }
 
+    public override void Shutdown()
+    {
+        if (_subscribed)
+            _transform.OnGlobalMoveEvent -= AnythingMoved;
+
+        _subscribed = false;
+    }
+
     internal void AddSubscription()
     {
         if (_subscribed)
             return;
 
         _subscribed = true;
-        SubscribeLocalEvent<MoveEvent>(AnythingMoved);
+        _transform.OnGlobalMoveEvent += AnythingMoved;
     }
 
     private void AnythingMoved(ref MoveEvent args)

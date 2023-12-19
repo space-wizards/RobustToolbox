@@ -21,7 +21,7 @@ internal sealed class RecursiveMoveSystem : EntitySystem
 
     private EntityQuery<TransformComponent> _xformQuery;
 
-    bool Subscribed = false;
+    bool _subscribed = false;
 
     public override void Initialize()
     {
@@ -31,10 +31,10 @@ internal sealed class RecursiveMoveSystem : EntitySystem
 
     internal void AddSubscription()
     {
-        if (Subscribed)
+        if (_subscribed)
             return;
 
-        Subscribed = true;
+        _subscribed = true;
         SubscribeLocalEvent<MoveEvent>(AnythingMoved);
     }
 

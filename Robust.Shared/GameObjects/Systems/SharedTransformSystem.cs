@@ -33,7 +33,7 @@ namespace Robust.Shared.GameObjects
         public delegate void MoveEventHandler(ref MoveEvent ev);
 
         /// <summary>
-        ///     Invoked as an alternative to broadcasting move events, which can be expensive
+        ///     Invoked as an alternative to broadcasting move events, which can be expensive.
         ///     Systems which want to subscribe broadcast to <see cref="MoveEvent"/> (which you probably shouldn't)
         ///     should subscribe to this instead
         /// </summary>

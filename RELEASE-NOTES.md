@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* MoveEvent is no longer raised broadcast, subscribe to the SharedTransformSystem.OnGlobalMoveEvent C# event instead
+*None yet*
 
 ### New features
 
@@ -52,6 +52,17 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 194.0.0
+
+### Breaking changes
+
+* MoveEvent is no longer raised broadcast, subscribe to the SharedTransformSystem.OnGlobalMoveEvent C# event instead
+
+### Bugfixes
+
+* Fixed the game sometimes freezing while trying to load specific audio files.
 
 
 ## 193.2.0

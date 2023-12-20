@@ -116,7 +116,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
         SubscribeLocalEvent<MapChangedEvent>(OnMapChange);
 
-        SubscribeLocalEvent<MoveEvent>(OnMove);
+        _transform.OnGlobalMoveEvent += OnMove;
 
         SubscribeLocalEvent<TransformComponent, PhysicsBodyTypeChangedEvent>(OnBodyTypeChange);
         SubscribeLocalEvent<PhysicsComponent, ComponentStartup>(OnBodyStartup);
@@ -134,6 +134,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
     {
         base.Shutdown();
         EntityManager.EntityInitialized -= OnEntityInit;
+        _transform.OnGlobalMoveEvent -= OnMove;
     }
     #region DynamicTree
 

@@ -19,7 +19,12 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<MoveEvent>(OnMove);
+        _transform.OnGlobalMoveEvent += OnMove;
+    }
+
+    public override void Shutdown()
+    {
+        _transform.OnGlobalMoveEvent -= OnMove;
     }
 
     internal void CheckTraverse(EntityUid uid, TransformComponent xform)

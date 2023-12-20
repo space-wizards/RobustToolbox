@@ -54,6 +54,24 @@ END TEMPLATE-->
 *None yet*
 
 
+## 194.0.0
+
+### Breaking changes
+
+* MoveEvent is no longer raised broadcast, subscribe to the SharedTransformSystem.OnGlobalMoveEvent C# event instead
+
+### Bugfixes
+
+* Fixed the game sometimes freezing while trying to load specific audio files.
+
+
+## 193.2.0
+
+### Other
+
+* Added more PVS error logs
+
+
 ## 193.1.1
 
 ### Bugfixes
@@ -76,7 +94,7 @@ END TEMPLATE-->
 
 ### Internal
 
-* Various static dictionaries have been converted into FrozenDictionary. 
+* Various static dictionaries have been converted into FrozenDictionary.
 
 
 ## 193.0.0
@@ -109,7 +127,7 @@ END TEMPLATE-->
 
 ### Internal
 
-* PVS message ack processing now happens asynchronously 
+* PVS message ack processing now happens asynchronously
 * Dependency collections now use a `FrozenDictionary`
 
 

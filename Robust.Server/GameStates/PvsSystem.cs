@@ -152,7 +152,7 @@ internal sealed partial class PvsSystem : EntitySystem
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        SubscribeLocalEvent<MoveEvent>(OnEntityMove);
+        _transform.OnGlobalMoveEvent += OnEntityMove;
         SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
@@ -173,6 +173,7 @@ internal sealed partial class PvsSystem : EntitySystem
         UnregisterPVSCollection(_entityPvsCollection);
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         EntityManager.EntityDeleted -= OnEntityDeleted;
+        _transform.OnGlobalMoveEvent -= OnEntityMove;
 
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
         _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);

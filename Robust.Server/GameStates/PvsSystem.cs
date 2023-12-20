@@ -970,7 +970,7 @@ internal sealed partial class PvsSystem : EntitySystem
             }
             else
             {
-                Log.Error($"Attempted to add deleted entity. NetUid: {entity}");
+                Log.Error($"Attempted to send deleted entity. NetUid: {entity}");
             }
         }
 

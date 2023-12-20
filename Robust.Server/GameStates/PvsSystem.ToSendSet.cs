@@ -142,6 +142,11 @@ internal sealed partial class PvsSystem
             // on different chunks (this is especially common with direct grid children)
 
             var data = GetOrNewEntityData(entityData, currentNodeIndex);
+
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (data == null)
+                continue;
+
             if (data.LastSent != toTick)
             {
                 var (entered, budgetExceeded) = IsEnteringPvsRange(data, fromTick, toTick,
@@ -222,6 +227,11 @@ internal sealed partial class PvsSystem
         // send the new parents, which may otherwise be delayed because of the PVS budget.
 
         var data = GetOrNewEntityData(entityData, netEntity);
+
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (data == null)
+            return false;
+
         if (data.LastSent != toTick)
         {
             var (entered, _) = IsEnteringPvsRange(data, fromTick, toTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
@@ -259,6 +269,11 @@ internal sealed partial class PvsSystem
             var metadata = _metaQuery.GetComponent(child);
             var netChild = metadata.NetEntity;
             var data = GetOrNewEntityData(entityData, netChild);
+
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (data == null)
+                continue;
+
             if (data.LastSent != toTick)
             {
                 var (entered, _) = IsEnteringPvsRange(data, fromTick, toTick, ref newEntityCount,

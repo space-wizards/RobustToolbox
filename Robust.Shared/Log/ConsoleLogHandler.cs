@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -103,6 +103,7 @@ namespace Robust.Shared.Log
             {
                 _line
                     .Clear()
+                    .AppendFormat("{0:o} ", DateTime.Now)
                     .Append(LogLevelToString(robustLevel))
                     .Append(sawmillName)
                     .Append(": ")

@@ -22,6 +22,12 @@ internal sealed partial class PvsSystem
         bool entered,
         ref int dirtyEntityCount)
     {
+        if (data == null)
+        {
+            Log.Error($"Encountered null EntityData.");
+            return;
+        }
+
         var meta = data.Entity.Comp;
         DebugTools.Assert(fromTick < toTick);
         DebugTools.AssertNotEqual(data.LastSent, toTick);
@@ -30,7 +36,7 @@ internal sealed partial class PvsSystem
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (meta == null)
         {
-            Log.Error($"Encountered null metadata in EntityData");
+            Log.Error($"Encountered null metadata in EntityData. Entity: {ToPrettyString(data?.Entity)}");
             return;
         }
 

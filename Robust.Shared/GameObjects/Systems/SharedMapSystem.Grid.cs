@@ -173,24 +173,36 @@ public abstract partial class SharedMapSystem
 
     private void OnParentChange(EntityUid uid, MapGridComponent component, ref MoveEvent args)
     {
-        if (EntityManager.HasComponent<MapComponent>(uid))
-            return;
-
-        var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
+        var meta = MetaData(uid);
+        var xform = args.Component;
 
         // oh boy
         // Want gridinit to handle this hence specialcase those situations.
         // oh boy oh boy, its even worse now.
         // transform now raises parent change events on startup, because container code is a POS.
-        if (lifestage < EntityLifeStage.Initialized || args.Component.LifeStage == ComponentLifeStage.Starting)
+        if (meta.EntityLifeStage < EntityLifeStage.Initialized || args.Component.LifeStage == ComponentLifeStage.Starting)
             return;
+
+        // yipeee grids are being spontaneously moved to nullspace.
+        Log.Info($"Grid {ToPrettyString(uid, meta)} changed parent. Old parent: {ToPrettyString(args.OldPosition.EntityId)}. New parent: {xform.ParentUid}");
+        if (xform.MapUid == null && meta.EntityLifeStage < EntityLifeStage.Terminating && _netManager.IsServer)
+            Log.Error($"Grid {ToPrettyString(uid, meta)} was moved to nullspace! AAAAAAAAAAAAAAAAAAAAAAAAA! {Environment.StackTrace}");
+
+        if (EntityManager.HasComponent<MapComponent>(uid))
+        {
+            Log.Error($"A map moved? What? How? Map: {ToPrettyString(uid, meta)}. Trace: {Environment.StackTrace}");
+            return;
+        }
+
+        if (xform.ParentUid != xform.MapUid && meta.EntityLifeStage < EntityLifeStage.Terminating  && _netManager.IsServer)
+        {
+            Log.Error($"Grid {ToPrettyString(uid, meta)} it not parented to a map.  y'all need jesus. {Environment.StackTrace}");
+            return;
+        }
 
         // Make sure we cleanup old map for moved grid stuff.
         var mapId = args.Component.MapID;
         var oldMap = args.OldPosition.ToMap(EntityManager, _transform);
-
-        // y'all need jesus
-        if (oldMap.MapId == mapId) return;
 
         if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(MapManager.GetMapEntityId(oldMap.MapId), out var oldMovedGrids))
         {
@@ -474,6 +486,7 @@ public abstract partial class SharedMapSystem
 
     private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
     {
+        Log.Info($"Removing grid {ToPrettyString(uid)}");
         if (TryComp<TransformComponent>(uid, out var xform) && xform.MapUid != null)
         {
             RemoveGrid(uid, component, xform.MapUid.Value);

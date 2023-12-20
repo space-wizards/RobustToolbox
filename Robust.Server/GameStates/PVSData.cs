@@ -1,20 +1,22 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
 /// <summary>
 /// Class for storing session specific PVS data.
 /// </summary>
-internal sealed class SessionPvsData
+internal sealed class SessionPvsData(ICommonSession session)
 {
     /// <summary>
     /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="PvsSystem.DirtyBufferSize"/> ticks.
     /// </summary>
-    public readonly OverflowDictionary<GameTick, List<NetEntity>> SentEntities = new(PvsSystem.DirtyBufferSize);
+    public readonly OverflowDictionary<GameTick, List<EntityData>> SentEntities = new(PvsSystem.DirtyBufferSize);
 
     public readonly Dictionary<NetEntity, EntityData> EntityData = new();
 
@@ -22,7 +24,7 @@ internal sealed class SessionPvsData
     /// <see cref="SentEntities"/> overflow in case a player's last ack is more than
     /// <see cref="PvsSystem.DirtyBufferSize"/> ticks behind the current tick.
     /// </summary>
-    public (GameTick Tick, List<NetEntity> SentEnts)? Overflow;
+    public (GameTick Tick, List<EntityData> SentEnts)? Overflow;
 
     /// <summary>
     /// If true, the client has explicitly requested a full state. Unlike the first state, we will send them all data,
@@ -32,20 +34,16 @@ internal sealed class SessionPvsData
 
     public GameTick LastReceivedAck;
 
-    public readonly ICommonSession Session;
-
-    public SessionPvsData(ICommonSession session)
-    {
-        Session = session;
-    }
+    public readonly ICommonSession Session = session;
 }
 
 /// <summary>
-/// Struct for storing session-specific information about when an entity was last sent to a player.
+/// Class for storing session-specific information about when an entity was last sent to a player.
 /// </summary>
-internal struct EntityData
+internal sealed class EntityData(Entity<MetaDataComponent> entity) : IEquatable<EntityData>
 {
-    public readonly Entity<MetaDataComponent> Entity;
+    public readonly Entity<MetaDataComponent> Entity = entity;
+    public readonly NetEntity NetEntity = entity.Comp.NetEntity;
 
     /// <summary>
     /// Tick at which this entity was last sent to a player.
@@ -69,14 +67,25 @@ internal struct EntityData
     /// </summary>
     public PvsEntityVisibility Visibility;
 
-    public EntityData(Entity<MetaDataComponent> entity)
+    public bool Equals(EntityData? other)
     {
-        Entity = entity;
+#if DEBUG
+        // Each this class should be unique for each entity-session combination, and should never be getting compared
+        // across sessions.
+        if (Entity.Owner == other?.Entity.Owner)
+            DebugTools.Assert(ReferenceEquals(this, other));
+#endif
+        return Entity.Owner == other?.Entity.Owner;
+    }
+
+    public override int GetHashCode()
+    {
+        return Entity.Owner.GetHashCode();
     }
 
     public override string ToString()
     {
         var rep = new EntityStringRepresentation(Entity);
-        return $"PVS Entity: {rep} - {LastSent}/{LastLeftView}/{EntityLastAcked}";
+        return $"PVS Entity: {rep} - {LastSent}/{LastLeftView}/{EntityLastAcked} - {Visibility}";
     }
 }

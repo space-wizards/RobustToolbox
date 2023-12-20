@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 194.0.1
+
+### Bugfixes
+
+* Fixed `Control.SetPositionInParent` failing to move an entity to the last position.
+* Fixed audio occlusion not working.
+
+### Internal
+
+* Added some logs for grid/map deletion and movement to debug some map loading issues.
+* Refactored some parts of PVS. It should be slightly faster, though the game may be unstable for a bit.
+
 ## 194.0.0
 
 ### Breaking changes

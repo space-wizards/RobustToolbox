@@ -34,6 +34,8 @@ internal abstract class BaseAudioSource : IAudioSource
     /// </summary>
     private float _gain;
 
+    private float _occlusion;
+
     private bool IsEfxSupported => Master.IsEfxSupported;
 
     protected BaseAudioSource(AudioManager master, int sourceHandle)
@@ -270,13 +272,7 @@ internal abstract class BaseAudioSource : IAudioSource
     /// <inheritdoc />
     public float Occlusion
     {
-        get
-        {
-            _checkDisposed();
-            AL.GetSource(SourceHandle, ALSourcef.MaxDistance, out var value);
-            Master._checkAlError();
-            return value;
-        }
+        get => _occlusion;
         set
         {
             _checkDisposed();
@@ -291,6 +287,8 @@ internal abstract class BaseAudioSource : IAudioSource
                 gain *= gain * gain;
                 AL.Source(SourceHandle, ALSourcef.Gain, _gain * gain);
             }
+
+            _occlusion = value;
             Master._checkAlError();
         }
     }

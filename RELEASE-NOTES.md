@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 194.0.2
+
+### Internal
+
+* Added some null-checks to PVS to try reduce the error spam.
+
+
 ## 194.0.1
 
 ### Bugfixes

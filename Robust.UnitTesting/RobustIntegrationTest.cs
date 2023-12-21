@@ -272,6 +272,7 @@ namespace Robust.UnitTesting
             public IGameTiming Timing { get; private set; } = default!;
             public IMapManager MapMan { get; private set; } = default!;
             public IConsoleHost ConsoleHost { get; private set; } = default!;
+            public ISawmill Log { get; private set; } = default!;
 
             protected virtual void ResolveIoC(IDependencyCollection deps)
             {
@@ -282,6 +283,7 @@ namespace Robust.UnitTesting
                 Timing = deps.Resolve<IGameTiming>();
                 MapMan = deps.Resolve<IMapManager>();
                 ConsoleHost = deps.Resolve<IConsoleHost>();
+                Log = deps.Resolve<ILogManager>().GetSawmill("test");
             }
 
             public T System<T>() where T : IEntitySystem

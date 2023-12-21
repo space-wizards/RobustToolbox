@@ -284,6 +284,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<OccluderComponent>();
             compFactory.RegisterClass<OccluderTreeComponent>();
             compFactory.RegisterClass<Gravity2DComponent>();
+            compFactory.RegisterClass<CollideOnAnchorComponent>();
 
             _regDelegate?.Invoke(compFactory);
 

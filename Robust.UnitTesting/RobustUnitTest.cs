@@ -94,6 +94,7 @@ namespace Robust.UnitTesting
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
             systems.LoadExtraSystemType<Gravity2DController>();
+            systems.LoadExtraSystemType<CollisionWakeSystem>();
 
             if (Project == UnitTestProject.Client)
             {
@@ -222,6 +223,16 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(Gravity2DComponent)))
             {
                 compFactory.RegisterClass<Gravity2DComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(CollisionWakeComponent)))
+            {
+                compFactory.RegisterClass<CollisionWakeComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(CollideOnAnchorComponent)))
+            {
+                compFactory.RegisterClass<CollideOnAnchorComponent>();
             }
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(ActorComponent)))

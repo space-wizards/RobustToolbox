@@ -579,18 +579,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
             }
         }
 
-        if (oldBroadphase != null && _xformQuery.GetComponent(oldParent).MapID == MapId.Nullspace)
-        {
-            oldBroadphase = null;
-            // Note that the parentXform.MapID != MapId.Nullspace is required because currently grids are not allowed to
-            // ever enter null-space. If they are in null-space, we assume that the grid is being deleted, as otherwise
-            // RemoveFromEntityTree() will explode. This may eventually have to change if we stop universally sending
-            // all grids to all players (i.e., out-of view grids will need to get sent to null-space)
-            //
-            // This also means the queries above can be reverted (check broadQuery, then xformQuery, as this will
-            // generally save a component lookup.
-        }
-
         TryFindBroadphase(xform, out var newBroadphase);
 
         if (oldBroadphase != null && oldBroadphase != newBroadphase)

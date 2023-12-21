@@ -202,7 +202,7 @@ public partial class SharedPhysicsSystem
     /// <summary>
     /// Completely resets a dynamic body.
     /// </summary>
-    public void ResetDynamics(PhysicsComponent body)
+    public void ResetDynamics(PhysicsComponent body, bool dirty = true)
     {
         var updated = false;
 
@@ -230,7 +230,7 @@ public partial class SharedPhysicsSystem
             updated = true;
         }
 
-        if (updated)
+        if (updated && dirty)
             Dirty(body);
     }
 
@@ -416,8 +416,11 @@ public partial class SharedPhysicsSystem
                 return;
             }
 
-            ResetDynamics(body);
+            ResetDynamics(body, dirty: false);
         }
+
+        // Update wake system after we are sure that the wake/sleep event wasn't cancelled.
+        _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
 
         if (updateSleepTime)
             SetSleepTime(body, 0);

@@ -10,6 +10,7 @@ namespace Robust.Shared.GameObjects
     public sealed class CollisionWakeSystem : EntitySystem
     {
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        private EntityQuery<CollisionWakeComponent> _query;
 
         public override void Initialize()
         {
@@ -19,18 +20,17 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<CollisionWakeComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<CollisionWakeComponent, ComponentHandleState>(OnHandleState);
 
-            SubscribeLocalEvent<CollisionWakeComponent, PhysicsWakeEvent>(OnWake);
-            SubscribeLocalEvent<CollisionWakeComponent, PhysicsSleepEvent>(OnSleep);
-
             SubscribeLocalEvent<CollisionWakeComponent, JointAddedEvent>(OnJointAdd);
             SubscribeLocalEvent<CollisionWakeComponent, JointRemovedEvent>(OnJointRemove);
 
             SubscribeLocalEvent<CollisionWakeComponent, EntParentChangedMessage>(OnParentChange);
+
+            _query = GetEntityQuery<CollisionWakeComponent>();
         }
 
         public void SetEnabled(EntityUid uid, bool enabled, CollisionWakeComponent? component = null)
         {
-            if (!Resolve(uid, ref component) || component.Enabled == enabled)
+            if (!_query.Resolve(uid, ref component) || component.Enabled == enabled)
                 return;
 
             component.Enabled = enabled;
@@ -89,17 +89,13 @@ namespace Robust.Shared.GameObjects
                 _physics.SetCanCollide(uid, true);
         }
 
-        private void OnWake(EntityUid uid, CollisionWakeComponent component, ref PhysicsWakeEvent args)
+        internal void UpdateCanCollide(Entity<PhysicsComponent> entity, bool checkTerminating = true, bool dirty = true)
         {
-            UpdateCanCollide(uid, component, args.Body, checkTerminating: false);
+            if (_query.TryGetComponent(entity, out var wakeComp))
+                UpdateCanCollide(entity.Owner, wakeComp, entity.Comp, checkTerminating: checkTerminating, dirty: dirty);
         }
 
-        private void OnSleep(EntityUid uid, CollisionWakeComponent component, ref PhysicsSleepEvent args)
-        {
-            UpdateCanCollide(uid, component, args.Body);
-        }
-
-        private void UpdateCanCollide(
+        internal void UpdateCanCollide(
             EntityUid uid,
             CollisionWakeComponent component,
             PhysicsComponent? body = null,

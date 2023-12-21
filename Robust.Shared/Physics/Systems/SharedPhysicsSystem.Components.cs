@@ -385,7 +385,8 @@ public partial class SharedPhysicsSystem
         if (body.Awake == value)
             return;
 
-        if (value && (body.BodyType == BodyType.Static || !body.CanCollide))
+        var canWake = body.BodyType != BodyType.Static && body.CanCollide;
+        if (value && !canWake)
             return;
 
         body.Awake = value;
@@ -397,12 +398,18 @@ public partial class SharedPhysicsSystem
         }
         else
         {
+            // TODO C# event?
             var ev = new PhysicsSleepEvent(uid, body);
             RaiseLocalEvent(uid, ref ev, true);
 
             // Reset the sleep timer.
-            if (ev.Cancelled)
+            if (ev.Cancelled && canWake)
             {
+                body.Awake = true;
+                // TODO C# event?
+                var wakeEv = new PhysicsWakeEvent(uid, body);
+                RaiseLocalEvent(uid, ref wakeEv, true);
+
                 if (updateSleepTime)
                     SetSleepTime(body, 0);
 

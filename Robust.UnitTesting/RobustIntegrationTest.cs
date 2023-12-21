@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using Robust.Client;
+using Robust.Client.Console;
 using Robust.Client.GameStates;
 using Robust.Client.Player;
 using Robust.Client.Timing;
@@ -668,6 +669,9 @@ namespace Robust.UnitTesting
                 deps.Register<TestingModLoader, TestingModLoader>(true);
                 deps.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
                 deps.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
+                deps.Register<IServerConsoleHost, TestingServerConsoleHost>(true);
+                deps.Register<IConsoleHost, TestingServerConsoleHost>(true);
+                deps.Register<IConsoleHostInternal, TestingServerConsoleHost>(true);
                 Options?.InitIoC?.Invoke();
                 deps.BuildGraph();
                 //ServerProgram.SetupLogging();
@@ -836,6 +840,9 @@ namespace Robust.UnitTesting
                 deps.Register<IModLoaderInternal, TestingModLoader>(true);
                 deps.Register<TestingModLoader, TestingModLoader>(true);
                 deps.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
+                deps.Register<IClientConsoleHost, TestingClientConsoleHost>(true);
+                deps.Register<IConsoleHost, TestingClientConsoleHost>(true);
+                deps.Register<IConsoleHostInternal, TestingClientConsoleHost>(true);
                 Options?.InitIoC?.Invoke();
                 deps.BuildGraph();
 

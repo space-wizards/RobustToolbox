@@ -15,7 +15,8 @@ using Robust.Shared.Utility;
 namespace Robust.Server.Console
 {
     /// <inheritdoc cref="IServerConsoleHost" />
-    internal sealed class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
+    [Virtual]
+    internal class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
     {
         [Dependency] private readonly IConGroupController _groupController = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
@@ -127,10 +128,16 @@ namespace Robust.Server.Console
                     // toolshed time
                     _toolshed.InvokeCommand(shell, command, null, out var res, out var ctx);
 
+                    bool anyErrors = false;
                     foreach (var err in ctx.GetErrors())
                     {
+                        anyErrors = true;
                         ctx.WriteLine(err.Describe());
                     }
+
+                    // why does ctx not have any write-error support?
+                    if (anyErrors)
+                        shell.WriteError($"Failed to execute toolshed command");
 
                     shell.WriteLine(FormattedMessage.FromMarkupPermissive(_toolshed.PrettyPrintType(res, out var more, moreUsed: true)));
                     ctx.WriteVar("more", more);

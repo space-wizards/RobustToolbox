@@ -380,12 +380,15 @@ public partial class SharedPhysicsSystem
 
     public void SetAwake(Entity<PhysicsComponent> ent, bool value, bool updateSleepTime = true)
     {
-        var uid = ent.Owner;
-        var body = ent.Comp;
-        if (body.Awake == value)
-            return;
-
+        var (uid, body) = ent;
         var canWake = body.BodyType != BodyType.Static && body.CanCollide;
+
+        if (body.Awake == value)
+        {
+            DebugTools.Assert(!body.Awake || canWake);
+            return;
+        }
+
         if (value && !canWake)
             return;
 

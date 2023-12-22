@@ -328,8 +328,6 @@ namespace Robust.Shared.Physics.Systems
                         FinalStep(comp);
                     }
                 }
-
-                _traversal.ProcessMovement();
             }
         }
 

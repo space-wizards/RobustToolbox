@@ -304,11 +304,20 @@ internal sealed partial class MidiManager : IMidiManager
             }
             else if (OperatingSystem.IsWindows())
             {
+                /*
+                 TODO:
+                 Okay so our current fluidsynth does not in fact support loading dls files
+                 so this will always cause the error to get spammed out every time a midi renderer comes in range.
+                 afaict this will also open up the file which seems like it's bad for perfcoin
+                 The real fix is updating fluidsynth and validating this works (and then later on
+                 caching it somehow).
+
                 if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
                 {
                     _midiSawmill.Debug($"Loading OS soundfont {WindowsSoundfont}");
                     renderer.LoadSoundfont(WindowsSoundfont);
                 }
+                */
             }
 
             // Maybe load soundfont specified in environment variable.

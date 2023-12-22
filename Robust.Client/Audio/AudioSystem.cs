@@ -395,20 +395,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return false;
     }
 
-    private bool TryCreateAudioSource(AudioStream stream, [NotNullWhen(true)] out IAudioSource? source)
-    {
-        if (!Timing.IsFirstTimePredicted)
-        {
-            source = null;
-            Log.Error($"Tried to create audio source outside of prediction!");
-            DebugTools.Assert(false);
-            return false;
-        }
-
-        source = _audio.CreateAudioSource(stream);
-        return source != null;
-    }
-
     public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityCoordinates coordinates,
         AudioParams? audioParams = null)
     {
@@ -461,7 +447,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? PlayGlobal(AudioStream stream, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayGlobal(AudioStream stream, AudioParams? audioParams = null)
     {
         var (entity, component) = CreateAndStartPlayingStream(audioParams, stream);
         component.Global = true;
@@ -496,7 +482,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="entity">The entity "emitting" the audio.</param>
     /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
     {
         if (TerminatingOrDeleted(entity))
         {
@@ -537,7 +523,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         if (TerminatingOrDeleted(coordinates.EntityId))
         {

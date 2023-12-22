@@ -259,8 +259,11 @@ namespace Robust.Shared.Serialization
                     {
                         for (var sl = 1; sl <= parts.Length - si; ++sl)
                         {
-                            var subSubStr = String.Concat(parts.Skip(si).Take(sl));
-                            AddString(subSubStr);
+                            // Don't ask me what the original was doing; we just skip by si and take sl
+                            // Can be reduced even further if you know what you're doin
+                            var end = si + sl;
+                            var subBetter = string.Concat(parts[si..^(parts.Length - end)]);
+                            AddString(subBetter);
                         }
                     }
                 }

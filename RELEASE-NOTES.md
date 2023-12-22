@@ -54,6 +54,16 @@ END TEMPLATE-->
 *None yet*
 
 
+## 194.1.0
+
+### New features
+
+* `IAudioManager` has APIs to directly load `AudioStream`s from data streams.
+* `AudioSystem` has new `Play*` methods.
+* `EntityCoordinates.TryDelta()`
+* `EntityLookupSystem.GetEntitiesInRange()` untyped hashset overload has `flags` parameter.
+
+
 ## 194.0.2
 
 ### Internal

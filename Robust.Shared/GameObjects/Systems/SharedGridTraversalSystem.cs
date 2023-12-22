@@ -57,7 +57,6 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
         // - Is in nullspace
         // - Current parent is not a grid / map
 
-        // If move event arose from state handling, don't bother to run grid traversal logic.
         if (moveEv.FromStateHandling ||
             xform.Anchored ||
             (xform.GridUid != xform.ParentUid &&

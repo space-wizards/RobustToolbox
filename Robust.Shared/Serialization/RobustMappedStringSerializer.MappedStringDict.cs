@@ -260,7 +260,7 @@ namespace Robust.Shared.Serialization
                         for (var sl = 1; sl <= parts.Length - si; ++sl)
                         {
                             // Don't ask me what the original was doing; we just skip by si and take sl
-                            // Use string interning as this is quite intensive.
+                            // Can be reduced even further if you know what you're doin
                             var end = si + sl;
                             var subBetter = string.Concat(parts[si..^(parts.Length - end)]);
                             AddString(subBetter);

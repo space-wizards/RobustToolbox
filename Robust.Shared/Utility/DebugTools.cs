@@ -37,8 +37,11 @@ namespace Robust.Shared.Utility
                 throw new DebugAssertException();
         }
 
+        /// <summary>
+        ///     An assertion that will <see langword="throw"/> an exception if
+        ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
+        /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertEqual(object? objA, object? objB)
         {
             if (ReferenceEquals(objA, objB))
@@ -48,8 +51,11 @@ namespace Robust.Shared.Utility
                 throw new DebugAssertException($"Expected: {objB ?? "null"} but was {objA ?? "null"}");
         }
 
+        /// <summary>
+        ///     An assertion that will <see langword="throw"/> an exception with <see cref="message"/> embedded if
+        ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
+        /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertEqual(object? objA, object? objB, string message)
         {
             if (ReferenceEquals(objA, objB))
@@ -59,8 +65,41 @@ namespace Robust.Shared.Utility
                 throw new DebugAssertException($"{message}\nExpected: {objB ?? "null"} but was {objA ?? "null"}");
         }
 
+        /// <summary>
+        ///     A non-boxing assertion that will <see langword="throw"/> an exception if
+        ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
+        /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
+        public static void AssertEqual<T>(T? objA, T? objB)
+            where T: IEquatable<T>
+        {
+            if (objA == null && objB == null)
+                return;
+
+            if (objA == null || !objA.Equals(objB))
+                throw new DebugAssertException($"Expected: {objB?.ToString() ?? "null"} but was {objA?.ToString() ?? "null"}");
+        }
+
+        /// <summary>
+        ///     A non-boxing assertion that will <see langword="throw"/> an exception with <see cref="message"/> embedded if
+        ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
+        /// </summary>
+        [Conditional("DEBUG")]
+        public static void AssertEqual<T>(T? objA, T? objB, string message)
+            where T: IEquatable<T>
+        {
+            if (objA == null && objB == null)
+                return;
+
+            if (objA == null || !objA.Equals(objB))
+                throw new DebugAssertException($"{message}\nExpected: {objB?.ToString() ?? "null"} but was {objA?.ToString() ?? "null"}");
+        }
+
+        /// <summary>
+        ///     An assertion that will <see langword="throw"/> an exception if
+        ///     <see cref="objA"/> and <see cref="objB"/> are equal.
+        /// </summary>
+        [Conditional("DEBUG")]
         public static void AssertNotEqual(object? objA, object? objB)
         {
             if (ReferenceEquals(objA, objB))
@@ -72,8 +111,11 @@ namespace Robust.Shared.Utility
             throw new DebugAssertException($"Expected: not {objB}");
         }
 
+        /// <summary>
+        ///     An assertion that will <see langword="throw"/> an exception with <see cref="message"/> embedded if
+        ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
+        /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertNotEqual(object? objA, object? objB, string message)
         {
             if (ReferenceEquals(objA, objB))
@@ -85,8 +127,41 @@ namespace Robust.Shared.Utility
             throw new DebugAssertException($"{message}\nExpected: not {objB}");
         }
 
+        /// <summary>
+        ///     A non-boxing assertion that will <see langword="throw"/> an exception if
+        ///     <see cref="objA"/> and <see cref="objB"/> are equal.
+        /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
+        public static void AssertNotEqual<T>(T? objA, T? objB)
+            where T: IEquatable<T>
+        {
+            if (objA == null && objB == null)
+                throw new DebugAssertException("Expected: not null");
+
+            if (objA == null || !objA.Equals(objB))
+                return;
+
+            throw new DebugAssertException($"Expected: not {objB?.ToString() ?? "null"}");
+        }
+
+        /// <summary>
+        ///     An assertion that will <see langword="throw"/> an exception with <see cref="message"/> embedded if
+        ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
+        /// </summary>
+        [Conditional("DEBUG")]
+        public static void AssertNotEqual<T>(T? objA, T? objB, string message)
+            where T: IEquatable<T>
+        {
+            if (objA == null && objB == null)
+                throw new DebugAssertException($"{message}\nExpected: not null");
+
+            if (objA == null || !objA.Equals(objB))
+                return;
+
+            throw new DebugAssertException($"{message}\nExpected: not {objB?.ToString() ?? "null"}");
+        }
+
+        [Conditional("DEBUG")]
         public static void AssertOwner(EntityUid? uid, IComponent? component)
         {
             if (component == null)

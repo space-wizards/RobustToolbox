@@ -34,6 +34,8 @@ public sealed class RobustTree<T> where T : notnull
 
     public TreeNode this[T index] => _nodeIndex[index];
 
+    public bool TryGet(T index, out TreeNode node) => _nodeIndex.TryGetValue(index, out node);
+
     public void Remove(T value, bool mend = false)
     {
         if (!_nodeIndex.TryGetValue(value, out var node))

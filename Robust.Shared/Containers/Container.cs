@@ -33,14 +33,14 @@ namespace Robust.Shared.Containers
         public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
 
         /// <inheritdoc />
-        protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
+        protected internal override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
         {
             DebugTools.Assert(!_containerList.Contains(toInsert));
             _containerList.Add(toInsert);
         }
 
         /// <inheritdoc />
-        protected override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
+        protected internal override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
         {
             _containerList.Remove(toRemove);
         }
@@ -63,14 +63,14 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        protected override void InternalShutdown(IEntityManager entMan, bool isClient)
+        protected internal override void InternalShutdown(IEntityManager entMan, SharedContainerSystem system, bool isClient)
         {
             foreach (var entity in _containerList.ToArray())
             {
                 if (!isClient)
                     entMan.DeleteEntity(entity);
                 else if (entMan.EntityExists(entity))
-                    Remove(entity, entMan, reparent: false, force: true);
+                    system.Remove(entity, this, reparent: false, force: true);
             }
         }
     }

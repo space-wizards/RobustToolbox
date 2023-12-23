@@ -18,11 +18,5 @@ namespace Robust.Client.GameObjects
         public ComponentStateApplyException(string message, Exception inner) : base(message, inner)
         {
         }
-
-        protected ComponentStateApplyException(
-            SerializationInfo info,
-            StreamingContext context) : base(info, context)
-        {
-        }
     }
 }

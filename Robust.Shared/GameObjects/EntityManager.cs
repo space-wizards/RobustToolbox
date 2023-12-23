@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Prometheus;
+using Robust.Shared.Containers;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -38,6 +39,7 @@ namespace Robust.Shared.GameObjects
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
         private SharedTransformSystem _xforms = default!;
+        private SharedContainerSystem _containers = default!;
 
         public EntityQuery<MetaDataComponent> MetaQuery;
         public EntityQuery<TransformComponent> TransformQuery;
@@ -198,6 +200,7 @@ namespace Robust.Shared.GameObjects
             _eventBus.CalcOrdering();
             _mapSystem = System<SharedMapSystem>();
             _xforms = System<SharedTransformSystem>();
+            _containers = System<SharedContainerSystem>();
             MetaQuery = GetEntityQuery<MetaDataComponent>();
             TransformQuery = GetEntityQuery<TransformComponent>();
         }
@@ -415,7 +418,7 @@ namespace Robust.Shared.GameObjects
             EntityUid uid,
             MetaDataComponent metadata)
         {
-            var transform = TransformQuery.GetComponent(uid);
+            DebugTools.Assert(metadata.EntityLifeStage < EntityLifeStage.Terminating);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
 
             try
@@ -428,6 +431,7 @@ namespace Robust.Shared.GameObjects
                 _sawmill.Error($"Caught exception while raising event {nameof(EntityTerminatingEvent)} on entity {ToPrettyString(uid, metadata)}\n{e}");
             }
 
+            var transform = TransformQuery.GetComponent(uid);
             foreach (var child in transform._children)
             {
                 if (!MetaQuery.TryGetComponent(child, out var childMeta) || childMeta.EntityDeleted)
@@ -448,7 +452,7 @@ namespace Robust.Shared.GameObjects
             TransformComponent? parentXform)
         {
             DebugTools.Assert(transform.ParentUid.IsValid() == (parentXform != null));
-            DebugTools.Assert(parentXform == null || parentXform.ChildEntities.Contains(uid));
+            DebugTools.Assert(parentXform == null || parentXform._children.Contains(uid));
 
             // Note about this method: #if EXCEPTION_TOLERANCE is not used here because we're gonna it in the future...
 
@@ -458,7 +462,7 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    _xforms.DetachParentToNull(uid, transform, parentXform);
+                    _xforms.DetachParentToNull((uid, transform, metadata), parentXform, true);
                 }
                 catch (Exception e)
                 {
@@ -656,7 +660,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(prototype, out metadata);
             try
             {
-                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+                EntityPrototype.LoadEntity((entity, metadata), ComponentFactory, this, _serManager, context);
                 return entity;
             }
             catch (Exception e)
@@ -670,12 +674,14 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(MetaQuery.GetComponent(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+            EntityPrototype.LoadEntity((entity, MetaQuery.GetComponent(entity)), ComponentFactory, this, _serManager, context);
         }
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
         {
-            EntityPrototype.LoadEntity(prototype, entity, ComponentFactory, this, _serManager, context);
+            var meta = MetaQuery.GetComponent(entity);
+            DebugTools.Assert(meta.EntityPrototype == prototype);
+            EntityPrototype.LoadEntity((entity, meta), ComponentFactory, this, _serManager, context);
         }
 
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)
@@ -730,9 +736,9 @@ namespace Robust.Shared.GameObjects
         public virtual EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata = null)
         {
             if (!MetaQuery.Resolve(uid, ref metadata, false))
-                return new EntityStringRepresentation(uid, true);
+                return new EntityStringRepresentation(uid, default, true);
 
-            return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);
+            return new EntityStringRepresentation(uid, metadata);
         }
 
         /// <inheritdoc />
@@ -746,7 +752,7 @@ namespace Robust.Shared.GameObjects
         public EntityStringRepresentation ToPrettyString(NetEntity netEntity)
         {
             if (!TryGetEntityData(netEntity, out var uid, out var meta))
-                return new EntityStringRepresentation(EntityUid.Invalid, true);
+                return new EntityStringRepresentation(EntityUid.Invalid, netEntity, true);
 
             return ToPrettyString(uid.Value, meta);
         }

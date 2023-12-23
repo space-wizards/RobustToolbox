@@ -455,7 +455,7 @@ namespace Robust.Shared.Network
 
             foreach (var peer in _netPeers)
             {
-                NetIncomingMessage msg;
+                NetIncomingMessage? msg;
                 var recycle = true;
                 while ((msg = peer.Peer.ReadMessage()) != null)
                 {
@@ -499,7 +499,7 @@ namespace Robust.Shared.Network
                         default:
                             _logger.Warning("{0}: Unhandled incoming packet type from {1}: {2}",
                                 peer.Peer.Configuration.LocalAddress,
-                                msg.SenderConnection.RemoteEndPoint,
+                                msg.SenderConnection?.RemoteEndPoint,
                                 msg.MessageType);
                             break;
                     }
@@ -694,6 +694,8 @@ namespace Robust.Shared.Network
         private void HandleStatusChanged(NetPeerData peer, NetIncomingMessage msg)
         {
             var sender = msg.SenderConnection;
+            DebugTools.Assert(sender != null);
+
             var newStatus = (NetConnectionStatus) msg.ReadByte();
             var reason = msg.ReadString();
             _logger.Debug("{ConnectionEndpoint}: Status changed to {ConnectionStatus}, reason: {ConnectionStatusReason}",
@@ -818,6 +820,8 @@ namespace Robust.Shared.Network
 
         private bool DispatchNetMessage(NetIncomingMessage msg)
         {
+            DebugTools.Assert(msg.SenderConnection != null);
+
             var peer = msg.SenderConnection.Peer;
             if (peer.Status == NetPeerStatus.ShutdownRequested)
             {
@@ -1147,12 +1151,6 @@ namespace Robust.Shared.Network
             }
 
             public ClientDisconnectedException(string message, Exception inner) : base(message, inner)
-            {
-            }
-
-            protected ClientDisconnectedException(
-                SerializationInfo info,
-                StreamingContext context) : base(info, context)
             {
             }
         }

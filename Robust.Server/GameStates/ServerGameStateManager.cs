@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
@@ -173,6 +174,10 @@ Oldest acked clients: {string.Join(", ", players)}
         {
             var players = _playerManager.Sessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
+            // Update client acks, which is used to figure out what data needs to be sent to clients
+            // This only needs SessionData which isn't touched during GetPVSData or ProcessCollections.
+            var ackJob = _pvs.ProcessQueuedAcks();
+
             // Update entity positions in PVS chunks/collections
             // TODO disable processing if culling is disabled? Need to check if toggling PVS breaks anything.
             // TODO parallelize?
@@ -189,11 +194,7 @@ Oldest acked clients: {string.Join(", ", players)}
                 pvsData = GetPVSData(players);
             }
 
-            // Update client acks, which is used to figure out what data needs to be sent to clients
-            using (_usageHistogram.WithLabels("Process Acks").NewTimer())
-            {
-                _pvs.ProcessQueuedAcks();
-            }
+            ackJob.WaitOne();
 
             // Construct & send the game state to each player.
             GameTick oldestAck;
@@ -253,7 +254,8 @@ Oldest acked clients: {string.Join(", ", players)}
                 }
                 catch (Exception e) // Catch EVERY exception
                 {
-                    _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
+                    var source = i >= 0 ? players[i].ToString() : "replays";
+                    _logger.Log(LogLevel.Error, e, $"Caught exception while generating mail for {source}.");
                 }
                 return resource;
             }
@@ -265,15 +267,14 @@ Oldest acked clients: {string.Join(", ", players)}
         {
             public HashSet<int>[] PlayerChunks;
             public EntityUid[][] ViewerEntities;
-            public (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] ChunkCache;
+            public RobustTree<NetEntity>?[] ChunkCache;
         }
 
         private PvsData? GetPVSData(ICommonSession[] players)
         {
             var chunks = _pvs.GetChunks(players, ref _playerChunks, ref _viewerEntities);
             var chunksCount = chunks.Count;
-            var chunkCache =
-                new (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[chunksCount];
+            var chunkCache = new RobustTree<NetEntity>?[chunksCount];
             // Update the reused trees sequentially to avoid having to lock the dictionary per chunk.
             var reuse = ArrayPool<bool>.Shared.Rent(chunksCount);
 
@@ -310,7 +311,7 @@ Oldest acked clients: {string.Join(", ", players)}
         {
             var channel = session.Channel;
             var sessionData = _pvs.PlayerData[session];
-            var lastAck = sessionData.LastReceivedAck;
+            var from = sessionData.RequestedFull ? GameTick.Zero : sessionData.LastReceivedAck;
             List<NetEntity>? leftPvs = null;
             List<EntityState>? entStates;
             List<NetEntity>? deletions;
@@ -321,7 +322,7 @@ Oldest acked clients: {string.Join(", ", players)}
             {
                 (entStates, deletions, leftPvs, fromTick) = _pvs.CalculateEntityStates(
                     session,
-                    lastAck,
+                    from,
                     _gameTiming.CurTick,
                     pvsData.Value.ChunkCache,
                     pvsData.Value.PlayerChunks[i],
@@ -329,7 +330,7 @@ Oldest acked clients: {string.Join(", ", players)}
             }
             else
             {
-                (entStates, deletions, fromTick) = _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
+                (entStates, deletions, fromTick) = _pvs.GetAllEntityStates(session, from, _gameTiming.CurTick);
             }
 
             var playerStates = _playerManager.GetPlayerStates(fromTick);
@@ -346,7 +347,7 @@ Oldest acked clients: {string.Join(", ", players)}
                 playerStates,
                 deletions);
 
-            InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
+            InterlockedHelper.Min(ref oldestAckValue, from.Value);
 
             // actually send the state
             var stateUpdateMessage = new MsgState();
@@ -360,13 +361,13 @@ Oldest acked clients: {string.Join(", ", players)}
             // We also do this if the client's last ack is too old. This helps prevent things like the entity deletion
             // history from becoming too bloated if a bad client fails to send acks for whatever reason.
 
-            if (_gameTiming.CurTick.Value > lastAck.Value + _pvs.ForceAckThreshold)
+            if (_gameTiming.CurTick.Value > from.Value + _pvs.ForceAckThreshold)
             {
                 stateUpdateMessage.ForceSendReliably = true;
 #if FULL_RELEASE
                 var connectedTime = (DateTime.UtcNow - session.ConnectedTime).TotalMinutes;
-                if (lastAck > GameTick.Zero && connectedTime > 1)
-                    _logger.Warning($"Client {session} exceeded ack-tick threshold. Last ack: {lastAck}. Cur tick: {_gameTiming.CurTick}. Connect time: {connectedTime} minutes");
+                if (sessionData.LastReceivedAck > GameTick.Zero && connectedTime > 1)
+                    _logger.Warning($"Client {session} exceeded ack-tick threshold. Last ack: {sessionData.LastReceivedAck}. Cur tick: {_gameTiming.CurTick}. Connect time: {connectedTime} minutes");
 #endif
             }
 
@@ -436,22 +437,22 @@ Oldest acked clients: {string.Join(", ", players)}
 
             public List<(int, IChunkIndexLocation)> Chunks;
             public bool[] Reuse;
-            public (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] ChunkCache;
+            public RobustTree<NetEntity>?[] ChunkCache;
 
             public void Execute(int index)
             {
                 var (visMask, chunkIndexLocation) = Chunks[index];
-                Reuse[index] = Pvs.TryCalculateChunk(chunkIndexLocation, visMask, out var chunk);
-                ChunkCache[index] = chunk;
+                Reuse[index] = Pvs.TryCalculateChunk(chunkIndexLocation, visMask, out var tree);
+                ChunkCache[index] = tree;
 
 #if DEBUG
-                if (chunk == null)
+                if (tree == null)
                     return;
 
                 // Each root nodes should simply be a map or a grid entity.
-                DebugTools.Assert(chunk.Value.tree.RootNodes.Count == 1,
-                    $"Root node count is {chunk.Value.tree.RootNodes.Count} instead of 1.");
-                var nent = chunk.Value.tree.RootNodes.FirstOrDefault();
+                DebugTools.Assert(tree.RootNodes.Count == 1,
+                    $"Root node count is {tree.RootNodes.Count} instead of 1.");
+                var nent = tree.RootNodes.FirstOrDefault();
                 var ent = EntManager.GetEntity(nent);
                 DebugTools.Assert(EntManager.EntityExists(ent), $"Root node does not exist. Node {ent}.");
                 DebugTools.Assert(EntManager.HasComponent<MapComponent>(ent)

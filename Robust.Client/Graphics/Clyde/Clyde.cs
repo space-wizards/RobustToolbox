@@ -76,6 +76,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private Thread? _gameThread;
 
+        private ISawmill _clydeSawmill = default!;
         private ISawmill _sawmillOgl = default!;
 
         private IBindingsContext _glBindingsContext = default!;
@@ -91,6 +92,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public bool InitializePreWindowing()
         {
+            _clydeSawmill = _logManager.GetSawmill("clyde");
             _sawmillOgl = _logManager.GetSawmill("clyde.ogl");
 
             _cfg.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);

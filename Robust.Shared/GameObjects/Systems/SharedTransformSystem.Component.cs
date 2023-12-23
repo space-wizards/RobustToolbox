@@ -52,7 +52,8 @@ public abstract partial class SharedTransformSystem
             xform.LocalRotation,
             xform,
             _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref movEevee, true);
+        RaiseLocalEvent(uid, ref movEevee);
+        InvokeGlobalMoveEvent(ref movEevee);
 
         DebugTools.Assert(xformQuery.GetComponent(oldGridUid).MapID == xformQuery.GetComponent(newGridUid).MapID);
         DebugTools.Assert(xform._anchored);
@@ -178,6 +179,16 @@ public abstract partial class SharedTransformSystem
             return false;
 
         return ContainsEntity(parent, (child.Comp.ParentUid, parentXform));
+    }
+
+    /// <summary>
+    /// Checks whether the given component is the parent of the entity without having to fetch the child's
+    /// transform component.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsParentOf(TransformComponent parent, EntityUid child)
+    {
+        return parent._children.Contains(child);
     }
 
     #endregion
@@ -353,25 +364,11 @@ public abstract partial class SharedTransformSystem
         if (!xform._gridInitialized || xform._gridUid == gridId || xform.GridUid == uid)
             return;
 
-        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
-        DebugTools.Assert(gridId == null || HasComp<MapGridComponent>(gridId));
-
-        xformQuery ??= XformQuery;
-        SetGridIdRecursive(uid, xform, gridId, xformQuery.Value);
-    }
-
-    private void SetGridIdRecursive(EntityUid uid, TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent> xformQuery)
-    {
-        if (!xform._gridInitialized || xform._gridUid == gridId || xform.GridUid == uid)
-            return;
-
-        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
+        DebugTools.Assert(!HasComp<MapGridComponent>(uid) || gridId == uid);
         xform._gridUid = gridId;
-        var childEnumerator = xform.ChildEnumerator;
-
-        while (childEnumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            SetGridIdRecursive(child.Value, xformQuery.GetComponent(child.Value), gridId, xformQuery);
+            SetGridId(child, XformQuery.GetComponent(child), gridId);
         }
     }
 
@@ -602,7 +599,8 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid || xform.GridUid == xform.MapUid);
 #endif
         var moveEvent = new MoveEvent(uid, oldPosition, newPosition, oldRotation, xform._localRotation, xform, _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref moveEvent, true);
+        RaiseLocalEvent(uid, ref moveEvent);
+        InvokeGlobalMoveEvent(ref moveEvent);
     }
 
     public void SetCoordinates(
@@ -1151,7 +1149,8 @@ public abstract partial class SharedTransformSystem
             return;
 
         var moveEvent = new MoveEvent(uid, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref moveEvent, true);
+        RaiseLocalEvent(uid, ref moveEvent);
+        InvokeGlobalMoveEvent(ref moveEvent);
     }
 
     #endregion
@@ -1282,20 +1281,24 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region AttachToGridOrMap
+    /// <summary>
+    /// Attempts to re-parent the given entity to the grid or map that the entity is on.
+    /// If no valid map or grid is found, this will detach the entity to null-space and queue it for deletion.
+    /// </summary>
     public void AttachToGridOrMap(EntityUid uid, TransformComponent? xform = null)
     {
-        if (XformQuery.Resolve(uid, ref xform))
-            AttachToGridOrMap(uid, xform, XformQuery);
-    }
+        if (TerminatingOrDeleted(uid))
+            return;
 
-    public void AttachToGridOrMap(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> query)
-    {
+        if (!XformQuery.Resolve(uid, ref xform))
+            return;
+
         if (!xform.ParentUid.IsValid() || xform.ParentUid == xform.GridUid)
             return;
 
         EntityUid newParent;
-        var oldPos = GetWorldPosition(xform, query);
-        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, query, out var gridUid, out _)
+        var oldPos = GetWorldPosition(xform);
+        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, out var gridUid, out _)
             && !TerminatingOrDeleted(gridUid))
         {
             newParent = gridUid;
@@ -1314,10 +1317,10 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        if (newParent == xform.ParentUid)
+        if (newParent == xform.ParentUid || newParent == uid)
             return;
 
-        var newPos = GetInvWorldMatrix(newParent, query).Transform(oldPos);
+        var newPos = GetInvWorldMatrix(newParent).Transform(oldPos);
         SetCoordinates(uid, xform, new(newParent, newPos));
     }
 
@@ -1361,7 +1364,19 @@ public abstract partial class SharedTransformSystem
 
     public void DetachParentToNull(EntityUid uid, TransformComponent xform, TransformComponent? oldXform)
     {
-        DebugTools.Assert(uid == xform.Owner);
+        DetachParentToNull((uid, xform, MetaData(uid)), oldXform);
+    }
+
+    public void DetachParentToNull(Entity<TransformComponent,MetaDataComponent> entity, TransformComponent? oldXform, bool terminating = false)
+    {
+        var (uid, xform, meta) = entity;
+
+        if (!terminating && meta.EntityLifeStage >= EntityLifeStage.Terminating)
+        {
+            // Something is attempting to remove the entity from this entity's parent while it is in the process of being deleted.
+            Log.Error($"Attempting to detach a terminating entity: {ToPrettyString(uid, meta)}. Trace: {Environment.StackTrace}");
+            return;
+        }
 
         var parent = xform._parent;
         if (!parent.IsValid())
@@ -1393,8 +1408,8 @@ public abstract partial class SharedTransformSystem
         xform.LerpParent = EntityUid.Invalid;
 
         if (xform.Anchored
-            && _metaQuery.TryGetComponent(xform.GridUid, out var meta)
-            && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
+            && _metaQuery.TryGetComponent(xform.GridUid, out var gridMeta)
+            && gridMeta.EntityLifeStage <= EntityLifeStage.MapInitialized)
         {
             var grid = Comp<MapGridComponent>(xform.GridUid.Value);
             var tileIndices = _map.TileIndicesFor(xform.GridUid.Value, grid, xform.Coordinates);
@@ -1404,9 +1419,9 @@ public abstract partial class SharedTransformSystem
             RaiseLocalEvent(uid, ref anchorStateChangedEvent, true);
         }
 
-        SetCoordinates(uid, xform, default, Angle.Zero, oldParent: oldXform);
+        SetCoordinates(entity, default, Angle.Zero, oldParent: oldXform);
 
-        DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0,
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0x0,
             $"Entity is in a container after having been detached to null-space? Entity: {ToPrettyString(uid)}");
     }
 
@@ -1414,11 +1429,13 @@ public abstract partial class SharedTransformSystem
 
     private void OnGridAdd(EntityUid uid, TransformComponent component, GridAddEvent args)
     {
+        // Added to existing map so need to update all children too.
         if (LifeStage(uid) > EntityLifeStage.Initialized)
         {
             SetGridId(uid, component, uid, XformQuery);
             return;
         }
+
         component._gridInitialized = true;
         component._gridUid = uid;
     }
@@ -1450,7 +1467,7 @@ public abstract partial class SharedTransformSystem
             if (_container.IsEntityInContainer(targetUid)
                 && _container.TryGetContainingContainer(targetXform.ParentUid, targetUid, out var container,
                     skipExistCheck: true)
-                && container.Insert(entity, EntityManager, xform))
+                && _container.Insert((entity, xform, null, null), container))
             {
                 return;
             }
@@ -1492,7 +1509,7 @@ public abstract partial class SharedTransformSystem
             if (!container.Contains(target))
                 continue;
 
-            if (!container.Insert(entity, EntityManager, xform))
+            if (!_container.Insert((entity, xform, null, null), container))
                 PlaceNextTo((entity, xform), targetXform.ParentUid);
         }
     }

@@ -109,6 +109,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     Whether key functions other than <see cref="EngineKeyFunctions.UIClick"/> trigger the button.
         /// </summary>
+        [ViewVariables]
         public bool EnableAllKeybinds
         {
             get => _enableAllKeybinds;

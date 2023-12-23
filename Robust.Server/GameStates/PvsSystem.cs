@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.Configuration;
 using Robust.Server.Player;
 using Robust.Shared;
-using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -47,7 +48,7 @@ internal sealed partial class PvsSystem : EntitySystem
     public int ForceAckThreshold { get; private set; }
 
     /// <summary>
-    /// Maximum number of pooled objects
+    /// Maximum number of pooled objects.
     /// </summary>
     private const int MaxVisPoolSize = 1024;
 
@@ -73,16 +74,21 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     private HashSet<ICommonSession> _seenAllEnts = new();
 
-    internal readonly Dictionary<ICommonSession, SessionPVSData> PlayerData = new();
+    internal readonly Dictionary<ICommonSession, SessionPvsData> PlayerData = new();
 
     private PVSCollection<NetEntity> _entityPvsCollection = default!;
     public PVSCollection<NetEntity> EntityPVSCollection => _entityPvsCollection;
 
     private readonly List<IPVSCollection> _pvsCollections = new();
 
-    private readonly ObjectPool<Dictionary<NetEntity, PvsEntityVisibility>> _visSetPool
-        = new DefaultObjectPool<Dictionary<NetEntity, PvsEntityVisibility>>(
-            new DictPolicy<NetEntity, PvsEntityVisibility>(), MaxVisPoolSize);
+    private readonly ObjectPool<HashSet<NetEntity>> _netUidSetPool
+        = new DefaultObjectPool<HashSet<NetEntity>>(new SetPolicy<NetEntity>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<List<NetEntity>> _netUidListPool
+        = new DefaultObjectPool<List<NetEntity>>(new ListPolicy<NetEntity>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<List<EntityData>> _entDataListPool
+        = new DefaultObjectPool<List<EntityData>>(new ListPolicy<EntityData>(), MaxVisPoolSize);
 
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
@@ -90,10 +96,6 @@ internal sealed partial class PvsSystem : EntitySystem
     private readonly ObjectPool<Stack<NetEntity>> _stackPool
         = new DefaultObjectPool<Stack<NetEntity>>(
             new StackPolicy<NetEntity>(), MaxVisPoolSize);
-
-    private readonly ObjectPool<Dictionary<NetEntity, MetaDataComponent>> _chunkCachePool =
-        new DefaultObjectPool<Dictionary<NetEntity, MetaDataComponent>>(
-            new DictPolicy<NetEntity, MetaDataComponent>(), MaxVisPoolSize);
 
     private readonly ObjectPool<HashSet<int>> _playerChunkPool =
         new DefaultObjectPool<HashSet<int>>(new SetPolicy<int>(), MaxVisPoolSize);
@@ -114,8 +116,7 @@ internal sealed partial class PvsSystem : EntitySystem
     private readonly List<(int, IChunkIndexLocation)> _chunkList = new(64);
     internal readonly HashSet<ICommonSession> PendingAcks = new();
 
-    private readonly Dictionary<(int visMask, IChunkIndexLocation location), (Dictionary<NetEntity, MetaDataComponent> metadata,
-        RobustTree<NetEntity> tree)?> _previousTrees = new();
+    private readonly Dictionary<(int visMask, IChunkIndexLocation location), RobustTree<NetEntity>?> _previousTrees = new();
 
     private readonly HashSet<(int visMask, IChunkIndexLocation location)> _reusedTrees = new();
 
@@ -136,7 +137,6 @@ internal sealed partial class PvsSystem : EntitySystem
         _eyeQuery = GetEntityQuery<EyeComponent>();
         _metaQuery = GetEntityQuery<MetaDataComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
-        _metaQuery = GetEntityQuery<MetaDataComponent>();
 
         _entityPvsCollection = RegisterPVSCollection<NetEntity>();
 
@@ -152,7 +152,7 @@ internal sealed partial class PvsSystem : EntitySystem
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        SubscribeLocalEvent<MoveEvent>(OnEntityMove);
+        _transform.OnGlobalMoveEvent += OnEntityMove;
         SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
@@ -173,6 +173,7 @@ internal sealed partial class PvsSystem : EntitySystem
         UnregisterPVSCollection(_entityPvsCollection);
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         EntityManager.EntityDeleted -= OnEntityDeleted;
+        _transform.OnGlobalMoveEvent -= OnEntityMove;
 
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
         _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
@@ -184,7 +185,7 @@ internal sealed partial class PvsSystem : EntitySystem
         ShutdownDirty();
     }
 
-    // TODO rate limit this?
+    // TODO PVS rate limit this?
     private void OnClientRequestFull(ICommonSession session, GameTick tick, NetEntity? missingEntity)
     {
         if (!PlayerData.TryGetValue(session, out var sessionData))
@@ -195,37 +196,31 @@ internal sealed partial class PvsSystem : EntitySystem
         sessionData.LastReceivedAck = _gameTiming.CurTick;
 
         var sb = new StringBuilder();
-        sb.Append($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}.");
+        sb.Append($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}. Curtick: {_gameTiming.CurTick}.");
 
         if (missingEntity != null)
         {
             var entity = GetEntity(missingEntity)!;
             sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(entity.Value)}.");
 
-            if (sessionData.LastSeenAt.TryGetValue(missingEntity.Value, out var lastSeenTick))
-                sb.Append($" Entity last sent: {lastSeenTick.Value}");
+            if (sessionData.EntityData.TryGetValue(missingEntity.Value, out var data))
+                sb.Append($" Entity last seen: {data.EntityLastAcked}");
         }
 
         Log.Warning(sb.ToString());
 
-        sessionData.LastSeenAt.Clear();
-        sessionData.LastLeftView.Clear();
-
         if (sessionData.Overflow != null)
-        {
-            _visSetPool.Return(sessionData.Overflow.Value.SentEnts);
-            sessionData.Overflow = null;
-        }
+            _entDataListPool.Return(sessionData.Overflow.Value.SentEnts);
+        sessionData.Overflow = null;
 
-        // return last acked to pool, but only if it is not still in the OverflowDictionary.
-        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(sessionData.LastAcked.Value.Tick))
+        foreach (var visSet in sessionData.SentEntities.Values)
         {
-            DebugTools.Assert(!sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
-            _visSetPool.Return(sessionData.LastAcked.Value.Data);
+            _entDataListPool.Return(visSet);
         }
+        sessionData.SentEntities.Clear();
 
-        sessionData.LastAcked = null;
         sessionData.RequestedFull = true;
+        sessionData.EntityData.Clear();
     }
 
     private void OnViewsizeChanged(float obj)
@@ -278,15 +273,9 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         _entityPvsCollection.RemoveIndex(EntityManager.CurrentTick, metadata.NetEntity);
 
-        var previousTick = _gameTiming.CurTick - 1;
-
         foreach (var sessionData in PlayerData.Values)
         {
-            sessionData.LastSeenAt.Remove(metadata.NetEntity);
-            sessionData.LastLeftView.Remove(metadata.NetEntity);
-
-            if (sessionData.SentEntities.TryGetValue(previousTick, out var ents))
-                ents.Remove(metadata.NetEntity);
+            sessionData.EntityData.Remove(metadata.NetEntity);
         }
     }
 
@@ -350,15 +339,13 @@ internal sealed partial class PvsSystem : EntitySystem
         else
             _entityPvsCollection.UpdateIndex(metadata.NetEntity, xform.MapID, indices, forceDirty: forceDirty);
 
-        var children = xform.ChildEnumerator;
-
         // TODO PERFORMANCE
         // Given uid is the parent of its children, we already know that the child xforms will have to be relative to
         // coordinates.EntityId. So instead of calling GetMoverCoordinates() for each child we should just calculate it
         // directly.
-        while (children.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            UpdateEntityRecursive(child.Value, _metaQuery.GetComponent(child.Value), _xformQuery.GetComponent(child.Value), coordinates, true, forceDirty);
+            UpdateEntityRecursive(child, _metaQuery.GetComponent(child), _xformQuery.GetComponent(child), coordinates, true, forceDirty);
         }
     }
 
@@ -366,7 +353,7 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         if (e.NewStatus == SessionStatus.InGame)
         {
-            if (!PlayerData.TryAdd(e.Session, new()))
+            if (!PlayerData.TryAdd(e.Session, new(e.Session)))
                 Log.Error($"Attempted to add player to _playerVisibleSets, but they were already present? Session:{e.Session}");
 
             foreach (var pvsCollection in _pvsCollections)
@@ -390,20 +377,13 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         if (data.Overflow != null)
-            _visSetPool.Return(data.Overflow.Value.SentEnts);
+            _entDataListPool.Return(data.Overflow.Value.SentEnts);
         data.Overflow = null;
-
-        var acked = data.LastAcked?.Data;
-        if (acked != null)
-            _visSetPool.Return(acked);
 
         foreach (var visSet in data.SentEntities.Values)
         {
-            if (visSet != acked)
-                _visSetPool.Return(visSet);
+            _entDataListPool.Return(visSet);
         }
-
-        data.LastAcked = null;
     }
 
     private void OnGridRemoved(GridRemovalEvent ev)
@@ -576,7 +556,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     public void RegisterNewPreviousChunkTrees(
         List<(int, IChunkIndexLocation)> chunks,
-        (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] trees,
+        RobustTree<NetEntity>?[] trees,
         bool[] reuse)
     {
         // For any chunks able to re-used we'll chuck them in a dictionary for faster lookup.
@@ -595,10 +575,7 @@ internal sealed partial class PvsSystem : EntitySystem
                 continue;
 
             if (chunk != null)
-            {
-                _chunkCachePool.Return(chunk.Value.metadata);
-                _treePool.Return(chunk.Value.tree);
-            }
+                _treePool.Return(chunk);
 
             if (!chunks.Contains(index))
                 _previousTrees.Remove(index);
@@ -617,11 +594,11 @@ internal sealed partial class PvsSystem : EntitySystem
     public bool TryCalculateChunk(
         IChunkIndexLocation chunkLocation,
         int visMask,
-        out (Dictionary<NetEntity, MetaDataComponent> mData, RobustTree<NetEntity> tree)? result)
+        out RobustTree<NetEntity>? tree)
     {
-        if (!_entityPvsCollection.IsDirty(chunkLocation) && _previousTrees.TryGetValue((visMask, chunkLocation), out var previousTree))
+        if (!_entityPvsCollection.IsDirty(chunkLocation)
+            && _previousTrees.TryGetValue((visMask, chunkLocation), out tree))
         {
-            result = previousTree;
             return true;
         }
 
@@ -639,15 +616,19 @@ internal sealed partial class PvsSystem : EntitySystem
         };
         if (chunk == null)
         {
-            result = null;
+            tree = null;
             return false;
         }
-        var chunkSet = _chunkCachePool.Get();
-        var tree = _treePool.Get();
+
+        tree = _treePool.Get();
+        var set = _netUidSetPool.Get();
+        DebugTools.AssertNotNull(tree.RootNodes.Count == 0);
+        DebugTools.AssertNotNull(set.Count == 0);
+
         foreach (var netEntity in chunk)
         {
             var (uid, meta) = GetEntityData(netEntity);
-            AddToChunkSetRecursively(in uid, in netEntity, meta, visMask, tree, chunkSet);
+            AddToChunkSetRecursively(in uid, in netEntity, meta, visMask, tree, set);
 #if DEBUG
             var xform = _xformQuery.GetComponent(uid);
             if (chunkLocation is MapChunkLocation)
@@ -657,19 +638,18 @@ internal sealed partial class PvsSystem : EntitySystem
 #endif
         }
 
+        DebugTools.Assert(set.Count > 0 || tree.RootNodes.Count == 0);
+        _netUidSetPool.Return(set);
+
         if (tree.RootNodes.Count == 0)
         {
             // This can happen if the only entity in a chunk is invisible
             // (e.g., when a ghost moves from from a grid into empty space).
-            DebugTools.Assert(chunkSet.Count == 0);
             _treePool.Return(tree);
-            _chunkCachePool.Return(chunkSet);
-            result = null;
+            tree = null;
             return true;
         }
-        DebugTools.Assert(chunkSet.Count > 0);
 
-        result = (chunkSet, tree);
         return false;
     }
 
@@ -682,14 +662,14 @@ internal sealed partial class PvsSystem : EntitySystem
     }
 
     private void AddToChunkSetRecursively(in EntityUid uid, in NetEntity netEntity, MetaDataComponent mComp,
-        int visMask, RobustTree<NetEntity> tree, Dictionary<NetEntity, MetaDataComponent> set)
+        int visMask, RobustTree<NetEntity> tree, HashSet<NetEntity> set)
     {
         // If the eye is missing ANY layer that this entity is on, or any layer that any of its parents belongs to, then
         // it is considered invisible.
         if ((visMask & mComp.VisibilityMask) != mComp.VisibilityMask)
             return;
 
-        if (!set.TryAdd(netEntity, mComp))
+        if (!set.Add(netEntity))
             return; // already sending
 
         var xform = _xformQuery.GetComponent(uid);
@@ -721,7 +701,7 @@ internal sealed partial class PvsSystem : EntitySystem
         CalculateEntityStates(ICommonSession session,
             GameTick fromTick,
             GameTick toTick,
-            (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] chunks,
+            RobustTree<NetEntity>?[] chunks,
             HashSet<int> visibleChunks,
             EntityUid[] viewers)
     {
@@ -732,38 +712,37 @@ internal sealed partial class PvsSystem : EntitySystem
         var enteredEntityCount = 0;
         var sessionData = PlayerData[session];
         sessionData.SentEntities.TryGetValue(toTick - 1, out var lastSent);
-        var lastAcked = sessionData.LastAcked?.Data;
-        var lastSeen = sessionData.LastSeenAt;
-        var lastLeft = sessionData.LastLeftView;
-        var visibleEnts = _visSetPool.Get();
+        var toSend = _entDataListPool.Get();
+        var entityData = sessionData.EntityData;
 
-        if (visibleEnts.Count != 0)
-            throw new Exception("Encountered non-empty object inside of _visSetPool. Was the same object returned to the pool more than once?");
+        if (toSend.Count != 0)
+            throw new Exception("Encountered non-empty object inside of _netUidSetPool. Was the same object returned to the pool more than once?");
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-        var entStateCount = 0;
+        var dirtyEntityCount = 0;
 
         var stack = _stackPool.Get();
+
         // TODO reorder chunks to prioritize those that are closest to the viewer? Helps make pop-in less visible.
         foreach (var i in visibleChunks)
         {
-            var cache = chunks[i];
-            if(!cache.HasValue) continue;
-
+            var tree = chunks[i];
+            if(tree == null)
+                continue;
 #if DEBUG
             // Each root nodes should simply be a map or a grid entity.
-            DebugTools.Assert(cache.Value.tree.RootNodes.Count == 1,
-                $"Root node count is {cache.Value.tree.RootNodes.Count} instead of 1. Session: {session}");
-            var nent = cache.Value.tree.RootNodes.FirstOrDefault();
+            DebugTools.Assert(tree.RootNodes.Count == 1,
+                $"Root node count is {tree.RootNodes.Count} instead of 1. Session: {session}");
+            var nent = tree.RootNodes.FirstOrDefault();
             var ent = GetEntity(nent);
             DebugTools.Assert(Exists(ent), $"Root node does not exist. Node {ent}. Session: {session}");
             DebugTools.Assert(HasComp<MapComponent>(ent) || HasComp<MapGridComponent>(ent));
 #endif
 
-            foreach (var rootNode in cache.Value.tree.RootNodes)
+            foreach (var rootNode in tree.RootNodes)
             {
-                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, lastAcked, lastSent, visibleEnts, lastSeen, lastLeft, cache.Value.metadata, stack, in fromTick,
-                        ref newEntityCount, ref enteredEntityCount, ref entStateCount,  in newEntityBudget, in enteredEntityBudget);
+                RecursivelyAddTreeNode(in rootNode, tree, toSend, entityData, stack, fromTick, toTick,
+                        ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
             }
         }
         _stackPool.Return(stack);
@@ -773,8 +752,8 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = globalEnumerator.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen, lastLeft, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+            RecursivelyAddOverride(in uid, toSend, entityData, fromTick, toTick,
+                ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
         }
         globalEnumerator.Dispose();
 
@@ -783,8 +762,8 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = globalRecursiveEnumerator.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen, lastLeft, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
+            RecursivelyAddOverride(in uid, toSend, entityData, fromTick, toTick,
+                ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget, true);
         }
         globalRecursiveEnumerator.Dispose();
 
@@ -793,25 +772,30 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             var netEntity = sessionOverrides.Current;
             var uid = GetEntity(netEntity);
-            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen, lastLeft, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
+            RecursivelyAddOverride(in uid, toSend, entityData, fromTick, toTick,
+                ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget, true);
         }
         sessionOverrides.Dispose();
 
         foreach (var viewerEntity in viewers)
         {
-            RecursivelyAddOverride(in viewerEntity, lastAcked, lastSent, visibleEnts, lastSeen, lastLeft, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+            RecursivelyAddOverride(in viewerEntity, toSend, entityData, fromTick, toTick,
+                ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
         }
 
         var expandEvent = new ExpandPvsEvent(session);
-        RaiseLocalEvent(ref expandEvent);
+
+        if (session.AttachedEntity != null)
+            RaiseLocalEvent(session.AttachedEntity.Value, ref expandEvent, true);
+        else
+            RaiseLocalEvent(ref expandEvent);
+
         if (expandEvent.Entities != null)
         {
             foreach (var entityUid in expandEvent.Entities)
             {
-                RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, lastSeen, lastLeft, in fromTick,
-                    ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+                RecursivelyAddOverride(in entityUid, toSend, entityData, fromTick, toTick,
+                    ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget);
             }
         }
 
@@ -819,48 +803,56 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             foreach (var entityUid in expandEvent.RecursiveEntities)
             {
-                RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, lastSeen, lastLeft, in fromTick,
-                    ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
+                RecursivelyAddOverride(in entityUid, toSend, entityData, fromTick, toTick,
+                    ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget, true);
             }
         }
 
-        var entityStates = new List<EntityState>(entStateCount);
+        // TODO PVS reduce allocs
+        var entityStates = new List<EntityState>(dirtyEntityCount);
 
-        foreach (var (netEntity, visiblity) in visibleEnts)
-        {
-            EntityUid uid;
-            MetaDataComponent meta;
 #if DEBUG
-            uid = GetEntity(netEntity);
+        // TODO PVS consider removing expensive asserts
+        var toSendSet = new HashSet<EntityUid>(toSend.Count);
+        foreach (var data in toSend)
+        {
+            toSendSet.Add(data.Entity.Owner);
+        }
+        DebugTools.AssertEqual(toSend.Count, toSendSet.Count);
+
+        foreach (var data in CollectionsMarshal.AsSpan(toSend))
+        {
+            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
+            DebugTools.AssertEqual(data.LastSent, _gameTiming.CurTick);
+            DebugTools.Assert(ReferenceEquals(data, entityData[data.NetEntity]));
+
             // if an entity is visible, its parents should always be visible.
-            DebugTools.Assert((_xformQuery.GetComponent(uid).ParentUid is not { Valid: true } parent) ||
-                              visibleEnts.ContainsKey(_metaQuery.GetComponent(parent).NetEntity),
-                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(uid)}.");
+            if (_xformQuery.GetComponent(data.Entity).ParentUid is not {Valid: true} pUid)
+                continue;
+
+            DebugTools.Assert(toSendSet.Contains(pUid),
+                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(pUid)}.");
+        }
+
+        foreach (var data in CollectionsMarshal.AsSpan(lastSent))
+        {
+            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
+            DebugTools.Assert(!entityData.TryGetValue(data.NetEntity, out var old) || ReferenceEquals(data, old));
+            DebugTools.Assert(data.LastSent != GameTick.Zero);
+            DebugTools.AssertEqual(toSendSet.Contains(data.Entity), data.LastSent == _gameTiming.CurTick);
+            DebugTools.Assert(data.LastSent == _gameTiming.CurTick
+                              || data.LastSent == _gameTiming.CurTick - 1);
+        }
 #endif
 
-            if (sessionData.RequestedFull)
-            {
-                (uid, meta) = GetEntityData(netEntity);
-                entityStates.Add(GetFullEntityState(session, uid, meta));
-                continue;
-            }
+        // Get entity/component states and update EntityData.LastSent
+        GetStateList(entityStates, toSend, sessionData, fromTick);
 
-            if (visiblity == PvsEntityVisibility.StayedUnchanged)
-                continue;
+        // Tell the client to detach entities that have left their view
+        // This has to be called after EntityData.LastSent is updated.
+        var leftView = ProcessLeavePvs(lastSent, toTick, toSend.Count);
 
-            (uid, meta) = GetEntityData(netEntity);
-            var entered = visiblity == PvsEntityVisibility.Entered;
-            var entFromTick = entered ? lastSeen.GetValueOrDefault(netEntity) : fromTick;
-            var state = GetEntityState(session, uid, entFromTick, meta);
-
-            if (entered || !state.Empty)
-                entityStates.Add(state);
-        }
-
-        // tell a client to detach entities that have left their view
-        var leftView = ProcessLeavePvs(visibleEnts, lastSent, lastLeft);
-
-        if (sessionData.SentEntities.Add(toTick, visibleEnts, out var oldEntry))
+        if (sessionData.SentEntities.Add(toTick, toSend, out var oldEntry))
         {
             if (oldEntry.Value.Key > fromTick && sessionData.Overflow == null)
             {
@@ -883,450 +875,47 @@ internal sealed partial class PvsSystem : EntitySystem
                 Log.Debug($"Client {session} exceeded tick buffer.");
 #endif
             }
-            else if (oldEntry.Value.Value != lastAcked)
-                _visSetPool.Return(oldEntry.Value.Value);
+            else
+                _entDataListPool.Return(oldEntry.Value.Value);
         }
 
-        if (entityStates.Count == 0) entityStates = default;
-        return (entityStates, deletions, leftView, sessionData.RequestedFull ? GameTick.Zero : fromTick);
+        DebugTools.Assert(!sessionData.RequestedFull || fromTick == GameTick.Zero);
+
+        if (entityStates.Count == 0)
+            entityStates = default;
+
+        return (entityStates, deletions, leftView, fromTick);
     }
 
     /// <summary>
     ///     Figure out what entities are no longer visible to the client. These entities are sent reliably to the client
     ///     in a separate net message.
     /// </summary>
-    private List<NetEntity>? ProcessLeavePvs(
-        Dictionary<NetEntity, PvsEntityVisibility> visibleEnts,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
-        Dictionary<NetEntity, GameTick> lastLeft)
+    private List<NetEntity>? ProcessLeavePvs(List<EntityData>? lastSent, GameTick toTick, int toSendCount)
     {
+        // TODO parallelize this with system processing.
+        // Note that this requires deferring entity-deletion processing to be applied at the beginning of PVS
+        // processing, instead of happening during system ticks. But it also would make it easy to parallelize
+        // updating it.
+
         if (lastSent == null)
             return null;
 
-        var tick = _gameTiming.CurTick;
-        var minSize = Math.Max(0, lastSent.Count - visibleEnts.Count);
+        var minSize = Math.Max(0, lastSent.Count - toSendCount);
+
+        // TODO PVS reduce allocs
         var leftView = new List<NetEntity>(minSize);
 
-        foreach (var netEntity in lastSent.Keys)
+        foreach (var data in CollectionsMarshal.AsSpan(lastSent))
         {
-            if (!visibleEnts.ContainsKey(netEntity))
-            {
-                leftView.Add(netEntity);
-                lastLeft[netEntity] = tick;
-            }
+            if (data.LastSent == toTick)
+                continue;
 
+            leftView.Add(data.NetEntity);
+            data.LastLeftView = toTick;
         }
 
         return leftView.Count > 0 ? leftView : null;
-    }
-
-    private void RecursivelyAddTreeNode(in NetEntity nodeIndex,
-        RobustTree<NetEntity> tree,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastAcked,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
-        Dictionary<NetEntity, PvsEntityVisibility> toSend,
-        Dictionary<NetEntity, GameTick> lastSeen,
-        Dictionary<NetEntity, GameTick> lastLeft,
-        Dictionary<NetEntity, MetaDataComponent> metaDataCache,
-        Stack<NetEntity> stack,
-        in GameTick fromTick,
-        ref int newEntityCount,
-        ref int enteredEntityCount,
-        ref int entStateCount,
-        in int newEntityBudget,
-        in int enteredEntityBudget)
-    {
-        stack.Push(nodeIndex);
-
-        while (stack.TryPop(out var currentNodeIndex))
-        {
-            DebugTools.Assert(currentNodeIndex.IsValid());
-
-            // As every map is parented to uid 0 in the tree we still need to get their children, plus because we go top-down
-            // we may find duplicate parents with children we haven't encountered before
-            // on different chunks (this is especially common with direct grid children)
-
-            ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, currentNodeIndex, out var exists);
-            if (!exists)
-            {
-                var (entered, shouldAdd) = ProcessEntry(in currentNodeIndex, lastAcked, lastSent, lastSeen, lastLeft, fromTick,
-                    ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-
-                if (!shouldAdd)
-                {
-                    // In the majority of instances entities do get added.
-                    // So its better to add and maybe remove, rather than checking ContainsKey() and then maybe adding it.
-                    toSend.Remove(currentNodeIndex);
-                    continue;
-                }
-
-                AddToSendSet(in currentNodeIndex, metaDataCache[currentNodeIndex], ref value, toSend, fromTick, in entered, ref entStateCount);
-            }
-
-            var node = tree[currentNodeIndex];
-            if (node.Children == null)
-                continue;
-
-            foreach (var child in node.Children)
-            {
-                stack.Push(child);
-            }
-        }
-    }
-
-    public bool RecursivelyAddOverride(in EntityUid uid,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastAcked,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
-        Dictionary<NetEntity, PvsEntityVisibility> toSend,
-        Dictionary<NetEntity, GameTick> lastSeen,
-        Dictionary<NetEntity, GameTick> lastLeft,
-        in GameTick fromTick,
-        ref int newEntityCount,
-        ref int enteredEntityCount,
-        ref int entStateCount,
-        in int newEntityBudget,
-        in int enteredEntityBudget,
-        bool addChildren = false)
-    {
-        //are we valid?
-        //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
-        if (!uid.IsValid())
-            return false;
-
-        var xform = _xformQuery.GetComponent(uid);
-        var parent = xform.ParentUid;
-        if (parent.IsValid() && !RecursivelyAddOverride(in parent, lastAcked, lastSent, toSend, lastSeen, lastLeft, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget,
-                in enteredEntityBudget))
-        {
-            return false;
-        }
-
-        var metadata = _metaQuery.GetComponent(uid);
-        var netEntity = metadata.NetEntity;
-
-        // Note that we check this AFTER adding parents. This is because while this entity may already have been added
-        // to the toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported
-        // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
-        // send the new parents, which may otherwise be delayed because of the PVS budget..
-        ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, netEntity, out var exists);
-        if (!exists)
-        {
-            var (entered, _) = ProcessEntry(in netEntity, lastAcked, lastSent, lastSeen, lastLeft, fromTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-            AddToSendSet(in netEntity, metadata, ref value, toSend, fromTick, in entered, ref entStateCount);
-        }
-
-        if (addChildren)
-        {
-            RecursivelyAddChildren(xform, lastAcked, lastSent, toSend, lastSeen, lastLeft, fromTick, ref newEntityCount,
-                ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
-        }
-
-        return true;
-    }
-
-    private void RecursivelyAddChildren(TransformComponent xform,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastAcked,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
-        Dictionary<NetEntity, PvsEntityVisibility> toSend,
-        Dictionary<NetEntity, GameTick> lastSeen,
-        Dictionary<NetEntity, GameTick> lastLeft,
-        in GameTick fromTick,
-        ref int newEntityCount,
-        ref int enteredEntityCount,
-        ref int entStateCount,
-        in int newEntityBudget,
-        in int enteredEntityBudget)
-    {
-        foreach (var child in xform.ChildEntities)
-        {
-            if (!_xformQuery.TryGetComponent(child, out var childXform))
-                continue;
-
-            var metadata = _metaQuery.GetComponent(child);
-            var childNetEntity = metadata.NetEntity;
-
-            ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, childNetEntity, out var exists);
-            if (!exists)
-            {
-                var (entered, _) = ProcessEntry(in childNetEntity, lastAcked, lastSent, lastSeen, lastLeft, fromTick, ref newEntityCount,
-                    ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-
-                AddToSendSet(in childNetEntity, metadata, ref value, toSend, fromTick, in entered, ref entStateCount);
-            }
-
-            RecursivelyAddChildren(childXform, lastAcked, lastSent, toSend, lastSeen, lastLeft, fromTick, ref newEntityCount,
-                ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
-        }
-    }
-
-    private (bool Entered, bool ShouldAdd) ProcessEntry(in NetEntity netEntity,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastAcked,
-        Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
-        Dictionary<NetEntity, GameTick> lastSeen,
-        Dictionary<NetEntity, GameTick> lastLeft,
-        GameTick fromTick,
-        ref int newEntityCount,
-        ref int enteredEntityCount,
-        in int newEntityBudget,
-        in int enteredEntityBudget)
-    {
-        var enteredSinceLastSent = lastSent == null || !lastSent.ContainsKey(netEntity);
-
-        var entered = enteredSinceLastSent
-                      || lastAcked == null
-                      || !lastAcked.ContainsKey(netEntity) // entered since last acked
-                      || lastLeft.GetValueOrDefault(netEntity) >= fromTick; // Just in case a packet was lost. I love dictionary lookups
-
-        // If the entity is entering, but we already sent this entering entity in the last message, we won't add it to
-        // the budget. Chances are the packet will arrive in a nice and orderly fashion, and the client will stick to
-        // their requested budget. However this can cause issues if a packet gets dropped, because a player may create
-        // 2x or more times the normal entity creation budget.
-        if (enteredSinceLastSent)
-        {
-            if (newEntityCount >= newEntityBudget || enteredEntityCount >= enteredEntityBudget)
-                return (entered, false);
-
-            enteredEntityCount++;
-            if (!lastSeen.ContainsKey(netEntity))
-                newEntityCount++;
-        }
-
-        return (entered, true);
-    }
-
-    private void AddToSendSet(in NetEntity netEntity, MetaDataComponent metaDataComponent,
-        ref PvsEntityVisibility vis, Dictionary<NetEntity, PvsEntityVisibility> toSend,
-        GameTick fromTick, in bool entered, ref int entStateCount)
-    {
-        if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
-        {
-            toSend.Remove(netEntity);
-            var rep = new EntityStringRepresentation(GetEntity(netEntity), metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
-            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Trace:\n{Environment.StackTrace}");
-            return;
-        }
-
-        if (entered)
-        {
-            vis = PvsEntityVisibility.Entered;
-            entStateCount++;
-            return;
-        }
-
-        if (metaDataComponent.EntityLastModifiedTick <= fromTick)
-        {
-            //entity has been sent before and hasnt been updated since
-            vis = PvsEntityVisibility.StayedUnchanged;
-            return;
-        }
-
-        //add us
-        vis = PvsEntityVisibility.StayedChanged;
-        entStateCount++;
-    }
-
-    /// <summary>
-    ///     Gets all entity states that have been modified after and including the provided tick.
-    /// </summary>
-    public (List<EntityState>?, List<NetEntity>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
-    {
-        List<EntityState>? stateEntities;
-        var toSend = _uidSetPool.Get();
-        DebugTools.Assert(toSend.Count == 0);
-        bool enumerateAll = false;
-
-        if (player == null)
-        {
-            enumerateAll = fromTick == GameTick.Zero;
-        }
-        else if (!_seenAllEnts.Contains(player))
-        {
-            enumerateAll = true;
-            fromTick = GameTick.Zero;
-        }
-
-        if (_gameTiming.CurTick.Value - fromTick.Value > DirtyBufferSize)
-        {
-            // Fall back to enumerating over all entities.
-            enumerateAll = true;
-        }
-
-        if (enumerateAll)
-        {
-            stateEntities = new List<EntityState>(EntityManager.EntityCount);
-            var query = EntityManager.AllEntityQueryEnumerator<MetaDataComponent>();
-            while (query.MoveNext(out var uid, out var md))
-            {
-                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");
-                DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating, $"Entity {ToPrettyString(uid)} is/has been terminated");
-                if (md.EntityLastModifiedTick <= fromTick)
-                    continue;
-
-                var state = GetEntityState(player, uid, fromTick, md);
-
-                if (state.Empty)
-                {
-                    Log.Error($@"{nameof(GetEntityState)} returned an empty state while enumerating entities.
-Tick: {fromTick}--{_gameTiming.CurTick}
-Entity: {ToPrettyString(uid)}
-Last modified: {md.EntityLastModifiedTick}
-Metadata last modified: {md.LastModifiedTick}
-Transform last modified: {Transform(uid).LastModifiedTick}");
-                }
-
-                stateEntities.Add(state);
-            }
-        }
-        else
-        {
-            stateEntities = new();
-            for (var i = fromTick.Value + 1; i <= toTick.Value; i++)
-            {
-                if (!TryGetDirtyEntities(new GameTick(i), out var add, out var dirty))
-                {
-                    // This should be unreachable if `enumerateAll` is false.
-                    throw new Exception($"Failed to get tick dirty data. tick: {i}, from: {fromTick}, to {toTick}, buffer: {DirtyBufferSize}");
-                }
-
-                foreach (var uid in add)
-                {
-                    if (!toSend.Add(uid) || !_metaQuery.TryGetComponent(uid, out var md))
-                        continue;
-
-                    DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");
-                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating, $"Entity {ToPrettyString(uid)} is/has been terminated");
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick, $"Entity {ToPrettyString(uid)} last modified tick is less than creation tick");
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick, $"Entity {ToPrettyString(uid)} last modified tick is less than from tick");
-
-                    var state = GetEntityState(player, uid, fromTick, md);
-
-                    if (state.Empty)
-                    {
-                        Log.Error($@"{nameof(GetEntityState)} returned an empty state for a new entity.
-Tick: {fromTick}--{_gameTiming.CurTick}
-Entity: {ToPrettyString(uid)}
-Last modified: {md.EntityLastModifiedTick}
-Metadata last modified: {md.LastModifiedTick}
-Transform last modified: {Transform(uid).LastModifiedTick}");
-                        continue;
-                    }
-
-                    stateEntities.Add(state);
-                }
-
-                foreach (var uid in dirty)
-                {
-                    DebugTools.Assert(!add.Contains(uid));
-                    if (!toSend.Add(uid) || !_metaQuery.TryGetComponent(uid, out var md))
-                        continue;
-
-                    DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");
-                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating, $"Entity {ToPrettyString(uid)} is/has been terminated");
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick, $"Entity {ToPrettyString(uid)} last modified tick is less than creation tick");
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick, $"Entity {ToPrettyString(uid)} last modified tick is less than from tick");
-
-                    var state = GetEntityState(player, uid, fromTick, md);
-                    if (!state.Empty)
-                        stateEntities.Add(state);
-                }
-            }
-        }
-
-        _uidSetPool.Return(toSend);
-        var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-
-        if (stateEntities.Count == 0)
-            stateEntities = null;
-
-        return (stateEntities, deletions, fromTick);
-    }
-
-    /// <summary>
-    /// Generates a network entity state for the given entity.
-    /// </summary>
-    /// <param name="player">The player to generate this state for. This may be null if the state is for replay recordings.</param>
-    /// <param name="entityUid">Uid of the entity to generate the state from.</param>
-    /// <param name="fromTick">Only provide delta changes from this tick.</param>
-    /// <param name="meta">The entity's metadata component</param>
-    /// <returns>New entity State for the given entity.</returns>
-    private EntityState GetEntityState(ICommonSession? player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
-    {
-        var bus = EntityManager.EventBus;
-        var changed = new List<ComponentChange>();
-
-        bool sendCompList = meta.LastComponentRemoved > fromTick;
-        HashSet<ushort>? netComps = sendCompList ? new() : null;
-
-        foreach (var (netId, component) in meta.NetComponents)
-        {
-            if (!component.NetSyncEnabled)
-                continue;
-
-            if (component.Deleted || !component.Initialized)
-            {
-                Log.Error("Entity manager returned deleted or uninitialized components while sending entity data");
-                continue;
-            }
-
-            if (component.SendOnlyToOwner && player != null && player.AttachedEntity != entityUid)
-                continue;
-
-            if (component.LastModifiedTick <= fromTick)
-            {
-                if (sendCompList && (!component.SessionSpecific || player == null || EntityManager.CanGetComponentState(bus, component, player)))
-                    netComps!.Add(netId);
-                continue;
-            }
-
-            if (component.SessionSpecific && player != null && !EntityManager.CanGetComponentState(bus, component, player))
-                continue;
-
-            var state = EntityManager.GetComponentState(bus, component, player, fromTick);
-            DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState delta || delta.FullState);
-            changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
-
-            if (sendCompList)
-                netComps!.Add(netId);
-        }
-
-        DebugTools.Assert(meta.EntityLastModifiedTick >= meta.LastComponentRemoved);
-        DebugTools.Assert(GetEntity(meta.NetEntity) == entityUid);
-        var entState = new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
-
-        return entState;
-    }
-
-    /// <summary>
-    ///     Variant of <see cref="GetEntityState"/> that includes all entity data, including data that can be inferred implicitly from the entity prototype.
-    /// </summary>
-    private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta)
-    {
-        var bus = EntityManager.EventBus;
-        var changed = new List<ComponentChange>();
-
-        HashSet<ushort> netComps = new();
-
-        foreach (var (netId, component) in meta.NetComponents)
-        {
-            if (!component.NetSyncEnabled)
-                continue;
-
-            if (component.SendOnlyToOwner && player.AttachedEntity != entityUid)
-                continue;
-
-            if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
-                continue;
-
-            var state = EntityManager.GetComponentState(bus, component, player, GameTick.Zero);
-            DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
-            changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
-            netComps.Add(netId);
-        }
-
-        var entState = new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
-
-        return entState;
     }
 
     private void GetSessionViewers(ICommonSession session, [NotNull] ref EntityUid[]? viewers)
@@ -1369,6 +958,27 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal EntityData GetOrNewEntityData(Dictionary<NetEntity, EntityData> entityData, NetEntity entity)
+    {
+        ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(entityData, entity, out var exists);
+        if (!exists)
+        {
+            if (TryGetEntityData(entity, out var uid, out var meta))
+            {
+                data = new((uid.Value, meta));
+            }
+            else
+            {
+                Log.Error($"Attempted to send deleted entity. NetUid: {entity}");
+            }
+        }
+
+        DebugTools.AssertEqual(data!.NetEntity, entity);
+        DebugTools.AssertEqual(data.LastSent == GameTick.Zero, data.Visibility <= PvsEntityVisibility.Unsent);
+        return data!;
+    }
+
     // Read Safe
     private (Vector2 worldPos, float range, MapId mapId) CalcViewBounds(in EntityUid euid)
     {
@@ -1403,52 +1013,6 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
             obj.Clear();
             return true;
         }
-    }
-
-    /// <summary>
-    ///     Class used to store per-session data in order to avoid having to lock dictionaries.
-    /// </summary>
-    internal sealed class SessionPVSData
-    {
-        /// <summary>
-        /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="DirtyBufferSize"/> ticks.
-        /// </summary>
-        public readonly OverflowDictionary<GameTick, Dictionary<NetEntity, PvsEntityVisibility>> SentEntities = new(DirtyBufferSize);
-
-        /// <summary>
-        ///     The most recently acked entities
-        /// </summary>
-        public (GameTick Tick, Dictionary<NetEntity, PvsEntityVisibility> Data)? LastAcked;
-
-        /// <summary>
-        ///     Stores the last tick at which a given entity was acked by a player. Used to avoid re-sending the whole entity
-        ///     state when an item re-enters PVS.
-        /// </summary>
-        public readonly Dictionary<NetEntity, GameTick> LastSeenAt = new();
-
-        /// <summary>
-        ///     Tick at which an entity last left a player's PVS view.
-        /// </summary>
-        public readonly Dictionary<NetEntity, GameTick> LastLeftView = new();
-
-        /// <summary>
-        ///     <see cref="SentEntities"/> overflow in case a player's last ack is more than <see cref="DirtyBufferSize"/> ticks behind the current tick.
-        /// </summary>
-        public (GameTick Tick, Dictionary<NetEntity, PvsEntityVisibility> SentEnts)? Overflow;
-
-        /// <summary>
-        ///     If true, the client has explicitly requested a full state. Unlike the first state, we will send them
-        ///     all data, not just data that cannot be implicitly inferred from entity prototypes.
-        /// </summary>
-        public bool RequestedFull = false;
-
-        /// <summary>
-        ///     The tick of the most recently received client Ack. Will be used to update <see cref="LastAcked"/>
-        /// </summary>
-        /// <remarks>
-        ///     As the server delays processing acks, this might not currently be the same as <see cref="LastAcked"/>
-        /// </remarks>
-        public GameTick LastReceivedAck;
     }
 }
 

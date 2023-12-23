@@ -60,7 +60,7 @@ public sealed class RecursiveUpdateTest
 
         // Insert into container.
         var slot = containers.EnsureContainer<ContainerSlot>(container, "test");
-        slot.Insert(contained);
+        containers.Insert(contained, slot);
 
         // Attach child B after having inserted.
         xforms.SetCoordinates(childB, childBXform, new EntityCoordinates(contained, Vector2.Zero));
@@ -100,7 +100,7 @@ public sealed class RecursiveUpdateTest
         Assert.That(childBXform.ParentUid, Is.EqualTo(contained));
 
         // Remove from container.
-        slot.Remove(contained);
+        containers.Remove(contained, slot);
 
         Assert.That(broadphase.SundriesTree, Does.Contain(container));
         Assert.That(broadphase.SundriesTree, Does.Contain(contained));
@@ -118,7 +118,7 @@ public sealed class RecursiveUpdateTest
         Assert.That(childBXform.ParentUid, Is.EqualTo(contained));
 
         // Insert back into container.
-        slot.Insert(contained);
+        containers.Insert(contained, slot);
 
         Assert.That(broadphase.SundriesTree, Does.Contain(container));
         Assert.That(broadphase.SundriesTree, Does.Not.Contain(contained));
@@ -136,7 +136,7 @@ public sealed class RecursiveUpdateTest
         Assert.That(childBXform.ParentUid, Is.EqualTo(contained));
 
         // re-remove from container, but this time WITHOUT changing parent.
-        slot.Remove(contained, reparent: false);
+        containers.Remove(contained, slot, reparent: false);
 
         Assert.That(broadphase.SundriesTree, Does.Contain(container));
         Assert.That(broadphase.SundriesTree, Does.Contain(contained));

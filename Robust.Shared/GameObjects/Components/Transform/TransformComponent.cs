@@ -157,7 +157,8 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 var moveEvent = new MoveEvent(Owner, Coordinates, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
             }
         }
 
@@ -341,7 +342,8 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
             }
         }
 
@@ -374,24 +376,8 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        [ViewVariables]
-        public IEnumerable<TransformComponent> Children
-        {
-            get
-            {
-                if (_children.Count == 0) yield break;
-
-                var xforms = _entMan.GetEntityQuery<TransformComponent>();
-                var children = ChildEnumerator;
-
-                while (children.MoveNext(out var child))
-                {
-                    yield return xforms.GetComponent(child.Value);
-                }
-            }
-        }
-
-        [ViewVariables] public IEnumerable<EntityUid> ChildEntities => _children;
+        [Obsolete("Use ChildEnumerator")]
+        public IEnumerable<EntityUid> ChildEntities => _children;
 
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
 
@@ -446,15 +432,13 @@ namespace Robust.Shared.GameObjects
             EntityQuery<MetaDataComponent> metaQuery,
             MetaDataSystem system)
         {
-            var childEnumerator = ChildEnumerator;
-
-            while (childEnumerator.MoveNext(out var child))
+            foreach (var child in _children)
             {
                 //Set Paused state
-                var metaData = metaQuery.GetComponent(child.Value);
-                system.SetEntityPaused(child.Value, mapPaused, metaData);
+                var metaData = metaQuery.GetComponent(child);
+                system.SetEntityPaused(child, mapPaused, metaData);
 
-                var concrete = xformQuery.GetComponent(child.Value);
+                var concrete = xformQuery.GetComponent(child);
 
                 concrete.MapUid = newUid;
                 concrete.MapID = newMapId;
@@ -611,12 +595,10 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
-    ///     Raised whenever an entity translates or rotates relative to their parent.
+    /// Raised directed at an entity whenever is position or rotation changes relative to their parent, or if their
+    /// parent changed. Note that this event does not get broadcast. If you need to receive information about ALL
+    /// move events, subscribe to the <see cref="SharedTransformSystem.OnGlobalMoveEvent"/>.
     /// </summary>
-    /// <remarks>
-    ///     This will also get raised if the entity's parent changes, even if the local position and rotation remains
-    ///     unchanged.
-    /// </remarks>
     [ByRefEvent]
     public readonly struct MoveEvent
     {
@@ -655,11 +637,11 @@ namespace Robust.Shared.GameObjects
             _children = children;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out EntityUid? child)
+        public bool MoveNext(out EntityUid child)
         {
             if (!_children.MoveNext())
             {
-                child = null;
+                child = default;
                 return false;
             }
 

@@ -1,21 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Robust.UnitTesting.Shared.GameObjects;
 
 public sealed class GenericEntityPrint
 {
-    // [Test]
+    //[Test]
     public void Print()
     {
         // Using the test framework for things it was not meant for is my passion
         var i = 8;
 
-        IEnumerable<string> Generics(int n, bool nullable)
+        IEnumerable<string> Generics(int n, bool nullable, bool forceIncludeNumber = false)
         {
             for (var j = 1; j <= n; j++)
             {
+                var jStr = n == 1 && !forceIncludeNumber ? string.Empty : j.ToString();
+                yield return $"T{jStr}{(nullable ? "?" : string.Empty)}";
+            }
+        }
+
+        IEnumerable<string> PartiallyNullableGenerics(int n, int notNullCount)
+        {
+            bool nullable;
+            for (var j = 1; j <= n; j++)
+            {
+                nullable = j > notNullCount;
                 var jStr = n == 1 ? string.Empty : j.ToString();
                 yield return $"T{jStr}{(nullable ? "?" : string.Empty)}";
             }
@@ -29,10 +41,16 @@ public sealed class GenericEntityPrint
         var assignments = new StringBuilder();
         var tupleParameters = new StringBuilder();
         var tupleAccess = new StringBuilder();
+        var entityAccess = new StringBuilder();
+        var entityNumberedAccess = new StringBuilder();
         var defaults = new StringBuilder();
         var compOperators = new StringBuilder();
         var deConstructorParameters = new StringBuilder();
         var deConstructorAccess = new StringBuilder();
+        var partialTupleCasts = new StringBuilder();
+        var partialEntityCasts = new StringBuilder();
+        var entitySubCast = new StringBuilder();
+        var castRegion = new StringBuilder();
 
         for (var j = 1; j <= i; j++)
         {
@@ -43,10 +61,16 @@ public sealed class GenericEntityPrint
             assignments.Clear();
             tupleParameters.Clear();
             tupleAccess.Clear();
+            entityAccess.Clear();
+            entityNumberedAccess.Clear();
             defaults.Clear();
             compOperators.Clear();
             deConstructorParameters.Clear();
             deConstructorAccess.Clear();
+            partialTupleCasts.Clear();
+            partialEntityCasts.Clear();
+            entitySubCast.Clear();
+            castRegion.Clear();
 
             var generics = string.Join(", ", Generics(j, false));
             var nullableGenerics = string.Join(", ", Generics(j, true));
@@ -61,6 +85,10 @@ public sealed class GenericEntityPrint
                 assignments.AppendLine($"        Comp{kStr} = comp{kStr};");
                 tupleParameters.Append($", T{kStr} Comp{kStr}");
                 tupleAccess.Append($", tuple.Comp{kStr}");
+                var suffix = (j >= 2 && k == 1) ? string.Empty : kStr;
+                var prefix = (j >= 2 && k == 2) ? "1" : string.Empty;
+                entityAccess.Append($"{prefix}, ent.Comp{suffix}");
+                entityNumberedAccess.Append($", ent.Comp{kStr}");
                 defaults.Append(", default");
                 compOperators.AppendLine($$"""
                         public static implicit operator T{{kStr}}(Entity<{{generics}}> ent)
@@ -71,6 +99,71 @@ public sealed class GenericEntityPrint
                     """);
                 deConstructorParameters.Append($", out T{kStr} comp{kStr}");
                 deConstructorAccess.AppendLine($"        comp{kStr} = Comp{kStr};");
+
+                if (k == j)
+                    continue;
+
+                // Cast a (EntityUid, T1) tuple to an Entity<T1, T2?>
+                // We could also casts for going from a (Uid, T2) tuple to a Entity<T1?, T2> but once we get to 4 or
+                // more components there are just too many combinations and I CBF writing the code to generate all those.
+                var partiallyNullableGenerics = string.Join(", ", PartiallyNullableGenerics(j, k));
+                var defaultArgs = string.Concat(Enumerable.Repeat(", default", j-k));
+                partialTupleCasts.Append($$"""
+
+                        public static implicit operator Entity<{{partiallyNullableGenerics}}>((EntityUid Owner{{tupleParameters}}) tuple)
+                        {
+                            return new Entity<{{partiallyNullableGenerics}}>(tuple.Owner{{tupleAccess}}{{defaultArgs}});
+                        }
+
+                    """);
+
+                // Cast an Entity<T1> to an Entity<T1, T2?>
+                // As with the tuple casts, we could in principle generate more here.
+                var subGenerics = string.Join(", ", Generics(k, false, true));
+                partialEntityCasts.Append($$"""
+
+                        public static implicit operator Entity<{{partiallyNullableGenerics}}>(Entity<{{subGenerics}}> ent)
+                        {
+                            return new Entity<{{partiallyNullableGenerics}}>(ent.Owner{{entityAccess}}{{defaultArgs}});
+                        }
+
+                    """);
+
+                // Cast an Entity<T1, T2> to an Entity<T1/2>
+                entitySubCast.Append($$"""
+
+                        public static implicit operator Entity<{{subGenerics}}>(Entity<{{generics}}> ent)
+                        {
+                            return new Entity<{{subGenerics}}>(ent.Owner{{entityNumberedAccess}});
+                        }
+
+                    """);
+            }
+
+            if (j == 2)
+            {
+                castRegion.Append($$"""
+                    {{partialTupleCasts.ToString().TrimEnd()}}
+                    {{partialEntityCasts.ToString().TrimEnd()}}
+                    {{entitySubCast.ToString().TrimEnd()}}
+                    """);
+            }
+            else if (j > 2)
+            {
+                castRegion.Append($$"""
+
+                    #region Partial Tuple Casts
+                    {{partialTupleCasts}}
+                    #endregion
+
+                    #region Partial Entity Casts
+                    {{partialEntityCasts}}
+                    #endregion
+
+                    #region Entity Sub casts
+                    {{entitySubCast}}
+                    #endregion
+                    """);
             }
 
             structs.Append($$"""
@@ -109,6 +202,7 @@ public sealed class GenericEntityPrint
                         owner = Owner;
                 {{deConstructorAccess.ToString().TrimEnd()}}
                     }
+                    {{castRegion}}
                 }
 
 

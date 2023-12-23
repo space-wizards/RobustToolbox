@@ -305,7 +305,7 @@ namespace Robust.Shared.GameObjects
             _entCompIndex.Add(uid, component);
 
             // add the component to the netId grid
-            if (reg.NetID != null)
+            if (reg.NetID != null && component.NetSyncEnabled)
             {
                 // the main comp grid keeps this in sync
                 var netId = reg.NetID.Value;

@@ -1,0 +1,46 @@
+// Simple shader for creating a box with colours varying along the x and y axes.
+
+uniform highp vec2 size;
+uniform highp vec2 offset;
+
+uniform highp vec4 xAxis;
+uniform highp vec4 yAxis;
+uniform highp vec4 baseColor;
+
+uniform bool hsv;
+
+void fragment() 
+{
+    // Calculate local uv coordinates.
+    // I.e., if using this shader to draw a box to the screen, (0,0) is the bottom left of the box.
+    
+    highp float yCoords = 1.0/SCREEN_PIXEL_SIZE.y - FRAGCOORD.y;
+    highp vec2 uv = vec2(FRAGCOORD.x - offset.x,  yCoords - offset.y);
+    uv /= size;
+    uv.y = 1.0 - uv.y;
+    
+    highp vec4 modulate = baseColor + uv.x * xAxis + uv.y * yAxis;
+    
+    if (hsv)
+    {
+        modulate.xyz = hsv2rgb(modulate.xyz);
+    }
+    
+    // The UV used for the texture lookup is the TEXTURE UV coordinate, which is different from the coordinates computed above.
+	COLOR = zTexture(UV) * modulate;
+}
+
+
+// hsv to RGB conversion taken from www.shadertoy.com/view/MsS3Wc
+
+// The MIT License
+// Copyright © 2014 Inigo Quilez
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// https://www.youtube.com/c/InigoQuilez
+// https://iquilezles.org
+
+highp vec3 hsv2rgb( in highp vec3 c )
+{
+    highp vec3 rgb = clamp( abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0, 0.0, 1.0 );
+	return c.z * mix( vec3(1.0), rgb, c.y);
+}

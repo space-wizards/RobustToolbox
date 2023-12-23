@@ -14,6 +14,7 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private EntityQuery<MapGridComponent> _gridQuery;
+    [Dependency] private readonly IGameTiming _timing = default!;
 
     /// <summary>
     /// Enables or disables changing grid / map uid upon moving.
@@ -44,7 +45,7 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
 
     private void OnMove(ref MoveEvent moveEv)
     {
-        if (!Enabled)
+        if (!Enabled || _timing.ApplyingState)
             return;
 
         var entity = moveEv.Sender;

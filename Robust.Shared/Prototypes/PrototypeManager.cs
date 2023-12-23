@@ -917,8 +917,7 @@ namespace Robust.Shared.Prototypes
         }
     }
 
-    [Virtual]
-    public class InvalidPrototypeNameException : Exception
+    public sealed class InvalidPrototypeNameException : Exception
     {
         public InvalidPrototypeNameException(string message) : base(message)
         {

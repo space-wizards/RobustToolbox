@@ -491,8 +491,7 @@ namespace Robust.Shared.GameObjects
     }
 
     [Serializable]
-    [Virtual]
-    public class UnknownComponentException : Exception
+    public sealed class UnknownComponentException : Exception
     {
         public UnknownComponentException()
         {
@@ -503,14 +502,22 @@ namespace Robust.Shared.GameObjects
         public UnknownComponentException(string message, Exception inner) : base(message, inner)
         {
         }
-        protected UnknownComponentException(
-          SerializationInfo info,
-          StreamingContext context) : base(info, context) { }
+
+        private UnknownComponentException(
+            SerializationInfo info,
+            StreamingContext context) : base(info, context)
+        {
+        }
     }
 
-    [Virtual]
-    public class ComponentRegistrationLockException : Exception { }
+    public sealed class ComponentRegistrationLockException : Exception
+    {
+    }
 
-    [Virtual]
-    public class InvalidComponentNameException : Exception { public InvalidComponentNameException(string message) : base(message) { } }
+    public sealed class InvalidComponentNameException : Exception
+    {
+        public InvalidComponentNameException(string message) : base(message)
+        {
+        }
+    }
 }

@@ -42,7 +42,6 @@ namespace Robust.Shared.Utility
         ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
         /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertEqual(object? objA, object? objB)
         {
             if (ReferenceEquals(objA, objB))
@@ -57,7 +56,6 @@ namespace Robust.Shared.Utility
         ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
         /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertEqual(object? objA, object? objB, string message)
         {
             if (ReferenceEquals(objA, objB))
@@ -72,7 +70,6 @@ namespace Robust.Shared.Utility
         ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
         /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertEqual<T>(T? objA, T? objB)
             where T: IEquatable<T>
         {
@@ -88,7 +85,6 @@ namespace Robust.Shared.Utility
         ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
         /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertEqual<T>(T? objA, T? objB, string message)
             where T: IEquatable<T>
         {
@@ -104,7 +100,6 @@ namespace Robust.Shared.Utility
         ///     <see cref="objA"/> and <see cref="objB"/> are equal.
         /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertNotEqual(object? objA, object? objB)
         {
             if (ReferenceEquals(objA, objB))
@@ -121,7 +116,6 @@ namespace Robust.Shared.Utility
         ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
         /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertNotEqual(object? objA, object? objB, string message)
         {
             if (ReferenceEquals(objA, objB))
@@ -138,7 +132,6 @@ namespace Robust.Shared.Utility
         ///     <see cref="objA"/> and <see cref="objB"/> are equal.
         /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertNotEqual<T>(T? objA, T? objB)
             where T: IEquatable<T>
         {
@@ -156,7 +149,6 @@ namespace Robust.Shared.Utility
         ///     <see cref="objA"/> and <see cref="objB"/> are not equal.
         /// </summary>
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertNotEqual<T>(T? objA, T? objB, string message)
             where T: IEquatable<T>
         {
@@ -170,7 +162,6 @@ namespace Robust.Shared.Utility
         }
 
         [Conditional("DEBUG")]
-        [AssertionMethod]
         public static void AssertOwner(EntityUid? uid, IComponent? component)
         {
             if (component == null)

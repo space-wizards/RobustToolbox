@@ -68,7 +68,12 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
             return;
         }
 
-        var mapPos = moveEv.NewPosition.ToMapPos(EntityManager, _transform);
+        DebugTools.Assert(!HasComp<MapGridComponent>(entity));
+        DebugTools.Assert(!HasComp<MapComponent>(entity));
+
+        var mapPos = xform.ParentUid == xform.MapUid
+            ? xform.LocalPosition
+            : Transform(xform.ParentUid).LocalMatrix.Transform(xform.LocalPosition);
 
         // Change parent if necessary
         if (_mapManager.TryFindGridAt(moveEv.Component.MapID, mapPos, out var gridUid, out _))

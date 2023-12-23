@@ -1,7 +1,8 @@
-using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -12,8 +13,6 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
 {
     [Dependency] private readonly IMapManagerInternal _mapManager = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
-
-    private EntityQuery<MapGridComponent> _gridQuery;
     [Dependency] private readonly IGameTiming _timing = default!;
 
     /// <summary>
@@ -24,7 +23,6 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-        _gridQuery = GetEntityQuery<MapGridComponent>();
         _transform.OnGlobalMoveEvent += OnMove;
     }
 
@@ -52,18 +50,16 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
         var xform = moveEv.Component;
 
         // Don't run logic if:
-        // - Part of state handling
-        // - Is anchored
-        // - Is a grid
-        // - Is in nullspace
         // - Current parent is not a grid / map
+        // - Is anchored
+        // - Is a grid/map
+        // - Is in nullspace
 
-        if (moveEv.FromStateHandling ||
-            xform.Anchored ||
-            (xform.GridUid != xform.ParentUid &&
-             xform.MapUid != xform.ParentUid) ||
-            xform.MapID == MapId.Nullspace ||
-            _gridQuery.HasComponent(moveEv.Sender))
+        if ((xform.GridUid != xform.ParentUid && xform.MapUid != xform.ParentUid)
+            || xform.Anchored
+            || entity == xform.GridUid
+            || entity == xform.MapUid
+            || xform.MapUid is not {} map)
         {
             return;
         }
@@ -80,20 +76,13 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
         {
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
             if (gridUid != xform.GridUid)
-            {
                 _transform.SetParent(entity, xform, gridUid);
-            }
+            return;
         }
-        else
-        {
-            var oldGridId = xform.GridUid;
 
-            // Attach them to map / they are on an invalid grid
-            if (oldGridId != null)
-            {
-                _transform.SetParent(entity, xform, xform.MapUid!.Value);
-            }
-        }
+        // Attach them to map / they are on an invalid grid
+        if (xform.GridUid != null)
+            _transform.SetParent(entity, xform, xform.MapUid.Value);
     }
 }
 

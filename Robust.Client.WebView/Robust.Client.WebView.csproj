@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" />
-    <PackageReference Include="Robust.Natives.Cef" Version="102.0.9" />
+    <PackageReference Include="Robust.Natives.Cef" Version="120.1.9" />
   </ItemGroup>
 
   <ItemGroup>

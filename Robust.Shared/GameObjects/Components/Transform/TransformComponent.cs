@@ -625,6 +625,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.
         /// </summary>
+        [Obsolete("Check IGameTiming.ApplyingState")]
         public readonly bool FromStateHandling;
     }
 

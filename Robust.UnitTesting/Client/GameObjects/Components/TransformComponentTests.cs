@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Client.GameObjects.Components
@@ -40,11 +41,9 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         {
             var (sim, gridIdA, gridIdB) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
             var xformSystem = entMan.System<SharedTransformSystem>();
-
-            var gridA = mapMan.GetGrid(gridIdA);
-            var gridB = mapMan.GetGrid(gridIdB);
+            var gridSystem = entMan.System<SharedGridTraversalSystem>();
+            gridSystem.Enabled = false;
 
             // Arrange
             var initialPos = new EntityCoordinates(gridIdA, new Vector2(0, 0));
@@ -64,11 +63,13 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             // World pos should be 6, 6 now.
 
             // Act
-            var oldWpos = childTrans.WorldPosition;
+            var oldWpos = xformSystem.GetWorldPosition(childTrans);
             compState = new TransformComponentState(new Vector2(1, 1), new Angle(0), entMan.GetNetEntity(parent), false, false);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(child, childTrans, ref handleState);
-            var newWpos = childTrans.WorldPosition;
+            var newWpos = xformSystem.GetWorldPosition(childTrans);
+
+            gridSystem.Enabled = true;
 
             // Assert
             Assert.That(newWpos, Is.EqualTo(oldWpos));
@@ -82,12 +83,10 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         {
             var (sim, gridIdA, gridIdB) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
             var xformSystem = entMan.System<SharedTransformSystem>();
             var metaSystem = entMan.System<MetaDataSystem>();
-
-            var gridA = mapMan.GetGrid(gridIdA);
-            var gridB = mapMan.GetGrid(gridIdB);
+            var gridSystem = entMan.System<SharedGridTraversalSystem>();
+            gridSystem.Enabled = false;
 
             // Arrange
             var initalPos = new EntityCoordinates(gridIdA, new Vector2(0, 0));
@@ -116,7 +115,9 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             xformSystem.OnHandleState(node3, node3Trans, ref handleState);
 
             // Act
-            var result = node3Trans.WorldRotation;
+            var result = xformSystem.GetWorldRotation(node3Trans);
+
+            gridSystem.Enabled = true;
 
             // Assert (135 + 45 + 45 = 225)
             Assert.That(result, new ApproxEqualityConstraint(Angle.FromDegrees(225)));

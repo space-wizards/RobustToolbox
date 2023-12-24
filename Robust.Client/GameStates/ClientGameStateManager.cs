@@ -532,7 +532,6 @@ namespace Robust.Client.GameStates
             using var __ = _timing.StartStateApplicationArea();
 
             // This is terrible, and I hate it. This also needs to run even when prediction is disabled.
-            _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
             _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
 
             if (!PredictionNeedsResetting)

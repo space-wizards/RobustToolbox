@@ -16,22 +16,16 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void AddPvsChunks(PvsSession pvsSession)
     {
-        var (chunks, distancesSq) = (pvsSession.Chunks, pvsSession.ChunkDistanceSq);
-        for (var i = 0; i < chunks.Length; i++)
+        foreach (var (chunk, distance) in CollectionsMarshal.AsSpan(pvsSession.Chunks))
         {
-            var chunk = chunks[i];
-            if (chunk == null)
-                continue;
-
-            var squareDistance = distancesSq[i];
-            AddPvsChunk(chunk, squareDistance, pvsSession);
+            AddPvsChunk(chunk, distance, pvsSession);
         }
     }
 
     /// <summary>
     /// A chunks that is visible to a player and add entities to the game-state.
     /// </summary>
-    private void AddPvsChunk(PvsChunk chunk, float distanceSq, PvsSession session)
+    private void AddPvsChunk(PvsChunk chunk, float distance, PvsSession session)
     {
 #if DEBUG
         // Each root nodes should simply be a map or a grid entity.
@@ -50,8 +44,15 @@ internal sealed partial class PvsSystem
         if (chunk.Map.Owner != chunk.Root.Owner && !AddEntity(session, chunk.Root, fromTick))
             return;
 
+        // Get the number of entities to send (i.e., basic LOD restrictions)
+        // We add chunk-size here so that its consistent with the normal PVS range setting.
+        // I.e., distance here is the Chebyshev distance to the centre of each chunk, but the normal pvs range only
+        // required that the chunk be touching the box, not the centre.
+        var count = distance < (_lowLodDistance + ChunkSize)/2
+            ? chunk.Contents.Count
+            : chunk.LodCounts[0];
+
         // Send entities on the chunk.
-        var count = distanceSq < _lowLodDistanceSq ? chunk.Contents.Count : chunk.LowLodCount;
         var span = CollectionsMarshal.AsSpan(chunk.Contents);
         for (var i = 0; i < count; i++)
         {

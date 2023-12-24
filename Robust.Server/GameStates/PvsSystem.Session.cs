@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+using System.Runtime.InteropServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
@@ -81,32 +83,44 @@ internal sealed partial class PvsSystem
         if (!CullingEnabled || session.DisableCulling)
             return;
 
-        // Sort chunks based on distance to the viewer
-        i = 0;
+        var chunks = session.Chunks;
+        var distances = session.ChunkDistanceSq;
+
+        chunks.Clear();
+        distances.Clear();
+
         var nChunks = session.VisibleChunks.Count;
-        Array.Resize(ref session.Chunks, nChunks);
-        Array.Resize(ref session.ChunkDistanceSq, nChunks);
+        chunks.EnsureCapacity(nChunks);
+        distances.EnsureCapacity(nChunks);
+
+        // Assemble list of chunks and their distances to the nearest eye.
         foreach (var location in session.VisibleChunks)
         {
             if (!_chunks.TryGetValue(location, out var chunk))
-            {
-                session.Chunks[i++] = null;
                 continue;
-            }
 
-            session.Chunks[i] = chunk;
-
-            ref var dist = ref session.ChunkDistanceSq[i++];
-            dist = float.MaxValue;
+            var dist = float.MaxValue;
+            var chebDist = float.MaxValue; // Chebyshev distance
 
             foreach (var pos in positions)
             {
-                if (pos.MapId == chunk.Position.MapId)
-                    dist = Math.Min(dist, (pos.Position - chunk.Position.Position).LengthSquared());
+                if (pos.MapId != chunk.Position.MapId)
+                    continue;
+
+                dist = Math.Min(dist, (pos.Position - chunk.Position.Position).LengthSquared());
+
+                var relative = chunk.InvWorldMatrix.Transform(pos.Position)  - chunk.Centre;
+                relative = Vector2.Abs(relative);
+                chebDist = Math.Min(chebDist, Math.Max(relative.X, relative.Y));
             }
+
+            distances.Add(dist);
+            chunks.Add((chunk, chebDist));
         }
 
-        Array.Sort(session.ChunkDistanceSq, session.Chunks);
+        // Sort chunks based on distances
+        CollectionsMarshal.AsSpan(distances).Sort(CollectionsMarshal.AsSpan(chunks));
+
         session.VisibleChunks.Clear();
         session.ToSend = _entDataListPool.Get();
 

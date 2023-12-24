@@ -75,10 +75,10 @@ namespace Robust.Shared.Player
             IoCManager.Resolve(ref playerMan, ref cfgMan);
 
             // If PVS is disabled, we simply return all players.
-            if (!cfgMan.GetCVar(CVars.NetPVS))
+            if (!cfgMan.GetCVar(CVars.NetPvs))
                 return AddAllPlayers();
 
-            var pvsRange = cfgMan.GetCVar(CVars.NetMaxUpdateRange) * rangeMultiplier;
+            var pvsRange = cfgMan.GetCVar(CVars.NetPvsRange) * rangeMultiplier;
 
             return AddInRange(origin, pvsRange, playerMan, entManager);
         }

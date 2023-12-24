@@ -56,7 +56,8 @@ internal sealed partial class PvsSystem
             return;
 
         var xform = Transform(chunk.Root);
-        var worldPos = _transform.GetWorldMatrix(xform).Transform(chunk.Centre);
+        chunk.InvWorldMatrix = xform.InvLocalMatrix;
+        var worldPos = xform.LocalMatrix.Transform(chunk.Centre);
         chunk.Position = new(worldPos, xform.MapID);
     }
 

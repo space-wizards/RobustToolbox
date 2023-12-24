@@ -180,20 +180,21 @@ namespace Robust.Shared
         /// If this is on, only entities immediately close to a client will be sent.
         /// Otherwise, all entities will be sent to all clients.
         /// </summary>
-        public static readonly CVarDef<bool> NetPVS =
+        public static readonly CVarDef<bool> NetPvs =
             CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// View size to take for PVS calculations,
         /// as the size of the sides of a square centered on the view points of clients.
         /// </summary>
-        public static readonly CVarDef<float> NetMaxUpdateRange =
-            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+        public static readonly CVarDef<float> NetPvsRange =
+            CVarDef.Create("net.pvs_range", 25f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Chunks whose centre is further than this distance away from a player's eye will contain fewer entities.
+        /// This has no effect if it is smaller than <see cref="NetPvsRange"/>
         /// </summary>
-        public static readonly CVarDef<float> NetLowLodDistance =
+        public static readonly CVarDef<float> NetLowLodRange =
             CVarDef.Create("net.low_lod_distance", 100f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
@@ -208,7 +209,7 @@ namespace Robust.Shared
         /// avoid stuttering on the client when it has to spawn a bunch of entities in a single tick. If ever entity
         /// spawning isn't hot garbage, this can be increased.
         /// </summary>
-        public static readonly CVarDef<int> NetPVSEntityBudget =
+        public static readonly CVarDef<int> NetPvsEntityBudget =
             CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED | CVar.CLIENT);
 
         /// <summary>
@@ -216,19 +217,19 @@ namespace Robust.Shared
         /// avoid stuttering on the client when it has to update the transform of a bunch (700+) of entities in a single
         /// tick. Ideally this would just be handled client-side somehow.
         /// </summary>
-        public static readonly CVarDef<int> NetPVSEntityEnterBudget =
+        public static readonly CVarDef<int> NetPvsEntityEnterBudget =
             CVarDef.Create("net.pvs_enter_budget", 200, CVar.ARCHIVE | CVar.REPLICATED | CVar.CLIENT);
 
         /// <summary>
         /// The amount of pvs-exiting entities that a client will process in a single tick.
         /// </summary>
-        public static readonly CVarDef<int> NetPVSEntityExitBudget =
+        public static readonly CVarDef<int> NetPvsEntityExitBudget =
             CVarDef.Create("net.pvs_exit_budget", 75, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// ZSTD compression level to use when compressing game states. Used by both networking and replays.
         /// </summary>
-        public static readonly CVarDef<int> NetPVSCompressLevel =
+        public static readonly CVarDef<int> NetPvsCompressLevel =
             CVarDef.Create("net.pvs_compress_level", 3, CVar.ARCHIVE);
 
         /// <summary>

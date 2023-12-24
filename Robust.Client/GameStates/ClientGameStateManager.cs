@@ -147,7 +147,7 @@ namespace Robust.Client.GameStates
             _config.OnValueChanged(CVars.NetPredictTickBias, i => PredictTickBias = i, true);
             _config.OnValueChanged(CVars.NetPredictLagBias, i => PredictLagBias = i, true);
             _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i, true);
-            _config.OnValueChanged(CVars.NetPVSEntityExitBudget, i => _pvsDetachBudget = i, true);
+            _config.OnValueChanged(CVars.NetPvsEntityExitBudget, i => _pvsDetachBudget = i, true);
             _config.OnValueChanged(CVars.NetMaxBufferSize, i => _processor.MaxBufferSize = i, true);
 
             _processor.Interpolation = _config.GetCVar(CVars.NetInterp);

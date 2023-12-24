@@ -59,7 +59,7 @@ internal sealed partial class PvsSystem : EntitySystem
     private float _viewSize;
 
     // see CVars.NetLowLodDistance
-    private float _lowLodDistanceSq;
+    private float _lowLodDistance;
 
     /// <summary>
     /// Per-tick ack data to avoid re-allocating.
@@ -102,9 +102,9 @@ internal sealed partial class PvsSystem : EntitySystem
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         _transform.OnGlobalMoveEvent += OnEntityMove;
 
-        _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
-        _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
-        _configManager.OnValueChanged(CVars.NetLowLodDistance, OnLodChanged, true);
+        _configManager.OnValueChanged(CVars.NetPvs, SetPvs, true);
+        _configManager.OnValueChanged(CVars.NetPvsRange, OnViewsizeChanged, true);
+        _configManager.OnValueChanged(CVars.NetLowLodRange, OnLodChanged, true);
         _configManager.OnValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged, true);
 
         _serverGameStateManager.ClientAck += OnClientAck;
@@ -120,8 +120,8 @@ internal sealed partial class PvsSystem : EntitySystem
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         _transform.OnGlobalMoveEvent -= OnEntityMove;
 
-        _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
-        _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
+        _configManager.UnsubValueChanged(CVars.NetPvs, SetPvs);
+        _configManager.UnsubValueChanged(CVars.NetPvsRange, OnViewsizeChanged);
         _configManager.UnsubValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged);
 
         _serverGameStateManager.ClientAck -= OnClientAck;
@@ -170,13 +170,12 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private void OnViewsizeChanged(float value)
     {
-        _viewSize = value * 2;
+        _viewSize = value;
     }
 
     private void OnLodChanged(float value)
     {
-        _lowLodDistanceSq = Math.Clamp(value, ChunkSize, 100f);
-        _lowLodDistanceSq *= _lowLodDistanceSq;
+        _lowLodDistance = Math.Clamp(value, ChunkSize, 100f);
     }
 
     private void OnForceAckChanged(int value)
@@ -232,8 +231,8 @@ internal sealed partial class PvsSystem : EntitySystem
         AddForcedEntities(session);
 
         // After processing the entity's viewers, we set actual, budget limits.
-        session.Budget.NewLimit= _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityBudget);
-        session.Budget.EnterLimit = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityEnterBudget);
+        session.Budget.NewLimit= _netConfigManager.GetClientCVar(session.Channel, CVars.NetPvsEntityBudget);
+        session.Budget.EnterLimit = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPvsEntityEnterBudget);
 
         // Process all entities in visible PVS chunks
         AddPvsChunks(session);

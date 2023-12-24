@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
@@ -58,12 +59,12 @@ internal sealed class PvsSession(ICommonSession session)
     /// <summary>
     /// Visible chunks, sorted by proximity to the clients's viewers;
     /// </summary>
-    public PvsChunk?[] Chunks = Array.Empty<PvsChunk>();
+    public readonly List<(PvsChunk Chunk, float ChebyshevDistance)> Chunks = new();
 
     /// <summary>
-    /// Distance squared to all of the the <see cref="Chunks"/>.
+    /// Squared distance ta all of the visible chunks.
     /// </summary>
-    public float[] ChunkDistanceSq = Array.Empty<float>();
+    public readonly List<float> ChunkDistanceSq = new();
 
     /// <summary>
     /// The client's current eyes/viewers.

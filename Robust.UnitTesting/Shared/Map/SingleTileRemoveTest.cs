@@ -41,7 +41,7 @@ public sealed class GridDeleteSingleTileRemoveTestTest : RobustIntegrationTest
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
-        server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
+        server.Post(() => confMan.SetCVar(CVars.NetPvs, true));
 
         for (int i = 0; i < 10; i++)
         {

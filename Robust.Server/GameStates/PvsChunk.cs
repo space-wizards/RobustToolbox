@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
@@ -54,17 +57,36 @@ internal sealed class PvsChunk
     /// </summary>
     public MapCoordinates Position;
 
+    /// <summary>
+    /// The <see cref="Root"/>'s inverse world matrix.
+    /// </summary>
+    public Matrix3 InvWorldMatrix { get; set; }
+
     // These are only used while populating the chunk. They aren't local variables because the chunks are pooled, so
     // the same chunk can be repopulated more than once.
     private List<HashSet<EntityUid>> _childSets = new();
     private List<HashSet<EntityUid>> _nextChildSets = new();
+    private List<Entity<MetaDataComponent>> _lowPriorityChildren = new();
+    private List<Entity<MetaDataComponent>> _anchoredChildren = new();
 
     /// <summary>
-    /// Effective "count" of <see cref="Contents"/> that should be used to limit the entities in a chunk to a lower
-    /// "level of detail". If this is used, then the chunk will effectively only contain entities that are directly
-    /// parented to the grid.
+    /// Effective "counts" of <see cref="Contents"/> that should be used to limit the number of entities in a chunk that
+    /// get sent to players. This can be used to add a crude "level of detail" for distant chunks.
+    /// The counts correspond to entities that are:
+    /// <list type="bullet">
+    /// <item>Directly attached to the <see cref="Root"/> and have the <see cref="MetaDataFlags.PvsPriority"/> flag.</item>
+    /// <item>Directly attached to the <see cref="Root"/> and are anchored (or high priority).</item>
+    /// <item>Directly attached to the <see cref="Root"/>.</item>
+    /// <item>Directly attached to the <see cref="Root"/> and their direct children.</item>
+    /// <item>All entities.</item>
+    /// </list>
+    /// <remarks>
+    /// Note that the chunk will not be re-populated if an entity gets (un)anchored, or if their metadata flags changes.
+    /// So if somebody anchors an occluder and it starts occluding, it won't become a high priority entity untill
+    /// the chunk gets dirtied & rebuilt.
+    /// </remarks>
     /// </summary>
-    public int LowLodCount;
+    public readonly int[] LodCounts = new int[5];
 
     public void Initialize(PvsChunkLocation location,
         EntityQuery<MetaDataComponent> meta,
@@ -102,18 +124,58 @@ internal sealed class PvsChunk
     /// </summary>
     public bool PopulateContents(EntityQuery<MetaDataComponent> meta, EntityQuery<TransformComponent> xform)
     {
-#if DEBUG
-        // Initial set of children should all be parented directly to the root entity.
-        foreach (var c in Children)
-        {
-            DebugTools.AssertEqual(xform.GetComponent(c).ParentUid, Root.Owner);
-        }
-        DebugTools.Assert(Contents.Count == 0);
-#endif
+        DebugTools.AssertEqual(Contents.Count, 0);
+        DebugTools.AssertEqual(_childSets.Count, 0);
+        DebugTools.AssertEqual(_nextChildSets.Count, 0);
+        DebugTools.AssertEqual(_anchoredChildren.Count, 0);
+        DebugTools.AssertEqual(_lowPriorityChildren.Count, 0);
 
-        // Recursively add all children
-        var nextSetTotal = Children.Count;
-        _childSets.Add(Children);
+        Contents.EnsureCapacity(Children.Count);
+        _lowPriorityChildren.EnsureCapacity(Children.Count);
+        var nextSetTotal = 0;
+
+        // First, we add all high-priority children.
+        foreach (var child in Children)
+        {
+            // TODO ARCH multi-component queries
+            if (!meta.TryGetComponent(child, out var childMeta)
+                || !xform.TryGetComponent(child, out var childXform))
+            {
+                DebugTools.Assert($"PVS chunk contains a deleted entity: {child}");
+                MarkDirty();
+                return false;
+            }
+
+            childMeta.LastPvsLocation = Location;
+
+            if ((childMeta.Flags & MetaDataFlags.PvsPriority) == MetaDataFlags.PvsPriority)
+                Contents.Add((child, childMeta));
+            else if (childXform.Anchored)
+                _anchoredChildren.Add((child, childMeta));
+            else
+                _lowPriorityChildren.Add((child, childMeta));
+
+            var subCount = childXform._children.Count;
+            if (subCount == 0)
+                continue;
+
+            nextSetTotal += subCount;
+            _childSets.Add(childXform._children);
+        }
+
+        // Populate LoD counts
+        LodCounts[0] = Contents.Count;
+        LodCounts[1] = LodCounts[0] + _anchoredChildren.Count;
+        LodCounts[2] = LodCounts[1] + _lowPriorityChildren.Count;
+        LodCounts[3] = LodCounts[2] + nextSetTotal;
+
+        // Next, add the lower priority children.
+        Contents.AddRange(_anchoredChildren);
+        Contents.AddRange(_lowPriorityChildren);
+        _lowPriorityChildren.Clear();
+        _anchoredChildren.Clear();
+
+        // Next, we recursively add all grand-children
         while (nextSetTotal > 0)
         {
             Contents.EnsureCapacity(Contents.Count + nextSetTotal);
@@ -131,8 +193,8 @@ internal sealed class PvsChunk
                         return false;
                     }
 
-                    Contents.Add((child, childMeta));
                     childMeta.LastPvsLocation = Location;
+                    Contents.Add((child, childMeta));
 
                     var subCount = childXform._children.Count;
                     if (subCount == 0)
@@ -145,16 +207,43 @@ internal sealed class PvsChunk
             _childSets.Clear();
             (_childSets, _nextChildSets) = (_nextChildSets, _childSets);
         }
-        ;
-#if DEBUG
-        var set = new HashSet<Entity<MetaDataComponent>>(Contents);
-        DebugTools.Assert(set.Count == Contents.Count);
-#endif
-        _nextChildSets.Clear();
-        Dirty = false;
-        LowLodCount = Children.Count;
 
+        LodCounts[4] = Contents.Count;
+        Dirty = false;
+        ValidateChunk(xform);
         return true;
+    }
+
+    [Conditional("DEBUG")]
+    private void ValidateChunk(EntityQuery<TransformComponent> query)
+    {
+        DebugTools.Assert(LodCounts[0] <= LodCounts[1]);
+        DebugTools.Assert(LodCounts[1] <= LodCounts[2]);
+        DebugTools.Assert(LodCounts[2] <= LodCounts[3]);
+        DebugTools.Assert(LodCounts[3] <= LodCounts[4]);
+        DebugTools.AssertEqual(LodCounts[4], Contents.Count());
+
+        DebugTools.AssertEqual(_childSets.Count, 0);
+        DebugTools.AssertEqual(_nextChildSets.Count, 0);
+        DebugTools.AssertEqual(_anchoredChildren.Count, 0);
+        DebugTools.AssertEqual(_lowPriorityChildren.Count, 0);
+
+        foreach (var c in Children)
+        {
+            DebugTools.AssertEqual(query.GetComponent(c).ParentUid, Root.Owner,
+                "Direct child is not actually directly attached to the root.");
+        }
+
+        var set = new HashSet<EntityUid>(Contents.Count);
+        set.Add(Root.Owner);
+        set.Add(Map.Owner);
+        foreach (var child in Contents)
+        {
+            var parent = query.GetComponent(child).ParentUid;
+            DebugTools.Assert(set.Contains(parent),
+                "A child's parent is not in the chunk, or is not listed first.");
+            DebugTools.Assert(set.Add(child), "Child appears more than once in the chunk.");
+        }
     }
 
     public void MarkDirty()

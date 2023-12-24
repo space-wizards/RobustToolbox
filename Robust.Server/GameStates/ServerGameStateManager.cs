@@ -76,12 +76,12 @@ namespace Robust.Server.GameStates
 
             _parallelMgr.AddAndInvokeParallelCountChanged(ResetParallelism);
 
-            _cfg.OnValueChanged(CVars.NetPVSCompressLevel, _ => ResetParallelism(), true);
+            _cfg.OnValueChanged(CVars.NetPvsCompressLevel, _ => ResetParallelism(), true);
         }
 
         private void ResetParallelism()
         {
-            var compressLevel = _cfg.GetCVar(CVars.NetPVSCompressLevel);
+            var compressLevel = _cfg.GetCVar(CVars.NetPvsCompressLevel);
             // The * 2 is because trusting .NET won't take more is what got this code into this mess in the first place.
             _threadResourcesPool = new DefaultObjectPool<PvsThreadResources>(new PvsThreadResourcesObjectPolicy(compressLevel), _parallelMgr.ParallelProcessCount * 2);
         }

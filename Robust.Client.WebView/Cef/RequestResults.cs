@@ -76,14 +76,9 @@ namespace Robust.Client.WebView.Cef
                 return true;
             }
 
-            protected override bool Read(Stream response, int bytesToRead, out int bytesRead, CefResourceReadCallback callback)
+            protected override bool Read(Span<byte> response, out int bytesRead, CefResourceReadCallback callback)
             {
-                // CefGlue expects you to write into a Stream now (in a previous version, it gave you a raw pointer).
-                // Except instead of looking at the Stream's position when this function returns,
-                // it still expects you to write bytesRead manually.
-                // *sigh*
-                _stream.CopyTo(response);
-                bytesRead = (int) response.Position;
+                bytesRead = _stream.Read(response);
                 return bytesRead != 0;
             }
 

@@ -221,6 +221,13 @@ namespace Robust.Shared.GameObjects
         /// Used by clients to indicate that an entity has left their visible set.
         /// </summary>
         Detached = 1 << 2,
+
+        /// <summary>
+        /// If true, then this entity is considered a "high priority" entity and will be sent to players from further
+        /// away. Useful for things like light sources and occluders. Only works if the entity is directly parented to
+        /// a grid or map.
+        /// </summary>
+        PvsPriority = 1 << 3,
     }
 
     /// <summary>

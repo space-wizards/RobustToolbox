@@ -98,25 +98,17 @@ namespace Robust.Client.GameObjects
                 base.Dirty(ent, meta);
         }
 
-        public override EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metaDataComponent = null)
-        {
-            if (_playerManager.LocalPlayer?.ControlledEntity == uid)
-                return base.ToPrettyString(uid) with { Session = _playerManager.LocalPlayer.Session };
-
-            return base.ToPrettyString(uid);
-        }
-
         public override void RaisePredictiveEvent<T>(T msg)
         {
-            var localPlayer = _playerManager.LocalPlayer;
-            DebugTools.AssertNotNull(localPlayer);
+            var session = _playerManager.LocalSession;
+            DebugTools.AssertNotNull(session);
 
             var sequence = _stateMan.SystemMessageDispatched(msg);
             EntityNetManager?.SendSystemNetworkMessage(msg, sequence);
 
             DebugTools.Assert(!_stateMan.IsPredictionEnabled || _gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel != ClientRunLevel.Connected);
 
-            var eventArgs = new EntitySessionEventArgs(localPlayer!.Session);
+            var eventArgs = new EntitySessionEventArgs(session!);
             EventBus.RaiseEvent(EventSource.Local, msg);
             EventBus.RaiseEvent(EventSource.Local, new EntitySessionMessage<T>(eventArgs, msg));
         }

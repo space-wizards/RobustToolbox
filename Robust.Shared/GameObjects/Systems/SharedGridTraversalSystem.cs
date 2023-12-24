@@ -31,12 +31,14 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
         _transform.OnGlobalMoveEvent -= OnMove;
     }
 
-    internal void CheckTraverse(EntityUid uid, TransformComponent xform)
+    internal void CheckTraverse(EntityUid uid)
     {
         if (!Enabled)
             return;
 
-        var moveEv = new MoveEvent(uid, xform.Coordinates, xform.Coordinates, xform.LocalRotation, xform.LocalRotation, xform, false);
+        var xform = Transform(uid);
+        var meta = MetaData(uid);
+        var moveEv = new MoveEvent((uid, xform, meta), xform.Coordinates, xform.Coordinates, xform.LocalRotation, xform.LocalRotation);
 
         OnMove(ref moveEv);
     }

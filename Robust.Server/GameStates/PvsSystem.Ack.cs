@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -20,7 +18,7 @@ internal sealed partial class PvsSystem
     private void OnClientAck(ICommonSession session, GameTick ackedTick)
     {
         DebugTools.Assert(ackedTick < _gameTiming.CurTick);
-        if (!PlayerData.TryGetValue(session, out var sessionData))
+        if (!_playerData.TryGetValue(session, out var sessionData))
             return;
 
         if (ackedTick <= sessionData.LastReceivedAck)
@@ -64,12 +62,27 @@ internal sealed partial class PvsSystem
         }
     }
 
+    private record struct PvsChunkJob : IParallelRobustJob
+    {
+        public int BatchSize => 4;
+        public PvsSystem Pvs;
+
+        public void Execute(int index)
+        {
+            // 0-th "chunk" is processing global PVS overrides
+            if (index == 0)
+                Pvs.CacheGlobalOverrides();
+            else
+                Pvs.UpdateVisibleChunks(index - 1);
+        }
+    }
+
     /// <summary>
     ///     Process a given client's queued ack.
     /// </summary>
     private void ProcessQueuedAck(ICommonSession session)
     {
-        if (!PlayerData.TryGetValue(session, out var sessionData))
+        if (!_playerData.TryGetValue(session, out var sessionData))
             return;
 
         var ackedTick = sessionData.LastReceivedAck;
@@ -86,19 +99,19 @@ internal sealed partial class PvsSystem
             if (overflowTick != ackedTick)
             {
                 _entDataListPool.Return(overflowEnts);
-                DebugTools.Assert(!sessionData.SentEntities.Values.Contains(overflowEnts));
+                DebugTools.Assert(!sessionData.PreviouslySent.Values.Contains(overflowEnts));
                 return;
             }
         }
-        else if (!sessionData.SentEntities.TryGetValue(ackedTick, out ackedEnts))
+        else if (!sessionData.PreviouslySent.TryGetValue(ackedTick, out ackedEnts))
             return;
 
         foreach (var data in CollectionsMarshal.AsSpan(ackedEnts))
         {
             data.EntityLastAcked = ackedTick;
             DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
-            DebugTools.Assert(data.LastSent >= ackedTick); // LastSent may equal ackedTick if the packet was sent reliably.
-            DebugTools.Assert(!sessionData.EntityData.TryGetValue(data.NetEntity, out var old)
+            DebugTools.Assert(data.LastSeen >= ackedTick); // LastSent may equal ackedTick if the packet was sent reliably.
+            DebugTools.Assert(!sessionData.Entities.TryGetValue(data.NetEntity, out var old)
                               || ReferenceEquals(data, old));
         }
 

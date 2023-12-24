@@ -50,6 +50,11 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite), DataField("visMask", customTypeSerializer:typeof(FlagSerializer<VisibilityMaskLayer>)), AutoNetworkedField]
         public int VisibilityMask = DefaultVisibilityMask;
+
+        /// <summary>
+        /// Scales the PVS view range of this eye,
+        /// </summary>
+        [DataField] public float PvsScale = 1;
     }
 
     /// <summary>

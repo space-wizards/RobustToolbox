@@ -47,11 +47,13 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, ISe
             return;
         }
 
-        var (entStates, deletions, _) = _pvs.GetAllEntityStates(null, _fromTick, Timing.CurTick);
-        var playerStates = _player.GetPlayerStates(_fromTick);
-        var state = new GameState(_fromTick, Timing.CurTick, 0, entStates, playerStates, deletions);
+        // TODO REPLAY
+        // cache/reuse this to reduce allocs.
+        var session = new PvsSession(default!) { FromTick = _fromTick, DisableCulling = true };
+        var data = _pvs.GetSessionData(session);
+
         _fromTick = Timing.CurTick;
-        Update(state);
+        Update(data.State);
     }
 
     protected override void Reset()

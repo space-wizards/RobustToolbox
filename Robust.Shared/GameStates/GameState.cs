@@ -17,6 +17,8 @@ namespace Robust.Shared.GameStates
         [field:NonSerialized]
         public int PayloadSize { get; set; }
 
+        public bool ForceSendReliably;
+
         /// <summary>
         /// Constructor!
         /// </summary>

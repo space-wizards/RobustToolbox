@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
@@ -11,58 +10,6 @@ namespace Robust.Server.GameStates;
 // This partial class contains code for turning a list of visible entities into actual entity states.
 internal sealed partial class PvsSystem
 {
-    public void GetStateList(
-        List<EntityState> states,
-        List<EntityData> toSend,
-        SessionPvsData sessionData,
-        GameTick fromTick)
-    {
-        DebugTools.Assert(states.Count == 0);
-        var entData = sessionData.EntityData;
-        var session = sessionData.Session;
-
-        if (sessionData.RequestedFull)
-        {
-            foreach (var data in CollectionsMarshal.AsSpan(toSend))
-            {
-                DebugTools.AssertNotNull(data.Entity.Comp);
-                DebugTools.Assert(data.LastSent == _gameTiming.CurTick);
-                DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
-                DebugTools.Assert(ReferenceEquals(data, entData[data.NetEntity]));
-                states.Add(GetFullEntityState(session, data.Entity.Owner, data.Entity.Comp));
-            }
-            return;
-        }
-
-        foreach (var data in CollectionsMarshal.AsSpan(toSend))
-        {
-            DebugTools.AssertNotNull(data.Entity.Comp);
-            DebugTools.Assert(data.LastSent == _gameTiming.CurTick);
-            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
-            DebugTools.Assert(ReferenceEquals(data, entData[data.NetEntity]));
-
-            if (data.Visibility == PvsEntityVisibility.Unchanged)
-                continue;
-
-            var (uid, meta) = data.Entity;
-            var entered = data.Visibility == PvsEntityVisibility.Entered;
-            var entFromTick = entered ? data.EntityLastAcked : fromTick;
-
-            // TODO PVS turn into debug assert
-            // This is should really be a debug assert, but I want to check for errors on live servers
-            // If an entity is not marked as "entering" this tick, then it HAS to have been in the last acked state
-            if (!entered && data.EntityLastAcked < fromTick)
-            {
-                Log.Error($"un-acked entity is not marked as entering. Entity{ToPrettyString(uid)}. FromTick: {fromTick}. CurTick: {_gameTiming.CurTick}. Data: {data}");
-            }
-
-            var state = GetEntityState(session, uid, entFromTick, meta);
-
-            if (entered || !state.Empty)
-                states.Add(state);
-        }
-    }
-
     /// <summary>
     /// Generates a network entity state for the given entity.
     /// </summary>
@@ -151,20 +98,25 @@ internal sealed partial class PvsSystem
     /// <summary>
     /// Gets all entity states that have been modified after and including the provided tick.
     /// </summary>
-    public (List<EntityState>?, List<NetEntity>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
+    public void GetAllEntityStates(PvsSession pvsSession)
     {
-        List<EntityState>? stateEntities;
+        var session = pvsSession.Session;
+        var toTick = _gameTiming.CurTick;
+        var fromTick = pvsSession.FromTick;
+
         var toSend = _uidSetPool.Get();
         DebugTools.Assert(toSend.Count == 0);
         bool enumerateAll = false;
         DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
         DebugTools.Assert(toTick > fromTick);
 
-        if (player == null)
+        // Null sessions imply this is a replay.
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (session == null)
         {
             enumerateAll = fromTick == GameTick.Zero;
         }
-        else if (!_seenAllEnts.Contains(player))
+        else if (!_seenAllEnts.Contains(session))
         {
             enumerateAll = true;
             fromTick = GameTick.Zero;
@@ -178,7 +130,6 @@ internal sealed partial class PvsSystem
 
         if (enumerateAll)
         {
-            stateEntities = new List<EntityState>(EntityManager.EntityCount);
             var query = EntityManager.AllEntityQueryEnumerator<MetaDataComponent>();
             while (query.MoveNext(out var uid, out var md))
             {
@@ -187,7 +138,7 @@ internal sealed partial class PvsSystem
                 if (md.EntityLastModifiedTick <= fromTick)
                     continue;
 
-                var state = GetEntityState(player, uid, fromTick, md);
+                var state = GetEntityState(session, uid, fromTick, md);
 
                 if (state.Empty)
                 {
@@ -199,12 +150,11 @@ Metadata last modified: {md.LastModifiedTick}
 Transform last modified: {Transform(uid).LastModifiedTick}");
                 }
 
-                stateEntities.Add(state);
+                pvsSession.States.Add(state);
             }
         }
         else
         {
-            stateEntities = new();
             for (var i = fromTick.Value + 1; i <= toTick.Value; i++)
             {
                 if (!TryGetDirtyEntities(new GameTick(i), out var add, out var dirty))
@@ -223,7 +173,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                     DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick, $"Entity {ToPrettyString(uid)} last modified tick is less than creation tick");
                     DebugTools.Assert(md.EntityLastModifiedTick > fromTick, $"Entity {ToPrettyString(uid)} last modified tick is less than from tick");
 
-                    var state = GetEntityState(player, uid, fromTick, md);
+                    var state = GetEntityState(session, uid, fromTick, md);
 
                     if (state.Empty)
                     {
@@ -236,7 +186,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                         continue;
                     }
 
-                    stateEntities.Add(state);
+                    pvsSession.States.Add(state);
                 }
 
                 foreach (var uid in dirty)
@@ -250,19 +200,13 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                     DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick, $"Entity {ToPrettyString(uid)} last modified tick is less than creation tick");
                     DebugTools.Assert(md.EntityLastModifiedTick > fromTick, $"Entity {ToPrettyString(uid)} last modified tick is less than from tick");
 
-                    var state = GetEntityState(player, uid, fromTick, md);
+                    var state = GetEntityState(session, uid, fromTick, md);
                     if (!state.Empty)
-                        stateEntities.Add(state);
+                        pvsSession.States.Add(state);
                 }
             }
         }
 
         _uidSetPool.Return(toSend);
-        var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-
-        if (stateEntities.Count == 0)
-            stateEntities = null;
-
-        return (stateEntities, deletions, fromTick);
     }
 }

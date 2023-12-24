@@ -114,8 +114,7 @@ public interface ISharedPlayerManager
     bool HasPlayerData(NetUserId userId);
 
     IEnumerable<SessionData> GetAllPlayerData();
-
-    List<SessionState>? GetPlayerStates(GameTick fromTick);
+    void GetPlayerStates(GameTick fromTick, List<SessionState> states);
     void UpdateState(ICommonSession commonSession);
 
     void RemoveSession(ICommonSession session, bool removeData = false);

@@ -191,6 +191,12 @@ namespace Robust.Shared
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// Chunks whose centre is further than this distance away from a player's eye will contain fewer entities.
+        /// </summary>
+        public static readonly CVarDef<float> NetLowLodDistance =
+            CVarDef.Create("net.low_lod_distance", 100f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
         /// Maximum allowed delay between the current tick and a client's last acknowledged tick before we send the
         /// next game state reliably and simply force update the acked tick,
         /// </summary>

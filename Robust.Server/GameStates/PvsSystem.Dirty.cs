@@ -82,20 +82,6 @@ namespace Robust.Server.GameStates
             _currentIndex = ((int)_gameTiming.CurTick.Value + 1) % DirtyBufferSize;
             _addEntities[_currentIndex].Clear();
             _dirtyEntities[_currentIndex].Clear();
-
-            foreach (var collection in _pvsCollections)
-            {
-                collection.ClearDirty();
-            }
-        }
-
-        /// <summary>
-        ///     Marks an entity's current chunk as dirty.
-        /// </summary>
-        internal void MarkDirty(EntityUid uid, TransformComponent xform)
-        {
-            var coordinates = _transform.GetMoverCoordinates(uid, xform);
-            _entityPvsCollection.MarkDirty(_entityPvsCollection.GetChunkIndex(coordinates));
         }
     }
 }

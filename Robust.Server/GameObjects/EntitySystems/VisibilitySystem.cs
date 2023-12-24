@@ -103,7 +103,6 @@ namespace Robust.Server.GameObjects
 
             var xform = _xformQuery.GetComponent(uid);
             meta.VisibilityMask = mask;
-            _pvs.MarkDirty(uid, xform);
 
             foreach (var child in xform._children)
             {

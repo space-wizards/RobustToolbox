@@ -130,7 +130,12 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns a string representation of an entity with various information regarding it.
         /// </summary>
-        EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata = null);
+        EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata);
+
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        EntityStringRepresentation ToPrettyString(Entity<MetaDataComponent?> uid);
 
         /// <summary>
         /// Returns a string representation of an entity with various information regarding it.

@@ -8,6 +8,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
@@ -43,6 +44,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<MetaDataComponent> MetaQuery;
         public EntityQuery<TransformComponent> TransformQuery;
+        public EntityQuery<ActorComponent> _actorQuery;
 
         #endregion Dependencies
 
@@ -203,6 +205,7 @@ namespace Robust.Shared.GameObjects
             _containers = System<SharedContainerSystem>();
             MetaQuery = GetEntityQuery<MetaDataComponent>();
             TransformQuery = GetEntityQuery<TransformComponent>();
+            _actorQuery = GetEntityQuery<ActorComponent>();
         }
 
         public virtual void Shutdown()
@@ -423,7 +426,7 @@ namespace Robust.Shared.GameObjects
 
             try
             {
-                var ev = new EntityTerminatingEvent(uid);
+                var ev = new EntityTerminatingEvent((uid, metadata));
                 EventBus.RaiseLocalEvent(uid, ref ev, true);
             }
             catch (Exception e)
@@ -733,12 +736,16 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata = null)
-        {
-            if (!MetaQuery.Resolve(uid, ref metadata, false))
-                return new EntityStringRepresentation(uid, default, true);
+        public EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata)
+            =>  ToPrettyString((uid, metadata));
 
-            return new EntityStringRepresentation(uid, metadata);
+        /// <inheritdoc />
+        public EntityStringRepresentation ToPrettyString(Entity<MetaDataComponent?> entity)
+        {
+            if (entity.Comp == null && !MetaQuery.Resolve(entity.Owner, ref entity.Comp, false))
+                return new EntityStringRepresentation(entity.Owner, default, true);
+
+            return new EntityStringRepresentation(entity.Owner, entity.Comp, _actorQuery.CompOrNull(entity));
         }
 
         /// <inheritdoc />

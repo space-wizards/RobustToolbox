@@ -371,12 +371,12 @@ public partial class EntitySystem
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata)
-        => EntityManager.ToPrettyString(uid, metadata);
+        => EntityManager.ToPrettyString((uid, metadata));
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityStringRepresentation ToPrettyString(EntityUid uid)
-        => EntityManager.ToPrettyString(uid);
+    protected EntityStringRepresentation ToPrettyString(Entity<MetaDataComponent?> entity)
+        => EntityManager.ToPrettyString(entity);
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

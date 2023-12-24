@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
+using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -11,20 +13,63 @@ namespace Robust.Server.GameStates;
 /// <summary>
 /// Class for storing session specific PVS data.
 /// </summary>
-internal sealed class SessionPvsData(ICommonSession session)
+internal sealed class PvsSession(ICommonSession session)
 {
+    public readonly ICommonSession Session = session;
+    public INetChannel Channel => Session.Channel;
+
     /// <summary>
     /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="PvsSystem.DirtyBufferSize"/> ticks.
     /// </summary>
-    public readonly OverflowDictionary<GameTick, List<EntityData>> SentEntities = new(PvsSystem.DirtyBufferSize);
-
-    public readonly Dictionary<NetEntity, EntityData> EntityData = new();
+    public readonly OverflowDictionary<GameTick, List<EntityData>> PreviouslySent = new(PvsSystem.DirtyBufferSize);
 
     /// <summary>
-    /// <see cref="SentEntities"/> overflow in case a player's last ack is more than
+    /// Dictionary containing data about all entities that this client has ever seen.
+    /// </summary>
+    public readonly Dictionary<NetEntity, EntityData> Entities = new();
+
+    /// <summary>
+    /// <see cref="PreviouslySent"/> overflow in case a player's last ack is more than
     /// <see cref="PvsSystem.DirtyBufferSize"/> ticks behind the current tick.
     /// </summary>
     public (GameTick Tick, List<EntityData> SentEnts)? Overflow;
+
+    /// <summary>
+    /// The client's current visibility mask.
+    /// </summary>
+    public int VisMask;
+
+    /// <summary>
+    /// The list that is currently being prepared for sending.
+    /// </summary>
+    public List<EntityData>? ToSend;
+
+    /// <summary>
+    /// The <see cref="ToSend"/> list from the previous tick. Also caches the current tick that the PVS leave message
+    /// should belong to, in case the processing is ever run asynchronously with normal system/game ticking.
+    /// </summary>
+    public (GameTick ToTick, List<EntityData> PreviouslySent)? LastSent;
+
+    /// <summary>
+    /// Indices of the chunks that are currently visible to this player;
+    /// </summary>
+    public HashSet<PvsChunkLocation> VisibleChunks = new();
+
+    /// <summary>
+    /// Visible chunks, sorted by proximity to the clients's viewers;
+    /// </summary>
+    public PvsChunk?[] Chunks = Array.Empty<PvsChunk>();
+
+    /// <summary>
+    /// Distance squared to all of the the <see cref="Chunks"/>.
+    /// </summary>
+    public float[] ChunkDistanceSq = Array.Empty<float>();
+
+    /// <summary>
+    /// The client's current eyes/viewers.
+    /// </summary>
+    public Entity<TransformComponent, EyeComponent?>[] Viewers
+        = Array.Empty<Entity<TransformComponent, EyeComponent?>>();
 
     /// <summary>
     /// If true, the client has explicitly requested a full state. Unlike the first state, we will send them all data,
@@ -32,9 +77,54 @@ internal sealed class SessionPvsData(ICommonSession session)
     /// </summary>
     public bool RequestedFull = false;
 
+    /// <summary>
+    /// List of entity states to send to the client.
+    /// </summary>
+    public readonly List<EntityState> States = new();
+
+    /// <summary>
+    /// Information about the current number of entities that are being sent to the player this tick. Used to enforce
+    /// pvs budgets.
+    /// </summary>
+    public PvsBudget Budget;
+
+    /// <summary>
+    /// The tick of the last acknowledged game state.
+    /// </summary>
     public GameTick LastReceivedAck;
 
-    public readonly ICommonSession Session = session;
+    /// <summary>
+    /// Start tick for the time window of data that has to be sent to this player.
+    /// </summary>
+    public GameTick FromTick;
+
+    // TODO PVS support this properly. I.e., add a command, and remove from _seenAllEnts
+    public bool DisableCulling;
+
+    /// <summary>
+    /// List of entities that have left the player's view this tick.
+    /// </summary>
+    public readonly List<NetEntity> LeftView = new();
+
+    public readonly List<SessionState> PlayerStates = new();
+    public uint LastMessage;
+    public uint LastInput;
+
+    /// <summary>
+    /// The game state for this tick,
+    /// </summary>
+    public GameState? State;
+
+    /// <summary>
+    /// Clears all stored game state data. This should only be used after the game state has been serialized.
+    /// </summary>
+    public void ClearState()
+    {
+        PlayerStates.Clear();
+        VisibleChunks.Clear();
+        States.Clear();
+        State = null;
+    }
 }
 
 /// <summary>
@@ -48,7 +138,7 @@ internal sealed class EntityData(Entity<MetaDataComponent> entity) : IEquatable<
     /// <summary>
     /// Tick at which this entity was last sent to a player.
     /// </summary>
-    public GameTick LastSent;
+    public GameTick LastSeen;
 
     /// <summary>
     /// Tick at which an entity last left a player's PVS view.
@@ -66,6 +156,9 @@ internal sealed class EntityData(Entity<MetaDataComponent> entity) : IEquatable<
     /// Entity visibility state when it was last sent to this player.
     /// </summary>
     public PvsEntityVisibility Visibility;
+    // this is currently no longer strictly required, but maybe in future we want to separate out the get-state code
+    // from the get-visible/to-send code. If we do that, we need to have this to quickly distinguish between dirty,
+    // entering, and unmodified entities.
 
     public bool Equals(EntityData? other)
     {
@@ -86,6 +179,18 @@ internal sealed class EntityData(Entity<MetaDataComponent> entity) : IEquatable<
     public override string ToString()
     {
         var rep = new EntityStringRepresentation(Entity);
-        return $"PVS Entity: {rep} - {LastSent}/{LastLeftView}/{EntityLastAcked} - {Visibility}";
+        return $"PVS Entity: {rep} - {LastSeen}/{LastLeftView}/{EntityLastAcked} - {Visibility}";
     }
+}
+
+/// <summary>
+/// Struct for storing information about the current number of entities that are being sent to the player this tick.
+/// Used to enforce pvs budgets.
+internal struct PvsBudget
+{
+    public int NewLimit;
+    public int EnterLimit;
+    public int DirtyCount;
+    public int EnterCount;
+    public int NewCount;
 }

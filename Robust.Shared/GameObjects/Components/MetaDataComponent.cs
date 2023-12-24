@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -181,6 +182,15 @@ namespace Robust.Shared.GameObjects
         public bool EntityInitializing => EntityLifeStage == EntityLifeStage.Initializing;
         public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
 
+        /// <summary>
+        /// The PVS chunk that this entity is currently stored on.
+        /// This should always be set properly if the entity is directly attached to a grid or map.
+        /// If it is null, it implies that either:
+        /// - The entity nested is somewhere in some chunk that has already been marked as dirty
+        /// - The entity is in nullspace
+        /// </summary>
+        internal PvsChunkLocation? LastPvsLocation;
+
         [Obsolete("Do not use from content")]
         public override void ClearTicks()
         {
@@ -212,4 +222,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         Detached = 1 << 2,
     }
+
+    /// <summary>
+    /// Key struct for uniquely identifying a PVS chunk.
+    /// </summary>
+    internal readonly record struct PvsChunkLocation(EntityUid Uid, Vector2i Indices);
 }

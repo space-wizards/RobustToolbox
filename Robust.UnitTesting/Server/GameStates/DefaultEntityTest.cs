@@ -33,7 +33,7 @@ public sealed class DefaultEntityTest : RobustIntegrationTest
 
         client.SetConnectTarget(server);
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
-        server.Post(() => confMan.SetCVar(CVars.NetPvs, false));
+        server.Post(() => confMan.SetCVar(CVars.NetPVS, false));
 
         for (int i = 0; i < 10; i++)
         {
@@ -68,7 +68,7 @@ public sealed class DefaultEntityTest : RobustIntegrationTest
         Assert.That(cEntMan.EntityExists(cEntMan.GetEntity(ent)));
 
         // Enable PVS and repeat the test.
-        server.Post(() => confMan.SetCVar(CVars.NetPvs, true));
+        server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
         // Set up map and spawn player entity
         NetEntity player = default;

@@ -40,7 +40,7 @@ public class RecursiveMoveBenchmark
             .NewSimulation()
             .InitializeInstance();
 
-        if (!_simulation.Resolve<IConfigurationManager>().GetCVar(CVars.NetPvs))
+        if (!_simulation.Resolve<IConfigurationManager>().GetCVar(CVars.NetPVS))
             throw new InvalidOperationException("PVS must be enabled");
 
         _entMan = _simulation.Resolve<IEntityManager>();

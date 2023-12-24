@@ -46,7 +46,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
-        server.Post(() => server.CfgMan.SetCVar(CVars.NetPvs, true));
+        server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, true));
 
         // Set up map.
         EntityUid map = default;
@@ -137,7 +137,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             Assert.That(cmp?.Other, Is.EqualTo(clientEntB));
         });
 
-        server.Post(() => server.CfgMan.SetCVar(CVars.NetPvs, false));
+        server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, false));
 
         // wait for errors.
         await RunTicks();
@@ -182,7 +182,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
-        server.Post(() => server.CfgMan.SetCVar(CVars.NetPvs, true));
+        server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, true));
 
         // Set up map.
         EntityUid map = default;
@@ -288,7 +288,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             Assert.That(cmp?.Other, Is.EqualTo(EntityUid.Invalid));
         });
 
-        server.Post(() => server.CfgMan.SetCVar(CVars.NetPvs, false));
+        server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, false));
 
         // wait for errors.
         await RunTicks();

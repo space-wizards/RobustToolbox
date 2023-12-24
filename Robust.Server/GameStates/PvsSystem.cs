@@ -102,8 +102,8 @@ internal sealed partial class PvsSystem : EntitySystem
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         _transform.OnGlobalMoveEvent += OnEntityMove;
 
-        _configManager.OnValueChanged(CVars.NetPvs, SetPvs, true);
-        _configManager.OnValueChanged(CVars.NetPvsRange, OnViewsizeChanged, true);
+        _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
+        _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
         _configManager.OnValueChanged(CVars.NetLowLodRange, OnLodChanged, true);
         _configManager.OnValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged, true);
 
@@ -120,8 +120,8 @@ internal sealed partial class PvsSystem : EntitySystem
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         _transform.OnGlobalMoveEvent -= OnEntityMove;
 
-        _configManager.UnsubValueChanged(CVars.NetPvs, SetPvs);
-        _configManager.UnsubValueChanged(CVars.NetPvsRange, OnViewsizeChanged);
+        _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
+        _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
         _configManager.UnsubValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged);
 
         _serverGameStateManager.ClientAck -= OnClientAck;
@@ -231,8 +231,8 @@ internal sealed partial class PvsSystem : EntitySystem
         AddForcedEntities(session);
 
         // After processing the entity's viewers, we set actual, budget limits.
-        session.Budget.NewLimit= _netConfigManager.GetClientCVar(session.Channel, CVars.NetPvsEntityBudget);
-        session.Budget.EnterLimit = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPvsEntityEnterBudget);
+        session.Budget.NewLimit= _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityBudget);
+        session.Budget.EnterLimit = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityEnterBudget);
 
         // Process all entities in visible PVS chunks
         AddPvsChunks(session);

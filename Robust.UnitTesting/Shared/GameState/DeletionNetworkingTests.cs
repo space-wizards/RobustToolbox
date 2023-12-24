@@ -41,7 +41,7 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
-        server.Post(() => confMan.SetCVar(CVars.NetPvs, true));
+        server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
         async Task RunTicks()
         {

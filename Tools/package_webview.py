@@ -83,7 +83,7 @@ def build_windows(skip_build: bool) -> None:
     # Run a full build.
     print(Fore.GREEN + "Building project for Windows x64..." + Style.RESET_ALL)
 
-    base_bin = p("Robust.Client.WebView", "bin", "Release", "net7.0")
+    base_bin = p("Robust.Client.WebView", "bin", "Release", "net8.0")
 
     if not skip_build:
         build_client_rid("Windows", "win-x64")
@@ -142,7 +142,7 @@ def build_linux(skip_build: bool) -> None:
     # Run a full build.
     print(Fore.GREEN + "Building project for Linux x64..." + Style.RESET_ALL)
 
-    base_bin = p("Robust.Client.WebView", "bin", "Release", "net7.0")
+    base_bin = p("Robust.Client.WebView", "bin", "Release", "net8.0")
 
     if not skip_build:
         build_client_rid("Linux", "linux-x64")

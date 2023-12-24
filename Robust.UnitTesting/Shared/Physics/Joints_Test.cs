@@ -21,10 +21,6 @@ public sealed class Joints_Test
     public void JointsRelayTest()
     {
         var factory = RobustServerSimulation.NewSimulation();
-        factory.RegisterComponents(fac =>
-        {
-            fac.RegisterClass<CollideOnAnchorComponent>();
-        });
         var sim = factory.InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();

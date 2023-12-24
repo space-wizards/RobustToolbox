@@ -227,8 +227,6 @@ public abstract partial class SharedMapSystem
             "Can't modify chunk size of an existing grid.");
 
         component.ChunkSize = state.ChunkSize;
-        DebugTools.Assert(state.ChunkData != null || state.FullGridData != null);
-
         if (state.ChunkData == null && state.FullGridData == null)
             return;
 

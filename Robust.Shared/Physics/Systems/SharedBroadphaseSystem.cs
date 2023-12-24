@@ -33,6 +33,7 @@ namespace Robust.Shared.Physics.Systems
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;
+        private EntityQuery<PhysicsMapComponent> _mapQuery;
 
         /*
          * Okay so Box2D has its own "MoveProxy" stuff so you can easily find new contacts when required.
@@ -61,6 +62,7 @@ namespace Robust.Shared.Physics.Systems
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
+            _mapQuery = GetEntityQuery<PhysicsMapComponent>();
 
             UpdatesOutsidePrediction = true;
             UpdatesAfter.Add(typeof(SharedTransformSystem));
@@ -436,30 +438,32 @@ namespace Robust.Shared.Physics.Systems
             if (!Resolve(uid, ref xform, ref fixtures))
                 return;
 
-            if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
+            if (xform.MapUid == null)
                 return;
 
-            _physicsSystem.SetAwake(uid, body, true);
+            if (!_xformQuery.TryGetComponent(xform.Broadphase?.Uid, out var broadphase))
+                return;
 
+            _physicsSystem.SetAwake((uid, body), true);
+
+            var matrix = _transform.GetWorldMatrix(broadphase);
             foreach (var fixture in fixtures.Fixtures.Values)
             {
-                TouchProxies(xform.MapID, broadphase, fixture);
+                TouchProxies(xform.MapUid.Value, matrix, fixture);
             }
         }
 
-        private void TouchProxies(MapId mapId, BroadphaseComponent broadphase, Fixture fixture)
+        private void TouchProxies(EntityUid mapId, Matrix3 broadphaseMatrix, Fixture fixture)
         {
-            var broadphasePos = Transform(broadphase.Owner).WorldMatrix;
-
             foreach (var proxy in fixture.Proxies)
             {
-                AddToMoveBuffer(mapId, proxy, broadphasePos.TransformBox(proxy.AABB));
+                AddToMoveBuffer(mapId, proxy, broadphaseMatrix.TransformBox(proxy.AABB));
             }
         }
 
-        private void AddToMoveBuffer(MapId mapId, FixtureProxy proxy, Box2 aabb)
+        private void AddToMoveBuffer(EntityUid mapId, FixtureProxy proxy, Box2 aabb)
         {
-            if (!TryComp<PhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
+            if (!_mapQuery.TryGetComponent(mapId, out var physicsMap))
                 return;
 
             DebugTools.Assert(proxy.Body.CanCollide);
@@ -477,10 +481,14 @@ namespace Robust.Shared.Physics.Systems
             if (!Resolve(uid, ref xform))
                 return;
 
-            if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
+            if (xform.MapUid == null)
                 return;
 
-            TouchProxies(xform.MapID, broadphase, fixture);
+            if (!_xformQuery.TryGetComponent(xform.Broadphase?.Uid, out var broadphase))
+                return;
+
+            var matrix = _transform.GetWorldMatrix(broadphase);
+            TouchProxies(xform.MapUid.Value, matrix, fixture);
         }
 
         // TODO: The below is slow and should just query the map's broadphase directly. The problem is that

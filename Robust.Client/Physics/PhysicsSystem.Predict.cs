@@ -99,8 +99,8 @@ public sealed partial class PhysicsSystem
             if (xform.MapUid is not { } map)
                 continue;
 
-            if (maps.Add(map) && TryComp(map, out PhysicsMapComponent? physMap) &&
-                TryComp(map, out MapComponent? mapComp))
+            if (maps.Add(map) && PhysMapQuery.TryGetComponent(map, out var physMap) &&
+                MapQuery.TryGetComponent(map, out var mapComp))
                 _broadphase.FindNewContacts(physMap, mapComp.MapId);
 
             contacts.AddRange(physics.Contacts);

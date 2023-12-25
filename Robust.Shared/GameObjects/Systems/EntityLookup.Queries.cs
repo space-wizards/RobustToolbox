@@ -697,28 +697,34 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
         var intersecting = new HashSet<EntityUid>();
-
-        if (!_mapManager.GridExists(gridId))
-            return intersecting;
-
-        var localAABB = _transform.GetInvWorldMatrix(gridId).TransformBox(worldAABB);
-        AddEntitiesIntersecting(gridId, intersecting, localAABB, flags);
-        AddContained(intersecting, flags);
-
+        GetEntitiesIntersecting(gridId, worldAABB, intersecting, flags);
         return intersecting;
     }
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
     {
         var intersecting = new HashSet<EntityUid>();
+        GetEntitiesIntersecting(gridId, worldBounds, intersecting, flags);
+        return intersecting;
+    }
 
-        if (!_mapManager.GridExists(gridId))
-            return intersecting;
+    public void GetEntitiesIntersecting(EntityUid gridId, Box2 worldAABB, HashSet<EntityUid> intersecting, LookupFlags flags = DefaultFlags)
+    {
+        if (!_broadQuery.HasComponent(gridId))
+            return;
+
+        var localAABB = _transform.GetInvWorldMatrix(gridId).TransformBox(worldAABB);
+        AddEntitiesIntersecting(gridId, intersecting, localAABB, flags);
+        AddContained(intersecting, flags);
+    }
+
+    public void GetEntitiesIntersecting(EntityUid gridId, Box2Rotated worldBounds, HashSet<EntityUid> intersecting, LookupFlags flags = DefaultFlags)
+    {
+        if (!_broadQuery.HasComponent(gridId))
+            return;
 
         AddEntitiesIntersecting(gridId, intersecting, worldBounds, flags);
         AddContained(intersecting, flags);
-
-        return intersecting;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

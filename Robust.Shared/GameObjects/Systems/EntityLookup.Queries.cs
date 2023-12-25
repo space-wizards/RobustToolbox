@@ -21,7 +21,7 @@ public sealed partial class EntityLookupSystem
 
     #region Private
 
-    private void AddEntitiesIntersecting(
+    private void AddLocalEntitiesIntersecting(
         EntityUid lookupUid,
         HashSet<EntityUid> intersecting,
         Box2 localAABB,
@@ -77,18 +77,14 @@ public sealed partial class EntityLookupSystem
         }
     }
 
-    private void AddEntitiesIntersecting(
+    private void AddLocalEntitiesIntersecting(
         EntityUid lookupUid,
         HashSet<EntityUid> intersecting,
-        Box2Rotated worldBounds,
+        Box2Rotated localBounds,
         LookupFlags flags)
     {
-        var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
-        // We don't just use CalcBoundingBox because the transformed bounds might be tighter.
-        var localAABB = invMatrix.TransformBox(worldBounds);
-
         // Someday we'll split these but maybe it's wishful thinking.
-        AddEntitiesIntersecting(lookupUid, intersecting, localAABB, flags);
+        AddLocalEntitiesIntersecting(lookupUid, intersecting, localBounds.CalcBoundingBox(), flags);
     }
 
     private bool AnyEntitiesIntersecting(EntityUid lookupUid,
@@ -298,7 +294,7 @@ public sealed partial class EntityLookupSystem
                 Box2 worldAABB, SharedTransformSystem xformSystem, LookupFlags flags) tuple) =>
             {
                 var localAABB = tuple.xformSystem.GetInvWorldMatrix(gridUid).TransformBox(tuple.worldAABB);
-                tuple.lookup.AddEntitiesIntersecting(gridUid, tuple.intersecting, localAABB, tuple.flags);
+                tuple.lookup.AddLocalEntitiesIntersecting(gridUid, tuple.intersecting, localAABB, tuple.flags);
 
                 if ((tuple.flags & LookupFlags.Static) != 0x0)
                 {
@@ -319,7 +315,7 @@ public sealed partial class EntityLookupSystem
         var mapUid = _mapManager.GetMapEntityId(mapId);
         // Transform just in case future proofing?
         var localAABB = _transform.GetInvWorldMatrix(mapUid).TransformBox(worldAABB);
-        AddEntitiesIntersecting(mapUid, intersecting, localAABB, flags);
+        AddLocalEntitiesIntersecting(mapUid, intersecting, localAABB, flags);
         AddContained(intersecting, flags);
     }
 
@@ -370,13 +366,16 @@ public sealed partial class EntityLookupSystem
                 Box2Rotated worldBounds,
                 LookupFlags flags) tuple) =>
         {
-            tuple.lookup.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.worldBounds, tuple.flags);
+            var localAABB = tuple.lookup._transform.GetInvWorldMatrix(uid).TransformBox(tuple.worldBounds);
+            tuple.lookup.AddLocalEntitiesIntersecting(uid, tuple.intersecting, localAABB, tuple.flags);
             return true;
         }, approx: true);
 
         // Get map entities
         var mapUid = _mapManager.GetMapEntityId(mapId);
-        AddEntitiesIntersecting(mapUid, intersecting, worldBounds, flags);
+
+        var localAABB = _transform.GetInvWorldMatrix(mapUid).TransformBox(worldBounds);
+        AddLocalEntitiesIntersecting(mapUid, intersecting, localAABB, flags);
         AddContained(intersecting, flags);
 
         return intersecting;
@@ -714,7 +713,7 @@ public sealed partial class EntityLookupSystem
             return;
 
         var localAABB = _transform.GetInvWorldMatrix(gridId).TransformBox(worldAABB);
-        AddEntitiesIntersecting(gridId, intersecting, localAABB, flags);
+        AddLocalEntitiesIntersecting(gridId, intersecting, localAABB, flags);
         AddContained(intersecting, flags);
     }
 
@@ -723,7 +722,8 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.HasComponent(gridId))
             return;
 
-        AddEntitiesIntersecting(gridId, intersecting, worldBounds, flags);
+        var localAABB = _transform.GetInvWorldMatrix(gridId).TransformBox(worldBounds);
+        AddLocalEntitiesIntersecting(gridId, intersecting, localAABB, flags);
         AddContained(intersecting, flags);
     }
 

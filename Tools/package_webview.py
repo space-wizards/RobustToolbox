@@ -106,8 +106,8 @@ def build_windows(skip_build: bool) -> None:
         "Robust.Client.WebView.runtimeconfig.json",
         "Robust.Client.WebView.pdb",
         "Robust.Client.WebView.deps.json",
-        "Xilium.CefGlue.dll",
-        "Xilium.CefGlue.pdb",
+        "SpaceWizards.CefGlue.dll",
+        "SpaceWizards.CefGlue.pdb",
         # These are copies of regular Robust dlls that Robust.Client.WebView needs when ran on its own.
         "Robust.Client.dll",
         "Robust.Shared.dll",
@@ -162,8 +162,8 @@ def build_linux(skip_build: bool) -> None:
         "Robust.Client.WebView.pdb",
         "Robust.Client.WebView",
         "Robust.Client.WebView.deps.json",
-        "Xilium.CefGlue.dll",
-        "Xilium.CefGlue.pdb",
+        "SpaceWizards.CefGlue.dll",
+        "SpaceWizards.CefGlue.pdb",
         # These are copies of regular Robust dlls that Robust.Client.WebView needs when ran on its own.
         "Robust.Client.dll",
         "Robust.Shared.dll",

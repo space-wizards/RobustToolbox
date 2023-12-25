@@ -164,6 +164,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return;
         }
 
+        SetupSource(component, audioResource);
+    }
+
+    private void SetupSource(AudioComponent component, AudioResource audioResource, TimeSpan? length = null)
+    {
         var source = _audio.CreateAudioSource(audioResource);
 
         if (source == null)
@@ -182,8 +187,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;
 
+        length ??= GetAudioLength(component.FileName);
+
         // If audio came into range then start playback at the correct position.
-        var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % GetAudioLength(component.FileName).TotalSeconds;
+        var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % length.Value.TotalSeconds;
 
         if (offset > 0)
         {
@@ -395,6 +402,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return false;
     }
 
+    private bool TryGetAudio(AudioStream stream, [NotNullWhen(true)] out AudioResource? audio)
+    {
+        audio = new AudioResource();
+        audio.Load(stream);
+        return true;
+    }
+
     public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityCoordinates coordinates,
         AudioParams? audioParams = null)
     {
@@ -560,6 +574,15 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return PlayGlobal(filename, audioParams);
     }
 
+    public override void LoadStream<T>(AudioComponent component, T stream)
+    {
+        if (stream is AudioStream audioStream)
+        {
+            TryGetAudio(audioStream, out var audio);
+            SetupSource(component, audio!, audioStream.Length);
+        }
+    }
+
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null)
     {
@@ -590,11 +613,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return PlayStatic(filename, coordinates, audioParams);
     }
 
+
     private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(AudioParams? audioParams, AudioStream stream)
     {
         var audioP = audioParams ?? AudioParams.Default;
         var entity = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
-        var comp = SetupAudio(entity, stream.Name!, audioP);
+        var comp = SetupAudio(entity, stream.Length, audioP);
+        LoadStream(comp, stream);
         EntityManager.InitializeAndStartEntity(entity);
         var source = comp.Source;
 

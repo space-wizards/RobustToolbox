@@ -149,6 +149,29 @@ public abstract partial class SharedAudioSystem : EntitySystem
         return comp;
     }
 
+    protected AudioComponent SetupAudio(EntityUid uid, TimeSpan length, AudioParams? audioParams)
+    {
+        audioParams ??= AudioParams.Default;
+        var comp = AddComp<AudioComponent>(uid);
+        comp.Params = audioParams.Value;
+        comp.AudioStart = Timing.CurTime;
+
+
+        if (!audioParams.Value.Loop)
+        {
+            var despawn = AddComp<TimedDespawnComponent>(uid);
+            // Don't want to clip audio too short due to imprecision.
+            despawn.Lifetime = (float) length.TotalSeconds + 0.01f;
+        }
+
+        if (comp.Params.Variation != null && comp.Params.Variation.Value != 0f)
+        {
+            comp.Params.Pitch *= (float) RandMan.NextGaussian(1, comp.Params.Variation.Value);
+        }
+
+        return comp;
+    }
+
     public static float GainToVolume(float value)
     {
         return 10f * MathF.Log10(value);
@@ -258,6 +281,8 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         return sound == null ? null : PlayGlobal(GetSound(sound), recipient, sound.Params);
     }
+
+    public abstract void LoadStream<T>(AudioComponent component, T stream);
 
     /// <summary>
     /// Play an audio file globally, without position.

@@ -12,6 +12,11 @@ public sealed class AudioResource : BaseResource
 {
     public AudioStream AudioStream { get; private set; } = default!;
 
+    public void Load(AudioStream stream)
+    {
+        AudioStream = stream;
+    }
+
     public override void Load(IDependencyCollection dependencies, ResPath path)
     {
         var cache = dependencies.Resolve<IResourceManager>();

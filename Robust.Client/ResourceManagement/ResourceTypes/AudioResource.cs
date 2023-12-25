@@ -44,6 +44,13 @@ public sealed class AudioResource : BaseResource
         }
     }
 
+    public AudioResource(AudioStream stream) : base()
+    {
+        AudioStream = stream;
+    }
+
+    public AudioResource() : base(){}
+
     public static implicit operator AudioStream(AudioResource res)
     {
         return res.AudioStream;

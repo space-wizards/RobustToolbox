@@ -123,45 +123,23 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     #region AudioParams
 
-    protected AudioComponent SetupAudio(EntityUid uid, string fileName, AudioParams? audioParams)
+    protected AudioComponent SetupAudio(EntityUid uid, string? fileName, AudioParams? audioParams, TimeSpan? length = null)
     {
-        DebugTools.Assert(!string.IsNullOrEmpty(fileName));
+        DebugTools.Assert((!string.IsNullOrEmpty(fileName) || length is not null));
         audioParams ??= AudioParams.Default;
         var comp = AddComp<AudioComponent>(uid);
-        comp.FileName = fileName;
-        comp.Params = audioParams.Value;
-        comp.AudioStart = Timing.CurTime;
-
-        if (!audioParams.Value.Loop)
-        {
-            var length = GetAudioLength(fileName);
-
-            var despawn = AddComp<TimedDespawnComponent>(uid);
-            // Don't want to clip audio too short due to imprecision.
-            despawn.Lifetime = (float) length.TotalSeconds + 0.01f;
-        }
-
-        if (comp.Params.Variation != null && comp.Params.Variation.Value != 0f)
-        {
-            comp.Params.Pitch *= (float) RandMan.NextGaussian(1, comp.Params.Variation.Value);
-        }
-
-        return comp;
-    }
-
-    protected AudioComponent SetupAudio(EntityUid uid, TimeSpan length, AudioParams? audioParams)
-    {
-        audioParams ??= AudioParams.Default;
-        var comp = AddComp<AudioComponent>(uid);
+        comp.FileName = fileName ?? string.Empty;
         comp.Params = audioParams.Value;
         comp.AudioStart = Timing.CurTime;
 
 
         if (!audioParams.Value.Loop)
         {
+            length ??= GetAudioLength(fileName!);
+
             var despawn = AddComp<TimedDespawnComponent>(uid);
             // Don't want to clip audio too short due to imprecision.
-            despawn.Lifetime = (float) length.TotalSeconds + 0.01f;
+            despawn.Lifetime = (float) length.Value.TotalSeconds + 0.01f;
         }
 
         if (comp.Params.Variation != null && comp.Params.Variation.Value != 0f)

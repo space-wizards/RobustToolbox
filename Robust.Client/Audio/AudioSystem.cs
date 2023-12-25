@@ -404,9 +404,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private bool TryGetAudio(AudioStream stream, [NotNullWhen(true)] out AudioResource? audio)
     {
-        audio = new AudioResource();
-        audio.Load(stream);
-        return true;
+        if (_resourceCache.TryGetResource(stream, out audio))
+            return true;
+
+        Log.Error($"Server failed to play audio stream {stream.Title}.");
+        return false;
     }
 
     public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityCoordinates coordinates,
@@ -613,12 +615,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return PlayStatic(filename, coordinates, audioParams);
     }
 
-
     private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(AudioParams? audioParams, AudioStream stream)
     {
         var audioP = audioParams ?? AudioParams.Default;
         var entity = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
-        var comp = SetupAudio(entity, stream.Length, audioP);
+        var comp = SetupAudio(entity, null, audioP, stream.Length);
         LoadStream(comp, stream);
         EntityManager.InitializeAndStartEntity(entity);
         var source = comp.Source;

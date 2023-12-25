@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 195.0.0
+
+### New features
+
+* Generic versions of `DebugTools.AssertEquals()` functions.
+* `[Prototype]` now does not need to have a name specified, the name is inferred from the class name.
+
+### Other
+
+* `Robust.Client.WebView` has been brought alive again.
+
+
 ## 194.1.0
 
 ### New features

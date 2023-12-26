@@ -138,50 +138,18 @@ namespace Robust.Server.GameStates
         {
             var players = _playerManager.Sessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
-            // Update client acks, which is used to figure out what data needs to be sent to clients
-            // This only needs SessionData which isn't touched during GetPVSData or ProcessCollections.
-            var ackJob = _pvs.ProcessQueuedAcks();
-
-            // Figure out what chunks players can see and cache some chunk data.
-            if (_pvs.CullingEnabled)
-            {
-                using var _ = _usageHistogram.WithLabels("Get Chunks").NewTimer();
-                _pvs.ProcessChunks(players);
-            }
-
-            ackJob.WaitOne();
+            _pvs.BeforeSendState(players, _usageHistogram);
 
             // Construct & send the game state to each player.
-            GameTick oldestAck;
-            using (_usageHistogram.WithLabels("Send States").NewTimer())
-            {
-                oldestAck = SendStates(players);
-            }
+            var oldestAck = SendStates(players);
 
-            using (_usageHistogram.WithLabels("Clean Dirty").NewTimer())
-            {
-                _pvs.CleanupDirty(players);
-            }
-
-            if (oldestAck == GameTick.MaxValue)
-            {
-                // There were no connected players?
-                // In that case we just clear all deletion history.
-                _pvs.CullDeletionHistory(GameTick.MaxValue);
-                _lastOldestAck = GameTick.Zero;
-                return;
-            }
-
-            if (oldestAck == _lastOldestAck)
-                return;
-
-            _lastOldestAck = oldestAck;
-            using var __ = _usageHistogram.WithLabels("Cull History").NewTimer();
-            _pvs.CullDeletionHistory(oldestAck);
+            _pvs.AfterSendState(players, _usageHistogram, oldestAck, ref _lastOldestAck);
         }
 
         private GameTick SendStates(ICommonSession[] players)
         {
+            using var _ = _usageHistogram.WithLabels("Send States").NewTimer();
+
             var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
             var oldestAckValue = GameTick.MaxValue.Value;
 

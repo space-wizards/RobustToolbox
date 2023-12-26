@@ -184,6 +184,13 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// If false, this will run more parts of PVS synchronously. This will generally slow it down, can be useful
+        /// for collecting tick timing metrics.
+        /// </summary>
+        public static readonly CVarDef<bool> NetPvsAsync =
+            CVarDef.Create("net.pvs_async", true, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
         /// View size to take for PVS calculations,
         /// as the size of the sides of a square centered on the view points of clients.
         /// </summary>

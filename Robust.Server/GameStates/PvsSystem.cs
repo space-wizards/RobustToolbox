@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
+using Prometheus;
 using Robust.Server.Configuration;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
@@ -83,6 +84,8 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     private readonly List<GameTick> _deletedTick = new();
 
+    private bool _async;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -106,11 +109,17 @@ internal sealed partial class PvsSystem : EntitySystem
         _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
         _configManager.OnValueChanged(CVars.NetLowLodRange, OnLodChanged, true);
         _configManager.OnValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged, true);
+        _configManager.OnValueChanged(CVars.NetPvsAsync, OnAsyncChanged, true);
 
         _serverGameStateManager.ClientAck += OnClientAck;
         _serverGameStateManager.ClientRequestFull += OnClientRequestFull;
 
         InitializeDirty();
+    }
+
+    private void OnAsyncChanged(bool value)
+    {
+        _async = value;
     }
 
     public override void Shutdown()
@@ -189,8 +198,9 @@ internal sealed partial class PvsSystem : EntitySystem
         CullingEnabled = value;
     }
 
-    public void CullDeletionHistory(GameTick oldestAck)
+    public void CullDeletionHistory(GameTick oldestAck, Histogram histogram)
     {
+        using var _ = histogram.WithLabels("Cull History").NewTimer();
         CullDeletionHistoryUntil(oldestAck);
         _mapManager.CullDeletionHistory(oldestAck);
     }
@@ -365,6 +375,41 @@ internal sealed partial class PvsSystem : EntitySystem
             _deletedEntities.RemoveSwap(i);
             _deletedTick.RemoveSwap(i);
         }
+    }
+
+    public void BeforeSendState(ICommonSession[] players, Histogram histogram)
+    {
+        var ackJob = ProcessQueuedAcks(histogram);
+
+        // Figure out what chunks players can see and cache some chunk data.
+        if (CullingEnabled)
+        {
+            GetVisibleChunks(players, histogram);
+            ProcessVisibleChunks(players, histogram);
+        }
+
+        ackJob?.WaitOne();
+    }
+
+    public void AfterSendState(ICommonSession[] players, Histogram histogram, GameTick oldestAck,
+        ref GameTick lastOldestAck)
+    {
+        CleanupDirty(players, histogram);
+
+        if (oldestAck == GameTick.MaxValue)
+        {
+            // There were no connected players?
+            // In that case we just clear all deletion history.
+            CullDeletionHistory(GameTick.MaxValue, histogram);
+            lastOldestAck = GameTick.Zero;
+            return;
+        }
+
+        if (oldestAck == lastOldestAck)
+            return;
+
+        lastOldestAck = oldestAck;
+        CullDeletionHistory(oldestAck, histogram);
     }
 }
 

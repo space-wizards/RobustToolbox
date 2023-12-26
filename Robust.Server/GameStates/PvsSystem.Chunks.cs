@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Prometheus;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
@@ -64,8 +65,17 @@ internal sealed partial class PvsSystem
     /// <summary>
     /// Update the list of all currently visible chunks.
     /// </summary>
-    public void GetVisibleChunks(ICommonSession[] sessions)
+    public void GetVisibleChunks(ICommonSession[] sessions, Histogram histogram)
     {
+        using var _= histogram.WithLabels("Get Chunks").NewTimer();
+
+        // TODO PVS try parallelize
+        // I.e., get the per-player List<PvsChunk> in parallel.
+        // Then, add them together into a single (unique) List on the main thread
+        // However, I'm not sure if this would actually be any faster with parallel overhead.
+        // Per-player chunk enumeration should be reasonably fast? But its still a few component lookups and O(N^2)
+        // chunk enumeration per player, where N ~ pvs size.
+
         _visibleChunks.Clear();
         _visibleChunkSet.Clear();
         foreach (var session in sessions)
@@ -162,10 +172,9 @@ internal sealed partial class PvsSystem
         }
     }
 
-    public void ProcessChunks(ICommonSession[] players)
+    public void ProcessVisibleChunks(ICommonSession[] players, Histogram histogram)
     {
-        GetVisibleChunks(players);
-
+        using var _= histogram.WithLabels("Update Chunks").NewTimer();
         if (_visibleChunks.Count > 0)
             _parallelMgr.ProcessNow(_chunkJob, _visibleChunks.Count + 1);
     }

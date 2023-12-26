@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Prometheus;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -31,12 +32,11 @@ internal sealed partial class PvsSystem
     /// <summary>
     ///     Processes queued client acks in parallel
     /// </summary>
-    internal WaitHandle ProcessQueuedAcks()
+    /// <param name="histogram"></param>
+    internal WaitHandle? ProcessQueuedAcks(Histogram histogram)
     {
         if (PendingAcks.Count == 0)
-        {
-            return ParallelManager.DummyResetEvent.WaitHandle;
-        }
+            return null;
 
         _toAck.Clear();
 
@@ -46,6 +46,14 @@ internal sealed partial class PvsSystem
         }
 
         PendingAcks.Clear();
+
+        if (!_async)
+        {
+            using var _= histogram.WithLabels("Process Acks").NewTimer();
+            _parallelManager.ProcessNow(_ackJob, _toAck.Count);
+            return null;
+        }
+
         return _parallelManager.Process(_ackJob, _toAck.Count);
     }
 

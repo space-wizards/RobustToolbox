@@ -159,7 +159,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         // Source has already been set
-        if (component.Source is not DummyAudioSource)
+        if (component.Loaded)
         {
             return;
         }
@@ -171,6 +171,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         SetupSource(component, audioResource);
+        component.Loaded = true;
     }
 
     private void SetupSource(AudioComponent component, AudioResource audioResource, TimeSpan? length = null)
@@ -588,6 +589,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             TryGetAudio(audioStream, out var audio);
             SetupSource(component, audio!, audioStream.Length);
+            component.Loaded = true;
         }
     }
 

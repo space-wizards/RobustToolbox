@@ -32,7 +32,7 @@ namespace Robust.Shared.Localization
         private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();
 
         private (CultureInfo, FluentBundle)? _defaultCulture;
-        private (CultureInfo, FluentBundle)[]? _fallbackCultures;
+        private (CultureInfo, FluentBundle)[] _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();
 
         void IPostInjectInit.PostInject()
         {
@@ -82,12 +82,6 @@ namespace Robust.Shared.Localization
 
             if (TryGetString(messageId, _defaultCulture.Value, out value))
                 return true;
-
-            if (_fallbackCultures == null)
-            {
-                value = null;
-                return false;
-            }
 
             foreach (var fallback in  _fallbackCultures)
             {
@@ -175,13 +169,6 @@ namespace Robust.Shared.Localization
             if (culture.Value.Item2.HasMessage(messageId))
                 return true;
 
-
-            if (_fallbackCultures == null)
-            {
-                culture = null;
-                return false;
-            }
-
             foreach (var fallback in  _fallbackCultures)
             {
                 culture = fallback;
@@ -208,12 +195,6 @@ namespace Robust.Shared.Localization
             bundle = _defaultCulture.Value.Item2;
             if (bundle.TryGetAstMessage(messageId, out message))
                 return true;
-
-            if (_fallbackCultures == null)
-            {
-                bundle = null;
-                return false;
-            }
 
             foreach (var fallback in  _fallbackCultures)
             {
@@ -273,7 +254,7 @@ namespace Robust.Shared.Localization
 
         public void SetFallbackCluture(params CultureInfo[] cultures)
         {
-            _fallbackCultures = null;
+            _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();;
             var tuples = new (CultureInfo, FluentBundle)[cultures.Length];
             var i = 0;
             foreach (var culture in cultures)

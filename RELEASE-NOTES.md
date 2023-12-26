@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `LocalizationManager` now supports multiple fallback cultures
 
 ### Bugfixes
 

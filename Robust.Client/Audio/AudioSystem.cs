@@ -158,6 +158,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return;
         }
 
+        // Source has already been set
+        if (component.Loaded)
+        {
+            return;
+        }
+
         if (!TryGetAudio(component.FileName, out var audioResource))
         {
             Log.Error($"Error creating audio source for {audioResource}, can't find file {component.FileName}");
@@ -165,6 +171,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         SetupSource(component, audioResource);
+        component.Loaded = true;
     }
 
     private void SetupSource(AudioComponent component, AudioResource audioResource, TimeSpan? length = null)
@@ -582,6 +589,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             TryGetAudio(audioStream, out var audio);
             SetupSource(component, audio!, audioStream.Length);
+            component.Loaded = true;
         }
     }
 

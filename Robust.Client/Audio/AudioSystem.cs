@@ -158,6 +158,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return;
         }
 
+        // Source has already been set
+        if (component.Source is not DummyAudioSource)
+        {
+            return;
+        }
+
         if (!TryGetAudio(component.FileName, out var audioResource))
         {
             Log.Error($"Error creating audio source for {audioResource}, can't find file {component.FileName}");

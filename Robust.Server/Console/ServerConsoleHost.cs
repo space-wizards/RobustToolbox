@@ -82,7 +82,7 @@ namespace Robust.Server.Console
                 var sudoShell = new SudoShell(this, localShell, shell);
 
 #pragma warning disable CA2012
-                return CalcCompletions(sudoShell, args, argStr);
+                return CalcCompletionsOrEmpty(sudoShell, args, argStr);
 #pragma warning restore CA2012
             });
 
@@ -237,7 +237,7 @@ namespace Robust.Server.Console
 
             var result = await CalcCompletions(shell, message.Args, message.ArgString);
 
-            if ((result.Options.Length == 0 && result.Hint is null) || message.Args.Length <= 1)
+            if ((result == null) || message.Args.Length <= 1)
             {
                 var parser = new ParserContext(message.ArgString, _toolshed);
                 CommandRun.TryParse(true, parser, null, null, false, out _, out var completions, out _);
@@ -247,7 +247,7 @@ namespace Robust.Server.Console
                 }
                 var (shedRes, _) = await completions.Value;
                 shedRes ??= CompletionResult.Empty;
-                result = new CompletionResult(shedRes.Options.Concat(result.Options).ToArray(), shedRes.Hint ?? result.Hint);
+                result = new CompletionResult(shedRes.Options.Concat(result?.Options ?? Array.Empty<CompletionOption>()).ToArray(), result?.Hint ?? shedRes.Hint);
             }
 
             done:
@@ -263,25 +263,34 @@ namespace Robust.Server.Console
             NetManager.ServerSendMessage(msg, message.MsgChannel);
         }
 
-        private ValueTask<CompletionResult> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
+        private async ValueTask<CompletionResult> CalcCompletionsOrEmpty(IConsoleShell shell, string[] args, string argStr)
+        {
+            return await CalcCompletions(shell, args, argStr) ?? CompletionResult.Empty;
+        }
+
+        /// <summary>
+        /// Get completions. Non-null results imply that the command was handled. If it is empty, it implies that
+        /// there are no completions for this command.
+        /// </summary>
+        private ValueTask<CompletionResult?> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
         {
             // Logger.Debug(string.Join(", ", args));
 
             if (args.Length <= 1)
             {
                 // Typing out command name, handle this ourselves.
-                return ValueTask.FromResult(CompletionResult.FromOptions(
+                return ValueTask.FromResult<CompletionResult?>(CompletionResult.FromOptions(
                     AvailableCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description))));
             }
 
             var cmdName = args[0];
             if (!RegisteredCommands.TryGetValue(cmdName, out var cmd))
-                return ValueTask.FromResult(CompletionResult.Empty);
+                return ValueTask.FromResult<CompletionResult?>(null);
 
             if (!ShellCanExecute(shell, cmdName))
-                return ValueTask.FromResult(CompletionResult.Empty);
+                return ValueTask.FromResult<CompletionResult?>(CompletionResult.Empty);
 
-            return cmd.GetCompletionAsync(shell, args[1..], argStr, default);
+            return ValueTask.FromResult<CompletionResult?>(cmd.GetCompletion(shell, args[1..]));
         }
 
         private sealed class SudoShell : IConsoleShell

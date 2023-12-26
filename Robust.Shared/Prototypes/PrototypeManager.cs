@@ -770,9 +770,12 @@ namespace Robust.Shared.Prototypes
                 return false;
             }
 
-            DebugTools.Assert(dict is FrozenDictionary<string, T>);
+            DebugTools.Assert(dict is FrozenDictionary<string, T> || dict == null);
             instances = dict as FrozenDictionary<string, T>;
-            return instances != null;
+
+            // Prototypes with no loaded instances never get frozen.
+            instances ??= FrozenDictionary<string, T>.Empty;
+            return true;
         }
 
         private bool TryGetInstances(Type kind, [NotNullWhen(true)] out object? instances)

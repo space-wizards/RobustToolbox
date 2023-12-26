@@ -54,6 +54,32 @@ namespace Robust.Shared.Localization
             return msg;
         }
 
+        #region get string
+
+        public string GetString(string messageId, (string, object) arg)
+        {
+            if (_defaultCulture == null)
+                return messageId;
+
+            if (TryGetString(messageId, out var argMsg, arg))
+                return argMsg;
+
+            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name, messageId);
+            return  messageId;
+        }
+
+        public string GetString(string messageId, (string, object) arg1, (string, object) arg2)
+        {
+            if (_defaultCulture == null)
+                return messageId;
+
+            if (TryGetString(messageId, out var argMsg, arg1, arg2))
+                return argMsg;
+
+            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name, messageId);
+            return  messageId;
+        }
+
         public string GetString(string messageId, params (string, object)[] args)
         {
             if (_defaultCulture == null)
@@ -64,15 +90,18 @@ namespace Robust.Shared.Localization
 
             _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name, messageId);
             return  messageId;
-
         }
+
+        #endregion
 
         public bool HasString(string messageId)
         {
             return HasMessage(messageId, out _);
         }
 
-        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value)
+        #region TryGetString
+
+public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value)
         {
             if (_defaultCulture == null)
             {
@@ -115,10 +144,56 @@ namespace Robust.Shared.Localization
         }
 
         public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
+            (string, object) arg)
+        {
+            // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]
+            // I.e., have it automatically call FluentFromObject(context) with the right context if the message exists
+            // This allows us to get rid of this message check.
+            if (!HasMessage(messageId, out var culture))
+            {
+                value = null;
+                return false;
+            }
+
+            var (info, bundle) = culture.Value;
+            var context = new LocContext(bundle);
+            var args = new Dictionary<string, IFluentType>
+            {
+                { arg.Item1, arg.Item2.FluentFromObject(context) }
+            };
+
+            return TryGetString(messageId, out value, args, bundle, info);
+        }
+
+        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
+            (string, object) arg1, (string, object) arg2)
+        {
+            // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]
+            // I.e., have it automatically call FluentFromObject(context) with the right context if the message exists
+            // This allows us to get rid of this message check.
+            if (!HasMessage(messageId, out var culture))
+            {
+                value = null;
+                return false;
+            }
+
+            var (info, bundle) = culture.Value;
+            var context = new LocContext(bundle);
+            var args = new Dictionary<string, IFluentType>
+            {
+                { arg1.Item1, arg1.Item2.FluentFromObject(context) },
+                { arg2.Item1, arg2.Item2.FluentFromObject(context) }
+            };
+
+            return TryGetString(messageId, out value, args, bundle, info);
+        }
+
+        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
             params (string, object)[] keyArgs)
         {
             // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]
-            // I.e., get rid of this has-message check
+            // I.e., have it automatically call FluentFromObject(context) with the right context if the message exists
+            // This allows us to get rid of this message check.
             if (!HasMessage(messageId, out var culture))
             {
                 value = null;
@@ -133,23 +208,31 @@ namespace Robust.Shared.Localization
                 args.Add(k, v.FluentFromObject(context));
             }
 
+            return TryGetString(messageId, out value, args, bundle, info);
+        }
+
+        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
+            Dictionary<string, IFluentType> args, FluentBundle bundle, CultureInfo culture)
+        {
             try
             {
                 var result = bundle.TryGetAttrMsg(messageId, args, out var errs, out value);
                 foreach (var err in errs)
                 {
-                    _logSawmill.Error("{culture}/{messageId}: {error}", info.Name, messageId, err);
+                    _logSawmill.Error("{culture}/{messageId}: {error}", culture.Name, messageId, err);
                 }
 
                 return result;
             }
             catch (Exception e)
             {
-                _logSawmill.Error("{culture}/{messageId}: {exception}", info.Name, messageId, e);
+                _logSawmill.Error("{culture}/{messageId}: {exception}", culture.Name, messageId, e);
                 value = null;
                 return false;
             }
         }
+
+        #endregion
 
         private bool HasMessage(
             string messageId,

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -246,8 +247,15 @@ namespace Robust.Server.Console
                     goto done;
                 }
                 var (shedRes, _) = await completions.Value;
-                shedRes ??= CompletionResult.Empty;
-                result = new CompletionResult(shedRes.Options.Concat(result?.Options ?? Array.Empty<CompletionOption>()).ToArray(), result?.Hint ?? shedRes.Hint);
+
+                IEnumerable<CompletionOption> options = result?.Options ?? Array.Empty<CompletionOption>();
+
+                if (shedRes != null)
+                    options = options.Concat(shedRes.Options);
+
+                var hints = result?.Hint ?? shedRes?.Hint;
+
+                result = new CompletionResult(options.ToArray(), hints);
             }
 
             done:

@@ -238,4 +238,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return loadedMetadata.Length;
         }
     }
+
+    public override void LoadStream<T>(AudioComponent component, T stream)
+    {
+    }
 }

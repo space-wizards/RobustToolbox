@@ -12,6 +12,11 @@ public sealed class AudioResource : BaseResource
 {
     public AudioStream AudioStream { get; private set; } = default!;
 
+    public void Load(AudioStream stream)
+    {
+        AudioStream = stream;
+    }
+
     public override void Load(IDependencyCollection dependencies, ResPath path)
     {
         var cache = dependencies.Resolve<IResourceManager>();
@@ -38,6 +43,13 @@ public sealed class AudioResource : BaseResource
             }
         }
     }
+
+    public AudioResource(AudioStream stream) : base()
+    {
+        AudioStream = stream;
+    }
+
+    public AudioResource() : base(){}
 
     public static implicit operator AudioStream(AudioResource res)
     {

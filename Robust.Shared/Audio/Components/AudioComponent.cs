@@ -56,8 +56,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
     [DataField(required: true)]
     public string FileName = string.Empty;
 
-    [AutoNetworkedField]
-    [DataField(required: true)]
     public bool Loaded = false;
 
     /// <summary>

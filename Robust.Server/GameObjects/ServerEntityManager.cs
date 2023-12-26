@@ -156,9 +156,9 @@ namespace Robust.Server.GameObjects
             EntitiesCount.Set(Entities.Count);
         }
 
-        public uint GetLastMessageSequence(ICommonSession session)
+        public uint GetLastMessageSequence(ICommonSession? session)
         {
-            return _lastProcessedSequencesCmd[session];
+            return session == null ? default : _lastProcessedSequencesCmd[session];
         }
 
         /// <inheritdoc />

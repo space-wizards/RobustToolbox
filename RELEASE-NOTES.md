@@ -54,6 +54,15 @@ END TEMPLATE-->
 *None yet*
 
 
+## 195.0.1
+
+### Bugfixes
+
+* Fixes playing audio using audio streams
+* Fixes placement manager exceptions when placing self deleting / spawner entities
+* Fixed `IPrototypeManager.EnumeratePrototypes<T>` throwing an exception when there are no instances.
+
+
 ## 195.0.0
 
 ### New features
@@ -61,9 +70,17 @@ END TEMPLATE-->
 * Generic versions of `DebugTools.AssertEquals()` functions.
 * `[Prototype]` now does not need to have a name specified, the name is inferred from the class name.
 
+### Bugfixes
+
+* Fixes a physics bug that could cause deleted entities to remain on the physics map.
+* Fixes a bug in entity lookup code that could cause clients to get stuck in an infinite loop.
+ 
 ### Other
 
 * `Robust.Client.WebView` has been brought alive again.
+* The addition of physics joints is no longer deferred to the next tick.
+* Grid traversal is no longer deferred to the next tick.
+* Integration tests now fail when console commands log errors.
 
 
 ## 194.1.0

@@ -73,12 +73,12 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     This is the tick the component was created.
         /// </summary>
-        GameTick CreationTick { get; [Obsolete("Do not use from content")] set; }
+        GameTick CreationTick { get; set; }
 
         /// <summary>
         ///     This is the last game tick Dirty() was called.
         /// </summary>
-        GameTick LastModifiedTick { get; [Obsolete("Do not use from content")] set; }
+        GameTick LastModifiedTick { get;  set; }
 
         [Obsolete("Do not use from content")]
         void ClearTicks();

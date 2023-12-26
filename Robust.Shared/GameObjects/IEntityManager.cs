@@ -90,6 +90,21 @@ namespace Robust.Shared.GameObjects
 
         public void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent;
 
+        public void Dirty<T1, T2>(Entity<T1, T2> ent, MetaDataComponent? meta = null)
+            where T1 : IComponent
+            where T2 : IComponent;
+
+        public void Dirty<T1, T2, T3>(Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
+            where T1 : IComponent
+            where T2 : IComponent
+            where T3 : IComponent;
+
+        public void Dirty<T1, T2, T3, T4>(Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
+            where T1 : IComponent
+            where T2 : IComponent
+            where T3 : IComponent
+            where T4 : IComponent;
+
         public void QueueDeleteEntity(EntityUid? uid);
 
         public bool IsQueuedForDeletion(EntityUid uid);

@@ -19,14 +19,11 @@ internal abstract partial class SharedPlayerManager
         if (LastStateUpdate < fromTick)
             return;
 
-        // Integration tests need to clone data before "sending" it to the client. Otherwise they reference the
-        // same object.
-
-#if FULL_RELEASE
-        states.AddRange(InternalSessions.Values.Select(s => s.State));
-#else
-        states.AddRange(InternalSessions.Values.Select(s => s.State.Clone()));
-#endif
+        states.EnsureCapacity(InternalSessions.Count);
+        foreach (var player in InternalSessions.Values)
+        {
+            states.Add(player.State);
+        }
     }
 
     public void UpdateState(ICommonSession session)

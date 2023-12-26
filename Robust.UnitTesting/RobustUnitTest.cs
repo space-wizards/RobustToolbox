@@ -24,6 +24,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
 
 namespace Robust.UnitTesting
@@ -120,6 +121,8 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<DebugRayDrawingSystem>();
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<DebugPhysicsSystem>();
+                systems.LoadExtraSystemType<InputSystem>();
+                systems.LoadExtraSystemType<PvsOverrideSystem>();
             }
 
             var entMan = deps.Resolve<IEntityManager>();

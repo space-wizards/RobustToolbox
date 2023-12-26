@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
@@ -77,11 +78,15 @@ internal sealed partial class PvsSystem
         RemoveEntityFromChunk(uid, meta);
 
         // moving to null space?
-        if (xform.ParentUid == default || xform.ParentUid == uid)
+        if (xform.ParentUid == EntityUid.Invalid || xform.ParentUid == uid)
             return;
 
         var newRoot = (xform.GridUid ?? xform.MapUid);
-        DebugTools.AssertNotNull(newRoot);
+        if (newRoot == null)
+        {
+            AssertNullspace(xform.ParentUid);
+            return;
+        }
 
         // If directly parented to the chunk, add as a direct child.
         if (xform.ParentUid == newRoot)
@@ -94,5 +99,16 @@ internal sealed partial class PvsSystem
         // Else, mark the new parent's last chunk as dirty. Null implies it is already dirty.
         if (MetaData(xform.ParentUid).LastPvsLocation is { } loc)
             DirtyChunk(loc);
+    }
+
+    [Conditional("DEBUG")]
+    private void AssertNullspace(EntityUid uid)
+    {
+        if (uid == EntityUid.Invalid || !_xformQuery.TryGetComponent(uid, out var xform))
+            return;
+
+        DebugTools.AssertNull(xform.GridUid);
+        DebugTools.AssertNull(xform.MapUid);
+        AssertNullspace(xform.ParentUid);
     }
 }

@@ -26,6 +26,9 @@ public sealed partial class ToolshedManager
     [Dependency] private readonly IEntityManager _entity = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
+#if !CLIENT_SCRIPTING
+    [Dependency] private readonly INetManager _net = default!;
+#endif
     [Dependency] private readonly ISharedPlayerManager _player = default!;
     [Dependency] private readonly IConsoleHost _conHost = default!;
 

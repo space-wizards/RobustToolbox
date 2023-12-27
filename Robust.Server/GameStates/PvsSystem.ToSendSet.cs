@@ -116,7 +116,7 @@ internal sealed partial class PvsSystem
     /// This method adds an entity to the list of visible entities, updates the last-seen tick, and computes any
     /// required game states.
     /// </summary>
-    private bool AddToSendList(PvsSession session, EntityData data, GameTick fromTick, bool entered)
+    private bool AddToSendList(PvsSession session, PvsData data, GameTick fromTick, bool entered)
     {
         DebugTools.Assert(fromTick < _gameTiming.CurTick);
 
@@ -189,20 +189,20 @@ internal sealed partial class PvsSystem
     /// This method will also check that the player's PVS entry budget is not being exceeded.
     /// </summary>
     private (bool Entering, bool BudgetExceeded) IsEnteringPvsRange(
-        EntityData entity,
+        PvsData data,
         GameTick fromTick,
         ref PvsBudget budget)
     {
-        DebugTools.AssertEqual(entity.LastSeen == GameTick.Zero, entity.Visibility <= PvsEntityVisibility.Unsent);
+        DebugTools.AssertEqual(data.LastSeen == GameTick.Zero, data.Visibility <= PvsEntityVisibility.Unsent);
 
         var enteredSinceLastSent = fromTick == GameTick.Zero
-                                   || entity.LastSeen == GameTick.Zero
-                                   || entity.LastSeen != _gameTiming.CurTick - 1;
+                                   || data.LastSeen == GameTick.Zero
+                                   || data.LastSeen != _gameTiming.CurTick - 1;
 
         var entering = enteredSinceLastSent
-                      || entity.EntityLastAcked == GameTick.Zero
-                      || entity.EntityLastAcked < fromTick // this entity was not in the last acked state.
-                      || entity.LastLeftView >= fromTick; // entity left and re-entered sometime after the last acked tick
+                      || data.EntityLastAcked == GameTick.Zero
+                      || data.EntityLastAcked < fromTick // this entity was not in the last acked state.
+                      || data.LastLeftView >= fromTick; // entity left and re-entered sometime after the last acked tick
 
         // If the entity is entering, but we already sent this entering entity in the last message, we won't add it to
         // the budget. Chances are the packet will arrive in a nice and orderly fashion, and the client will stick to
@@ -215,7 +215,7 @@ internal sealed partial class PvsSystem
 
             budget.EnterCount++;
 
-            if (entity.EntityLastAcked == GameTick.Zero)
+            if (data.EntityLastAcked == GameTick.Zero)
                 budget.NewCount++;
         }
 

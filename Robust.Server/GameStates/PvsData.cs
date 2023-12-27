@@ -22,18 +22,18 @@ internal sealed class PvsSession(ICommonSession session)
     /// <summary>
     /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="PvsSystem.DirtyBufferSize"/> ticks.
     /// </summary>
-    public readonly OverflowDictionary<GameTick, List<EntityData>> PreviouslySent = new(PvsSystem.DirtyBufferSize);
+    public readonly OverflowDictionary<GameTick, List<PvsData>> PreviouslySent = new(PvsSystem.DirtyBufferSize);
 
     /// <summary>
     /// Dictionary containing data about all entities that this client has ever seen.
     /// </summary>
-    public readonly Dictionary<NetEntity, EntityData> Entities = new();
+    public readonly Dictionary<NetEntity, PvsData> Entities = new();
 
     /// <summary>
     /// <see cref="PreviouslySent"/> overflow in case a player's last ack is more than
     /// <see cref="PvsSystem.DirtyBufferSize"/> ticks behind the current tick.
     /// </summary>
-    public (GameTick Tick, List<EntityData> SentEnts)? Overflow;
+    public (GameTick Tick, List<PvsData> SentEnts)? Overflow;
 
     /// <summary>
     /// The client's current visibility mask.
@@ -43,13 +43,13 @@ internal sealed class PvsSession(ICommonSession session)
     /// <summary>
     /// The list that is currently being prepared for sending.
     /// </summary>
-    public List<EntityData>? ToSend;
+    public List<PvsData>? ToSend;
 
     /// <summary>
     /// The <see cref="ToSend"/> list from the previous tick. Also caches the current tick that the PVS leave message
     /// should belong to, in case the processing is ever run asynchronously with normal system/game ticking.
     /// </summary>
-    public (GameTick ToTick, List<EntityData> PreviouslySent)? LastSent;
+    public (GameTick ToTick, List<PvsData> PreviouslySent)? LastSent;
 
     /// <summary>
     /// Visible chunks, sorted by proximity to the clients's viewers;
@@ -126,7 +126,7 @@ internal sealed class PvsSession(ICommonSession session)
 /// <summary>
 /// Class for storing session-specific information about when an entity was last sent to a player.
 /// </summary>
-internal sealed class EntityData(Entity<MetaDataComponent> entity) : IEquatable<EntityData>
+internal sealed class PvsData(Entity<MetaDataComponent> entity) : IEquatable<PvsData>
 {
     public readonly Entity<MetaDataComponent> Entity = entity;
     public readonly NetEntity NetEntity = entity.Comp.NetEntity;
@@ -156,7 +156,7 @@ internal sealed class EntityData(Entity<MetaDataComponent> entity) : IEquatable<
     // from the get-visible/to-send code. If we do that, we need to have this to quickly distinguish between dirty,
     // entering, and unmodified entities.
 
-    public bool Equals(EntityData? other)
+    public bool Equals(PvsData? other)
     {
 #if DEBUG
         // Each this class should be unique for each entity-session combination, and should never be getting compared

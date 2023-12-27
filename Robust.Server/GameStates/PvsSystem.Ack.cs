@@ -101,7 +101,7 @@ internal sealed partial class PvsSystem
             return;
 
         var ackedTick = sessionData.LastReceivedAck;
-        List<EntityData>? ackedEnts;
+        List<PvsData>? ackedEnts;
 
         if (sessionData.Overflow != null && sessionData.Overflow.Value.Tick <= ackedTick)
         {

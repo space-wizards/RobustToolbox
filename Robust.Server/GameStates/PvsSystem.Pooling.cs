@@ -14,8 +14,8 @@ internal sealed partial class PvsSystem
     /// </summary>
     private const int MaxVisPoolSize = 1024;
 
-    private readonly ObjectPool<List<EntityData>> _entDataListPool
-        = new DefaultObjectPool<List<EntityData>>(new ListPolicy<EntityData>(), MaxVisPoolSize);
+    private readonly ObjectPool<List<PvsData>> _entDataListPool
+        = new DefaultObjectPool<List<PvsData>>(new ListPolicy<PvsData>(), MaxVisPoolSize);
 
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);

@@ -54,10 +54,33 @@ END TEMPLATE-->
 *None yet*
 
 
+## 197.0.0
+
+### Breaking changes
+
+* PvsOverrideSystem has been reworked:
+  * Session and global overrides now default to always being recursive (i.e., sending all children).
+  * Session & global overrides will always respect a client's PVS budgets.
+  * Entities with an override will now still be sent in the same way as other entities if they are within a player's view. If you want to prevent them from being sent, you need to use visibility masks.
+  * Entities can have more than one kind of override (i.e., multiple sessions).
+
+### New features
+
+* Added a `PvsSize ` field to `EyeComponent`, which can be used to modify the PVS range of an eye.
+* Added a new `NetLowLodRange` cvar for reducing the number of distant entities that get sent to a player. If a PVS chunk is beyond this range (but still within PVS range), then only high-priority entities on that chunk will get sent.
+* Added a new metadata flag for tagging an entity as a "high prority" entity that should get sent even on distant chunks. This only works for entities that are directly attached to a grid or map. This is currently used by lights & occluders.
+
+### Other
+
+* PVS has been reworked again, and should hopefully be noticeable faster.
+* PVS now prioritizes sending chunks that are closer to a player's eyes.
+
+
 ## 196.0.0
 
 ### Breaking changes
 
+* Dirtying a non-networked component will now fail a debug assert.
 * The `IInvocationContext` interface for toolshed commands now requires a UserId field. The session field should be cleared if a player disconnects.
 
 ### New features

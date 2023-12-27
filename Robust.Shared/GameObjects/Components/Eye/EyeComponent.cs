@@ -52,9 +52,9 @@ namespace Robust.Shared.GameObjects
         public int VisibilityMask = DefaultVisibilityMask;
 
         /// <summary>
-        /// Scales the PVS view range of this eye,
+        /// Overrides the PVS view range of this eye, Effectively a per-eye <see cref="CVars.NetMaxUpdateRange"/> cvar.
         /// </summary>
-        [DataField] public float PvsScale = 1;
+        [DataField] public float? PvsSize;
     }
 
     /// <summary>

@@ -353,8 +353,8 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private (Vector2 worldPos, float range, EntityUid? map) CalcViewBounds(Entity<TransformComponent, EyeComponent?> eye)
     {
-        var scale = eye.Comp2?.PvsScale ?? 1;
-        return (_transform.GetWorldPosition(eye.Comp1), scale * _viewSize / 2f, eye.Comp1.MapUid);
+        var size = Math.Max(eye.Comp2?.PvsSize ?? _viewSize, 1);
+        return (_transform.GetWorldPosition(eye.Comp1), size / 2f, eye.Comp1.MapUid);
     }
 
     public void CullDeletionHistoryUntil(GameTick tick)

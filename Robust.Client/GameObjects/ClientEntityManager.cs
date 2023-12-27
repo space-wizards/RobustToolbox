@@ -98,6 +98,35 @@ namespace Robust.Client.GameObjects
                 base.Dirty(ent, meta);
         }
 
+        /// <inheritdoc />
+        public override void Dirty<T1, T2>(Entity<T1, T2> ent, MetaDataComponent? meta = null)
+        {
+            if (_gameTiming.InPrediction)
+                base.Dirty(ent, meta);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty<T1, T2, T3>(Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
+        {
+            if (_gameTiming.InPrediction)
+                base.Dirty(ent, meta);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty<T1, T2, T3, T4>(Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
+        {
+            if (_gameTiming.InPrediction)
+                base.Dirty(ent, meta);
+        }
+
+        public override EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metaDataComponent = null)
+        {
+            if (_playerManager.LocalPlayer?.ControlledEntity == uid)
+                return base.ToPrettyString(uid) with { Session = _playerManager.LocalPlayer.Session };
+
+            return base.ToPrettyString(uid);
+        }
+
         public override void RaisePredictiveEvent<T>(T msg)
         {
             var session = _playerManager.LocalSession;

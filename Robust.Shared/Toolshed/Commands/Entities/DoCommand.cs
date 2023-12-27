@@ -17,7 +17,7 @@ internal sealed class DoCommand : ToolshedCommand
         [PipedArgument] IEnumerable<T> input,
         [CommandArgument] string command)
     {
-        if (ctx is not OldShellInvocationContext { } reqCtx)
+        if (ctx is not OldShellInvocationContext { } reqCtx || reqCtx.Shell == null)
         {
             throw new NotImplementedException("do can only be executed in a shell invocation context. Some commands like emplace provide their own context.");
         }

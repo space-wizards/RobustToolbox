@@ -15,6 +15,8 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
 
+    private EntityUid _recursionGuard;
+
     /// <summary>
     /// Enables or disables changing grid / map uid upon moving.
     /// </summary>
@@ -31,25 +33,21 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
         _transform.OnGlobalMoveEvent -= OnMove;
     }
 
-    internal void CheckTraverse(EntityUid uid)
+    private void OnMove(ref MoveEvent moveEv)
     {
-        if (!Enabled)
-            return;
-
-        var xform = Transform(uid);
-        var meta = MetaData(uid);
-        var moveEv = new MoveEvent((uid, xform, meta), xform.Coordinates, xform.Coordinates, xform.LocalRotation, xform.LocalRotation);
-
-        OnMove(ref moveEv);
+        CheckTraverse(moveEv.Sender, moveEv.Component);
     }
 
-    private void OnMove(ref MoveEvent moveEv)
+
+    internal void CheckTraverse(EntityUid uid, TransformComponent xform)
     {
         if (!Enabled || _timing.ApplyingState)
             return;
 
-        var entity = moveEv.Sender;
-        var xform = moveEv.Component;
+        // Grid-traversal can result in a stack overflow. This is probably because of rounding errors when checking
+        // grid intersections using the map vs grid coordinates.
+        if (uid == _recursionGuard)
+            return;
 
         // Don't run logic if:
         // - Current parent is not a grid / map
@@ -59,13 +57,33 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
 
         if ((xform.GridUid != xform.ParentUid && xform.MapUid != xform.ParentUid)
             || xform.Anchored
-            || entity == xform.GridUid
-            || entity == xform.MapUid
+            || uid == xform.GridUid
+            || uid == xform.MapUid
             || xform.MapUid is not {} map)
         {
             return;
         }
 
+        if (_recursionGuard != EntityUid.Invalid)
+        {
+            Log.Error($"Grid traversal attempted to handle movement of {ToPrettyString(uid)} while moving {ToPrettyString(_recursionGuard)}");
+            return;
+        }
+
+        _recursionGuard = uid;
+        try
+        {
+            CheckTraversal(uid, xform, map);
+        }
+        finally
+        {
+            _recursionGuard = default;
+        }
+    }
+
+
+    public void CheckTraversal(EntityUid entity, TransformComponent xform, EntityUid map)
+    {
         DebugTools.Assert(!HasComp<MapGridComponent>(entity));
         DebugTools.Assert(!HasComp<MapComponent>(entity));
 
@@ -74,7 +92,7 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
             : Transform(xform.ParentUid).LocalMatrix.Transform(xform.LocalPosition);
 
         // Change parent if necessary
-        if (_mapManager.TryFindGridAt(moveEv.Component.MapID, mapPos, out var gridUid, out _))
+        if (_mapManager.TryFindGridAt(xform.MapID, mapPos, out var gridUid, out _))
         {
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
             if (gridUid != xform.GridUid)
@@ -84,7 +102,7 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
 
         // Attach them to map / they are on an invalid grid
         if (xform.GridUid != null)
-            _transform.SetParent(entity, xform, xform.MapUid.Value);
+            _transform.SetParent(entity, xform, map);
     }
 }
 

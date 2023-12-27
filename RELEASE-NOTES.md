@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Ensure `Robust.Client.WebView` processes get shut down if game process exits uncleanly.
 
 ### Other
 
@@ -74,7 +74,7 @@ END TEMPLATE-->
 
 * Fixes a physics bug that could cause deleted entities to remain on the physics map.
 * Fixes a bug in entity lookup code that could cause clients to get stuck in an infinite loop.
- 
+
 ### Other
 
 * `Robust.Client.WebView` has been brought alive again.

@@ -189,6 +189,7 @@ namespace Robust.Shared.GameObjects
         /// - The entity nested is somewhere in some chunk that has already been marked as dirty
         /// - The entity is in nullspace
         /// </summary>
+        [ViewVariables]
         internal PvsChunkLocation? LastPvsLocation;
 
         [Obsolete("Do not use from content")]

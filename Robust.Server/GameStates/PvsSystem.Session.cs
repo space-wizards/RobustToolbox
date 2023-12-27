@@ -58,7 +58,7 @@ internal sealed partial class PvsSystem
         DebugTools.AssertEqual(session.LeftView.Count, 0);
         DebugTools.AssertEqual(session.PlayerStates.Count, 0);
         DebugTools.AssertEqual(session.States.Count, 0);
-        DebugTools.Assert(CullingEnabled && !session.DisableCulling || session.VisibleChunks.Count == 0);
+        DebugTools.Assert(CullingEnabled && !session.DisableCulling || session.Chunks.Count == 0);
         DebugTools.AssertNull(session.ToSend);
         DebugTools.AssertNull(session.State);
 
@@ -85,22 +85,18 @@ internal sealed partial class PvsSystem
 
         var chunks = session.Chunks;
         var distances = session.ChunkDistanceSq;
-
-        chunks.Clear();
         distances.Clear();
-
-        var nChunks = session.VisibleChunks.Count;
-        chunks.EnsureCapacity(nChunks);
-        distances.EnsureCapacity(nChunks);
+        distances.EnsureCapacity(chunks.Count);
 
         // Assemble list of chunks and their distances to the nearest eye.
-        foreach (var location in session.VisibleChunks)
+        foreach (ref var tuple in CollectionsMarshal.AsSpan(chunks))
         {
-            if (!_chunks.TryGetValue(location, out var chunk))
-                continue;
-
+            var chunk = tuple.Chunk;
             var dist = float.MaxValue;
-            var chebDist = float.MaxValue; // Chebyshev distance
+            var chebDist = float.MaxValue;
+
+            DebugTools.Assert(!chunk.UpdateQueued);
+            DebugTools.Assert(!chunk.Dirty);
 
             foreach (var pos in positions)
             {
@@ -115,13 +111,12 @@ internal sealed partial class PvsSystem
             }
 
             distances.Add(dist);
-            chunks.Add((chunk, chebDist));
+            tuple.ChebyshevDistance = chebDist;
         }
 
         // Sort chunks based on distances
         CollectionsMarshal.AsSpan(distances).Sort(CollectionsMarshal.AsSpan(chunks));
 
-        session.VisibleChunks.Clear();
         session.ToSend = _entDataListPool.Get();
 
         if (session.PreviouslySent.TryGetValue(_gameTiming.CurTick - 1, out var lastSent))

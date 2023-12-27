@@ -33,7 +33,7 @@ internal sealed partial class PvsSystem
     ///     Processes queued client acks in parallel
     /// </summary>
     /// <param name="histogram"></param>
-    internal WaitHandle? ProcessQueuedAcks(Histogram histogram)
+    internal WaitHandle? ProcessQueuedAcks(Histogram? histogram)
     {
         if (PendingAcks.Count == 0)
             return null;
@@ -49,7 +49,7 @@ internal sealed partial class PvsSystem
 
         if (!_async)
         {
-            using var _= histogram.WithLabels("Process Acks").NewTimer();
+            using var _= histogram?.WithLabels("Process Acks").NewTimer();
             _parallelManager.ProcessNow(_ackJob, _toAck.Count);
             return null;
         }
@@ -72,16 +72,23 @@ internal sealed partial class PvsSystem
 
     private record struct PvsChunkJob : IParallelRobustJob
     {
-        public int BatchSize => 4;
+        public int BatchSize => 2;
         public PvsSystem Pvs;
+        public int Count => Pvs._dirtyChunks.Count + 2;
 
         public void Execute(int index)
         {
-            // 0-th "chunk" is processing global PVS overrides
+            if (index > 1)
+            {
+                Pvs.UpdateDirtyChunks(index-2);
+                return;
+            }
+
+            // 1st batch/job performs some extra processing.
             if (index == 0)
                 Pvs.CacheGlobalOverrides();
-            else
-                Pvs.UpdateVisibleChunks(index - 1);
+            else if (index == 1)
+                Pvs.UpdateCleanChunks();
         }
     }
 

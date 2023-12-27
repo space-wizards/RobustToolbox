@@ -52,11 +52,6 @@ internal sealed class PvsSession(ICommonSession session)
     public (GameTick ToTick, List<EntityData> PreviouslySent)? LastSent;
 
     /// <summary>
-    /// Indices of the chunks that are currently visible to this player;
-    /// </summary>
-    public HashSet<PvsChunkLocation> VisibleChunks = new();
-
-    /// <summary>
     /// Visible chunks, sorted by proximity to the clients's viewers;
     /// </summary>
     public readonly List<(PvsChunk Chunk, float ChebyshevDistance)> Chunks = new();
@@ -122,7 +117,7 @@ internal sealed class PvsSession(ICommonSession session)
     public void ClearState()
     {
         PlayerStates.Clear();
-        VisibleChunks.Clear();
+        Chunks.Clear();
         States.Clear();
         State = null;
     }

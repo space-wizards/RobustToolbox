@@ -27,6 +27,8 @@ internal sealed class PvsChunk
     /// </summary>
     public bool Dirty { get; private set; } = true;
 
+    public bool UpdateQueued = false;
+
     /// <summary>
     /// Set of entities that are directly parented to this grid.
     /// </summary>

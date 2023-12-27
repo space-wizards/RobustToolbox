@@ -198,9 +198,9 @@ internal sealed partial class PvsSystem : EntitySystem
         CullingEnabled = value;
     }
 
-    public void CullDeletionHistory(GameTick oldestAck, Histogram histogram)
+    public void CullDeletionHistory(GameTick oldestAck, Histogram? histogram)
     {
-        using var _ = histogram.WithLabels("Cull History").NewTimer();
+        using var _ = histogram?.WithLabels("Cull History").NewTimer();
         CullDeletionHistoryUntil(oldestAck);
         _mapManager.CullDeletionHistory(oldestAck);
     }
@@ -385,7 +385,7 @@ internal sealed partial class PvsSystem : EntitySystem
         if (CullingEnabled)
         {
             GetVisibleChunks(players, histogram);
-            ProcessVisibleChunks(players, histogram);
+            ProcessVisibleChunks(histogram);
         }
 
         ackJob?.WaitOne();

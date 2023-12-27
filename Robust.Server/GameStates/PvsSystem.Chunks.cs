@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -19,8 +20,8 @@ internal sealed partial class PvsSystem
     public const float ChunkSize = 8;
 
     private readonly Dictionary<PvsChunkLocation, PvsChunk> _chunks = new();
-    private readonly List<PvsChunkLocation> _visibleChunks = new(64);
-    private readonly HashSet<PvsChunkLocation> _visibleChunkSet = new(64);
+    private readonly List<PvsChunk> _dirtyChunks = new(64);
+    private readonly List<PvsChunk> _cleanChunks = new(64);
 
     // Store chunks grouped by the root node, for when maps/grids get deleted.
     private readonly Dictionary<EntityUid, HashSet<PvsChunkLocation>> _chunkSets = new();
@@ -33,68 +34,79 @@ internal sealed partial class PvsSystem
     /// <summary>
     /// Iterate over all visible chunks and, if necessary, re-construct their list of entities.
     /// </summary>
-    public void UpdateVisibleChunks(int index)
+    private void UpdateDirtyChunks(int index)
     {
-        var loc = _visibleChunks[index];
-        if (!_chunks.TryGetValue(loc, out var chunk))
-            return; // empty / non-existent chunk.
+        var chunk = _dirtyChunks[index];
+        DebugTools.Assert(chunk.Dirty);
+        DebugTools.Assert(chunk.UpdateQueued);
 
-        if (chunk.Dirty)
-        {
-            if (!chunk.PopulateContents(_metaQuery, _xformQuery))
-                return; // Failed to populate a dirty chunk.
-        }
+        if (!chunk.PopulateContents(_metaQuery, _xformQuery))
+            return; // Failed to populate a dirty chunk.
 
         UpdateChunkPosition(chunk);
+    }
+
+    private void UpdateCleanChunks()
+    {
+        foreach (var chunk in CollectionsMarshal.AsSpan(_cleanChunks))
+        {
+            UpdateChunkPosition(chunk);
+        }
     }
 
     /// <summary>
     /// Update a chunk's world position. This is used to prioritize sending chunks that a closer to players.
     /// </summary>
-    private void UpdateChunkPosition(PvsChunk? chunk)
+    private void UpdateChunkPosition(PvsChunk chunk)
     {
-        if (chunk == null)
-            return;
-
         var xform = Transform(chunk.Root);
         chunk.InvWorldMatrix = xform.InvLocalMatrix;
         var worldPos = xform.LocalMatrix.Transform(chunk.Centre);
         chunk.Position = new(worldPos, xform.MapID);
+        chunk.UpdateQueued = false;
     }
 
     /// <summary>
     /// Update the list of all currently visible chunks.
     /// </summary>
-    public void GetVisibleChunks(ICommonSession[] sessions, Histogram histogram)
+    public void GetVisibleChunks(ICommonSession[] sessions, Histogram? histogram)
     {
-        using var _= histogram.WithLabels("Get Chunks").NewTimer();
+        using var _= histogram?.WithLabels("Get Chunks").NewTimer();
 
         // TODO PVS try parallelize
         // I.e., get the per-player List<PvsChunk> in parallel.
         // Then, add them together into a single (unique) List on the main thread
         // However, I'm not sure if this would actually be any faster with parallel overhead.
         // Per-player chunk enumeration should be reasonably fast? But its still a few component lookups and O(N^2)
-        // chunk enumeration per player, where N ~ pvs size.
+        // dictionary lookups per player, where N ~ pvs size.
 
-        _visibleChunks.Clear();
-        _visibleChunkSet.Clear();
+        DebugTools.Assert(!_chunks.Values.Any(x=> x.UpdateQueued));
+        _dirtyChunks.Clear();
+        _cleanChunks.Clear();
         foreach (var session in sessions)
         {
             var data = _playerData[session];
-            DebugTools.Assert(data.VisibleChunks.Count == 0);
-
+            data.Chunks.Clear();
             GetSessionViewers(data);
+
             foreach (var eye in data.Viewers)
             {
-                GetVisibleChunks(eye, data.VisibleChunks);
+                GetVisibleChunks(eye, data.Chunks);
             }
+
+            // The list of visible chunks should be unique.
+            DebugTools.Assert(data.Chunks.Select(x => x.Chunk).ToHashSet().Count == data.Chunks.Count);
         }
+        DebugTools.Assert(_dirtyChunks.ToHashSet().Count == _dirtyChunks.Count);
+        DebugTools.Assert(_cleanChunks.ToHashSet().Count == _cleanChunks.Count);
+
     }
 
     /// <summary>
     /// Get the chunks visible to a single entity and add them to a player's set of visible chunks.
     /// </summary>
-    private void GetVisibleChunks(Entity<TransformComponent, EyeComponent?> eye, HashSet<PvsChunkLocation> playerChunks)
+    private void GetVisibleChunks(Entity<TransformComponent, EyeComponent?> eye,
+        List<(PvsChunk Chunk, float ChebyshevDistance)> playerChunks)
     {
         var (viewPos, range, mapUid) = CalcViewBounds(eye);
         if (mapUid is not {} map)
@@ -104,9 +116,18 @@ internal sealed partial class PvsSystem
         while (mapChunkEnumerator.MoveNext(out var chunkIndices))
         {
             var loc = new PvsChunkLocation(map, chunkIndices.Value);
-            playerChunks.Add(loc);
-            if (_visibleChunkSet.Add(loc))
-                _visibleChunks.Add(loc);
+            if (!_chunks.TryGetValue(loc, out var chunk))
+                continue;
+
+            playerChunks.Add((chunk, default));
+            if (chunk.UpdateQueued)
+                continue;
+
+            chunk.UpdateQueued = true;
+            if (chunk.Dirty)
+                _dirtyChunks.Add(chunk);
+            else
+                _cleanChunks.Add(chunk);
         }
 
         _grids.Clear();
@@ -121,9 +142,18 @@ internal sealed partial class PvsSystem
             while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
             {
                 var loc = new PvsChunkLocation(grid, gridChunkIndices.Value);
-                playerChunks.Add(loc);
-                if (_visibleChunkSet.Add(loc))
-                    _visibleChunks.Add(loc);
+                if (!_chunks.TryGetValue(loc, out var chunk))
+                    continue;
+
+                playerChunks.Add((chunk, default));
+                if (chunk.UpdateQueued)
+                    continue;
+
+                chunk.UpdateQueued = true;
+                if (chunk.Dirty)
+                    _dirtyChunks.Add(chunk);
+                else
+                    _cleanChunks.Add(chunk);
             }
         }
     }
@@ -172,11 +202,23 @@ internal sealed partial class PvsSystem
         }
     }
 
-    public void ProcessVisibleChunks(ICommonSession[] players, Histogram histogram)
+    public void ProcessVisibleChunks(Histogram? histogram)
     {
-        using var _= histogram.WithLabels("Update Chunks").NewTimer();
-        if (_visibleChunks.Count > 0)
-            _parallelMgr.ProcessNow(_chunkJob, _visibleChunks.Count + 1);
+        using var _= histogram?.WithLabels("Update Chunks").NewTimer();
+        _parallelMgr.ProcessNow(_chunkJob, _chunkJob.Count);
+    }
+
+    /// <summary>
+    /// Variant of <see cref="ProcessVisibleChunks"/> that isn't multithreaded.
+    /// </summary>
+    public void ProcessVisibleChunksSequential()
+    {
+        UpdateCleanChunks();
+
+        for (var i = 0; i < _dirtyChunks.Count; i++)
+        {
+            UpdateDirtyChunks(i);
+        }
     }
 
     /// <summary>

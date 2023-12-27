@@ -20,10 +20,10 @@ internal sealed partial class PvsSystem
     /// </summary>
     private HashSet<ICommonSession> _seenAllEnts = new();
 
-    private readonly Dictionary<ICommonSession, PvsSession> _playerData = new();
+    internal readonly Dictionary<ICommonSession, PvsSession> PlayerData = new();
 
     internal PvsSession GetSessionData(ICommonSession session)
-        => GetSessionData(_playerData[session]);
+        => GetSessionData(PlayerData[session]);
 
     internal PvsSession GetSessionData(PvsSession session)
     {

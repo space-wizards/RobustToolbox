@@ -19,7 +19,7 @@ internal sealed partial class PvsSystem
     private void OnClientAck(ICommonSession session, GameTick ackedTick)
     {
         DebugTools.Assert(ackedTick < _gameTiming.CurTick);
-        if (!_playerData.TryGetValue(session, out var sessionData))
+        if (!PlayerData.TryGetValue(session, out var sessionData))
             return;
 
         if (ackedTick <= sessionData.LastReceivedAck)
@@ -97,7 +97,7 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void ProcessQueuedAck(ICommonSession session)
     {
-        if (!_playerData.TryGetValue(session, out var sessionData))
+        if (!PlayerData.TryGetValue(session, out var sessionData))
             return;
 
         var ackedTick = sessionData.LastReceivedAck;

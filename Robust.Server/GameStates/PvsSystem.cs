@@ -142,7 +142,7 @@ internal sealed partial class PvsSystem : EntitySystem
     // TODO PVS rate limit this?
     private void OnClientRequestFull(ICommonSession session, GameTick tick, NetEntity? missingEntity)
     {
-        if (!_playerData.TryGetValue(session, out var sessionData))
+        if (!PlayerData.TryGetValue(session, out var sessionData))
             return;
 
         // Update acked tick so that OnClientAck doesn't get invoked by any late acks.
@@ -211,7 +211,7 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         if (e.NewStatus == SessionStatus.InGame)
         {
-            if (!_playerData.TryAdd(e.Session, new(e.Session)))
+            if (!PlayerData.TryAdd(e.Session, new(e.Session)))
                 Log.Error($"Attempted to add player to _playerVisibleSets, but they were already present? Session:{e.Session}");
 
             return;
@@ -220,7 +220,7 @@ internal sealed partial class PvsSystem : EntitySystem
         if (e.NewStatus != SessionStatus.Disconnected)
             return;
 
-        if (!_playerData.Remove(e.Session, out var data))
+        if (!PlayerData.Remove(e.Session, out var data))
             return;
 
         if (data.Overflow != null)

@@ -25,7 +25,7 @@ internal sealed partial class PvsSystem
     {
         var meta = ev.Entity.Comp;
 
-        foreach (var sessionData in _playerData.Values)
+        foreach (var sessionData in PlayerData.Values)
         {
             sessionData.Entities.Remove(meta.NetEntity);
         }

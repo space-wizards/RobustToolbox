@@ -85,7 +85,7 @@ internal sealed partial class PvsSystem
         _cleanChunks.Clear();
         foreach (var session in sessions)
         {
-            var data = _playerData[session];
+            var data = PlayerData[session];
             data.Chunks.Clear();
             GetSessionViewers(data);
 

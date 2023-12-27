@@ -40,6 +40,7 @@ public class RecursiveMoveBenchmark : RobustIntegrationTest
     [GlobalSetup]
     public void GlobalSetup()
     {
+        ProgramShared.PathOffset = "../../../../";
         var server = StartServer();
         var client = StartClient();
 

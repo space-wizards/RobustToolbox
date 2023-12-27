@@ -99,7 +99,6 @@ internal sealed partial class PvsSystem
         }
         DebugTools.Assert(_dirtyChunks.ToHashSet().Count == _dirtyChunks.Count);
         DebugTools.Assert(_cleanChunks.ToHashSet().Count == _cleanChunks.Count);
-
     }
 
     /// <summary>

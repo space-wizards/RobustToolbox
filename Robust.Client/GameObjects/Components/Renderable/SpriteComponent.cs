@@ -795,7 +795,7 @@ namespace Robust.Client.GameObjects
             }
 
             layer.RenderingStrategy = layerDatum.RenderingStrategy ?? layer.RenderingStrategy;
-            layer.Cycle = layerDatum.Cycle ?? false;
+            layer.Cycle = layerDatum.Cycle;
 
             layer.Color = layerDatum.Color ?? layer.Color;
             layer._rotation = layerDatum.Rotation ?? layer._rotation;
@@ -2062,14 +2062,12 @@ namespace Robust.Client.GameObjects
                             if (Cycle)
                             {
                                 AnimationFrame = 1;
-                                Reversed = !Reversed;
+                                Reversed = false;
                             }
                             else
                             {
                                 AnimationFrame = delayCount - 1;
                             }
-
-                            AnimationTime = -AnimationTimeLeft;
                         }
                     }
                     else
@@ -2082,17 +2080,16 @@ namespace Robust.Client.GameObjects
                             if (Cycle)
                             {
                                 AnimationFrame = delayCount - 2;
-                                Reversed = !Reversed;
+                                Reversed = true;
                             }
                             else
                             {
                                 AnimationFrame = 0;
                             }
-
-                            AnimationTime = -AnimationTimeLeft;
                         }
                     }
 
+                    AnimationTime = -AnimationTimeLeft;
                     AnimationTimeLeft += state.GetDelay(AnimationFrame);
                 }
             }

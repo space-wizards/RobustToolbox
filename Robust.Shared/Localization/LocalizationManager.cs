@@ -319,6 +319,29 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
             }
         }
 
+        public CultureInfo[] FallbackCultures
+        {
+            get => _fallbackCultures.Select(c => c.Item1).ToArray();
+            set
+            {
+                _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();
+                var tuples = new (CultureInfo, FluentBundle)[value.Length];
+                var i = 0;
+                foreach (var culture in value)
+                {
+                    if (!_contexts.TryGetValue(culture, out var bundle))
+                    {
+                        throw new ArgumentException("That culture is not yet loaded and cannot be used.",
+                            nameof(value));
+                    }
+
+                    tuples[i++] = (culture, bundle);
+                }
+
+                _fallbackCultures = tuples;
+            }
+        }
+
         public void LoadCulture(CultureInfo culture)
         {
             var bundle = LinguiniBuilder.Builder()
@@ -337,18 +360,7 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
 
         public void SetFallbackCluture(params CultureInfo[] cultures)
         {
-            _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();;
-            var tuples = new (CultureInfo, FluentBundle)[cultures.Length];
-            var i = 0;
-            foreach (var culture in cultures)
-            {
-                if (!_contexts.TryGetValue(culture, out var bundle))
-                    throw new ArgumentException("That culture is not loaded.", nameof(culture));
-
-                tuples[i++] = (culture, bundle);
-            }
-
-            _fallbackCultures = tuples;
+            FallbackCultures = cultures;
         }
 
         public void AddLoadedToStringSerializer(IRobustMappedStringSerializer serializer)

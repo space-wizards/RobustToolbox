@@ -95,6 +95,11 @@ namespace Robust.Shared.Localization
         CultureInfo? DefaultCulture { get; set; }
 
         /// <summary>
+        ///     Fallback culture to be used in the absence of the main one.
+        /// </summary>
+        CultureInfo[] FallbackCultures { get; set; }
+
+        /// <summary>
         ///     Load data for a culture.
         /// </summary>
         /// <param name="culture"></param>

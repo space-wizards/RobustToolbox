@@ -117,7 +117,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 moveBuffer[proxy] = worldAABB;
                 // If something is in our AABB then try grid traversal for it
-                _traversal.CheckTraverse(proxy.Entity, _xformQuery.GetComponent(proxy.Entity));
+                _traversal.CheckTraverse(proxy.Entity, Transform(proxy.Entity));
             }
         }
 

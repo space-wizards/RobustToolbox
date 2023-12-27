@@ -142,6 +142,7 @@ namespace Robust.Shared.Map
         void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false, bool includeMap = true);
 
         void FindGridsIntersecting(MapId mapId, Box2 worldAABB, ref List<Entity<MapGridComponent>> state, bool approx = false, bool includeMap = true);
+        void FindGridsIntersecting(EntityUid map, Box2 worldAABB, ref List<Entity<MapGridComponent>> state, bool approx = false, bool includeMap = true);
 
         void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false, bool includeMap = true);
 

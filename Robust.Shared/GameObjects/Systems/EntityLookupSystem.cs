@@ -18,6 +18,7 @@ using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -669,7 +670,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         if (!_physicsQuery.TryGetComponent(uid, out var body) || !body.CanCollide)
         {
-            // TOOD optimize this. This function iterates UP through parents, while we are currently iterating down.
+            // TODO optimize this. This function iterates UP through parents, while we are currently iterating down.
             var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(uid, xform);
 
             // TODO BROADPHASE PARENTING this just assumes local = world
@@ -716,6 +717,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (!TryGetCurrentBroadphase(xform, out var broadphase))
             return;
 
+        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
+        DebugTools.Assert(!HasComp<MapComponent>(uid));
         PhysicsMapComponent? physMap = null;
         if (xform.Broadphase!.Value.PhysicsMap is { Valid: true } map && !_mapQuery.TryGetComponent(map, out physMap))
         {

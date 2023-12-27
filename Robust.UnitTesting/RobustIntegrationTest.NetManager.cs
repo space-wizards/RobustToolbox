@@ -249,9 +249,18 @@ namespace Robust.UnitTesting
             {
                 DebugTools.Assert(IsServer);
 
-                // MsgState sending method depends on the size of the possible compressed buffer. But tests bypass buffer read/write.
                 if (message is MsgState stateMsg)
+                {
+                    // MsgState sending method depends on the size of the possible compressed buffer. But tests bypass buffer read/write.
                     stateMsg._hasWritten = true;
+
+                    // Need to duplicate the state to avoid the server & client storing references to the same collections.
+                    stateMsg.State = stateMsg.State.Clone();
+                }
+                else if (message is MsgStateLeavePvs leaveMsg)
+                {
+                    leaveMsg.Entities = leaveMsg.Entities.ShallowClone();
+                }
 
                 var channel = (IntegrationNetChannel) recipient;
                 channel.OtherChannel.TryWrite(new DataMessage(message, channel.RemoteUid));

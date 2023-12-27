@@ -12,14 +12,14 @@ namespace Robust.Server.GameObjects
 
         private EntityQuery<TransformComponent> _xformQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
-        private EntityQuery<VisibilityComponent> _visiblityQuery;
+        private EntityQuery<VisibilityComponent> _visibilityQuery;
 
         public override void Initialize()
         {
             base.Initialize();
             _xformQuery = GetEntityQuery<TransformComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
-            _visiblityQuery = GetEntityQuery<VisibilityComponent>();
+            _visibilityQuery = GetEntityQuery<VisibilityComponent>();
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             EntityManager.EntityInitialized += OnEntityInit;
 
@@ -41,35 +41,57 @@ namespace Robust.Server.GameObjects
 
         public void AddLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
         {
-            if ((layer & component.Layer) == layer)
+            AddLayer((uid, component), layer, refresh);
+        }
+
+        public void AddLayer(Entity<VisibilityComponent?> ent, int layer, bool refresh = true)
+        {
+            ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<VisibilityComponent>(ent.Owner);
+
+            if ((layer & ent.Comp.Layer) == layer)
                 return;
 
-            component.Layer |= layer;
+            ent.Comp.Layer |= layer;
 
             if (refresh)
-                RefreshVisibility(uid, visibilityComponent: component);
+                RefreshVisibility(ent);
         }
 
         public void RemoveLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
         {
-            if ((layer & component.Layer) != layer)
+            RemoveLayer((uid, component), layer, refresh);
+        }
+
+        public void RemoveLayer(Entity<VisibilityComponent?> ent, int layer, bool refresh = true)
+        {
+            if (!_visibilityQuery.Resolve(ent.Owner, ref ent.Comp, false))
                 return;
 
-            component.Layer &= ~layer;
+            if ((layer & ent.Comp.Layer) != layer)
+                return;
+
+            ent.Comp.Layer &= ~layer;
 
             if (refresh)
-                RefreshVisibility(uid, visibilityComponent: component);
+                RefreshVisibility(ent);
         }
 
         public void SetLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
         {
-            if (component.Layer == layer)
+            SetLayer((uid, component), layer, refresh);
+        }
+
+        public void SetLayer(Entity<VisibilityComponent?> ent, int layer, bool refresh = true)
+        {
+            ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<VisibilityComponent>(ent.Owner);
+
+            if (ent.Comp.Layer == layer)
                 return;
 
-            component.Layer = layer;
+            ent.Comp.Layer = layer;
 
             if (refresh)
-                RefreshVisibility(uid, visibilityComponent: component);
+                RefreshVisibility(ent);
         }
 
         private void OnParentChange(ref EntParentChangedMessage ev)
@@ -86,14 +108,19 @@ namespace Robust.Server.GameObjects
             VisibilityComponent? visibilityComponent = null,
             MetaDataComponent? meta = null)
         {
-            if (!_metaQuery.Resolve(uid, ref meta, false))
+            RefreshVisibility((uid, visibilityComponent, meta));
+        }
+
+        public void RefreshVisibility(Entity<VisibilityComponent?, MetaDataComponent?> ent)
+        {
+            if (!_metaQuery.Resolve(ent, ref ent.Comp2, false))
                 return;
 
             // Iterate up through parents and calculate the cumulative visibility mask.
-            var mask = GetParentVisibilityMask(uid, visibilityComponent);
+            var mask = GetParentVisibilityMask(ent);
 
             // Iterate down through children and propagate mask changes.
-            RecursivelyApplyVisibility(uid, mask, meta);
+            RecursivelyApplyVisibility(ent.Owner, mask, ent.Comp2);
         }
 
         private void RecursivelyApplyVisibility(EntityUid uid, int mask, MetaDataComponent meta)
@@ -103,7 +130,6 @@ namespace Robust.Server.GameObjects
 
             var xform = _xformQuery.GetComponent(uid);
             meta.VisibilityMask = mask;
-            _pvs.MarkDirty(uid, xform);
 
             foreach (var child in xform._children)
             {
@@ -112,21 +138,21 @@ namespace Robust.Server.GameObjects
 
                 var childMask = mask;
 
-                if (_visiblityQuery.TryGetComponent(child, out var childVis))
+                if (_visibilityQuery.TryGetComponent(child, out var childVis))
                     childMask |= childVis.Layer;
 
                 RecursivelyApplyVisibility(child, childMask, childMeta);
             }
         }
 
-        private int GetParentVisibilityMask(EntityUid uid, VisibilityComponent? visibilityComponent = null)
+        private int GetParentVisibilityMask(Entity<VisibilityComponent?> ent)
         {
             int visMask = 1; // apparently some content expects everything to have the first bit/flag set to true.
-            if (_visiblityQuery.Resolve(uid, ref visibilityComponent, false))
-                visMask |= visibilityComponent.Layer;
+            if (_visibilityQuery.Resolve(ent.Owner, ref ent.Comp, false))
+                visMask |= ent.Comp.Layer;
 
             // Include parent vis masks
-            if (_xformQuery.TryGetComponent(uid, out var xform) && xform.ParentUid.IsValid())
+            if (_xformQuery.TryGetComponent(ent.Owner, out var xform) && xform.ParentUid.IsValid())
                 visMask |= GetParentVisibilityMask(xform.ParentUid);
 
             return visMask;

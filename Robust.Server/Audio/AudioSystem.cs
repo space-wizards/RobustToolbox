@@ -49,8 +49,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (count == 0)
             return;
 
-        var nent = GetNetEntity(uid);
-        _pvs.AddSessionOverrides(nent, filter);
+        _pvs.AddSessionOverrides(uid, filter);
 
         var ents = new HashSet<EntityUid>(count);
 

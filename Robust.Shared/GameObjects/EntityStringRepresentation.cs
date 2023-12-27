@@ -23,8 +23,8 @@ public readonly record struct EntityStringRepresentation
     {
     }
 
-    public EntityStringRepresentation(EntityUid uid, MetaDataComponent meta)
-        : this(uid, meta.NetEntity, meta.EntityDeleted, meta.EntityName, meta.EntityPrototype?.ID)
+    public EntityStringRepresentation(EntityUid uid, MetaDataComponent meta, ActorComponent? actor = null)
+        : this(uid, meta.NetEntity, meta.EntityDeleted, meta.EntityName, meta.EntityPrototype?.ID, actor?.PlayerSession)
     {
     }
 

@@ -59,13 +59,13 @@ public abstract class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent
             QueueTreeUpdate(uid, comp);
     }
 
-    public virtual void SetEnabled(EntityUid uid, bool enabled, OccluderComponent? comp = null)
+    public virtual void SetEnabled(EntityUid uid, bool enabled, OccluderComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!Resolve(uid, ref comp, false) || enabled == comp.Enabled)
             return;
 
         comp.Enabled = enabled;
-        Dirty(uid, comp);
+        Dirty(uid, comp, meta);
         QueueTreeUpdate(uid, comp);
     }
     #endregion

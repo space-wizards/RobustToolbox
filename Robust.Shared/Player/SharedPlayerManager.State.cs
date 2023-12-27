@@ -13,31 +13,16 @@ internal abstract partial class SharedPlayerManager
         LastStateUpdate = Timing.CurTick;
     }
 
-    public List<SessionState>? GetPlayerStates(GameTick fromTick)
+    public void GetPlayerStates(GameTick fromTick, List<SessionState> states)
     {
+        states.Clear();
         if (LastStateUpdate < fromTick)
-        {
-            return null;
-        }
+            return;
 
-        Lock.EnterReadLock();
-        try
+        states.EnsureCapacity(InternalSessions.Count);
+        foreach (var player in InternalSessions.Values)
         {
-#if FULL_RELEASE
-                return InternalSessions.Values
-                    .Select(s => s.State)
-                    .ToList();
-#else
-            // Integration tests need to clone data before "sending" it to the client. Otherwise they reference the
-            // same object.
-            return InternalSessions.Values
-                .Select(s => s.State.Clone())
-                .ToList();
-#endif
-        }
-        finally
-        {
-            Lock.ExitReadLock();
+            states.Add(player.State);
         }
     }
 

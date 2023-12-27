@@ -43,7 +43,7 @@ public sealed class ClientDirtySystem : EntitySystem
             return;
 
         // Client-side entity deletion is not supported and will cause errors.
-        Log.Error($"Predicting the deletion of a networked entity: {ToPrettyString(ev.Entity)}. Trace: {Environment.StackTrace}");
+        Log.Error($"Predicting the deletion of a networked entity: {ToPrettyString(ev.Entity.Owner, ev.Entity.Comp)}. Trace: {Environment.StackTrace}");
     }
 
     private void OnCompRemoved(RemovedComponentEventArgs args)

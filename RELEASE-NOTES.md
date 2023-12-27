@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* `LocalizationManager` now supports multiple fallback cultures
+*None yet*
 
 ### Bugfixes
 
-* Ensure `Robust.Client.WebView` processes get shut down if game process exits uncleanly.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,31 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 196.0.0
+
+### Breaking changes
+
+* The `IInvocationContext` interface for toolshed commands now requires a UserId field. The session field should be cleared if a player disconnects.
+
+### New features
+
+* `LocalizationManager` now supports multiple fallback cultures
+* SpriteView now supports using a `NetEntity` to select an entity to draw.
+* Added methods for simultaneously dirtying several components on the same entity.
+* Animated sprite layers now have a "Cycle" option that will reverse an animation when it finishes.
+
+### Bugfixes
+
+* Fixed a recursion/stack-overflow in `GridTraversalSystem`
+* Ensure `Robust.Client.WebView` processes get shut down if game process exits uncleanly.
+* Fixed Toolshed commands not properly functioning after disconnecting and reconnecting.
+
+### Other
+
+* Console command completions no longer suggest toolshed commands for non-toolshed commands.
+
 
 
 ## 195.0.1

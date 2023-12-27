@@ -30,6 +30,7 @@ public class RecursiveMoveBenchmark : RobustIntegrationTest
     private PvsSystem _pvs = default!;
     private EntityCoordinates _mapCoords;
     private EntityCoordinates _gridCoords;
+    private EntityCoordinates _gridCoords2;
     private EntityUid _ent;
     private EntityUid _child;
     private TransformComponent _childXform = default!;
@@ -96,6 +97,7 @@ public class RecursiveMoveBenchmark : RobustIntegrationTest
             var grid = gridComp.Owner;
             mapSys.SetTile(grid, gridComp, Vector2i.Zero, new Tile(1));
             _gridCoords = new EntityCoordinates(grid, .5f, .5f);
+            _gridCoords2 = new EntityCoordinates(grid, .5f, .6f);
             _mapCoords = new EntityCoordinates(map, 100, 100);
 
             var playerUid = _entMan.SpawnEntity(null, _mapCoords);
@@ -203,6 +205,13 @@ public class RecursiveMoveBenchmark : RobustIntegrationTest
         _transform.SetCoordinates(_ent, _mapCoords);
     }
 
+    [Benchmark]
+    public void MoveEntityASmidge()
+    {
+        _transform.SetCoordinates(_ent, _gridCoords);
+        _transform.SetCoordinates(_ent, _gridCoords2);
+    }
+
     /// <summary>
     /// Like <see cref="MoveEntity"/>, but also processes queued PVS chunk updates.
     /// </summary>
@@ -212,6 +221,15 @@ public class RecursiveMoveBenchmark : RobustIntegrationTest
         _transform.SetCoordinates(_ent, _gridCoords);
         PvsTick();
         _transform.SetCoordinates(_ent, _mapCoords);
+        PvsTick();
+    }
+
+    [Benchmark]
+    public void MoveASmidgeAndUpdateChunk()
+    {
+        _transform.SetCoordinates(_ent, _gridCoords);
+        PvsTick();
+        _transform.SetCoordinates(_ent, _gridCoords2);
         PvsTick();
     }
 

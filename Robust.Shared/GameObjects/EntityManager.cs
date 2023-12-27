@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Prometheus;
 using Robust.Shared.Containers;
+using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -356,20 +357,90 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            Dirty(new Entity<IComponent>(uid, component), meta);
+            DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {component.GetType()}");
+
+            if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
+                return;
+
+            DirtyEntity(uid, meta);
+            component.LastModifiedTick = CurrentTick;
         }
 
         /// <inheritdoc />
         public virtual void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
         {
+            DebugTools.Assert(ent.Comp.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp.GetType()}");
+
             if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
                 return;
 
-            DebugTools.AssertOwner(ent, ent.Comp);
             DirtyEntity(ent, meta);
-#pragma warning disable CS0618 // Type or member is obsolete
             ent.Comp.LastModifiedTick = CurrentTick;
-#pragma warning restore CS0618 // Type or member is obsolete
+        }
+
+        /// <inheritdoc />
+        public virtual void Dirty<T1, T2>(Entity<T1, T2> ent, MetaDataComponent? meta = null)
+            where T1 : IComponent
+            where T2 : IComponent
+        {
+            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
+            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
+
+            // We're not gonna bother checking ent.Comp.NetSyncEnabled
+            // chances are at least one of these components didn't get net-sync disabled.
+            DirtyEntity(ent, meta);
+            ent.Comp1.LastModifiedTick = CurrentTick;
+            ent.Comp2.LastModifiedTick = CurrentTick;
+        }
+
+        /// <inheritdoc />
+        public virtual void Dirty<T1, T2, T3>(Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
+            where T1 : IComponent
+            where T2 : IComponent
+            where T3 : IComponent
+        {
+            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
+            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
+            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
+
+            // We're not gonna bother checking ent.Comp.NetSyncEnabled
+            // chances are at least one of these components didn't get net-sync disabled.
+            DirtyEntity(ent, meta);
+            ent.Comp1.LastModifiedTick = CurrentTick;
+            ent.Comp2.LastModifiedTick = CurrentTick;
+            ent.Comp3.LastModifiedTick = CurrentTick;
+        }
+
+        /// <inheritdoc />
+        public virtual void Dirty<T1, T2, T3, T4>(Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
+            where T1 : IComponent
+            where T2 : IComponent
+            where T3 : IComponent
+            where T4 : IComponent
+        {
+            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
+            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
+            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
+            DebugTools.Assert(ent.Comp4.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp4.GetType()}");
+
+            // We're not gonna bother checking ent.Comp.NetSyncEnabled
+            // chances are at least one of these components didn't get net-sync disabled.
+            DirtyEntity(ent, meta);
+            ent.Comp1.LastModifiedTick = CurrentTick;
+            ent.Comp2.LastModifiedTick = CurrentTick;
+            ent.Comp3.LastModifiedTick = CurrentTick;
+            ent.Comp4.LastModifiedTick = CurrentTick;
         }
 
         /// <summary>

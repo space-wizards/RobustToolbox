@@ -59,7 +59,15 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void UpdateChunkPosition(PvsChunk chunk)
     {
+        if (chunk.Root.Comp.EntityLifeStage >= EntityLifeStage.Terminating
+            || chunk.Map.Comp.EntityLifeStage >= EntityLifeStage.Terminating)
+        {
+            Log.Error($"Encountered deleted root while updating pvs chunk positions. Root: {ToPrettyString(chunk.Root, chunk.Root)}. Map: {ToPrettyString(chunk.Map, chunk.Map)}" );
+            return;
+        }
+
         var xform = Transform(chunk.Root);
+        DebugTools.AssertEqual(chunk.Map.Owner, xform.MapUid);
         chunk.InvWorldMatrix = xform.InvLocalMatrix;
         var worldPos = xform.LocalMatrix.Transform(chunk.Centre);
         chunk.Position = new(worldPos, xform.MapID);
@@ -280,18 +288,51 @@ internal sealed partial class PvsSystem
     private void OnMapChanged(MapChangedEvent ev)
     {
         if (!ev.Destroyed)
-            RemoveRoot(ev.Uid);
+            return;
+
+        RemoveRoot(ev.Uid);
     }
 
     private void RemoveRoot(EntityUid root)
     {
         if (!_chunkSets.Remove(root, out var locations))
+        {
+            DebugTools.Assert(_chunks.Values.All(x => x.Map.Owner != root && x.Root.Owner != root));
             return;
+        }
+
+        DebugTools.Assert(_chunks.Values.All(x => locations.Contains(x.Location) || x.Root.Owner != root));
 
         foreach (var loc in locations)
         {
             if (_chunks.Remove(loc, out var chunk))
                 _chunkPool.Return(chunk);
+        }
+        DebugTools.Assert(_chunks.Values.All(x => x.Map.Owner != root && x.Root.Owner != root));
+    }
+
+    public void GridParentChanged(Entity<TransformComponent, MetaDataComponent> grid)
+    {
+        if (!_chunkSets.TryGetValue(grid.Owner, out var locations))
+        {
+            DebugTools.Assert(_chunks.Values.All(x => x.Root.Owner != grid.Owner));
+            return;
+        }
+
+        DebugTools.Assert(_chunks.Values.All(x => locations.Contains(x.Location) || x.Root.Owner != grid.Owner));
+        if (grid.Comp1.MapUid is not { } map || !TryComp(map, out MetaDataComponent? meta))
+        {
+            if (grid.Comp2.EntityLifeStage < EntityLifeStage.Terminating)
+                Log.Error($"Grid {ToPrettyString(grid)} has no map?");
+            RemoveRoot(grid.Owner);
+            return;
+        }
+
+        var newMap = new Entity<MetaDataComponent>(map, meta);
+        foreach (var loc in locations)
+        {
+            if (_chunks.TryGetValue(loc, out var chunk))
+                chunk.Map = newMap;
         }
     }
 }

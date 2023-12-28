@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -379,6 +380,9 @@ internal sealed partial class PvsSystem : EntitySystem
 
     public void BeforeSendState(ICommonSession[] players, Histogram histogram)
     {
+        DebugTools.Assert(_chunks.Values.All(x => Exists(x.Map) && Exists(x.Root)));
+        DebugTools.Assert(_chunkSets.Keys.All(Exists));
+
         var ackJob = ProcessQueuedAcks(histogram);
 
         // Figure out what chunks players can see and cache some chunk data.

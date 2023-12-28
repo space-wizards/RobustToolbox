@@ -173,8 +173,9 @@ public abstract partial class SharedMapSystem
 
     private void OnParentChange(EntityUid uid, MapGridComponent component, ref MoveEvent args)
     {
-        var meta = MetaData(uid);
-        var xform = args.Component;
+        UpdatePvsChunks(args.Entity);
+
+        var (_, xform, meta) = args.Entity;
 
         // oh boy
         // Want gridinit to handle this hence specialcase those situations.
@@ -188,11 +189,7 @@ public abstract partial class SharedMapSystem
         if (xform.MapUid == null && meta.EntityLifeStage < EntityLifeStage.Terminating && _netManager.IsServer)
             Log.Error($"Grid {ToPrettyString(uid, meta)} was moved to nullspace! AAAAAAAAAAAAAAAAAAAAAAAAA! {Environment.StackTrace}");
 
-        if (EntityManager.HasComponent<MapComponent>(uid))
-        {
-            Log.Error($"A map moved? What? How? Map: {ToPrettyString(uid, meta)}. Trace: {Environment.StackTrace}");
-            return;
-        }
+        DebugTools.Assert(!HasComp<MapComponent>(uid));
 
         if (xform.ParentUid != xform.MapUid && meta.EntityLifeStage < EntityLifeStage.Terminating  && _netManager.IsServer)
         {
@@ -201,21 +198,24 @@ public abstract partial class SharedMapSystem
         }
 
         // Make sure we cleanup old map for moved grid stuff.
-        var mapId = args.Component.MapID;
         var oldMap = args.OldPosition.ToMap(EntityManager, _transform);
-
-        if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(MapManager.GetMapEntityId(oldMap.MapId), out var oldMovedGrids))
+        var oldMapUid = MapManager.GetMapEntityId(oldMap.MapId);
+        if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(oldMapUid, out var oldMovedGrids))
         {
             oldMovedGrids.MovedGrids.Remove(uid);
-            RemoveGrid(uid, component, MapManager.GetMapEntityId(oldMap.MapId));
+            RemoveGrid(uid, component, oldMapUid);
         }
 
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
-        if (TryComp<MovedGridsComponent>(MapManager.GetMapEntityId(mapId), out var newMovedGrids))
+        if (TryComp<MovedGridsComponent>(xform.MapUid, out var newMovedGrids))
         {
             newMovedGrids.MovedGrids.Add(uid);
-            AddGrid(uid, component, mapId);
+            AddGrid(uid, component);
         }
+    }
+
+    protected virtual void UpdatePvsChunks(Entity<TransformComponent, MetaDataComponent> grid)
+    {
     }
 
     private void OnGridHandleState(EntityUid uid, MapGridComponent component, ref ComponentHandleState args)
@@ -505,7 +505,7 @@ public abstract partial class SharedMapSystem
         return new Box2Rotated(aabb, worldRot, worldPos).CalcBoundingBox();
     }
 
-    private void AddGrid(EntityUid uid, MapGridComponent grid, MapId mapId)
+    private void AddGrid(EntityUid uid, MapGridComponent grid)
     {
         DebugTools.Assert(!EntityManager.HasComponent<MapComponent>(uid));
         var aabb = GetWorldAABB(uid, grid);

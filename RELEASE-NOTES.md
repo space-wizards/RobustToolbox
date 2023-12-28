@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* ACZ improvements: `IStatusHost.InvalidateAcz()` and `IStatusHost.SetFullHybridAczProvider()`.
 
 ### Bugfixes
 

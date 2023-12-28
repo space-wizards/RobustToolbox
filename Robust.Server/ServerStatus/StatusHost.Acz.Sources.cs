@@ -152,9 +152,11 @@ internal sealed partial class StatusHost
 
     private async Task<bool> SourceAczViaMagic(AssetPass pass, IPackageLogger logger)
     {
+        _aczSawmill.Debug("Using Magic ACZ");
         var provider = _magicAczProvider;
         if (provider == null)
         {
+            _aczSawmill.Verbose("Using default magic ACZ provider");
             // Default provider
             var (binFolderPath, assemblyNames) =
                 _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });

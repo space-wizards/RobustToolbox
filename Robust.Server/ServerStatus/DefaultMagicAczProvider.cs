@@ -24,6 +24,10 @@ public sealed class DefaultMagicAczProvider : IMagicAczProvider
         IPackageLogger logger,
         CancellationToken cancel)
     {
+#if FULL_RELEASE
+        throw new InvalidOperationException("Default Magic ACZ is not available on full release builds. Make sure your server is packaged with Hybrid ACZ or otherwise has build information configured.");
+#endif
+
         var (binFolderPath, assemblyNames) = _info;
 
         var graph = new RobustClientAssetGraph();

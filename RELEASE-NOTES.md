@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Automatic UI scale is disabled by default for non-main windows. If desired, it can be re-enabled per window by changing `WindowRoot.DisableAutoScaling`.
 
 ### Bugfixes
 

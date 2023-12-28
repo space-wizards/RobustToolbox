@@ -148,6 +148,7 @@ namespace Robust.Client.UserInterface
 
             RootControl = CreateWindowRoot(_clyde.MainWindow);
             RootControl.Name = "MainWindowRoot";
+            RootControl.DisableAutoScaling = false;
 
             _clyde.DestroyWindow += WindowDestroyed;
             _clyde.OnWindowFocused += ClydeOnWindowFocused;

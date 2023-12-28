@@ -2068,6 +2068,8 @@ namespace Robust.Client.GameObjects
                             {
                                 AnimationFrame = delayCount - 1;
                             }
+
+                            AnimationTime = -AnimationTimeLeft;
                         }
                     }
                     else
@@ -2086,10 +2088,11 @@ namespace Robust.Client.GameObjects
                             {
                                 AnimationFrame = 0;
                             }
+
+                            AnimationTime = -AnimationTimeLeft;
                         }
                     }
 
-                    AnimationTime = -AnimationTimeLeft;
                     AnimationTimeLeft += state.GetDelay(AnimationFrame);
                 }
             }

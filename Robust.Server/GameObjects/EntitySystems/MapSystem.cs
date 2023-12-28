@@ -18,7 +18,6 @@ namespace Robust.Server.GameObjects
 
         private bool _deleteEmptyGrids;
 
-
         protected override void UpdatePvsChunks(Entity<TransformComponent, MetaDataComponent> grid)
         {
             _pvs.GridParentChanged(grid);

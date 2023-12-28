@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* ACZ improvements: `IStatusHost.InvalidateAcz()` and `IStatusHost.SetFullHybridAczProvider()`.
+*None yet*
 
 ### Bugfixes
 
-* Fix sprite animations not working properly
+*None yet*
 
 ### Other
 
@@ -52,6 +52,18 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 197.1.0
+
+### New features
+
+* ACZ improvements: `IStatusHost.InvalidateAcz()` and `IStatusHost.SetFullHybridAczProvider()`.
+
+### Bugfixes
+
+* Fixes a PVS bug that happens when grids moved across maps.
+* Fixes sprite animations not working properly
 
 
 ## 197.0.0

@@ -27,11 +27,10 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void AddPvsChunk(PvsChunk chunk, float distance, PvsSession session)
     {
-#if DEBUG
         // Each root nodes should simply be a map or a grid entity.
-        DebugTools.Assert(Exists(chunk.Root), $"Root node does not exist. Node {chunk.Root.Owner}. Session: {session.Session}");
+        DebugTools.Assert(Exists(chunk.Root), $"Chunk root does not exist!");
+        DebugTools.Assert(Exists(chunk.Map), $"Map does not exist!.");
         DebugTools.Assert(HasComp<MapComponent>(chunk.Root) || HasComp<MapGridComponent>(chunk.Root));
-#endif
 
         var fromTick = session.FromTick;
         var mask = session.VisMask;

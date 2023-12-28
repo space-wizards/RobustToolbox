@@ -5,9 +5,11 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Prometheus;
 using Robust.Shared.Containers;
+using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
@@ -43,6 +45,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<MetaDataComponent> MetaQuery;
         public EntityQuery<TransformComponent> TransformQuery;
+        public EntityQuery<ActorComponent> _actorQuery;
 
         #endregion Dependencies
 
@@ -203,6 +206,7 @@ namespace Robust.Shared.GameObjects
             _containers = System<SharedContainerSystem>();
             MetaQuery = GetEntityQuery<MetaDataComponent>();
             TransformQuery = GetEntityQuery<TransformComponent>();
+            _actorQuery = GetEntityQuery<ActorComponent>();
         }
 
         public virtual void Shutdown()
@@ -356,20 +360,90 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            Dirty(new Entity<IComponent>(uid, component), meta);
+            DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {component.GetType()}");
+
+            if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
+                return;
+
+            DirtyEntity(uid, meta);
+            component.LastModifiedTick = CurrentTick;
         }
 
         /// <inheritdoc />
         public virtual void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
         {
+            DebugTools.Assert(ent.Comp.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp.GetType()}");
+
             if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
                 return;
 
-            DebugTools.AssertOwner(ent, ent.Comp);
             DirtyEntity(ent, meta);
-#pragma warning disable CS0618 // Type or member is obsolete
             ent.Comp.LastModifiedTick = CurrentTick;
-#pragma warning restore CS0618 // Type or member is obsolete
+        }
+
+        /// <inheritdoc />
+        public virtual void Dirty<T1, T2>(Entity<T1, T2> ent, MetaDataComponent? meta = null)
+            where T1 : IComponent
+            where T2 : IComponent
+        {
+            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
+            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
+
+            // We're not gonna bother checking ent.Comp.NetSyncEnabled
+            // chances are at least one of these components didn't get net-sync disabled.
+            DirtyEntity(ent, meta);
+            ent.Comp1.LastModifiedTick = CurrentTick;
+            ent.Comp2.LastModifiedTick = CurrentTick;
+        }
+
+        /// <inheritdoc />
+        public virtual void Dirty<T1, T2, T3>(Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
+            where T1 : IComponent
+            where T2 : IComponent
+            where T3 : IComponent
+        {
+            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
+            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
+            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
+
+            // We're not gonna bother checking ent.Comp.NetSyncEnabled
+            // chances are at least one of these components didn't get net-sync disabled.
+            DirtyEntity(ent, meta);
+            ent.Comp1.LastModifiedTick = CurrentTick;
+            ent.Comp2.LastModifiedTick = CurrentTick;
+            ent.Comp3.LastModifiedTick = CurrentTick;
+        }
+
+        /// <inheritdoc />
+        public virtual void Dirty<T1, T2, T3, T4>(Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
+            where T1 : IComponent
+            where T2 : IComponent
+            where T3 : IComponent
+            where T4 : IComponent
+        {
+            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
+            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
+            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
+            DebugTools.Assert(ent.Comp4.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {ent.Comp4.GetType()}");
+
+            // We're not gonna bother checking ent.Comp.NetSyncEnabled
+            // chances are at least one of these components didn't get net-sync disabled.
+            DirtyEntity(ent, meta);
+            ent.Comp1.LastModifiedTick = CurrentTick;
+            ent.Comp2.LastModifiedTick = CurrentTick;
+            ent.Comp3.LastModifiedTick = CurrentTick;
+            ent.Comp4.LastModifiedTick = CurrentTick;
         }
 
         /// <summary>
@@ -423,7 +497,7 @@ namespace Robust.Shared.GameObjects
 
             try
             {
-                var ev = new EntityTerminatingEvent(uid);
+                var ev = new EntityTerminatingEvent((uid, metadata));
                 EventBus.RaiseLocalEvent(uid, ref ev, true);
             }
             catch (Exception e)
@@ -452,7 +526,7 @@ namespace Robust.Shared.GameObjects
             TransformComponent? parentXform)
         {
             DebugTools.Assert(transform.ParentUid.IsValid() == (parentXform != null));
-            DebugTools.Assert(parentXform == null || parentXform.ChildEntities.Contains(uid));
+            DebugTools.Assert(parentXform == null || parentXform._children.Contains(uid));
 
             // Note about this method: #if EXCEPTION_TOLERANCE is not used here because we're gonna it in the future...
 
@@ -733,12 +807,16 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata = null)
-        {
-            if (!MetaQuery.Resolve(uid, ref metadata, false))
-                return new EntityStringRepresentation(uid, true);
+        public EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata)
+            =>  ToPrettyString((uid, metadata));
 
-            return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);
+        /// <inheritdoc />
+        public EntityStringRepresentation ToPrettyString(Entity<MetaDataComponent?> entity)
+        {
+            if (entity.Comp == null && !MetaQuery.Resolve(entity.Owner, ref entity.Comp, false))
+                return new EntityStringRepresentation(entity.Owner, default, true);
+
+            return new EntityStringRepresentation(entity.Owner, entity.Comp, _actorQuery.CompOrNull(entity));
         }
 
         /// <inheritdoc />
@@ -752,7 +830,7 @@ namespace Robust.Shared.GameObjects
         public EntityStringRepresentation ToPrettyString(NetEntity netEntity)
         {
             if (!TryGetEntityData(netEntity, out var uid, out var meta))
-                return new EntityStringRepresentation(EntityUid.Invalid, true);
+                return new EntityStringRepresentation(EntityUid.Invalid, netEntity, true);
 
             return ToPrettyString(uid.Value, meta);
         }

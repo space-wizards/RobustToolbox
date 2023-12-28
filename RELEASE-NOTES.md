@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Automatic UI scale is disabled by default for non-main windows. If desired, it can be re-enabled per window by changing `WindowRoot.DisableAutoScaling`.
 
 ### Bugfixes
 
@@ -52,6 +52,219 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 197.1.0
+
+### New features
+
+* ACZ improvements: `IStatusHost.InvalidateAcz()` and `IStatusHost.SetFullHybridAczProvider()`.
+
+### Bugfixes
+
+* Fixes a PVS bug that happens when grids moved across maps.
+* Fixes sprite animations not working properly
+
+
+## 197.0.0
+
+### Breaking changes
+
+* PvsOverrideSystem has been reworked:
+  * Session and global overrides now default to always being recursive (i.e., sending all children).
+  * Session & global overrides will always respect a client's PVS budgets.
+  * Entities with an override will now still be sent in the same way as other entities if they are within a player's view. If you want to prevent them from being sent, you need to use visibility masks.
+  * Entities can have more than one kind of override (i.e., multiple sessions).
+
+### New features
+
+* Added a `PvsSize ` field to `EyeComponent`, which can be used to modify the PVS range of an eye.
+* Added a new `NetLowLodRange` cvar for reducing the number of distant entities that get sent to a player. If a PVS chunk is beyond this range (but still within PVS range), then only high-priority entities on that chunk will get sent.
+* Added a new metadata flag for tagging an entity as a "high prority" entity that should get sent even on distant chunks. This only works for entities that are directly attached to a grid or map. This is currently used by lights & occluders.
+
+### Other
+
+* PVS has been reworked again, and should hopefully be noticeable faster.
+* PVS now prioritizes sending chunks that are closer to a player's eyes.
+
+
+## 196.0.0
+
+### Breaking changes
+
+* Dirtying a non-networked component will now fail a debug assert.
+* The `IInvocationContext` interface for toolshed commands now requires a UserId field. The session field should be cleared if a player disconnects.
+
+### New features
+
+* `LocalizationManager` now supports multiple fallback cultures
+* SpriteView now supports using a `NetEntity` to select an entity to draw.
+* Added methods for simultaneously dirtying several components on the same entity.
+* Animated sprite layers now have a "Cycle" option that will reverse an animation when it finishes.
+
+### Bugfixes
+
+* Fixed a recursion/stack-overflow in `GridTraversalSystem`
+* Ensure `Robust.Client.WebView` processes get shut down if game process exits uncleanly.
+* Fixed Toolshed commands not properly functioning after disconnecting and reconnecting.
+
+### Other
+
+* Console command completions no longer suggest toolshed commands for non-toolshed commands.
+
+
+
+## 195.0.1
+
+### Bugfixes
+
+* Fixes playing audio using audio streams
+* Fixes placement manager exceptions when placing self deleting / spawner entities
+* Fixed `IPrototypeManager.EnumeratePrototypes<T>` throwing an exception when there are no instances.
+
+
+## 195.0.0
+
+### New features
+
+* Generic versions of `DebugTools.AssertEquals()` functions.
+* `[Prototype]` now does not need to have a name specified, the name is inferred from the class name.
+
+### Bugfixes
+
+* Fixes a physics bug that could cause deleted entities to remain on the physics map.
+* Fixes a bug in entity lookup code that could cause clients to get stuck in an infinite loop.
+
+### Other
+
+* `Robust.Client.WebView` has been brought alive again.
+* The addition of physics joints is no longer deferred to the next tick.
+* Grid traversal is no longer deferred to the next tick.
+* Integration tests now fail when console commands log errors.
+
+
+## 194.1.0
+
+### New features
+
+* `IAudioManager` has APIs to directly load `AudioStream`s from data streams.
+* `AudioSystem` has new `Play*` methods.
+* `EntityCoordinates.TryDelta()`
+* `EntityLookupSystem.GetEntitiesInRange()` untyped hashset overload has `flags` parameter.
+
+
+## 194.0.2
+
+### Internal
+
+* Added some null-checks to PVS to try reduce the error spam.
+
+
+## 194.0.1
+
+### Bugfixes
+
+* Fixed `Control.SetPositionInParent` failing to move an entity to the last position.
+* Fixed audio occlusion not working.
+
+### Internal
+
+* Added some logs for grid/map deletion and movement to debug some map loading issues.
+* Refactored some parts of PVS. It should be slightly faster, though the game may be unstable for a bit.
+
+## 194.0.0
+
+### Breaking changes
+
+* MoveEvent is no longer raised broadcast, subscribe to the SharedTransformSystem.OnGlobalMoveEvent C# event instead
+
+### Bugfixes
+
+* Fixed the game sometimes freezing while trying to load specific audio files.
+
+
+## 193.2.0
+
+### Other
+
+* Added more PVS error logs
+
+
+## 193.1.1
+
+### Bugfixes
+
+* Fixed an exception when building in FULL_RELEASE
+
+
+## 193.1.0
+
+### New features
+
+* Added FrozenDictionary and FrozenHashSet to sandbox whitelist
+* Added yaml type serializers for FrozenDictionary and FrozenHashSet
+* Added `IPrototypeManager.GetInstances<T>()`
+* `IPrototypeManager` now also raises `PrototypesReloadedEventArgs` as a system event.
+
+### Bugfixes
+
+* Might fix some PVS bugs added in the last version.
+
+### Internal
+
+* Various static dictionaries have been converted into FrozenDictionary.
+
+
+## 193.0.0
+
+### Breaking changes
+
+* The `TransformChildrenEnumerator`'s out values are now non-nullable
+
+### New features
+
+* Added `IPrototypeManager.TryGetInstances()`, which returns a dictionary of prototype instances for a given prototype kind/type.
+
+### Bugfixes
+
+* Fixed `BaseAudioSource.SetAuxiliary()` throwing errors on non-EFX systems
+
+### Internal
+
+
+* The internals of PVS system have been reworked to reduce the number of dictionary lookups.
+* `RobustMappedStringSerializer` now uses frozen dictionaries
+* `IPrototypeManager` now uses frozen dictionaries
+
+
+## 192.0.0
+
+### Breaking changes
+
+* `EntitySystem.TryGetEntity` is now `protected`.
+
+### Internal
+
+* PVS message ack processing now happens asynchronously
+* Dependency collections now use a `FrozenDictionary`
+
+
+## 191.0.1
+
+### Bugfixes
+
+.* Fix sandbox being broken thanks to .NET 8.
+
+
+## 191.0.0
+
+### Breaking changes
+
+* Robust now uses **.NET 8**. Nyoom.
+
+### Bugfixes
+
+* `IResourceCache.TryGetResource<T>` won't silently eat all exceptions anymore.
 
 
 ## 190.1.1
@@ -401,7 +614,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Most methods in ActorSystem have been moved to ISharedPlayerManager. 
+* Most methods in ActorSystem have been moved to ISharedPlayerManager.
 * Several actor/player related components and events have been moved to shared.
 
 ### New features

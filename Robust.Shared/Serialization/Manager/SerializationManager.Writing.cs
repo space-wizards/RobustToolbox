@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Globalization;
 using System.Linq.Expressions;
 using Robust.Shared.Serialization.Manager.Definition;
@@ -73,6 +74,14 @@ public sealed partial class SerializationManager
             Expression objAccess = baseType.IsNullable()
                 ? Expression.Convert(objParam, sameType ? baseType.EnsureNotNullableType() : actualType)
                 : sameType ? objParam : Expression.Convert(objParam, actualType);
+
+            if (baseType.IsGenericType)
+            {
+                // Frozen dictionaries/sets are abstract and have a bunch of implementations, but we always serialize them as their abstract type.
+                var t = baseType.GetGenericTypeDefinition();
+                if (t == typeof(FrozenDictionary<,>) || t == typeof(FrozenSet<>))
+                    actualType = baseType;
+            }
 
             Expression call;
             if (serializationManager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeWriter<>), actualType, out var serializer))

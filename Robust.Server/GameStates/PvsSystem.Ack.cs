@@ -1,5 +1,7 @@
 using System.Collections.Generic;
-using Robust.Shared.GameObjects;
+using System.Runtime.InteropServices;
+using System.Threading;
+using Prometheus;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -16,6 +18,7 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void OnClientAck(ICommonSession session, GameTick ackedTick)
     {
+        DebugTools.Assert(ackedTick < _gameTiming.CurTick);
         if (!PlayerData.TryGetValue(session, out var sessionData))
             return;
 
@@ -29,10 +32,11 @@ internal sealed partial class PvsSystem
     /// <summary>
     ///     Processes queued client acks in parallel
     /// </summary>
-    internal void ProcessQueuedAcks()
+    /// <param name="histogram"></param>
+    internal WaitHandle? ProcessQueuedAcks(Histogram? histogram)
     {
         if (PendingAcks.Count == 0)
-            return;
+            return null;
 
         _toAck.Clear();
 
@@ -41,8 +45,16 @@ internal sealed partial class PvsSystem
             _toAck.Add(session);
         }
 
-        _parallelManager.ProcessNow(_ackJob, _toAck.Count);
         PendingAcks.Clear();
+
+        if (!_async)
+        {
+            using var _= histogram?.WithLabels("Process Acks").NewTimer();
+            _parallelManager.ProcessNow(_ackJob, _toAck.Count);
+            return null;
+        }
+
+        return _parallelManager.Process(_ackJob, _toAck.Count);
     }
 
     private record struct PvsAckJob : IParallelRobustJob
@@ -58,6 +70,28 @@ internal sealed partial class PvsSystem
         }
     }
 
+    private record struct PvsChunkJob : IParallelRobustJob
+    {
+        public int BatchSize => 2;
+        public PvsSystem Pvs;
+        public int Count => Pvs._dirtyChunks.Count + 2;
+
+        public void Execute(int index)
+        {
+            if (index > 1)
+            {
+                Pvs.UpdateDirtyChunks(index-2);
+                return;
+            }
+
+            // 1st batch/job performs some extra processing.
+            if (index == 0)
+                Pvs.CacheGlobalOverrides();
+            else if (index == 1)
+                Pvs.UpdateCleanChunks();
+        }
+    }
+
     /// <summary>
     ///     Process a given client's queued ack.
     /// </summary>
@@ -67,37 +101,33 @@ internal sealed partial class PvsSystem
             return;
 
         var ackedTick = sessionData.LastReceivedAck;
-        Dictionary<NetEntity, PvsEntityVisibility>? ackedData;
+        List<PvsData>? ackedEnts;
 
         if (sessionData.Overflow != null && sessionData.Overflow.Value.Tick <= ackedTick)
         {
             var (overflowTick, overflowEnts) = sessionData.Overflow.Value;
             sessionData.Overflow = null;
-            ackedData = overflowEnts;
+            ackedEnts = overflowEnts;
 
             // Even though the acked tick might be newer, we have no guarantee that the client received the cached tick,
             // so discard it unless they happen to be equal.
             if (overflowTick != ackedTick)
             {
-                _visSetPool.Return(overflowEnts);
-                DebugTools.Assert(!sessionData.SentEntities.Values.Contains(overflowEnts));
+                _entDataListPool.Return(overflowEnts);
+                DebugTools.Assert(!sessionData.PreviouslySent.Values.Contains(overflowEnts));
                 return;
             }
         }
-        else if (!sessionData.SentEntities.TryGetValue(ackedTick, out ackedData))
+        else if (!sessionData.PreviouslySent.TryGetValue(ackedTick, out ackedEnts))
             return;
 
-        // return last acked to pool, but only if it is not still in the OverflowDictionary.
-        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(sessionData.LastAcked.Value.Tick))
+        foreach (var data in CollectionsMarshal.AsSpan(ackedEnts))
         {
-            DebugTools.Assert(!sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
-            _visSetPool.Return(sessionData.LastAcked.Value.Data);
-        }
-
-        sessionData.LastAcked = (ackedTick, ackedData);
-        foreach (var ent in ackedData.Keys)
-        {
-            sessionData.LastSeenAt[ent] = ackedTick;
+            data.EntityLastAcked = ackedTick;
+            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
+            DebugTools.Assert(data.LastSeen >= ackedTick); // LastSent may equal ackedTick if the packet was sent reliably.
+            DebugTools.Assert(!sessionData.Entities.TryGetValue(data.NetEntity, out var old)
+                              || ReferenceEquals(data, old));
         }
 
         // The client acked a tick. If they requested a full state, this ack happened some time after that, so we can safely set this to false

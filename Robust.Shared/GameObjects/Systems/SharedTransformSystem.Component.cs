@@ -44,20 +44,20 @@ public abstract partial class SharedTransformSystem
         SetGridId(uid, xform, newGridUid, xformQuery);
         var reParent = new EntParentChangedMessage(uid, oldGridUid, xform.MapID, xform);
         RaiseLocalEvent(uid, ref reParent, true);
-        // TODO: Ideally shouldn't need to call the moveevent
-        var movEevee = new MoveEvent(uid,
+        var meta = MetaData(uid);
+        var movEevee = new MoveEvent((uid, xform, meta),
             new EntityCoordinates(oldGridUid, xform._localPosition),
             new EntityCoordinates(newGridUid, xform._localPosition),
             xform.LocalRotation,
             xform.LocalRotation,
-            xform,
             _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref movEevee, true);
+        RaiseLocalEvent(uid, ref movEevee);
+        InvokeGlobalMoveEvent(ref movEevee);
 
         DebugTools.Assert(xformQuery.GetComponent(oldGridUid).MapID == xformQuery.GetComponent(newGridUid).MapID);
         DebugTools.Assert(xform._anchored);
 
-        Dirty(uid, xform);
+        Dirty(uid, xform, meta);
         var ev = new ReAnchorEvent(uid, oldGridUid, newGridUid, tilePos, xform);
         RaiseLocalEvent(uid, ref ev);
     }
@@ -178,6 +178,16 @@ public abstract partial class SharedTransformSystem
             return false;
 
         return ContainsEntity(parent, (child.Comp.ParentUid, parentXform));
+    }
+
+    /// <summary>
+    /// Checks whether the given component is the parent of the entity without having to fetch the child's
+    /// transform component.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsParentOf(TransformComponent parent, EntityUid child)
+    {
+        return parent._children.Contains(child);
     }
 
     #endregion
@@ -355,11 +365,9 @@ public abstract partial class SharedTransformSystem
 
         DebugTools.Assert(!HasComp<MapGridComponent>(uid) || gridId == uid);
         xform._gridUid = gridId;
-        var childEnumerator = xform.ChildEnumerator;
-
-        while (childEnumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            SetGridId(child.Value, XformQuery.GetComponent(child.Value), gridId);
+            SetGridId(child, XformQuery.GetComponent(child), gridId);
         }
     }
 
@@ -589,8 +597,9 @@ public abstract partial class SharedTransformSystem
         if (xform.ParentUid == xform.MapUid)
             DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid || xform.GridUid == xform.MapUid);
 #endif
-        var moveEvent = new MoveEvent(uid, oldPosition, newPosition, oldRotation, xform._localRotation, xform, _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref moveEvent, true);
+        var moveEvent = new MoveEvent((uid, xform, meta), oldPosition, newPosition, oldRotation, xform._localRotation, _gameTiming.ApplyingState);
+        RaiseLocalEvent(uid, ref moveEvent);
+        InvokeGlobalMoveEvent(ref moveEvent);
     }
 
     public void SetCoordinates(
@@ -1132,14 +1141,16 @@ public abstract partial class SharedTransformSystem
 
         DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
 
-        Dirty(uid, xform);
+        var meta = MetaData(uid);
+        Dirty(uid, xform, meta);
         xform.MatricesDirty = true;
 
         if (!xform.Initialized)
             return;
 
-        var moveEvent = new MoveEvent(uid, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref moveEvent, true);
+        var moveEvent = new MoveEvent((uid, xform, meta), oldPosition, xform.Coordinates, oldRotation, rot, _gameTiming.ApplyingState);
+        RaiseLocalEvent(uid, ref moveEvent);
+        InvokeGlobalMoveEvent(ref moveEvent);
     }
 
     #endregion

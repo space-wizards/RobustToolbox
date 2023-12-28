@@ -319,6 +319,7 @@ namespace Robust.Client.GameObjects
                         Scale = Vector2.One,
                         Visible = true,
                         RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy,
+                        Cycle = false,
                     });
                     state = null;
                     texture = null;
@@ -794,6 +795,7 @@ namespace Robust.Client.GameObjects
             }
 
             layer.RenderingStrategy = layerDatum.RenderingStrategy ?? layer.RenderingStrategy;
+            layer.Cycle = layerDatum.Cycle;
 
             layer.Color = layerDatum.Color ?? layer.Color;
             layer._rotation = layerDatum.Rotation ?? layer._rotation;
@@ -1515,6 +1517,19 @@ namespace Robust.Client.GameObjects
             [ViewVariables] public float AnimationTime;
             [ViewVariables] public int AnimationFrame;
 
+            /// <summary>
+            /// Is the animation currently playing in reverse.
+            /// </summary>
+            [ViewVariables] public bool Reversed { get; internal set; }
+
+            /// <summary>
+            /// If every animation delay finishes do we reverse it.
+            /// </summary>
+            /// <remarks>
+            /// Only applies if the state is auto-animated.
+            /// </remarks>
+            [ViewVariables] public bool Cycle;
+
             private RSI.State? _actualState;
             [ViewVariables] public RSI.State? ActualState => _actualState;
 
@@ -2033,15 +2048,49 @@ namespace Robust.Client.GameObjects
 
             internal void AdvanceFrameAnimation(RSI.State state)
             {
+                // Can't advance frames without more than 1 delay which is already checked above.
                 var delayCount = state.DelayCount;
                 while (AnimationTimeLeft < 0)
                 {
-                    AnimationFrame += 1;
-
-                    if (AnimationFrame >= delayCount)
+                    if (Reversed)
                     {
-                        AnimationFrame = 0;
-                        AnimationTime = -AnimationTimeLeft;
+                        AnimationFrame -= 1;
+
+                        // Animation finished, do we cycle back to positive or reset.
+                        if (AnimationFrame < 0)
+                        {
+                            if (Cycle)
+                            {
+                                AnimationFrame = 1;
+                                Reversed = false;
+                            }
+                            else
+                            {
+                                AnimationFrame = delayCount - 1;
+                            }
+
+                            AnimationTime = -AnimationTimeLeft;
+                        }
+                    }
+                    else
+                    {
+                        AnimationFrame += 1;
+
+                        // Animation finished, do we reverse or reset.
+                        if (AnimationFrame >= delayCount)
+                        {
+                            if (Cycle)
+                            {
+                                AnimationFrame = delayCount - 2;
+                                Reversed = true;
+                            }
+                            else
+                            {
+                                AnimationFrame = 0;
+                            }
+
+                            AnimationTime = -AnimationTimeLeft;
+                        }
                     }
 
                     AnimationTimeLeft += state.GetDelay(AnimationFrame);

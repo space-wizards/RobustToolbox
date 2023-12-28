@@ -158,12 +158,24 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return;
         }
 
+        // Source has already been set
+        if (component.Loaded)
+        {
+            return;
+        }
+
         if (!TryGetAudio(component.FileName, out var audioResource))
         {
             Log.Error($"Error creating audio source for {audioResource}, can't find file {component.FileName}");
             return;
         }
 
+        SetupSource(component, audioResource);
+        component.Loaded = true;
+    }
+
+    private void SetupSource(AudioComponent component, AudioResource audioResource, TimeSpan? length = null)
+    {
         var source = _audio.CreateAudioSource(audioResource);
 
         if (source == null)
@@ -182,8 +194,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;
 
+        length ??= GetAudioLength(component.FileName);
+
         // If audio came into range then start playback at the correct position.
-        var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % GetAudioLength(component.FileName).TotalSeconds;
+        var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % length.Value.TotalSeconds;
 
         if (offset > 0)
         {
@@ -395,18 +409,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return false;
     }
 
-    private bool TryCreateAudioSource(AudioStream stream, [NotNullWhen(true)] out IAudioSource? source)
+    private bool TryGetAudio(AudioStream stream, [NotNullWhen(true)] out AudioResource? audio)
     {
-        if (!Timing.IsFirstTimePredicted)
-        {
-            source = null;
-            Log.Error($"Tried to create audio source outside of prediction!");
-            DebugTools.Assert(false);
-            return false;
-        }
+        if (_resourceCache.TryGetResource(stream, out audio))
+            return true;
 
-        source = _audio.CreateAudioSource(stream);
-        return source != null;
+        Log.Error($"Server failed to play audio stream {stream.Title}.");
+        return false;
     }
 
     public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityCoordinates coordinates,
@@ -461,7 +470,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? PlayGlobal(AudioStream stream, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayGlobal(AudioStream stream, AudioParams? audioParams = null)
     {
         var (entity, component) = CreateAndStartPlayingStream(audioParams, stream);
         component.Global = true;
@@ -496,7 +505,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="entity">The entity "emitting" the audio.</param>
     /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
     {
         if (TerminatingOrDeleted(entity))
         {
@@ -537,7 +546,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         if (TerminatingOrDeleted(coordinates.EntityId))
         {
@@ -574,6 +583,16 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return PlayGlobal(filename, audioParams);
     }
 
+    public override void LoadStream<T>(AudioComponent component, T stream)
+    {
+        if (stream is AudioStream audioStream)
+        {
+            TryGetAudio(audioStream, out var audio);
+            SetupSource(component, audio!, audioStream.Length);
+            component.Loaded = true;
+        }
+    }
+
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null)
     {
@@ -608,7 +627,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         var audioP = audioParams ?? AudioParams.Default;
         var entity = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
-        var comp = SetupAudio(entity, stream.Name!, audioP);
+        var comp = SetupAudio(entity, null, audioP, stream.Length);
+        LoadStream(comp, stream);
         EntityManager.InitializeAndStartEntity(entity);
         var source = comp.Source;
 

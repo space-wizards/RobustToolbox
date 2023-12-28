@@ -52,7 +52,7 @@ internal abstract partial class ViewVariablesManager
         var tsc = new TaskCompletionSource<string?>();
         _readRequests.Add(msg.RequestId, tsc);
 
-        SendMessage(msg, session?.ConnectedClient);
+        SendMessage(msg, session?.Channel);
         return tsc.Task;
     }
 
@@ -72,7 +72,7 @@ internal abstract partial class ViewVariablesManager
         var tsc = new TaskCompletionSource();
         _writeRequests.Add(msg.RequestId, tsc);
 
-        SendMessage(msg, session?.ConnectedClient);
+        SendMessage(msg, session?.Channel);
         return tsc.Task;
     }
 
@@ -92,7 +92,7 @@ internal abstract partial class ViewVariablesManager
         var tsc = new TaskCompletionSource<string?>();
         _invokeRequests.Add(msg.RequestId, tsc);
 
-        SendMessage(msg, session?.ConnectedClient);
+        SendMessage(msg, session?.Channel);
         return tsc.Task;
     }
 
@@ -112,7 +112,7 @@ internal abstract partial class ViewVariablesManager
         var tsc = new TaskCompletionSource<IEnumerable<string>>();
         _listRequests.Add(msg.RequestId, tsc);
 
-        SendMessage(msg, session?.ConnectedClient);
+        SendMessage(msg, session?.Channel);
         return tsc.Task;
     }
 

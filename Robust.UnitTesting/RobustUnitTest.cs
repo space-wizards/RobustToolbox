@@ -24,6 +24,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
 
 namespace Robust.UnitTesting
@@ -85,7 +86,6 @@ namespace Robust.UnitTesting
 
             var systems = deps.Resolve<IEntitySystemManager>();
             // Required systems
-            systems.LoadExtraSystemType<MapSystem>();
             systems.LoadExtraSystemType<EntityLookupSystem>();
 
             // uhhh so maybe these are the wrong system for the client, but I CBF adding sprite system and all the rest,
@@ -94,6 +94,7 @@ namespace Robust.UnitTesting
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
             systems.LoadExtraSystemType<Gravity2DController>();
+            systems.LoadExtraSystemType<CollisionWakeSystem>();
 
             if (Project == UnitTestProject.Client)
             {
@@ -106,6 +107,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugRayDrawingSystem>();
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugPhysicsSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.MapSystem>();
             }
             else
             {
@@ -119,6 +121,9 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<DebugRayDrawingSystem>();
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<DebugPhysicsSystem>();
+                systems.LoadExtraSystemType<InputSystem>();
+                systems.LoadExtraSystemType<PvsOverrideSystem>();
+                systems.LoadExtraSystemType<MapSystem>();
             }
 
             var entMan = deps.Resolve<IEntityManager>();
@@ -222,6 +227,16 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(Gravity2DComponent)))
             {
                 compFactory.RegisterClass<Gravity2DComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(CollisionWakeComponent)))
+            {
+                compFactory.RegisterClass<CollisionWakeComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(CollideOnAnchorComponent)))
+            {
+                compFactory.RegisterClass<CollideOnAnchorComponent>();
             }
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(ActorComponent)))

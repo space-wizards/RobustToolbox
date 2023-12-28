@@ -109,8 +109,14 @@ namespace Robust.Client
                 {
                     IsBackground = false,
                     Priority = priority,
-                    Name = "Game thread",
+                    Name = "Game thread"
                 };
+
+                if (OperatingSystem.IsWindows())
+                {
+                    // Necessary for CEF to not complain when using CEF debug binaries.
+                    _gameThread.SetApartmentState(ApartmentState.STA);
+                }
 
                 _gameThread.Start();
 

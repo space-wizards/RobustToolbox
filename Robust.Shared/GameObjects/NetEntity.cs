@@ -48,6 +48,9 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// </summary>
     public static NetEntity Parse(ReadOnlySpan<char> uid)
     {
+        if (uid.Length == 0)
+            return default;
+
         if (uid[0] != 'c')
             return new NetEntity(int.Parse(uid));
 

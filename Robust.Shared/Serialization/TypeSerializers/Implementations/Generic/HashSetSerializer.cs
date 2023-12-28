@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -15,10 +16,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
     [TypeSerializer]
     public sealed class HashSetSerializer<T> :
         ITypeSerializer<HashSet<T>, SequenceDataNode>,
+        ITypeSerializer<FrozenSet<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>,
         ITypeCopier<HashSet<T>>,
-        ITypeCopyCreator<ImmutableHashSet<T>>
+        ITypeCopyCreator<ImmutableHashSet<T>>,
+        ITypeCopyCreator<FrozenSet<T>>
     {
+        #region Read
+
         HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
@@ -34,6 +39,51 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             }
 
             return set;
+        }
+
+        public FrozenSet<T> Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies,
+            SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<FrozenSet<T>>? instanceProvider = null)
+        {
+            if (instanceProvider != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(FrozenSet<T>)}. Ignoring...");
+
+            var array = new T[node.Sequence.Count];
+            var i = 0;
+            foreach (var dataNode in node.Sequence)
+            {
+                array[i++] = serializationManager.Read<T>(dataNode, hookCtx, context);
+            }
+            return array.ToFrozenSet();
+        }
+
+        ImmutableHashSet<T> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
+            ISerializationManager serializationManager,
+            SequenceDataNode node,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<ImmutableHashSet<T>>? instanceProvider)
+        {
+            if (instanceProvider != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableHashSet<T>)}. Ignoring...");
+            var set = ImmutableHashSet.CreateBuilder<T>();
+
+            foreach (var dataNode in node.Sequence)
+            {
+                set.Add(serializationManager.Read<T>(dataNode, hookCtx, context));
+            }
+
+            return set.ToImmutable();
+        }
+
+        #endregion
+
+        #region Validate
+
+        public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
+            IDependencyCollection dependencies, ISerializationContext? context = null)
+        {
+            return Validate(serializationManager, node, context);
         }
 
         ValidationNode ITypeValidator<ImmutableHashSet<T>, SequenceDataNode>.Validate(
@@ -61,10 +111,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return new ValidatedSequenceNode(list);
         }
 
+        #endregion
+
+        #region Write
+
         public DataNode Write(ISerializationManager serializationManager, ImmutableHashSet<T> value,
             IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
+        {
+            return Write(serializationManager, value.ToHashSet(), dependencies, alwaysWrite, context);
+        }
+
+        public DataNode Write(ISerializationManager serializationManager, FrozenSet<T> value, IDependencyCollection dependencies,
+            bool alwaysWrite = false, ISerializationContext? context = null)
         {
             return Write(serializationManager, value.ToHashSet(), dependencies, alwaysWrite, context);
         }
@@ -83,25 +143,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return sequence;
         }
 
-        ImmutableHashSet<T> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
-            ISerializationManager serializationManager,
-            SequenceDataNode node,
-            IDependencyCollection dependencies,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<ImmutableHashSet<T>>? instanceProvider)
-        {
-            if (instanceProvider != null)
-                Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableHashSet<T>)}. Ignoring...");
-            var set = ImmutableHashSet.CreateBuilder<T>();
+        #endregion
 
-            foreach (var dataNode in node.Sequence)
-            {
-                set.Add(serializationManager.Read<T>(dataNode, hookCtx, context));
-            }
-
-            return set.ToImmutable();
-        }
+        #region Copy
 
         public void CopyTo(ISerializationManager serializationManager, HashSet<T> source, ref HashSet<T> target,
             IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
@@ -118,8 +162,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         public ImmutableHashSet<T> CreateCopy(ISerializationManager serializationManager, ImmutableHashSet<T> source,
             IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
-            var target = new HashSet<T>();
-            target.EnsureCapacity(source.Count);
+            var target = new HashSet<T>(source.Count);
 
             foreach (var val in source)
             {
@@ -128,5 +171,19 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             return target.ToImmutableHashSet();
         }
+
+        public FrozenSet<T> CreateCopy(ISerializationManager serializationManager, FrozenSet<T> source, IDependencyCollection dependencies,
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
+        {
+            var array = new T[source.Count];
+            var i = 0;
+            foreach (var val in source)
+            {
+                array[i++] = serializationManager.CreateCopy(val, hookCtx, context);
+            }
+            return array.ToFrozenSet();
+        }
+
+        #endregion
     }
 }

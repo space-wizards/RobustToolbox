@@ -28,6 +28,24 @@ namespace Robust.UnitTesting.Shared
         }
 
         [Test]
+        public async Task  ConsoleErrorsFailTest()
+        {
+            var server = StartServer();
+            var client = StartClient();
+            await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+
+            // test missing commands
+            await client.WaitPost(() => Assert.Throws<AssertionException>(() => client.ConsoleHost.ExecuteCommand("aaaaaaaa")));
+
+            // test invalid commands / missing arguments
+            await client.WaitPost(() => Assert.Throws<AssertionException>(() => client.ConsoleHost.ExecuteCommand("cvar")));
+
+            // and repeat for the server
+            await server.WaitPost(() => Assert.Throws<AssertionException>(() => server.ConsoleHost.ExecuteCommand("aaaaaaaa")));
+            await server.WaitPost(() => Assert.Throws<AssertionException>(() => server.ConsoleHost.ExecuteCommand("cvar")));
+        }
+
+        [Test]
         public async Task ServerClientPairConnectCorrectlyTest()
         {
             var server = StartServer();
@@ -60,7 +78,7 @@ namespace Robust.UnitTesting.Shared
                 var player = playerManager.Sessions.Single();
 
                 Assert.That(player.Status, Is.EqualTo(SessionStatus.Connected));
-                Assert.That(player.ConnectedClient.IsConnected, Is.True);
+                Assert.That(player.Channel.IsConnected, Is.True);
             });
 
             await client.WaitAssertion(() =>

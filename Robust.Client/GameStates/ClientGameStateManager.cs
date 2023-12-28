@@ -532,7 +532,6 @@ namespace Robust.Client.GameStates
             using var __ = _timing.StartStateApplicationArea();
 
             // This is terrible, and I hate it. This also needs to run even when prediction is disabled.
-            _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
             _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
 
             if (!PredictionNeedsResetting)
@@ -982,16 +981,15 @@ namespace Robust.Client.GameStates
                 xformSys.DetachParentToNull(ent, xform);
 
                 // Then detach all children.
-                var childEnumerator = xform.ChildEnumerator;
-                while (childEnumerator.MoveNext(out var child))
+                foreach (var child in xform._children)
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
+                    xformSys.DetachParentToNull(child, xforms.GetComponent(child), xform);
 
                     if (deleteClientChildren
                         && !deleteClientEntities // don't add duplicates
-                        && _entities.IsClientSide(child.Value))
+                        && _entities.IsClientSide(child))
                     {
-                        _toDelete.Add(child.Value);
+                        _toDelete.Add(child);
                     }
                 }
 
@@ -1039,7 +1037,7 @@ namespace Robust.Client.GameStates
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
+                    xformSys.DetachParentToNull(child, xforms.GetComponent(child), xform);
                 }
 
                 // Finally, delete the entity.
@@ -1430,7 +1428,7 @@ namespace Robust.Client.GameStates
             void _recursiveRemoveState(NetEntity netEntity, TransformComponent xform, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery)
             {
                 _processor._lastStateFullRep.Remove(netEntity);
-                foreach (var child in xform.ChildEntities)
+                foreach (var child in xform._children)
                 {
                     if (xformQuery.TryGetComponent(child, out var childXform) &&
                         metaQuery.TryGetComponent(child, out var childMeta))

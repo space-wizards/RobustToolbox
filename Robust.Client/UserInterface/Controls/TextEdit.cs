@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Numerics;
@@ -228,7 +229,7 @@ public sealed class TextEdit : Control
     private bool IsPlaceholderVisible => Rope.IsNullOrEmpty(_textRope) && _placeholder != null;
 
     // Table used by cursor movement system, see below.
-    private static readonly Dictionary<BoundKeyFunction, MoveType> MoveTypeMap = new()
+    private static readonly FrozenDictionary<BoundKeyFunction, MoveType> MoveTypeMap = new Dictionary<BoundKeyFunction, MoveType>()
     {
         // @formatter:off
         { EngineKeyFunctions.TextCursorLeft,            MoveType.Left        },
@@ -249,7 +250,7 @@ public sealed class TextEdit : Control
         { EngineKeyFunctions.TextCursorSelectBegin,     MoveType.BeginOfLine | MoveType.SelectFlag },
         { EngineKeyFunctions.TextCursorSelectEnd,       MoveType.EndOfLine   | MoveType.SelectFlag },
         // @formatter:on
-    };
+    }.ToFrozenDictionary();
 
     protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
     {

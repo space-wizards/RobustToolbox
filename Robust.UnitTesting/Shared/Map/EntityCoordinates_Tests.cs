@@ -105,13 +105,13 @@ namespace Robust.UnitTesting.Shared.Map
         public void NoParent_OffsetZero()
         {
             var mapManager = IoCManager.Resolve<IMapManager>();
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            var uid = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
+            var xform = entMan.GetComponent<TransformComponent>(uid);
+            Assert.That(xform.Coordinates.Position, Is.EqualTo(Vector2.Zero));
 
-            var mapId = mapManager.CreateMap();
-            var mapEntity = mapManager.CreateNewMapEntity(mapId);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapEntity).Coordinates.Position, Is.EqualTo(Vector2.Zero));
-
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapEntity).LocalPosition = Vector2.One;
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapEntity).Coordinates.Position, Is.EqualTo(Vector2.Zero));
+            xform.LocalPosition = Vector2.One;
+            Assert.That(xform.Coordinates.Position, Is.EqualTo(Vector2.Zero));
         }
 
         [Test]

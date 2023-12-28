@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Prometheus;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Player;
@@ -68,8 +69,9 @@ namespace Robust.Server.GameStates
             return true;
         }
 
-        public void CleanupDirty(IEnumerable<ICommonSession> sessions)
+        public void CleanupDirty(ICommonSession[] sessions, Histogram? histogram)
         {
+            using var _ = histogram?.WithLabels("Clean Dirty").NewTimer();
             if (!CullingEnabled)
             {
                 _seenAllEnts.Clear();
@@ -82,20 +84,6 @@ namespace Robust.Server.GameStates
             _currentIndex = ((int)_gameTiming.CurTick.Value + 1) % DirtyBufferSize;
             _addEntities[_currentIndex].Clear();
             _dirtyEntities[_currentIndex].Clear();
-
-            foreach (var collection in _pvsCollections)
-            {
-                collection.ClearDirty();
-            }
-        }
-
-        /// <summary>
-        ///     Marks an entity's current chunk as dirty.
-        /// </summary>
-        internal void MarkDirty(EntityUid uid, TransformComponent xform)
-        {
-            var coordinates = _transform.GetMoverCoordinates(uid, xform);
-            _entityPvsCollection.MarkDirty(_entityPvsCollection.GetChunkIndex(coordinates));
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -35,7 +36,7 @@ public sealed class UITheme : IPrototype
     private ResPath _path;
 
     [DataField("colors", readOnly: true)] // This is a prototype, why is this readonly??
-    public Dictionary<string, Color>? Colors { get; }
+    public FrozenDictionary<string, Color>? Colors { get; }
     public ResPath Path => _path == default ? new ResPath(DefaultPath+"/"+ID) : _path;
 
     private void ValidateFilePath(IResourceManager manager)

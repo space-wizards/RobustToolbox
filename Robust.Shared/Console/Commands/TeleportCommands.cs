@@ -131,7 +131,7 @@ public sealed class TeleportToCommand : LocalizedCommands
             return true;
         }
 
-        if (_players.Sessions.TryFirstOrDefault(x => x.ConnectedClient.UserName == str, out var session)
+        if (_players.Sessions.TryFirstOrDefault(x => x.Channel.UserName == str, out var session)
             && _entities.TryGetComponent(session.AttachedEntity, out transform))
         {
             victimUid = session.AttachedEntity;

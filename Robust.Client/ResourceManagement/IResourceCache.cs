@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Client.Audio;
 using Robust.Client.Graphics;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
@@ -23,6 +24,8 @@ public interface IResourceCache : IResourceManager
 
     bool TryGetResource<T>(ResPath path, [NotNullWhen(true)] out T? resource)
         where T : BaseResource, new();
+
+    bool TryGetResource(AudioStream stream, [NotNullWhen(true)] out AudioResource? resource);
 
     void ReloadResource<T>(string path)
         where T : BaseResource, new();

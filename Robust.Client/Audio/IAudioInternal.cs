@@ -60,10 +60,4 @@ internal interface IAudioInternal : IAudioManager
     /// Manually calculates the specified gain for an attenuation source with the specified distance.
     /// </summary>
     float GetAttenuationGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance);
-
-    AudioStream LoadAudioOggVorbis(Stream stream, string? name = null);
-
-    AudioStream LoadAudioWav(Stream stream, string? name = null);
-
-    AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null);
 }

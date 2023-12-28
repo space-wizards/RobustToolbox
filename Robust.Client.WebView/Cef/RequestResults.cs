@@ -76,12 +76,9 @@ namespace Robust.Client.WebView.Cef
                 return true;
             }
 
-            protected override unsafe bool Read(IntPtr dataOut, int bytesToRead, out int bytesRead, CefResourceReadCallback callback)
+            protected override bool Read(Span<byte> response, out int bytesRead, CefResourceReadCallback callback)
             {
-                var byteSpan = new Span<byte>((void*) dataOut, bytesToRead);
-
-                bytesRead = _stream.Read(byteSpan);
-
+                bytesRead = _stream.Read(response);
                 return bytesRead != 0;
             }
 

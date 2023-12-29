@@ -10,6 +10,8 @@ namespace Robust.Shared.Maths
     [StructLayout(LayoutKind.Explicit)]
     public struct Box2i : IEquatable<Box2i>, ISpanFormattable
     {
+        public static Box2i Empty => new();
+
         [FieldOffset(sizeof(int) * 0)] public int Left;
         [FieldOffset(sizeof(int) * 1)] public int Bottom;
         [FieldOffset(sizeof(int) * 2)] public int Right;
@@ -71,6 +73,20 @@ namespace Robust.Shared.Maths
             return xOk && yOk;
         }
 
+        /// <summary>
+        /// Unlike Contains this assumes the Vector2i occupies an entire tile so we need the point to the top-right of it for consideration.
+        /// </summary>
+        public readonly bool ContainsTile(Vector2i tile, bool closedRegion = true)
+        {
+            var xOk = closedRegion
+                ? tile.X >= Left ^ tile.X + 1 > Right
+                : tile.X > Left ^ tile.X + 1 >= Right;
+            var yOk = closedRegion
+                ? tile.Y >= Bottom ^ tile.Y + 1 > Top
+                : tile.Y > Bottom ^ tile.Y + 1 >= Top;
+            return xOk && yOk;
+        }
+
         public readonly bool IsEmpty()
         {
             return Bottom == Top || Left == Right;
@@ -87,15 +103,47 @@ namespace Robust.Shared.Maths
         /// </summary>
         public readonly Box2i Union(in Box2i other)
         {
-            var left = Math.Min(Left, other.Left);
-            var right = Math.Max(Right, other.Right);
-            var bottom = Math.Min(Bottom, other.Bottom);
-            var top = Math.Max(Top, other.Top);
+            var botLeft = Vector2i.ComponentMin(BottomLeft, other.BottomLeft);
+            var topRight = Vector2i.ComponentMax(TopRight, other.TopRight);
 
-            if (left <= right && bottom <= top)
-                return new Box2i(left, bottom, right, top);
+            if (botLeft.X <= topRight.X && botLeft.Y <= topRight.Y)
+                return new Box2i(botLeft, topRight);
 
             return new Box2i();
+        }
+
+        /// <summary>
+        /// Unions the box2i with the specified Vector2i.
+        /// </summary>
+        /// <remarks>
+        /// Union treating other as a single point and not an entire tile.
+        /// </remarks>
+        public readonly Box2i Union(in Vector2i other)
+        {
+            if (Contains(other))
+                return this;
+
+            var botLeft = Vector2i.ComponentMin(BottomLeft, other);
+            var topRight = Vector2i.ComponentMax(TopRight, other);
+
+            return new Box2i(botLeft, topRight);
+        }
+
+        /// <summary>
+        /// Unions the box2i with the specified Vector2i.
+        /// </summary>
+        /// <remarks>
+        /// Union treating other as an entire tile and not a single point.
+        /// </remarks>
+        public readonly Box2i UnionTile(in Vector2i other)
+        {
+            if (ContainsTile(other))
+                return this;
+
+            var botLeft = Vector2i.ComponentMin(BottomLeft, other);
+            var topRight = Vector2i.ComponentMax(TopRight, other + Vector2i.One);
+
+            return new Box2i(botLeft, topRight);
         }
 
         // override object.Equals

@@ -281,7 +281,7 @@ internal partial class AudioManager
         _bufferedAudioSources.Remove(handle);
     }
 
-    IAudioSource? IAudioInternal.CreateAudioSource(AudioStream stream)
+    public IAudioSource? CreateAudioSource(AudioStream stream)
     {
         var source = AL.GenSource();
 

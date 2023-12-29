@@ -10,7 +10,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio.Sources;
 
-internal abstract class BaseAudioSource : IAudioSource
+public abstract class BaseAudioSource : IAudioSource
 {
     /*
      * This may look weird having all these methods here however
@@ -27,7 +27,7 @@ internal abstract class BaseAudioSource : IAudioSource
     /// </summary>
     protected int FilterHandle;
 
-    protected readonly AudioManager Master;
+    internal readonly AudioManager Master;
 
     /// <summary>
     /// Prior gain that was set.
@@ -38,13 +38,14 @@ internal abstract class BaseAudioSource : IAudioSource
 
     private bool IsEfxSupported => Master.IsEfxSupported;
 
-    protected BaseAudioSource(AudioManager master, int sourceHandle)
+    internal BaseAudioSource(AudioManager master, int sourceHandle)
     {
         Master = master;
         SourceHandle = sourceHandle;
         AL.GetSource(SourceHandle, ALSourcef.Gain, out _gain);
     }
 
+    /// <inheritdoc />
     public void Pause()
     {
         AL.SourcePause(SourceHandle);
@@ -66,6 +67,13 @@ internal abstract class BaseAudioSource : IAudioSource
             return;
 
         Playing = false;
+    }
+
+    /// <inheritdoc />
+    public void Restart()
+    {
+        AL.SourceRewind(SourceHandle);
+        StartPlaying();
     }
 
     /// <inheritdoc />
@@ -338,7 +346,7 @@ internal abstract class BaseAudioSource : IAudioSource
         }
     }
 
-    public void SetAuxiliary(IAuxiliaryAudio? audio)
+    void IAudioSource.SetAuxiliary(IAuxiliaryAudio? audio)
     {
         _checkDisposed();
         if (!IsEfxSupported)

@@ -366,34 +366,32 @@ internal sealed partial class PvsSystem : EntitySystem
     private void VerifySessionData(PvsSession pvsSession)
     {
         var toSend = pvsSession.ToSend;
-        var toSendSet = new HashSet<EntityUid>(toSend!.Count);
+        var toSendSet = new HashSet<NetEntity>(toSend!.Count);
         foreach (var data in toSend)
         {
-            toSendSet.Add(data.Entity.Owner);
+            toSendSet.Add(data.NetEntity);
         }
         DebugTools.AssertEqual(toSend.Count, toSendSet.Count);
 
         foreach (var data in CollectionsMarshal.AsSpan(toSend))
         {
-            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
             DebugTools.AssertEqual(data.LastSeen, _gameTiming.CurTick);
             DebugTools.Assert(ReferenceEquals(data, pvsSession.Entities[data.NetEntity]));
 
             // if an entity is visible, its parents should always be visible.
-            if (_xformQuery.GetComponent(data.Entity).ParentUid is not {Valid: true} pUid)
+            if (_xformQuery.GetComponent(GetEntity(data.NetEntity)).ParentUid is not {Valid: true} pUid)
                 continue;
 
-            DebugTools.Assert(toSendSet.Contains(pUid),
+            DebugTools.Assert(toSendSet.Contains(GetNetEntity(pUid)),
                 $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(pUid)}.");
         }
 
         pvsSession.PreviouslySent.TryGetValue(_gameTiming.CurTick - 1, out var lastSent);
         foreach (var data in CollectionsMarshal.AsSpan(lastSent))
         {
-            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
             DebugTools.Assert(!pvsSession.Entities.TryGetValue(data.NetEntity, out var old) || ReferenceEquals(data, old));
             DebugTools.Assert(data.LastSeen != GameTick.Zero);
-            DebugTools.AssertEqual(toSendSet.Contains(data.Entity), data.LastSeen == _gameTiming.CurTick);
+            DebugTools.AssertEqual(toSendSet.Contains(data.NetEntity), data.LastSeen == _gameTiming.CurTick);
             DebugTools.Assert(data.LastSeen == _gameTiming.CurTick
                               || data.LastSeen == _gameTiming.CurTick - 1);
         }
@@ -421,8 +419,8 @@ internal sealed partial class PvsSystem : EntitySystem
             data.LastLeftView = toTick;
 
             // TODO PVS make this not required. I.e., hide maps/grids from clients.
-            DebugTools.Assert(!HasComp<MapGridComponent>(data.Entity));
-            DebugTools.Assert(!HasComp<MapComponent>(data.Entity));
+            DebugTools.Assert(!TryGetEntity(data.NetEntity, out var uid)
+                              || (!HasComp<MapGridComponent>(uid) && !HasComp<MapComponent>(uid)));
         }
 
         if (session.LeftView.Count == 0)

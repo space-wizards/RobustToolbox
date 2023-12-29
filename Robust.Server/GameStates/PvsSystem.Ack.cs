@@ -124,7 +124,6 @@ internal sealed partial class PvsSystem
         foreach (var data in CollectionsMarshal.AsSpan(ackedEnts))
         {
             data.EntityLastAcked = ackedTick;
-            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
             DebugTools.Assert(data.LastSeen >= ackedTick); // LastSent may equal ackedTick if the packet was sent reliably.
             DebugTools.Assert(!sessionData.Entities.TryGetValue(data.NetEntity, out var old)
                               || ReferenceEquals(data, old));

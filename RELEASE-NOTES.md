@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 198.0.1
+
+### Bugfixes
+
+* Fix preprocessor flag for FULL_RELEASE preventing building.
+
+
 ## 198.0.0
 
 ### Breaking changes

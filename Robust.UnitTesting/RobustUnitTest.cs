@@ -23,6 +23,7 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
@@ -243,6 +244,8 @@ namespace Robust.UnitTesting
             {
                 compFactory.RegisterClass<ActorComponent>();
             }
+
+            deps.Resolve<IParallelManagerInternal>().Initialize();
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.
             // We want to bypass this and load our own systems hence we will manually initialize it here.

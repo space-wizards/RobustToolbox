@@ -1,7 +1,6 @@
 using System;
 using System.Numerics;
 using Robust.Shared.Audio.Effects;
-using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Audio.Sources;
 
@@ -11,7 +10,7 @@ namespace Robust.Shared.Audio.Sources;
 /// <remarks>
 /// This just exists so client can interact with OpenAL and server can interact with nothing.
 /// </remarks>
-internal interface IAudioSource : IDisposable
+public interface IAudioSource : IDisposable
 {
     void Pause();
 
@@ -24,6 +23,11 @@ internal interface IAudioSource : IDisposable
     /// Stops playing a source if it is currently playing.
     /// </summary>
     void StopPlaying();
+
+    /// <summary>
+    /// Restarts the audio source from the beginning.
+    /// </summary>
+    void Restart();
 
     /// <summary>
     /// Is the audio source currently playing.

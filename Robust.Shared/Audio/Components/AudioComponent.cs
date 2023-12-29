@@ -92,6 +92,9 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <inheritdoc />
     public void StopPlaying() => Source.StopPlaying();
 
+    /// <inheritdoc />
+    public void Restart() => Source.Restart();
+
     /// <summary>
     /// <see cref="IAudioSource.Playing"/>
     /// </summary>

@@ -40,7 +40,8 @@ namespace Robust.Client.UserInterface.Controls
                         Orientation = LayoutOrientation.Vertical,
                         MinSize = new Vector2(300, 0)
                     })
-                }
+                },
+                StyleClasses = { "menubar-popup" }
             };
             _popup.OnPopupHide += PopupHidden;
             UserInterfaceManager.ModalRoot.AddChild(_popup);

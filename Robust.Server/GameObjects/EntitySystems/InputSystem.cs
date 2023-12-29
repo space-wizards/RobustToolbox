@@ -73,7 +73,7 @@ namespace Robust.Server.GameObjects
 
         public uint GetLastInputCommand(ICommonSession? session)
         {
-            return session == null ? default : _lastProcessedInputCmd[session];
+            return session == null ? default : _lastProcessedInputCmd.GetValueOrDefault(session);
         }
 
         private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)

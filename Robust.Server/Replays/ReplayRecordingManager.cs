@@ -44,7 +44,7 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, ISe
             return;
         }
 
-        _pvs.GetSessionData(_pvsSession);
+        _pvs.ComputeSessionState(_pvsSession);
         Update(_pvsSession.State);
         _pvsSession.ClearState();
         _pvsSession.LastReceivedAck = Timing.CurTick;

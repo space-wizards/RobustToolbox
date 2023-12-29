@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -22,12 +23,64 @@ internal sealed partial class PvsSystem
 
     internal readonly Dictionary<ICommonSession, PvsSession> PlayerData = new();
 
-    internal PvsSession GetSessionData(ICommonSession session)
-        => GetSessionData(PlayerData[session]);
-
-    internal PvsSession GetSessionData(PvsSession session)
+    private void SendStateUpdate(ICommonSession session, PvsThreadResources resources)
     {
-        UpdateSessionData(session);
+        var data = GetOrNewPvsSession(session);
+        ComputeSessionState(data);
+
+        InterlockedHelper.Min(ref _oldestAck, data.FromTick.Value);
+
+        // actually send the state
+        var msg = new MsgState
+        {
+            State = data.State,
+            CompressionContext = resources.CompressionContext
+        };
+
+        // PVS benchmarks use dummy sessions.
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (session.Channel != null)
+        {
+            _netMan.ServerSendMessage(msg, session.Channel);
+            if (msg.ShouldSendReliably())
+            {
+                data.LastReceivedAck = _gameTiming.CurTick;
+                lock (PendingAcks)
+                {
+                    PendingAcks.Add(session);
+                }
+            }
+        }
+        else
+        {
+            // Always "ack" dummy sessions.
+            data.LastReceivedAck = _gameTiming.CurTick;
+            lock (PendingAcks)
+            {
+                PendingAcks.Add(session);
+            }
+        }
+
+        data.ClearState();
+
+        // TODO parallelize this with system processing.
+        // Before we do that we need to:
+        // - Defer player connection changes untill the start of the nxt PVS tick and  this job has finished
+        // - Defer OnEntityDeleted in pvs system. Or refactor per-session entity data to be stored as arrays on metadaat component
+        ProcessLeavePvs(data);
+    }
+
+    private PvsSession GetOrNewPvsSession(ICommonSession session)
+    {
+        if (!PlayerData.TryGetValue(session, out var pvsSession))
+            PlayerData[session] = pvsSession = new(session);
+
+        return pvsSession;
+    }
+
+    internal void ComputeSessionState(PvsSession session)
+    {
+        UpdateSession(session);
 
         if (CullingEnabled && !session.DisableCulling)
             GetEntityStates(session);
@@ -50,10 +103,9 @@ internal sealed partial class PvsSystem
 
         if (_gameTiming.CurTick.Value > session.LastReceivedAck.Value + ForceAckThreshold)
             session.State.ForceSendReliably = true;
-
-        return session;
     }
-    internal void UpdateSessionData(PvsSession session)
+
+    private void UpdateSession(PvsSession session)
     {
         DebugTools.AssertEqual(session.LeftView.Count, 0);
         DebugTools.AssertEqual(session.PlayerStates.Count, 0);

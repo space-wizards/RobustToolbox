@@ -19,6 +19,7 @@ using Robust.Client.Timing;
 using Robust.Client.UserInterface;
 using Robust.Server;
 using Robust.Server.Console;
+using Robust.Server.GameStates;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
@@ -741,6 +742,16 @@ namespace Robust.UnitTesting
                 ResolveIoC(deps);
 
                 return server;
+            }
+
+            /// <summary>
+            /// Force a PVS update. This is mainly here to expose internal PVS methods to content benchmarks.
+            /// </summary>
+            public void PvsTick(ICommonSession[] players)
+            {
+                var pvs = EntMan.System<PvsSystem>();
+                pvs.SendGameStates(players);
+                Timing.CurTick += 1;
             }
         }
 

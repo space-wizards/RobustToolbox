@@ -54,6 +54,24 @@ END TEMPLATE-->
 *None yet*
 
 
+## 198.1.0
+
+### New features
+
+* `IClydeViewport` now provides access to the light render target.
+* Added a style-class to the `MenuBar` popup control.
+* Added `NextGaussian()` extension method for `System.Random`.
+* Added per-session variant of `PvsOverrideSystem.AddForceSend()`.
+
+### Bugfixes
+
+* Stopped the client from logging errors when attempting to delete invalid entities.
+
+### Other
+
+* The `DevWindow` UI inspector has been improved a bit and it now groups properties by their defining type.
+
+
 ## 198.0.1
 
 ### Bugfixes

@@ -98,7 +98,7 @@ internal sealed partial class PvsSystem
     /// <summary>
     /// Gets all entity states that have been modified after and including the provided tick.
     /// </summary>
-    public void GetAllEntityStates(PvsSession pvsSession)
+    private void GetAllEntityStates(PvsSession pvsSession)
     {
         var session = pvsSession.Session;
         var toTick = _gameTiming.CurTick;

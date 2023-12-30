@@ -1,25 +1,15 @@
 using System;
 using System.Diagnostics.Tracing;
 using System.Linq;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Server.Player;
-using Robust.Shared;
-using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Threading;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
-using SharpZstd.Interop;
-using Microsoft.Extensions.ObjectPool;
-using Prometheus;
-using Robust.Server.Replays;
-using Robust.Shared.Console;
 using Robust.Shared.Player;
 
 namespace Robust.Server.GameStates
@@ -28,31 +18,13 @@ namespace Robust.Server.GameStates
     [UsedImplicitly]
     public sealed class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
     {
-        // Mapping of net UID of clients -> last known acked state.
-        private GameTick _lastOldestAck = GameTick.Zero;
-
         private PvsSystem _pvs = default!;
 
         [Dependency] private readonly EntityManager _entityManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IEntitySystemManager _systemManager = default!;
-        [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IParallelManager _parallelMgr = default!;
-        [Dependency] private readonly IConsoleHost _conHost = default!;
-
-        private static readonly Histogram _usageHistogram = Metrics.CreateHistogram("robust_game_state_update_usage",
-            "Amount of time spent processing different parts of the game state update", new HistogramConfiguration
-            {
-                LabelNames = new[] {"area"},
-                Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
-            });
 
         private ISawmill _logger = default!;
-
-        private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
 
         public ushort TransformNetId { get; set; }
 
@@ -71,51 +43,7 @@ namespace Robust.Server.GameStates
             _networkManager.RegisterNetMessage<MsgStateLeavePvs>();
             _networkManager.RegisterNetMessage<MsgStateAck>(HandleStateAck);
             _networkManager.RegisterNetMessage<MsgStateRequestFull>(HandleFullStateRequest);
-
             _pvs = _entityManager.System<PvsSystem>();
-
-            _parallelMgr.AddAndInvokeParallelCountChanged(ResetParallelism);
-
-            _cfg.OnValueChanged(CVars.NetPvsCompressLevel, _ => ResetParallelism(), true);
-        }
-
-        private void ResetParallelism()
-        {
-            var compressLevel = _cfg.GetCVar(CVars.NetPvsCompressLevel);
-            // The * 2 is because trusting .NET won't take more is what got this code into this mess in the first place.
-            _threadResourcesPool = new DefaultObjectPool<PvsThreadResources>(new PvsThreadResourcesObjectPolicy(compressLevel), _parallelMgr.ParallelProcessCount * 2);
-        }
-
-        private sealed class PvsThreadResourcesObjectPolicy : IPooledObjectPolicy<PvsThreadResources>
-        {
-            public int CompressionLevel;
-
-            public PvsThreadResourcesObjectPolicy(int ce)
-            {
-                CompressionLevel = ce;
-            }
-
-            PvsThreadResources IPooledObjectPolicy<PvsThreadResources>.Create()
-            {
-                var res = new PvsThreadResources();
-                res.CompressionContext.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, CompressionLevel);
-                return res;
-            }
-
-            bool IPooledObjectPolicy<PvsThreadResources>.Return(PvsThreadResources _)
-            {
-                return true;
-            }
-        }
-
-        internal sealed class PvsThreadResources
-        {
-            public ZStdCompressionContext CompressionContext = new();
-
-            ~PvsThreadResources()
-            {
-                CompressionContext.Dispose();
-            }
         }
 
         private void HandleFullStateRequest(MsgStateRequestFull msg)
@@ -137,83 +65,7 @@ namespace Robust.Server.GameStates
         public void SendGameStateUpdate()
         {
             var players = _playerManager.Sessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
-
-            _pvs.BeforeSendState(players, _usageHistogram);
-
-            // Construct & send the game state to each player.
-            var oldestAck = SendStates(players);
-
-            _pvs.AfterSendState(players, _usageHistogram, oldestAck, ref _lastOldestAck);
-        }
-
-        private GameTick SendStates(ICommonSession[] players)
-        {
-            using var _ = _usageHistogram.WithLabels("Send States").NewTimer();
-
-            var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
-            var oldestAckValue = GameTick.MaxValue.Value;
-
-            // Replays process game states in parallel with players
-            Parallel.For(-1, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
-
-            PvsThreadResources SendPlayer(int i, ParallelLoopState state, PvsThreadResources resource)
-            {
-                try
-                {
-                    var guid = i >= 0 ? players[i].UserId.UserId : default;
-
-                    PvsEventSource.Log.WorkStart(_gameTiming.CurTick.Value, i, guid);
-
-                    if (i >= 0)
-                        SendStateUpdate(resource, players[i], ref oldestAckValue);
-                    else
-                        _replay.Update();
-
-                    PvsEventSource.Log.WorkStop(_gameTiming.CurTick.Value, i, guid);
-                }
-                catch (Exception e) // Catch EVERY exception
-                {
-                    var source = i >= 0 ? players[i].ToString() : "replays";
-                    _logger.Log(LogLevel.Error, e, $"Caught exception while generating mail for {source}.");
-                }
-                return resource;
-            }
-
-            return new GameTick(oldestAckValue);
-        }
-
-        private void SendStateUpdate(
-            PvsThreadResources resources,
-            ICommonSession session,
-            ref uint oldestAckValue)
-        {
-            var data = _pvs.GetSessionData(session);
-            InterlockedHelper.Min(ref oldestAckValue, data.FromTick.Value);
-
-            // actually send the state
-            var stateUpdateMessage = new MsgState
-            {
-                State = data.State,
-                CompressionContext = resources.CompressionContext
-            };
-
-            _networkManager.ServerSendMessage(stateUpdateMessage, session.Channel);
-            data.ClearState();
-
-            if (stateUpdateMessage.ShouldSendReliably())
-            {
-                data.LastReceivedAck = _gameTiming.CurTick;
-                lock (_pvs.PendingAcks)
-                {
-                    _pvs.PendingAcks.Add(session);
-                }
-            }
-
-            // TODO parallelize this with system processing.
-            // Before we do that we need to:
-            // - Defer player connection changes untill the start of the nxt PVS tick and  this job has finished
-            // - Defer OnEntityDeleted in pvs system. Or refactor per-session entity data to be stored as arrays on metadaat component
-            _pvs.ProcessLeavePvs(data);
+            _pvs.SendGameStates(players);
         }
 
         [EventSource(Name = "Robust.Pvs")]

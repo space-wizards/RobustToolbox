@@ -69,9 +69,9 @@ namespace Robust.Server.GameStates
             return true;
         }
 
-        public void CleanupDirty(ICommonSession[] sessions, Histogram? histogram)
+        private void CleanupDirty(ICommonSession[] sessions)
         {
-            using var _ = histogram?.WithLabels("Clean Dirty").NewTimer();
+            using var _ = Histogram.WithLabels("Clean Dirty").NewTimer();
             if (!CullingEnabled)
             {
                 _seenAllEnts.Clear();

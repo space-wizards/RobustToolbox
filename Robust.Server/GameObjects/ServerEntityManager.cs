@@ -158,7 +158,7 @@ namespace Robust.Server.GameObjects
 
         public uint GetLastMessageSequence(ICommonSession? session)
         {
-            return session == null ? default : _lastProcessedSequencesCmd[session];
+            return session == null ? default : _lastProcessedSequencesCmd.GetValueOrDefault(session);
         }
 
         /// <inheritdoc />

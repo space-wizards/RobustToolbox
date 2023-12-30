@@ -77,9 +77,9 @@ internal sealed partial class PvsSystem
     /// <summary>
     /// Update the list of all currently visible chunks.
     /// </summary>
-    public void GetVisibleChunks(ICommonSession[] sessions, Histogram? histogram)
+    internal void GetVisibleChunks(ICommonSession[] sessions)
     {
-        using var _= histogram?.WithLabels("Get Chunks").NewTimer();
+        using var _= Histogram.WithLabels("Get Chunks").NewTimer();
 
         // TODO PVS try parallelize
         // I.e., get the per-player List<PvsChunk> in parallel.
@@ -93,7 +93,7 @@ internal sealed partial class PvsSystem
         _cleanChunks.Clear();
         foreach (var session in sessions)
         {
-            var data = PlayerData[session];
+            var data = GetOrNewPvsSession(session);
             data.Chunks.Clear();
             GetSessionViewers(data);
 
@@ -209,16 +209,16 @@ internal sealed partial class PvsSystem
         }
     }
 
-    public void ProcessVisibleChunks(Histogram? histogram)
+    private void ProcessVisibleChunks()
     {
-        using var _= histogram?.WithLabels("Update Chunks").NewTimer();
+        using var _= Histogram.WithLabels("Update Chunks").NewTimer();
         _parallelMgr.ProcessNow(_chunkJob, _chunkJob.Count);
     }
 
     /// <summary>
     /// Variant of <see cref="ProcessVisibleChunks"/> that isn't multithreaded.
     /// </summary>
-    public void ProcessVisibleChunksSequential()
+    internal void ProcessVisibleChunksSequential()
     {
         UpdateCleanChunks();
 
@@ -311,7 +311,7 @@ internal sealed partial class PvsSystem
         DebugTools.Assert(_chunks.Values.All(x => x.Map.Owner != root && x.Root.Owner != root));
     }
 
-    public void GridParentChanged(Entity<TransformComponent, MetaDataComponent> grid)
+    internal void GridParentChanged(Entity<TransformComponent, MetaDataComponent> grid)
     {
         if (!_chunkSets.TryGetValue(grid.Owner, out var locations))
         {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -494,9 +495,9 @@ namespace Robust.Client.Console.Commands
             }
         }
 
-        internal static List<(string, string)> PropertyValuesFor(Control control)
+        internal static List<MemberInfo> GetAllMembers(Control control)
         {
-            var members = new List<(string, string)>();
+            var members = new List<MemberInfo>();
             var type = control.GetType();
 
             foreach (var fieldInfo in type.GetAllFields())
@@ -506,7 +507,7 @@ namespace Robust.Client.Console.Commands
                     continue;
                 }
 
-                members.Add((fieldInfo.Name, fieldInfo.GetValue(control)?.ToString() ?? "null"));
+                members.Add(fieldInfo);
             }
 
             foreach (var propertyInfo in type.GetAllProperties())
@@ -516,7 +517,19 @@ namespace Robust.Client.Console.Commands
                     continue;
                 }
 
-                members.Add((propertyInfo.Name, propertyInfo.GetValue(control)?.ToString() ?? "null"));
+                members.Add(propertyInfo);
+            }
+
+            return members;
+        }
+
+        internal static List<(string, string)> PropertyValuesFor(Control control)
+        {
+            var members = new List<(string, string)>();
+
+            foreach (var fieldInfo in GetAllMembers(control))
+            {
+                members.Add((fieldInfo.Name, fieldInfo.GetValue(control)?.ToString() ?? "null"));
             }
 
             foreach (var (attachedProperty, value) in control.AllAttachedProperties)
@@ -527,6 +540,47 @@ namespace Robust.Client.Console.Commands
 
             members.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
             return members;
+        }
+
+        internal static Dictionary<string, List<(string, string)>> PropertyValuesForInheritance(Control control)
+        {
+            var returnVal = new Dictionary<string, List<(string, string)>>();
+
+            foreach (var member in GetAllMembers(control))
+            {
+                var cname = member.DeclaringType!.Name;
+                if (!member.DeclaringType!.ToString().StartsWith("Robust.Client.UserInterface."))
+                {
+                    // full name on non engine class
+                    cname = member.DeclaringType!.ToString();
+                }
+
+                if (!returnVal.TryGetValue(cname, out var members))
+                {
+                    returnVal.Add(cname,
+                        [(member.Name, member.GetValue(control)?.ToString() ?? "null")]);
+                    continue;
+                }
+                members.Add((member.Name, member.GetValue(control)?.ToString() ?? "null"));
+            }
+
+            foreach (var (attachedProperty, value) in control.AllAttachedProperties)
+            {
+                var cname = $"Attached > {attachedProperty.OwningType.Name}";
+                if (!returnVal.TryGetValue(cname, out var members))
+                {
+                    returnVal.Add(cname,
+                        [(attachedProperty.Name, value?.ToString() ?? "null")]);
+                    continue;
+                }
+                members.Add((attachedProperty.Name, value?.ToString() ?? "null"));
+            }
+
+            foreach (var (_, v) in returnVal)
+            {
+                v.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
+            }
+            return returnVal;
         }
     }
 

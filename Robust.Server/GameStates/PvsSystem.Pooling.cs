@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Utility;
+using SharpZstd.Interop;
 
 namespace Robust.Server.GameStates;
 
@@ -23,7 +24,7 @@ internal sealed partial class PvsSystem
     private readonly ObjectPool<PvsChunk> _chunkPool =
         new DefaultObjectPool<PvsChunk>(new PvsChunkPolicy(), 256);
 
-    public sealed class PvsChunkPolicy : PooledObjectPolicy<PvsChunk>
+    private sealed class PvsChunkPolicy : PooledObjectPolicy<PvsChunk>
     {
         public override PvsChunk Create()
         {
@@ -34,6 +35,31 @@ internal sealed partial class PvsSystem
         {
             obj.Wipe();
             return true;
+        }
+    }
+
+    private sealed class PvsThreadResourcesObjectPolicy(int ce) : IPooledObjectPolicy<PvsThreadResources>
+    {
+        PvsThreadResources IPooledObjectPolicy<PvsThreadResources>.Create()
+        {
+            var res = new PvsThreadResources();
+            res.CompressionContext.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, ce);
+            return res;
+        }
+
+        bool IPooledObjectPolicy<PvsThreadResources>.Return(PvsThreadResources _)
+        {
+            return true;
+        }
+    }
+
+    private sealed class PvsThreadResources
+    {
+        public ZStdCompressionContext CompressionContext = new();
+
+        ~PvsThreadResources()
+        {
+            CompressionContext.Dispose();
         }
     }
 }

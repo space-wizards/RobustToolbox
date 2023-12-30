@@ -33,7 +33,7 @@ internal sealed partial class PvsSystem
     ///     Processes queued client acks in parallel
     /// </summary>
     /// <param name="histogram"></param>
-    internal WaitHandle? ProcessQueuedAcks(Histogram? histogram)
+    private WaitHandle? ProcessQueuedAcks()
     {
         if (PendingAcks.Count == 0)
             return null;
@@ -49,7 +49,7 @@ internal sealed partial class PvsSystem
 
         if (!_async)
         {
-            using var _= histogram?.WithLabels("Process Acks").NewTimer();
+            using var _= Histogram.WithLabels("Process Acks").NewTimer();
             _parallelManager.ProcessNow(_ackJob, _toAck.Count);
             return null;
         }
@@ -124,7 +124,6 @@ internal sealed partial class PvsSystem
         foreach (var data in CollectionsMarshal.AsSpan(ackedEnts))
         {
             data.EntityLastAcked = ackedTick;
-            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
             DebugTools.Assert(data.LastSeen >= ackedTick); // LastSent may equal ackedTick if the packet was sent reliably.
             DebugTools.Assert(!sessionData.Entities.TryGetValue(data.NetEntity, out var old)
                               || ReferenceEquals(data, old));

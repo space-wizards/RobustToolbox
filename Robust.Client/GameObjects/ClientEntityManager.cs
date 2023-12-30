@@ -67,7 +67,7 @@ namespace Robust.Client.GameObjects
 
         public override void QueueDeleteEntity(EntityUid? uid)
         {
-            if (uid == null)
+            if (uid == null || uid == EntityUid.Invalid)
                 return;
 
             if (IsClientSide(uid.Value))

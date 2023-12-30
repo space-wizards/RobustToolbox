@@ -52,6 +52,14 @@ internal sealed partial class PvsSystem
         {
             RecursivelyAddOverride(session, uid, fromTick, addChildren: false);
         }
+
+        if (!_pvsOverride.SessionForceSend.TryGetValue(session.Session, out var sessionForce))
+            return;
+
+        foreach (var uid in sessionForce)
+        {
+            RecursivelyAddOverride(session, uid, fromTick, addChildren: false);
+        }
     }
 
     private void RaiseExpandEvent(PvsSession session, GameTick fromTick)

@@ -18,6 +18,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     internal HashSet<EntityUid> GlobalOverride = new();
     internal HashSet<EntityUid> ForceSend = new();
     internal Dictionary<ICommonSession, HashSet<EntityUid>> SessionOverrides = new();
+    internal Dictionary<ICommonSession, HashSet<EntityUid>> SessionForceSend = new();
 
     public override void Initialize()
     {
@@ -35,6 +36,7 @@ public sealed class PvsOverrideSystem : EntitySystem
             return;
 
         SessionOverrides.Remove(ev.Session);
+        SessionForceSend.Remove(ev.Session);
     }
 
     public override void Shutdown()
@@ -60,6 +62,12 @@ public sealed class PvsOverrideSystem : EntitySystem
         {
             if (set.Remove(uid) && set.Count == 0)
                 SessionOverrides.Remove(session);
+        }
+
+        foreach (var (session, set) in SessionForceSend)
+        {
+            if (set.Remove(uid) && set.Count == 0)
+                SessionForceSend.Remove(session);
         }
     }
 
@@ -88,7 +96,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// </summary>
     /// <remarks>
     /// This differs from <see cref="AddGlobalOverride"/> as it does not send children, and will ignore a players usual
-    /// PVS budget. You generally shouldn't use this.
+    /// PVS budget. You generally shouldn't use this unless an entity absolutely always needs to be sent to all clients.
     /// </remarks>
     public void AddForceSend(EntityUid uid)
     {
@@ -102,6 +110,35 @@ public sealed class PvsOverrideSystem : EntitySystem
         // Not bothering to clear _hasOverride, as we'd have to check all the other collections, and at that point we
         // might as well just do that when the entity gets deleted anyways.
     }
+
+    /// <summary>
+    /// This causes an entity and all of its parents to always be sent to a player..
+    /// </summary>
+    /// <remarks>
+    /// This differs from <see cref="AddSessionOverride"/> as it does not send children, and will ignore a players usual
+    /// PVS budget. You generally shouldn't use this unless an entity absolutely always needs to be sent to a client.
+    /// </remarks>
+    public void AddForceSend(EntityUid uid, ICommonSession session)
+    {
+        if (SessionForceSend.GetOrNew(session).Add(uid))
+            _hasOverride.Add(uid);
+    }
+
+    /// <summary>
+    /// Removes an entity from a session's force send set.
+    /// </summary>
+    public void RemoveForceSend(EntityUid uid, ICommonSession session)
+    {
+        if (!SessionForceSend.TryGetValue(session, out var overrides))
+            return;
+
+        if (overrides.Remove(uid) && overrides.Count == 0)
+            SessionForceSend.Remove(session);
+
+        // Not bothering to clear _hasOverride, as we'd have to check all the other collections, and at that point we
+        // might as well just do that when the entity gets deleted anyways.
+    }
+
 
     /// <summary>
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations for a

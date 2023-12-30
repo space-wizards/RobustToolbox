@@ -545,38 +545,26 @@ namespace Robust.Client.Console.Commands
         internal static Dictionary<string, List<(string, string)>> PropertyValuesForInheritance(Control control)
         {
             var returnVal = new Dictionary<string, List<(string, string)>>();
+            var engine = typeof(Control).Assembly;
 
             foreach (var member in GetAllMembers(control))
             {
-                var cname = member.DeclaringType!.Name;
-                if (!member.DeclaringType!.ToString().StartsWith("Robust.Client.UserInterface."))
-                {
-                    // full name on non engine class
-                    cname = member.DeclaringType!.ToString();
-                }
+                var type = member.DeclaringType!;
+                var cname = type.Assembly == engine ? type.Name : type.ToString();
 
-                if (!returnVal.TryGetValue(cname, out var members))
-                {
-                    returnVal.Add(cname,
-                        [(member.Name, member.GetValue(control)?.ToString() ?? "null")]);
-                    continue;
-                }
-                members.Add((member.Name, member.GetValue(control)?.ToString() ?? "null"));
+                if (type != typeof(Control))
+                    cname = $"Control > {cname}";
+
+                returnVal.GetOrNew(cname).Add((member.Name, member.GetValue(control)?.ToString() ?? "null"));
             }
 
             foreach (var (attachedProperty, value) in control.AllAttachedProperties)
             {
                 var cname = $"Attached > {attachedProperty.OwningType.Name}";
-                if (!returnVal.TryGetValue(cname, out var members))
-                {
-                    returnVal.Add(cname,
-                        [(attachedProperty.Name, value?.ToString() ?? "null")]);
-                    continue;
-                }
-                members.Add((attachedProperty.Name, value?.ToString() ?? "null"));
+                returnVal.GetOrNew(cname).Add((attachedProperty.Name, value?.ToString() ?? "null"));
             }
 
-            foreach (var (_, v) in returnVal)
+            foreach (var v in returnVal.Values)
             {
                 v.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
             }

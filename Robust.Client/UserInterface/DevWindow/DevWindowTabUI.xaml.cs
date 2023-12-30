@@ -196,7 +196,7 @@ public sealed partial class DevWindowTabUI : Control
             {
                 Children = { new Label
                 {
-                    Text = (classname != "Control" && !classname.StartsWith("Attached > ") ? "Control > " : "") + $"{classname}",
+                    Text = classname,
                     Margin = new Thickness(3, 2)
                 }},
                 PanelOverride = new StyleBoxFlat

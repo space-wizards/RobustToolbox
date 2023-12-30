@@ -6,7 +6,6 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using FastAccessors;
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Server.Configuration;
@@ -15,13 +14,10 @@ using Robust.Server.Player;
 using Robust.Server.Replays;
 using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -77,6 +73,7 @@ internal sealed partial class PvsSystem : EntitySystem
     internal readonly HashSet<ICommonSession> PendingAcks = new();
     private PvsAckJob _ackJob;
     private PvsChunkJob _chunkJob;
+    private PvsLeaveJob _leaveJob;
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
@@ -110,8 +107,9 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         base.Initialize();
 
+        _leaveJob = new PvsLeaveJob { Pvs = this };
         _chunkJob = new PvsChunkJob { Pvs = this };
-        _ackJob = new PvsAckJob { System = this, Sessions = _toAck,};
+        _ackJob = new PvsAckJob { Pvs = this };
 
         _eyeQuery = GetEntityQuery<EyeComponent>();
         _metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -170,8 +168,10 @@ internal sealed partial class PvsSystem : EntitySystem
         // Construct & send the game state to each player.
         SendStates(players);
 
-        // Cull deletion history
+        // Cull deletion history and process pvs-leave messages
         AfterSendState(players);
+
+        ProcessLeavePvs(players);
     }
 
     private void SendStates(ICommonSession[] players)
@@ -286,28 +286,6 @@ internal sealed partial class PvsSystem : EntitySystem
         _mapManager.CullDeletionHistory(oldestAck);
     }
 
-    #region PVSCollection Event Updates
-
-    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
-    {
-        if (e.NewStatus != SessionStatus.Disconnected)
-            return;
-
-        if (!PlayerData.Remove(e.Session, out var data))
-            return;
-
-        if (data.Overflow != null)
-            _entDataListPool.Return(data.Overflow.Value.SentEnts);
-        data.Overflow = null;
-
-        foreach (var visSet in data.PreviouslySent.Values)
-        {
-            _entDataListPool.Return(visSet);
-        }
-    }
-
-    #endregion
-
     private void GetEntityStates(PvsSession session)
     {
         // First, we send the client's own viewers. we want to ALWAYS send these, regardless of any pvs budget.
@@ -397,45 +375,6 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    /// <summary>
-    /// Figure out what entities are no longer visible to the client. These entities are sent reliably to the client
-    /// in a separate net message. This has to be called after EntityData.LastSent is updated.
-    /// </summary>
-    private void ProcessLeavePvs(PvsSession session)
-    {
-        if (!CullingEnabled || session.DisableCulling)
-            return;
-
-        if (session.LastSent == null)
-            return;
-
-        var (toTick, lastSent) = session.LastSent.Value;
-        foreach (var data in CollectionsMarshal.AsSpan(lastSent))
-        {
-            if (data.LastSeen == toTick)
-                continue;
-
-            session.LeftView.Add(data.NetEntity);
-            data.LastLeftView = toTick;
-
-            // TODO PVS make this not required. I.e., hide maps/grids from clients.
-            DebugTools.Assert(!TryGetEntity(data.NetEntity, out var uid)
-                              || (!HasComp<MapGridComponent>(uid) && !HasComp<MapComponent>(uid)));
-        }
-
-        if (session.LeftView.Count == 0)
-            return;
-
-        var pvsMessage = new MsgStateLeavePvs {Entities = session.LeftView, Tick = toTick};
-
-        // PVS benchmarks use dummy sessions.
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (session.Channel != null)
-            _netMan.ServerSendMessage(pvsMessage, session.Channel);
-
-        session.LeftView.Clear();
-    }
-
     private (Vector2 worldPos, float range, EntityUid? map) CalcViewBounds(Entity<TransformComponent, EyeComponent?> eye)
     {
         var size = Math.Max(eye.Comp2?.PvsSize ?? _viewSize, 1);
@@ -477,6 +416,8 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         ackJob?.WaitOne();
+        _leaveTask?.WaitOne();
+        _leaveTask = null;
     }
 
     private void AfterSendState(ICommonSession[] players)

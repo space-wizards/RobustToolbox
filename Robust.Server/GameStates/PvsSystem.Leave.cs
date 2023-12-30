@@ -1,0 +1,94 @@
+using System;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.JavaScript;
+using System.Threading;
+using Prometheus;
+using Robust.Shared.Enums;
+using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
+using Robust.Shared.Threading;
+using Robust.Shared.Utility;
+
+namespace Robust.Server.GameStates;
+
+// Partial class for handling entities leaving a player's pvs range.
+internal sealed partial class PvsSystem
+{
+    private WaitHandle? _leaveTask;
+
+    private void ProcessLeavePvs(ICommonSession[] sessions)
+    {
+        if (!CullingEnabled)
+            return;
+
+        DebugTools.AssertNull(_leaveTask);
+        _leaveJob.Setup(sessions);
+
+        if (_async)
+        {
+            _leaveTask = _parallelMgr.Process(_leaveJob, _leaveJob.Count);
+            return;
+        }
+
+        using var _ = Histogram.WithLabels("Process Leave").NewTimer();
+        _parallelMgr.ProcessNow(_leaveJob, _leaveJob.Count);
+    }
+
+    /// <summary>
+    /// Figure out what entities are no longer visible to the client. These entities are sent reliably to the client
+    /// in a separate net message. This has to be called after EntityData.LastSent is updated.
+    /// </summary>
+    private void ProcessLeavePvs(PvsSession session)
+    {
+        if (session.DisableCulling || session.Session.Status != SessionStatus.InGame)
+            return;
+
+        if (session.LastSent == null)
+            return;
+
+        var (toTick, lastSent) = session.LastSent.Value;
+        foreach (var data in CollectionsMarshal.AsSpan(lastSent))
+        {
+            if (data.LastSeen == toTick)
+                continue;
+
+            session.LeftView.Add(data.NetEntity);
+            data.LastLeftView = toTick;
+        }
+
+        if (session.LeftView.Count == 0)
+            return;
+
+        var pvsMessage = new MsgStateLeavePvs {Entities = session.LeftView, Tick = toTick};
+
+        // PVS benchmarks use dummy sessions.
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (session.Session.Status == SessionStatus.InGame && session.Channel != null)
+            _netMan.ServerSendMessage(pvsMessage, session.Channel);
+
+        session.LeftView.Clear();
+    }
+
+    private record struct PvsLeaveJob : IParallelRobustJob
+    {
+        public int BatchSize => 2;
+        public PvsSystem Pvs;
+        public int Count => _sessions.Length;
+        private PvsSession[] _sessions;
+
+        public void Execute(int index)
+        {
+            Pvs.ProcessLeavePvs(_sessions[index]);
+        }
+
+        public void Setup(ICommonSession[] sessions)
+        {
+            // Copy references to PvsSession classes, im case players disconnect while the task is running.
+            Array.Resize(ref _sessions, sessions.Length);
+            for (var i = 0; i < sessions.Length; i++)
+            {
+                _sessions[i] = Pvs.PlayerData[sessions[i]];
+            }
+        }
+    }
+}

@@ -326,11 +326,11 @@ internal sealed partial class PvsSystem : EntitySystem
             session.Budget.EnterLimit = CVars.NetPVSEntityEnterBudget.DefaultValue;
         }
 
-        // Process all entities in visible PVS chunks
-        AddPvsChunks(session);
-
         // Process all PVS overrides.
         AddAllOverrides(session);
+
+        // Process all entities in visible PVS chunks
+        AddPvsChunks(session);
 
         VerifySessionData(session);
 

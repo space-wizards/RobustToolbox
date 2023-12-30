@@ -14,6 +14,7 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class MenuBar : PanelContainer
     {
+        public const string StyleClassMenuBarPopup = "menuBarPopup";
         private readonly List<Menu> _menus = new();
         private readonly List<MenuTopButton> _buttons = new();
         private readonly BoxContainer _hBox;
@@ -41,7 +42,7 @@ namespace Robust.Client.UserInterface.Controls
                         MinSize = new Vector2(300, 0)
                     })
                 },
-                StyleClasses = { "menubar-popup" }
+                StyleClasses = { StyleClassMenuBarPopup }
             };
             _popup.OnPopupHide += PopupHidden;
             UserInterfaceManager.ModalRoot.AddChild(_popup);

@@ -152,12 +152,15 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     public static float GainToVolume(float value)
     {
+        DebugTools.Assert(value >= 0f);
         return 10f * MathF.Log10(value);
     }
 
     public static float VolumeToGain(float value)
     {
-        return MathF.Pow(10, value / 10);
+        var result = MathF.Pow(10, value / 10);
+        DebugTools.Assert(result >= 0f);
+        return result;
     }
 
     /// <summary>

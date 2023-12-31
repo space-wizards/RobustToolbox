@@ -148,7 +148,7 @@ internal sealed partial class AudioManager : IAudioInternal
         var error = AL.GetError();
         if (error != ALError.NoError)
         {
-            OpenALSawmill.Error("[{0}:{1}] AL error: {2}, {3}", callerMember, callerLineNumber, error, message);
+            OpenALSawmill.Error("[{0}:{1}] AL error: {2}, {3}. Stacktrace is {4}", callerMember, callerLineNumber, error, message, Environment.StackTrace);
         }
     }
 

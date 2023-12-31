@@ -155,6 +155,8 @@ internal sealed partial class PvsSystem : EntitySystem
         _serverGameStateManager.ClientRequestFull -= OnClientRequestFull;
 
         ShutdownDirty();
+        _leaveTask?.WaitOne();
+        _leaveTask = null;
     }
 
     /// <summary>
@@ -168,7 +170,7 @@ internal sealed partial class PvsSystem : EntitySystem
         // Construct & send the game state to each player.
         SendStates(players);
 
-        // Cull deletion history and process pvs-leave messages
+        // Cull deletion history
         AfterSendState(players);
 
         ProcessLeavePvs(players);

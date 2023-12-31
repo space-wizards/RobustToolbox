@@ -162,6 +162,12 @@ internal sealed class ParallelManager : IParallelManagerInternal
 
         // Need to set this up front to avoid firing too early.
         tracker.Event.Reset();
+        if (amount <= 0)
+        {
+            tracker.Event.Set();
+            return tracker;
+        }
+
         tracker.PendingTasks = batches;
 
         for (var i = 0; i < batches; i++)

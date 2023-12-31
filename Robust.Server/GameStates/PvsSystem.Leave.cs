@@ -18,7 +18,7 @@ internal sealed partial class PvsSystem
 
     private void ProcessLeavePvs(ICommonSession[] sessions)
     {
-        if (!CullingEnabled)
+        if (!CullingEnabled || sessions.Length == 0)
             return;
 
         DebugTools.AssertNull(_leaveTask);
@@ -83,7 +83,7 @@ internal sealed partial class PvsSystem
 
         public void Setup(ICommonSession[] sessions)
         {
-            // Copy references to PvsSession classes, im case players disconnect while the task is running.
+            // Copy references to PvsSession, in case players disconnect while the job is running.
             Array.Resize(ref _sessions, sessions.Length);
             for (var i = 0; i < sessions.Length; i++)
             {

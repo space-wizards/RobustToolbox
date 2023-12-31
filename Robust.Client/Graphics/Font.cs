@@ -50,11 +50,12 @@ namespace Robust.Client.Graphics
         /// <param name="baseline">The baseline from which to draw the character.</param>
         /// <param name="scale">DPI scale factor to render the font at.</param>
         /// <param name="color">The color of the character to draw.</param>
+        /// <param name="background_color">The color of the background to draw.</param>
         /// <param name="fallback">If the character is not available, render "�" instead.</param>
         /// <returns>How much to advance the cursor to draw the next character.</returns>
         public abstract float DrawChar(
             DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale,
-            Color color, bool fallback=true);
+            Color color, Color? background_color=null, bool fallback=true);
 
         /// <summary>
         ///     Gets metrics describing the dimensions and positioning of a single glyph in the font.
@@ -109,7 +110,7 @@ namespace Robust.Client.Graphics
         public override int GetDescent(float scale) => Handle.GetDescent(scale);
         public override int GetLineHeight(float scale) => Handle.GetLineHeight(scale);
 
-        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
+        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, Color? background_color=null, bool fallback=true)
         {
             var metrics = Handle.GetCharMetrics(rune, scale);
             if (!metrics.HasValue)
@@ -131,7 +132,15 @@ namespace Robust.Client.Graphics
                 return metrics.Value.Advance;
             }
 
+            var start = baseline;
             baseline += new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
+            if (background_color is Color bg_color)
+            {
+                handle.DrawRect(new UIBox2(start.X,
+                                           start.Y + GetDescent(scale),
+                                           start.X + metrics.Value.Advance,
+                                           start.Y - GetAscent(scale)), bg_color);
+            }
             handle.DrawTexture(texture, baseline, color);
             return metrics.Value.Advance;
         }
@@ -169,17 +178,17 @@ namespace Robust.Client.Graphics
         public override int GetLineHeight(float scale) => _main.GetLineHeight(scale);
 
         // DrawChar just proxies to the stack, or invokes _main's fallback.
-        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
+        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, Color? background_color=null, bool fallback=true)
         {
             foreach (var f in Stack)
             {
-                var w = f.DrawChar(handle, rune, baseline, scale, color, fallback: false);
+                var w = f.DrawChar(handle, rune, baseline, scale, color, background_color, fallback: false);
                 if (w != 0f)
                     return w;
             }
 
             if (fallback)
-                return _main.DrawChar(handle, rune, baseline, scale, color, fallback: true);
+                return _main.DrawChar(handle, rune, baseline, scale, color, background_color, fallback: true);
 
             return 0f;
         }
@@ -207,7 +216,7 @@ namespace Robust.Client.Graphics
         public override int GetDescent(float scale) => default;
         public override int GetLineHeight(float scale) => default;
 
-        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
+        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, Color? background_color=null, bool fallback=true)
         {
             // Nada, it's a dummy after all.
             return 0;

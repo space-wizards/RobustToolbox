@@ -192,6 +192,11 @@ namespace Robust.Client.UserInterface
                     font = defaultFont;
                 }
 
+                if (!context.BackgroundColor.TryPeek(out var background_color))
+                {
+                    background_color = null;
+                }
+
                 foreach (var rune in text.EnumerateRunes())
                 {
                     if (lineBreakIndex < LineBreaks.Count &&
@@ -202,7 +207,7 @@ namespace Robust.Client.UserInterface
                         lineBreakIndex += 1;
                     }
 
-                    var advance = font.DrawChar(handle, rune, baseLine, uiScale, color);
+                    var advance = font.DrawChar(handle, rune, baseLine, uiScale, color, background_color);
                     baseLine += new Vector2(advance, 0);
 
                     globalBreakCounter += 1;

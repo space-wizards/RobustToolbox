@@ -55,6 +55,7 @@
     <RobustLinkRoots Include="Robust.Client" />
     <RobustLinkRoots Include="Robust.Shared" />
     <RobustLinkAssemblies Include="TerraFX.Interop.Windows" />
+    <RobustLinkAssemblies Include="TerraFX.Interop.Xlib" />
     <RobustLinkAssemblies Include="OpenToolkit.Graphics" />
   </ItemGroup>
 

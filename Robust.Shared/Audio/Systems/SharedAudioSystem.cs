@@ -152,12 +152,24 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     public static float GainToVolume(float value)
     {
+        if (value < 0f)
+        {
+            throw new InvalidOperationException($"Tried to get volume calculation for gain of {value}.");
+        }
+
         return 10f * MathF.Log10(value);
     }
 
     public static float VolumeToGain(float value)
     {
-        return MathF.Pow(10, value / 10);
+        var result = MathF.Pow(10, value / 10);
+
+        if (result < 0f)
+        {
+            throw new InvalidOperationException($"Tried to get gain calculation that resulted in invalid value of {result}");
+        }
+
+        return result;
     }
 
     /// <summary>

@@ -59,7 +59,9 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void UpdateChunkPosition(PvsChunk chunk)
     {
-        if (chunk.Root.Comp.EntityLifeStage >= EntityLifeStage.Terminating
+        if (chunk.Root.Comp == null
+            || chunk.Map.Comp == null
+            || chunk.Root.Comp.EntityLifeStage >= EntityLifeStage.Terminating
             || chunk.Map.Comp.EntityLifeStage >= EntityLifeStage.Terminating)
         {
             Log.Error($"Encountered deleted root while updating pvs chunk positions. Root: {ToPrettyString(chunk.Root, chunk.Root)}. Map: {ToPrettyString(chunk.Map, chunk.Map)}" );
@@ -238,7 +240,15 @@ internal sealed partial class PvsSystem
         if (!existing)
         {
             chunk = _chunkPool.Get();
-            chunk.Initialize(location, _metaQuery, _xformQuery);
+            try
+            {
+                chunk.Initialize(location, _metaQuery, _xformQuery);
+            }
+            catch (Exception e)
+            {
+                _chunks.Remove(location);
+                throw;
+            }
             _chunkSets.GetOrNew(location.Uid).Add(location);
         }
 

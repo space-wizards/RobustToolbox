@@ -14,6 +14,7 @@ using TerraFX.Interop.Xlib;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
 using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
 using Window = OpenToolkit.GraphicsLibraryFramework.Window;
+using X11Window = TerraFX.Interop.Xlib.Window;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -470,6 +471,11 @@ namespace Robust.Client.Graphics.Clyde
                     GLFW.MaximizeWindow(window);
                 }
 
+                if ((parameters.Styles & OSWindowStyles.NoTitleBar) != 0)
+                {
+                    GLFW.WindowHint(WindowHintBool.Decorated, false);
+                }
+
                 if ((parameters.Styles & OSWindowStyles.NoTitleOptions) != 0)
                 {
                     if (OperatingSystem.IsWindows())
@@ -485,49 +491,35 @@ namespace Robust.Client.Graphics.Clyde
                     }
                     else if (OperatingSystem.IsLinux())
                     {
-                        var x11Window = (TerraFX.Interop.Xlib.Window)GLFW.GetX11Window(window);
-                        var x11Display = (Display*) GLFW.GetX11Display(window);
-                        DebugTools.Assert(x11Window != Xlib.None);
+                        try
+                        {
+                            var x11Window = (X11Window)GLFW.GetX11Window(window);
+                            var x11Display = (Display*) GLFW.GetX11Display(window);
+                            DebugTools.Assert(x11Window != X11Window.NULL);
 
-                        var propName = Xlib.XInternAtom(x11Display, (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE"), Xlib.False);
+                            var propName = Xlib.XInternAtom(x11Display, (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE"), Xlib.False);
 
-                        // https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46181547486832
-                        var newPropVal = Xlib.XInternAtom(x11Display,
-                            (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE_DIALOG"), Xlib.False);
+                            // https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46181547486832
+                            var newPropVal = Xlib.XInternAtom(x11Display,
+                                (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE_DIALOG"), Xlib.False);
 
 #pragma warning disable CA1806
-                        // [display] [window] [property] [type] [format (8, 16,32)] [mode] [data] [element count]
-                        Xlib.XChangeProperty(x11Display, x11Window, propName, Xlib.XA_ATOM, 32, Xlib.PropModeReplace,
-                            (byte*)&newPropVal, 1);
+                            // [display] [window] [property] [type] [format (8, 16,32)] [mode] [data] [element count]
+                            Xlib.XChangeProperty(x11Display, x11Window, propName, Xlib.XA_ATOM, 32, Xlib.PropModeReplace,
+                                (byte*)&newPropVal, 1);
 #pragma warning restore CA1806
+
+                            Marshal.FreeCoTaskMem(propName);
+                            Marshal.FreeCoTaskMem(newPropVal);
+                        }
+                        catch (EntryPointNotFoundException)
+                        {
+                            _sawmill.Warning("OSWindowStyles.NoTitleOptions not implemented on this windowing manager");
+                        }
                     }
                     else
                     {
                         _sawmill.Warning("OSWindowStyles.NoTitleOptions not implemented on this platform");
-                    }
-                }
-
-                if ((parameters.Styles & OSWindowStyles.NoTitleBar) != 0)
-                {
-                    if (OperatingSystem.IsLinux())
-                    {
-                        var x11Window = (TerraFX.Interop.Xlib.Window)GLFW.GetX11Window(window);
-                        var x11Display = (Display*) GLFW.GetX11Display(window);
-                        DebugTools.Assert(x11Window != Xlib.None);
-
-                        var propName = Xlib.XInternAtom(x11Display,
-                            (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE"), Xlib.False);
-                        var newPropVal = Xlib.XInternAtom(x11Display,
-                            (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE_POPUP_MENU"), Xlib.False);
-
-#pragma warning disable CA1806
-                        Xlib.XChangeProperty(x11Display, x11Window, propName, Xlib.XA_ATOM, 32, Xlib.PropModeReplace,
-                            (byte*)&newPropVal, 1);
-#pragma warning restore CA1806
-                    }
-                    else
-                    {
-                        _sawmill.Warning("OSWindowStyles.NoTitleBar not implemented on this platform");
                     }
                 }
 
@@ -546,15 +538,22 @@ namespace Robust.Client.Graphics.Clyde
                     }
                     else if (OperatingSystem.IsLinux())
                     {
-                        var x11Display = (Display*) GLFW.GetX11Display(window);
-                        var thisWindow = (TerraFX.Interop.Xlib.Window)GLFW.GetX11Window(window);
-                        var parentWindow = (TerraFX.Interop.Xlib.Window)GLFW.GetX11Window(ownerWindow);
-                        DebugTools.Assert(thisWindow != Xlib.None);
-                        DebugTools.Assert(parentWindow != Xlib.None);
+                        try
+                        {
+                            var x11Display = (Display*) GLFW.GetX11Display(window);
+                            var thisWindow = (X11Window)GLFW.GetX11Window(window);
+                            var parentWindow = (X11Window)GLFW.GetX11Window(ownerWindow);
+                            DebugTools.Assert(thisWindow != X11Window.NULL);
+                            DebugTools.Assert(parentWindow != X11Window.NULL);
 
 #pragma warning disable CA1806
-                        Xlib.XSetTransientForHint(x11Display, thisWindow, parentWindow);
+                            Xlib.XSetTransientForHint(x11Display, thisWindow, parentWindow);
 #pragma warning restore CA1806
+                        }
+                        catch (EntryPointNotFoundException)
+                        {
+                            _sawmill.Warning("owner windows not implemented on this windowing manager");
+                        }
                     }
                     else
                     {

@@ -496,20 +496,19 @@ namespace Robust.Client.Graphics.Clyde
                             var x11Window = (X11Window)GLFW.GetX11Window(window);
                             var x11Display = (Display*) GLFW.GetX11Display(window);
                             DebugTools.Assert(x11Window != X11Window.NULL);
-
-                            var propName = Xlib.XInternAtom(x11Display, (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE"), Xlib.False);
-
                             // https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46181547486832
                             var newPropVal = Xlib.XInternAtom(x11Display,
                                 (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE_DIALOG"), Xlib.False);
 
 #pragma warning disable CA1806
                             // [display] [window] [property] [type] [format (8, 16,32)] [mode] [data] [element count]
-                            Xlib.XChangeProperty(x11Display, x11Window, propName, Xlib.XA_ATOM, 32, Xlib.PropModeReplace,
+                            Xlib.XChangeProperty(x11Display, x11Window,
+                                Xlib.XInternAtom(x11Display,
+                                    (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE"), Xlib.False),
+                                Xlib.XA_ATOM, 32, Xlib.PropModeReplace,
                                 (byte*)&newPropVal, 1);
 #pragma warning restore CA1806
 
-                            Marshal.FreeCoTaskMem(propName);
                             Marshal.FreeCoTaskMem(newPropVal);
                         }
                         catch (EntryPointNotFoundException)

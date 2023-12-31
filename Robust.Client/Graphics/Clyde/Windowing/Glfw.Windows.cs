@@ -10,8 +10,10 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp.PixelFormats;
 using TerraFX.Interop.Windows;
+using TerraFX.Interop.Xlib;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
 using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
+using Window = OpenToolkit.GraphicsLibraryFramework.Window;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -481,9 +483,51 @@ namespace Robust.Client.Graphics.Clyde
                             // Cast to long here to work around a bug in rider with nint bitwise operators.
                             (nint)((long)Windows.GetWindowLongPtrW(hWnd, GWL.GWL_STYLE) & ~WS.WS_SYSMENU));
                     }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        var x11Window = (TerraFX.Interop.Xlib.Window)GLFW.GetX11Window(window);
+                        var x11Display = (Display*) GLFW.GetX11Display(window);
+                        DebugTools.Assert(x11Window != Xlib.None);
+
+                        var propName = Xlib.XInternAtom(x11Display, (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE"), Xlib.False);
+
+                        // https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46181547486832
+                        var newPropVal = Xlib.XInternAtom(x11Display,
+                            (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE_DIALOG"), Xlib.False);
+
+#pragma warning disable CA1806
+                        // [display] [window] [property] [type] [format (8, 16,32)] [mode] [data] [element count]
+                        Xlib.XChangeProperty(x11Display, x11Window, propName, Xlib.XA_ATOM, 32, Xlib.PropModeReplace,
+                            (byte*)&newPropVal, 1);
+#pragma warning restore CA1806
+                    }
                     else
                     {
                         _sawmill.Warning("OSWindowStyles.NoTitleOptions not implemented on this platform");
+                    }
+                }
+
+                if ((parameters.Styles & OSWindowStyles.NoTitleBar) != 0)
+                {
+                    if (OperatingSystem.IsLinux())
+                    {
+                        var x11Window = (TerraFX.Interop.Xlib.Window)GLFW.GetX11Window(window);
+                        var x11Display = (Display*) GLFW.GetX11Display(window);
+                        DebugTools.Assert(x11Window != Xlib.None);
+
+                        var propName = Xlib.XInternAtom(x11Display,
+                            (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE"), Xlib.False);
+                        var newPropVal = Xlib.XInternAtom(x11Display,
+                            (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE_POPUP_MENU"), Xlib.False);
+
+#pragma warning disable CA1806
+                        Xlib.XChangeProperty(x11Display, x11Window, propName, Xlib.XA_ATOM, 32, Xlib.PropModeReplace,
+                            (byte*)&newPropVal, 1);
+#pragma warning restore CA1806
+                    }
+                    else
+                    {
+                        _sawmill.Warning("OSWindowStyles.NoTitleBar not implemented on this platform");
                     }
                 }
 
@@ -499,6 +543,18 @@ namespace Robust.Client.Graphics.Clyde
                             hWnd,
                             GWLP.GWLP_HWNDPARENT,
                             ownerHWnd);
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        var x11Display = (Display*) GLFW.GetX11Display(window);
+                        var thisWindow = (TerraFX.Interop.Xlib.Window)GLFW.GetX11Window(window);
+                        var parentWindow = (TerraFX.Interop.Xlib.Window)GLFW.GetX11Window(ownerWindow);
+                        DebugTools.Assert(thisWindow != Xlib.None);
+                        DebugTools.Assert(parentWindow != Xlib.None);
+
+#pragma warning disable CA1806
+                        Xlib.XSetTransientForHint(x11Display, thisWindow, parentWindow);
+#pragma warning restore CA1806
                     }
                     else
                     {

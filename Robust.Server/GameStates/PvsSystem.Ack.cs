@@ -50,23 +50,22 @@ internal sealed partial class PvsSystem
         if (!_async)
         {
             using var _= Histogram.WithLabels("Process Acks").NewTimer();
-            _parallelManager.ProcessNow(_ackJob, _toAck.Count);
+            _parallelManager.ProcessNow(_ackJob, _ackJob.Count);
             return null;
         }
 
-        return _parallelManager.Process(_ackJob, _toAck.Count);
+        return _parallelManager.Process(_ackJob, _ackJob.Count);
     }
 
     private record struct PvsAckJob : IParallelRobustJob
     {
         public int BatchSize => 2;
-
-        public PvsSystem System;
-        public List<ICommonSession> Sessions;
+        public PvsSystem Pvs;
+        public int Count => Pvs._toAck.Count;
 
         public void Execute(int index)
         {
-            System.ProcessQueuedAck(Sessions[index]);
+            Pvs.ProcessQueuedAck(Pvs._toAck[index]);
         }
     }
 

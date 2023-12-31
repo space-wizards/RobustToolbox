@@ -53,8 +53,10 @@ internal sealed partial class PvsSystem
             : chunk.LodCounts[0];
 
         // Send entities on the chunk.
-        foreach (ref var ent in CollectionsMarshal.AsSpan(chunk.Contents))
+        var span = CollectionsMarshal.AsSpan(chunk.Contents);
+        for (var i = 0; i < count; i++)
         {
+            var ent = span[i];
             if ((mask & ent.Comp.VisibilityMask) == ent.Comp.VisibilityMask)
                 AddEntity(session, ent, fromTick);
         }

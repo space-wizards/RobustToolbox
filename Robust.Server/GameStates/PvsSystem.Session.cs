@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
@@ -62,12 +63,6 @@ internal sealed partial class PvsSystem
         }
 
         data.ClearState();
-
-        // TODO parallelize this with system processing.
-        // Before we do that we need to:
-        // - Defer player connection changes untill the start of the nxt PVS tick and  this job has finished
-        // - Defer OnEntityDeleted in pvs system. Or refactor per-session entity data to be stored as arrays on metadaat component
-        ProcessLeavePvs(data);
     }
 
     private PvsSession GetOrNewPvsSession(ICommonSession session)
@@ -173,5 +168,23 @@ internal sealed partial class PvsSystem
 
         if (session.PreviouslySent.TryGetValue(_gameTiming.CurTick - 1, out var lastSent))
             session.LastSent = (_gameTiming.CurTick, lastSent);
+    }
+
+    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
+    {
+        if (e.NewStatus != SessionStatus.Disconnected)
+            return;
+
+        if (!PlayerData.Remove(e.Session, out var data))
+            return;
+
+        if (data.Overflow != null)
+            _entDataListPool.Return(data.Overflow.Value.SentEnts);
+        data.Overflow = null;
+
+        foreach (var visSet in data.PreviouslySent.Values)
+        {
+            _entDataListPool.Return(visSet);
+        }
     }
 }

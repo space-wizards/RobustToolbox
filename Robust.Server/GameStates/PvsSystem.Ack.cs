@@ -74,21 +74,11 @@ internal sealed partial class PvsSystem
     {
         public int BatchSize => 2;
         private PvsSystem _pvs = _pvs;
-        public int Count => _pvs._dirtyChunks.Count + 2;
+        public int Count => _pvs._dirtyChunks.Count;
 
         public void Execute(int index)
         {
-            if (index > 1)
-            {
-                _pvs.UpdateDirtyChunks(index-2);
-                return;
-            }
-
-            // 1st batch/job performs some extra processing.
-            if (index == 0)
-                _pvs.CacheGlobalOverrides();
-            else if (index == 1)
-                _pvs.UpdateCleanChunks();
+            _pvs.UpdateDirtyChunks(index);
         }
     }
 

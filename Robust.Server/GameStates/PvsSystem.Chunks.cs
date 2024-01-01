@@ -205,8 +205,13 @@ internal sealed partial class PvsSystem
 
     private void ProcessVisibleChunks()
     {
-        using var _= Histogram.WithLabels("Update Chunks").NewTimer();
-        _parallelMgr.ProcessNow(_chunkJob, _chunkJob.Count);
+        using var _= Histogram.WithLabels("Update Chunks & Overrides").NewTimer();
+        var task = _parallelMgr.Process(_chunkJob, _chunkJob.Count);
+
+        UpdateCleanChunks();
+        CacheGlobalOverrides();
+
+        task.WaitOne();
     }
 
     /// <summary>
@@ -214,12 +219,12 @@ internal sealed partial class PvsSystem
     /// </summary>
     internal void ProcessVisibleChunksSequential()
     {
-        UpdateCleanChunks();
-
         for (var i = 0; i < _dirtyChunks.Count; i++)
         {
             UpdateDirtyChunks(i);
         }
+        UpdateCleanChunks();
+        CacheGlobalOverrides();
     }
 
     /// <summary>

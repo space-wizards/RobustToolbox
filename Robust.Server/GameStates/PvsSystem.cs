@@ -415,6 +415,8 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         ackJob?.WaitOne();
+
+        // Ensure any pvs leave tasks have finished before we get the next state & overwrite the "last sent" list.
         _leaveTask?.WaitOne();
         _leaveTask = null;
     }

@@ -40,14 +40,14 @@ namespace Robust.Server.GameStates
             EntityManager.EntityDirtied -= OnEntityDirty;
         }
 
-        private void OnEntityAdd(EntityUid e)
+        private void OnEntityAdd(Entity<MetaDataComponent> e)
         {
             DebugTools.Assert(_currentIndex == _gameTiming.CurTick.Value % DirtyBufferSize ||
                 _gameTiming.GetType().Name == "IGameTimingProxy");// Look I have NFI how best to excuse this assert if the game timing isn't real (a Mock<IGameTiming>).
             _addEntities[_currentIndex].Add(e);
         }
 
-        private void OnEntityDirty(EntityUid uid)
+        private void OnEntityDirty(Entity<MetaDataComponent> uid)
         {
             if (!_addEntities[_currentIndex].Contains(uid))
                 _dirtyEntities[_currentIndex].Add(uid);

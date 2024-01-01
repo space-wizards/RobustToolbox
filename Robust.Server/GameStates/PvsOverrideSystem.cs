@@ -46,9 +46,9 @@ public sealed class PvsOverrideSystem : EntitySystem
         _player.PlayerStatusChanged -= OnPlayerStatusChanged;
     }
 
-    private void OnDeleted(EntityUid uid, MetaDataComponent meta)
+    private void OnDeleted(Entity<MetaDataComponent> entity)
     {
-        Clear(uid);
+        Clear(entity);
     }
 
     private void Clear(EntityUid uid)

@@ -71,9 +71,9 @@ public sealed class ClientDirtySystem : EntitySystem
         RemovedComponents.Clear();
     }
 
-    private void OnEntityDirty(EntityUid e)
+    private void OnEntityDirty(Entity<MetaDataComponent> e)
     {
-        if (_timing.InPrediction && !IsClientSide(e))
+        if (_timing.InPrediction && !IsClientSide(e, e))
             DirtyEntities.Add(e);
     }
 }

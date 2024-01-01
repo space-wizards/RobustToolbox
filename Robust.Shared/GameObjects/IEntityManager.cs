@@ -51,10 +51,21 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
-        event Action<EntityUid>? EntityAdded;
-        event Action<EntityUid>? EntityInitialized;
-        event Action<EntityUid, MetaDataComponent>? EntityDeleted;
-        event Action<EntityUid>? EntityDirtied; // only raised after initialization
+        event Action<Entity<MetaDataComponent>>? EntityAdded;
+        event Action<Entity<MetaDataComponent>>? EntityInitialized;
+        event Action<Entity<MetaDataComponent>>? EntityDeleted;
+        event Action<Entity<MetaDataComponent>>? EntityDirtied; // only raised after initialization
+
+
+        /// <summary>
+        /// Invoked just before all entities get deleted. See <see cref="FlushEntities"/>.
+        /// </summary>
+        public event Action? BeforeEntityFlush;
+
+        /// <summary>
+        /// Invoked just after all entities got deleted. See <see cref="FlushEntities"/>.
+        /// </summary>
+        public event Action? AfterEntityFlush;
 
         EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null);
 
@@ -114,6 +125,11 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="uid">Uid of entity to remove.</param>
         void DeleteEntity(EntityUid? uid);
+
+        /// <summary>
+        /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.
+        /// </summary>
+        void DeleteEntity(EntityUid uid, MetaDataComponent meta, TransformComponent xform);
 
         /// <summary>
         /// Checks whether an entity with the specified ID exists.

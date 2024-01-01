@@ -99,9 +99,9 @@ namespace Robust.Server.GameObjects
             RefreshVisibility(ev.Entity);
         }
 
-        private void OnEntityInit(EntityUid uid)
+        private void OnEntityInit(Entity<MetaDataComponent> ent)
         {
-            RefreshVisibility(uid);
+            RefreshVisibility(ent.Owner, null, ent.Comp);
         }
 
         public void RefreshVisibility(EntityUid uid,

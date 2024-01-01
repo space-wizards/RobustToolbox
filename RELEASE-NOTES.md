@@ -35,11 +35,12 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Various `IEntityManager` C# events now use `Entity<MetadataComponent>` instead of `EntityUid`
 
 ### New features
 
-*None yet*
+* Added two new `IEntityManager` C# events that get raiseed before and after deleting ("flushing") all entities.
+* Added a new `DeleteEntity()` override that takes in the entity's metadata and transform components.
 
 ### Bugfixes
 

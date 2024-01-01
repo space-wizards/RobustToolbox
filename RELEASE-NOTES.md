@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Various `IEntityManager` C# events now use `Entity<MetadataComponent>` instead of `EntityUid`
+* Entity visibility masks now use a ushort instead of an integer.
 
 ### New features
 

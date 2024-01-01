@@ -12,6 +12,6 @@ namespace Robust.Server.GameObjects
         ///     Players whose visibility masks don't match this won't get state updates for it.
         /// </summary>
         [DataField("layer")]
-        public int Layer = 1;
+        public ushort Layer = 1;
     }
 }

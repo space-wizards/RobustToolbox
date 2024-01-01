@@ -878,7 +878,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
         if (data.MapIsPostInit)
         {
-            metadata.EntityLifeStage = EntityLifeStage.MapInitialized;
+            EntityManager.SetLifeStage(metadata, EntityLifeStage.MapInitialized);
         }
         else if (_mapManager.IsMapInitialized(data.TargetMap))
         {

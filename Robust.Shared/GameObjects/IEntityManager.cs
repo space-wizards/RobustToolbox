@@ -54,8 +54,11 @@ namespace Robust.Shared.GameObjects
         event Action<Entity<MetaDataComponent>>? EntityAdded;
         event Action<Entity<MetaDataComponent>>? EntityInitialized;
         event Action<Entity<MetaDataComponent>>? EntityDeleted;
-        event Action<Entity<MetaDataComponent>>? EntityDirtied; // only raised after initialization
 
+        /// <summary>
+        /// Invoked when an entity gets dirtied. This only gets raised after initialization, and at most once per tick.
+        /// </summary>
+        event Action<Entity<MetaDataComponent>>? EntityDirtied;
 
         /// <summary>
         /// Invoked just before all entities get deleted. See <see cref="FlushEntities"/>.

@@ -45,6 +45,7 @@ internal sealed partial class PvsSystem
             _netMan.ServerSendMessage(msg, session.Channel);
             if (msg.ShouldSendReliably())
             {
+                data.RequestedFull = false;
                 data.LastReceivedAck = _gameTiming.CurTick;
                 lock (PendingAcks)
                 {
@@ -56,6 +57,7 @@ internal sealed partial class PvsSystem
         {
             // Always "ack" dummy sessions.
             data.LastReceivedAck = _gameTiming.CurTick;
+            data.RequestedFull = false;
             lock (PendingAcks)
             {
                 PendingAcks.Add(session);
@@ -96,8 +98,8 @@ internal sealed partial class PvsSystem
             session.PlayerStates,
             _deletedEntities);
 
-        if (_gameTiming.CurTick.Value > session.LastReceivedAck.Value + ForceAckThreshold)
-            session.State.ForceSendReliably = true;
+        session.State.ForceSendReliably = session.RequestedFull
+                                          || _gameTiming.CurTick > session.LastReceivedAck + (uint) ForceAckThreshold;
     }
 
     private void UpdateSession(PvsSession session)
@@ -175,16 +177,22 @@ internal sealed partial class PvsSystem
         if (e.NewStatus != SessionStatus.Disconnected)
             return;
 
-        if (!PlayerData.Remove(e.Session, out var data))
-            return;
+        if (PlayerData.Remove(e.Session, out var data))
+            ClearSendHistory(data);
+    }
 
-        if (data.Overflow != null)
-            _entDataListPool.Return(data.Overflow.Value.SentEnts);
-        data.Overflow = null;
+    private void ClearSendHistory(PvsSession session)
+    {
+        if (session.Overflow != null)
+            _entDataListPool.Return(session.Overflow.Value.SentEnts);
+        session.Overflow = null;
 
-        foreach (var visSet in data.PreviouslySent.Values)
+        foreach (var visSet in session.PreviouslySent.Values)
         {
             _entDataListPool.Return(visSet);
         }
+
+        session.PreviouslySent.Clear();
+        session.LastSent = null;
     }
 }

@@ -69,8 +69,9 @@ internal sealed partial class PvsSystem : EntitySystem
     /// <summary>
     /// Per-tick ack data to avoid re-allocating.
     /// </summary>
-    private readonly List<ICommonSession> _toAck = new();
+    private readonly List<PvsSession> _toAck = new();
     internal readonly HashSet<ICommonSession> PendingAcks = new();
+
     private PvsAckJob _ackJob;
     private PvsChunkJob _chunkJob;
     private PvsLeaveJob _leaveJob;
@@ -92,6 +93,8 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     private readonly List<GameTick> _deletedTick = new();
 
+    private PvsSession[] _sessions = default!;
+
     private bool _async;
 
     private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
@@ -107,9 +110,9 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         base.Initialize();
 
-        _leaveJob = new PvsLeaveJob { Pvs = this };
-        _chunkJob = new PvsChunkJob { Pvs = this };
-        _ackJob = new PvsAckJob { Pvs = this };
+        _leaveJob = new PvsLeaveJob(this);
+        _chunkJob = new PvsChunkJob(this);
+        _ackJob = new PvsAckJob(this);
 
         _eyeQuery = GetEntityQuery<EyeComponent>();
         _metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -164,8 +167,11 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     internal void SendGameStates(ICommonSession[] players)
     {
+        // Ensure each session has a PvsSession entry before starting any parallel jobs.
+        CacheSessionData(players);
+
         // Get visible chunks, and update any dirty chunks.
-        BeforeSendState(players);
+        BeforeSendState();
 
         // Construct & send the game state to each player.
         SendStates(players);
@@ -225,39 +231,30 @@ internal sealed partial class PvsSystem : EntitySystem
     // TODO PVS rate limit this?
     private void OnClientRequestFull(ICommonSession session, GameTick tick, NetEntity? missingEntity)
     {
-        if (!PlayerData.TryGetValue(session, out var sessionData))
+        if (!PlayerData.TryGetValue(session, out var pvsSession))
             return;
 
-        // Update acked tick so that OnClientAck doesn't get invoked by any late acks.
-        var lastAcked = sessionData.LastReceivedAck;
-        sessionData.LastReceivedAck = _gameTiming.CurTick;
+        var lastAcked = pvsSession.LastReceivedAck;
 
         var sb = new StringBuilder();
         sb.Append($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}. Curtick: {_gameTiming.CurTick}.");
 
         if (missingEntity != null)
         {
-            var entity = GetEntity(missingEntity)!;
-            sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(entity.Value)}.");
-
-            if (sessionData.Entities.TryGetValue(missingEntity.Value, out var data))
-                sb.Append($" Entity last seen: {data.EntityLastAcked}");
+            var (entity, meta) = GetEntityData(missingEntity.Value);
+            sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(entity)}.");
+            //sb.Append($" Entity last seen: {meta.PvsData[sessionData.Index].EntityLastAcked}");
         }
 
         Log.Warning(sb.ToString());
+        ForceFullState(pvsSession);
+    }
 
-        if (sessionData.Overflow != null)
-            _entDataListPool.Return(sessionData.Overflow.Value.SentEnts);
-        sessionData.Overflow = null;
-
-        foreach (var visSet in sessionData.PreviouslySent.Values)
-        {
-            _entDataListPool.Return(visSet);
-        }
-        sessionData.PreviouslySent.Clear();
-
-        sessionData.RequestedFull = true;
-        sessionData.Entities.Clear();
+    private void ForceFullState(PvsSession session)
+    {
+        session.LastReceivedAck = _gameTiming.CurTick;
+        session.RequestedFull = true;
+        ClearSendHistory(session);
     }
 
     private void OnViewsizeChanged(float value)
@@ -403,7 +400,7 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private void BeforeSendState(ICommonSession[] players)
+    private void BeforeSendState()
     {
         DebugTools.Assert(_chunks.Values.All(x => Exists(x.Map) && Exists(x.Root)));
         DebugTools.Assert(_chunkSets.Keys.All(Exists));
@@ -413,13 +410,22 @@ internal sealed partial class PvsSystem : EntitySystem
         // Figure out what chunks players can see and cache some chunk data.
         if (CullingEnabled)
         {
-            GetVisibleChunks(players);
+            GetVisibleChunks();
             ProcessVisibleChunks();
         }
 
         ackJob?.WaitOne();
         _leaveTask?.WaitOne();
         _leaveTask = null;
+    }
+
+    internal void CacheSessionData(ICommonSession[] players)
+    {
+        Array.Resize(ref _sessions, players.Length);
+        for (var i = 0; i < players.Length; i++)
+        {
+            _sessions[i] = GetOrNewPvsSession(players[i]);
+        }
     }
 
     private void AfterSendState(ICommonSession[] players)

@@ -190,7 +190,8 @@ public class RecursiveMoveBenchmark : RobustIntegrationTest
     private void PvsTick()
     {
         _session.ClearState();
-        _pvs.GetVisibleChunks(_players);
+        _pvs.CacheSessionData(_players);
+        _pvs.GetVisibleChunks();
         _pvs.ProcessVisibleChunksSequential();
     }
 

@@ -177,8 +177,10 @@ internal sealed partial class PvsSystem
         if (e.NewStatus != SessionStatus.Disconnected)
             return;
 
-        if (PlayerData.Remove(e.Session, out var data))
-            ClearSendHistory(data);
+        if (!PlayerData.Remove(e.Session, out var session))
+            return;
+
+        ClearSendHistory(session);
     }
 
     private void ClearSendHistory(PvsSession session)

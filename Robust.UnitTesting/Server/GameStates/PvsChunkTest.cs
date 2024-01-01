@@ -1,9 +1,6 @@
 using System.Linq;
-using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Client.GameStates;
-using Robust.Client.Timing;
 using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -12,7 +9,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
-using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Server.GameStates;
 

@@ -48,7 +48,7 @@ internal sealed partial class PvsSystem
         // We add chunk-size here so that its consistent with the normal PVS range setting.
         // I.e., distance here is the Chebyshev distance to the centre of each chunk, but the normal pvs range only
         // required that the chunk be touching the box, not the centre.
-        var count = distance < (_lowLodDistance + ChunkSize)/2
+        var count = distance < (_lowLodDistance + ChunkSize) / 2
             ? chunk.Contents.Count
             : chunk.LodCounts[0];
 
@@ -120,18 +120,18 @@ internal sealed partial class PvsSystem
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (meta == null)
         {
-            Log.Error($"Encountered null metadata in EntityData. Entity: {ToPrettyString(entity.Owner)}");
+            Log.Error($"Encountered null metadata in EntityData. Entity: {ToPrettyString(uid)}");
             return false;
         }
 
         if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
             var rep = new EntityStringRepresentation(entity);
-            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(entity)}. Trace:\n{Environment.StackTrace}");
+            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(uid)}. Trace:\n{Environment.StackTrace}");
 
             // This can happen if some entity was some removed from it's parent while that parent was being deleted.
             // As a result the entity was marked for deletion but was never actually properly deleted.
-            EntityManager.QueueDeleteEntity(entity);
+            EntityManager.QueueDeleteEntity(uid);
             return false;
         }
 
@@ -154,10 +154,7 @@ internal sealed partial class PvsSystem
         }
 
         if (meta.EntityLastModifiedTick <= fromTick)
-        {
-            //entity has been sent before and hasn't been updated since
             return true;
-        }
 
         state = GetEntityState(session.Session, uid, fromTick , meta);
 

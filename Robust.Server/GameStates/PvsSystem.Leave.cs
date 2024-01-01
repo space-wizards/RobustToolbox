@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.JavaScript;
 using System.Threading;
 using Prometheus;
 using Robust.Shared.Enums;
@@ -69,16 +68,16 @@ internal sealed partial class PvsSystem
         session.LeftView.Clear();
     }
 
-    private record struct PvsLeaveJob : IParallelRobustJob
+    private record struct PvsLeaveJob(PvsSystem _pvs) : IParallelRobustJob
     {
         public int BatchSize => 2;
-        public PvsSystem Pvs;
+        private PvsSystem _pvs = _pvs;
         public int Count => _sessions.Length;
         private PvsSession[] _sessions;
 
         public void Execute(int index)
         {
-            Pvs.ProcessLeavePvs(_sessions[index]);
+            _pvs.ProcessLeavePvs(_sessions[index]);
         }
 
         public void Setup(ICommonSession[] sessions)
@@ -87,7 +86,7 @@ internal sealed partial class PvsSystem
             Array.Resize(ref _sessions, sessions.Length);
             for (var i = 0; i < sessions.Length; i++)
             {
-                _sessions[i] = Pvs.PlayerData[sessions[i]];
+                _sessions[i] = _pvs.PlayerData[sessions[i]];
             }
         }
     }

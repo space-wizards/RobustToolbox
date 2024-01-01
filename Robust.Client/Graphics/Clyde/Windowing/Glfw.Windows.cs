@@ -497,19 +497,21 @@ namespace Robust.Client.Graphics.Clyde
                             var x11Display = (Display*) GLFW.GetX11Display(window);
                             DebugTools.Assert(x11Window != X11Window.NULL);
                             // https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46181547486832
-                            var newPropVal = Xlib.XInternAtom(x11Display,
-                                (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE_DIALOG"), Xlib.False);
+                            var newPropValString = Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE_DIALOG");
+                            var newPropVal = Xlib.XInternAtom(x11Display, (sbyte*)newPropValString, Xlib.False);
+                            DebugTools.Assert(newPropVal != Atom.NULL);
 
+                            var propNameString = Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE");
 #pragma warning disable CA1806
                             // [display] [window] [property] [type] [format (8, 16,32)] [mode] [data] [element count]
                             Xlib.XChangeProperty(x11Display, x11Window,
-                                Xlib.XInternAtom(x11Display,
-                                    (sbyte*)Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE"), Xlib.False),
+                                Xlib.XInternAtom(x11Display, (sbyte*)propNameString, Xlib.False), // should never be null; part of spec
                                 Xlib.XA_ATOM, 32, Xlib.PropModeReplace,
                                 (byte*)&newPropVal, 1);
 #pragma warning restore CA1806
 
-                            Marshal.FreeCoTaskMem(newPropVal);
+                            Marshal.FreeCoTaskMem(newPropValString);
+                            Marshal.FreeCoTaskMem(propNameString);
                         }
                         catch (EntryPointNotFoundException)
                         {

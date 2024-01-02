@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<MetaDataComponent> MetaQuery;
         public EntityQuery<TransformComponent> TransformQuery;
-        public EntityQuery<ActorComponent> _actorQuery;
+        private EntityQuery<ActorComponent> _actorQuery;
 
         #endregion Dependencies
 
@@ -92,7 +92,7 @@ namespace Robust.Shared.GameObjects
         /// Raised when an entity is queued for deletion. Not raised if an entity is deleted.
         /// </summary>
         public event Action<EntityUid>? EntityQueueDeleted;
-        public event Action<Entity<MetaDataComponent>>? EntityDirtied; // only raised after initialization
+        public event Action<Entity<MetaDataComponent>>? EntityDirtied;
 
         private string _xformName = string.Empty;
 
@@ -506,7 +506,7 @@ namespace Robust.Shared.GameObjects
             TransformComponent xform)
         {
             DebugTools.Assert(metadata.EntityLifeStage < EntityLifeStage.Terminating);
-            metadata.EntityLifeStage = EntityLifeStage.Terminating;
+            SetLifeStage(metadata, EntityLifeStage.Terminating);
 
             try
             {
@@ -591,8 +591,8 @@ namespace Robust.Shared.GameObjects
             }
 
             // Dispose all my components, in a safe order so transform is available
-            DisposeComponents(uid);
-            metadata.EntityLifeStage = EntityLifeStage.Deleted;
+            DisposeComponents(uid, metadata);
+            SetLifeStage(metadata, EntityLifeStage.Deleted);
 
             try
             {
@@ -850,7 +850,7 @@ namespace Robust.Shared.GameObjects
                 return; // Already map initialized, do nothing.
 
             DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized, $"Expected entity {ToPrettyString(entity)} to be initialized, was {meta.EntityLifeStage}");
-            meta.EntityLifeStage = EntityLifeStage.MapInitialized;
+            SetLifeStage(meta, EntityLifeStage.MapInitialized);
 
             EventBus.RaiseLocalEvent(entity, MapInitEventInstance, false);
         }

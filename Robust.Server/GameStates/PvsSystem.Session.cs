@@ -70,8 +70,12 @@ internal sealed partial class PvsSystem
     private PvsSession GetOrNewPvsSession(ICommonSession session)
     {
         if (!PlayerData.TryGetValue(session, out var pvsSession))
+        {
             PlayerData[session] = pvsSession = new(session);
+            AssignPlayerOffset(pvsSession);
+        }
 
+        ValidateOffset(pvsSession);
         return pvsSession;
     }
 

@@ -26,7 +26,7 @@ internal sealed partial class PvsSystem
     /// <summary>
     /// A chunks that is visible to a player and add entities to the game-state.
     /// </summary>
-    private void AddPvsChunk(PvsChunk chunk, float distance, PvsSession session)
+    private unsafe void AddPvsChunk(PvsChunk chunk, float distance, PvsSession session)
     {
         // Each root nodes should simply be a map or a grid entity.
         DebugTools.Assert(Exists(chunk.Root), $"Chunk root does not exist!");
@@ -53,12 +53,14 @@ internal sealed partial class PvsSystem
             : chunk.LodCounts[0];
 
         // Send entities on the chunk.
-        var span = CollectionsMarshal.AsSpan(chunk.Contents);
-        for (var i = 0; i < count; i++)
+        var span = CollectionsMarshal.AsSpan(chunk.Contents)[..count];
+        DebugTools.Assert(session.Offset > 0 && session.Offset % _entityCount == 0);
+        foreach (ref var ent in span)
         {
-            var ent = span[i];
-            if ((mask & ent.Comp.VisibilityMask) == ent.Comp.VisibilityMask)
-                AddEntity(session, ent, fromTick);
+            ValidatePtr(ent.Ptr);
+            ref var meta = ref Unsafe.AsRef<PvsMetadata>((PvsMetadata*) ent.Ptr);
+            if ((mask & meta.VisMask) == meta.VisMask)
+                AddEntity(session, ref ent, ref meta, fromTick);
         }
     }
 
@@ -66,55 +68,75 @@ internal sealed partial class PvsSystem
     /// Attempt to add an entity to the to-send lists, while respecting pvs budgets.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool AddEntity(PvsSession session, Entity<MetaDataComponent> entity, GameTick fromTick)
+    private unsafe void AddEntity(PvsSession session, ref PvsChunk.ChunkEntity ent, ref PvsMetadata meta,
+        GameTick fromTick)
     {
-        var nuid = entity.Comp.NetEntity;
-        ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(session.Entities, nuid, out var exists);
-        if (!exists)
-            data = new(nuid);
+        DebugTools.Assert(fromTick < _gameTiming.CurTick);
+        var ptr = ((PvsData*) ent.Ptr) + session.Offset;
+        ValidatePtr((IntPtr)ptr);
+        ref var data = ref Unsafe.AsRef<PvsData>(ptr);
 
-        if (entity.Comp.Deleted)
+        if (data.LastSeen == _gameTiming.CurTick)
+            return;
+
+        if (meta.LifeStage >= EntityLifeStage.Terminating)
         {
-            Log.Error($"Attempted to send deleted entity: {ToPrettyString(entity, entity)}");
-            session.Entities.Remove(entity.Comp.NetEntity);
-            return false;
+            Log.Error($"Attempted to send deleted entity: {ToPrettyString(ent.Uid)}");
+            EntityManager.QueueDeleteEntity(ent.Uid);
+            return;
         }
 
-        DebugTools.AssertEqual(data!.NetEntity, entity.Comp.NetEntity);
+        var (entered,budgetExceeded) = IsEnteringPvsRange(ref data, fromTick, ref session.Budget);
+
+        if (budgetExceeded)
+            return;
+
+        data.LastSeen = _gameTiming.CurTick;
+        session.ToSend!.Add((IntPtr)ptr);
+
+        if (session.RequestedFull)
+        {
+            var state = GetFullEntityState(session.Session, ent.Uid, ent.Meta);
+            session.States.Add(state);
+            return;
+        }
+
+        if (entered)
+        {
+            var state = GetEntityState(session.Session, ent.Uid, data.EntityLastAcked, ent.Meta);
+            session.States.Add(state);
+            return;
+        }
+
+        if (meta.LastModifiedTick <= fromTick)
+            return;
+
+        var entState = GetEntityState(session.Session, ent.Uid, fromTick , ent.Meta);
+
+        if (!entState.Empty)
+            session.States.Add(entState);
+    }
+
+    /// <summary>
+    /// Attempt to add an entity to the to-send lists, while respecting pvs budgets.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private unsafe bool AddEntity(PvsSession session, Entity<MetaDataComponent> entity, GameTick fromTick)
+    {
+        DebugTools.Assert(session.Offset > 0 && session.Offset % _entityCount == 0);
+        DebugTools.Assert(fromTick < _gameTiming.CurTick);
+        var ptr = ((PvsData*) entity.Comp.PvsData) + session.Offset;
+        ValidatePtr((IntPtr)ptr);
+        ref var data = ref Unsafe.AsRef<PvsData>(ptr);
+
         if (data.LastSeen == _gameTiming.CurTick)
             return true;
 
-        var (entered,budgetExceeded) = IsEnteringPvsRange(data, fromTick, ref session.Budget);
+        var (entered,budgetExceeded) = IsEnteringPvsRange(ref data, fromTick, ref session.Budget);
 
         if (budgetExceeded)
             return false;
 
-        if (!AddToSendList(session, data, entity, fromTick, entered))
-            return false;
-
-        DebugTools.AssertNotEqual(data.LastSeen, GameTick.Zero);
-        return true;
-    }
-
-    /// <summary>
-    /// This method adds an entity to the list of visible entities, updates the last-seen tick, and computes any
-    /// required game states.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool AddToSendList(PvsSession session, PvsData data, Entity<MetaDataComponent> entity, GameTick fromTick,
-        bool entered)
-    {
-        DebugTools.Assert(fromTick < _gameTiming.CurTick);
-
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (data == null)
-        {
-            Log.Error($"Encountered null EntityData.");
-            return false;
-        }
-
-        DebugTools.AssertNotEqual(data.LastSeen, _gameTiming.CurTick);
-        DebugTools.Assert(data.EntityLastAcked <= fromTick || fromTick == GameTick.Zero);
         var (uid, meta) = entity;
 
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
@@ -136,19 +158,18 @@ internal sealed partial class PvsSystem
         }
 
         data.LastSeen = _gameTiming.CurTick;
-        session.ToSend!.Add(data);
-        EntityState state;
+        session.ToSend!.Add((IntPtr)ptr);
 
         if (session.RequestedFull)
         {
-            state = GetFullEntityState(session.Session, uid, meta);
+            var state = GetFullEntityState(session.Session, uid, meta);
             session.States.Add(state);
             return true;
         }
 
         if (entered)
         {
-            state = GetEntityState(session.Session, uid, data.EntityLastAcked, meta);
+            var state = GetEntityState(session.Session, uid, data.EntityLastAcked, meta);
             session.States.Add(state);
             return true;
         }
@@ -156,10 +177,10 @@ internal sealed partial class PvsSystem
         if (meta.EntityLastModifiedTick <= fromTick)
             return true;
 
-        state = GetEntityState(session.Session, uid, fromTick , meta);
+        var entState = GetEntityState(session.Session, uid, fromTick , meta);
 
-        if (!state.Empty)
-            session.States.Add(state);
+        if (!entState.Empty)
+            session.States.Add(entState);
 
         return true;
     }
@@ -170,7 +191,7 @@ internal sealed partial class PvsSystem
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private (bool Entering, bool BudgetExceeded) IsEnteringPvsRange(
-        PvsData data,
+        ref PvsData data,
         GameTick fromTick,
         ref PvsBudget budget)
     {

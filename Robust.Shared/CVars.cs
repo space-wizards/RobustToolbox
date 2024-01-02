@@ -184,6 +184,30 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// Size increments for the automatic growth of Pvs' pinned array. 0 will increase it by factors of 2
+        /// </summary>
+        public static readonly CVarDef<int> NetPvsEntityGrowth =
+            CVarDef.Create("net.pvs_entity_growth", 1 << 16, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
+        /// Size increments for the automatic growth of Pvs' pinned array. 0 will increase it by factors of 2
+        /// </summary>
+        public static readonly CVarDef<int> NetPvsPlayerGrowth =
+            CVarDef.Create("net.pvs_player_growth", 32, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
+        /// Initial size of Pvs' pinned array.
+        /// </summary>
+        public static readonly CVarDef<int> NetPvsEntityInitial =
+            CVarDef.Create("net.pvs_entity_initial", 1 << 16, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
+        /// Initial size of Pvs' pinned array.
+        /// </summary>
+        public static readonly CVarDef<int> NetPvsPlayerInitial =
+            CVarDef.Create("net.pvs_player_initial", 64, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
         /// If false, this will run more parts of PVS synchronously. This will generally slow it down, can be useful
         /// for collecting tick timing metrics.
         /// </summary>

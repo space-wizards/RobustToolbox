@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
@@ -24,11 +25,6 @@ internal sealed partial class PvsSystem
     private void OnEntityTerminating(ref EntityTerminatingEvent ev)
     {
         var meta = ev.Entity.Comp;
-
-        foreach (var sessionData in PlayerData.Values)
-        {
-            sessionData.Entities.Remove(meta.NetEntity);
-        }
 
         _deletedEntities.Add(meta.NetEntity);
         _deletedTick.Add(_gameTiming.CurTick);
@@ -110,5 +106,16 @@ internal sealed partial class PvsSystem
         DebugTools.AssertNull(xform.GridUid);
         DebugTools.AssertNull(xform.MapUid);
         AssertNullspace(xform.ParentUid);
+    }
+
+    internal unsafe void SyncMetadata(MetaDataComponent meta)
+    {
+        if (_data == null || meta.PvsData == IntPtr.Zero)
+            return;
+
+        ValidatePtr(meta.PvsData);
+        var ptr = (PvsMetadata*) meta.PvsData;
+        ptr->VisMask = meta.VisibilityMask;
+        ptr->LifeStage = meta.EntityLifeStage;
     }
 }

@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
@@ -17,23 +16,20 @@ namespace Robust.Server.GameStates;
 internal sealed class PvsSession(ICommonSession session)
 {
     public readonly ICommonSession Session = session;
+    public int Offset = -1;
+
     public INetChannel Channel => Session.Channel;
 
     /// <summary>
     /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="PvsSystem.DirtyBufferSize"/> ticks.
     /// </summary>
-    public readonly OverflowDictionary<GameTick, List<PvsData>> PreviouslySent = new(PvsSystem.DirtyBufferSize);
-
-    /// <summary>
-    /// Dictionary containing data about all entities that this client has ever seen.
-    /// </summary>
-    public readonly Dictionary<NetEntity, PvsData> Entities = new();
+    public readonly OverflowDictionary<GameTick, List<IntPtr>> PreviouslySent = new(PvsSystem.DirtyBufferSize);
 
     /// <summary>
     /// <see cref="PreviouslySent"/> overflow in case a player's last ack is more than
     /// <see cref="PvsSystem.DirtyBufferSize"/> ticks behind the current tick.
     /// </summary>
-    public (GameTick Tick, List<PvsData> SentEnts)? Overflow;
+    public (GameTick Tick, List<IntPtr> SentEnts)? Overflow;
 
     /// <summary>
     /// The client's current visibility mask.
@@ -43,13 +39,13 @@ internal sealed class PvsSession(ICommonSession session)
     /// <summary>
     /// The list that is currently being prepared for sending.
     /// </summary>
-    public List<PvsData>? ToSend;
+    public List<IntPtr>? ToSend;
 
     /// <summary>
     /// The <see cref="ToSend"/> list from the previous tick. Also caches the current tick that the PVS leave message
     /// should belong to, in case the processing is ever run asynchronously with normal system/game ticking.
     /// </summary>
-    public (GameTick ToTick, List<PvsData> PreviouslySent)? LastSent;
+    public (GameTick ToTick, List<IntPtr> PreviouslySent)? LastSent;
 
     /// <summary>
     /// Visible chunks, sorted by proximity to the clients's viewers;
@@ -126,10 +122,9 @@ internal sealed class PvsSession(ICommonSession session)
 /// <summary>
 /// Class for storing session-specific information about when an entity was last sent to a player.
 /// </summary>
-internal sealed class PvsData(NetEntity entity) : IEquatable<PvsData>
+[StructLayout(LayoutKind.Sequential)]
+internal struct PvsData
 {
-    public readonly NetEntity NetEntity = entity;
-
     /// <summary>
     /// Tick at which this entity was last sent to a player.
     /// </summary>
@@ -146,22 +141,28 @@ internal sealed class PvsData(NetEntity entity) : IEquatable<PvsData>
     /// present in that state.
     /// </summary>
     public GameTick EntityLastAcked;
+}
 
-    public bool Equals(PvsData? other)
-    {
-        DebugTools.Assert((NetEntity != other?.NetEntity) || ReferenceEquals(this, other));
-        return NetEntity == other?.NetEntity;
-    }
-
-    public override int GetHashCode()
-    {
-        return NetEntity.GetHashCode();
-    }
+/// <summary>
+/// Specialized struct with the same size as <see cref="PvsData"/> that is used to store metadata in the pinned PVsData array
+/// </summary>
+[StructLayout(LayoutKind.Sequential)]
+internal struct PvsMetadata
+{
+    /// <summary>
+    /// Tick at which this entity was last sent to a player.
+    /// </summary>
+    public NetEntity NetEntity;
+    public GameTick LastModifiedTick;
+    public ushort VisMask;
+    public EntityLifeStage LifeStage;
+    public byte Unused;
 }
 
 /// <summary>
 /// Struct for storing information about the current number of entities that are being sent to the player this tick.
 /// Used to enforce pvs budgets.
+/// </summary>
 internal struct PvsBudget
 {
     public int NewLimit;

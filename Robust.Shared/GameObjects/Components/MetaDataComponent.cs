@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
@@ -201,6 +202,11 @@ namespace Robust.Shared.GameObjects
             // (Creation can still be cleared though)
             ClearCreationTick();
         }
+
+        /// <summary>
+        /// Pointer to internal PVS data.
+        /// </summary>
+        internal IntPtr PvsData;
     }
 
     [Flags]

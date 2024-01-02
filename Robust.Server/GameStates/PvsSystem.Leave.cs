@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
@@ -37,7 +38,7 @@ internal sealed partial class PvsSystem
     /// Figure out what entities are no longer visible to the client. These entities are sent reliably to the client
     /// in a separate net message. This has to be called after EntityData.LastSent is updated.
     /// </summary>
-    private void ProcessLeavePvs(PvsSession session)
+    private unsafe void ProcessLeavePvs(PvsSession session)
     {
         if (session.DisableCulling || session.Session.Status != SessionStatus.InGame)
             return;
@@ -46,12 +47,15 @@ internal sealed partial class PvsSystem
             return;
 
         var (toTick, lastSent) = session.LastSent.Value;
-        foreach (var data in CollectionsMarshal.AsSpan(lastSent))
+
+        foreach (var intPtr in CollectionsMarshal.AsSpan(lastSent))
         {
+            ValidatePtr(intPtr);
+            ref var data = ref Unsafe.AsRef<PvsData>((PvsData*)intPtr);
             if (data.LastSeen == toTick)
                 continue;
 
-            session.LeftView.Add(data.NetEntity);
+            session.LeftView.Add(PtrToNetEntity(intPtr, session));
             data.LastLeftView = toTick;
         }
 

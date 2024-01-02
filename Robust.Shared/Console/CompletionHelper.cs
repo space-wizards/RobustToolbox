@@ -142,6 +142,11 @@ public static class CompletionHelper
         return entManager.EntityQuery<MapComponent>(true).Select(o => new CompletionOption(o.MapId.ToString()));
     }
 
+    public static IEnumerable<CompletionOption> MapUids(IEntityManager? entManager = null)
+    {
+        return Components<MapComponent>(string.Empty, entManager);
+    }
+
     public static IEnumerable<CompletionOption> NetEntities(string text, IEntityManager? entManager = null)
     {
         return Components<MetaDataComponent>(text, entManager);

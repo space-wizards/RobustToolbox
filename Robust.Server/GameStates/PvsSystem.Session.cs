@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -22,12 +24,60 @@ internal sealed partial class PvsSystem
 
     internal readonly Dictionary<ICommonSession, PvsSession> PlayerData = new();
 
-    internal PvsSession GetSessionData(ICommonSession session)
-        => GetSessionData(PlayerData[session]);
-
-    internal PvsSession GetSessionData(PvsSession session)
+    private void SendStateUpdate(ICommonSession session, PvsThreadResources resources)
     {
-        UpdateSessionData(session);
+        var data = GetOrNewPvsSession(session);
+        ComputeSessionState(data);
+
+        InterlockedHelper.Min(ref _oldestAck, data.FromTick.Value);
+
+        // actually send the state
+        var msg = new MsgState
+        {
+            State = data.State,
+            CompressionContext = resources.CompressionContext
+        };
+
+        // PVS benchmarks use dummy sessions.
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (session.Channel != null)
+        {
+            _netMan.ServerSendMessage(msg, session.Channel);
+            if (msg.ShouldSendReliably())
+            {
+                data.RequestedFull = false;
+                data.LastReceivedAck = _gameTiming.CurTick;
+                lock (PendingAcks)
+                {
+                    PendingAcks.Add(session);
+                }
+            }
+        }
+        else
+        {
+            // Always "ack" dummy sessions.
+            data.LastReceivedAck = _gameTiming.CurTick;
+            data.RequestedFull = false;
+            lock (PendingAcks)
+            {
+                PendingAcks.Add(session);
+            }
+        }
+
+        data.ClearState();
+    }
+
+    private PvsSession GetOrNewPvsSession(ICommonSession session)
+    {
+        if (!PlayerData.TryGetValue(session, out var pvsSession))
+            PlayerData[session] = pvsSession = new(session);
+
+        return pvsSession;
+    }
+
+    internal void ComputeSessionState(PvsSession session)
+    {
+        UpdateSession(session);
 
         if (CullingEnabled && !session.DisableCulling)
             GetEntityStates(session);
@@ -48,12 +98,11 @@ internal sealed partial class PvsSystem
             session.PlayerStates,
             _deletedEntities);
 
-        if (_gameTiming.CurTick.Value > session.LastReceivedAck.Value + ForceAckThreshold)
-            session.State.ForceSendReliably = true;
-
-        return session;
+        session.State.ForceSendReliably = session.RequestedFull
+                                          || _gameTiming.CurTick > session.LastReceivedAck + (uint) ForceAckThreshold;
     }
-    internal void UpdateSessionData(PvsSession session)
+
+    private void UpdateSession(PvsSession session)
     {
         DebugTools.AssertEqual(session.LeftView.Count, 0);
         DebugTools.AssertEqual(session.PlayerStates.Count, 0);
@@ -121,5 +170,31 @@ internal sealed partial class PvsSystem
 
         if (session.PreviouslySent.TryGetValue(_gameTiming.CurTick - 1, out var lastSent))
             session.LastSent = (_gameTiming.CurTick, lastSent);
+    }
+
+    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
+    {
+        if (e.NewStatus != SessionStatus.Disconnected)
+            return;
+
+        if (!PlayerData.Remove(e.Session, out var session))
+            return;
+
+        ClearSendHistory(session);
+    }
+
+    private void ClearSendHistory(PvsSession session)
+    {
+        if (session.Overflow != null)
+            _entDataListPool.Return(session.Overflow.Value.SentEnts);
+        session.Overflow = null;
+
+        foreach (var visSet in session.PreviouslySent.Values)
+        {
+            _entDataListPool.Return(visSet);
+        }
+
+        session.PreviouslySent.Clear();
+        session.LastSent = null;
     }
 }

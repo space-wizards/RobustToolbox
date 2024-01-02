@@ -54,6 +54,46 @@ END TEMPLATE-->
 *None yet*
 
 
+## 199.0.0
+
+### Breaking changes
+
+* Various `IEntityManager` C# events now use `Entity<MetadataComponent>` instead of `EntityUid`
+* Entity visibility masks now use a ushort instead of an integer.
+* Run grid traversal on entity spawn.
+
+### New features
+
+* Added two new `IEntityManager` C# events that get raiseed before and after deleting ("flushing") all entities.
+* Added a new `DeleteEntity()` override that takes in the entity's metadata and transform components.
+* Add better audio logs.
+* Expand z-library shader.
+* Add a Box2i union for Vector2i and add a Contains variant that assumes the Vector2i is a tile and not a point.
+
+### Bugfixes
+
+* Try to prevent some NREs in PVS.
+* More PVS fixes and cleanup.
+
+
+## 198.1.0
+
+### New features
+
+* `IClydeViewport` now provides access to the light render target.
+* Added a style-class to the `MenuBar` popup control.
+* Added `NextGaussian()` extension method for `System.Random`.
+* Added per-session variant of `PvsOverrideSystem.AddForceSend()`.
+
+### Bugfixes
+
+* Stopped the client from logging errors when attempting to delete invalid entities.
+
+### Other
+
+* The `DevWindow` UI inspector has been improved a bit and it now groups properties by their defining type.
+
+
 ## 198.0.1
 
 ### Bugfixes

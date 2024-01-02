@@ -40,14 +40,14 @@ namespace Robust.Server.GameStates
             EntityManager.EntityDirtied -= OnEntityDirty;
         }
 
-        private void OnEntityAdd(EntityUid e)
+        private void OnEntityAdd(Entity<MetaDataComponent> e)
         {
             DebugTools.Assert(_currentIndex == _gameTiming.CurTick.Value % DirtyBufferSize ||
                 _gameTiming.GetType().Name == "IGameTimingProxy");// Look I have NFI how best to excuse this assert if the game timing isn't real (a Mock<IGameTiming>).
             _addEntities[_currentIndex].Add(e);
         }
 
-        private void OnEntityDirty(EntityUid uid)
+        private void OnEntityDirty(Entity<MetaDataComponent> uid)
         {
             if (!_addEntities[_currentIndex].Contains(uid))
                 _dirtyEntities[_currentIndex].Add(uid);
@@ -69,9 +69,9 @@ namespace Robust.Server.GameStates
             return true;
         }
 
-        public void CleanupDirty(ICommonSession[] sessions, Histogram? histogram)
+        private void CleanupDirty(ICommonSession[] sessions)
         {
-            using var _ = histogram?.WithLabels("Clean Dirty").NewTimer();
+            using var _ = Histogram.WithLabels("Clean Dirty").NewTimer();
             if (!CullingEnabled)
             {
                 _seenAllEnts.Clear();

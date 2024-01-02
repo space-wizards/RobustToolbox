@@ -326,7 +326,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
                     return;
                 }
 
-                var paramsGain = MathF.Pow(10, component.Params.Volume / 10);
+                var paramsGain = VolumeToGain(component.Params.Volume);
 
                 // Thought I'd never have to manually calculate gain again but this is the least
                 // unpleasant audio I could get at the moment.

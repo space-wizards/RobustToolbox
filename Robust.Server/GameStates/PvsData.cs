@@ -126,10 +126,9 @@ internal sealed class PvsSession(ICommonSession session)
 /// <summary>
 /// Class for storing session-specific information about when an entity was last sent to a player.
 /// </summary>
-internal sealed class PvsData(Entity<MetaDataComponent> entity) : IEquatable<PvsData>
+internal sealed class PvsData(NetEntity entity) : IEquatable<PvsData>
 {
-    public readonly Entity<MetaDataComponent> Entity = entity;
-    public readonly NetEntity NetEntity = entity.Comp.NetEntity;
+    public readonly NetEntity NetEntity = entity;
 
     /// <summary>
     /// Tick at which this entity was last sent to a player.
@@ -148,34 +147,15 @@ internal sealed class PvsData(Entity<MetaDataComponent> entity) : IEquatable<Pvs
     /// </summary>
     public GameTick EntityLastAcked;
 
-    /// <summary>
-    /// Entity visibility state when it was last sent to this player.
-    /// </summary>
-    public PvsEntityVisibility Visibility;
-    // this is currently no longer strictly required, but maybe in future we want to separate out the get-state code
-    // from the get-visible/to-send code. If we do that, we need to have this to quickly distinguish between dirty,
-    // entering, and unmodified entities.
-
     public bool Equals(PvsData? other)
     {
-#if DEBUG
-        // Each this class should be unique for each entity-session combination, and should never be getting compared
-        // across sessions.
-        if (Entity.Owner == other?.Entity.Owner)
-            DebugTools.Assert(ReferenceEquals(this, other));
-#endif
-        return Entity.Owner == other?.Entity.Owner;
+        DebugTools.Assert((NetEntity != other?.NetEntity) || ReferenceEquals(this, other));
+        return NetEntity == other?.NetEntity;
     }
 
     public override int GetHashCode()
     {
-        return Entity.Owner.GetHashCode();
-    }
-
-    public override string ToString()
-    {
-        var rep = new EntityStringRepresentation(Entity);
-        return $"PVS Entity: {rep} - {LastSeen}/{LastLeftView}/{EntityLastAcked} - {Visibility}";
+        return NetEntity.GetHashCode();
     }
 }
 

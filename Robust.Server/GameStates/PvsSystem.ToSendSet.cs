@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
@@ -47,7 +48,7 @@ internal sealed partial class PvsSystem
         // We add chunk-size here so that its consistent with the normal PVS range setting.
         // I.e., distance here is the Chebyshev distance to the centre of each chunk, but the normal pvs range only
         // required that the chunk be touching the box, not the centre.
-        var count = distance < (_lowLodDistance + ChunkSize)/2
+        var count = distance < (_lowLodDistance + ChunkSize) / 2
             ? chunk.Contents.Count
             : chunk.LodCounts[0];
 
@@ -64,11 +65,13 @@ internal sealed partial class PvsSystem
     /// <summary>
     /// Attempt to add an entity to the to-send lists, while respecting pvs budgets.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool AddEntity(PvsSession session, Entity<MetaDataComponent> entity, GameTick fromTick)
     {
-        ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(session.Entities, entity.Comp.NetEntity, out var exists);
+        var nuid = entity.Comp.NetEntity;
+        ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(session.Entities, nuid, out var exists);
         if (!exists)
-            data = new(entity);
+            data = new(nuid);
 
         if (entity.Comp.Deleted)
         {
@@ -78,44 +81,28 @@ internal sealed partial class PvsSystem
         }
 
         DebugTools.AssertEqual(data!.NetEntity, entity.Comp.NetEntity);
-        DebugTools.AssertEqual(data.LastSeen == GameTick.Zero, data.Visibility <= PvsEntityVisibility.Unsent);
-        DebugTools.AssertEqual(data.Entity, entity);
         if (data.LastSeen == _gameTiming.CurTick)
             return true;
 
         var (entered,budgetExceeded) = IsEnteringPvsRange(data, fromTick, ref session.Budget);
 
-        if (!budgetExceeded)
-        {
-            if (!AddToSendList(session, data, fromTick, entered))
-                return false;
-
-            DebugTools.AssertNotEqual(data.LastSeen, GameTick.Zero);
-            return true;
-        }
-
-        // Sending this entity would go over the player's budget, so we will not add it. However, we  do not
-        // stop iterating over this (or other chunks). This is to avoid sending bad pvs-leave messages.
-        // I.e., other entities may have just stayed in view, and we can send them without exceeding our
-        // budget. E.g., this might be the very first chunk we are iterating over, and it just so happens
-        // to be a chunk that just entered their PVS range.
-
-        if (data.Visibility != PvsEntityVisibility.Invalid)
+        if (budgetExceeded)
             return false;
 
-        // This entity was never sent to the player, and isn't being sent now.
-        // However, the data has already been added to the entityData dictionary.
-        // In order for debug asserts and other sanity checks to keep working, we mark the entity as
-        // explicitly unsent.
-        data.Visibility = PvsEntityVisibility.Unsent;
-        return false;
+        if (!AddToSendList(session, data, entity, fromTick, entered))
+            return false;
+
+        DebugTools.AssertNotEqual(data.LastSeen, GameTick.Zero);
+        return true;
     }
 
     /// <summary>
     /// This method adds an entity to the list of visible entities, updates the last-seen tick, and computes any
     /// required game states.
     /// </summary>
-    private bool AddToSendList(PvsSession session, PvsData data, GameTick fromTick, bool entered)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool AddToSendList(PvsSession session, PvsData data, Entity<MetaDataComponent> entity, GameTick fromTick,
+        bool entered)
     {
         DebugTools.Assert(fromTick < _gameTiming.CurTick);
 
@@ -128,23 +115,23 @@ internal sealed partial class PvsSystem
 
         DebugTools.AssertNotEqual(data.LastSeen, _gameTiming.CurTick);
         DebugTools.Assert(data.EntityLastAcked <= fromTick || fromTick == GameTick.Zero);
-        var (uid, meta) = data.Entity;
+        var (uid, meta) = entity;
 
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (meta == null)
         {
-            Log.Error($"Encountered null metadata in EntityData. Entity: {ToPrettyString(data?.Entity)}");
+            Log.Error($"Encountered null metadata in EntityData. Entity: {ToPrettyString(uid)}");
             return false;
         }
 
         if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
-            var rep = new EntityStringRepresentation(data.Entity);
-            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(data.Entity)}. Trace:\n{Environment.StackTrace}");
+            var rep = new EntityStringRepresentation(entity);
+            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(uid)}. Trace:\n{Environment.StackTrace}");
 
             // This can happen if some entity was some removed from it's parent while that parent was being deleted.
             // As a result the entity was marked for deletion but was never actually properly deleted.
-            EntityManager.QueueDeleteEntity(data.Entity);
+            EntityManager.QueueDeleteEntity(uid);
             return false;
         }
 
@@ -154,27 +141,21 @@ internal sealed partial class PvsSystem
 
         if (session.RequestedFull)
         {
-            state = GetFullEntityState(session.Session, data.Entity.Owner, data.Entity.Comp);
+            state = GetFullEntityState(session.Session, uid, meta);
             session.States.Add(state);
             return true;
         }
 
         if (entered)
         {
-            data.Visibility = PvsEntityVisibility.Entered;
             state = GetEntityState(session.Session, uid, data.EntityLastAcked, meta);
             session.States.Add(state);
             return true;
         }
 
         if (meta.EntityLastModifiedTick <= fromTick)
-        {
-            //entity has been sent before and hasn't been updated since
-            data.Visibility = PvsEntityVisibility.Unchanged;
             return true;
-        }
 
-        data.Visibility = PvsEntityVisibility.Dirty;
         state = GetEntityState(session.Session, uid, fromTick , meta);
 
         if (!state.Empty)
@@ -187,13 +168,12 @@ internal sealed partial class PvsSystem
     /// This method figures out whether a given entity is currently entering a player's PVS range.
     /// This method will also check that the player's PVS entry budget is not being exceeded.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private (bool Entering, bool BudgetExceeded) IsEnteringPvsRange(
         PvsData data,
         GameTick fromTick,
         ref PvsBudget budget)
     {
-        DebugTools.AssertEqual(data.LastSeen == GameTick.Zero, data.Visibility <= PvsEntityVisibility.Unsent);
-
         var enteredSinceLastSent = fromTick == GameTick.Zero
                                    || data.LastSeen == GameTick.Zero
                                    || data.LastSeen != _gameTiming.CurTick - 1;

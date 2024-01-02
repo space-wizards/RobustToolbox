@@ -5,39 +5,42 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Server.Configuration;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
+using Robust.Server.Replays;
 using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Dependency = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Server.GameStates;
 
 internal sealed partial class PvsSystem : EntitySystem
 {
-    [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Shared.IoC.Dependency] private readonly INetworkedMapManager _mapManager = default!;
-    [Shared.IoC.Dependency] private readonly IServerEntityNetworkManager _netEntMan = default!;
-    [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Shared.IoC.Dependency] private readonly IParallelManager _parallelManager = default!;
-    [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
-    [Shared.IoC.Dependency] private readonly IServerNetConfigurationManager _netConfigManager = default!;
-    [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Shared.IoC.Dependency] private readonly InputSystem _input = default!;
-    [Shared.IoC.Dependency] private readonly IServerNetManager _netMan = default!;
-    [Shared.IoC.Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
-    [Shared.IoC.Dependency] private readonly PvsOverrideSystem _pvsOverride = default!;
+    [Dependency] private readonly IConfigurationManager _configManager = default!;
+    [Dependency] private readonly INetworkedMapManager _mapManager = default!;
+    [Dependency] private readonly IServerEntityNetworkManager _netEntMan = default!;
+    [Dependency] private readonly IPlayerManager _playerManager = default!;
+    [Dependency] private readonly IParallelManager _parallelManager = default!;
+    [Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
+    [Dependency] private readonly IServerNetConfigurationManager _netConfigManager = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private readonly InputSystem _input = default!;
+    [Dependency] private readonly IServerNetManager _netMan = default!;
+    [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
+    [Dependency] private readonly PvsOverrideSystem _pvsOverride = default!;
+    [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
 
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
     // Main issue is that I CBF figuring out the logic for handling it changing mid-game.
@@ -66,14 +69,19 @@ internal sealed partial class PvsSystem : EntitySystem
     /// <summary>
     /// Per-tick ack data to avoid re-allocating.
     /// </summary>
-    private readonly List<ICommonSession> _toAck = new();
+    private readonly List<PvsSession> _toAck = new();
     internal readonly HashSet<ICommonSession> PendingAcks = new();
+
     private PvsAckJob _ackJob;
     private PvsChunkJob _chunkJob;
+    private PvsLeaveJob _leaveJob;
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
     private EntityQuery<TransformComponent> _xformQuery;
+
+    private uint _oldestAck;
+    private GameTick _lastOldestAck = GameTick.Zero;
 
     /// <summary>
     /// List of recently deleted entities.
@@ -85,14 +93,26 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     private readonly List<GameTick> _deletedTick = new();
 
+    private PvsSession[] _sessions = default!;
+
     private bool _async;
+
+    private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
+
+    private static readonly Histogram Histogram = Metrics.CreateHistogram("robust_game_state_update_usage",
+        "Amount of time spent processing different parts of the game state update", new HistogramConfiguration
+        {
+            LabelNames = new[] {"area"},
+            Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
+        });
 
     public override void Initialize()
     {
         base.Initialize();
 
-        _chunkJob = new PvsChunkJob { Pvs = this };
-        _ackJob = new PvsAckJob { System = this, Sessions = _toAck,};
+        _leaveJob = new PvsLeaveJob(this);
+        _chunkJob = new PvsChunkJob(this);
+        _ackJob = new PvsAckJob(this);
 
         _eyeQuery = GetEntityQuery<EyeComponent>();
         _metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -116,11 +136,9 @@ internal sealed partial class PvsSystem : EntitySystem
         _serverGameStateManager.ClientRequestFull += OnClientRequestFull;
 
         InitializeDirty();
-    }
 
-    private void OnAsyncChanged(bool value)
-    {
-        _async = value;
+        _parallelMgr.ParallelCountChanged += ResetParallelism;
+        _configManager.OnValueChanged(CVars.NetPvsCompressLevel, ResetParallelism, true);
     }
 
     public override void Shutdown()
@@ -133,49 +151,110 @@ internal sealed partial class PvsSystem : EntitySystem
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
         _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
         _configManager.UnsubValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged);
+        _configManager.UnsubValueChanged(CVars.NetPvsCompressLevel, ResetParallelism);
+        _parallelMgr.ParallelCountChanged -= ResetParallelism;
 
         _serverGameStateManager.ClientAck -= OnClientAck;
         _serverGameStateManager.ClientRequestFull -= OnClientRequestFull;
 
         ShutdownDirty();
+        _leaveTask?.WaitOne();
+        _leaveTask = null;
+    }
+
+    /// <summary>
+    /// Send this tick's game state data to players.
+    /// </summary>
+    internal void SendGameStates(ICommonSession[] players)
+    {
+        // Ensure each session has a PvsSession entry before starting any parallel jobs.
+        CacheSessionData(players);
+
+        // Get visible chunks, and update any dirty chunks.
+        BeforeSendState();
+
+        // Construct & send the game state to each player.
+        SendStates(players);
+
+        // Cull deletion history
+        AfterSendState(players);
+
+        ProcessLeavePvs(players);
+    }
+
+    private void SendStates(ICommonSession[] players)
+    {
+        using var _ = Histogram.WithLabels("Send States").NewTimer();
+
+        var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
+        _oldestAck = GameTick.MaxValue.Value;
+
+        // Replays process game states in parallel with players
+        Parallel.For(-1, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
+
+        PvsThreadResources SendPlayer(int i, ParallelLoopState state, PvsThreadResources resource)
+        {
+            try
+            {
+                var guid = i >= 0 ? players[i].UserId.UserId : default;
+                ServerGameStateManager.PvsEventSource.Log.WorkStart(_gameTiming.CurTick.Value, i, guid);
+
+                if (i >= 0)
+                    SendStateUpdate(players[i], resource);
+                else
+                    _replay.Update();
+
+                ServerGameStateManager.PvsEventSource.Log.WorkStop(_gameTiming.CurTick.Value, i, guid);
+            }
+            catch (Exception e) // Catch EVERY exception
+            {
+                var source = i >= 0 ? players[i].ToString() : "replays";
+                Log.Log(LogLevel.Error, e, $"Caught exception while generating mail for {source}.");
+            }
+            return resource;
+        }
+    }
+
+    private void ResetParallelism(int _) => ResetParallelism();
+    private void ResetParallelism()
+    {
+        var compressLevel = _configManager.GetCVar(CVars.NetPvsCompressLevel);
+        // The * 2 is because trusting .NET won't take more is what got this code into this mess in the first place.
+        _threadResourcesPool = new DefaultObjectPool<PvsThreadResources>(new PvsThreadResourcesObjectPolicy(compressLevel), _parallelMgr.ParallelProcessCount * 2);
+    }
+
+    private void OnAsyncChanged(bool value)
+    {
+        _async = value;
     }
 
     // TODO PVS rate limit this?
     private void OnClientRequestFull(ICommonSession session, GameTick tick, NetEntity? missingEntity)
     {
-        if (!PlayerData.TryGetValue(session, out var sessionData))
+        if (!PlayerData.TryGetValue(session, out var pvsSession))
             return;
 
-        // Update acked tick so that OnClientAck doesn't get invoked by any late acks.
-        var lastAcked = sessionData.LastReceivedAck;
-        sessionData.LastReceivedAck = _gameTiming.CurTick;
+        var lastAcked = pvsSession.LastReceivedAck;
 
         var sb = new StringBuilder();
         sb.Append($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}. Curtick: {_gameTiming.CurTick}.");
 
         if (missingEntity != null)
         {
-            var entity = GetEntity(missingEntity)!;
-            sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(entity.Value)}.");
-
-            if (sessionData.Entities.TryGetValue(missingEntity.Value, out var data))
-                sb.Append($" Entity last seen: {data.EntityLastAcked}");
+            var (entity, meta) = GetEntityData(missingEntity.Value);
+            sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(entity)}.");
+            //sb.Append($" Entity last seen: {meta.PvsData[sessionData.Index].EntityLastAcked}");
         }
 
         Log.Warning(sb.ToString());
+        ForceFullState(pvsSession);
+    }
 
-        if (sessionData.Overflow != null)
-            _entDataListPool.Return(sessionData.Overflow.Value.SentEnts);
-        sessionData.Overflow = null;
-
-        foreach (var visSet in sessionData.PreviouslySent.Values)
-        {
-            _entDataListPool.Return(visSet);
-        }
-        sessionData.PreviouslySent.Clear();
-
-        sessionData.RequestedFull = true;
-        sessionData.Entities.Clear();
+    private void ForceFullState(PvsSession session)
+    {
+        session.LastReceivedAck = _gameTiming.CurTick;
+        session.RequestedFull = true;
+        ClearSendHistory(session);
     }
 
     private void OnViewsizeChanged(float value)
@@ -199,57 +278,36 @@ internal sealed partial class PvsSystem : EntitySystem
         CullingEnabled = value;
     }
 
-    public void CullDeletionHistory(GameTick oldestAck, Histogram? histogram)
+    private void CullDeletionHistory(GameTick oldestAck)
     {
-        using var _ = histogram?.WithLabels("Cull History").NewTimer();
+        using var _ = Histogram.WithLabels("Cull History").NewTimer();
         CullDeletionHistoryUntil(oldestAck);
         _mapManager.CullDeletionHistory(oldestAck);
     }
 
-    #region PVSCollection Event Updates
-
-    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
-    {
-        if (e.NewStatus == SessionStatus.InGame)
-        {
-            if (!PlayerData.TryAdd(e.Session, new(e.Session)))
-                Log.Error($"Attempted to add player to _playerVisibleSets, but they were already present? Session:{e.Session}");
-
-            return;
-        }
-
-        if (e.NewStatus != SessionStatus.Disconnected)
-            return;
-
-        if (!PlayerData.Remove(e.Session, out var data))
-            return;
-
-        if (data.Overflow != null)
-            _entDataListPool.Return(data.Overflow.Value.SentEnts);
-        data.Overflow = null;
-
-        foreach (var visSet in data.PreviouslySent.Values)
-        {
-            _entDataListPool.Return(visSet);
-        }
-    }
-
-    #endregion
-
-    internal void GetEntityStates(PvsSession session)
+    private void GetEntityStates(PvsSession session)
     {
         // First, we send the client's own viewers. we want to ALWAYS send these, regardless of any pvs budget.
         AddForcedEntities(session);
 
         // After processing the entity's viewers, we set actual, budget limits.
-        session.Budget.NewLimit= _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityBudget);
-        session.Budget.EnterLimit = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityEnterBudget);
-
-        // Process all entities in visible PVS chunks
-        AddPvsChunks(session);
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (session.Channel != null)
+        {
+            session.Budget.NewLimit= _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityBudget);
+            session.Budget.EnterLimit = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityEnterBudget);
+        }
+        else
+        {
+            session.Budget.NewLimit= CVars.NetPVSEntityBudget.DefaultValue;
+            session.Budget.EnterLimit = CVars.NetPVSEntityEnterBudget.DefaultValue;
+        }
 
         // Process all PVS overrides.
         AddAllOverrides(session);
+
+        // Process all entities in visible PVS chunks
+        AddPvsChunks(session);
 
         VerifySessionData(session);
 
@@ -285,71 +343,35 @@ internal sealed partial class PvsSystem : EntitySystem
     private void VerifySessionData(PvsSession pvsSession)
     {
         var toSend = pvsSession.ToSend;
-        var toSendSet = new HashSet<EntityUid>(toSend!.Count);
+        var toSendSet = new HashSet<NetEntity>(toSend!.Count);
         foreach (var data in toSend)
         {
-            toSendSet.Add(data.Entity.Owner);
+            toSendSet.Add(data.NetEntity);
         }
         DebugTools.AssertEqual(toSend.Count, toSendSet.Count);
 
         foreach (var data in CollectionsMarshal.AsSpan(toSend))
         {
-            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
             DebugTools.AssertEqual(data.LastSeen, _gameTiming.CurTick);
             DebugTools.Assert(ReferenceEquals(data, pvsSession.Entities[data.NetEntity]));
 
             // if an entity is visible, its parents should always be visible.
-            if (_xformQuery.GetComponent(data.Entity).ParentUid is not {Valid: true} pUid)
+            if (_xformQuery.GetComponent(GetEntity(data.NetEntity)).ParentUid is not {Valid: true} pUid)
                 continue;
 
-            DebugTools.Assert(toSendSet.Contains(pUid),
+            DebugTools.Assert(toSendSet.Contains(GetNetEntity(pUid)),
                 $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(pUid)}.");
         }
 
         pvsSession.PreviouslySent.TryGetValue(_gameTiming.CurTick - 1, out var lastSent);
         foreach (var data in CollectionsMarshal.AsSpan(lastSent))
         {
-            DebugTools.Assert(data.Visibility > PvsEntityVisibility.Unsent);
             DebugTools.Assert(!pvsSession.Entities.TryGetValue(data.NetEntity, out var old) || ReferenceEquals(data, old));
             DebugTools.Assert(data.LastSeen != GameTick.Zero);
-            DebugTools.AssertEqual(toSendSet.Contains(data.Entity), data.LastSeen == _gameTiming.CurTick);
+            DebugTools.AssertEqual(toSendSet.Contains(data.NetEntity), data.LastSeen == _gameTiming.CurTick);
             DebugTools.Assert(data.LastSeen == _gameTiming.CurTick
                               || data.LastSeen == _gameTiming.CurTick - 1);
         }
-    }
-
-    /// <summary>
-    /// Figure out what entities are no longer visible to the client. These entities are sent reliably to the client
-    /// in a separate net message. This has to be called after EntityData.LastSent is updated.
-    /// </summary>
-    internal void ProcessLeavePvs(PvsSession session)
-    {
-        if (!CullingEnabled || session.DisableCulling)
-            return;
-
-        if (session.LastSent == null)
-            return;
-
-        var (toTick, lastSent) = session.LastSent.Value;
-        foreach (var data in CollectionsMarshal.AsSpan(lastSent))
-        {
-            if (data.LastSeen == toTick)
-                continue;
-
-            session.LeftView.Add(data.NetEntity);
-            data.LastLeftView = toTick;
-
-            // TODO PVS make this not required. I.e., hide maps/grids from clients.
-            DebugTools.Assert(!HasComp<MapGridComponent>(data.Entity));
-            DebugTools.Assert(!HasComp<MapComponent>(data.Entity));
-        }
-
-        if (session.LeftView.Count == 0)
-            return;
-
-        var pvsMessage = new MsgStateLeavePvs {Entities = session.LeftView, Tick = toTick};
-        _netMan.ServerSendMessage(pvsMessage, session.Channel);
-        session.LeftView.Clear();
     }
 
     private (Vector2 worldPos, float range, EntityUid? map) CalcViewBounds(Entity<TransformComponent, EyeComponent?> eye)
@@ -358,7 +380,7 @@ internal sealed partial class PvsSystem : EntitySystem
         return (_transform.GetWorldPosition(eye.Comp1), size / 2f, eye.Comp1.MapUid);
     }
 
-    public void CullDeletionHistoryUntil(GameTick tick)
+    private void CullDeletionHistoryUntil(GameTick tick)
     {
         if (tick == GameTick.MaxValue)
         {
@@ -378,42 +400,54 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    public void BeforeSendState(ICommonSession[] players, Histogram histogram)
+    private void BeforeSendState()
     {
         DebugTools.Assert(_chunks.Values.All(x => Exists(x.Map) && Exists(x.Root)));
         DebugTools.Assert(_chunkSets.Keys.All(Exists));
 
-        var ackJob = ProcessQueuedAcks(histogram);
+        var ackJob = ProcessQueuedAcks();
 
         // Figure out what chunks players can see and cache some chunk data.
         if (CullingEnabled)
         {
-            GetVisibleChunks(players, histogram);
-            ProcessVisibleChunks(histogram);
+            GetVisibleChunks();
+            ProcessVisibleChunks();
         }
 
         ackJob?.WaitOne();
+
+        // Ensure any pvs leave tasks have finished before we get the next state & overwrite the "last sent" list.
+        _leaveTask?.WaitOne();
+        _leaveTask = null;
     }
 
-    public void AfterSendState(ICommonSession[] players, Histogram histogram, GameTick oldestAck,
-        ref GameTick lastOldestAck)
+    internal void CacheSessionData(ICommonSession[] players)
     {
-        CleanupDirty(players, histogram);
+        Array.Resize(ref _sessions, players.Length);
+        for (var i = 0; i < players.Length; i++)
+        {
+            _sessions[i] = GetOrNewPvsSession(players[i]);
+        }
+    }
 
-        if (oldestAck == GameTick.MaxValue)
+    private void AfterSendState(ICommonSession[] players)
+    {
+        CleanupDirty(players);
+
+        if (_oldestAck == GameTick.MaxValue.Value)
         {
             // There were no connected players?
             // In that case we just clear all deletion history.
-            CullDeletionHistory(GameTick.MaxValue, histogram);
-            lastOldestAck = GameTick.Zero;
+            CullDeletionHistory(GameTick.MaxValue);
+            _lastOldestAck = GameTick.Zero;
             return;
         }
 
-        if (oldestAck == lastOldestAck)
+        if (_oldestAck == _lastOldestAck.Value)
             return;
 
-        lastOldestAck = oldestAck;
-        CullDeletionHistory(oldestAck, histogram);
+        _lastOldestAck = new(_oldestAck);
+        CullDeletionHistory(_lastOldestAck);
     }
 }
 

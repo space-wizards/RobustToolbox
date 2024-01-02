@@ -25,7 +25,13 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
+        SubscribeLocalEvent<TransformStartupEvent>(OnStartup);
         _transform.OnGlobalMoveEvent += OnMove;
+    }
+
+    private void OnStartup(ref TransformStartupEvent ev)
+    {
+        CheckTraverse(ev.Entity.Owner, ev.Entity.Comp);
     }
 
     public override void Shutdown()
@@ -92,7 +98,7 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
             : Transform(xform.ParentUid).LocalMatrix.Transform(xform.LocalPosition);
 
         // Change parent if necessary
-        if (_mapManager.TryFindGridAt(xform.MapID, mapPos, out var gridUid, out _))
+        if (_mapManager.TryFindGridAt(map, mapPos, out var gridUid, out _))
         {
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
             if (gridUid != xform.GridUid)

@@ -332,7 +332,7 @@ public abstract partial class SharedTransformSystem
         var parentEv = new EntParentChangedMessage(uid, null, MapId.Nullspace, xform);
         RaiseLocalEvent(uid, ref parentEv, true);
 
-        var ev = new TransformStartupEvent(xform);
+        var ev = new TransformStartupEvent((uid, xform));
         RaiseLocalEvent(uid, ref ev, true);
 
         DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0, $"NoRot entity has a non-zero local rotation. entity: {ToPrettyString(uid)}");
@@ -1334,22 +1334,15 @@ public abstract partial class SharedTransformSystem
         if (!xform.ParentUid.IsValid())
             return false;
 
-        EntityUid newParent;
-        var oldPos = GetWorldPosition(xform, XformQuery);
-        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, XformQuery, out var gridUid, out _))
-        {
-            newParent = gridUid;
-        }
-        else if (_mapManager.GetMapEntityId(xform.MapID) is { Valid: true } mapEnt)
-        {
-            newParent = mapEnt;
-        }
-        else
-        {
+        if (xform.MapUid is not { } map)
             return false;
-        }
 
-        coordinates = new(newParent, GetInvWorldMatrix(newParent, XformQuery).Transform(oldPos));
+        var newParent = map;
+        var oldPos = GetWorldPosition(xform);
+        if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _))
+            newParent = gridUid;
+
+        coordinates = new(newParent, GetInvWorldMatrix(newParent).Transform(oldPos));
         return true;
     }
     #endregion

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `OSWindowStyles.NoTitleBar` (supported only on Linux X11 for now).
 
 ### Bugfixes
 
@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* `OSWindowStyles.NoTitleOptions` is now supported on Linux X11.
 
 ### Internal
 

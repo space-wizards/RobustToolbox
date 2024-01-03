@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `OSWindowStyles.NoTitleBar` (supported only on Linux X11 for now).
+*None yet*
 
 ### Bugfixes
 
@@ -47,11 +47,32 @@ END TEMPLATE-->
 
 ### Other
 
-* `OSWindowStyles.NoTitleOptions` is now supported on Linux X11.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 200.0.0
+
+### Breaking changes
+
+* MappingDataNode is now ordered.
+* Make invalid AutoNetworkedFields compiler errors.
+
+### New features
+
+* `OSWindowStyles.NoTitleBar` (supported only on Linux X11 for now).
+
+### Bugfixes
+
+* Avoid calling DirtyEntity when a component's last modified tick is not current.
+* Fix `tpgrid` allowing moving grids to nullspace.
+
+### Other
+
+* `OSWindowStyles.NoTitleOptions` is now supported on Linux X11.
 
 
 ## 199.0.0

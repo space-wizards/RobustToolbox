@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `replay.max_compressed_size` and `replay.max_uncompressed_size` CVars are now `long`.
+*None yet*
 
 ### New features
 
@@ -43,8 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed integer overflows in replay max size calculation.
-* Explicitly capped `replay.replay_tick_batchSize` internally to avoid high values causing allocation failures.
+*None yet*
 
 ### Other
 

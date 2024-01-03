@@ -34,11 +34,6 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     // date format for default replay names. Like the sortable template, but without colons.
     public const string DefaultReplayNameFormat = "yyyy-MM-dd_HH-mm-ss";
 
-    // Kinda arbitrary but (after multiplying by 1024 cuz it's kB)
-    // needs to be less than (max array size) / 2.
-    // I don't think anybody's gonna write 256 MB of chunk at once yeah?
-    private const int MaxTickBatchSize = 256 * 1024;
-
     [Dependency] protected readonly IGameTiming Timing = default!;
     [Dependency] protected readonly INetConfigurationManager NetConf = default!;
     [Dependency] private readonly IComponentFactory _factory = default!;
@@ -55,8 +50,8 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     private List<object> _queuedMessages = new();
 
     // Config variables.
-    private long _maxCompressedSize;
-    private long _maxUncompressedSize;
+    private int _maxCompressedSize;
+    private int _maxUncompressedSize;
     private int _tickBatchSize;
     private bool _enabled;
 
@@ -68,9 +63,9 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     {
         _sawmill = _logManager.GetSawmill("replay");
 
-        NetConf.OnValueChanged(CVars.ReplayMaxCompressedSize, (v) => _maxCompressedSize = SaturatingMultiplyKb(v), true);
-        NetConf.OnValueChanged(CVars.ReplayMaxUncompressedSize, (v) => _maxUncompressedSize = SaturatingMultiplyKb(v), true);
-        NetConf.OnValueChanged(CVars.ReplayTickBatchSize, (v) => _tickBatchSize = Math.Min(v, MaxTickBatchSize) * 1024, true);
+        NetConf.OnValueChanged(CVars.ReplayMaxCompressedSize, (v) => _maxCompressedSize = v * 1024, true);
+        NetConf.OnValueChanged(CVars.ReplayMaxUncompressedSize, (v) => _maxUncompressedSize = v * 1024, true);
+        NetConf.OnValueChanged(CVars.ReplayTickBatchSize, (v) => _tickBatchSize = v * 1024, true);
         NetConf.OnValueChanged(CVars.NetPvsCompressLevel, OnCompressionChanged);
     }
 
@@ -453,18 +448,6 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         var altSize = _recState.UncompressedSize;
 
         return new ReplayRecordingStats(time, tick, size, altSize);
-    }
-
-    private static long SaturatingMultiplyKb(long kb)
-    {
-        var result = kb * 1024;
-        if (result < kb)
-        {
-            // Overflow
-            return long.MaxValue;
-        }
-
-        return result;
     }
 
     /// <summary>

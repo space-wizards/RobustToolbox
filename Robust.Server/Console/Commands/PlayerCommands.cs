@@ -28,10 +28,10 @@ namespace Robust.Server.Console.Commands
             foreach (var p in players)
             {
                 sb.AppendLine(string.Format("{4,20} {1,12} {2,14:hh\\:mm\\:ss} {3,9} {0,20}",
-                    p.ConnectedClient.RemoteEndPoint,
+                    p.Channel.RemoteEndPoint,
                     p.Status.ToString(),
                     DateTime.UtcNow - p.ConnectedTime,
-                    p.ConnectedClient.Ping + "ms",
+                    p.Channel.Ping + "ms",
                     p.Name));
             }
 
@@ -71,7 +71,7 @@ namespace Robust.Server.Console.Commands
                 else
                     reason = "Kicked by console";
 
-                _netManager.DisconnectChannel(target.ConnectedClient, reason);
+                _netManager.DisconnectChannel(target.Channel, reason);
             }
         }
 

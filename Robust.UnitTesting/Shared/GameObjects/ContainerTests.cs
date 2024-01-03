@@ -88,10 +88,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  itemUid = sEntManager.SpawnEntity(null, mapPos);
                  sMetadataSys.SetEntityName(itemUid, "Item");
                  var container = sContainerSys.EnsureContainer<Container>(entityUid, "dummy");
-                 Assert.That(container.Insert(itemUid));
+                 Assert.That(sContainerSys.Insert(itemUid, container));
 
-                 // Move item out of PVS so that it doesn't get sent to the client
-                 sEntManager.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(100000, 0);
+                 // Modify visibility layer so that the item does not get sent ot the player
+                 sEntManager.System<VisibilitySystem>().AddLayer(itemUid, 10 );
              });
 
              // Needs minimum 4 to sync to client because buffer size is 3
@@ -108,7 +108,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cEntityUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
 
@@ -118,8 +118,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
              await server.WaitAssertion(() =>
              {
-                 // Move item into PVS so it gets sent to the client
-                 sEntManager.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(0, 0);
+                 // Modify visibility layer so it now gets sent to the client
+                 sEntManager.System<VisibilitySystem>().RemoveLayer(itemUid, 10 );
              });
 
              await server.WaitRunTicks(1);
@@ -133,7 +133,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cEntityUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
@@ -216,10 +216,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  netEnt = sEntManager.GetNetEntity(sItemUid);
                  sMetadataSys.SetEntityName(sItemUid, "Item");
                  var container = sContainerSys.GetContainer(sEntityUid, "dummy");
-                 container.Insert(sItemUid);
+                 sContainerSys.Insert(sItemUid, container);
 
-                 // Move item out of PVS so that it doesn't get sent to the client
-                 sEntManager.GetComponent<TransformComponent>(sItemUid).LocalPosition = new Vector2(100000, 0);
+                 // Modify visibility layer so that the item does not get sent ot the player
+                 sEntManager.System<VisibilitySystem>().AddLayer(sItemUid, 10 );
              });
 
             await server.WaitRunTicks(1);
@@ -239,7 +239,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
 
@@ -255,7 +255,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                      // && itemUid.TryGetContainer(out var container))
                      && sContainerSys.TryGetContainingContainer(sItemUid, out var container))
                  {
-                     container.ForceRemove(sItemUid);
+                     sContainerSys.Remove(sItemUid, container, force: true);
                  }
 
                  sEntManager.DeleteEntity(sItemUid);
@@ -272,7 +272,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
@@ -312,7 +312,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 var container = sContainerSys.MakeContainer<Container>(containerEnt, "testContainer");
                 container.OccludesLight = true;
                 container.ShowContents = true;
-                container.Insert(containeeEnt);
+                sContainerSys.Insert(containeeEnt, container);
 
                 // save the map
                 var mapLoader = sEntManager.EntitySysManager.GetEntitySystem<MapLoaderSystem>();
@@ -353,7 +353,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
                 Assert.That(container.Comp!.Containers.ContainsKey("testContainer"));
 
-                var baseContainer = container.Comp.GetContainer("testContainer");
+                var baseContainer = sContainerSys.GetContainer(containerEnt, "testContainer", container.Comp);
                 Assert.That(baseContainer.ContainedEntities, Has.Count.EqualTo(1));
 
                 var containeeEnt = baseContainer.ContainedEntities[0];

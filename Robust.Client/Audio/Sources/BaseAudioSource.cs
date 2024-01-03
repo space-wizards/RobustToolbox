@@ -10,7 +10,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio.Sources;
 
-internal abstract class BaseAudioSource : IAudioSource
+public abstract class BaseAudioSource : IAudioSource
 {
     /*
      * This may look weird having all these methods here however
@@ -27,22 +27,25 @@ internal abstract class BaseAudioSource : IAudioSource
     /// </summary>
     protected int FilterHandle;
 
-    protected readonly AudioManager Master;
+    internal readonly AudioManager Master;
 
     /// <summary>
     /// Prior gain that was set.
     /// </summary>
     private float _gain;
 
+    private float _occlusion;
+
     private bool IsEfxSupported => Master.IsEfxSupported;
 
-    protected BaseAudioSource(AudioManager master, int sourceHandle)
+    internal BaseAudioSource(AudioManager master, int sourceHandle)
     {
         Master = master;
         SourceHandle = sourceHandle;
         AL.GetSource(SourceHandle, ALSourcef.Gain, out _gain);
     }
 
+    /// <inheritdoc />
     public void Pause()
     {
         AL.SourcePause(SourceHandle);
@@ -64,6 +67,13 @@ internal abstract class BaseAudioSource : IAudioSource
             return;
 
         Playing = false;
+    }
+
+    /// <inheritdoc />
+    public void Restart()
+    {
+        AL.SourceRewind(SourceHandle);
+        StartPlaying();
     }
 
     /// <inheritdoc />
@@ -157,7 +167,22 @@ internal abstract class BaseAudioSource : IAudioSource
     }
 
     /// <inheritdoc />
-    public float Pitch { get; set; }
+    public float Pitch
+    {
+        get
+        {
+            _checkDisposed();
+            AL.GetSource(SourceHandle, ALSourcef.Pitch, out var value);
+            Master._checkAlError();
+            return value;
+        }
+        set
+        {
+            _checkDisposed();
+            AL.Source(SourceHandle, ALSourcef.Pitch, value);
+            Master._checkAlError();
+        }
+    }
 
     /// <inheritdoc />
     public float Volume
@@ -188,12 +213,13 @@ internal abstract class BaseAudioSource : IAudioSource
             if (!IsEfxSupported)
             {
                 AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
-                priorOcclusion = priorGain / _gain;
+                // Default to 0 to avoid spiking audio, just means it will be muted for a frame in this case.
+                priorOcclusion = _gain == 0 ? 1f : priorGain / _gain;
             }
 
             _gain = value;
             AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
-            Master._checkAlError();
+            Master.LogALError($"Gain is {_gain:0.00} and priorOcclusion is {priorOcclusion:0.00}. EFX supported: {IsEfxSupported}");
         }
     }
 
@@ -211,7 +237,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.MaxDistance, value);
-            Master._checkAlError();
+            Master.LogALError($"MaxDistance is {value:0.00}");
         }
     }
 
@@ -229,7 +255,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.RolloffFactor, value);
-            Master._checkAlError();
+            Master.LogALError($"RolloffFactor is {value:0.00}");
         }
     }
 
@@ -247,20 +273,14 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.ReferenceDistance, value);
-            Master._checkAlError();
+            Master.LogALError($"ReferenceDistance is {value:0.00}");
         }
     }
 
     /// <inheritdoc />
     public float Occlusion
     {
-        get
-        {
-            _checkDisposed();
-            AL.GetSource(SourceHandle, ALSourcef.MaxDistance, out var value);
-            Master._checkAlError();
-            return value;
-        }
+        get => _occlusion;
         set
         {
             _checkDisposed();
@@ -275,6 +295,8 @@ internal abstract class BaseAudioSource : IAudioSource
                 gain *= gain * gain;
                 AL.Source(SourceHandle, ALSourcef.Gain, _gain * gain);
             }
+
+            _occlusion = value;
             Master._checkAlError();
         }
     }
@@ -293,7 +315,7 @@ internal abstract class BaseAudioSource : IAudioSource
         {
             _checkDisposed();
             AL.Source(SourceHandle, ALSourcef.SecOffset, value);
-            Master._checkAlError();
+            Master._checkAlError($"Tried to set invalid playback position of {value:0.00}");
         }
     }
 
@@ -324,9 +346,11 @@ internal abstract class BaseAudioSource : IAudioSource
         }
     }
 
-    public void SetAuxiliary(IAuxiliaryAudio? audio)
+    void IAudioSource.SetAuxiliary(IAuxiliaryAudio? audio)
     {
         _checkDisposed();
+        if (!IsEfxSupported)
+            return;
 
         if (audio is AuxiliaryAudio impAudio)
         {

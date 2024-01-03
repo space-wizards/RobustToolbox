@@ -174,19 +174,21 @@ namespace Robust.Client.GameStates
 
         private void OnComponentAdded(AddedComponentEventArgs args)
         {
-            if (_resettingPredictedEntities)
-            {
-                var comp = args.ComponentType;
+            if (!_resettingPredictedEntities)
+                return;
 
-                if (comp.NetID == null)
-                    return;
+            var comp = args.ComponentType;
+            if (comp.NetID == null)
+                return;
 
-                _sawmill.Error($"""
-                    Added component {comp.Name} with net id {comp.NetID} while resetting predicted entities.
-                    Stack trace:
-                    {Environment.StackTrace}
-                    """);
-            }
+            if (_entityManager.IsClientSide(args.BaseArgs.Owner))
+                return;
+
+            _sawmill.Error($"""
+                Added component {comp.Name} to entity {_entityManager.ToPrettyString(args.BaseArgs.Owner)} while resetting predicted entities.
+                Stack trace:
+                {Environment.StackTrace}
+                """);
         }
 
         /// <inheritdoc />
@@ -341,7 +343,7 @@ namespace Robust.Client.GameStates
                 }
 
                 // If we were waiting for a new state, we are now applying it.
-                if (_processor.WaitingForFull)
+                if (curState.FromSequence == GameTick.Zero)
                 {
                     _processor.OnFullStateReceived();
                     _timing.LastProcessedTick = curState.ToSequence;
@@ -349,7 +351,10 @@ namespace Robust.Client.GameStates
                     PartialStateReset(curState, true);
                 }
                 else
+                {
+                    DebugTools.Assert(!_processor.WaitingForFull);
                     _timing.LastProcessedTick += 1;
+                }
 
                 _timing.CurTick = _timing.LastRealTick = _timing.LastProcessedTick;
 
@@ -530,7 +535,6 @@ namespace Robust.Client.GameStates
             using var __ = _timing.StartStateApplicationArea();
 
             // This is terrible, and I hate it. This also needs to run even when prediction is disabled.
-            _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
             _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
 
             if (!PredictionNeedsResetting)
@@ -663,14 +667,13 @@ namespace Robust.Client.GameStates
 
             foreach (var netEntity in createdEntities)
             {
-                var (createdEntity, meta) = _entityManager.GetEntityData(netEntity);
+                var (_, meta) = _entityManager.GetEntityData(netEntity);
                 var compData = _compDataPool.Get();
                 _outputData.Add(netEntity, compData);
 
                 foreach (var (netId, component) in meta.NetComponents)
                 {
-                    if (!component.NetSyncEnabled)
-                        continue;
+                    DebugTools.Assert(component.NetSyncEnabled);
 
                     var state = _entityManager.GetComponentState(bus, component, null, GameTick.Zero);
                     DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
@@ -981,16 +984,15 @@ namespace Robust.Client.GameStates
                 xformSys.DetachParentToNull(ent, xform);
 
                 // Then detach all children.
-                var childEnumerator = xform.ChildEnumerator;
-                while (childEnumerator.MoveNext(out var child))
+                foreach (var child in xform._children)
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
+                    xformSys.DetachParentToNull(child, xforms.GetComponent(child), xform);
 
                     if (deleteClientChildren
                         && !deleteClientEntities // don't add duplicates
-                        && _entities.IsClientSide(child.Value))
+                        && _entities.IsClientSide(child))
                     {
-                        _toDelete.Add(child.Value);
+                        _toDelete.Add(child);
                     }
                 }
 
@@ -1038,7 +1040,7 @@ namespace Robust.Client.GameStates
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
+                    xformSys.DetachParentToNull(child, xforms.GetComponent(child), xform);
                 }
 
                 // Finally, delete the entity.
@@ -1129,7 +1131,7 @@ namespace Robust.Client.GameStates
                         (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
                         containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container, null, true))
                     {
-                        container.Remove(ent.Value, _entities, xform, meta, false, true);
+                        containerSys.Remove((ent.Value, xform, meta), container, false, true);
                     }
 
                     meta._flags |= MetaDataFlags.Detached;
@@ -1217,7 +1219,9 @@ namespace Robust.Client.GameStates
 
                 foreach (var (id, comp) in meta.NetComponents)
                 {
-                    if (comp.NetSyncEnabled && !curState.NetComponents.Contains(id))
+                    DebugTools.Assert(comp.NetSyncEnabled);
+
+                    if (!curState.NetComponents.Contains(id))
                         _toRemove.Add(comp);
                 }
 
@@ -1427,7 +1431,7 @@ namespace Robust.Client.GameStates
             void _recursiveRemoveState(NetEntity netEntity, TransformComponent xform, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery)
             {
                 _processor._lastStateFullRep.Remove(netEntity);
-                foreach (var child in xform.ChildEntities)
+                foreach (var child in xform._children)
                 {
                     if (xformQuery.TryGetComponent(child, out var childXform) &&
                         metaQuery.TryGetComponent(child, out var childMeta))

@@ -20,17 +20,5 @@ namespace Robust.Shared.IoC.Exceptions
         {
             typeName = type.AssemblyQualifiedName;
         }
-
-        protected ImplementationConstructorException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-            typeName = info.GetString("typeName");
-        }
-
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            base.GetObjectData(info, context);
-
-            info.AddValue("typeName", typeName);
-        }
     }
 }

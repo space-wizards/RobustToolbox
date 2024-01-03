@@ -30,8 +30,19 @@ namespace Robust.Shared.GameObjects
         private EntityQuery<MetaDataComponent> _metaQuery;
         protected EntityQuery<TransformComponent> XformQuery;
 
-        private readonly Queue<MoveEvent> _gridMoves = new();
-        private readonly Queue<MoveEvent> _otherMoves = new();
+        public delegate void MoveEventHandler(ref MoveEvent ev);
+
+        /// <summary>
+        ///     Invoked as an alternative to broadcasting move events, which can be expensive.
+        ///     Systems which want to subscribe broadcast to <see cref="MoveEvent"/> (which you probably shouldn't)
+        ///     should subscribe to this instead
+        /// </summary>
+        public event MoveEventHandler? OnGlobalMoveEvent;
+
+        public void InvokeGlobalMoveEvent(ref MoveEvent ev)
+        {
+            OnGlobalMoveEvent?.Invoke(ref ev);
+        }
 
         public override void Initialize()
         {
@@ -94,42 +105,6 @@ namespace Robust.Shared.GameObjects
                     DetachParentToNull(entity, xform, gridXform);
                 else
                     SetParent(entity, xform, gridXform.MapUid.Value, mapTransform);
-            }
-        }
-
-        public void DeferMoveEvent(ref MoveEvent moveEvent)
-        {
-            if (EntityManager.HasComponent<MapGridComponent>(moveEvent.Sender))
-                _gridMoves.Enqueue(moveEvent);
-            else
-                _otherMoves.Enqueue(moveEvent);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-
-            // Process grid moves first.
-            Process(_gridMoves);
-            Process(_otherMoves);
-
-            void Process(Queue<MoveEvent> queue)
-            {
-                while (queue.TryDequeue(out var ev))
-                {
-                    if (EntityManager.Deleted(ev.Sender))
-                    {
-                        continue;
-                    }
-
-                    // Hopefully we can remove this when PVS gets updated to not use NaNs
-                    if (!ev.NewPosition.IsValid(EntityManager))
-                    {
-                        continue;
-                    }
-
-                    RaiseLocalEvent(ev.Sender, ref ev, true);
-                }
             }
         }
 
@@ -278,18 +253,13 @@ namespace Robust.Shared.GameObjects
             indices = _map.CoordinatesToTile(xform.GridUid.Value, grid, xform.Coordinates);
             return true;
         }
-
     }
 
     [ByRefEvent]
-    public readonly struct TransformStartupEvent
+    public readonly struct TransformStartupEvent(Entity<TransformComponent> entity)
     {
-        public readonly TransformComponent Component;
-
-        public TransformStartupEvent(TransformComponent component)
-        {
-            Component = component;
-        }
+        public readonly Entity<TransformComponent> Entity = entity;
+        public TransformComponent Component => Entity.Comp;
     }
 
     /// <summary>

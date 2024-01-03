@@ -22,6 +22,9 @@ namespace Robust.Server.ServerStatus
 
     internal sealed partial class StatusHost
     {
+        private const string AczInvalidateReasonCVar = "ACZ CVars changed, invalidating ACZ data.";
+        private const string AczInvalidateReasonCall = "InvalidateAcz() called, invalidating ACZ data.";
+
         // Lock used while working on the ACZ.
         private readonly SemaphoreSlim _aczLock = new(1, 1);
 
@@ -39,23 +42,28 @@ namespace Robust.Server.ServerStatus
 
         private void InitAcz()
         {
-            _cfg.OnValueChanged(CVars.AczStreamCompress, _ => InvalidateAcz());
-            _cfg.OnValueChanged(CVars.AczStreamCompressLevel, _ => InvalidateAcz());
-            _cfg.OnValueChanged(CVars.AczBlobCompress, _ => InvalidateAcz());
-            _cfg.OnValueChanged(CVars.AczBlobCompressLevel, _ => InvalidateAcz());
-            _cfg.OnValueChanged(CVars.AczBlobCompressSaveThreshold, _ => InvalidateAcz());
-            _cfg.OnValueChanged(CVars.AczManifestCompress, _ => InvalidateAcz());
-            _cfg.OnValueChanged(CVars.AczManifestCompressLevel, _ => InvalidateAcz());
+            _cfg.OnValueChanged(CVars.AczStreamCompress, _ => InvalidateAczCore(AczInvalidateReasonCVar));
+            _cfg.OnValueChanged(CVars.AczStreamCompressLevel, _ => InvalidateAczCore(AczInvalidateReasonCVar));
+            _cfg.OnValueChanged(CVars.AczBlobCompress, _ => InvalidateAczCore(AczInvalidateReasonCVar));
+            _cfg.OnValueChanged(CVars.AczBlobCompressLevel, _ => InvalidateAczCore(AczInvalidateReasonCVar));
+            _cfg.OnValueChanged(CVars.AczBlobCompressSaveThreshold, _ => InvalidateAczCore(AczInvalidateReasonCVar));
+            _cfg.OnValueChanged(CVars.AczManifestCompress, _ => InvalidateAczCore(AczInvalidateReasonCVar));
+            _cfg.OnValueChanged(CVars.AczManifestCompressLevel, _ => InvalidateAczCore(AczInvalidateReasonCVar));
         }
 
-        private void InvalidateAcz()
+        public void InvalidateAcz()
+        {
+            InvalidateAczCore(AczInvalidateReasonCall);
+        }
+
+        private void InvalidateAczCore(string reason)
         {
             using var _ = _aczLock.WaitGuard();
 
             if (_aczPrepared == null)
                 return;
 
-            _aczSawmill.Info("ACZ CVars changed, invalidating ACZ data.");
+            _aczSawmill.Info(reason);
 
             _aczPrepared = null;
             _aczPrepareAttempted = false;

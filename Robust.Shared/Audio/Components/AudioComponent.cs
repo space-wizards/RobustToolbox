@@ -56,6 +56,8 @@ public sealed partial class AudioComponent : Component, IAudioSource
     [DataField(required: true)]
     public string FileName = string.Empty;
 
+    public bool Loaded = false;
+
     /// <summary>
     /// Audio params. Set this if you want to adjust default volume, max distance, etc.
     /// </summary>
@@ -89,6 +91,9 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     /// <inheritdoc />
     public void StopPlaying() => Source.StopPlaying();
+
+    /// <inheritdoc />
+    public void Restart() => Source.Restart();
 
     /// <summary>
     /// <see cref="IAudioSource.Playing"/>

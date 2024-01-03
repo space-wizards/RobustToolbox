@@ -57,6 +57,7 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly CollisionWakeSystem _wakeSystem = default!;
 
         private int _substeps;
 
@@ -65,6 +66,9 @@ namespace Robust.Shared.Physics.Systems
         private EntityQuery<FixturesComponent> _fixturesQuery;
         protected EntityQuery<PhysicsComponent> PhysicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;
+        private EntityQuery<CollideOnAnchorComponent> _anchorQuery;
+        protected EntityQuery<PhysicsMapComponent> PhysMapQuery;
+        protected EntityQuery<MapComponent> MapQuery;
 
         public override void Initialize()
         {
@@ -73,6 +77,9 @@ namespace Robust.Shared.Physics.Systems
             _fixturesQuery = GetEntityQuery<FixturesComponent>();
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
+            _anchorQuery = GetEntityQuery<CollideOnAnchorComponent>();
+            PhysMapQuery = GetEntityQuery<PhysicsMapComponent>();
+            MapQuery = GetEntityQuery<MapComponent>();
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
@@ -180,8 +187,8 @@ namespace Robust.Shared.Physics.Systems
             var xformQuery = GetEntityQuery<TransformComponent>();
             var jointQuery = GetEntityQuery<JointComponent>();
 
-            TryComp(_mapManager.GetMapEntityId(oldMapId), out PhysicsMapComponent? oldMap);
-            TryComp(_mapManager.GetMapEntityId(newMapId), out PhysicsMapComponent? newMap);
+            PhysMapQuery.TryGetComponent(_mapManager.GetMapEntityId(oldMapId), out var oldMap);
+            PhysMapQuery.TryGetComponent(_mapManager.GetMapEntityId(newMapId), out var newMap);
 
             RecursiveMapUpdate(uid, xform, body, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
         }
@@ -217,13 +224,13 @@ namespace Robust.Shared.Physics.Systems
             if (jointQuery.TryGetComponent(uid, out var joint))
                 _joints.ClearJoints(uid, joint);
 
-            var childEnumerator = xform.ChildEnumerator;
-            while (childEnumerator.MoveNext(out var child))
+
+            foreach (var child in xform._children)
             {
                 if (xformQuery.TryGetComponent(child, out var childXform))
                 {
                     bodyQuery.TryGetComponent(child, out var childBody);
-                    RecursiveMapUpdate(child.Value, childXform, childBody, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
+                    RecursiveMapUpdate(child, childXform, childBody, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
                 }
             }
         }
@@ -254,18 +261,13 @@ namespace Robust.Shared.Physics.Systems
 
         private void UpdateMapAwakeState(EntityUid uid, PhysicsComponent body)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(uid).MapID;
-            if (mapId == MapId.Nullspace)
+            if (Transform(uid).MapUid is not {} map)
                 return;
-            var tempQualifier = _mapManager.GetMapEntityId(mapId);
+
             if (body.Awake)
-            {
-                AddAwakeBody(uid, body, tempQualifier);
-            }
+                AddAwakeBody(uid, body, map);
             else
-            {
-                RemoveSleepBody(uid, body, tempQualifier);
-            }
+                RemoveSleepBody(uid, body, map);
         }
 
         private void HandleContainerRemoved(EntityUid uid, PhysicsComponent physics, EntGotRemovedFromContainerMessage message)
@@ -274,7 +276,7 @@ namespace Robust.Shared.Physics.Systems
             if (MetaData(uid).EntityLifeStage >= EntityLifeStage.Terminating) return;
 
             // If this entity is only meant to collide when anchored, return early.
-            if (TryComp(uid, out CollideOnAnchorComponent? collideComp) && collideComp.Enable)
+            if (_anchorQuery.TryGetComponent(uid, out var collideComp) && collideComp.Enable)
                 return;
 
             WakeBody(uid, body: physics);
@@ -328,8 +330,6 @@ namespace Robust.Shared.Physics.Systems
                         FinalStep(comp);
                     }
                 }
-
-                _traversal.ProcessMovement();
             }
         }
 

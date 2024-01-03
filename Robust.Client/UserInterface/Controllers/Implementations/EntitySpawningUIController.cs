@@ -213,7 +213,12 @@ public sealed class EntitySpawningUIController : UIController
             _shownEntities.Add(prototype);
         }
 
-        _shownEntities.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+        _shownEntities.Sort((a, b) => {
+                var namesComparation = string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+                if (namesComparation == 0)
+                    return string.Compare(a.EditorSuffix, b.EditorSuffix, StringComparison.Ordinal);
+                return namesComparation;
+        });
 
         _window.PrototypeList.TotalItemCount = _shownEntities.Count;
         _window.PrototypeScrollContainer.SetScrollValue(new Vector2(0, 0));

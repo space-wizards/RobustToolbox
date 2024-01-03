@@ -97,6 +97,8 @@ entities:
             entMan.EnsureComponent<PhysicsMapComponent>(mapUid);
             entMan.EnsureComponent<BroadphaseComponent>(mapUid);
 
+            var traversal = entMan.System<SharedGridTraversalSystem>();
+            traversal.Enabled = false;
             var mapLoad = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>();
             if (!mapLoad.TryLoad(mapId, "/TestMap.yml", out var root)
                 || root.FirstOrDefault() is not { Valid:true } geid)
@@ -105,8 +107,9 @@ entities:
                 return;
             }
 
-            var entity = entMan.GetComponent<TransformComponent>(geid).Children.Single().Owner;
+            var entity = entMan.GetComponent<TransformComponent>(geid)._children.Single();
             var c = entMan.GetComponent<MapDeserializeTestComponent>(entity);
+            traversal.Enabled = true;
 
             Assert.That(c.Bar, Is.EqualTo(2));
             Assert.That(c.Foo, Is.EqualTo(3));

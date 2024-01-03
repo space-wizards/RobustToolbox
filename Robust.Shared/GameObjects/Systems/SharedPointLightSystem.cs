@@ -13,13 +13,19 @@ public abstract class SharedPointLightSystem : EntitySystem
 
     public abstract bool RemoveLightDeferred(EntityUid uid);
 
-    public void SetCastShadows(EntityUid uid, bool value, SharedPointLightComponent? comp = null)
+    protected abstract void UpdatePriority(EntityUid uid, SharedPointLightComponent comp, MetaDataComponent meta);
+
+    public void SetCastShadows(EntityUid uid, bool value, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!ResolveLight(uid, ref comp) || value == comp.CastShadows)
             return;
 
         comp.CastShadows = value;
-        Dirty(uid, comp);
+        if (!Resolve(uid, ref meta))
+            return;
+
+        Dirty(uid, comp, meta);
+        UpdatePriority(uid, comp, meta);
     }
 
     public void SetColor(EntityUid uid, Color value, SharedPointLightComponent? comp = null)
@@ -31,14 +37,18 @@ public abstract class SharedPointLightSystem : EntitySystem
         Dirty(uid, comp);
     }
 
-    public virtual void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null)
+    public virtual void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!ResolveLight(uid, ref comp) || enabled == comp.Enabled)
             return;
 
         comp.Enabled = enabled;
         RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
-        Dirty(uid, comp);
+        if (!Resolve(uid, ref meta))
+            return;
+
+        Dirty(uid, comp, meta);
+        UpdatePriority(uid, comp, meta);
     }
 
     public void SetEnergy(EntityUid uid, float value, SharedPointLightComponent? comp = null)
@@ -50,13 +60,17 @@ public abstract class SharedPointLightSystem : EntitySystem
         Dirty(uid, comp);
     }
 
-    public virtual void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null)
+    public virtual void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.Radius, radius))
             return;
 
         comp.Radius = radius;
-        Dirty(uid, comp);
+        if (!Resolve(uid, ref meta))
+            return;
+
+        Dirty(uid, comp, meta);
+        UpdatePriority(uid, comp, meta);
     }
 
     public void SetSoftness(EntityUid uid, float value, SharedPointLightComponent? comp = null)

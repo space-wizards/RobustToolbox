@@ -307,31 +307,29 @@ public sealed partial class EntityLookupSystem
 
     private void RecursiveAdd<T>(EntityUid uid, ref ValueList<T> toAdd, EntityQuery<T> query) where T : IComponent
     {
-        var childEnumerator = _xformQuery.GetComponent(uid).ChildEnumerator;
-
-        while (childEnumerator.MoveNext(out var child))
+        var xform = _xformQuery.GetComponent(uid);
+        foreach (var child in xform._children)
         {
-            if (query.TryGetComponent(child.Value, out var compies))
+            if (query.TryGetComponent(child, out var compies))
             {
                 toAdd.Add(compies);
             }
 
-            RecursiveAdd(child.Value, ref toAdd, query);
+            RecursiveAdd(child, ref toAdd, query);
         }
     }
 
     private void RecursiveAdd<T>(EntityUid uid, ref ValueList<Entity<T>> toAdd, EntityQuery<T> query) where T : IComponent
     {
-        var childEnumerator = _xformQuery.GetComponent(uid).ChildEnumerator;
-
-        while (childEnumerator.MoveNext(out var child))
+        var xform = _xformQuery.GetComponent(uid);
+        foreach (var child in xform._children)
         {
-            if (query.TryGetComponent(child.Value, out var compies))
+            if (query.TryGetComponent(child, out var compies))
             {
-                toAdd.Add((child.Value, compies));
+                toAdd.Add((child, compies));
             }
 
-            RecursiveAdd(child.Value, ref toAdd, query);
+            RecursiveAdd(child, ref toAdd, query);
         }
     }
 
@@ -353,7 +351,7 @@ public sealed partial class EntityLookupSystem
         {
             if (!_containerQuery.TryGetComponent(comp, out var conManager)) continue;
 
-            foreach (var con in conManager.GetAllContainers())
+            foreach (var con in _container.GetAllContainers(comp, conManager))
             {
                 foreach (var contained in con.ContainedEntities)
                 {
@@ -721,10 +719,10 @@ public sealed partial class EntityLookupSystem
         return entities;
     }
 
-    public void GetEntitiesInRange(Type type, MapCoordinates coordinates, float range, HashSet<Entity<IComponent>> entities)
+    public void GetEntitiesInRange(Type type, MapCoordinates coordinates, float range, HashSet<Entity<IComponent>> entities, LookupFlags flags = DefaultFlags)
     {
         DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
-        GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities);
+        GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities, flags);
     }
 
     [Obsolete]

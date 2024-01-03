@@ -28,6 +28,8 @@ public sealed partial class PrototypeLayerData
     [DataField("color")] public Color? Color;
     [DataField("map")] public HashSet<string>? MapKeys;
     [DataField("renderingStrategy")] public LayerRenderingStrategy? RenderingStrategy;
+
+    [DataField] public bool Cycle;
 }
 
 [Serializable, NetSerializable]

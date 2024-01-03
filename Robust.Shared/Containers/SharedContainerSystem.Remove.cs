@@ -1,6 +1,10 @@
+using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers;
 
@@ -30,12 +34,80 @@ public abstract partial class SharedContainerSystem
         EntityCoordinates? destination = null,
         Angle? localRotation = null)
     {
+        var (uid, xform, meta) = toRemove;
+
         // Cannot Use Resolve(ref toInsert) as the physics component is optional
-        if (!Resolve(toRemove.Owner, ref toRemove.Comp1, ref toRemove.Comp2))
+        if (!Resolve(uid, ref xform, ref meta))
             return false;
 
-        // TODO move logic over to the system.
-        return container.Remove(toRemove, EntityManager, toRemove, toRemove, reparent, force, destination, localRotation);
+        DebugTools.AssertNotNull(container.Manager);
+        DebugTools.Assert(Exists(toRemove));
+
+        if (!force && !CanRemove(toRemove, container))
+            return false;
+
+        if (force && !container.Contains(toRemove))
+        {
+            DebugTools.Assert("Attempted to force remove an entity that was never inside of the container.");
+            return false;
+        }
+
+        // Terminating entities should not get re-parented. However, this removal will still be forced when
+        // detaching to null-space just before deletion happens.
+        if (meta.EntityLifeStage >= EntityLifeStage.Terminating && (!force || reparent))
+        {
+            Log.Error($"Attempting to remove an entity from a container while it is terminating. Entity: {ToPrettyString(toRemove, meta)}. Container: {ToPrettyString(container.Owner)}. Trace: {Environment.StackTrace}");
+            return false;
+        }
+
+        DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating || (force && !reparent));
+        DebugTools.Assert(xform.Broadphase == null || !xform.Broadphase.Value.IsValid());
+        DebugTools.Assert(!xform.Anchored);
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0);
+        DebugTools.Assert(!TryComp(toRemove, out PhysicsComponent? phys) || (!phys.Awake && !phys.CanCollide));
+
+        // Unset flag (before parent change events are raised).
+        meta.Flags &= ~MetaDataFlags.InContainer;
+
+        // Implementation specific remove logic
+        container.InternalRemove(toRemove, EntityManager);
+
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0x0);
+        var oldParent = xform.ParentUid;
+
+        if (destination != null)
+        {
+            // Container ECS when.
+            _transform.SetCoordinates(toRemove, xform, destination.Value, localRotation);
+        }
+        else if (reparent)
+        {
+            // Container ECS when.
+            AttachParentToContainerOrGrid((toRemove, xform));
+            if (localRotation != null)
+                _transform.SetLocalRotation(uid, localRotation.Value, xform);
+        }
+
+        // Add to new broadphase
+        if (xform.ParentUid == oldParent // move event should already have handled it
+            && xform.Broadphase == null) // broadphase explicitly invalid?
+        {
+            _lookup.FindAndAddToEntityTree(toRemove, xform: xform);
+        }
+
+        if (TryComp<JointComponent>(toRemove, out var jointComp))
+        {
+            _joint.RefreshRelay(toRemove, jointComp);
+        }
+
+        // Raise container events (after re-parenting and internal remove).
+        RaiseLocalEvent(container.Owner, new EntRemovedFromContainerMessage(toRemove, container), true);
+        RaiseLocalEvent(toRemove, new EntGotRemovedFromContainerMessage(toRemove, container), false);
+
+        DebugTools.Assert(destination == null || xform.Coordinates.Equals(destination.Value));
+
+        Dirty(container.Owner, container.Manager);
+        return true;
     }
 
     /// <summary>

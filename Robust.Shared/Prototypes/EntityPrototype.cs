@@ -194,13 +194,16 @@ namespace Robust.Shared.Prototypes
         }
 
         internal static void LoadEntity(
-            EntityPrototype? prototype,
-            EntityUid entity,
+            Entity<MetaDataComponent> ent,
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
             IEntityLoadContext? context) //yeah officer this method right here
         {
+            var (entity, meta) = ent;
+            var prototype = meta.EntityPrototype;
+            var ctx = context as ISerializationContext;
+
             if (prototype != null)
             {
                 foreach (var (name, entry) in prototype.Components)
@@ -209,8 +212,11 @@ namespace Robust.Shared.Prototypes
                         continue;
 
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
+                    var compReg = factory.GetRegistration(name);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, ctx);
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
+                    if (!entry.Component.NetSyncEnabled && compReg.NetID is {} netId)
+                        meta.NetComponents.Remove(netId);
                 }
             }
 
@@ -232,12 +238,14 @@ namespace Robust.Shared.Prototypes
                             $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
                     }
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, data, context as ISerializationContext);
+                    var compReg = factory.GetRegistration(name);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, ctx);
                 }
             }
         }
 
         public static void EnsureCompExistsAndDeserialize(EntityUid entity,
+            ComponentRegistration compReg,
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
@@ -245,8 +253,6 @@ namespace Robust.Shared.Prototypes
             IComponent data,
             ISerializationContext? context)
         {
-            var compReg = factory.GetRegistration(compName);
-
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
                 var newComponent = factory.GetComponent(compName);

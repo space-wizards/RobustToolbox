@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -198,6 +199,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+#if DEBUG
     internal sealed class ShowRayCommand : LocalizedCommands
     {
         [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
@@ -224,6 +226,7 @@ namespace Robust.Client.Console.Commands
             mgr.DebugRayLifetime = TimeSpan.FromSeconds(duration);
         }
     }
+#endif
 
     internal sealed class DisconnectCommand : LocalizedCommands
     {
@@ -492,9 +495,9 @@ namespace Robust.Client.Console.Commands
             }
         }
 
-        internal static List<(string, string)> PropertyValuesFor(Control control)
+        internal static List<MemberInfo> GetAllMembers(Control control)
         {
-            var members = new List<(string, string)>();
+            var members = new List<MemberInfo>();
             var type = control.GetType();
 
             foreach (var fieldInfo in type.GetAllFields())
@@ -504,7 +507,7 @@ namespace Robust.Client.Console.Commands
                     continue;
                 }
 
-                members.Add((fieldInfo.Name, fieldInfo.GetValue(control)?.ToString() ?? "null"));
+                members.Add(fieldInfo);
             }
 
             foreach (var propertyInfo in type.GetAllProperties())
@@ -514,7 +517,19 @@ namespace Robust.Client.Console.Commands
                     continue;
                 }
 
-                members.Add((propertyInfo.Name, propertyInfo.GetValue(control)?.ToString() ?? "null"));
+                members.Add(propertyInfo);
+            }
+
+            return members;
+        }
+
+        internal static List<(string, string)> PropertyValuesFor(Control control)
+        {
+            var members = new List<(string, string)>();
+
+            foreach (var fieldInfo in GetAllMembers(control))
+            {
+                members.Add((fieldInfo.Name, fieldInfo.GetValue(control)?.ToString() ?? "null"));
             }
 
             foreach (var (attachedProperty, value) in control.AllAttachedProperties)
@@ -525,6 +540,35 @@ namespace Robust.Client.Console.Commands
 
             members.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
             return members;
+        }
+
+        internal static Dictionary<string, List<(string, string)>> PropertyValuesForInheritance(Control control)
+        {
+            var returnVal = new Dictionary<string, List<(string, string)>>();
+            var engine = typeof(Control).Assembly;
+
+            foreach (var member in GetAllMembers(control))
+            {
+                var type = member.DeclaringType!;
+                var cname = type.Assembly == engine ? type.Name : type.ToString();
+
+                if (type != typeof(Control))
+                    cname = $"Control > {cname}";
+
+                returnVal.GetOrNew(cname).Add((member.Name, member.GetValue(control)?.ToString() ?? "null"));
+            }
+
+            foreach (var (attachedProperty, value) in control.AllAttachedProperties)
+            {
+                var cname = $"Attached > {attachedProperty.OwningType.Name}";
+                returnVal.GetOrNew(cname).Add((attachedProperty.Name, value?.ToString() ?? "null"));
+            }
+
+            foreach (var v in returnVal.Values)
+            {
+                v.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
+            }
+            return returnVal;
         }
     }
 

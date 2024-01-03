@@ -92,11 +92,9 @@ public sealed class Gravity2DController : VirtualController
         }
 
         var xform = xformQuery.GetComponent(uid);
-        var childEnumerator = xform.ChildEnumerator;
-
-        while (childEnumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            WakeBodiesRecursive(child.Value, xformQuery, bodyQuery);
+            WakeBodiesRecursive(child, xformQuery, bodyQuery);
         }
     }
 

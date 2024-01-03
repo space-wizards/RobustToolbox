@@ -255,7 +255,7 @@ internal sealed class MidiRenderer : IMidiRenderer
         _taskManager = taskManager;
         _midiSawmill = midiSawmill;
 
-        Source = clydeAudio.CreateBufferedAudioSource(Buffers, true);
+        Source = clydeAudio.CreateBufferedAudioSource(Buffers, true) ?? DummyBufferedAudioSource.Instance;
         Source.SampleRate = SampleRate;
         _settings = settings;
         _soundFontLoader = soundFontLoader;

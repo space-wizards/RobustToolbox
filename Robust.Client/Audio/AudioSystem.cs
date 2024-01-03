@@ -62,6 +62,18 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             _zOffset = value;
             _audio.SetZOffset(value);
+
+            var query = AllEntityQuery<AudioComponent>();
+
+            while (query.MoveNext(out var audio))
+            {
+                // Pythagoras back to normal then adjust.
+                var maxDistance = GetAudioDistance(audio.Params.MaxDistance);
+                var refDistance = GetAudioDistance(audio.Params.ReferenceDistance);
+
+                audio.MaxDistance = maxDistance;
+                audio.ReferenceDistance = refDistance;
+            }
         }
     }
 
@@ -118,7 +130,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     public void SetMasterVolume(float value)
     {
-        _audio.SetMasterVolume(value);
+        _audio.SetMasterGain(value);
     }
 
     public override void Shutdown()
@@ -146,12 +158,24 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return;
         }
 
+        // Source has already been set
+        if (component.Loaded)
+        {
+            return;
+        }
+
         if (!TryGetAudio(component.FileName, out var audioResource))
         {
             Log.Error($"Error creating audio source for {audioResource}, can't find file {component.FileName}");
             return;
         }
 
+        SetupSource(component, audioResource);
+        component.Loaded = true;
+    }
+
+    private void SetupSource(AudioComponent component, AudioResource audioResource, TimeSpan? length = null)
+    {
         var source = _audio.CreateAudioSource(audioResource);
 
         if (source == null)
@@ -170,8 +194,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;
 
+        length ??= GetAudioLength(component.FileName);
+
         // If audio came into range then start playback at the correct position.
-        var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % GetAudioLength(component.FileName).TotalSeconds;
+        var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % length.Value.TotalSeconds;
 
         if (offset > 0)
         {
@@ -300,7 +326,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
                     return;
                 }
 
-                var paramsGain = MathF.Pow(10, component.Params.Volume / 10);
+                var paramsGain = VolumeToGain(component.Params.Volume);
 
                 // Thought I'd never have to manually calculate gain again but this is the least
                 // unpleasant audio I could get at the moment.
@@ -325,19 +351,19 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var delta = worldPos - listener.Position;
         var distance = delta.Length();
 
-        if (distance > 0f && distance < 0.01f)
-        {
-            worldPos = listener.Position;
-            delta = Vector2.Zero;
-            distance = 0f;
-        }
-
         // Out of range so just clip it for us.
         if (distance > component.MaxDistance)
         {
             // Still keeps the source playing, just with no volume.
             component.Gain = 0f;
             return;
+        }
+
+        if (distance > 0f && distance < 0.01f)
+        {
+            worldPos = listener.Position;
+            delta = Vector2.Zero;
+            distance = 0f;
         }
 
         // Update audio occlusion
@@ -383,18 +409,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return false;
     }
 
-    private bool TryCreateAudioSource(AudioStream stream, [NotNullWhen(true)] out IAudioSource? source)
+    private bool TryGetAudio(AudioStream stream, [NotNullWhen(true)] out AudioResource? audio)
     {
-        if (!Timing.IsFirstTimePredicted)
-        {
-            source = null;
-            Log.Error($"Tried to create audio source outside of prediction!");
-            DebugTools.Assert(false);
-            return false;
-        }
+        if (_resourceCache.TryGetResource(stream, out audio))
+            return true;
 
-        source = _audio.CreateAudioSource(stream);
-        return source != null;
+        Log.Error($"Server failed to play audio stream {stream.Title}.");
+        return false;
     }
 
     public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityCoordinates coordinates,
@@ -411,7 +432,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
     {
-        if (Timing.IsFirstTimePredicted || sound == null)
+        if (Timing.IsFirstTimePredicted && sound != null)
             return PlayEntity(sound, Filter.Local(), source, false, audioParams);
 
         return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
@@ -419,7 +440,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user, AudioParams? audioParams = null)
     {
-        if (Timing.IsFirstTimePredicted || sound == null)
+        if (Timing.IsFirstTimePredicted && sound != null)
             return PlayStatic(sound, Filter.Local(), coordinates, false, audioParams);
 
         return null;
@@ -449,7 +470,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? PlayGlobal(AudioStream stream, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayGlobal(AudioStream stream, AudioParams? audioParams = null)
     {
         var (entity, component) = CreateAndStartPlayingStream(audioParams, stream);
         component.Global = true;
@@ -484,8 +505,14 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="entity">The entity "emitting" the audio.</param>
     /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
     {
+        if (TerminatingOrDeleted(entity))
+        {
+            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entity)}");
+            return null;
+        }
+
         var playing = CreateAndStartPlayingStream(audioParams, stream);
         _xformSys.SetCoordinates(playing.Entity, new EntityCoordinates(entity, Vector2.Zero));
 
@@ -519,8 +546,14 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
+        if (TerminatingOrDeleted(coordinates.EntityId))
+        {
+            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}");
+            return null;
+        }
+
         var playing = CreateAndStartPlayingStream(audioParams, stream);
         _xformSys.SetCoordinates(playing.Entity, coordinates);
         return playing;
@@ -548,6 +581,16 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)
     {
         return PlayGlobal(filename, audioParams);
+    }
+
+    public override void LoadStream<T>(AudioComponent component, T stream)
+    {
+        if (stream is AudioStream audioStream)
+        {
+            TryGetAudio(audioStream, out var audio);
+            SetupSource(component, audio!, audioStream.Length);
+            component.Loaded = true;
+        }
     }
 
     /// <inheritdoc />
@@ -584,7 +627,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         var audioP = audioParams ?? AudioParams.Default;
         var entity = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
-        var comp = SetupAudio(entity, stream.Name!, audioP);
+        var comp = SetupAudio(entity, null, audioP, stream.Length);
+        LoadStream(comp, stream);
         EntityManager.InitializeAndStartEntity(entity);
         var source = comp.Source;
 
@@ -593,8 +637,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
         offset = Math.Clamp(offset, 0f, (float) stream.Length.TotalSeconds - 0.01f);
         source.PlaybackPosition = offset;
 
-        ApplyAudioParams(audioP, comp);
-        comp.Params = audioP;
+        // For server we will rely on the adjusted one but locally we will have to adjust it ourselves.
+        ApplyAudioParams(comp.Params, comp);
         source.StartPlaying();
         return (entity, comp);
     }
@@ -607,8 +651,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
         source.Pitch = audioParams.Pitch;
         source.Volume = audioParams.Volume;
         source.RolloffFactor = audioParams.RolloffFactor;
-        source.MaxDistance = audioParams.MaxDistance;
-        source.ReferenceDistance = audioParams.ReferenceDistance;
+        source.MaxDistance = GetAudioDistance(audioParams.MaxDistance);
+        source.ReferenceDistance = GetAudioDistance(audioParams.ReferenceDistance);
         source.Looping = audioParams.Loop;
     }
 

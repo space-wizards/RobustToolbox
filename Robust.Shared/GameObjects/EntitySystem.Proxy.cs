@@ -141,9 +141,7 @@ public partial class EntitySystem
         EntityManager.Dirty(component.Owner, component, meta);
     }
 
-    /// <summary>
-    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
-    /// </summary>
+    /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
     {
@@ -160,20 +158,37 @@ public partial class EntitySystem
         if (comp == null && !EntityManager.TryGetComponent(ent.Owner, out comp))
             return;
 
-        EntityManager.Dirty(ent.Owner, comp, meta);
+        EntityManager.Dirty(ent, comp, meta);
     }
 
-    /// <summary>
-    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
-    /// </summary>
+    /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty<T>(Entity<T, MetaDataComponent> ent) where T : IComponent?
+    protected void Dirty<T1, T2>(Entity<T1, T2> ent, MetaDataComponent? meta = null)
+        where T1 : IComponent
+        where T2 : IComponent
     {
-        var comp = ent.Comp1;
-        if (comp == null && !EntityManager.TryGetComponent(ent.Owner, out comp))
-            return;
+        EntityManager.Dirty(ent, meta);
+    }
 
-        EntityManager.Dirty(ent.Owner, comp, ent.Comp2);
+    /// <inheritdoc cref="Dirty{T}"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty<T1, T2, T3>(Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
+        where T1 : IComponent
+        where T2 : IComponent
+        where T3 : IComponent
+    {
+        EntityManager.Dirty(ent, meta);
+    }
+
+    /// <inheritdoc cref="Dirty{T}"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty<T1, T2, T3, T4>(Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
+        where T1 : IComponent
+        where T2 : IComponent
+        where T3 : IComponent
+        where T4 : IComponent
+    {
+        EntityManager.Dirty(ent, meta);
     }
 
     /// <summary>
@@ -371,12 +386,12 @@ public partial class EntitySystem
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata)
-        => EntityManager.ToPrettyString(uid, metadata);
+        => EntityManager.ToPrettyString((uid, metadata));
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityStringRepresentation ToPrettyString(EntityUid uid)
-        => EntityManager.ToPrettyString(uid);
+    protected EntityStringRepresentation ToPrettyString(Entity<MetaDataComponent?> entity)
+        => EntityManager.ToPrettyString(entity);
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -941,13 +956,13 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetEntity(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity)
+    protected bool TryGetEntity(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity)
     {
         return EntityManager.TryGetEntity(nEntity, out entity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
+    protected bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
     {
         return EntityManager.TryGetEntity(nEntity, out entity);
     }

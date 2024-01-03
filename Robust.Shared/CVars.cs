@@ -184,11 +184,25 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// If false, this will run more parts of PVS synchronously. This will generally slow it down, can be useful
+        /// for collecting tick timing metrics.
+        /// </summary>
+        public static readonly CVarDef<bool> NetPvsAsync =
+            CVarDef.Create("net.pvs_async", true, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
         /// View size to take for PVS calculations,
         /// as the size of the sides of a square centered on the view points of clients.
         /// </summary>
         public static readonly CVarDef<float> NetMaxUpdateRange =
-            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("net.pvs_range", 25f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Chunks whose centre is further than this distance away from a player's eye will contain fewer entities.
+        /// This has no effect if it is smaller than <see cref="NetMaxUpdateRange"/>
+        /// </summary>
+        public static readonly CVarDef<float> NetLowLodRange =
+            CVarDef.Create("net.low_lod_distance", 100f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Maximum allowed delay between the current tick and a client's last acknowledged tick before we send the
@@ -222,7 +236,7 @@ namespace Robust.Shared
         /// <summary>
         /// ZSTD compression level to use when compressing game states. Used by both networking and replays.
         /// </summary>
-        public static readonly CVarDef<int> NetPVSCompressLevel =
+        public static readonly CVarDef<int> NetPvsCompressLevel =
             CVarDef.Create("net.pvs_compress_level", 3, CVar.ARCHIVE);
 
         /// <summary>
@@ -1030,7 +1044,7 @@ namespace Robust.Shared
         /// Master volume for audio output.
         /// </summary>
         public static readonly CVarDef<float> AudioMasterVolume =
-            CVarDef.Create("audio.mastervolume", 1.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("audio.mastervolume", 0.50f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Maximum raycast distance for audio occlusion.
@@ -1173,6 +1187,11 @@ namespace Robust.Shared
         public static readonly CVarDef<string> InterfaceTheme =
             CVarDef.Create("interface.theme", "", CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        /// <summary>
+        /// Should UI have audio at all.
+        /// </summary>
+        public static readonly CVarDef<bool> InterfaceAudio =
+            CVarDef.Create("interface.audio", true, CVar.REPLICATED);
 
         /// <summary>
         ///Minimum resolution to start clamping autoscale to 1
@@ -1302,7 +1321,7 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<float> MidiVolume =
-            CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("midi.volume", 0.50f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * HUB
@@ -1468,14 +1487,14 @@ namespace Robust.Shared
         /// <summary>
         /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
-        public static readonly CVarDef<int> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size",
-            1024 * 256, CVar.ARCHIVE);
+        public static readonly CVarDef<long> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size",
+            1024L * 256, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum uncompressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
-        public static readonly CVarDef<int> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
-            1024 * 1024, CVar.ARCHIVE);
+        public static readonly CVarDef<long> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
+            1024L * 1024, CVar.ARCHIVE);
 
         /// <summary>
         /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data

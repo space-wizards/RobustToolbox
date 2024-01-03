@@ -341,6 +341,11 @@ namespace Robust.Shared.Console
 
                 return ValueTask.FromResult(CompletionResult.Empty);
             }
+
+            public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+            {
+                return CompletionCallback?.Invoke(shell, args) ?? CompletionResult.Empty;
+            }
         }
     }
 }

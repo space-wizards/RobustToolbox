@@ -125,12 +125,6 @@ namespace Robust.Client.Graphics.Clyde
                 public GlfwException(string message, Exception inner) : base(message, inner)
                 {
                 }
-
-                protected GlfwException(
-                    SerializationInfo info,
-                    StreamingContext context) : base(info, context)
-                {
-                }
             }
         }
     }

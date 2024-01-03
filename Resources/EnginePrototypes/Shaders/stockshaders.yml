@@ -12,3 +12,8 @@
   id: bgra
   kind: source
   path: "/Shaders/Internal/bgra.swsl"
+
+- type: shader
+  id: ColorPicker
+  kind: source
+  path: "/Shaders/color_picker.swsl"

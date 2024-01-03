@@ -71,7 +71,7 @@ namespace Robust.Server.GameObjects
 
                     foreach (var (player, state) in ui.PlayerStateOverrides)
                     {
-                        RaiseNetworkEvent(state, player.ConnectedClient);
+                        RaiseNetworkEvent(state, player.Channel);
                     }
 
                     if (ui.LastStateMsg == null)
@@ -80,7 +80,7 @@ namespace Robust.Server.GameObjects
                     foreach (var session in ui.SubscribedSessions)
                     {
                         if (!ui.PlayerStateOverrides.ContainsKey(session))
-                            RaiseNetworkEvent(ui.LastStateMsg, session.ConnectedClient);
+                            RaiseNetworkEvent(ui.LastStateMsg, session.Channel);
                     }
                 }
             }
@@ -324,7 +324,7 @@ namespace Robust.Server.GameObjects
             var msg = new BoundUIWrapMessage(GetNetEntity(bui.Owner), message, bui.UiKey);
             foreach (var session in bui.SubscribedSessions)
             {
-                RaiseNetworkEvent(msg, session.ConnectedClient);
+                RaiseNetworkEvent(msg, session.Channel);
             }
         }
 
@@ -347,7 +347,7 @@ namespace Robust.Server.GameObjects
             if (!bui.SubscribedSessions.Contains(session))
                 return false;
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), message, bui.UiKey), session.ConnectedClient);
+            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), message, bui.UiKey), session.Channel);
             return true;
         }
 

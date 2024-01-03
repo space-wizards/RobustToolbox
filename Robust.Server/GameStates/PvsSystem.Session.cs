@@ -24,6 +24,8 @@ internal sealed partial class PvsSystem
 
     internal readonly Dictionary<ICommonSession, PvsSession> PlayerData = new();
 
+    private List<ICommonSession> _disconnected = new();
+
     private void SendStateUpdate(ICommonSession session, PvsThreadResources resources)
     {
         var data = GetOrNewPvsSession(session);
@@ -174,13 +176,8 @@ internal sealed partial class PvsSystem
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
     {
-        if (e.NewStatus != SessionStatus.Disconnected)
-            return;
-
-        if (!PlayerData.Remove(e.Session, out var session))
-            return;
-
-        ClearSendHistory(session);
+        if (e.NewStatus == SessionStatus.Disconnected)
+            _disconnected.Add(e.Session);
     }
 
     private void ClearSendHistory(PvsSession session)

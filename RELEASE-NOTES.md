@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 201.0.0
+
+### Breaking changes
+
+* The `zCircleGradient` shader function arguments have changed. It now requires a pixel-size to ensure that the gradient is properly entered.
+
+### Bugfixes
+
+* Fixed some PVS null reference errors.
+
+
 ## 200.0.0
 
 ### Breaking changes

@@ -114,7 +114,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         SubscribeLocalEvent<BroadphaseComponent, EntityTerminatingEvent>(OnBroadphaseTerminating);
         SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
-        SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
         SubscribeLocalEvent<MapChangedEvent>(OnMapChange);
 
         _transform.OnGlobalMoveEvent += OnMove;
@@ -191,12 +190,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
         {
             EnsureComp<BroadphaseComponent>(ev.Uid);
         }
-    }
-
-    private void OnGridAdd(GridAddEvent ev)
-    {
-        // Must be done before initialization as that's when broadphase data starts getting set.
-        EnsureComp<BroadphaseComponent>(ev.EntityUid);
     }
 
     private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)

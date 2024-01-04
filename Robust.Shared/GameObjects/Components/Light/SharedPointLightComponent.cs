@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects
     public abstract partial class SharedPointLightComponent : Component
     {
         [ViewVariables(VVAccess.ReadWrite)]
-        [DataField("color"), AutoNetworkedField]
+        [DataField("color")]
         [Animatable]
         public Color Color { get; set; } = Color.White;
 
@@ -26,17 +26,17 @@ namespace Robust.Shared.GameObjects
         public Vector2 Offset = Vector2.Zero;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        [DataField("energy"), AutoNetworkedField]
+        [DataField("energy")]
         [Animatable]
         public float Energy { get; set; } = 1f;
 
-        [DataField("softness"), AutoNetworkedField, Animatable]
+        [DataField("softness"), Animatable]
         public float Softness { get; set; } = 1f;
 
         /// <summary>
         ///     Whether this pointlight should cast shadows
         /// </summary>
-        [DataField("castShadows"), AutoNetworkedField]
+        [DataField("castShadows")]
         public bool CastShadows = true;
 
         [Access(typeof(SharedPointLightSystem))]

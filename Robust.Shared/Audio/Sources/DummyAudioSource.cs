@@ -33,6 +33,11 @@ internal partial class DummyAudioSource : IAudioSource
     }
 
     /// <inheritdoc />
+    public void Restart()
+    {
+    }
+
+    /// <inheritdoc />
     public bool Playing { get; set; }
 
     /// <inheritdoc />

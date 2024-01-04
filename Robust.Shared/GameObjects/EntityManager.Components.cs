@@ -115,7 +115,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.AssertOwner(uid, metadata);
             metadata ??= GetComponent<MetaDataComponent>(uid);
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
-            metadata.EntityLifeStage = EntityLifeStage.Initializing;
+            SetLifeStage(metadata, EntityLifeStage.Initializing);
 
             // Initialize() can modify the collection of components. Copy them.
             FixedArray32<IComponent?> compsFixed = default;
@@ -142,7 +142,7 @@ namespace Robust.Shared.GameObjects
 
 #endif
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
-            metadata.EntityLifeStage = EntityLifeStage.Initialized;
+            SetLifeStage(metadata, EntityLifeStage.Initialized);
         }
 
         public void StartComponents(EntityUid uid)
@@ -632,7 +632,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent<T>(EntityUid uid)
+        public bool HasComponent<T>(EntityUid uid) where T : IComponent
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
@@ -641,7 +641,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent<T>(EntityUid? uid)
+        public bool HasComponent<T>(EntityUid? uid) where T : IComponent
         {
             return uid.HasValue && HasComponent<T>(uid.Value);
         }
@@ -810,7 +810,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
+        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component) where T : IComponent?
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
@@ -828,7 +828,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component)
+        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component) where T : IComponent?
         {
             if (!uid.HasValue)
             {

@@ -9,6 +9,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Toolshed;
@@ -193,7 +194,7 @@ namespace Robust.Shared.Scripting
         public bool TryComp<T>(EntityUid uid, out T? comp) where T : IComponent
             => ent.TryGetComponent(uid, out comp);
 
-        public bool HasComp<T>(EntityUid uid)
+        public bool HasComp<T>(EntityUid uid)  where T : IComponent
             => ent.HasComponent<T>(uid);
 
         public EntityUid Spawn(string? prototype, EntityCoordinates position)
@@ -260,6 +261,7 @@ namespace Robust.Shared.Scripting
             return true; // Do as I say!
         }
 
+        public NetUserId? User => null;
         public ICommonSession? Session => null;
 
         public void WriteLine(string line)

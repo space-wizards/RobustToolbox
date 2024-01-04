@@ -123,22 +123,23 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     #region AudioParams
 
-    protected AudioComponent SetupAudio(EntityUid uid, string fileName, AudioParams? audioParams)
+    protected AudioComponent SetupAudio(EntityUid uid, string? fileName, AudioParams? audioParams, TimeSpan? length = null)
     {
-        DebugTools.Assert(!string.IsNullOrEmpty(fileName));
+        DebugTools.Assert((!string.IsNullOrEmpty(fileName) || length is not null));
         audioParams ??= AudioParams.Default;
         var comp = AddComp<AudioComponent>(uid);
-        comp.FileName = fileName;
+        comp.FileName = fileName ?? string.Empty;
         comp.Params = audioParams.Value;
         comp.AudioStart = Timing.CurTime;
 
+
         if (!audioParams.Value.Loop)
         {
-            var length = GetAudioLength(fileName);
+            length ??= GetAudioLength(fileName!);
 
             var despawn = AddComp<TimedDespawnComponent>(uid);
             // Don't want to clip audio too short due to imprecision.
-            despawn.Lifetime = (float) length.TotalSeconds + 0.01f;
+            despawn.Lifetime = (float) length.Value.TotalSeconds + 0.01f;
         }
 
         if (comp.Params.Variation != null && comp.Params.Variation.Value != 0f)
@@ -151,12 +152,24 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     public static float GainToVolume(float value)
     {
+        if (value < 0f)
+        {
+            throw new InvalidOperationException($"Tried to get volume calculation for gain of {value}.");
+        }
+
         return 10f * MathF.Log10(value);
     }
 
     public static float VolumeToGain(float value)
     {
-        return MathF.Pow(10, value / 10);
+        var result = MathF.Pow(10, value / 10);
+
+        if (result < 0f)
+        {
+            throw new InvalidOperationException($"Tried to get gain calculation that resulted in invalid value of {result}");
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -258,6 +271,8 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         return sound == null ? null : PlayGlobal(GetSound(sound), recipient, sound.Params);
     }
+
+    public abstract void LoadStream<T>(AudioComponent component, T stream);
 
     /// <summary>
     /// Play an audio file globally, without position.

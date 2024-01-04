@@ -68,6 +68,10 @@ namespace Robust.Client.GameObjects
             return RemCompDeferred<PointLightComponent>(uid);
         }
 
+        protected override void UpdatePriority(EntityUid uid, SharedPointLightComponent comp, MetaDataComponent meta)
+        {
+        }
+
         private void HandleInit(EntityUid uid, PointLightComponent component, ComponentInit args)
         {
             SetMask(component.MaskPath, component);
@@ -95,28 +99,23 @@ namespace Robust.Client.GameObjects
                 _lightTree.QueueTreeUpdate(uid, clientComp);
         }
 
-        public override void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null)
+        public override void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
         {
             if (!ResolveLight(uid, ref comp) || enabled == comp.Enabled || comp is not PointLightComponent clientComp)
                 return;
 
-            comp.Enabled = enabled;
-            RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
-            Dirty(uid, comp);
-
+            base.SetEnabled(uid, enabled, comp, meta);
             if (!comp.ContainerOccluded)
                 _lightTree.QueueTreeUpdate(uid, clientComp);
         }
 
-        public override void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null)
+        public override void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
         {
             if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(radius, comp.Radius) ||
                 comp is not PointLightComponent clientComp)
                 return;
 
-            comp.Radius = radius;
-            Dirty(uid, comp);
-
+            base.SetRadius(uid, radius, comp, meta);
             if (clientComp.TreeUid != null)
                 _lightTree.QueueTreeUpdate(uid, clientComp);
         }

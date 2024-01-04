@@ -343,7 +343,7 @@ namespace Robust.Client.GameStates
                 }
 
                 // If we were waiting for a new state, we are now applying it.
-                if (_processor.WaitingForFull)
+                if (curState.FromSequence == GameTick.Zero)
                 {
                     _processor.OnFullStateReceived();
                     _timing.LastProcessedTick = curState.ToSequence;
@@ -351,7 +351,10 @@ namespace Robust.Client.GameStates
                     PartialStateReset(curState, true);
                 }
                 else
+                {
+                    DebugTools.Assert(!_processor.WaitingForFull);
                     _timing.LastProcessedTick += 1;
+                }
 
                 _timing.CurTick = _timing.LastRealTick = _timing.LastProcessedTick;
 
@@ -532,7 +535,6 @@ namespace Robust.Client.GameStates
             using var __ = _timing.StartStateApplicationArea();
 
             // This is terrible, and I hate it. This also needs to run even when prediction is disabled.
-            _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
             _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
 
             if (!PredictionNeedsResetting)

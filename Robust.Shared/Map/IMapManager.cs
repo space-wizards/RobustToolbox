@@ -124,6 +124,18 @@ namespace Robust.Shared.Map
         /// <param name="worldPos">Location on the map to check for a grid.</param>
         /// <param name="grid">Grid that was found, if any.</param>
         /// <returns>Returns true when a grid was found under the location.</returns>
+        bool TryFindGridAt(EntityUid mapId, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid);
+
+        /// <summary>
+        /// Attempts to find the map grid under the map location.
+        /// </summary>
+        /// <remarks>
+        /// This method will never return the map's default grid.
+        /// </remarks>
+        /// <param name="mapId">Map to search.</param>
+        /// <param name="worldPos">Location on the map to check for a grid.</param>
+        /// <param name="grid">Grid that was found, if any.</param>
+        /// <returns>Returns true when a grid was found under the location.</returns>
         bool TryFindGridAt(MapId mapId, Vector2 worldPos, EntityQuery<TransformComponent> query, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid);
 
         /// <summary>
@@ -142,6 +154,7 @@ namespace Robust.Shared.Map
         void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false, bool includeMap = true);
 
         void FindGridsIntersecting(MapId mapId, Box2 worldAABB, ref List<Entity<MapGridComponent>> state, bool approx = false, bool includeMap = true);
+        void FindGridsIntersecting(EntityUid map, Box2 worldAABB, ref List<Entity<MapGridComponent>> state, bool approx = false, bool includeMap = true);
 
         void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false, bool includeMap = true);
 

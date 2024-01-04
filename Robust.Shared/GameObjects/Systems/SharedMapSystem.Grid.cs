@@ -173,37 +173,49 @@ public abstract partial class SharedMapSystem
 
     private void OnParentChange(EntityUid uid, MapGridComponent component, ref MoveEvent args)
     {
-        if (EntityManager.HasComponent<MapComponent>(uid))
-            return;
+        UpdatePvsChunks(args.Entity);
 
-        var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
+        var (_, xform, meta) = args.Entity;
 
         // oh boy
         // Want gridinit to handle this hence specialcase those situations.
         // oh boy oh boy, its even worse now.
         // transform now raises parent change events on startup, because container code is a POS.
-        if (lifestage < EntityLifeStage.Initialized || args.Component.LifeStage == ComponentLifeStage.Starting)
+        if (meta.EntityLifeStage < EntityLifeStage.Initialized || args.Component.LifeStage == ComponentLifeStage.Starting)
             return;
 
+        // yipeee grids are being spontaneously moved to nullspace.
+        Log.Info($"Grid {ToPrettyString(uid, meta)} changed parent. Old parent: {ToPrettyString(args.OldPosition.EntityId)}. New parent: {ToPrettyString(xform.ParentUid)}");
+        if (xform.MapUid == null && meta.EntityLifeStage < EntityLifeStage.Terminating && _netManager.IsServer)
+            Log.Error($"Grid {ToPrettyString(uid, meta)} was moved to nullspace! AAAAAAAAAAAAAAAAAAAAAAAAA! {Environment.StackTrace}");
+
+        DebugTools.Assert(!HasComp<MapComponent>(uid));
+
+        if (xform.ParentUid != xform.MapUid && meta.EntityLifeStage < EntityLifeStage.Terminating  && _netManager.IsServer)
+        {
+            Log.Error($"Grid {ToPrettyString(uid, meta)} it not parented to a map.  y'all need jesus. {Environment.StackTrace}");
+            return;
+        }
+
         // Make sure we cleanup old map for moved grid stuff.
-        var mapId = args.Component.MapID;
         var oldMap = args.OldPosition.ToMap(EntityManager, _transform);
-
-        // y'all need jesus
-        if (oldMap.MapId == mapId) return;
-
-        if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(MapManager.GetMapEntityId(oldMap.MapId), out var oldMovedGrids))
+        var oldMapUid = MapManager.GetMapEntityId(oldMap.MapId);
+        if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(oldMapUid, out var oldMovedGrids))
         {
             oldMovedGrids.MovedGrids.Remove(uid);
-            RemoveGrid(uid, component, MapManager.GetMapEntityId(oldMap.MapId));
+            RemoveGrid(uid, component, oldMapUid);
         }
 
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
-        if (TryComp<MovedGridsComponent>(MapManager.GetMapEntityId(mapId), out var newMovedGrids))
+        if (TryComp<MovedGridsComponent>(xform.MapUid, out var newMovedGrids))
         {
             newMovedGrids.MovedGrids.Add(uid);
-            AddGrid(uid, component, mapId);
+            AddGrid(uid, component);
         }
+    }
+
+    protected virtual void UpdatePvsChunks(Entity<TransformComponent, MetaDataComponent> grid)
+    {
     }
 
     private void OnGridHandleState(EntityUid uid, MapGridComponent component, ref ComponentHandleState args)
@@ -215,8 +227,6 @@ public abstract partial class SharedMapSystem
             "Can't modify chunk size of an existing grid.");
 
         component.ChunkSize = state.ChunkSize;
-        DebugTools.Assert(state.ChunkData != null || state.FullGridData != null);
-
         if (state.ChunkData == null && state.FullGridData == null)
             return;
 
@@ -429,8 +439,7 @@ public abstract partial class SharedMapSystem
 
     private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
     {
-        var xformQuery = GetEntityQuery<TransformComponent>();
-        var xform = xformQuery.GetComponent(uid);
+        var xform = _xformQuery.GetComponent(uid);
 
         // Force networkedmapmanager to send it due to non-ECS legacy code.
         var curTick = _timing.CurTick;
@@ -443,7 +452,7 @@ public abstract partial class SharedMapSystem
         component.LastTileModifiedTick = curTick;
 
         if (xform.MapUid != null && xform.MapUid != uid)
-            _transform.SetParent(uid, xform, xform.MapUid.Value, xformQuery);
+            _transform.SetParent(uid, xform, xform.MapUid.Value);
 
         if (!HasComp<MapComponent>(uid))
         {
@@ -474,6 +483,7 @@ public abstract partial class SharedMapSystem
 
     private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
     {
+        Log.Info($"Removing grid {ToPrettyString(uid)}");
         if (TryComp<TransformComponent>(uid, out var xform) && xform.MapUid != null)
         {
             RemoveGrid(uid, component, xform.MapUid.Value);
@@ -494,7 +504,7 @@ public abstract partial class SharedMapSystem
         return new Box2Rotated(aabb, worldRot, worldPos).CalcBoundingBox();
     }
 
-    private void AddGrid(EntityUid uid, MapGridComponent grid, MapId mapId)
+    private void AddGrid(EntityUid uid, MapGridComponent grid)
     {
         DebugTools.Assert(!EntityManager.HasComponent<MapComponent>(uid));
         var aabb = GetWorldAABB(uid, grid);

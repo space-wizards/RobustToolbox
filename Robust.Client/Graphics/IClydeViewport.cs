@@ -17,6 +17,7 @@ namespace Robust.Client.Graphics
         ///     The render target that is rendered to when rendering this viewport.
         /// </summary>
         IRenderTexture RenderTarget { get; }
+        IRenderTexture LightRenderTarget { get; }
         IEye? Eye { get; set; }
         Vector2i Size { get; }
 

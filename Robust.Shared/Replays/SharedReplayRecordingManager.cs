@@ -66,7 +66,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         NetConf.OnValueChanged(CVars.ReplayMaxCompressedSize, (v) => _maxCompressedSize = v * 1024, true);
         NetConf.OnValueChanged(CVars.ReplayMaxUncompressedSize, (v) => _maxUncompressedSize = v * 1024, true);
         NetConf.OnValueChanged(CVars.ReplayTickBatchSize, (v) => _tickBatchSize = v * 1024, true);
-        NetConf.OnValueChanged(CVars.NetPVSCompressLevel, OnCompressionChanged);
+        NetConf.OnValueChanged(CVars.NetPvsCompressLevel, OnCompressionChanged);
     }
 
     public void Shutdown()
@@ -191,7 +191,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         var zip = new ZipArchive(file, ZipArchiveMode.Create);
 
         var context = new ZStdCompressionContext();
-        context.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, NetConf.GetCVar(CVars.NetPVSCompressLevel));
+        context.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, NetConf.GetCVar(CVars.NetPvsCompressLevel));
         var buffer = new MemoryStream(_tickBatchSize * 2);
 
         TimeSpan? recordingEnd = null;

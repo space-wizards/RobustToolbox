@@ -8,7 +8,7 @@ using Robust.Shared.Network.Messages;
 
 namespace Robust.Client.Console;
 
-internal sealed partial class ClientConsoleHost
+internal partial class ClientConsoleHost
 {
     private readonly Dictionary<int, PendingCompletion> _completionsPending = new();
     private int _completionSeq;

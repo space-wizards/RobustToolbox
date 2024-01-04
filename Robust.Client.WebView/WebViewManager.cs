@@ -5,6 +5,7 @@ using Robust.Client.WebView.Headless;
 using Robust.Client.WebViewHook;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 [assembly: WebViewManagerImpl(typeof(WebViewManager))]
@@ -21,6 +22,9 @@ namespace Robust.Client.WebView
 
             var cfg = dependencies.Resolve<IConfigurationManagerInternal>();
             cfg.LoadCVarsFromAssembly(typeof(WebViewManager).Assembly);
+
+            var refl = dependencies.Resolve<IReflectionManager>();
+            refl.LoadAssemblies(typeof(WebViewManager).Assembly);
 
             dependencies.RegisterInstance<IWebViewManager>(this);
             dependencies.RegisterInstance<IWebViewManagerInternal>(this);

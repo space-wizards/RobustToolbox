@@ -7,6 +7,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -150,14 +151,16 @@ namespace Robust.Shared.GameObjects
 
                 var oldRotation = _localRotation;
                 _localRotation = value;
-                _entMan.Dirty(Owner, this);
+                var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
+                _entMan.Dirty(Owner, this, meta);
                 MatricesDirty = true;
 
                 if (!Initialized)
                     return;
 
-                var moveEvent = new MoveEvent(Owner, Coordinates, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
+                var moveEvent = new MoveEvent((Owner, this, meta), Coordinates, Coordinates, oldRotation, _localRotation, _gameTiming.ApplyingState);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
             }
         }
 
@@ -334,14 +337,16 @@ namespace Robust.Shared.GameObjects
 
                 var oldGridPos = Coordinates;
                 _localPosition = value;
-                _entMan.Dirty(Owner, this);
+                var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
+                _entMan.Dirty(Owner, this, meta);
                 MatricesDirty = true;
 
                 if (!Initialized)
                     return;
 
-                var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
+                var moveEvent = new MoveEvent((Owner, this, meta), oldGridPos, Coordinates, _localRotation, _localRotation, _gameTiming.ApplyingState);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
             }
         }
 
@@ -593,39 +598,33 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
-    ///     Raised whenever an entity translates or rotates relative to their parent.
+    /// Raised directed at an entity whenever is position or rotation changes relative to their parent, or if their
+    /// parent changed. Note that this event does not get broadcast. If you need to receive information about ALL
+    /// move events, subscribe to the <see cref="SharedTransformSystem.OnGlobalMoveEvent"/>.
     /// </summary>
-    /// <remarks>
-    ///     This will also get raised if the entity's parent changes, even if the local position and rotation remains
-    ///     unchanged.
-    /// </remarks>
     [ByRefEvent]
-    public readonly struct MoveEvent
+    public readonly struct MoveEvent(Entity<TransformComponent, MetaDataComponent> entity, EntityCoordinates oldPos,
+        EntityCoordinates newPos, Angle oldRotation, Angle newRotation, bool stateHandling = false)
     {
-        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, Angle oldRotation, Angle newRotation, TransformComponent component, bool stateHandling)
-        {
-            Sender = sender;
-            OldPosition = oldPos;
-            NewPosition = newPos;
-            OldRotation = oldRotation;
-            NewRotation = newRotation;
-            Component = component;
-            FromStateHandling = stateHandling;
-        }
+        public readonly Entity<TransformComponent, MetaDataComponent> Entity = entity;
+        public readonly EntityCoordinates OldPosition = oldPos;
+        public readonly EntityCoordinates NewPosition = newPos;
+        public readonly Angle OldRotation = oldRotation;
+        public readonly Angle NewRotation = newRotation;
 
-        public readonly EntityUid Sender;
-        public readonly EntityCoordinates OldPosition;
-        public readonly EntityCoordinates NewPosition;
-        public readonly Angle OldRotation;
-        public readonly Angle NewRotation;
-        public readonly TransformComponent Component;
+        public EntityUid Sender => Entity.Owner;
+        public TransformComponent Component => Entity.Comp1;
 
         public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
 
-        /// <summary>
-        ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.
-        /// </summary>
-        public readonly bool FromStateHandling;
+        [Obsolete("Check IGameTiming.ApplyingState")]
+        public readonly bool FromStateHandling = stateHandling;
+
+        [Obsolete]
+        public MoveEvent(EntityUid uid, EntityCoordinates oldPos, EntityCoordinates newPos, Angle oldRot, Angle newRot, TransformComponent xform, bool state)
+            : this((uid, xform, default!), oldPos, newPos, oldRot, newRot)
+        {
+        }
     }
 
     public struct TransformChildrenEnumerator : IDisposable

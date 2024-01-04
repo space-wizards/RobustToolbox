@@ -463,6 +463,9 @@ namespace Robust.Client.Graphics.Clyde
             public IRenderTexture RenderTarget { get; } =
                 new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
 
+            public IRenderTexture LightRenderTarget { get; } =
+                new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
+
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
             public Color? ClearColor { get; set; } = Color.Black;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using Robust.Client.ComponentTrees;
@@ -23,7 +22,9 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
+using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
 
 namespace Robust.UnitTesting
@@ -58,6 +59,8 @@ namespace Robust.UnitTesting
                 typeof(OccluderTreeComponent),
                 typeof(SpriteTreeComponent),
                 typeof(LightTreeComponent),
+                typeof(CollisionWakeComponent),
+                typeof(CollideOnAnchorComponent),
                 typeof(Gravity2DComponent),
                 typeof(ActorComponent)
             };
@@ -110,7 +113,6 @@ namespace Robust.UnitTesting
 
             var systems = deps.Resolve<IEntitySystemManager>();
             // Required systems
-            systems.LoadExtraSystemType<MapSystem>();
             systems.LoadExtraSystemType<EntityLookupSystem>();
 
             // uhhh so maybe these are the wrong system for the client, but I CBF adding sprite system and all the rest,
@@ -119,6 +121,7 @@ namespace Robust.UnitTesting
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
             systems.LoadExtraSystemType<Gravity2DController>();
+            systems.LoadExtraSystemType<CollisionWakeSystem>();
 
             if (Project == UnitTestProject.Client)
             {
@@ -131,6 +134,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugRayDrawingSystem>();
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugPhysicsSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.MapSystem>();
             }
             else
             {
@@ -145,6 +149,9 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<DebugPhysicsSystem>();
                 systems.LoadExtraSystemType<MapLoaderSystem>();
+                systems.LoadExtraSystemType<InputSystem>();
+                systems.LoadExtraSystemType<PvsOverrideSystem>();
+                systems.LoadExtraSystemType<MapSystem>();
             }
 
             var entMan = deps.Resolve<IEntityManager>();
@@ -158,6 +165,8 @@ namespace Robust.UnitTesting
             compFactory.RegisterTypes(_components);
             if (ExtraComponents != null)
                 compFactory.RegisterTypes(ExtraComponents);
+
+            deps.Resolve<IParallelManagerInternal>().Initialize();
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.
             // We want to bypass this and load our own systems hence we will manually initialize it here.

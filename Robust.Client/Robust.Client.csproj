@@ -26,6 +26,7 @@
     <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" Version="1.2.0" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.Sodium" Version="0.2.1" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="8.0.0" />
+    <PackageReference Include="TerraFX.Interop.Xlib" Version="6.4.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.0.1" PrivateAssets="compile" />
@@ -54,6 +55,7 @@
     <RobustLinkRoots Include="Robust.Client" />
     <RobustLinkRoots Include="Robust.Shared" />
     <RobustLinkAssemblies Include="TerraFX.Interop.Windows" />
+    <RobustLinkAssemblies Include="TerraFX.Interop.Xlib" />
     <RobustLinkAssemblies Include="OpenToolkit.Graphics" />
   </ItemGroup>
 

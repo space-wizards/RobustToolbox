@@ -221,8 +221,9 @@ namespace Robust.UnitTesting.Server
 
             //Tier 2: Simulation
             container.RegisterInstance<IConsoleHost>(new Mock<IConsoleHost>().Object); //Console is technically a frontend, we want to run headless
-            container.Register<IEntityManager, EntityManager>();
-            container.Register<EntityManager, EntityManager>();
+            container.Register<IEntityManager, ServerEntityManager>();
+            container.Register<IServerEntityNetworkManager, ServerEntityManager>();
+            container.Register<EntityManager, ServerEntityManager>();
             container.Register<IMapManager, NetworkedMapManager>();
             container.Register<INetworkedMapManager, NetworkedMapManager>();
             container.Register<IMapManagerInternal, NetworkedMapManager>();
@@ -235,6 +236,7 @@ namespace Robust.UnitTesting.Server
             container.Register<IAuthManager, AuthManager>();
             container.Register<ITileDefinitionManager, TileDefinitionManager>();
             container.Register<IParallelManager, TestingParallelManager>();
+            container.Register<IParallelManagerInternal, TestingParallelManager>();
             // Needed for grid fixture debugging.
             container.Register<IConGroupController, ConGroupController>();
 
@@ -284,6 +286,8 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<OccluderComponent>();
             compFactory.RegisterClass<OccluderTreeComponent>();
             compFactory.RegisterClass<Gravity2DComponent>();
+            compFactory.RegisterClass<CollideOnAnchorComponent>();
+            compFactory.RegisterClass<ActorComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -310,6 +314,8 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
             entitySystemMan.LoadExtraSystemType<PvsSystem>();
+            entitySystemMan.LoadExtraSystemType<InputSystem>();
+            entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

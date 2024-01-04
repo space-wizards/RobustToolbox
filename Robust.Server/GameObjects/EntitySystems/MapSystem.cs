@@ -1,4 +1,5 @@
 using System.Linq;
+using Robust.Server.GameStates;
 using Robust.Shared;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
@@ -13,8 +14,14 @@ namespace Robust.Server.GameObjects
     public sealed class MapSystem : SharedMapSystem
     {
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly PvsSystem _pvs = default!;
 
         private bool _deleteEmptyGrids;
+
+        protected override void UpdatePvsChunks(Entity<TransformComponent, MetaDataComponent> grid)
+        {
+            _pvs.GridParentChanged(grid);
+        }
 
         public override void Initialize()
         {
@@ -22,11 +29,6 @@ namespace Robust.Server.GameObjects
             SubscribeLocalEvent<MapGridComponent, EmptyGridEvent>(HandleGridEmpty);
 
             _cfg.OnValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion, true);
-        }
-
-        protected override void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args)
-        {
-            EnsureComp<PhysicsMapComponent>(uid);
         }
 
         private void SetGridDeletion(bool value)

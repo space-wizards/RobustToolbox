@@ -10,7 +10,6 @@ public abstract partial class SharedMapSystem
 {
     private void InitializeMap()
     {
-        SubscribeLocalEvent<MapComponent, ComponentAdd>(OnMapAdd);
         SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapInit);
         SubscribeLocalEvent<MapComponent, ComponentShutdown>(OnMapRemoved);
         SubscribeLocalEvent<MapComponent, ComponentHandleState>(OnMapHandleState);
@@ -43,8 +42,6 @@ public abstract partial class SharedMapSystem
         args.State = new MapComponentState(component.MapId, component.LightingEnabled, component.MapPaused);
     }
 
-    protected abstract void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args);
-
     private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
     {
         EnsureComp<GridTreeComponent>(uid);
@@ -57,7 +54,7 @@ public abstract partial class SharedMapSystem
     private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
     {
         DebugTools.Assert(component.MapId != MapId.Nullspace);
-        Logger.InfoS("map", $"Deleting map {component.MapId}");
+        Log.Info($"Deleting map {component.MapId}");
 
         var iMap = (IMapManagerInternal)MapManager;
         iMap.RemoveMapId(component.MapId);

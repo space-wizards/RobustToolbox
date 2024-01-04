@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 202.1.0
+
+### New features
+
+* Add GetLocalEntitiesIntersecting overload that takes in a griduid and a Vector2i tile.
+
+
 ## 202.0.0
 
 ### Breaking changes

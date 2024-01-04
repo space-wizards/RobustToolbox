@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
+using Robust.Shared.Enums;
+using Robust.Shared.Log;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -43,7 +45,8 @@ internal sealed partial class PvsSystem
 
         foreach (var session in PendingAcks)
         {
-            _toAck.Add(GetOrNewPvsSession(session));
+            if (session.Status != SessionStatus.Disconnected)
+                _toAck.Add(GetOrNewPvsSession(session));
         }
 
         PendingAcks.Clear();
@@ -66,7 +69,14 @@ internal sealed partial class PvsSystem
 
         public void Execute(int index)
         {
-            _pvs.ProcessQueuedAck(_pvs._toAck[index]);
+            try
+            {
+                _pvs.ProcessQueuedAck(_pvs._toAck[index]);
+            }
+            catch (Exception e)
+            {
+                _pvs.Log.Log(LogLevel.Error, e, $"Caught exception while processing PVS acks.");
+            }
         }
     }
 
@@ -78,7 +88,14 @@ internal sealed partial class PvsSystem
 
         public void Execute(int index)
         {
-            _pvs.UpdateDirtyChunks(index);
+            try
+            {
+                _pvs.UpdateDirtyChunks(index);
+            }
+            catch (Exception e)
+            {
+                _pvs.Log.Log(LogLevel.Error, e, $"Caught exception while updating dirty PVS chunks.");
+            }
         }
     }
 

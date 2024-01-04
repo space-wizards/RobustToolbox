@@ -719,10 +719,10 @@ public sealed partial class EntityLookupSystem
         return entities;
     }
 
-    public void GetEntitiesInRange(Type type, MapCoordinates coordinates, float range, HashSet<Entity<IComponent>> entities)
+    public void GetEntitiesInRange(Type type, MapCoordinates coordinates, float range, HashSet<Entity<IComponent>> entities, LookupFlags flags = DefaultFlags)
     {
         DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
-        GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities);
+        GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities, flags);
     }
 
     [Obsolete]

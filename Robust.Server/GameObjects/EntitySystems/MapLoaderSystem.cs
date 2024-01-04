@@ -878,7 +878,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
         if (data.MapIsPostInit)
         {
-            metadata.EntityLifeStage = EntityLifeStage.MapInitialized;
+            EntityManager.SetLifeStage(metadata, EntityLifeStage.MapInitialized);
         }
         else if (_mapManager.IsMapInitialized(data.TargetMap))
         {
@@ -1211,7 +1211,7 @@ public sealed class MapLoaderSystem : EntitySystem
                     // information that needs to be written.
                     if (compMapping.Children.Count != 0 || protMapping == null)
                     {
-                        compMapping.Add("type", new ValueDataNode(compName));
+                        compMapping.InsertAt(0, "type", new ValueDataNode(compName));
                         // Something actually got written!
                         components.Add(compMapping);
                     }

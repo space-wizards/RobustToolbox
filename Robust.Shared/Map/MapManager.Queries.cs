@@ -21,11 +21,14 @@ internal partial class MapManager
 
     public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = false, bool includeMap = true)
     {
-        if (!_mapEntities.TryGetValue(mapId, out var mapEnt) ||
-            !EntityManager.TryGetComponent<GridTreeComponent>(mapEnt, out var gridTree))
-        {
+        if (_mapEntities.TryGetValue(mapId, out var map))
+            FindGridsIntersecting(map, worldAABB, callback, approx, includeMap);
+    }
+
+    public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, GridCallback callback, bool approx = false, bool includeMap = true)
+    {
+        if (!EntityManager.TryGetComponent<GridTreeComponent>(mapEnt, out var gridTree))
             return;
-        }
 
         var state = (worldAABB, gridTree.Tree, callback, approx, this, _transformSystem);
 
@@ -46,25 +49,24 @@ internal partial class MapManager
                 }
 
                 return tuple.callback(data.Uid, data.Grid);
-            }, worldAABB);
+            }, worldAABB); ;
 
-        var mapUid = GetMapEntityId(mapId);
-
-        if (includeMap && EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
+        if (includeMap && EntityManager.TryGetComponent<MapGridComponent>(mapEnt, out var grid))
         {
-            callback(mapUid, grid);
+            callback(mapEnt, grid);
         }
     }
 
     public void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false, bool includeMap = true)
     {
-        if (!_mapEntities.TryGetValue(mapId, out var mapEnt) ||
-            !EntityManager.TryGetComponent<GridTreeComponent>(mapEnt, out var gridTree))
-        {
-            return;
-        }
+        if (_mapEntities.TryGetValue(mapId, out var map))
+            FindGridsIntersecting(map, worldAABB, ref state, callback, approx, includeMap);
+    }
 
-        var mapUid = GetMapEntityId(mapId);
+    public void FindGridsIntersecting<TState>(EntityUid mapUid, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false, bool includeMap = true)
+    {
+        if (!EntityManager.TryGetComponent<GridTreeComponent>(mapUid, out var gridTree))
+            return;
 
         if (includeMap && EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
         {
@@ -99,7 +101,14 @@ internal partial class MapManager
     public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, ref List<Entity<MapGridComponent>> state,
         bool approx = false, bool includeMap = true)
     {
-        FindGridsIntersecting(mapId, worldAABB, ref state, static (EntityUid uid, MapGridComponent grid,
+        if (_mapEntities.TryGetValue(mapId, out var map))
+            FindGridsIntersecting(map, worldAABB, ref state, approx, includeMap);
+    }
+
+    public void FindGridsIntersecting(EntityUid map, Box2 worldAABB, ref List<Entity<MapGridComponent>> state,
+        bool approx = false, bool includeMap = true)
+    {
+        FindGridsIntersecting(map, worldAABB, ref state, static (EntityUid uid, MapGridComponent grid,
             ref List<Entity<MapGridComponent>> list) =>
         {
             list.Add((uid, grid));
@@ -107,10 +116,22 @@ internal partial class MapManager
         }, approx, includeMap);
     }
 
+    public void FindGridsIntersecting(EntityUid mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false,
+        bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), callback, approx, includeMap);
+    }
+
     public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false,
         bool includeMap = true)
     {
         FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), callback, approx, includeMap);
+    }
+
+    public void FindGridsIntersecting<TState>(EntityUid mapId, Box2Rotated worldBounds, ref TState state, GridCallback<TState> callback,
+        bool approx = false, bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), ref state, callback, approx, includeMap);
     }
 
     public void FindGridsIntersecting<TState>(MapId mapId, Box2Rotated worldBounds, ref TState state, GridCallback<TState> callback,
@@ -120,6 +141,13 @@ internal partial class MapManager
     }
 
     public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> state,
+        bool approx = false, bool includeMap = true)
+    {
+        if (_mapEntities.TryGetValue(mapId, out var map))
+            FindGridsIntersecting(map, worldBounds, ref state, approx, includeMap);
+    }
+
+    public void FindGridsIntersecting(EntityUid mapId, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> state,
         bool approx = false, bool includeMap = true)
     {
         FindGridsIntersecting(mapId, worldBounds, ref state, static (EntityUid uid, MapGridComponent grid,
@@ -186,6 +214,21 @@ internal partial class MapManager
         out EntityUid uid,
         [NotNullWhen(true)] out MapGridComponent? grid)
     {
+        if (_mapEntities.TryGetValue(mapId, out var map))
+            return TryFindGridAt(map, worldPos, xformQuery, out uid, out grid);
+
+        uid = default;
+        grid = null;
+        return false;
+    }
+
+    public bool TryFindGridAt(
+        EntityUid mapId,
+        Vector2 worldPos,
+        EntityQuery<TransformComponent> xformQuery,
+        out EntityUid uid,
+        [NotNullWhen(true)] out MapGridComponent? grid)
+    {
         var rangeVec = new Vector2(0.2f, 0.2f);
 
         // Need to enlarge the AABB by at least the grid shrinkage size.
@@ -229,11 +272,9 @@ internal partial class MapManager
             return false;
         }, approx: true);
 
-        var mapUid = GetMapEntityId(mapId);
-
-        if (state.grid == null && EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var mapGrid))
+        if (state.grid == null && EntityManager.TryGetComponent<MapGridComponent>(mapId, out var mapGrid))
         {
-            uid = mapUid;
+            uid = mapId;
             grid = mapGrid;
             return true;
         }
@@ -246,9 +287,22 @@ internal partial class MapManager
     /// <summary>
     /// Attempts to find the map grid under the map location.
     /// </summary>
-    public bool TryFindGridAt(MapId mapId, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
+    public bool TryFindGridAt(EntityUid mapId, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
     {
         return TryFindGridAt(mapId, worldPos, _xformQuery, out uid, out grid);
+    }
+
+    /// <summary>
+    /// Attempts to find the map grid under the map location.
+    /// </summary>
+    public bool TryFindGridAt(MapId mapId, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
+    {
+        if (_mapEntities.TryGetValue(mapId, out var map))
+            return TryFindGridAt(map, worldPos, _xformQuery, out uid, out grid);
+
+        uid = default;
+        grid = null;
+        return false;
     }
 
     /// <summary>

@@ -128,7 +128,7 @@ public abstract partial class SharedContainerSystem
         DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
         DebugTools.Assert(!transform.Anchored);
         DebugTools.Assert(transform.LocalPosition == Vector2.Zero);
-        DebugTools.Assert(transform.LocalRotation == Angle.Zero);
+        DebugTools.Assert(MathHelper.CloseTo(transform.LocalRotation.Theta, Angle.Zero));
         DebugTools.Assert(!PhysicsQuery.TryGetComponent(toInsert, out var phys) || (!phys.Awake && !phys.CanCollide));
 
         Dirty(container.Owner, container.Manager);

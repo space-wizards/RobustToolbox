@@ -267,8 +267,7 @@ namespace Robust.Shared.IoC
                 _pendingResolves.Enqueue(interfaceType);
             }
         }
-
-        [AssertionMethod]
+        
         private void CheckRegisterInterface(Type interfaceType, Type implementationType, bool overwrite)
         {
             lock (_serviceBuildLock)

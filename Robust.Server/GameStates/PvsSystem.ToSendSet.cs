@@ -1,89 +1,187 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
-// This partial class contains contains methods for adding entities to the set of entities that are about to get sent
-// to a player.
+// This partial class contains functions for adding entities to a the collections of entities that are getting sent to
+// a player this tick..
 internal sealed partial class PvsSystem
 {
     /// <summary>
-    /// This method adds an entity to the to-send list, updates the last-sent tick, and updates the entity's visibility.
+    /// Iterate over chunks that are visible to a player and add entities to the game-state.
     /// </summary>
-    private void AddToSendList(
-        NetEntity ent,
-        ref EntityData data,
-        List<NetEntity> list,
-        GameTick fromTick,
-        GameTick toTick,
-        bool entered,
-        ref int dirtyEntityCount)
+    private void AddPvsChunks(PvsSession pvsSession)
     {
-        var meta = data.Entity.Comp;
-        DebugTools.AssertEqual(meta.NetEntity, ent);
-        DebugTools.Assert(fromTick < toTick);
-        DebugTools.AssertNotEqual(data.LastSent, toTick);
-        DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
+        foreach (var (chunk, distance) in CollectionsMarshal.AsSpan(pvsSession.Chunks))
+        {
+            AddPvsChunk(chunk, distance, pvsSession);
+        }
+    }
+
+    /// <summary>
+    /// A chunks that is visible to a player and add entities to the game-state.
+    /// </summary>
+    private void AddPvsChunk(PvsChunk chunk, float distance, PvsSession session)
+    {
+        // Each root nodes should simply be a map or a grid entity.
+        DebugTools.Assert(Exists(chunk.Root), $"Chunk root does not exist!");
+        DebugTools.Assert(Exists(chunk.Map), $"Map does not exist!.");
+        DebugTools.Assert(HasComp<MapComponent>(chunk.Root) || HasComp<MapGridComponent>(chunk.Root));
+
+        var fromTick = session.FromTick;
+        var mask = session.VisMask;
+
+        // Send the map.
+        if (!AddEntity(session, chunk.Map, fromTick))
+            return;
+
+        // Send the grid
+        if (chunk.Map.Owner != chunk.Root.Owner && !AddEntity(session, chunk.Root, fromTick))
+            return;
+
+        // Get the number of entities to send (i.e., basic LOD restrictions)
+        // We add chunk-size here so that its consistent with the normal PVS range setting.
+        // I.e., distance here is the Chebyshev distance to the centre of each chunk, but the normal pvs range only
+        // required that the chunk be touching the box, not the centre.
+        var count = distance < (_lowLodDistance + ChunkSize) / 2
+            ? chunk.Contents.Count
+            : chunk.LodCounts[0];
+
+        // Send entities on the chunk.
+        var span = CollectionsMarshal.AsSpan(chunk.Contents);
+        for (var i = 0; i < count; i++)
+        {
+            var ent = span[i];
+            if ((mask & ent.Comp.VisibilityMask) == ent.Comp.VisibilityMask)
+                AddEntity(session, ent, fromTick);
+        }
+    }
+
+    /// <summary>
+    /// Attempt to add an entity to the to-send lists, while respecting pvs budgets.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool AddEntity(PvsSession session, Entity<MetaDataComponent> entity, GameTick fromTick)
+    {
+        var nuid = entity.Comp.NetEntity;
+        ref var data = ref CollectionsMarshal.GetValueRefOrAddDefault(session.Entities, nuid, out var exists);
+        if (!exists)
+            data = new(nuid);
+
+        if (entity.Comp.Deleted)
+        {
+            Log.Error($"Attempted to send deleted entity: {ToPrettyString(entity, entity)}");
+            session.Entities.Remove(entity.Comp.NetEntity);
+            return false;
+        }
+
+        DebugTools.AssertEqual(data!.NetEntity, entity.Comp.NetEntity);
+        if (data.LastSeen == _gameTiming.CurTick)
+            return true;
+
+        var (entered,budgetExceeded) = IsEnteringPvsRange(data, fromTick, ref session.Budget);
+
+        if (budgetExceeded)
+            return false;
+
+        if (!AddToSendList(session, data, entity, fromTick, entered))
+            return false;
+
+        DebugTools.AssertNotEqual(data.LastSeen, GameTick.Zero);
+        return true;
+    }
+
+    /// <summary>
+    /// This method adds an entity to the list of visible entities, updates the last-seen tick, and computes any
+    /// required game states.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool AddToSendList(PvsSession session, PvsData data, Entity<MetaDataComponent> entity, GameTick fromTick,
+        bool entered)
+    {
+        DebugTools.Assert(fromTick < _gameTiming.CurTick);
+
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (data == null)
+        {
+            Log.Error($"Encountered null EntityData.");
+            return false;
+        }
+
+        DebugTools.AssertNotEqual(data.LastSeen, _gameTiming.CurTick);
+        DebugTools.Assert(data.EntityLastAcked <= fromTick || fromTick == GameTick.Zero);
+        var (uid, meta) = entity;
+
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (meta == null)
+        {
+            Log.Error($"Encountered null metadata in EntityData. Entity: {ToPrettyString(uid)}");
+            return false;
+        }
 
         if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
-            var rep = new EntityStringRepresentation(data.Entity);
-            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(data.Entity)}. Trace:\n{Environment.StackTrace}");
+            var rep = new EntityStringRepresentation(entity);
+            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(uid)}. Trace:\n{Environment.StackTrace}");
 
             // This can happen if some entity was some removed from it's parent while that parent was being deleted.
             // As a result the entity was marked for deletion but was never actually properly deleted.
-            EntityManager.QueueDeleteEntity(data.Entity);
-            return;
+            EntityManager.QueueDeleteEntity(uid);
+            return false;
         }
 
-        data.LastSent = toTick;
-        list.Add(ent);
+        data.LastSeen = _gameTiming.CurTick;
+        session.ToSend!.Add(data);
+        EntityState state;
+
+        if (session.RequestedFull)
+        {
+            state = GetFullEntityState(session.Session, uid, meta);
+            session.States.Add(state);
+            return true;
+        }
 
         if (entered)
         {
-            data.Visibility = PvsEntityVisibility.Entered;
-            dirtyEntityCount++;
-            return;
+            state = GetEntityState(session.Session, uid, data.EntityLastAcked, meta);
+            session.States.Add(state);
+            return true;
         }
 
         if (meta.EntityLastModifiedTick <= fromTick)
-        {
-            //entity has been sent before and hasn't been updated since
-            data.Visibility = PvsEntityVisibility.StayedUnchanged;
-            return;
-        }
+            return true;
 
-        //add us
-        data.Visibility = PvsEntityVisibility.StayedChanged;
-        dirtyEntityCount++;
+        state = GetEntityState(session.Session, uid, fromTick , meta);
+
+        if (!state.Empty)
+            session.States.Add(state);
+
+        return true;
     }
 
     /// <summary>
     /// This method figures out whether a given entity is currently entering a player's PVS range.
     /// This method will also check that the player's PVS entry budget is not being exceeded.
     /// </summary>
-    private (bool Entered, bool BudgetExceeded) GetPvsEntryData(ref EntityData entity,
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private (bool Entering, bool BudgetExceeded) IsEnteringPvsRange(
+        PvsData data,
         GameTick fromTick,
-        GameTick toTick,
-        ref int newEntityCount,
-        ref int enteredEntityCount,
-        int newEntityBudget,
-        int enteredEntityBudget)
+        ref PvsBudget budget)
     {
-        DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
-
         var enteredSinceLastSent = fromTick == GameTick.Zero
-                                   || entity.LastSent == GameTick.Zero
-                                   || entity.LastSent.Value != toTick.Value - 1;
+                                   || data.LastSeen == GameTick.Zero
+                                   || data.LastSeen != _gameTiming.CurTick - 1;
 
-        var entered = enteredSinceLastSent
-                      || entity.EntityLastAcked == GameTick.Zero
-                      || entity.EntityLastAcked < fromTick // this entity was not in the last acked state.
-                      || entity.LastLeftView >= fromTick; // entity left and re-entered sometime after the last acked tick
+        var entering = enteredSinceLastSent
+                      || data.EntityLastAcked == GameTick.Zero
+                      || data.EntityLastAcked < fromTick // this entity was not in the last acked state.
+                      || data.LastLeftView >= fromTick; // entity left and re-entered sometime after the last acked tick
 
         // If the entity is entering, but we already sent this entering entity in the last message, we won't add it to
         // the budget. Chances are the packet will arrive in a nice and orderly fashion, and the client will stick to
@@ -91,159 +189,15 @@ internal sealed partial class PvsSystem
         // 2x or more times the normal entity creation budget.
         if (enteredSinceLastSent)
         {
-            if (newEntityCount >= newEntityBudget || enteredEntityCount >= enteredEntityBudget)
-                return (entered, true);
+            if (budget.NewCount >= budget.NewLimit || budget.EnterCount >= budget.EnterLimit)
+                return (entering, true);
 
-            enteredEntityCount++;
+            budget.EnterCount++;
 
-            if (entity.EntityLastAcked == GameTick.Zero)
-                newEntityCount++;
+            if (data.EntityLastAcked == GameTick.Zero)
+                budget.NewCount++;
         }
 
-        return (entered, false);
-    }
-
-    /// <summary>
-    /// Recursively add an entity and all of its children to the to-send set.
-    /// </summary>
-    private void RecursivelyAddTreeNode(in NetEntity nodeIndex,
-        RobustTree<NetEntity> tree,
-        List<NetEntity> toSend,
-        Dictionary<NetEntity, EntityData> entityData,
-        Stack<NetEntity> stack,
-        GameTick fromTick,
-        GameTick toTick,
-        ref int newEntityCount,
-        ref int enteredEntityCount,
-        ref int dirtyEntityCount,
-        int newEntityBudget,
-        int enteredEntityBudget)
-    {
-        stack.Push(nodeIndex);
-
-        while (stack.TryPop(out var currentNodeIndex))
-        {
-            DebugTools.Assert(currentNodeIndex.IsValid());
-
-            // As every map is parented to uid 0 in the tree we still need to get their children, plus because we go top-down
-            // we may find duplicate parents with children we haven't encountered before
-            // on different chunks (this is especially common with direct grid children)
-
-            ref var data = ref GetOrNewEntityData(entityData, currentNodeIndex);
-            if (data.LastSent != toTick)
-            {
-                var (entered, budgetExceeded) = GetPvsEntryData(ref data, fromTick, toTick,
-                    ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-
-
-                if (budgetExceeded)
-                {
-                    // should be false for the majority of entities
-                    if (data.LastSent == GameTick.Zero)
-                        entityData.Remove(currentNodeIndex);
-
-                    // We continue, but do not stop iterating this or other chunks.
-                    // This is to avoid sending bad pvs-leave messages. I.e., other entities may have just stayed in view, and we can send them without exceeding our budget.
-                    continue;
-                }
-
-                AddToSendList(currentNodeIndex, ref data, toSend, fromTick, toTick, entered, ref dirtyEntityCount);
-            }
-
-            var node = tree[currentNodeIndex];
-            if (node.Children == null)
-                continue;
-
-            foreach (var child in node.Children)
-            {
-                stack.Push(child);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Recursively add an entity and all of its parents to the to-send set. This optionally also adds all children.
-    /// </summary>
-    public bool RecursivelyAddOverride(in EntityUid uid,
-        List<NetEntity> toSend,
-        Dictionary<NetEntity, EntityData> entityData,
-        GameTick fromTick,
-        GameTick toTick,
-        ref int newEntityCount,
-        ref int enteredEntityCount,
-        ref int dirtyEntityCount,
-        int newEntityBudget,
-        int enteredEntityBudget,
-        bool addChildren = false)
-    {
-        //are we valid?
-        //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
-        if (!uid.IsValid())
-            return false;
-
-        var xform = _xformQuery.GetComponent(uid);
-        var parent = xform.ParentUid;
-        if (parent.IsValid() && !RecursivelyAddOverride(in parent, toSend, entityData, fromTick, toTick,
-                ref newEntityCount, ref enteredEntityCount, ref dirtyEntityCount, newEntityBudget, enteredEntityBudget))
-        {
-            return false;
-        }
-
-        var netEntity = _metaQuery.GetComponent(uid).NetEntity;
-
-        // Note that we check this AFTER adding parents. This is because while this entity may already have been added
-        // to the toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported
-        // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
-        // send the new parents, which may otherwise be delayed because of the PVS budget.
-
-        var curTick = _gameTiming.CurTick;
-        ref var data = ref GetOrNewEntityData(entityData, netEntity);
-        if (data.LastSent != curTick)
-        {
-            var (entered, _) = GetPvsEntryData(ref data, fromTick, toTick, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-            AddToSendList(netEntity, ref data, toSend, fromTick, toTick, entered, ref dirtyEntityCount);
-        }
-
-        if (addChildren)
-        {
-            RecursivelyAddChildren(xform, toSend, entityData, fromTick, toTick, ref newEntityCount,
-                ref enteredEntityCount, ref dirtyEntityCount, in newEntityBudget, in enteredEntityBudget);
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Recursively add an entity and all of its children to the to-send set.
-    /// </summary>
-    private void RecursivelyAddChildren(TransformComponent xform,
-        List<NetEntity> toSend,
-        Dictionary<NetEntity, EntityData> entityData,
-        in GameTick fromTick,
-        in GameTick toTick,
-        ref int newEntityCount,
-        ref int enteredEntityCount,
-        ref int dirtyEntityCount,
-        in int newEntityBudget,
-        in int enteredEntityBudget)
-    {
-        foreach (var child in xform._children)
-        {
-            if (!_xformQuery.TryGetComponent(child, out var childXform))
-                continue;
-
-            var metadata = _metaQuery.GetComponent(child);
-            var netChild = metadata.NetEntity;
-            ref var data = ref GetOrNewEntityData(entityData, netChild);
-            if (data.LastSent != toTick)
-            {
-                var (entered, _) = GetPvsEntryData(ref data, fromTick, toTick, ref newEntityCount,
-                    ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-                AddToSendList(netChild, ref data, toSend, fromTick, toTick, entered, ref dirtyEntityCount);
-            }
-
-            RecursivelyAddChildren(childXform, toSend, entityData, fromTick, toTick, ref newEntityCount,
-                ref enteredEntityCount, ref dirtyEntityCount, in newEntityBudget, in enteredEntityBudget);
-        }
+        return (entering, false);
     }
 }

@@ -30,8 +30,19 @@ namespace Robust.Shared.GameObjects
         private EntityQuery<MetaDataComponent> _metaQuery;
         protected EntityQuery<TransformComponent> XformQuery;
 
-        private readonly Queue<MoveEvent> _gridMoves = new();
-        private readonly Queue<MoveEvent> _otherMoves = new();
+        public delegate void MoveEventHandler(ref MoveEvent ev);
+
+        /// <summary>
+        ///     Invoked as an alternative to broadcasting move events, which can be expensive.
+        ///     Systems which want to subscribe broadcast to <see cref="MoveEvent"/> (which you probably shouldn't)
+        ///     should subscribe to this instead
+        /// </summary>
+        public event MoveEventHandler? OnGlobalMoveEvent;
+
+        public void InvokeGlobalMoveEvent(ref MoveEvent ev)
+        {
+            OnGlobalMoveEvent?.Invoke(ref ev);
+        }
 
         public override void Initialize()
         {
@@ -242,18 +253,13 @@ namespace Robust.Shared.GameObjects
             indices = _map.CoordinatesToTile(xform.GridUid.Value, grid, xform.Coordinates);
             return true;
         }
-
     }
 
     [ByRefEvent]
-    public readonly struct TransformStartupEvent
+    public readonly struct TransformStartupEvent(Entity<TransformComponent> entity)
     {
-        public readonly TransformComponent Component;
-
-        public TransformStartupEvent(TransformComponent component)
-        {
-            Component = component;
-        }
+        public readonly Entity<TransformComponent> Entity = entity;
+        public TransformComponent Component => Entity.Comp;
     }
 
     /// <summary>

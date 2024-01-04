@@ -41,6 +41,8 @@ public record struct Entity<T>
         owner = Owner;
         comp = Comp;
     }
+
+    public override int GetHashCode() => Owner.GetHashCode();
 }
 
 public record struct Entity<T1, T2>

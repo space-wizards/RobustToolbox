@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -172,7 +173,7 @@ namespace Robust.Shared.GameObjects
         ///     Every entity will always have the first bit set to true.
         /// </remarks>
         [ViewVariables] // TODO ACCESS RRestrict writing to server-side visibility system
-        public int VisibilityMask { get; internal set; }= 1;
+        public ushort VisibilityMask { get; internal set; }= 1;
 
         [ViewVariables]
         public bool EntityPaused => PauseTime != null;
@@ -180,6 +181,16 @@ namespace Robust.Shared.GameObjects
         public bool EntityInitialized => EntityLifeStage >= EntityLifeStage.Initialized;
         public bool EntityInitializing => EntityLifeStage == EntityLifeStage.Initializing;
         public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
+
+        /// <summary>
+        /// The PVS chunk that this entity is currently stored on.
+        /// This should always be set properly if the entity is directly attached to a grid or map.
+        /// If it is null, it implies that either:
+        /// - The entity nested is somewhere in some chunk that has already been marked as dirty
+        /// - The entity is in nullspace
+        /// </summary>
+        [ViewVariables]
+        internal PvsChunkLocation? LastPvsLocation;
 
         [Obsolete("Do not use from content")]
         public override void ClearTicks()
@@ -211,5 +222,17 @@ namespace Robust.Shared.GameObjects
         /// Used by clients to indicate that an entity has left their visible set.
         /// </summary>
         Detached = 1 << 2,
+
+        /// <summary>
+        /// If true, then this entity is considered a "high priority" entity and will be sent to players from further
+        /// away. Useful for things like light sources and occluders. Only works if the entity is directly parented to
+        /// a grid or map.
+        /// </summary>
+        PvsPriority = 1 << 3,
     }
+
+    /// <summary>
+    /// Key struct for uniquely identifying a PVS chunk.
+    /// </summary>
+    internal readonly record struct PvsChunkLocation(EntityUid Uid, Vector2i Indices);
 }

@@ -820,8 +820,18 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
+            // If it was at the top index and we re-add it there then don't throw.
             Parent._orderedChildren.RemoveAt(posInParent);
-            Parent._orderedChildren.Insert(position, this);
+
+            if (position == Parent._orderedChildren.Count)
+            {
+                Parent._orderedChildren.Add(this);
+            }
+            else
+            {
+                Parent._orderedChildren.Insert(position, this);
+            }
+
             Parent.ChildMoved(this, posInParent, position);
         }
 

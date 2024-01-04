@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Robust.Client.Audio;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -93,6 +94,12 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
             resource = null;
             return false;
         }
+    }
+
+    public bool TryGetResource(AudioStream stream, [NotNullWhen(true)] out AudioResource? resource)
+    {
+        resource = new AudioResource(stream);
+        return true;
     }
 
     public void ReloadResource<T>(string path) where T : BaseResource, new()

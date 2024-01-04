@@ -44,20 +44,20 @@ public abstract partial class SharedTransformSystem
         SetGridId(uid, xform, newGridUid, xformQuery);
         var reParent = new EntParentChangedMessage(uid, oldGridUid, xform.MapID, xform);
         RaiseLocalEvent(uid, ref reParent, true);
-        // TODO: Ideally shouldn't need to call the moveevent
-        var movEevee = new MoveEvent(uid,
+        var meta = MetaData(uid);
+        var movEevee = new MoveEvent((uid, xform, meta),
             new EntityCoordinates(oldGridUid, xform._localPosition),
             new EntityCoordinates(newGridUid, xform._localPosition),
             xform.LocalRotation,
             xform.LocalRotation,
-            xform,
             _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref movEevee, true);
+        RaiseLocalEvent(uid, ref movEevee);
+        InvokeGlobalMoveEvent(ref movEevee);
 
         DebugTools.Assert(xformQuery.GetComponent(oldGridUid).MapID == xformQuery.GetComponent(newGridUid).MapID);
         DebugTools.Assert(xform._anchored);
 
-        Dirty(uid, xform);
+        Dirty(uid, xform, meta);
         var ev = new ReAnchorEvent(uid, oldGridUid, newGridUid, tilePos, xform);
         RaiseLocalEvent(uid, ref ev);
     }
@@ -332,7 +332,7 @@ public abstract partial class SharedTransformSystem
         var parentEv = new EntParentChangedMessage(uid, null, MapId.Nullspace, xform);
         RaiseLocalEvent(uid, ref parentEv, true);
 
-        var ev = new TransformStartupEvent(xform);
+        var ev = new TransformStartupEvent((uid, xform));
         RaiseLocalEvent(uid, ref ev, true);
 
         DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0, $"NoRot entity has a non-zero local rotation. entity: {ToPrettyString(uid)}");
@@ -597,8 +597,9 @@ public abstract partial class SharedTransformSystem
         if (xform.ParentUid == xform.MapUid)
             DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid || xform.GridUid == xform.MapUid);
 #endif
-        var moveEvent = new MoveEvent(uid, oldPosition, newPosition, oldRotation, xform._localRotation, xform, _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref moveEvent, true);
+        var moveEvent = new MoveEvent((uid, xform, meta), oldPosition, newPosition, oldRotation, xform._localRotation, _gameTiming.ApplyingState);
+        RaiseLocalEvent(uid, ref moveEvent);
+        InvokeGlobalMoveEvent(ref moveEvent);
     }
 
     public void SetCoordinates(
@@ -1140,14 +1141,16 @@ public abstract partial class SharedTransformSystem
 
         DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
 
-        Dirty(uid, xform);
+        var meta = MetaData(uid);
+        Dirty(uid, xform, meta);
         xform.MatricesDirty = true;
 
         if (!xform.Initialized)
             return;
 
-        var moveEvent = new MoveEvent(uid, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
-        RaiseLocalEvent(uid, ref moveEvent, true);
+        var moveEvent = new MoveEvent((uid, xform, meta), oldPosition, xform.Coordinates, oldRotation, rot, _gameTiming.ApplyingState);
+        RaiseLocalEvent(uid, ref moveEvent);
+        InvokeGlobalMoveEvent(ref moveEvent);
     }
 
     #endregion
@@ -1331,22 +1334,15 @@ public abstract partial class SharedTransformSystem
         if (!xform.ParentUid.IsValid())
             return false;
 
-        EntityUid newParent;
-        var oldPos = GetWorldPosition(xform, XformQuery);
-        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, XformQuery, out var gridUid, out _))
-        {
-            newParent = gridUid;
-        }
-        else if (_mapManager.GetMapEntityId(xform.MapID) is { Valid: true } mapEnt)
-        {
-            newParent = mapEnt;
-        }
-        else
-        {
+        if (xform.MapUid is not { } map)
             return false;
-        }
 
-        coordinates = new(newParent, GetInvWorldMatrix(newParent, XformQuery).Transform(oldPos));
+        var newParent = map;
+        var oldPos = GetWorldPosition(xform);
+        if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _))
+            newParent = gridUid;
+
+        coordinates = new(newParent, GetInvWorldMatrix(newParent).Transform(oldPos));
         return true;
     }
     #endregion

@@ -67,7 +67,7 @@ namespace Robust.Client.GameObjects
 
         public override void QueueDeleteEntity(EntityUid? uid)
         {
-            if (uid == null)
+            if (uid == null || uid == EntityUid.Invalid)
                 return;
 
             if (IsClientSide(uid.Value))
@@ -98,25 +98,38 @@ namespace Robust.Client.GameObjects
                 base.Dirty(ent, meta);
         }
 
-        public override EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metaDataComponent = null)
+        /// <inheritdoc />
+        public override void Dirty<T1, T2>(Entity<T1, T2> ent, MetaDataComponent? meta = null)
         {
-            if (_playerManager.LocalPlayer?.ControlledEntity == uid)
-                return base.ToPrettyString(uid) with { Session = _playerManager.LocalPlayer.Session };
+            if (_gameTiming.InPrediction)
+                base.Dirty(ent, meta);
+        }
 
-            return base.ToPrettyString(uid);
+        /// <inheritdoc />
+        public override void Dirty<T1, T2, T3>(Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
+        {
+            if (_gameTiming.InPrediction)
+                base.Dirty(ent, meta);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty<T1, T2, T3, T4>(Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
+        {
+            if (_gameTiming.InPrediction)
+                base.Dirty(ent, meta);
         }
 
         public override void RaisePredictiveEvent<T>(T msg)
         {
-            var localPlayer = _playerManager.LocalPlayer;
-            DebugTools.AssertNotNull(localPlayer);
+            var session = _playerManager.LocalSession;
+            DebugTools.AssertNotNull(session);
 
             var sequence = _stateMan.SystemMessageDispatched(msg);
             EntityNetManager?.SendSystemNetworkMessage(msg, sequence);
 
             DebugTools.Assert(!_stateMan.IsPredictionEnabled || _gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel != ClientRunLevel.Connected);
 
-            var eventArgs = new EntitySessionEventArgs(localPlayer!.Session);
+            var eventArgs = new EntitySessionEventArgs(session!);
             EventBus.RaiseEvent(EventSource.Local, msg);
             EventBus.RaiseEvent(EventSource.Local, new EntitySessionMessage<T>(eventArgs, msg));
         }

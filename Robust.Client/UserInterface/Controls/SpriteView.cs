@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -22,6 +23,9 @@ namespace Robust.Client.UserInterface.Controls
 
         [ViewVariables]
         public Entity<SpriteComponent, TransformComponent>? Entity { get; private set; }
+
+        [ViewVariables]
+        public NetEntity? NetEnt { get; private set; }
 
         /// <summary>
         /// This field configures automatic scaling of the sprite. This automatic scaling is done before
@@ -120,11 +124,27 @@ namespace Robust.Client.UserInterface.Controls
             RectClipContent = true;
         }
 
-        public SpriteView(EntityUid uid, IEntityManager entMan)
+        public SpriteView(EntityUid? uid, IEntityManager entMan)
         {
             _entMan = entMan;
             RectClipContent = true;
             SetEntity(uid);
+        }
+
+        public SpriteView(NetEntity uid, IEntityManager entMan)
+        {
+            _entMan = entMan;
+            RectClipContent = true;
+            SetEntity(uid);
+        }
+
+        public void SetEntity(NetEntity netEnt)
+        {
+            if (netEnt == NetEnt)
+                return;
+
+            Entity = null;
+            NetEnt = netEnt;
         }
 
         public void SetEntity(EntityUid? uid)
@@ -136,10 +156,12 @@ namespace Robust.Client.UserInterface.Controls
                 || !_entMan.TryGetComponent(uid, out TransformComponent? xform))
             {
                 Entity = null;
+                NetEnt = null;
                 return;
             }
 
             Entity = new(uid.Value, sprite, xform);
+            NetEnt = _entMan.GetNetEntity(uid);
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
@@ -151,13 +173,10 @@ namespace Robust.Client.UserInterface.Controls
 
         private void UpdateSize()
         {
-            if (Entity is not { } ent)
-            {
-                _spriteSize = default;
+            if (!ResolveEntity(out _, out var sprite, out _))
                 return;
-            }
 
-            var spriteBox = ent.Comp1.CalculateRotatedBoundingBox(default,  _worldRotation ?? Angle.Zero, _eyeRotation)
+            var spriteBox = sprite.CalculateRotatedBoundingBox(default,  _worldRotation ?? Angle.Zero, _eyeRotation)
                 .CalcBoundingBox();
 
             if (!SpriteOffset)
@@ -199,16 +218,8 @@ namespace Robust.Client.UserInterface.Controls
 
         internal override void DrawInternal(IRenderHandle renderHandle)
         {
-            if (Entity == null)
+            if (!ResolveEntity(out var uid, out var sprite, out var xform))
                 return;
-
-            var (uid, sprite, xform) = Entity.Value;
-
-            if (sprite.Deleted)
-            {
-                SetEntity(null);
-                return;
-            }
 
             _sprite ??= _entMan.System<SpriteSystem>();
             _transform ??= _entMan.System<TransformSystem>();
@@ -238,6 +249,35 @@ namespace Robust.Client.UserInterface.Controls
 
             renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, sprite, xform, _transform);
             world.Modulate = oldModulate;
+        }
+
+        private bool ResolveEntity(
+            out EntityUid uid,
+            [NotNullWhen(true)] out SpriteComponent? sprite,
+            [NotNullWhen(true)] out TransformComponent? xform)
+        {
+            if (Entity != null)
+            {
+                (uid, sprite, xform) = Entity.Value;
+                return true;
+            }
+
+            sprite = null;
+            xform = null;
+            uid = default;
+
+            if (NetEnt == null)
+                return false;
+
+            if (!_entMan.TryGetEntity(NetEnt, out var ent))
+                return false;
+
+            SetEntity(ent);
+            if (Entity == null)
+                return false;
+
+            (uid, sprite, xform) = Entity.Value;
+            return true;
         }
     }
 }

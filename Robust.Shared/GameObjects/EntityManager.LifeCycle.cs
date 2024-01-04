@@ -90,4 +90,9 @@ public partial class EntityManager
         EventBus.RaiseComponentEvent(component, CompRemoveInstance);
         component.LifeStage = ComponentLifeStage.Deleted;
     }
+
+    internal virtual void SetLifeStage(MetaDataComponent meta, EntityLifeStage stage)
+    {
+        meta.EntityLifeStage = stage;
+    }
 }

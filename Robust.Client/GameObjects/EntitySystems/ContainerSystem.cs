@@ -54,9 +54,10 @@ namespace Robust.Client.GameObjects
             DebugTools.Assert(ExpectedEntities.TryGetValue(netEntity, out var expectedContainer) && expectedContainer == cont && cont.ExpectedEntities.Contains(netEntity));
         }
 
-        private void HandleEntityInitialized(EntityUid uid)
+        private void HandleEntityInitialized(Entity<MetaDataComponent> ent)
         {
-            if (!RemoveExpectedEntity(GetNetEntity(uid), out var container))
+            var (uid, meta) = ent;
+            if (!RemoveExpectedEntity(meta.NetEntity, out var container))
                 return;
 
             Insert((uid, TransformQuery.GetComponent(uid), MetaQuery.GetComponent(uid), null), container);

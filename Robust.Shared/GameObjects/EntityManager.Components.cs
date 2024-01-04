@@ -115,7 +115,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.AssertOwner(uid, metadata);
             metadata ??= GetComponent<MetaDataComponent>(uid);
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
-            metadata.EntityLifeStage = EntityLifeStage.Initializing;
+            SetLifeStage(metadata, EntityLifeStage.Initializing);
 
             // Initialize() can modify the collection of components. Copy them.
             FixedArray32<IComponent?> compsFixed = default;
@@ -142,7 +142,7 @@ namespace Robust.Shared.GameObjects
 
 #endif
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
-            metadata.EntityLifeStage = EntityLifeStage.Initialized;
+            SetLifeStage(metadata, EntityLifeStage.Initialized);
         }
 
         public void StartComponents(EntityUid uid)

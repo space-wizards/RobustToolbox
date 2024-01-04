@@ -94,8 +94,6 @@ namespace Robust.Shared.Network.Messages
             MsgSize = buffer.LengthBytes;
         }
 
-        public bool ForceSendReliably;
-
         /// <summary>
         ///     Whether this state message is large enough to warrant being sent reliably.
         ///     This is only valid after
@@ -104,7 +102,7 @@ namespace Robust.Shared.Network.Messages
         public bool ShouldSendReliably()
         {
             DebugTools.Assert(_hasWritten, "Attempted to determine sending method before determining packet size.");
-            return ForceSendReliably || MsgSize > ReliableThreshold;
+            return State.ForceSendReliably || MsgSize > ReliableThreshold;
         }
 
         public override NetDeliveryMethod DeliveryMethod

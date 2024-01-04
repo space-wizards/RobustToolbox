@@ -202,7 +202,7 @@ public partial class SharedPhysicsSystem
     /// <summary>
     /// Completely resets a dynamic body.
     /// </summary>
-    public void ResetDynamics(PhysicsComponent body)
+    public void ResetDynamics(PhysicsComponent body, bool dirty = true)
     {
         var updated = false;
 
@@ -230,7 +230,7 @@ public partial class SharedPhysicsSystem
             updated = true;
         }
 
-        if (updated)
+        if (updated && dirty)
             Dirty(body);
     }
 
@@ -380,12 +380,16 @@ public partial class SharedPhysicsSystem
 
     public void SetAwake(Entity<PhysicsComponent> ent, bool value, bool updateSleepTime = true)
     {
-        var uid = ent.Owner;
-        var body = ent.Comp;
-        if (body.Awake == value)
-            return;
+        var (uid, body) = ent;
+        var canWake = body.BodyType != BodyType.Static && body.CanCollide;
 
-        if (value && (body.BodyType == BodyType.Static || !body.CanCollide))
+        if (body.Awake == value)
+        {
+            DebugTools.Assert(!body.Awake || canWake);
+            return;
+        }
+
+        if (value && !canWake)
             return;
 
         body.Awake = value;
@@ -397,20 +401,29 @@ public partial class SharedPhysicsSystem
         }
         else
         {
+            // TODO C# event?
             var ev = new PhysicsSleepEvent(uid, body);
             RaiseLocalEvent(uid, ref ev, true);
 
             // Reset the sleep timer.
-            if (ev.Cancelled)
+            if (ev.Cancelled && canWake)
             {
+                body.Awake = true;
+                // TODO C# event?
+                var wakeEv = new PhysicsWakeEvent(uid, body);
+                RaiseLocalEvent(uid, ref wakeEv, true);
+
                 if (updateSleepTime)
                     SetSleepTime(body, 0);
 
                 return;
             }
 
-            ResetDynamics(body);
+            ResetDynamics(body, dirty: false);
         }
+
+        // Update wake system after we are sure that the wake/sleep event wasn't cancelled.
+        _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
 
         if (updateSleepTime)
             SetSleepTime(body, 0);

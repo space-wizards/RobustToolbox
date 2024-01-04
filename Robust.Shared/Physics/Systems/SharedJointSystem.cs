@@ -195,6 +195,7 @@ public abstract partial class SharedJointSystem : EntitySystem
             FilterContactsForJoint(joint, bodyA, bodyB);
         }
 
+        // TODO reduce metadata resolves.
         _physics.WakeBody(aUid, body: bodyA);
         _physics.WakeBody(bUid, body: bodyB);
         Dirty(aUid, bodyA);
@@ -426,13 +427,7 @@ public abstract partial class SharedJointSystem : EntitySystem
             return;
         }
 
-        // Need to defer this for prediction reasons, yay!
-        // This can also break prediction for reasons, yay!
-        // Whenever a joint is added or removed, you need to check if its queued for adding.
-        // The client can apply multiple game states in a row without running a tick update,
-        // which can lead to things like cross-map joints.
-        // TODO is this actually needed. Its bad for performance coin.
-        AddedJoints.Add(joint);
+        InitJoint(joint, bodyA, bodyB);
 
         if (_gameTiming.IsFirstTimePredicted)
         {

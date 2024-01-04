@@ -69,6 +69,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
+            var xform = entMan.System<SharedTransformSystem>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
@@ -76,16 +77,16 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
-            var subscriber = new Subscriber();
             int calledCount = 0;
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
-            entMan.EventBus.SubscribeEvent<MoveEvent>(EventSource.Local, subscriber, MoveEventHandler);
+            xform.OnGlobalMoveEvent += MoveEventHandler;
 
             // Act
             entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).WorldPosition, Is.EqualTo(new Vector2(7.5f, 7.5f))); // centered on tile
             Assert.That(calledCount, Is.EqualTo(1)); // because the ent was moved from snapping, a MoveEvent was raised.
+            xform.OnGlobalMoveEvent -= MoveEventHandler;
             void MoveEventHandler(ref MoveEvent ev)
             {
                 calledCount++;
@@ -156,6 +157,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
+            var traversal = entMan.System<SharedGridTraversalSystem>();
+            traversal.Enabled = false;
+
             var subscriber = new Subscriber();
             int calledCount = 0;
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
@@ -170,7 +174,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             {
                 Assert.That(ev.Entity, Is.EqualTo(ent1));
                 calledCount++;
+
             }
+            traversal.Enabled = true;
         }
 
         /// <summary>
@@ -232,6 +238,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
+            var xform = entMan.System<SharedTransformSystem>();
 
             // coordinates are already tile centered to prevent snapping and MoveEvent
             var coordinates = new MapCoordinates(new Vector2(7.5f, 7.5f), TestMapId);
@@ -240,11 +247,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
-            var subscriber = new Subscriber();
             int calledCount = 0;
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
             entMan.GetComponent<TransformComponent>(ent1).Anchored = true; // Anchoring will change parent if needed, raising MoveEvent, subscribe after
-            entMan.EventBus.SubscribeEvent<MoveEvent>(EventSource.Local, subscriber, MoveEventHandler);
+            xform.OnGlobalMoveEvent += MoveEventHandler;
 
             // Act
             entMan.GetComponent<TransformComponent>(ent1).WorldPosition = new Vector2(99, 99);
@@ -252,6 +258,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).MapPosition, Is.EqualTo(coordinates));
             Assert.That(calledCount, Is.EqualTo(0));
+            xform.OnGlobalMoveEvent -= MoveEventHandler;
             void MoveEventHandler(ref MoveEvent ev)
             {
                 Assert.Fail("MoveEvent raised when entity is anchored.");
@@ -508,6 +515,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
+            var traversal = entMan.System<SharedGridTraversalSystem>();
+            traversal.Enabled = false;
+
             var subscriber = new Subscriber();
             int calledCount = 0;
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
@@ -523,6 +533,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
                 Assert.That(ev.Entity, Is.EqualTo(ent1));
                 calledCount++;
             }
+            traversal.Enabled = true;
         }
 
         /// <summary>

@@ -18,6 +18,7 @@ using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -116,7 +117,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
         SubscribeLocalEvent<MapChangedEvent>(OnMapChange);
 
-        SubscribeLocalEvent<MoveEvent>(OnMove);
+        _transform.OnGlobalMoveEvent += OnMove;
 
         SubscribeLocalEvent<TransformComponent, PhysicsBodyTypeChangedEvent>(OnBodyTypeChange);
         SubscribeLocalEvent<PhysicsComponent, ComponentStartup>(OnBodyStartup);
@@ -134,7 +135,9 @@ public sealed partial class EntityLookupSystem : EntitySystem
     {
         base.Shutdown();
         EntityManager.EntityInitialized -= OnEntityInit;
+        _transform.OnGlobalMoveEvent -= OnMove;
     }
+
     #region DynamicTree
 
     private void OnBroadphaseTerminating(EntityUid uid, BroadphaseComponent component, ref EntityTerminatingEvent args)
@@ -230,7 +233,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (!TryGetCurrentBroadphase(xform, out var broadphase))
             return;
 
-        if (!TryComp(xform.MapUid, out PhysicsMapComponent? physMap))
+        if (!_mapQuery.TryGetComponent(xform.MapUid, out var physMap))
             throw new InvalidOperationException();
 
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
@@ -303,14 +306,14 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         xform.Broadphase = null;
 
-        if (!TryComp(old.Uid, out BroadphaseComponent? broadphase))
+        if (!_broadQuery.TryGetComponent(old.Uid, out var broadphase))
             return; // broadphase probably got deleted.
 
         // remove from the old broadphase
         var fixtures = Comp<FixturesComponent>(uid);
         if (old.CanCollide)
         {
-            TryComp(old.PhysicsMap, out PhysicsMapComponent? physicsMap);
+            _mapQuery.TryGetComponent(old.PhysicsMap, out var physicsMap);
             RemoveBroadTree(broadphase, fixtures, old.Static, physicsMap);
         }
         else
@@ -354,7 +357,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (broadphaseXform.MapID == MapId.Nullspace)
             return;
 
-        if (!TryComp(broadphaseXform.MapUid, out PhysicsMapComponent? physMap))
+        if (!_mapQuery.TryGetComponent(broadphaseXform.MapUid, out var physMap))
             throw new InvalidOperationException($"Physics Broadphase is missing physics map. {ToPrettyString(broadUid)}");
 
         AddOrUpdatePhysicsTree(uid, broadUid, broadphase, broadphaseXform, physMap, xform, body, fixtures, xformQuery);
@@ -441,9 +444,9 @@ public sealed partial class EntityLookupSystem : EntitySystem
         (staticBody ? broadphase.StaticSundriesTree : broadphase.SundriesTree).AddOrUpdate(uid, aabb);
     }
 
-    private void OnEntityInit(EntityUid uid)
+    private void OnEntityInit(Entity<MetaDataComponent> uid)
     {
-        if (_container.IsEntityOrParentInContainer(uid) || _mapManager.IsMap(uid) || _mapManager.IsGrid(uid))
+        if (_container.IsEntityOrParentInContainer(uid, uid) || _mapManager.IsMap(uid) || _mapManager.IsGrid(uid))
             return;
 
         // TODO can this just be done implicitly via transform startup?
@@ -487,9 +490,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
         DebugTools.Assert(!newMap.IsValid() || HasComp<MapComponent>(newMap));
         DebugTools.Assert(!oldMap.IsValid() || HasComp<MapComponent>(oldMap));
 
-        var oldBuffer = CompOrNull<PhysicsMapComponent>(oldMap)?.MoveBuffer;
-        var newBuffer = CompOrNull<PhysicsMapComponent>(newMap)?.MoveBuffer;
-
+        var oldBuffer = _mapQuery.CompOrNull(oldMap)?.MoveBuffer;
+        var newBuffer = _mapQuery.CompOrNull(newMap)?.MoveBuffer;
 
         foreach (var child in args.Component._children)
         {
@@ -558,7 +560,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             if (!xform.Broadphase.Value.IsValid())
                 return; // Entity is intentionally not on a broadphase (deferred updating?).
 
-            TryComp(xform.Broadphase.Value.PhysicsMap, out oldPhysMap);
+            _mapQuery.TryGetComponent(xform.Broadphase.Value.PhysicsMap, out oldPhysMap);
 
             if (!_broadQuery.TryGetComponent(xform.Broadphase.Value.Uid, out oldBroadphase))
             {
@@ -579,18 +581,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
             }
         }
 
-        if (oldBroadphase != null && _xformQuery.GetComponent(oldParent).MapID == MapId.Nullspace)
-        {
-            oldBroadphase = null;
-            // Note that the parentXform.MapID != MapId.Nullspace is required because currently grids are not allowed to
-            // ever enter null-space. If they are in null-space, we assume that the grid is being deleted, as otherwise
-            // RemoveFromEntityTree() will explode. This may eventually have to change if we stop universally sending
-            // all grids to all players (i.e., out-of view grids will need to get sent to null-space)
-            //
-            // This also means the queries above can be reverted (check broadQuery, then xformQuery, as this will
-            // generally save a component lookup.
-        }
-
         TryFindBroadphase(xform, out var newBroadphase);
 
         if (oldBroadphase != null && oldBroadphase != newBroadphase)
@@ -602,7 +592,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return;
 
         var newBroadphaseXform = _xformQuery.GetComponent(newBroadphase.Owner);
-        if (!TryComp(newBroadphaseXform.MapUid, out PhysicsMapComponent? physMap))
+        if (!_mapQuery.TryGetComponent(newBroadphaseXform.MapUid, out var physMap))
         {
             throw new InvalidOperationException(
                 $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(newBroadphase.Owner)}");
@@ -647,7 +637,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         bool recursive = true)
     {
         var broadphaseXform = _xformQuery.GetComponent(broadphase.Owner);
-        if (!TryComp(broadphaseXform.MapUid, out PhysicsMapComponent? physMap))
+        if (!_mapQuery.TryGetComponent(broadphaseXform.MapUid, out var physMap))
         {
             throw new InvalidOperationException(
                 $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
@@ -681,7 +671,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         if (!_physicsQuery.TryGetComponent(uid, out var body) || !body.CanCollide)
         {
-            // TOOD optimize this. This function iterates UP through parents, while we are currently iterating down.
+            // TODO optimize this. This function iterates UP through parents, while we are currently iterating down.
             var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(uid, xform);
 
             // TODO BROADPHASE PARENTING this just assumes local = world
@@ -728,8 +718,10 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (!TryGetCurrentBroadphase(xform, out var broadphase))
             return;
 
+        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
+        DebugTools.Assert(!HasComp<MapComponent>(uid));
         PhysicsMapComponent? physMap = null;
-        if (xform.Broadphase!.Value.PhysicsMap is { Valid: true } map && !TryComp(map, out physMap))
+        if (xform.Broadphase!.Value.PhysicsMap is { Valid: true } map && !_mapQuery.TryGetComponent(map, out physMap))
         {
             throw new InvalidOperationException(
                 $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
@@ -767,7 +759,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         if (old.PhysicsMap.IsValid() && physicsMap?.Owner != old.PhysicsMap)
         {
-            if (!TryComp(old.PhysicsMap, out physicsMap))
+            if (!_mapQuery.TryGetComponent(old.PhysicsMap, out physicsMap))
                 Log.Error($"Entity {ToPrettyString(uid)} has missing physics map?");
         }
 
@@ -802,12 +794,12 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (xform.Broadphase is not { Valid: true } old)
             return false;
 
-        if (!TryComp(old.Uid, out broadphase))
+        if (!_broadQuery.TryGetComponent(old.Uid, out broadphase))
         {
             // broadphase was probably deleted
             DebugTools.Assert("Encountered deleted broadphase.");
 
-            if (TryComp(xform.Owner, out FixturesComponent? fixtures))
+            if (_fixturesQuery.TryGetComponent(xform.Owner, out FixturesComponent? fixtures))
             {
                 foreach (var fixture in fixtures.Fixtures.Values)
                 {

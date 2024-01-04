@@ -8,6 +8,7 @@ import subprocess
 import sys
 import zipfile
 import argparse
+import glob
 
 from typing import List, Optional
 
@@ -101,10 +102,12 @@ def main() -> None:
 
     if os.path.exists("release"):
         print(Fore.BLUE + Style.DIM +
-              "Cleaning old release packages (release/)..." + Style.RESET_ALL)
-        shutil.rmtree("release")
+              "Cleaning old release packages (release/Robust.Client_*)..." + Style.RESET_ALL)
+        for past in glob.glob("release/Robust.Client_*"):
+            os.remove(past)
+    else:
+        os.mkdir("release")
 
-    os.mkdir("release")
 
     if PLATFORM_WINDOWS in platforms:
         if not skip_build:

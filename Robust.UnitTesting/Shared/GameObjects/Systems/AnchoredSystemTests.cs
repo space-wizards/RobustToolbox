@@ -71,7 +71,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
-            var xform = entMan.System<SharedTransformSystem>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
@@ -85,7 +84,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             entMan.System<MoveEventTestSystem>().ResetCounters();
             entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).WorldPosition, Is.EqualTo(new Vector2(7.5f, 7.5f))); // centered on tile
-            entMan.System<MoveEventTestSystem>().AssertMoved();
+            entMan.System<MoveEventTestSystem>().AssertMoved(false);
         }
 
         [ComponentProtoName("AnchorOnInit")]

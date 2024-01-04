@@ -35,19 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Various entity manager methods now have a new `where T : IComponent` constraint.
-* The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations. 
 * `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
 * Event bus subscriptions are now locked after `IEntityManager` has started, instead of after the first component gets added. Any event subscriptions now need to happen before startup (but after init).
 * Event bus subscriptions must now be locked before raising any events.
-
 
 ### New features
 
 * `RobustUnitTest` now has a `ExtraComponents` field for automatically registering additional components.
 * `IComponentFactory.RegisterIgnore()` now accepts more than one string. 
 * Added `IComponentFactory.RegisterTypes` for simultaneously registering multiple components. 
-* Added `IComponentFactory.GetAllRegistrations()`
 
 ### Bugfixes
 
@@ -60,6 +56,20 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 202.0.0
+
+### Breaking changes
+
+* Various entity manager methods now have a new `where T : IComponent` constraint.
+* The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations. 
+* `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
+
+### New features
+
+* Added `IComponentFactory.GetAllRegistrations()`
+* Add IComponentState interface support for component states so structs can be used in lieu of classes.
 
 
 ## 201.0.0

@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
 using Robust.Shared.Enums;
+using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
@@ -81,7 +82,14 @@ internal sealed partial class PvsSystem
 
         public void Execute(int index)
         {
-            _pvs.ProcessLeavePvs(_sessions[index]);
+            try
+            {
+                _pvs.ProcessLeavePvs(_sessions[index]);
+            }
+            catch (Exception e)
+            {
+                _pvs.Log.Log(LogLevel.Error, e, $"Caught exception while processing pvs-leave messages.");
+            }
         }
 
         public void Setup(ICommonSession[] sessions)

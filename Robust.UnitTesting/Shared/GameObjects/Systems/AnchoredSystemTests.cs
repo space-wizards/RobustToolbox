@@ -157,6 +157,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
+            var traversal = entMan.System<SharedGridTraversalSystem>();
+            traversal.Enabled = false;
+
             var subscriber = new Subscriber();
             int calledCount = 0;
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
@@ -171,7 +174,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             {
                 Assert.That(ev.Entity, Is.EqualTo(ent1));
                 calledCount++;
+
             }
+            traversal.Enabled = true;
         }
 
         /// <summary>
@@ -510,6 +515,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
+            var traversal = entMan.System<SharedGridTraversalSystem>();
+            traversal.Enabled = false;
+
             var subscriber = new Subscriber();
             int calledCount = 0;
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
@@ -525,6 +533,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
                 Assert.That(ev.Entity, Is.EqualTo(ent1));
                 calledCount++;
             }
+            traversal.Enabled = true;
         }
 
         /// <summary>

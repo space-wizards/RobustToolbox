@@ -369,6 +369,9 @@ namespace Robust.Shared.GameObjects
             if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;
 
+            if (component.LastModifiedTick == CurrentTick)
+                return;
+
             DirtyEntity(uid, meta);
             component.LastModifiedTick = CurrentTick;
         }
@@ -380,6 +383,9 @@ namespace Robust.Shared.GameObjects
                 $"Attempted to dirty a non-networked component: {ent.Comp.GetType()}");
 
             if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
+                return;
+
+            if (ent.Comp.LastModifiedTick == CurrentTick)
                 return;
 
             DirtyEntity(ent, meta);

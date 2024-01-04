@@ -274,6 +274,8 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private void ForceFullState(PvsSession session)
     {
+        _leaveTask?.WaitOne();
+        _leaveTask = null;
         session.LastReceivedAck = _gameTiming.CurTick;
         session.RequestedFull = true;
         ClearSendHistory(session);
@@ -431,6 +433,15 @@ internal sealed partial class PvsSystem : EntitySystem
         DebugTools.Assert(_chunks.Values.All(x => Exists(x.Map) && Exists(x.Root)));
         DebugTools.Assert(_chunkSets.Keys.All(Exists));
 
+        _leaveTask?.WaitOne();
+        _leaveTask = null;
+
+        foreach (var session in _disconnected)
+        {
+            if (PlayerData.Remove(session, out var pvsSession))
+                ClearSendHistory(pvsSession);
+        }
+
         var ackJob = ProcessQueuedAcks();
 
         // Figure out what chunks players can see and cache some chunk data.
@@ -441,10 +452,6 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         ackJob?.WaitOne();
-
-        // Ensure any pvs leave tasks have finished before we get the next state & overwrite the "last sent" list.
-        _leaveTask?.WaitOne();
-        _leaveTask = null;
     }
 
     internal void CacheSessionData(ICommonSession[] players)

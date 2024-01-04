@@ -106,9 +106,15 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             public override void Initialize()
             {
                 base.Initialize();
-
                 _transform.OnGlobalMoveEvent += OnMove;
                 SubscribeLocalEvent<EntParentChangedMessage>(OnReparent);
+            }
+
+
+            public override void Shutdown()
+            {
+                base.Shutdown();
+                _transform.OnGlobalMoveEvent -= OnMove;
             }
 
             public bool FailOnMove = false;

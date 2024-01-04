@@ -35,13 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Various entity manager methods now have a new `where T : IComponent` constraint.
-* The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations. 
-* `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
+*None yet*
 
 ### New features
 
-* Added `IComponentFactory.GetAllRegistrations()`
+*None yet*
 
 ### Bugfixes
 
@@ -54,6 +52,20 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 202.0.0
+
+### Breaking changes
+
+* Various entity manager methods now have a new `where T : IComponent` constraint.
+* The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations. 
+* `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
+
+### New features
+
+* Added `IComponentFactory.GetAllRegistrations()`
+* Add IComponentState interface support for component states so structs can be used in lieu of classes.
 
 
 ## 201.0.0

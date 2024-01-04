@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -36,8 +37,8 @@ namespace Robust.Shared.GameObjects
 
         private static readonly ComponentState DefaultComponentState = new();
 
-        private readonly Dictionary<Type, Dictionary<EntityUid, IComponent>> _entTraitDict
-            = new();
+        private FrozenDictionary<Type, Dictionary<EntityUid, IComponent>> _entTraitDict
+            = FrozenDictionary<Type, Dictionary<EntityUid, IComponent>>.Empty;
 
         private Dictionary<EntityUid, IComponent>[] _entTraitArray
             = Array.Empty<Dictionary<EntityUid, IComponent>>();
@@ -59,7 +60,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Already initialized.");
 
             FillComponentDict();
-            _componentFactory.ComponentAdded += OnComponentAdded;
+            _componentFactory.ComponentsAdded += OnComponentsAdded;
         }
 
         /// <summary>
@@ -76,16 +77,21 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void AddComponentRefType(CompIdx type)
+        private void RegisterComponents(IEnumerable<ComponentRegistration> components)
         {
-            var dict = new Dictionary<EntityUid, IComponent>();
-            _entTraitDict.Add(_componentFactory.IdxToType(type), dict);
-            CompIdx.AssignArray(ref _entTraitArray, type, dict);
+            var traitDict = _entTraitDict.ToDictionary();
+            foreach (var reg in components)
+            {
+                var dict = new Dictionary<EntityUid, IComponent>();
+                traitDict.Add(reg.Type, dict);
+                CompIdx.AssignArray(ref _entTraitArray, reg.Idx, dict);
+            }
+            _entTraitDict = traitDict.ToFrozenDictionary();
         }
 
-        private void OnComponentAdded(ComponentRegistration obj)
+        private void OnComponentsAdded(ComponentRegistration[] components)
         {
-            AddComponentRefType(obj.Idx);
+            RegisterComponents(components);
         }
 
         #region Component Management
@@ -1357,13 +1363,9 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FillComponentDict()
         {
-            _entTraitDict.Clear();
+            _entTraitDict = FrozenDictionary<Type, Dictionary<EntityUid, IComponent>>.Empty;
             Array.Fill(_entTraitArray, null);
-
-            foreach (var refType in _componentFactory.GetAllRefTypes())
-            {
-                AddComponentRefType(refType);
-            }
+            RegisterComponents(_componentFactory.GetAllRegistrations());
         }
     }
 

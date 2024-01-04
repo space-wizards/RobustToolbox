@@ -121,16 +121,16 @@ namespace Robust.Shared.GameObjects
             _comFac = entMan.ComponentFactory;
 
             // Dynamic handling of components is only for RobustUnitTest compatibility spaghetti.
-            _comFac.ComponentAdded += ComFacOnComponentAdded;
+            _comFac.ComponentsAdded += ComFacOnComponentsAdded;
 
             InitEntSubscriptionsArray();
         }
 
         private void InitEntSubscriptionsArray()
         {
-            foreach (var refType in _comFac.GetAllRefTypes())
+            foreach (var reg in _comFac.GetAllRegistrations())
             {
-                CompIdx.AssignArray(ref _entSubscriptions, refType, new Dictionary<Type, DirectedRegistration>());
+                CompIdx.AssignArray(ref _entSubscriptions, reg.Idx, new Dictionary<Type, DirectedRegistration>());
             }
         }
 
@@ -327,9 +327,12 @@ namespace Robust.Shared.GameObjects
             EntUnsubscribe(CompIdx.Index<TComp>(), typeof(TEvent));
         }
 
-        private void ComFacOnComponentAdded(ComponentRegistration obj)
+        private void ComFacOnComponentsAdded(ComponentRegistration[] regs)
         {
-            CompIdx.RefArray(ref _entSubscriptions, obj.Idx) ??= new Dictionary<Type, DirectedRegistration>();
+            foreach (var reg in regs)
+            {
+                CompIdx.RefArray(ref _entSubscriptions, reg.Idx) ??= new Dictionary<Type, DirectedRegistration>();
+            }
         }
 
         public void OnEntityAdded(EntityUid e)
@@ -578,10 +581,8 @@ namespace Robust.Shared.GameObjects
         {
             var compSubs = _entSubscriptions[baseType.Value]!;
 
-            if (!compSubs.TryGetValue(typeof(TEvent), out var reg))
-                return;
-
-            reg.Handler(euid, component, ref args);
+            if (compSubs.TryGetValue(typeof(TEvent), out var reg))
+                reg.Handler(euid, component, ref args);
         }
 
         /// <summary>
@@ -624,7 +625,7 @@ namespace Robust.Shared.GameObjects
 
         public void Dispose()
         {
-            _comFac.ComponentAdded -= ComFacOnComponentAdded;
+            _comFac.ComponentsAdded -= ComFacOnComponentsAdded;
 
             // punishment for use-after-free
             _entMan = null!;

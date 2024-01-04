@@ -1,6 +1,10 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Shared.GameObjects;
 
@@ -9,6 +13,15 @@ public sealed partial class EntityLookupSystem
     /*
      * Local AABB / Box2Rotated queries for broadphase entities.
      */
+
+    public HashSet<EntityUid> GetLocalEntitiesIntersecting(EntityUid gridId, Vector2i gridIndices, float enlargement = TileEnlargementRadius, LookupFlags flags = DefaultFlags, MapGridComponent? gridComp = null)
+    {
+        // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
+        var intersecting = new HashSet<EntityUid>();
+
+        GetLocalEntitiesIntersecting(gridId, gridIndices, intersecting, enlargement, flags, gridComp);
+        return intersecting;
+    }
 
     /// <summary>
     /// Gets the entities intersecting the specified broadphase entity using a local AABB.
@@ -25,8 +38,7 @@ public sealed partial class EntityLookupSystem
 
         var localAABB = GetLocalBounds(localTile, tileSize);
         localAABB = localAABB.Enlarged(TileEnlargementRadius);
-        AddLocalEntitiesIntersecting(gridUid, intersecting, localAABB, flags);
-        AddContained(intersecting, flags);
+        GetLocalEntitiesIntersecting(gridUid, localAABB, intersecting, flags);
     }
 
     /// <summary>
@@ -47,5 +59,41 @@ public sealed partial class EntityLookupSystem
     {
         AddLocalEntitiesIntersecting(gridUid, intersecting, localBounds, flags);
         AddContained(intersecting, flags);
+    }
+
+    /// <summary>
+    /// Returns the entities intersecting any of the supplied tiles. Faster than doing each tile individually.
+    /// </summary>
+    public HashSet<EntityUid> GetLocalEntitiesIntersecting(EntityUid gridId, IEnumerable<Vector2i> gridIndices, LookupFlags flags = DefaultFlags)
+    {
+        var intersecting = new HashSet<EntityUid>();
+
+        // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
+        if (!_gridQuery.TryGetComponent(gridId, out var mapGrid))
+            return intersecting;
+
+        // TODO: You can probably decompose the indices into larger areas if you take in a hashset instead.
+        foreach (var index in gridIndices)
+        {
+            GetLocalEntitiesIntersecting(gridId, index, intersecting, flags: flags, gridComp: mapGrid);
+        }
+
+        return intersecting;
+    }
+
+    public HashSet<EntityUid> GetLocalEntitiesIntersecting(BroadphaseComponent lookup, Box2 localAABB, LookupFlags flags = DefaultFlags)
+    {
+        var intersecting = new HashSet<EntityUid>();
+
+        AddLocalEntitiesIntersecting(lookup.Owner, intersecting, localAABB, flags, lookup);
+        AddContained(intersecting, flags);
+
+        return intersecting;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<EntityUid> GetLocalEntitiesIntersecting(TileRef tileRef, float enlargement = TileEnlargementRadius, LookupFlags flags = DefaultFlags)
+    {
+        return GetLocalEntitiesIntersecting(tileRef.GridUid, tileRef.GridIndices, enlargement, flags);
     }
 }

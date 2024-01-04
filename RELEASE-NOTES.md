@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Various entity manager methods now have a new `where T : IComponent` constraint.
 
 ### New features
 

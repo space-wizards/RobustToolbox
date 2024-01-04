@@ -37,6 +37,12 @@ namespace Robust.Shared.Map
         /// </summary>
         public float Y => Position.Y;
 
+        public EntityCoordinates()
+        {
+            EntityId = EntityUid.Invalid;
+            Position = Vector2.Zero;
+        }
+
         /// <summary>
         ///     Constructs a new instance of <see cref="EntityCoordinates"/>.
         /// </summary>

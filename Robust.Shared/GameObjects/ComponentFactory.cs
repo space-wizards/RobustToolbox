@@ -434,6 +434,11 @@ namespace Robust.Shared.GameObjects
             RegisterTypesInternal(types, false);
         }
 
+        public IEnumerable<CompIdx> GetAllRefTypes()
+        {
+            return AllRegistrations.Select(x => x.Idx).Distinct();
+        }
+
         public IEnumerable<ComponentRegistration> GetAllRegistrations()
         {
             return _types.Values;

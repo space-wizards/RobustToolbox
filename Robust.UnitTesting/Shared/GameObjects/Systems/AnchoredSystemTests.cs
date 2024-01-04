@@ -3,6 +3,7 @@ using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -101,10 +102,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
         internal sealed class MoveEventTestSystem : EntitySystem
         {
+            [Dependency] private readonly SharedTransformSystem _transform = default!;
+
             public override void Initialize()
             {
                 base.Initialize();
-                SubscribeLocalEvent<MoveEvent>(OnMove);
+
+                _transform.OnGlobalMoveEvent += OnMove;
                 SubscribeLocalEvent<EntParentChangedMessage>(OnReparent);
             }
 

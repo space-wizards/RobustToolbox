@@ -935,11 +935,13 @@ namespace Robust.UnitTesting
                 // use server side uids on the client and vice versa. This can sometimes accidentally work if the
                 // entities get created in the same order. For that reason we arbitrarily increment the queued Uid by
                 // some arbitrary quantity.
-                var e = (EntityManager) EntMan;
+
+                /* TODO: End my suffering and fix this because entmanager hasn't started up yet.
                 for (var i = 0; i < 10; i++)
                 {
-                    e.GenerateEntityUid();
+                    EntMan.SpawnEntity(null, MapCoordinates.Nullspace);
                 }
+                */
 
                 return client;
             }

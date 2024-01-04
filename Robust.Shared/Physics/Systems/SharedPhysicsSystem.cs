@@ -81,7 +81,7 @@ namespace Robust.Shared.Physics.Systems
             PhysMapQuery = GetEntityQuery<PhysicsMapComponent>();
             MapQuery = GetEntityQuery<MapComponent>();
 
-            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
+            SubscribeLocalEvent<GridInitializeEvent>(OnGridAdd);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
             SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
@@ -183,14 +183,12 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         private void HandleMapChange(EntityUid uid, TransformComponent xform, PhysicsComponent? body, MapId oldMapId, MapId newMapId)
         {
-            var bodyQuery = GetEntityQuery<PhysicsComponent>();
-            var xformQuery = GetEntityQuery<TransformComponent>();
             var jointQuery = GetEntityQuery<JointComponent>();
 
             PhysMapQuery.TryGetComponent(_mapManager.GetMapEntityId(oldMapId), out var oldMap);
             PhysMapQuery.TryGetComponent(_mapManager.GetMapEntityId(newMapId), out var newMap);
 
-            RecursiveMapUpdate(uid, xform, body, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
+            RecursiveMapUpdate(uid, xform, body, newMap, oldMap, jointQuery);
         }
 
         /// <summary>
@@ -202,8 +200,6 @@ namespace Robust.Shared.Physics.Systems
             PhysicsComponent? body,
             PhysicsMapComponent? newMap,
             PhysicsMapComponent? oldMap,
-            EntityQuery<PhysicsComponent> bodyQuery,
-            EntityQuery<TransformComponent> xformQuery,
             EntityQuery<JointComponent> jointQuery)
         {
             DebugTools.Assert(!Deleted(uid));
@@ -227,15 +223,15 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var child in xform._children)
             {
-                if (xformQuery.TryGetComponent(child, out var childXform))
+                if (_xformQuery.TryGetComponent(child, out var childXform))
                 {
-                    bodyQuery.TryGetComponent(child, out var childBody);
-                    RecursiveMapUpdate(child, childXform, childBody, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
+                    PhysicsQuery.TryGetComponent(child, out var childBody);
+                    RecursiveMapUpdate(child, childXform, childBody, newMap, oldMap, jointQuery);
                 }
             }
         }
 
-        private void OnGridAdd(GridAddEvent ev)
+        private void OnGridAdd(GridInitializeEvent ev)
         {
             var guid = ev.EntityUid;
 

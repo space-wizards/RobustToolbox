@@ -194,7 +194,7 @@ namespace Robust.Shared.Scripting
         public bool TryComp<T>(EntityUid uid, out T? comp) where T : IComponent
             => ent.TryGetComponent(uid, out comp);
 
-        public bool HasComp<T>(EntityUid uid)
+        public bool HasComp<T>(EntityUid uid)  where T : IComponent
             => ent.HasComponent<T>(uid);
 
         public EntityUid Spawn(string? prototype, EntityCoordinates position)

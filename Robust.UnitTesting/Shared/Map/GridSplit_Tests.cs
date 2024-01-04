@@ -160,8 +160,8 @@ public sealed class GridSplit_Tests
         grid.SetTile(new Vector2i(2, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
 
-        var newGrid = mapManager.GetAllGrids(mapId).Last();
-        var newGridXform = entManager.GetComponent<TransformComponent>(newGrid);
+        var newGrid = mapManager.GetAllMapGrids(mapId).First(x => x != grid);
+        var newGridXform = entManager.GetComponent<TransformComponent>(newGrid.Owner);
 
         Assert.Multiple(() =>
         {

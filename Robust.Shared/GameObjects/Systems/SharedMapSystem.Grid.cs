@@ -439,8 +439,7 @@ public abstract partial class SharedMapSystem
 
     private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
     {
-        var xformQuery = GetEntityQuery<TransformComponent>();
-        var xform = xformQuery.GetComponent(uid);
+        var xform = _xformQuery.GetComponent(uid);
 
         // Force networkedmapmanager to send it due to non-ECS legacy code.
         var curTick = _timing.CurTick;
@@ -453,7 +452,7 @@ public abstract partial class SharedMapSystem
         component.LastTileModifiedTick = curTick;
 
         if (xform.MapUid != null && xform.MapUid != uid)
-            _transform.SetParent(uid, xform, xform.MapUid.Value, xformQuery);
+            _transform.SetParent(uid, xform, xform.MapUid.Value);
 
         if (!HasComp<MapComponent>(uid))
         {

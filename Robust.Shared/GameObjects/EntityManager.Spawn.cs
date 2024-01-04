@@ -40,6 +40,16 @@ public partial class EntityManager
         return ents;
     }
 
+    public EntityUid[] SpawnEntities(MapCoordinates coordinates, string? prototype, int count)
+    {
+        var ents = new EntityUid[count];
+        for (var i = 0; i < count; i++)
+        {
+            ents[i] = Spawn(prototype, coordinates);
+        }
+        return ents;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, List<string?> protoNames)
     {

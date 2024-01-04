@@ -35,6 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+* Various entity manager methods now have a new `where T : IComponent` constraint.
 * The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations. 
 * `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
 

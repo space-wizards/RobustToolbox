@@ -406,8 +406,8 @@ public partial class SharedPhysicsSystem
             ResetDynamics(body, dirty: false);
         }
 
-        // Update wake system after we are sure that the wake/sleep event wasn't cancelled.
-        if (!value)
+        // Update wake system last, if sleeping but still colliding.
+        if (!value && body.CanCollide)
             _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
 
         if (updateSleepTime)

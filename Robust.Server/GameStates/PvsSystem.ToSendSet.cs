@@ -24,7 +24,7 @@ internal sealed partial class PvsSystem
     }
 
     /// <summary>
-    /// A chunks that is visible to a player and add entities to the game-state.
+    /// Add all entities on a given PVS chunk to a clients game-state.
     /// </summary>
     private void AddPvsChunk(PvsChunk chunk, float distance, PvsSession session)
     {
@@ -52,13 +52,24 @@ internal sealed partial class PvsSystem
             ? chunk.Contents.Count
             : chunk.LodCounts[0];
 
+        // If the PVS budget is exceeded, it should still be safe to send all of the chunk's direct children, though
+        // after that we have no guarantee that an entity's parent got sent.
+        var directChildren = Math.Min(count, chunk.LodCounts[2]);
+
         // Send entities on the chunk.
         var span = CollectionsMarshal.AsSpan(chunk.Contents);
         for (var i = 0; i < count; i++)
         {
             var ent = span[i];
-            if ((mask & ent.Comp.VisibilityMask) == ent.Comp.VisibilityMask)
-                AddEntity(session, ent, fromTick);
+            if ((mask & ent.Comp.VisibilityMask) != ent.Comp.VisibilityMask)
+                continue;
+
+            // TODO PVS improve this somehow
+            // Having entities "leave" pvs view just because the pvs entry budget was exceeded sucks.
+            // This probably requires changing client game state manager to support receiving entities with unknown parents.
+            // Probably needs to do something similar to pending net entity states, but for entity spawning.
+            if (!AddEntity(session, ent, fromTick))
+                count = directChildren;
         }
     }
 

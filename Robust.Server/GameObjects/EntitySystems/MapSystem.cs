@@ -31,6 +31,11 @@ namespace Robust.Server.GameObjects
             _cfg.OnValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion, true);
         }
 
+        protected override void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args)
+        {
+            EnsureComp<PhysicsMapComponent>(uid);
+        }
+
         private void SetGridDeletion(bool value)
         {
             _deleteEmptyGrids = value;

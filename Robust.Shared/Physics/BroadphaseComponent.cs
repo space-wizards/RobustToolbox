@@ -1,5 +1,4 @@
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameStates;
 using Robust.Shared.Physics.BroadPhase;
 
 namespace Robust.Shared.Physics
@@ -7,7 +6,7 @@ namespace Robust.Shared.Physics
     /// <summary>
     /// Stores the broadphase structure for the relevant grid / map.
     /// </summary>
-    [RegisterComponent, NetworkedComponent]
+    [RegisterComponent]
     public sealed partial class BroadphaseComponent : Component
     {
         /// <summary>

@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 202.1.1
+
+### Bugfixes
+
+* Reverted some map/grid initialisation changes that might've been causing broadphase/physics errors.
+* Fixed PVS sometimes sending entities without first sending their children.
+* Fixed a container state handling bug caused by containers not removing expected entities when shutting down.
+* Fixed a `EnsureEntity<T>` state handling bug caused by improper handling of entity deletions. 
+* Fixed a bad NetSyncEnabled debug assert.
+
+
 ## 202.1.0
 
 ### New features

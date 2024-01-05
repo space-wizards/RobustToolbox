@@ -779,15 +779,13 @@ namespace Robust.Client.GameStates
                     newMeta.LastStateApplied = curState.ToSequence;
 
                     // Check if there's any component states awaiting this entity.
-                    if (_entityManager.PendingNetEntityStates.TryGetValue(es.NetEntity, out var value))
+                    if (_entityManager.PendingNetEntityStates.Remove(es.NetEntity, out var value))
                     {
                         foreach (var (type, owner) in value)
                         {
                             var pending = _pendingReapplyNetStates.GetOrNew(owner);
                             pending.Add(type);
                         }
-
-                        _entityManager.PendingNetEntityStates.Remove(es.NetEntity);
                     }
                 }
 
@@ -850,6 +848,17 @@ namespace Robust.Client.GameStates
                 // Original entity referencing the NetEntity may have been deleted.
                 if (!metas.TryGetComponent(uid, out var meta))
                     continue;
+
+                // It may also have been queued for deletion, in which case its last server state entry has already been removed.
+                // I love me some spaghetti order-of-operation dependent code
+
+                if (!_processor._lastStateFullRep.ContainsKey(meta.NetEntity))
+                {
+                    DebugTools.Assert(curState.EntityDeletions.Value.Contains(meta.NetEntity));
+                    continue;
+                }
+
+                DebugTools.Assert(!curState.EntityDeletions.Value.Contains(meta.NetEntity));
 
                 // State already being re-applied so don't bulldoze it.
                 ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_toApply, uid, out var exists);

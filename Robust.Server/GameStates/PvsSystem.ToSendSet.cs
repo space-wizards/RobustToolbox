@@ -48,17 +48,17 @@ internal sealed partial class PvsSystem
         // We add chunk-size here so that its consistent with the normal PVS range setting.
         // I.e., distance here is the Chebyshev distance to the centre of each chunk, but the normal pvs range only
         // required that the chunk be touching the box, not the centre.
-        var count = distance < (_lowLodDistance + ChunkSize) / 2
+        var limit = distance < (_lowLodDistance + ChunkSize) / 2
             ? chunk.Contents.Count
             : chunk.LodCounts[0];
 
         // If the PVS budget is exceeded, it should still be safe to send all of the chunk's direct children, though
         // after that we have no guarantee that an entity's parent got sent.
-        var directChildren = Math.Min(count, chunk.LodCounts[2]);
+        var directChildren = Math.Min(limit, chunk.LodCounts[2]);
 
         // Send entities on the chunk.
         var span = CollectionsMarshal.AsSpan(chunk.Contents);
-        for (var i = 0; i < count; i++)
+        for (var i = 0; i < limit; i++)
         {
             var ent = span[i];
             if ((mask & ent.Comp.VisibilityMask) != ent.Comp.VisibilityMask)
@@ -69,7 +69,7 @@ internal sealed partial class PvsSystem
             // This probably requires changing client game state manager to support receiving entities with unknown parents.
             // Probably needs to do something similar to pending net entity states, but for entity spawning.
             if (!AddEntity(session, ent, fromTick))
-                count = directChildren;
+                limit = directChildren;
         }
     }
 

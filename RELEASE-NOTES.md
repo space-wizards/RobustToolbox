@@ -35,15 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
-* Event bus subscriptions are now locked after `IEntityManager` has started, instead of after the first component gets added. Any event subscriptions now need to happen before startup (but after init).
-* Event bus subscriptions must now be locked before raising any events.
+*None yet*
 
 ### New features
 
-* `RobustUnitTest` now has a `ExtraComponents` field for automatically registering additional components.
-* `IComponentFactory.RegisterIgnore()` now accepts more than one string. 
-* Added `IComponentFactory.RegisterTypes` for simultaneously registering multiple components. 
+*None yet*
 
 ### Bugfixes
 
@@ -56,6 +52,27 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 203.0.0
+
+### Breaking changes
+
+* `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
+* Event bus subscriptions are now locked after `IEntityManager` has started, instead of after the first component gets added. Any event subscriptions now need to happen before startup (but after init).
+* Event bus subscriptions must now be locked before raising any events.
+* Delete FodyWeavers.xsd as it hasn't been used for a long time.
+* Remove physics sleep cancelling as it was, in hindsight, a bad idea.
+
+### New features
+
+* `RobustUnitTest` now has a `ExtraComponents` field for automatically registering additional components.
+* `IComponentFactory.RegisterIgnore()` now accepts more than one string. 
+* Added `IComponentFactory.RegisterTypes` for simultaneously registering multiple components. 
+
+### Bugfixes
+
+* Clamp volume calculations for audio rather than throwing.
 
 
 ## 202.1.1

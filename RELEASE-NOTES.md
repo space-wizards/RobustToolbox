@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix `IClipboardManager.GetText()` returning null in some cases.
 
 ### Other
 
@@ -67,8 +67,8 @@ END TEMPLATE-->
 ### New features
 
 * `RobustUnitTest` now has a `ExtraComponents` field for automatically registering additional components.
-* `IComponentFactory.RegisterIgnore()` now accepts more than one string. 
-* Added `IComponentFactory.RegisterTypes` for simultaneously registering multiple components. 
+* `IComponentFactory.RegisterIgnore()` now accepts more than one string.
+* Added `IComponentFactory.RegisterTypes` for simultaneously registering multiple components.
 
 ### Bugfixes
 
@@ -82,7 +82,7 @@ END TEMPLATE-->
 * Reverted some map/grid initialisation changes that might've been causing broadphase/physics errors.
 * Fixed PVS sometimes sending entities without first sending their children.
 * Fixed a container state handling bug caused by containers not removing expected entities when shutting down.
-* Fixed a `EnsureEntity<T>` state handling bug caused by improper handling of entity deletions. 
+* Fixed a `EnsureEntity<T>` state handling bug caused by improper handling of entity deletions.
 * Fixed a bad NetSyncEnabled debug assert.
 
 
@@ -98,7 +98,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Various entity manager methods now have a new `where T : IComponent` constraint.
-* The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations. 
+* The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations.
 * `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
 
 ### New features

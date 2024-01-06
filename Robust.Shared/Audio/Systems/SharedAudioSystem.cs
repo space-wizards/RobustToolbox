@@ -154,7 +154,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         if (value < 0f)
         {
-            throw new InvalidOperationException($"Tried to get volume calculation for gain of {value}.");
+            value = 0f;
         }
 
         return 10f * MathF.Log10(value);

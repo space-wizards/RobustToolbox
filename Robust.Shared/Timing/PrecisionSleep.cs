@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 using TerraFX.Interop.Windows;
+using static TerraFX.Interop.Windows.Windows;
 
 namespace Robust.Shared.Timing;
 
@@ -56,11 +57,11 @@ internal sealed unsafe class PrecisionSleepWindowsHighResolution : PrecisionSlee
     public PrecisionSleepWindowsHighResolution()
     {
         // CREATE_WAITABLE_TIMER_HIGH_RESOLUTION is only supported since Windows 10 1803
-        _timerHandle = Windows.CreateWaitableTimerExW(
+        _timerHandle = CreateWaitableTimerExW(
             null,
             null,
             CREATE.CREATE_WAITABLE_TIMER_HIGH_RESOLUTION,
-            Windows.TIMER_ALL_ACCESS);
+            TIMER_ALL_ACCESS);
 
         if (_timerHandle == HANDLE.NULL)
             Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
@@ -72,7 +73,7 @@ internal sealed unsafe class PrecisionSleepWindowsHighResolution : PrecisionSlee
         // negative = relative time.
         due.QuadPart = -time.Ticks;
 
-        var success = Windows.SetWaitableTimer(
+        var success = SetWaitableTimer(
             _timerHandle,
             &due,
             0,
@@ -84,7 +85,7 @@ internal sealed unsafe class PrecisionSleepWindowsHighResolution : PrecisionSlee
         if (!success)
             Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
 
-        var waitResult = Windows.WaitForSingleObject(_timerHandle, Windows.INFINITE);
+        var waitResult = WaitForSingleObject(_timerHandle, INFINITE);
         if (waitResult == WAIT.WAIT_FAILED)
             Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
 
@@ -93,7 +94,7 @@ internal sealed unsafe class PrecisionSleepWindowsHighResolution : PrecisionSlee
 
     private void DisposeCore()
     {
-        Windows.CloseHandle(_timerHandle);
+        CloseHandle(_timerHandle);
 
         _timerHandle = default;
     }

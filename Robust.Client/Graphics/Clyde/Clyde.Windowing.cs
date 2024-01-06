@@ -16,6 +16,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using TerraFX.Interop.Windows;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using GL = OpenToolkit.Graphics.OpenGL4.GL;
+using static TerraFX.Interop.Windows.Windows;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -223,7 +224,7 @@ namespace Robust.Client.Graphics.Clyde
                     fixed (char* pText = msgBoxContent)
                     fixed (char* pCaption = "RobustToolbox: Failed to create window")
                     {
-                        Windows.MessageBoxW(HWND.NULL,
+                        MessageBoxW(HWND.NULL,
                             (ushort*) pText,
                             (ushort*) pCaption,
                             MB.MB_OK | MB.MB_ICONERROR);

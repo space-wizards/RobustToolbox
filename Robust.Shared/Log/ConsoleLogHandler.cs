@@ -6,7 +6,7 @@ using System.Text.Unicode;
 using System.Timers;
 using JetBrains.Annotations;
 using Serilog.Events;
-using TerraFX.Interop.Windows;
+using static TerraFX.Interop.Windows.Windows;
 
 namespace Robust.Shared.Log
 {
@@ -202,11 +202,11 @@ namespace Robust.Shared.Log
         {
             try
             {
-                var stdHandle = Windows.GetStdHandle(unchecked((uint)-11));
+                var stdHandle = GetStdHandle(unchecked((uint)-11));
                 uint mode;
-                Windows.GetConsoleMode(stdHandle, &mode);
-                Windows.SetConsoleMode(stdHandle, mode | 4);
-                Windows.GetConsoleMode(stdHandle, &mode);
+                GetConsoleMode(stdHandle, &mode);
+                SetConsoleMode(stdHandle, mode | 4);
+                GetConsoleMode(stdHandle, &mode);
                 return (mode & 4) == 4;
             }
             catch (DllNotFoundException)
@@ -225,7 +225,7 @@ namespace Robust.Shared.Log
 
         public static void TryDetachFromConsoleWindow()
         {
-            if (Windows.GetConsoleWindow() == default
+            if (GetConsoleWindow() == default
                 || Debugger.IsAttached
                 || System.Console.IsOutputRedirected
                 || System.Console.IsErrorRedirected
@@ -234,7 +234,7 @@ namespace Robust.Shared.Log
                 return;
             }
 
-            _freedConsole = Windows.FreeConsole();
+            _freedConsole = FreeConsole();
         }
 
         internal static class NativeMethods

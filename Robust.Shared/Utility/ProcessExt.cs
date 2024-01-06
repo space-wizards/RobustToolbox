@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using TerraFX.Interop.Windows;
+using static TerraFX.Interop.Windows.Windows;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable IdentifierTypo
@@ -50,7 +51,7 @@ namespace Robust.Shared.Utility
 
             PROCESS_MEMORY_COUNTERS_EX counters;
 
-            if (Windows.GetProcessMemoryInfo(
+            if (GetProcessMemoryInfo(
                     (HANDLE)process.Handle,
                     (PROCESS_MEMORY_COUNTERS*)(&counters),
                     (uint)sizeof(PROCESS_MEMORY_COUNTERS_EX)) == 0)

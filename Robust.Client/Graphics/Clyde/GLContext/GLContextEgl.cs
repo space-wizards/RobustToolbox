@@ -7,6 +7,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using TerraFX.Interop.Windows;
 using static Robust.Client.Graphics.Clyde.Egl;
+using static TerraFX.Interop.Windows.Windows;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -106,7 +107,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (OperatingSystem.IsWindows())
                 {
                     // Setting up ANGLE without manually selecting a D3D11 device requires a windows DC.
-                    mainWindow.DC = Windows.GetDC((HWND)Clyde._windowing!.WindowGetWin32Window(mainWindow.Reg)!.Value);
+                    mainWindow.DC = GetDC((HWND)Clyde._windowing!.WindowGetWin32Window(mainWindow.Reg)!.Value);
 
                     _eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, (void*) mainWindow.DC, null);
                     if (_eglDisplay == null)

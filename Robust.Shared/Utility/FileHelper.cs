@@ -4,6 +4,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using TerraFX.Interop.Windows;
+using static TerraFX.Interop.Windows.Windows;
+using static TerraFX.Interop.Windows.ERROR;
 
 namespace Robust.Shared.Utility;
 
@@ -49,9 +51,9 @@ internal static class FileHelper
             HANDLE file;
             fixed (char* pPath = path)
             {
-                file = Windows.CreateFileW(
+                file = CreateFileW(
                     (ushort*)pPath,
-                    Windows.GENERIC_READ,
+                    GENERIC_READ,
                     FILE.FILE_SHARE_READ,
                     null,
                     OPEN.OPEN_EXISTING,
@@ -62,13 +64,13 @@ internal static class FileHelper
             if (file == HANDLE.INVALID_VALUE)
             {
                 var lastError = Marshal.GetLastWin32Error();
-                if (lastError is ERROR.ERROR_FILE_NOT_FOUND or ERROR.ERROR_PATH_NOT_FOUND)
+                if (lastError is ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND)
                 {
                     stream = null;
                     return false;
                 }
 
-                Marshal.ThrowExceptionForHR(Windows.HRESULT_FROM_WIN32(lastError));
+                Marshal.ThrowExceptionForHR(HRESULT_FROM_WIN32(lastError));
             }
 
             var sf = new SafeFileHandle(file, ownsHandle: true);

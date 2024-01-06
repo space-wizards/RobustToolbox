@@ -1,5 +1,5 @@
 ﻿using System;
-using TerraFX.Interop.Windows;
+using static TerraFX.Interop.Windows.Windows;
 
 namespace Robust.Server.Utility
 {
@@ -10,8 +10,8 @@ namespace Robust.Server.Utility
             if (!OperatingSystem.IsWindows())
                 throw new InvalidOperationException();
 
-            var ret = Windows.timeBeginPeriod(period);
-            if (ret != Windows.TIMERR_NOERROR)
+            var ret = timeBeginPeriod(period);
+            if (ret != TIMERR_NOERROR)
                 throw new InvalidOperationException($"timeBeginPeriod returned error: {ret}");
         }
 
@@ -20,8 +20,8 @@ namespace Robust.Server.Utility
             if (!OperatingSystem.IsWindows())
                 throw new InvalidOperationException();
 
-            var ret = Windows.timeBeginPeriod(period);
-            if (ret != Windows.TIMERR_NOERROR)
+            var ret = timeBeginPeriod(period);
+            if (ret != TIMERR_NOERROR)
                 throw new InvalidOperationException($"timeEndPeriod returned error: {ret}");
         }
     }

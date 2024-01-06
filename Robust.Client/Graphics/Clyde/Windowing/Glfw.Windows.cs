@@ -15,6 +15,7 @@ using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
 using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
 using Window = OpenToolkit.GraphicsLibraryFramework.Window;
 using X11Window = TerraFX.Interop.Xlib.Window;
+using static TerraFX.Interop.Windows.Windows;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -370,7 +371,7 @@ namespace Robust.Client.Graphics.Clyde
                     var hWnd = (HWND) GLFW.GetWin32Window(window);
                     DebugTools.Assert(hWnd != HWND.NULL);
 
-                    Windows.SetWindowLongPtrW(
+                    SetWindowLongPtrW(
                         hWnd,
                         GWLP.GWLP_HWNDPARENT,
                         0);
@@ -483,11 +484,11 @@ namespace Robust.Client.Graphics.Clyde
                         var hWnd = (HWND) GLFW.GetWin32Window(window);
                         DebugTools.Assert(hWnd != HWND.NULL);
 
-                        Windows.SetWindowLongPtrW(
+                        SetWindowLongPtrW(
                             hWnd,
                             GWL.GWL_STYLE,
                             // Cast to long here to work around a bug in rider with nint bitwise operators.
-                            (nint)((long)Windows.GetWindowLongPtrW(hWnd, GWL.GWL_STYLE) & ~WS.WS_SYSMENU));
+                            (nint)((long)GetWindowLongPtrW(hWnd, GWL.GWL_STYLE) & ~WS.WS_SYSMENU));
                     }
                     else if (OperatingSystem.IsLinux())
                     {
@@ -532,7 +533,7 @@ namespace Robust.Client.Graphics.Clyde
                         var ownerHWnd = (HWND) GLFW.GetWin32Window(ownerWindow);
                         DebugTools.Assert(hWnd != HWND.NULL);
 
-                        Windows.SetWindowLongPtrW(
+                        SetWindowLongPtrW(
                             hWnd,
                             GWLP.GWLP_HWNDPARENT,
                             ownerHWnd);

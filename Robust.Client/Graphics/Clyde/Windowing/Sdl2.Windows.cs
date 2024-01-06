@@ -17,6 +17,7 @@ using BOOL = TerraFX.Interop.Windows.BOOL;
 using HWND = TerraFX.Interop.Windows.HWND;
 using GWLP = TerraFX.Interop.Windows.GWLP;
 using Windows = TerraFX.Interop.Windows.Windows;
+using static TerraFX.Interop.Windows.Windows;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -145,7 +146,7 @@ internal partial class Clyde
                     var hWnd = (HWND)wmInfo.info.win.window;
                     DebugTools.Assert(hWnd != HWND.NULL);
 
-                    Windows.SetWindowLongPtrW(
+                    SetWindowLongPtrW(
                         hWnd,
                         GWLP.GWLP_HWNDPARENT,
                         0);
@@ -384,7 +385,7 @@ internal partial class Clyde
                 // 6.2 is Windows 8
                 // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_osversioninfoexw
                 if (OperatingSystem.IsWindowsVersionAtLeast(6, 2)
-                    || Windows.SUCCEEDED(Windows.DwmIsCompositionEnabled(&compositing)) && compositing)
+                    || SUCCEEDED(DwmIsCompositionEnabled(&compositing)) && compositing)
                 {
                     var curCtx = SDL_GL_GetCurrentContext();
                     var curWin = SDL_GL_GetCurrentWindow();
@@ -405,7 +406,7 @@ internal partial class Clyde
                 var i = swapInterval;
                 while (i-- > 0)
                 {
-                    Windows.DwmFlush();
+                    DwmFlush();
                 }
 
                 SDL_GL_SetSwapInterval(swapInterval);

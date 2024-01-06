@@ -20,6 +20,7 @@ using Robust.Client.Replays.Loading;
 using Robust.Client.Replays.Playback;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Serialization;
+using Robust.Client.SpeechSynthesis;
 using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.Upload;
@@ -45,6 +46,8 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Upload;
 using Robust.Shared.ViewVariables;
+using TerraFX.Interop.Windows;
+using IResourceManager = Robust.Shared.ContentPack.IResourceManager;
 
 namespace Robust.Client
 {
@@ -112,6 +115,7 @@ namespace Robust.Client
                     deps.Register<IInputManager, InputManager>();
                     deps.Register<IFileDialogManager, DummyFileDialogManager>();
                     deps.Register<IUriOpener, UriOpenerDummy>();
+                    deps.Register<ITtsManagerInternal, TtsManagerDummy>();
                     break;
                 case GameController.DisplayMode.Clyde:
                     deps.Register<IClyde, Clyde>();
@@ -122,6 +126,8 @@ namespace Robust.Client
                     deps.Register<IInputManager, ClydeInputManager>();
                     deps.Register<IFileDialogManager, FileDialogManager>();
                     deps.Register<IUriOpener, UriOpener>();
+                    deps.Register<ITtsManager, TtsManagerWinRT>();
+                    deps.Register<ITtsManagerInternal, TtsManager>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

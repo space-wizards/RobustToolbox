@@ -15,6 +15,7 @@ using Robust.Client.Placement;
 using Robust.Client.Replays.Loading;
 using Robust.Client.Replays.Playback;
 using Robust.Client.ResourceManagement;
+using Robust.Client.SpeechSynthesis;
 using Robust.Client.State;
 using Robust.Client.Upload;
 using Robust.Client.UserInterface;
@@ -90,6 +91,7 @@ namespace Robust.Client
         [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly ITtsManagerInternal _tts = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -188,6 +190,7 @@ namespace Robust.Client
             _replayPlayback.Initialize();
             _replayRecording.Initialize();
             _userInterfaceManager.PostInitialize();
+            _tts.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
             if (_commandLineArgs?.Username != null)

@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
 
     /// <inheritdoc />
     [Virtual]
-    public partial class EntityManager : IEntityManager
+    public abstract partial class EntityManager : IEntityManager
     {
         #region Dependencies
 
@@ -61,7 +61,7 @@ namespace Robust.Shared.GameObjects
         public IEntitySystemManager EntitySysManager => _entitySystemManager;
 
         /// <inheritdoc />
-        public virtual IEntityNetworkManager? EntityNetManager => null;
+        public abstract IEntityNetworkManager EntityNetManager { get; }
 
         protected readonly Queue<EntityUid> QueuedDeletions = new();
         protected readonly HashSet<EntityUid> QueuedDeletionsSet = new();

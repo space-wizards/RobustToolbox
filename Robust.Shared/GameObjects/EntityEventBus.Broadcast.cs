@@ -297,7 +297,10 @@ namespace Robust.Shared.GameObjects
 
         private void UnsubscribeEvent(Type eventType, BroadcastRegistration tuple, IEntityEventSubscriber subscriber)
         {
-            if (_eventData.TryGetValue(eventType, out var subscriptions)
+            if (_subscriptionLock)
+                throw new InvalidOperationException("Subscription locked.");
+
+            if (_eventDataUnfrozen.TryGetValue(eventType, out var subscriptions)
                 && subscriptions.BroadcastRegistrations.Contains(tuple))
                 subscriptions.BroadcastRegistrations.Remove(tuple);
 
@@ -307,7 +310,7 @@ namespace Robust.Shared.GameObjects
 
         private void ProcessSingleEvent(EventSource source, ref Unit unitRef, Type eventType)
         {
-            if (!_eventData.TryGetValue(eventType, out var subs))
+            if (!_eventData!.TryGetValue(eventType, out var subs))
                 return;
 
             if (subs.IsOrdered && !subs.OrderingUpToDate)

@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -13,12 +14,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         private const string TestComponentName = "A";
         private const string LowercaseTestComponentName = "a";
         private const string NonexistentComponentName = "B";
-
-        [OneTimeSetUp]
-        public void OneTimeSetUp()
-        {
-            IoCManager.Resolve<IComponentFactory>().RegisterClass<TestComponent>();
-        }
+        protected override Type[]? ExtraComponents => new[] {typeof(TestComponent)};
 
         [Test]
         public void GetComponentAvailabilityTest()

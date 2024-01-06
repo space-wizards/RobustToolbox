@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
@@ -52,24 +53,14 @@ entities:
   - type: MapDeserializeTest
     foo: 1
     bar: 2
-
 ";
+
+        protected override Type[]? ExtraComponents => new[] { typeof(MapDeserializeTestComponent), typeof(VisibilityComponent), typeof(IgnoreUIRangeComponent)};
 
         [OneTimeSetUp]
         public void Setup()
         {
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
-            compFactory.RegisterClass<MapDeserializeTestComponent>();
-            compFactory.RegisterClass<VisibilityComponent>();
-            compFactory.RegisterClass<IgnoreUIRangeComponent>();
-            compFactory.GenerateNetIds();
             IoCManager.Resolve<ISerializationManager>().Initialize();
-
-            // For some reason RobustUnitTest doesn't discover PVSSystem but this does here so ?
-            var syssy = IoCManager.Resolve<IEntitySystemManager>();
-            syssy.Shutdown();
-            syssy.Initialize();
-
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             resourceManager.Initialize(null);
             resourceManager.MountString("/TestMap.yml", MapData);

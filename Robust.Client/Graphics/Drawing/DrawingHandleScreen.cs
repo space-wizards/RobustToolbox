@@ -114,9 +114,9 @@ namespace Robust.Client.Graphics
             {
                 if (rune == new Rune('\n'))
                 {
-                    baseLine.X = 0f;
                     baseLine.Y += lineHeight;
                     advanceTotal.Y += lineHeight;
+                    baseLine.X = 0f;
                     continue;
                 }
 
@@ -126,8 +126,8 @@ namespace Robust.Client.Graphics
                     continue;
 
                 var advance = metrics.Value.Advance;
-                advanceTotal.X += advance;
                 baseLine += new Vector2(advance, 0);
+                advanceTotal.X = MathF.Max(baseLine.X, advanceTotal.X);
             }
 
             return advanceTotal;

@@ -12,16 +12,19 @@ using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using Robust.Client;
+using Robust.Client.Console;
 using Robust.Client.GameStates;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface;
 using Robust.Server;
 using Robust.Server.Console;
+using Robust.Server.GameStates;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
@@ -29,7 +32,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -269,6 +272,8 @@ namespace Robust.UnitTesting
             public ISharedPlayerManager PlayerMan { get; private set; } = default!;
             public IGameTiming Timing { get; private set; } = default!;
             public IMapManager MapMan { get; private set; } = default!;
+            public IConsoleHost ConsoleHost { get; private set; } = default!;
+            public ISawmill Log { get; private set; } = default!;
 
             protected virtual void ResolveIoC(IDependencyCollection deps)
             {
@@ -278,6 +283,8 @@ namespace Robust.UnitTesting
                 PlayerMan = deps.Resolve<ISharedPlayerManager>();
                 Timing = deps.Resolve<IGameTiming>();
                 MapMan = deps.Resolve<IMapManager>();
+                ConsoleHost = deps.Resolve<IConsoleHost>();
+                Log = deps.Resolve<ILogManager>().GetSawmill("test");
             }
 
             public T System<T>() where T : IEntitySystem
@@ -293,6 +300,11 @@ namespace Robust.UnitTesting
             public MetaDataComponent MetaData(EntityUid uid)
             {
                 return EntMan.GetComponent<MetaDataComponent>(uid);
+            }
+
+            public async Task ExecuteCommand(string cmd)
+            {
+                await WaitPost(() => ConsoleHost.ExecuteCommand(cmd));
             }
 
             /// <summary>
@@ -660,6 +672,9 @@ namespace Robust.UnitTesting
                 deps.Register<TestingModLoader, TestingModLoader>(true);
                 deps.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
                 deps.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
+                deps.Register<IServerConsoleHost, TestingServerConsoleHost>(true);
+                deps.Register<IConsoleHost, TestingServerConsoleHost>(true);
+                deps.Register<IConsoleHostInternal, TestingServerConsoleHost>(true);
                 Options?.InitIoC?.Invoke();
                 deps.BuildGraph();
                 //ServerProgram.SetupLogging();
@@ -727,6 +742,16 @@ namespace Robust.UnitTesting
                 ResolveIoC(deps);
 
                 return server;
+            }
+
+            /// <summary>
+            /// Force a PVS update. This is mainly here to expose internal PVS methods to content benchmarks.
+            /// </summary>
+            public void PvsTick(ICommonSession[] players)
+            {
+                var pvs = EntMan.System<PvsSystem>();
+                pvs.SendGameStates(players);
+                Timing.CurTick += 1;
             }
         }
 
@@ -822,13 +847,15 @@ namespace Robust.UnitTesting
                 ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
                 deps.Register<INetManager, IntegrationNetManager>(true);
                 deps.Register<IClientNetManager, IntegrationNetManager>(true);
-                deps.Register<IGameStateProcessor, GameStateProcessor>(true);
                 deps.Register<IClientGameTiming, ClientGameTiming>(true);
                 deps.Register<IntegrationNetManager, IntegrationNetManager>(true);
                 deps.Register<IModLoader, TestingModLoader>(true);
                 deps.Register<IModLoaderInternal, TestingModLoader>(true);
                 deps.Register<TestingModLoader, TestingModLoader>(true);
                 deps.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
+                deps.Register<IClientConsoleHost, TestingClientConsoleHost>(true);
+                deps.Register<IConsoleHost, TestingClientConsoleHost>(true);
+                deps.Register<IConsoleHostInternal, TestingClientConsoleHost>(true);
                 Options?.InitIoC?.Invoke();
                 deps.BuildGraph();
 
@@ -908,11 +935,13 @@ namespace Robust.UnitTesting
                 // use server side uids on the client and vice versa. This can sometimes accidentally work if the
                 // entities get created in the same order. For that reason we arbitrarily increment the queued Uid by
                 // some arbitrary quantity.
-                var e = (EntityManager) EntMan;
+
+                /* TODO: End my suffering and fix this because entmanager hasn't started up yet.
                 for (var i = 0; i < 10; i++)
                 {
-                    e.GenerateEntityUid();
+                    EntMan.SpawnEntity(null, MapCoordinates.Nullspace);
                 }
+                */
 
                 return client;
             }

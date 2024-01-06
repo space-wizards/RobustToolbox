@@ -20,6 +20,10 @@ namespace Robust.Shared.Graphics
         public bool DrawFov { get; set; } = true;
 
         /// <inheritdoc />
+        [ViewVariables]
+        public bool DrawLight { get; set; } = true;
+
+        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual MapCoordinates Position
         {

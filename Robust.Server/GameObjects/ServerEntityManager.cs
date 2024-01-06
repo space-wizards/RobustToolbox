@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Server.Player;
@@ -15,6 +14,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
@@ -42,6 +42,7 @@ namespace Robust.Server.GameObjects
 #endif
 
         private ISawmill _netEntSawmill = default!;
+        private EntityQuery<ActorComponent> _actorQuery;
 
         public override void Initialize()
         {
@@ -51,6 +52,12 @@ namespace Robust.Server.GameObjects
             ReceivedSystemMessage += (_, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             base.Initialize();
+        }
+
+        public override void Startup()
+        {
+            base.Startup();
+            _actorQuery = GetEntityQuery<ActorComponent>();
         }
 
         EntityUid IServerEntityManagerInternal.AllocEntity(EntityPrototype? prototype)
@@ -78,15 +85,15 @@ namespace Robust.Server.GameObjects
             StartEntity(entity);
         }
 
-        private protected override EntityUid CreateEntity(string? prototypeName, IEntityLoadContext? context = null)
+        private protected override EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
-                return base.CreateEntity(prototypeName, context);
+                return base.CreateEntity(prototypeName, out metadata, context);
 
             if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-            var entity = base.CreateEntity(prototype, context);
+            var entity = base.CreateEntity(prototype, out metadata, context);
 
             // At this point in time, all data configure on the entity *should* be purely from the prototype.
             // As such, we can reset the modified ticks to Zero,
@@ -109,17 +116,6 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        [return: NotNullIfNotNull("uid")]
-        public override EntityStringRepresentation? ToPrettyString(EntityUid? uid)
-        {
-            if (uid == null)
-                return null;
-
-            TryGetComponent(uid, out ActorComponent? actor);
-
-            return base.ToPrettyString(uid).Value with { Session = actor?.PlayerSession };
-        }
-
         #region IEntityNetworkManager impl
 
         public override IEntityNetworkManager EntityNetManager => this;
@@ -129,7 +125,7 @@ namespace Robust.Server.GameObjects
 
         private readonly PriorityQueue<MsgEntity> _queue = new(new MessageSequenceComparer());
 
-        private readonly Dictionary<IPlayerSession, uint> _lastProcessedSequencesCmd =
+        private readonly Dictionary<ICommonSession, uint> _lastProcessedSequencesCmd =
             new();
 
         private bool _logLateMsgs;
@@ -160,9 +156,9 @@ namespace Robust.Server.GameObjects
             EntitiesCount.Set(Entities.Count);
         }
 
-        public uint GetLastMessageSequence(IPlayerSession session)
+        public uint GetLastMessageSequence(ICommonSession? session)
         {
-            return _lastProcessedSequencesCmd[session];
+            return session == null ? default : _lastProcessedSequencesCmd.GetValueOrDefault(session);
         }
 
         /// <inheritdoc />

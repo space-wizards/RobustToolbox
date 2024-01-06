@@ -20,6 +20,7 @@ namespace Robust.Client.UserInterface.Controls
         public RichTextLabel()
         {
             IoCManager.InjectDependencies(this);
+            VerticalAlignment = VAlignment.Center;
         }
 
         public void SetMessage(FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)

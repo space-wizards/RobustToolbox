@@ -9,7 +9,7 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -138,9 +138,9 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
         return (state, detachMsg);
     }
 
-    private PlayerState GetPlayerState(ICommonSession session)
+    private SessionState GetPlayerState(ICommonSession session)
     {
-        return new PlayerState
+        return new SessionState
         {
             UserId = session.UserId,
             Status = session.Status,

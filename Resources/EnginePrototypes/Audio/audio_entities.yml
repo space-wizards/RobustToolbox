@@ -1,0 +1,5 @@
+- type: entity
+  id: Audio
+  name: Audio
+  description: Audio entity used by engine
+  save: false

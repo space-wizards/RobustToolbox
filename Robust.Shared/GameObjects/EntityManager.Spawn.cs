@@ -40,6 +40,16 @@ public partial class EntityManager
         return ents;
     }
 
+    public EntityUid[] SpawnEntities(MapCoordinates coordinates, string? prototype, int count)
+    {
+        var ents = new EntityUid[count];
+        for (var i = 0; i < count; i++)
+        {
+            ents[i] = Spawn(prototype, coordinates);
+        }
+        return ents;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, List<string?> protoNames)
     {
@@ -95,7 +105,7 @@ public partial class EntityManager
         ComponentRegistry? overrides = null)
     {
         uid = null;
-        if (!_xformQuery.Resolve(target, ref xform))
+        if (!TransformQuery.Resolve(target, ref xform))
             return false;
 
         if (!xform.ParentUid.IsValid())
@@ -119,7 +129,7 @@ public partial class EntityManager
                 continue;
 
             uid = Spawn(protoName, overrides);
-            if (container.Insert(uid.Value, this))
+            if (_containers.Insert(uid.Value, container))
                 return true;
 
             DeleteEntity(uid.Value);
@@ -147,7 +157,7 @@ public partial class EntityManager
 
         uid = Spawn(protoName, overrides);
 
-        if (container.Insert(uid.Value, this))
+        if (_containers.Insert(uid.Value, container))
             return true;
 
         DeleteEntity(uid.Value);
@@ -157,12 +167,12 @@ public partial class EntityManager
 
     public EntityUid SpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
     {
-        xform ??= _xformQuery.GetComponent(target);
+        xform ??= TransformQuery.GetComponent(target);
         if (!xform.ParentUid.IsValid())
             return Spawn(protoName);
 
         var uid = Spawn(protoName, overrides);
-        _xforms.PlaceNextToOrDrop(uid, target);
+        _xforms.DropNextTo(uid, target);
         return uid;
     }
 
@@ -178,12 +188,12 @@ public partial class EntityManager
 
         if ((containerComp == null && !TryGetComponent(containerUid, out containerComp))
              || !containerComp.Containers.TryGetValue(containerId, out var container)
-             || !container.Insert(uid, this))
+             || !_containers.Insert(uid, container))
         {
 
-            xform ??= _xformQuery.GetComponent(containerUid);
+            xform ??= TransformQuery.GetComponent(containerUid);
             if (xform.ParentUid.IsValid())
-                _xforms.PlaceNextToOrDrop(uid, containerUid, targetXform: xform);
+                _xforms.DropNextTo(uid, (containerUid, xform));
         }
 
         return uid;

@@ -43,14 +43,7 @@ namespace Robust.Shared.Utility
         public bool Add(TKey key, TValue value)
         {
             InitializedCheck();
-
-            if (_index.TryGetValue(key, out var set))
-            {
-                return set.Add(value);
-            }
-
-            _index.Add(key, new HashSet<TValue> {value});
-            return true;
+            return _index.GetOrNew(key).Add(value);
         }
 
         /// <inheritdoc />

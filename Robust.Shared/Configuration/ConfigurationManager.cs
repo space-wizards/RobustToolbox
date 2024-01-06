@@ -617,6 +617,11 @@ namespace Robust.Shared.Configuration
                 return long.Parse(value);
             }
 
+            if (type == typeof(ushort))
+            {
+                return ushort.Parse(value);
+            }
+
             // Must be a string.
             return value;
         }
@@ -792,12 +797,6 @@ namespace Robust.Shared.Configuration
         }
 
         public InvalidConfigurationException(string message, Exception inner) : base(message, inner)
-        {
-        }
-
-        protected InvalidConfigurationException(
-            System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context)
         {
         }
     }

@@ -16,15 +16,17 @@
     <PackageReference Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.2" Condition="'$(UseSystemSqlite)' == 'True'" PrivateAssets="compile" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.2" Condition="'$(UseSystemSqlite)' != 'True'" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.NFluidsynth" Version="0.1.1" PrivateAssets="compile" />
-    <PackageReference Include="NVorbis" Version="0.10.1" PrivateAssets="compile" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
     <PackageReference Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" PrivateAssets="compile" />
     <PackageReference Include="OpenTK.OpenAL" Version="4.7.5" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" PrivateAssets="compile" />
     <PackageReference Include="Robust.Natives" Version="0.1.1" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
     <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.20348-rc2" PrivateAssets="compile" />
     <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" Version="1.2.0" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.Sodium" Version="0.2.1" PrivateAssets="compile" />
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="8.0.0" />
+    <PackageReference Include="TerraFX.Interop.Xlib" Version="6.4.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.0.1" PrivateAssets="compile" />
@@ -53,6 +55,7 @@
     <RobustLinkRoots Include="Robust.Client" />
     <RobustLinkRoots Include="Robust.Shared" />
     <RobustLinkAssemblies Include="TerraFX.Interop.Windows" />
+    <RobustLinkAssemblies Include="TerraFX.Interop.Xlib" />
     <RobustLinkAssemblies Include="OpenToolkit.Graphics" />
   </ItemGroup>
 

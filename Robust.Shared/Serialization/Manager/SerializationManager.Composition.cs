@@ -112,14 +112,40 @@ public partial class SerializationManager
         }, (node, this));
     }
 
-    private SequenceDataNode PushInheritanceSequence(SequenceDataNode child, SequenceDataNode _)
+    private SequenceDataNode PushInheritanceSequence(SequenceDataNode child, SequenceDataNode parent)
     {
-        return child; //todo implement different inheritancebehaviours for yamlfield
+        //todo implement different inheritancebehaviours for yamlfield
+        // I have NFI what this comment means.
+
+        var result = new SequenceDataNode(child.Count + parent.Count);
+        foreach (var entry in parent)
+        {
+            result.Add(entry);
+        }
+        foreach (var entry in child)
+        {
+            result.Add(entry);
+        }
+
+        return result;
     }
 
-    private MappingDataNode PushInheritanceMapping(MappingDataNode child, MappingDataNode _)
+    private MappingDataNode PushInheritanceMapping(MappingDataNode child, MappingDataNode parent)
     {
-        return child; //todo implement different inheritancebehaviours for yamlfield
+        //todo implement different inheritancebehaviours for yamlfield
+        // I have NFI what this comment means.
+
+        var result = new MappingDataNode(child.Count + parent.Count);
+        foreach (var (k, v) in parent)
+        {
+            result[k] = v;
+        }
+        foreach (var (k, v) in child)
+        {
+            result[k] = v;
+        }
+
+        return result;
     }
 
     private MappingDataNode PushInheritanceDefinition(MappingDataNode child, MappingDataNode parent,

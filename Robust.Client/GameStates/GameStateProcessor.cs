@@ -1,50 +1,38 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates
 {
     /// <inheritdoc />
-    internal sealed class GameStateProcessor : IGameStateProcessor, IPostInjectInit
+    internal sealed class GameStateProcessor : IGameStateProcessor
     {
-        [Dependency] private ILogManager _logMan = default!;
-
         private readonly IClientGameTiming _timing;
+        private readonly IClientGameStateManager _state;
+        private readonly ISawmill _logger;
 
         private readonly List<GameState> _stateBuffer = new();
 
         private readonly Dictionary<GameTick, List<NetEntity>> _pvsDetachMessages = new();
-
-        private ISawmill _logger = default!;
-        private ISawmill _stateLogger = default!;
-
         public GameState? LastFullState { get; private set; }
         public bool WaitingForFull => LastFullStateRequested.HasValue;
-        public GameTick? LastFullStateRequested
-        {
-            get => _lastFullStateRequested;
-            set
-            {
-                _lastFullStateRequested = value;
-                LastFullState = null;
-            }
-        }
-
-        public GameTick? _lastFullStateRequested = GameTick.Zero;
+        public (GameTick Tick, DateTime Time)? LastFullStateRequested { get; private set; } = (GameTick.Zero, DateTime.MaxValue);
 
         private int _bufferSize;
+        private int _maxBufferSize = 512;
+        public const int MinimumMaxBufferSize = 256;
 
         /// <summary>
         /// This dictionary stores the full most recently received server state of any entity. This is used whenever predicted entities get reset.
         /// </summary>
-        internal readonly Dictionary<NetEntity, Dictionary<ushort, ComponentState>> _lastStateFullRep
+        internal readonly Dictionary<NetEntity, Dictionary<ushort, IComponentState>> _lastStateFullRep
             = new();
 
         /// <inheritdoc />
@@ -60,7 +48,14 @@ namespace Robust.Client.GameStates
         public int BufferSize
         {
             get => _bufferSize;
-            set => _bufferSize = value < 0 ? 0 : value;
+            set => _bufferSize = Math.Max(value, 0);
+        }
+
+        public int MaxBufferSize
+        {
+            get => _maxBufferSize;
+            // We place a lower bound on the maximum size to avoid spamming servers with full game state requests.
+            set => _maxBufferSize = Math.Max(value, MinimumMaxBufferSize);
         }
 
         /// <inheritdoc />
@@ -70,9 +65,12 @@ namespace Robust.Client.GameStates
         ///     Constructs a new instance of <see cref="GameStateProcessor"/>.
         /// </summary>
         /// <param name="timing">Timing information of the current state.</param>
-        public GameStateProcessor(IClientGameTiming timing)
+        /// <param name="clientGameStateManager"></param>
+        public GameStateProcessor(IClientGameStateManager state, IClientGameTiming timing, ISawmill logger)
         {
             _timing = timing;
+            _state = state;
+            _logger = logger;
         }
 
         /// <inheritdoc />
@@ -82,7 +80,7 @@ namespace Robust.Client.GameStates
             if (state.ToSequence <= _timing.LastRealTick)
             {
                 if (Logging)
-                    _stateLogger.Debug($"Received Old GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
+                    _logger.Debug($"Received Old GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
 
                 return false;
             }
@@ -94,7 +92,7 @@ namespace Robust.Client.GameStates
                     continue;
 
                 if (Logging)
-                    _stateLogger.Debug($"Received Dupe GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
+                    _logger.Debug($"Received Dupe GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
 
                 return false;
             }
@@ -103,32 +101,66 @@ namespace Robust.Client.GameStates
             if (!WaitingForFull)
             {
                 // This is a good state that we will be using.
-                _stateBuffer.Add(state);
+                TryAdd(state);
                 if (Logging)
-                    _stateLogger.Debug($"Received New GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
+                    _logger.Debug($"Received New GameState: lastRealTick={_timing.LastRealTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
                 return true;
             }
 
-            if (LastFullState == null && state.FromSequence == GameTick.Zero && state.ToSequence >= LastFullStateRequested!.Value)
+            if (LastFullState == null && state.FromSequence == GameTick.Zero)
             {
-                LastFullState = state;
-
-                if (Logging)
+                if (state.ToSequence >= LastFullStateRequested!.Value.Tick)
+                {
+                    LastFullState = state;
                     _logger.Info($"Received Full GameState: to={state.ToSequence}, sz={state.PayloadSize}");
+                    return true;
+                }
 
-                return true;
+                _logger.Info($"Received a late full game state. Received: {state.ToSequence}. Requested: {LastFullStateRequested.Value.Tick}");
             }
 
             if (LastFullState != null && state.ToSequence <= LastFullState.ToSequence)
             {
-                if (Logging)
-                    _logger.Info($"While waiting for full, received late GameState with lower to={state.ToSequence} than the last full state={LastFullState.ToSequence}");
-
+                _logger.Info($"While waiting for full, received late GameState with lower to={state.ToSequence} than the last full state={LastFullState.ToSequence}");
                 return false;
             }
 
-            _stateBuffer.Add(state);
+            TryAdd(state);
             return true;
+        }
+
+        public void TryAdd(GameState state)
+        {
+            if (_stateBuffer.Count <= MaxBufferSize)
+            {
+                _stateBuffer.Add(state);
+                return;
+            }
+
+            // This can happen if a required state gets dropped somehow and the client keeps receiving future
+            // game states that they can't apply. I.e., GetApplicableStateCount() is zero, even though there are many
+            // states in the list.
+            //
+            // This can seemingly happen when the server sends ""reliable"" game states while the client is paused?
+            // For example, when debugging the client, while the server is running:
+            // - The client stops sending acks for states that the server sends out.
+            // - Thus the client will exceed the net.force_ack_threshold cvar
+            // - The server starts sending some packets ""reliably"" and just force updates the clients last ack.
+            //
+            // What should happen is that when the client resumes, it receives the reliably sent states and can just
+            // resume. However, even though the packets are sent ""reliably"", they just seem to get dropped.
+            // I don't quite understand how/why yet, but this ensures the client doesn't get stuck.
+#if FULL_RELEASE
+            _logger.Warning(@$"Exceeded maximum state buffer size!
+Tick: {_timing.CurTick}/{_timing.LastProcessedTick}/{_timing.LastRealTick}
+Size: {_stateBuffer.Count}
+Applicable states: {GetApplicableStateCount()}
+Was waiting for full: {WaitingForFull} {LastFullStateRequested}
+Had full state: {LastFullState != null}"
+            );
+#endif
+
+            _state.RequestFullState();
         }
 
         /// <summary>
@@ -151,7 +183,7 @@ namespace Robust.Client.GameStates
                     "Tried to apply a non-extrapolated state that has too high of a FromSequence!");
 
                 if (Logging)
-                    _stateLogger.Debug($"Applying State:  cTick={_timing.LastProcessedTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+                    _logger.Debug($"Applying State:  cTick={_timing.LastProcessedTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
             }
 
             return applyNextState;
@@ -180,7 +212,7 @@ namespace Robust.Client.GameStates
             {
                 if (!_lastStateFullRep.TryGetValue(entityState.NetEntity, out var compData))
                 {
-                    compData = new Dictionary<ushort, ComponentState>();
+                    compData = new Dictionary<ushort, IComponentState>();
                     _lastStateFullRep.Add(entityState.NetEntity, compData);
                 }
 
@@ -343,17 +375,23 @@ namespace Robust.Client.GameStates
         {
             _stateBuffer.Clear();
             LastFullState = null;
-            LastFullStateRequested = GameTick.Zero;
+            LastFullStateRequested = (GameTick.Zero, DateTime.MaxValue);
         }
 
-        public void RequestFullState()
+        public void OnFullStateRequested(GameTick tick)
         {
             _stateBuffer.Clear();
             LastFullState = null;
-            LastFullStateRequested = _timing.LastRealTick;
+            LastFullStateRequested = (tick, DateTime.UtcNow);
         }
 
-        public void MergeImplicitData(Dictionary<NetEntity, Dictionary<ushort, ComponentState>> implicitData)
+        public void OnFullStateReceived()
+        {
+            LastFullState = null;
+            LastFullStateRequested = null;
+        }
+
+        public void MergeImplicitData(Dictionary<NetEntity, Dictionary<ushort, IComponentState>> implicitData)
         {
             foreach (var (netEntity, implicitEntState) in implicitData)
             {
@@ -361,9 +399,11 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, implicitCompState) in implicitEntState)
                 {
-                    if (!fullRep.TryGetValue(netId, out var serverState))
+                    ref var serverState = ref CollectionsMarshal.GetValueRefOrAddDefault(fullRep, netId, out var exists);
+
+                    if (!exists)
                     {
-                        fullRep.Add(netId, implicitCompState);
+                        serverState = implicitCompState;
                         continue;
                     }
 
@@ -379,32 +419,45 @@ namespace Robust.Client.GameStates
                     }
 
                     serverDelta.ApplyToFullState(implicitCompState);
-                    fullRep[netId] = implicitCompState;
+                    serverState = implicitCompState;
                     DebugTools.Assert(implicitCompState is IComponentDeltaState d && d.FullState);
                 }
             }
         }
 
-        public Dictionary<ushort, ComponentState> GetLastServerStates(NetEntity netEntity)
+        public Dictionary<ushort, IComponentState> GetLastServerStates(NetEntity netEntity)
         {
             return _lastStateFullRep[netEntity];
         }
 
-        public Dictionary<NetEntity, Dictionary<ushort, ComponentState>> GetFullRep()
+        public Dictionary<NetEntity, Dictionary<ushort, IComponentState>> GetFullRep()
         {
             return _lastStateFullRep;
         }
 
         public bool TryGetLastServerStates(NetEntity entity,
-            [NotNullWhen(true)] out Dictionary<ushort, ComponentState>? dictionary)
+            [NotNullWhen(true)] out Dictionary<ushort, IComponentState>? dictionary)
         {
             return _lastStateFullRep.TryGetValue(entity, out dictionary);
         }
 
-        public int CalculateBufferSize(GameTick fromTick)
+        public bool IsQueuedForDetach(NetEntity entity)
         {
+            // This isn't fast, but its just meant for use in tests & debug asserts.
+            foreach (var msg in _pvsDetachMessages.Values)
+            {
+                if (msg.Contains(entity))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public int GetApplicableStateCount(GameTick? fromTick = null)
+        {
+            fromTick ??= _timing.LastRealTick;
             bool foundState;
-            var nextTick = fromTick;
+            var nextTick = fromTick.Value;
 
             do
             {
@@ -422,13 +475,9 @@ namespace Robust.Client.GameStates
             }
             while (foundState);
 
-            return (int) (nextTick.Value - fromTick.Value);
+            return (int) (nextTick.Value - fromTick.Value.Value);
         }
 
-        void IPostInjectInit.PostInject()
-        {
-            _logger = _logMan.GetSawmill("net");
-            _stateLogger = _logMan.GetSawmill("net.state");
-        }
+        public int StateCount => _stateBuffer.Count;
     }
 }

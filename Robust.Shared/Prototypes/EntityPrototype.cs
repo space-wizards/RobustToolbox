@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -26,6 +25,9 @@ namespace Robust.Shared.Prototypes
         private ILocalizationManager _loc = default!;
 
         private static readonly Dictionary<string, string> LocPropertiesDefault = new();
+
+        [ValidatePrototypeId<EntityCategoryPrototype>]
+        private const string HideCategory = "hideSpawnMenu";
 
         // LOCALIZATION NOTE:
         // Localization-related properties in here are manually localized in LocalizationManager.
@@ -56,6 +58,10 @@ namespace Robust.Shared.Prototypes
 
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
+
+        [DataField("categories")]
+        [AlwaysPushInheritance]
+        public HashSet<string> Categories = new();
 
         [ViewVariables]
         public IReadOnlyDictionary<string, string> LocProperties => _locPropertiesSet ?? LocPropertiesDefault;
@@ -92,7 +98,10 @@ namespace Robust.Shared.Prototypes
         [ViewVariables]
         [NeverPushInheritance]
         [DataField("noSpawn")]
+        [Obsolete("Use the HideSpawnMenu")]
         public bool NoSpawn { get; private set; }
+
+        public bool HideSpawnMenu => Categories.Contains(HideCategory) || NoSpawn;
 
         [DataField("placement")]
         private EntityPlacementProperties PlacementProperties = new();
@@ -185,13 +194,16 @@ namespace Robust.Shared.Prototypes
         }
 
         internal static void LoadEntity(
-            EntityPrototype? prototype,
-            EntityUid entity,
+            Entity<MetaDataComponent> ent,
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
             IEntityLoadContext? context) //yeah officer this method right here
         {
+            var (entity, meta) = ent;
+            var prototype = meta.EntityPrototype;
+            var ctx = context as ISerializationContext;
+
             if (prototype != null)
             {
                 foreach (var (name, entry) in prototype.Components)
@@ -200,8 +212,11 @@ namespace Robust.Shared.Prototypes
                         continue;
 
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
+                    var compReg = factory.GetRegistration(name);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, ctx);
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
+                    if (!entry.Component.NetSyncEnabled && compReg.NetID is {} netId)
+                        meta.NetComponents.Remove(netId);
                 }
             }
 
@@ -223,12 +238,14 @@ namespace Robust.Shared.Prototypes
                             $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
                     }
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, data, context as ISerializationContext);
+                    var compReg = factory.GetRegistration(name);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, ctx);
                 }
             }
         }
 
         public static void EnsureCompExistsAndDeserialize(EntityUid entity,
+            ComponentRegistration compReg,
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
@@ -236,12 +253,9 @@ namespace Robust.Shared.Prototypes
             IComponent data,
             ISerializationContext? context)
         {
-            var compReg = factory.GetRegistration(compName);
-
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                var newComponent = (Component) factory.GetComponent(compName);
-                newComponent.Owner = entity;
+                var newComponent = factory.GetComponent(compName);
                 entityManager.AddComponent(entity, newComponent);
                 component = newComponent;
             }

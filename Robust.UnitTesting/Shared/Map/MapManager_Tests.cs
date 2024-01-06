@@ -1,11 +1,9 @@
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.UnitTesting.Server;
-using System.Management;
-using System.Numerics;
 using Robust.Shared.Map.Components;
+using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Map
 {
@@ -49,15 +47,15 @@ namespace Robust.UnitTesting.Shared.Map
 
             var mapID = new MapId(11);
             mapMan.CreateMap(mapID);
-            var grid = mapMan.CreateGrid(mapID);
+            var grid = mapMan.CreateGridEntity(mapID);
 
             mapMan.Restart();
 
-            Assert.That(mapMan.GridExists(grid.Owner), Is.False);
+            Assert.That(mapMan.GridExists(grid), Is.False);
         }
 
         /// <summary>
-        /// When the map manager is restarted, Nullspace is recreated.
+        /// When entities are flushed check nullsapce is also culled.
         /// </summary>
         [Test]
         public void Restart_NullspaceMap_IsEmptied()
@@ -66,9 +64,8 @@ namespace Robust.UnitTesting.Shared.Map
             var entMan = sim.Resolve<IEntityManager>();
             var oldEntity = entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
             entMan.InitializeComponents(oldEntity);
-            entMan.Shutdown();
+            entMan.FlushEntities();
             Assert.That(entMan.Deleted(oldEntity), Is.True);
-
         }
 
         /// <summary>

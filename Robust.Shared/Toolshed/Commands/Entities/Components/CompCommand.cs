@@ -28,7 +28,7 @@ internal sealed class CompCommand : ToolshedCommand
 
     [CommandImplementation("add")]
     public EntityUid Add<T>([PipedArgument] EntityUid input)
-        where T: Component, new()
+        where T: IComponent, new()
     {
         AddComp<T>(input);
         return input;
@@ -36,13 +36,13 @@ internal sealed class CompCommand : ToolshedCommand
 
     [CommandImplementation("add")]
     public IEnumerable<EntityUid> Add<T>([PipedArgument] IEnumerable<EntityUid> input)
-        where T : Component, new()
+        where T : IComponent, new()
         => input.Select(Add<T>);
 
 
     [CommandImplementation("rm")]
     public EntityUid Rm<T>([PipedArgument] EntityUid input)
-        where T: Component, new()
+        where T: IComponent, new()
     {
         RemComp<T>(input);
         return input;
@@ -50,12 +50,12 @@ internal sealed class CompCommand : ToolshedCommand
 
     [CommandImplementation("rm")]
     public IEnumerable<EntityUid> Rm<T>([PipedArgument] IEnumerable<EntityUid> input)
-        where T : Component, new()
+        where T : IComponent, new()
         => input.Select(Rm<T>);
 
     [CommandImplementation("ensure")]
     public EntityUid Ensure<T>([PipedArgument] EntityUid input)
-        where T: Component, new()
+        where T: IComponent, new()
     {
         EnsureComp<T>(input);
         return input;
@@ -63,7 +63,7 @@ internal sealed class CompCommand : ToolshedCommand
 
     [CommandImplementation("ensure")]
     public IEnumerable<EntityUid> Ensure<T>([PipedArgument] IEnumerable<EntityUid> input)
-        where T : Component, new()
+        where T : IComponent, new()
         => input.Select(Ensure<T>);
 
     [CommandImplementation("has")]

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -146,34 +144,15 @@ public static class CompletionHelper
 
     public static IEnumerable<CompletionOption> MapUids(IEntityManager? entManager = null)
     {
-        IoCManager.Resolve(ref entManager);
-
-        var query = entManager.AllEntityQueryEnumerator<MapComponent>();
-        while (query.MoveNext(out var uid, out _))
-        {
-            yield return new CompletionOption(uid.ToString());
-        }
+        return Components<MapComponent>(string.Empty, entManager);
     }
 
     public static IEnumerable<CompletionOption> NetEntities(string text, IEntityManager? entManager = null)
     {
-        IoCManager.Resolve(ref entManager);
-
-        foreach (var ent in entManager.GetEntities())
-        {
-            if (!entManager.TryGetNetEntity(ent, out var netEntity))
-                continue;
-
-            var netString = netEntity.Value.ToString();
-
-            if (!netString.StartsWith(text))
-                continue;
-
-            yield return new CompletionOption(netString);
-        }
+        return Components<MetaDataComponent>(text, entManager);
     }
 
-    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null) where T : Component
+    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null) where T : IComponent
     {
         IoCManager.Resolve(ref entManager);
 
@@ -189,7 +168,7 @@ public static class CompletionHelper
             if (!netString.StartsWith(text))
                 continue;
 
-            yield return new CompletionOption(netString);
+            yield return new CompletionOption(netString, metadata.EntityName);
         }
     }
 }

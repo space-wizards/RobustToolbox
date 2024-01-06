@@ -8,7 +8,6 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
-using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
 
@@ -118,7 +117,7 @@ namespace Robust.Shared.GameObjects
 
         protected void RaiseNetworkEvent(EntityEventArgs message, ICommonSession session)
         {
-            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.Channel);
         }
 
         /// <summary>
@@ -134,14 +133,14 @@ namespace Robust.Shared.GameObjects
 
             foreach (var session in filter.Recipients)
             {
-                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
+                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.Channel);
             }
         }
 
         protected void RaiseNetworkEvent(EntityEventArgs message, EntityUid recipient)
         {
             if (_playerMan.TryGetSessionByEntity(recipient, out var session))
-                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
+                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.Channel);
         }
 
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)

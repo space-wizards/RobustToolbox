@@ -10,7 +10,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using cIPlayerManager = Robust.Client.Player.IPlayerManager;
 using sIPlayerManager = Robust.Server.Player.IPlayerManager;
 
@@ -56,7 +56,7 @@ public sealed class DisconnectTest : RobustIntegrationTest
         AssertConnected();
 
         // Disconnect again, but using the server-channel
-        session.ConnectedClient.Disconnect("test 2");
+        session.Channel.Disconnect("test 2");
         await RunTicks();
         AssertDisconnected();
 

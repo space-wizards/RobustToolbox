@@ -1,4 +1,5 @@
 using System;
+using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Shared.Utility;
 
@@ -58,7 +59,13 @@ internal sealed partial class ReplayPlaybackManager
 
             _timing.LastRealTick = _timing.LastProcessedTick = _timing.CurTick = Replay.CurTick;
             _gameState.UpdateFullRep(state, cloneDelta: true);
-            _gameState.ApplyGameState(state, Replay.NextState);
+
+            // Clear existing lerps
+            _entMan.EntitySysManager.GetEntitySystem<TransformSystem>().Reset();
+
+            var next = Replay.NextState;
+            BeforeApplyState?.Invoke((state, next));
+            _gameState.ApplyGameState(state, next);
             ProcessMessages(Replay.CurMessages, skipEffectEvents);
 
             // TODO REPLAYS block audio

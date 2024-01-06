@@ -11,14 +11,10 @@ namespace Robust.Shared.GameObjects
         private static void CollectBroadcastOrdered(
             EventSource source,
             EventData sub,
-            ref ValueList<OrderedEventDispatch> found,
-            bool byRef)
+            ref ValueList<OrderedEventDispatch> found)
         {
             foreach (var handler in sub.BroadcastRegistrations)
             {
-                if (handler.ReferenceEvent != byRef)
-                    ThrowByRefMisMatch();
-
                 if ((handler.Mask & source) != 0)
                     found.Add(new OrderedEventDispatch(handler.Handler, handler.Order));
             }
@@ -29,8 +25,7 @@ namespace Robust.Shared.GameObjects
             Type eventType,
             EventData subs,
             ref Unit unitRef,
-            bool broadcast,
-            bool byRef)
+            bool broadcast)
         {
             if (!subs.OrderingUpToDate)
                 UpdateOrderSeq(eventType, subs);
@@ -38,9 +33,9 @@ namespace Robust.Shared.GameObjects
             var found = new ValueList<OrderedEventDispatch>();
 
             if (broadcast)
-                CollectBroadcastOrdered(EventSource.Local, subs, ref found, byRef);
+                CollectBroadcastOrdered(EventSource.Local, subs, ref found);
 
-            EntCollectOrdered(uid, eventType, ref found, byRef);
+            EntCollectOrdered(uid, eventType, ref found);
 
             DispatchOrderedEvents(ref unitRef, ref found);
         }

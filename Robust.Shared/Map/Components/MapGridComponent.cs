@@ -25,7 +25,7 @@ namespace Robust.Shared.Map.Components
 
         // This field is used for deserialization internally in the map loader.
         // If you want to remove this, you would have to restructure the map save file.
-        [DataField("index")] internal int GridIndex = 0;
+        [DataField("index")] internal int GridIndex;
         // the grid section now writes the grid's EntityUID. as long as existing maps get updated (just a load+save),
         // this can be removed
 
@@ -75,70 +75,83 @@ namespace Robust.Shared.Map.Components
 
         #region TileAccess
 
+        [Obsolete("Use the MapSystem method")]
         public TileRef GetTileRef(MapCoordinates coords)
         {
             return MapSystem.GetTileRef(Owner, this, coords);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public TileRef GetTileRef(EntityCoordinates coords)
         {
             return MapSystem.GetTileRef(Owner, this, coords);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public TileRef GetTileRef(Vector2i tileCoordinates)
         {
             return MapSystem.GetTileRef(Owner, this, tileCoordinates);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true)
         {
             return MapSystem.GetAllTiles(Owner, this, ignoreEmpty);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public GridTileEnumerator GetAllTilesEnumerator(bool ignoreEmpty = true)
         {
             return MapSystem.GetAllTilesEnumerator(Owner, this, ignoreEmpty);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public void SetTile(EntityCoordinates coords, Tile tile)
         {
             MapSystem.SetTile(Owner, this, coords, tile);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public void SetTile(Vector2i gridIndices, Tile tile)
         {
             MapSystem.SetTile(Owner, this, gridIndices, tile);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles)
         {
             MapSystem.SetTiles(Owner, this, tiles);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<TileRef> GetLocalTilesIntersecting(Box2Rotated localArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
             return MapSystem.GetLocalTilesIntersecting(Owner, this, localArea, ignoreEmpty, predicate);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
             return MapSystem.GetTilesIntersecting(Owner, this, worldArea, ignoreEmpty, predicate);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
             return MapSystem.GetTilesIntersecting(Owner, this, worldArea, ignoreEmpty, predicate);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
             return MapSystem.GetLocalTilesIntersecting(Owner, this, localArea, ignoreEmpty, predicate);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<TileRef> GetTilesIntersecting(Circle worldArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
@@ -149,16 +162,19 @@ namespace Robust.Shared.Map.Components
 
         #region ChunkAccess
 
+        [Obsolete("Use the MapSystem method")]
         internal bool TryGetChunk(Vector2i chunkIndices, [NotNullWhen(true)] out MapChunk? chunk)
         {
             return MapSystem.TryGetChunk(Owner, this, chunkIndices, out chunk);
         }
 
+        [Obsolete("Use the MapSystem method")]
         internal IReadOnlyDictionary<Vector2i, MapChunk> GetMapChunks()
         {
             return MapSystem.GetMapChunks(Owner, this);
         }
 
+        [Obsolete("Use the MapSystem method")]
         internal ChunkEnumerator GetMapChunks(Box2Rotated worldArea)
         {
             return MapSystem.GetMapChunks(Owner, this, worldArea);
@@ -168,56 +184,67 @@ namespace Robust.Shared.Map.Components
 
         #region SnapGridAccess
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords)
         {
             return MapSystem.GetAnchoredEntities(Owner, this, coords);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos)
         {
             return MapSystem.GetAnchoredEntities(Owner, this, pos);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public AnchoredEntitiesEnumerator GetAnchoredEntitiesEnumerator(Vector2i pos)
         {
             return MapSystem.GetAnchoredEntitiesEnumerator(Owner, this, pos);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<EntityUid> GetLocalAnchoredEntities(Box2 localAABB)
         {
             return MapSystem.GetLocalAnchoredEntities(Owner, this, localAABB);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB)
         {
             return MapSystem.GetAnchoredEntities(Owner, this, worldAABB);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public Vector2i TileIndicesFor(EntityCoordinates coords)
         {
             return MapSystem.TileIndicesFor(Owner, this, coords);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public Vector2i TileIndicesFor(MapCoordinates worldPos)
         {
             return MapSystem.TileIndicesFor(Owner, this, worldPos);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<EntityUid> GetInDir(EntityCoordinates position, Direction dir)
         {
             return MapSystem.GetInDir(Owner, this, position, dir);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<EntityUid> GetLocal(EntityCoordinates coords)
         {
             return MapSystem.GetLocal(Owner, this, coords);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<EntityUid> GetCardinalNeighborCells(EntityCoordinates coords)
         {
             return MapSystem.GetCardinalNeighborCells(Owner, this, coords);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public IEnumerable<EntityUid> GetCellsInSquareArea(EntityCoordinates coords, int n)
         {
             return MapSystem.GetCellsInSquareArea(Owner, this, coords, n);
@@ -225,66 +252,79 @@ namespace Robust.Shared.Map.Components
 
         #endregion
 
+        [Obsolete("Use the MapSystem method")]
         public Vector2 WorldToLocal(Vector2 posWorld)
         {
             return MapSystem.WorldToLocal(Owner, this, posWorld);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public EntityCoordinates MapToGrid(MapCoordinates posWorld)
         {
             return MapSystem.MapToGrid(Owner, posWorld);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public Vector2 LocalToWorld(Vector2 posLocal)
         {
             return MapSystem.LocalToWorld(Owner, this, posLocal);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public Vector2i WorldToTile(Vector2 posWorld)
         {
             return MapSystem.WorldToTile(Owner, this, posWorld);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public Vector2i LocalToTile(EntityCoordinates coordinates)
         {
             return MapSystem.LocalToTile(Owner, this, coordinates);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public Vector2i CoordinatesToTile(EntityCoordinates coords)
         {
             return MapSystem.CoordinatesToTile(Owner, this, coords);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public bool CollidesWithGrid(Vector2i indices)
         {
             return MapSystem.CollidesWithGrid(Owner, this, indices);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public Vector2i GridTileToChunkIndices(Vector2i gridTile)
         {
             return MapSystem.GridTileToChunkIndices(Owner, this, gridTile);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public EntityCoordinates GridTileToLocal(Vector2i gridTile)
         {
             return MapSystem.GridTileToLocal(Owner, this, gridTile);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public Vector2 GridTileToWorldPos(Vector2i gridTile)
         {
             return MapSystem.GridTileToWorldPos(Owner, this, gridTile);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public MapCoordinates GridTileToWorld(Vector2i gridTile)
         {
             return MapSystem.GridTileToWorld(Owner, this, gridTile);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public bool TryGetTileRef(Vector2i indices, out TileRef tile)
         {
             return MapSystem.TryGetTileRef(Owner, this, indices, out tile);
         }
 
+        [Obsolete("Use the MapSystem method")]
         public bool TryGetTileRef(EntityCoordinates coords, out TileRef tile)
         {
             return MapSystem.TryGetTileRef(Owner, this, coords, out tile);
@@ -332,7 +372,7 @@ namespace Robust.Shared.Map.Components
             FullGridData = fullGridData;
         }
 
-        public void ApplyToFullState(ComponentState fullState)
+        public void ApplyToFullState(IComponentState fullState)
         {
             var state = (MapGridComponentState)fullState;
             DebugTools.Assert(!FullState && state.FullState);
@@ -351,7 +391,7 @@ namespace Robust.Shared.Map.Components
             }
         }
 
-        public ComponentState CreateNewFullState(ComponentState fullState)
+        public IComponentState CreateNewFullState(IComponentState fullState)
         {
             var state = (MapGridComponentState)fullState;
             DebugTools.Assert(!FullState && state.FullState);

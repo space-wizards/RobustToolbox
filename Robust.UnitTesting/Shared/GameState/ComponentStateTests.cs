@@ -2,14 +2,13 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.GameObjects;
-using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.UnitTesting.Shared.GameState;
 
@@ -73,9 +72,9 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         {
             // Attach player.
             player = server.EntMan.Spawn();
-            var session = (IPlayerSession) server.PlayerMan.Sessions.First();
-            server.System<ActorSystem>().Attach(player, session);
-            session.JoinGame();
+            var session = server.PlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, player);
+            server.PlayerMan.JoinGame(session);
 
             // Spawn test entities.
             serverEntA = server.EntMan.SpawnAttachedTo(null, coordsA);
@@ -209,9 +208,9 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         {
             // Attach player.
             player = server.EntMan.Spawn();
-            var session = (IPlayerSession) server.PlayerMan.Sessions.First();
-            server.System<ActorSystem>().Attach(player, session);
-            session.JoinGame();
+            var session = server.PlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, player);
+            server.PlayerMan.JoinGame(session);
 
             // Spawn test entities.
             serverEntA = server.EntMan.SpawnAttachedTo(null, coordsA);
@@ -250,7 +249,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             var clientEntA = client.EntMan.GetEntity(serverNetA);
             var clientEntB = client.EntMan.GetEntity(serverNetB);
             Assert.That(client.EntMan.EntityExists(clientEntB), Is.True);
-            Assert.That(client.EntMan.EntityExists(client.EntMan.GetEntity(serverNetA)), Is.False);
+            Assert.That(client.EntMan.EntityExists(clientEntA), Is.False);
 
             Assert.That(client.EntMan.TryGetComponent(clientEntB, out UnknownEntityTestComponent? cmp));
             Assert.That(cmp?.Other, Is.EqualTo(clientEntA));
@@ -308,6 +307,6 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class UnknownEntityTestComponent : Component
 {
-    [AutoNetworkedField]
+    [DataField, AutoNetworkedField]
     public EntityUid? Other;
 }

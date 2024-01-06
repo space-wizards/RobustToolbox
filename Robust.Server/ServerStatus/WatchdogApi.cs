@@ -80,6 +80,10 @@ namespace Robust.Server.ServerStatus
             return true;
         }
 
+        /// <remarks>
+        /// This function is used by https://github.com/tgstation/tgstation-server
+        /// Notify the project maintainer(s) if this API is changed.
+        /// </remarks>
         private async Task<bool> ShutdownHandler(IStatusHandlerContext context)
         {
             if (context.RequestMethod != HttpMethod.Post || context.Url!.AbsolutePath != "/shutdown")

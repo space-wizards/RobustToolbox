@@ -5,6 +5,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
+using Robust.Shared.Player;
 
 namespace Robust.Server.GameObjects
 {
@@ -15,10 +16,10 @@ namespace Robust.Server.GameObjects
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
-        private readonly Dictionary<IPlayerSession, IPlayerCommandStates> _playerInputs = new();
+        private readonly Dictionary<ICommonSession, IPlayerCommandStates> _playerInputs = new();
 
 
-        private readonly Dictionary<IPlayerSession, uint> _lastProcessedInputCmd = new();
+        private readonly Dictionary<ICommonSession, uint> _lastProcessedInputCmd = new();
 
         /// <inheritdoc />
         public override void Initialize()
@@ -48,7 +49,7 @@ namespace Robust.Server.GameObjects
             if (!Enum.IsDefined(typeof(BoundKeyState), msg.State))
                 return;
 
-            var session = (IPlayerSession) eventArgs.SenderSession;
+            var session = eventArgs.SenderSession;
 
             if (_lastProcessedInputCmd[session] < msg.InputSequence)
                 _lastProcessedInputCmd[session] = msg.InputSequence;
@@ -65,14 +66,14 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public IPlayerCommandStates GetInputStates(IPlayerSession session)
+        public IPlayerCommandStates GetInputStates(ICommonSession session)
         {
             return _playerInputs[session];
         }
 
-        public uint GetLastInputCommand(IPlayerSession session)
+        public uint GetLastInputCommand(ICommonSession? session)
         {
-            return _lastProcessedInputCmd[session];
+            return session == null ? default : _lastProcessedInputCmd.GetValueOrDefault(session);
         }
 
         private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)

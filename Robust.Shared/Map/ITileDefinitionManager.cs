@@ -30,6 +30,7 @@ namespace Robust.Shared.Map
         /// <param name="id">The ID of the tile definition.</param>
         /// <returns>The tile definition.</returns>
         ITileDefinition this[int id] { get; }
+        // TODO add a try get and get-or-null variant.
 
         /// <summary>
         ///     The number of tile definitions contained inside of this manager.

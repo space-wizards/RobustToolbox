@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-using Robust.Shared.Players;
+using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 
@@ -33,9 +34,14 @@ public interface IInvocationContext
     ToolshedEnvironment Environment { get; }
 
     /// <summary>
-    ///     The session this context is for, if any.
+    ///     The session for the <see cref="User"/>, if any currently exists.
     /// </summary>
     ICommonSession? Session { get; }
+
+    /// <summary>
+    ///     The session this context is for, if any.
+    /// </summary>
+    NetUserId? User { get; }
 
     ToolshedManager Toolshed { get; }
 

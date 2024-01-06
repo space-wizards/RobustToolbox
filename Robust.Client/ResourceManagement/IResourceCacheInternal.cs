@@ -2,14 +2,14 @@
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.ResourceManagement
-{
-    internal interface IResourceCacheInternal : IResourceCache, IResourceManagerInternal
-    {
-        void TextureLoaded(TextureLoadedEventArgs eventArgs);
-        void RsiLoaded(RsiLoadedEventArgs eventArgs);
+namespace Robust.Client.ResourceManagement;
 
-        void MountLoaderApi(IFileApi api, string apiPrefix, ResPath? prefix=null);
-        void PreloadTextures();
-    }
+/// <inheritdoc />
+internal interface IResourceCacheInternal : IResourceCache
+{
+    void TextureLoaded(TextureLoadedEventArgs eventArgs);
+    void RsiLoaded(RsiLoadedEventArgs eventArgs);
+    void PreloadTextures();
+
+    void MountLoaderApi(IResourceManager manager, IFileApi api, string apiPrefix, ResPath? prefix = null);
 }

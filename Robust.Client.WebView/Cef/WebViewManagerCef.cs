@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
@@ -84,6 +85,10 @@ namespace Robust.Client.WebView.Cef
             _sawmill.Info($"CEF Version: {CefRuntime.ChromeVersion}");
 
             _app = new RobustCefApp(_sawmill);
+
+            var process = Process.GetCurrentProcess();
+            Environment.SetEnvironmentVariable("ROBUST_CEF_BROWSER_PROCESS_ID", process.Id.ToString());
+            Environment.SetEnvironmentVariable("ROBUST_CEF_BROWSER_PROCESS_MODULE", process.MainModule?.FileName ?? "");
 
             // So these arguments look like nonsense, but it turns out CEF is just *like that*.
             // The first argument is literally nonsense, but it needs to be there as otherwise the second argument doesn't apply

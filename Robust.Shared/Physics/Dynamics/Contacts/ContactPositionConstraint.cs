@@ -21,7 +21,6 @@
 */
 
 using System.Numerics;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts

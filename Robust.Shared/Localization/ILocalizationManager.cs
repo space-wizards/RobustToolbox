@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
-using Robust.Shared.ContentPack;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Localization
@@ -23,13 +22,20 @@ namespace Robust.Shared.Localization
     public interface ILocalizationManager
     {
         /// <summary>
-        ///     Gets a language approrpiate string represented by the supplied messageId.
+        ///     Gets a language appropriate string represented by the supplied messageId.
         /// </summary>
         /// <param name="messageId">Unique Identifier for a translated message.</param>
         /// <returns>
         ///     The language appropriate message if available, otherwise the messageId is returned.
         /// </returns>
         string GetString(string messageId);
+
+        /// <summary>
+        ///     Checks if the specified id has been registered, without checking its arguments.
+        /// </summary>
+        /// <param name="messageId">Unique Identifier for a translated message.</param>
+        /// <returns>true if it exists, even if it requires any parameters to be passed.</returns>
+        bool HasString(string messageId);
 
         /// <summary>
         ///     Try- version of <see cref="GetString(string)"/>
@@ -46,7 +52,35 @@ namespace Robust.Shared.Localization
         string GetString(string messageId, params (string, object)[] args);
 
         /// <summary>
-        ///     Try- version of <see cref="GetString(string, ValueTuple{string, object}[])"/>
+        ///     Version of <see cref="GetString(string)"/> that supports arguments.
+        /// </summary>
+        string GetString(string messageId, (string, object) arg);
+
+        /// <summary>
+        ///     Version of <see cref="GetString(string)"/> that supports arguments.
+        /// </summary>
+        string GetString(string messageId, (string, object) arg, (string, object) arg2);
+
+        /// <summary>
+        ///     Try- version of <see cref="GetString(string, (string, object)[])"/>
+        /// </summary>
+        /// <remarks>
+        ///     Does not log a warning if the message does not exist.
+        ///     Does however log errors if any occur while formatting.
+        /// </remarks>
+        bool TryGetString(string messageId, [NotNullWhen(true)] out string? value, (string, object) arg);
+
+        /// <summary>
+        ///     Try- version of <see cref="GetString(string, (string, object)[])"/>
+        /// </summary>
+        /// <remarks>
+        ///     Does not log a warning if the message does not exist.
+        ///     Does however log errors if any occur while formatting.
+        /// </remarks>
+        bool TryGetString(string messageId, [NotNullWhen(true)] out string? value, (string, object) arg1, (string, object) arg2);
+
+        /// <summary>
+        ///     Try- version of <see cref="GetString(string, (string, object)[])"/>
         /// </summary>
         /// <remarks>
         ///     Does not log a warning if the message does not exist.
@@ -69,7 +103,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         ///     Sets culture to be used in the absence of the main one.
         /// </summary>
-        void SetFallbackCluture(CultureInfo culture);
+        void SetFallbackCluture(params CultureInfo[] culture);
 
         /// <summary>
         ///     Immediately reload ALL localizations from resources.

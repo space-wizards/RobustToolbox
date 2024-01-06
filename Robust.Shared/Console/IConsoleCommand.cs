@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -9,7 +8,7 @@ namespace Robust.Shared.Console
     /// Basic interface to handle console commands. Any class implementing this will be
     /// registered with the console system through reflection.
     /// </summary>
-    [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors), Obsolete("New commands should utilize ToolshedCommand.")]
+    [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
     public interface IConsoleCommand
     {
         /// <summary>

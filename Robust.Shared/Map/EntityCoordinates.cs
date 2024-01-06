@@ -37,6 +37,12 @@ namespace Robust.Shared.Map
         /// </summary>
         public float Y => Position.Y;
 
+        public EntityCoordinates()
+        {
+            EntityId = EntityUid.Invalid;
+            Position = Vector2.Zero;
+        }
+
         /// <summary>
         ///     Constructs a new instance of <see cref="EntityCoordinates"/>.
         /// </summary>
@@ -366,14 +372,34 @@ namespace Robust.Shared.Map
             EntityCoordinates otherCoordinates,
             out float distance)
         {
+            if (TryDelta(entityManager, transformSystem, otherCoordinates, out var delta))
+            {
+                distance = delta.Length();
+                return true;
+            }
+
             distance = 0f;
+            return false;
+        }
+
+        /// <summary>
+        ///     Tries to calculate the distance vector between two sets of coordinates.
+        /// </summary>
+        /// <returns>True if it was possible to calculate the distance</returns>
+        public bool TryDelta(
+            IEntityManager entityManager,
+            SharedTransformSystem transformSystem,
+            EntityCoordinates otherCoordinates,
+            out Vector2 delta)
+        {
+            delta = Vector2.Zero;
 
             if (!IsValid(entityManager) || !otherCoordinates.IsValid(entityManager))
                 return false;
 
             if (EntityId == otherCoordinates.EntityId)
             {
-                distance = (Position - otherCoordinates.Position).Length();
+                delta = Position - otherCoordinates.Position;
                 return true;
             }
 
@@ -383,7 +409,7 @@ namespace Robust.Shared.Map
             if (mapCoordinates.MapId != otherMapCoordinates.MapId)
                 return false;
 
-            distance = (mapCoordinates.Position - otherMapCoordinates.Position).Length();
+            delta = mapCoordinates.Position - otherMapCoordinates.Position;
             return true;
         }
 

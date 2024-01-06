@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;

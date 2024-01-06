@@ -8,6 +8,7 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Robust.Shared.Containers;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
@@ -23,13 +24,25 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly SharedMapSystem _map = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly INetManager _netMan = default!;
+        [Dependency] private readonly SharedContainerSystem _container = default!;
 
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
-        private EntityQuery<TransformComponent> _xformQuery;
+        protected EntityQuery<TransformComponent> XformQuery;
 
-        private readonly Queue<MoveEvent> _gridMoves = new();
-        private readonly Queue<MoveEvent> _otherMoves = new();
+        public delegate void MoveEventHandler(ref MoveEvent ev);
+
+        /// <summary>
+        ///     Invoked as an alternative to broadcasting move events, which can be expensive.
+        ///     Systems which want to subscribe broadcast to <see cref="MoveEvent"/> (which you probably shouldn't)
+        ///     should subscribe to this instead
+        /// </summary>
+        public event MoveEventHandler? OnGlobalMoveEvent;
+
+        public void InvokeGlobalMoveEvent(ref MoveEvent ev)
+        {
+            OnGlobalMoveEvent?.Invoke(ref ev);
+        }
 
         public override void Initialize()
         {
@@ -39,7 +52,7 @@ namespace Robust.Shared.GameObjects
 
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
-            _xformQuery = GetEntityQuery<TransformComponent>();
+            XformQuery = GetEntityQuery<TransformComponent>();
 
             SubscribeLocalEvent<TileChangedEvent>(MapManagerOnTileChanged);
             SubscribeLocalEvent<TransformComponent, ComponentInit>(OnCompInit);
@@ -47,21 +60,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<TransformComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<TransformComponent, ComponentHandleState>(OnHandleState);
             SubscribeLocalEvent<TransformComponent, GridAddEvent>(OnGridAdd);
-            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
-        }
-
-        private void OnParentChange(ref EntParentChangedMessage ev)
-        {
-            // TODO: when PVS errors on live servers get fixed, wrap this whole subscription in an #if DEBUG block to speed up parent changes & entity deletion.
-            if (ev.Transform.ParentUid == EntityUid.Invalid)
-                return;
-
-            if (LifeStage(ev.Entity) >= EntityLifeStage.Terminating)
-                Log.Error($"Entity {ToPrettyString(ev.Entity)} is getting attached to a new parent while terminating. New parent: {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
-
-
-            if (LifeStage(ev.Transform.ParentUid) >= EntityLifeStage.Terminating)
-                Log.Error($"Entity {ToPrettyString(ev.Entity)} is attaching itself to a terminating entity {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
         }
 
         private void MapManagerOnTileChanged(ref TileChangedEvent e)
@@ -85,17 +83,17 @@ namespace Robust.Shared.GameObjects
             if (!TryComp(gridId, out BroadphaseComponent? lookup) || !_mapManager.TryGetGrid(gridId, out var grid))
                 return;
 
-            if (!_xformQuery.TryGetComponent(gridId, out var gridXform))
+            if (!XformQuery.TryGetComponent(gridId, out var gridXform))
                 return;
 
-            if (!_xformQuery.TryGetComponent(gridXform.MapUid, out var mapTransform))
+            if (!XformQuery.TryGetComponent(gridXform.MapUid, out var mapTransform))
                 return;
 
             var aabb = _lookup.GetLocalBounds(tileIndices, grid.TileSize);
 
             foreach (var entity in _lookup.GetEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
             {
-                if (!_xformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
+                if (!XformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
                     continue;
 
                 if (!aabb.Contains(xform.LocalPosition))
@@ -110,45 +108,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public void DeferMoveEvent(ref MoveEvent moveEvent)
-        {
-            if (EntityManager.HasComponent<MapGridComponent>(moveEvent.Sender))
-                _gridMoves.Enqueue(moveEvent);
-            else
-                _otherMoves.Enqueue(moveEvent);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-
-            // Process grid moves first.
-            Process(_gridMoves);
-            Process(_otherMoves);
-
-            void Process(Queue<MoveEvent> queue)
-            {
-                while (queue.TryDequeue(out var ev))
-                {
-                    if (EntityManager.Deleted(ev.Sender))
-                    {
-                        continue;
-                    }
-
-                    // Hopefully we can remove this when PVS gets updated to not use NaNs
-                    if (!ev.NewPosition.IsValid(EntityManager))
-                    {
-                        continue;
-                    }
-
-                    RaiseLocalEvent(ev.Sender, ref ev, true);
-                }
-            }
-        }
-
         public EntityCoordinates GetMoverCoordinates(EntityUid uid)
         {
-            return GetMoverCoordinates(uid, _xformQuery.GetComponent(uid));
+            return GetMoverCoordinates(uid, XformQuery.GetComponent(uid));
         }
 
         public EntityCoordinates GetMoverCoordinates(EntityUid uid, TransformComponent xform)
@@ -168,11 +130,11 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
 
             // Not parented to grid so convert their pos back to the grid.
-            var worldPos = GetWorldPosition(xform, _xformQuery);
+            var worldPos = GetWorldPosition(xform, XformQuery);
 
             return xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, worldPos)
-                : new EntityCoordinates(xform.GridUid.Value, _xformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
+                : new EntityCoordinates(xform.GridUid.Value, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
         }
 
         public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
@@ -191,7 +153,7 @@ namespace Robust.Shared.GameObjects
             if (!parentUid.IsValid())
                 return coordinates;
 
-            var parentXform = _xformQuery.GetComponent(parentUid);
+            var parentXform = XformQuery.GetComponent(parentUid);
 
             // GriddUid is only set after init.
             if (!parentXform._gridInitialized)
@@ -209,11 +171,11 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(!_mapManager.IsGrid(parentUid) && !_mapManager.IsMap(parentUid));
 
             // Not parented to grid so convert their pos back to the grid.
-            var worldPos = GetWorldMatrix(parentXform, _xformQuery).Transform(coordinates.Position);
+            var worldPos = GetWorldMatrix(parentXform, XformQuery).Transform(coordinates.Position);
 
             return parentXform.GridUid == null
                 ? new EntityCoordinates(mapId ?? parentUid, worldPos)
-                : new EntityCoordinates(parentXform.GridUid.Value, _xformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
+                : new EntityCoordinates(parentXform.GridUid.Value, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
         }
 
         /// <summary>
@@ -231,15 +193,15 @@ namespace Robust.Shared.GameObjects
 
             // Is the entity directly parented to the grid?
             if (xform.GridUid == xform.ParentUid)
-                return (xform.Coordinates, GetWorldRotation(xform, _xformQuery));
+                return (xform.Coordinates, GetWorldRotation(xform, XformQuery));
 
             DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
 
-            var (pos, worldRot) = GetWorldPositionRotation(xform, _xformQuery);
+            var (pos, worldRot) = GetWorldPositionRotation(xform, XformQuery);
 
             var coords = xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, pos)
-                : new EntityCoordinates(xform.GridUid.Value, _xformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(pos));
+                : new EntityCoordinates(xform.GridUid.Value, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(pos));
 
             return (coords, worldRot);
         }
@@ -259,24 +221,52 @@ namespace Robust.Shared.GameObjects
             // We're on a grid, need to convert the coordinates to grid tiles.
             return _map.CoordinatesToTile(xform.GridUid.Value, Comp<MapGridComponent>(xform.GridUid.Value), xform.Coordinates);
         }
+
+        /// <summary>
+        /// Helper method that returns the grid tile an entity is on.
+        /// </summary>
+        public Vector2i GetGridTilePositionOrDefault(Entity<TransformComponent?> entity, MapGridComponent? grid = null)
+        {
+            var xform = entity.Comp;
+            if(!Resolve(entity.Owner, ref xform) || xform.GridUid == null)
+                return Vector2i.Zero;
+
+            if (!Resolve(xform.GridUid.Value, ref grid))
+                return Vector2i.Zero;
+
+            return _map.CoordinatesToTile(xform.GridUid.Value, grid, xform.Coordinates);
+        }
+
+        /// <summary>
+        /// Helper method that returns the grid tile an entity is on.
+        /// </summary>
+        public bool TryGetGridTilePosition(Entity<TransformComponent?> entity, out Vector2i indices, MapGridComponent? grid = null)
+        {
+            indices = default;
+            var xform = entity.Comp;
+            if(!Resolve(entity.Owner, ref xform) || xform.GridUid == null)
+                return false;
+
+            if (!Resolve(xform.GridUid.Value, ref grid))
+                return false;
+
+            indices = _map.CoordinatesToTile(xform.GridUid.Value, grid, xform.Coordinates);
+            return true;
+        }
     }
 
     [ByRefEvent]
-    public readonly struct TransformStartupEvent
+    public readonly struct TransformStartupEvent(Entity<TransformComponent> entity)
     {
-        public readonly TransformComponent Component;
-
-        public TransformStartupEvent(TransformComponent component)
-        {
-            Component = component;
-        }
+        public readonly Entity<TransformComponent> Entity = entity;
+        public TransformComponent Component => Entity.Comp;
     }
 
     /// <summary>
     ///     Serialized state of a TransformComponent.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class TransformComponentState : ComponentState
+    internal readonly record struct TransformComponentState : IComponentState
     {
         /// <summary>
         ///     Current parent entity of this entity.

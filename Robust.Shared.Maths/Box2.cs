@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
@@ -35,8 +36,14 @@ namespace Robust.Shared.Maths
         /// </summary>
         [FieldOffset(sizeof(float) * 3)] public float Top;
 
+        [NonSerialized]
         [FieldOffset(sizeof(float) * 0)] public Vector2 BottomLeft;
+
+        [NonSerialized]
         [FieldOffset(sizeof(float) * 2)] public Vector2 TopRight;
+
+        [NonSerialized]
+        [FieldOffset(sizeof(float) * 0)] public System.Numerics.Vector4 AsVector4;
 
         public readonly Vector2 BottomRight
         {
@@ -79,6 +86,8 @@ namespace Robust.Shared.Maths
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => (TopRight - BottomLeft) * 0.5f;
         }
+
+        public static Box2 Empty = new Box2();
 
         /// <summary>
         ///     A 1x1 unit box with the origin centered.
@@ -139,6 +148,11 @@ namespace Robust.Shared.Maths
             var max = Vector2.Max(a, b);
 
             return new Box2(min, max);
+        }
+
+        public readonly bool HasNan()
+        {
+            return Vector128.EqualsAny(AsVector4.AsVector128(), Vector128.Create(float.NaN));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

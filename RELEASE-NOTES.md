@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `TextEdit.OnTextChanged`
 
 ### Bugfixes
 

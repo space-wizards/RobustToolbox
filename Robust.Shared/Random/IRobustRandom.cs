@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Maths;
+using Robust.Shared.Toolshed.Commands.Generic;
 
 namespace Robust.Shared.Random;
 
@@ -117,6 +118,35 @@ public static class RandomHelpers
     public static bool Prob(this System.Random random, double chance)
     {
         return random.NextDouble() < chance;
+    }
+
+    /// <summary>
+    /// Picks a random element from a set and returns it.
+    /// </summary>
+    public static T Pick<T>(this System.Random random, HashSet<T> set)
+    {
+        var index = random.Next(set.Count);
+        var idx = 0;
+
+        foreach (var tile in set)
+        {
+            if (idx == index)
+                return tile;
+
+            idx++;
+        }
+
+        throw new InvalidOperationException();
+    }
+
+    /// <summary>
+    /// Picks a random from a set then removes it and returns it.
+    /// </summary>
+    public static T Take<T>(this System.Random random, HashSet<T> set)
+    {
+        var tile = Pick(random, set);
+        set.Remove(tile);
+        return tile;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -192,8 +192,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         internal PvsChunkLocation? LastPvsLocation;
 
-        [Obsolete("Do not use from content")]
-        public override void ClearTicks()
+        private protected override void ClearTicks()
         {
             // Do not clear modified ticks.
             // MetaDataComponent is used in the game state system to carry initial data like prototype ID.

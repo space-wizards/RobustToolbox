@@ -70,7 +70,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
             var componentData = prototype.Components["TestBasicPrototype"].Component as TestBasicPrototypeComponent;
 
-            Assert.NotNull(componentData);
+            Assert.That(componentData, Is.Not.Null);
             Assert.That(componentData!.Str, Is.EqualTo("hi!"));
             Assert.That(componentData!.int_field, Is.EqualTo(10));
             Assert.That(componentData!.float_field, Is.EqualTo(10f));

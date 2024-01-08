@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -34,7 +34,7 @@ public abstract class ToolshedTest : RobustIntegrationTest, IInvocationContext
 
     protected virtual async Task TearDown()
     {
-        Assert.IsEmpty(_expectedErrors);
+        Assert.That(_expectedErrors, Is.Empty);
         ClearErrors();
     }
 

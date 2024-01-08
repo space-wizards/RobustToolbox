@@ -4,14 +4,12 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Network.Messages;
 
-#nullable disable
-
 public sealed class MsgConCompletionResp : NetMessage
 {
     public override MsgGroups MsgGroup => MsgGroups.Command;
 
     public int Seq { get; set; }
-    public CompletionResult Result { get; set; }
+    public CompletionResult Result { get; set; } = default!;
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {

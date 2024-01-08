@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix `IClipboardManager.GetText()` returning null in some cases.
+* Fix possible NRE in server-side console command completion code.
 
 ### Other
 

@@ -10,6 +10,7 @@
     <!-- Try to fix sporadic errors against Robust.Packaging, apparently?? -->
     <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
     <RobustILLink>true</RobustILLink>
+    <NoWarn>CA1416</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />

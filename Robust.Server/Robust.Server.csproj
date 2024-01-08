@@ -20,6 +20,9 @@
     <PackageReference Include="prometheus-net" />
     <PackageReference Include="Serilog.Sinks.Loki" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.Extensions.Primitives" />
+    <!-- Needed to pull-up the dependency from prometheus-net -->
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="prometheus-net.DotNetRuntime" />
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" PrivateAssets="compile" />

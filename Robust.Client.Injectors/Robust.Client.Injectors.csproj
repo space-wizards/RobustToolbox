@@ -3,19 +3,12 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-      <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     </PropertyGroup>
 
     <ItemGroup>
-      <!-- Modern Pidgin versions don't support NS2.0 -->
-      <PackageVersion Remove="Pidgin" />
-      <PackageVersion Include="Pidgin" Version="2.5.0" />
-      <!-- Without this Rider starts displaying all the PackageVersions in the solution view. Why? -->
-      <PackageVersion Update="*" Visible="false" />
-
-      <PackageReference Include="Microsoft.Build.Framework" />
-      <PackageReference Include="Mono.Cecil" />
-      <PackageReference Include="Pidgin" />
+      <PackageReference Include="Microsoft.Build.Framework" Version="17.8.3" />
+      <PackageReference Include="Mono.Cecil" Version="0.11.5" />
+      <PackageReference Include="Pidgin" Version="2.5.0" />
     </ItemGroup>
 
     <ItemGroup>

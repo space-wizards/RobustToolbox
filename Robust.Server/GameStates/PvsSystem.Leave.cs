@@ -51,12 +51,11 @@ internal sealed partial class PvsSystem
 
         foreach (var intPtr in CollectionsMarshal.AsSpan(lastSent))
         {
-            ValidatePtr(intPtr);
-            ref var data = ref Unsafe.AsRef<PvsData>((PvsData*)intPtr);
+            ref var data = ref session.DataMemory.GetRef(intPtr.Index);
             if (data.LastSeen == toTick)
                 continue;
 
-            session.LeftView.Add(PtrToNetEntity(intPtr, session));
+            session.LeftView.Add(IndexToNetEntity(intPtr));
             data.LastLeftView = toTick;
         }
 

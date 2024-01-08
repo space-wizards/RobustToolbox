@@ -150,7 +150,8 @@ internal sealed partial class PvsSystem : EntitySystem
 
         _parallelMgr.ParallelCountChanged += ResetParallelism;
         _configManager.OnValueChanged(CVars.NetPvsCompressLevel, ResetParallelism, true);
-        InitializePvsArray(0, 0);
+
+        InitializePvsArray();
     }
 
     public override void Shutdown()
@@ -172,10 +173,7 @@ internal sealed partial class PvsSystem : EntitySystem
         _serverGameStateManager.ClientAck -= OnClientAck;
         _serverGameStateManager.ClientRequestFull -= OnClientRequestFull;
 
-        ClearPointers();
-        _entityCount = 0;
-        _playerCount = 0;
-        _data = null;
+        ClearPvsData();
         ShutdownDirty();
     }
 
@@ -372,18 +370,17 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var intPtr in toSend)
         {
-            toSendSet.Add(PtrToNetEntity(intPtr, pvsSession));
+            toSendSet.Add(IndexToNetEntity(intPtr));
         }
         DebugTools.AssertEqual(toSend.Count, toSendSet.Count);
 
         foreach (var intPtr in CollectionsMarshal.AsSpan(toSend))
         {
-            ValidatePtr(intPtr);
-            ref var data = ref Unsafe.AsRef<PvsData>((PvsData*)intPtr);
+            ref var data = ref pvsSession.DataMemory.GetRef(intPtr.Index);
             DebugTools.AssertEqual(data.LastSeen, _gameTiming.CurTick);
 
             // if an entity is visible, its parents should always be visible.
-            if (_xformQuery.GetComponent(GetEntity(PtrToNetEntity(intPtr, pvsSession))).ParentUid is not {Valid: true} pUid)
+            if (_xformQuery.GetComponent(GetEntity(IndexToNetEntity(intPtr))).ParentUid is not {Valid: true} pUid)
                 continue;
 
             DebugTools.Assert(toSendSet.Contains(GetNetEntity(pUid)),
@@ -393,10 +390,9 @@ internal sealed partial class PvsSystem : EntitySystem
         pvsSession.PreviouslySent.TryGetValue(_gameTiming.CurTick - 1, out var lastSent);
         foreach (var intPtr in CollectionsMarshal.AsSpan(lastSent))
         {
-            ValidatePtr(intPtr);
-            ref var data = ref Unsafe.AsRef<PvsData>((PvsData*)intPtr);
+            ref var data = ref pvsSession.DataMemory.GetRef(intPtr.Index);
             DebugTools.Assert(data.LastSeen != GameTick.Zero);
-            DebugTools.AssertEqual(toSendSet.Contains(PtrToNetEntity(intPtr, pvsSession)), data.LastSeen == _gameTiming.CurTick);
+            DebugTools.AssertEqual(toSendSet.Contains(IndexToNetEntity(intPtr)), data.LastSeen == _gameTiming.CurTick);
             DebugTools.Assert(data.LastSeen == _gameTiming.CurTick
                               || data.LastSeen == _gameTiming.CurTick - 1);
         }
@@ -439,7 +435,10 @@ internal sealed partial class PvsSystem : EntitySystem
         foreach (var session in _disconnected)
         {
             if (PlayerData.Remove(session, out var pvsSession))
+            {
                 ClearSendHistory(pvsSession);
+                FreeSessionDataMemory(pvsSession);
+            }
         }
 
         var ackJob = ProcessQueuedAcks();

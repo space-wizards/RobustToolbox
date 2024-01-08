@@ -26,7 +26,7 @@ internal sealed partial class PvsSystem
     /// <summary>
     /// A chunks that is visible to a player and add entities to the game-state.
     /// </summary>
-    private unsafe void AddPvsChunk(PvsChunk chunk, float distance, PvsSession session)
+    private void AddPvsChunk(PvsChunk chunk, float distance, PvsSession session)
     {
         // Each root nodes should simply be a map or a grid entity.
         DebugTools.Assert(Exists(chunk.Root), $"Chunk root does not exist!");
@@ -54,11 +54,9 @@ internal sealed partial class PvsSystem
 
         // Send entities on the chunk.
         var span = CollectionsMarshal.AsSpan(chunk.Contents)[..count];
-        DebugTools.Assert(session.Offset > 0 && session.Offset % _entityCount == 0);
         foreach (ref var ent in span)
         {
-            ValidatePtr(ent.Ptr);
-            ref var meta = ref Unsafe.AsRef<PvsMetadata>((PvsMetadata*) ent.Ptr);
+            ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
             if ((mask & meta.VisMask) == meta.VisMask)
                 AddEntity(session, ref ent, ref meta, fromTick);
         }
@@ -68,13 +66,11 @@ internal sealed partial class PvsSystem
     /// Attempt to add an entity to the to-send lists, while respecting pvs budgets.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private unsafe void AddEntity(PvsSession session, ref PvsChunk.ChunkEntity ent, ref PvsMetadata meta,
+    private void AddEntity(PvsSession session, ref PvsChunk.ChunkEntity ent, ref PvsMetadata meta,
         GameTick fromTick)
     {
         DebugTools.Assert(fromTick < _gameTiming.CurTick);
-        var ptr = ((PvsData*) ent.Ptr) + session.Offset;
-        ValidatePtr((IntPtr)ptr);
-        ref var data = ref Unsafe.AsRef<PvsData>(ptr);
+        ref var data = ref session.DataMemory.GetRef(ent.Ptr.Index);
 
         if (data.LastSeen == _gameTiming.CurTick)
             return;
@@ -92,7 +88,7 @@ internal sealed partial class PvsSystem
             return;
 
         data.LastSeen = _gameTiming.CurTick;
-        session.ToSend!.Add((IntPtr)ptr);
+        session.ToSend!.Add(ent.Ptr);
 
         if (session.RequestedFull)
         {
@@ -121,13 +117,10 @@ internal sealed partial class PvsSystem
     /// Attempt to add an entity to the to-send lists, while respecting pvs budgets.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private unsafe bool AddEntity(PvsSession session, Entity<MetaDataComponent> entity, GameTick fromTick)
+    private bool AddEntity(PvsSession session, Entity<MetaDataComponent> entity, GameTick fromTick)
     {
-        DebugTools.Assert(session.Offset > 0 && session.Offset % _entityCount == 0);
         DebugTools.Assert(fromTick < _gameTiming.CurTick);
-        var ptr = ((PvsData*) entity.Comp.PvsData) + session.Offset;
-        ValidatePtr((IntPtr)ptr);
-        ref var data = ref Unsafe.AsRef<PvsData>(ptr);
+        ref var data = ref session.DataMemory.GetRef(entity.Comp.PvsData.Index);
 
         if (data.LastSeen == _gameTiming.CurTick)
             return true;
@@ -158,7 +151,7 @@ internal sealed partial class PvsSystem
         }
 
         data.LastSeen = _gameTiming.CurTick;
-        session.ToSend!.Add((IntPtr)ptr);
+        session.ToSend!.Add(entity.Comp.PvsData);
 
         if (session.RequestedFull)
         {

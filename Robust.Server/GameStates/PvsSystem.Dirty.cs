@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Prometheus;
@@ -48,13 +47,12 @@ namespace Robust.Server.GameStates
             _addEntities[_currentIndex].Add(e);
         }
 
-        private unsafe void OnEntityDirty(Entity<MetaDataComponent> uid)
+        private void OnEntityDirty(Entity<MetaDataComponent> uid)
         {
-            if (_data != null && uid.Comp.PvsData != IntPtr.Zero)
+            if (uid.Comp.PvsData != default)
             {
-                ValidatePtr(uid.Comp.PvsData);
-                var meta = ((PvsMetadata*) uid.Comp.PvsData);
-                meta->LastModifiedTick = uid.Comp.EntityLastModifiedTick;
+                ref var meta = ref _metadataMemory.GetRef(uid.Comp.PvsData.Index);
+                meta.LastModifiedTick = uid.Comp.EntityLastModifiedTick;
             }
 
             if (!_addEntities[_currentIndex].Contains(uid))

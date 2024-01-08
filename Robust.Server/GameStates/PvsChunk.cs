@@ -278,7 +278,7 @@ internal sealed class PvsChunk
     public readonly struct ChunkEntity(EntityUid uid, MetaDataComponent meta)
     {
         public readonly EntityUid Uid = uid;
-        public readonly IntPtr Ptr = meta.PvsData;
+        public readonly PvsIndex Ptr = meta.PvsData;
         public readonly MetaDataComponent Meta = meta;
     }
 }

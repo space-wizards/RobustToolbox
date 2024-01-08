@@ -73,11 +73,10 @@ internal sealed partial class PvsSystem
     {
         if (!PlayerData.TryGetValue(session, out var pvsSession))
         {
-            PlayerData[session] = pvsSession = new(session);
-            AssignPlayerOffset(pvsSession);
+            var memoryRegion = CreateSessionDataMemory();
+            PlayerData[session] = pvsSession = new(session, memoryRegion);
         }
 
-        ValidateOffset(pvsSession);
         return pvsSession;
     }
 

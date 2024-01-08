@@ -16,7 +16,7 @@ internal sealed partial class PvsSystem
     private readonly HashSet<EntityUid> _forceOverrideSet = new();
     private readonly HashSet<EntityUid> _globalOverrideSet = new();
 
-    private unsafe void AddAllOverrides(PvsSession session)
+    private void AddAllOverrides(PvsSession session)
     {
         var mask = session.VisMask;
         var fromTick = session.FromTick;
@@ -24,8 +24,7 @@ internal sealed partial class PvsSystem
 
         foreach (ref var ent in CollectionsMarshal.AsSpan(_cachedGlobalOverride))
         {
-            ValidatePtr(ent.Ptr);
-            ref var meta = ref Unsafe.AsRef<PvsMetadata>((PvsMetadata*) ent.Ptr);
+            ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
             if ((mask & meta.VisMask) == meta.VisMask)
                 AddEntity(session, ref ent, ref meta, fromTick);
         }
@@ -42,7 +41,7 @@ internal sealed partial class PvsSystem
     /// <summary>
     /// Adds all entities that ignore normal pvs budgets.
     /// </summary>
-    private unsafe void AddForcedEntities(PvsSession session)
+    private void AddForcedEntities(PvsSession session)
     {
         // Ignore PVS budgets
         session.Budget = new() {NewLimit = int.MaxValue, EnterLimit = int.MaxValue};
@@ -51,8 +50,7 @@ internal sealed partial class PvsSystem
         var fromTick = session.FromTick;
         foreach (ref var ent in CollectionsMarshal.AsSpan(_cachedForceOverride))
         {
-            ValidatePtr(ent.Ptr);
-            ref var meta = ref Unsafe.AsRef<PvsMetadata>((PvsMetadata*) ent.Ptr);
+            ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
             if ((mask & meta.VisMask) == meta.VisMask)
                 AddEntity(session, ref ent, ref meta, fromTick);
         }

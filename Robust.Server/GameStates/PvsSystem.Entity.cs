@@ -108,14 +108,13 @@ internal sealed partial class PvsSystem
         AssertNullspace(xform.ParentUid);
     }
 
-    internal unsafe void SyncMetadata(MetaDataComponent meta)
+    internal void SyncMetadata(MetaDataComponent meta)
     {
-        if (_data == null || meta.PvsData == IntPtr.Zero)
+        if (meta.PvsData == default)
             return;
 
-        ValidatePtr(meta.PvsData);
-        var ptr = (PvsMetadata*) meta.PvsData;
-        ptr->VisMask = meta.VisibilityMask;
-        ptr->LifeStage = meta.EntityLifeStage;
+        ref var ptr = ref _metadataMemory.GetRef(meta.PvsData.Index);
+        ptr.VisMask = meta.VisibilityMask;
+        ptr.LifeStage = meta.EntityLifeStage;
     }
 }

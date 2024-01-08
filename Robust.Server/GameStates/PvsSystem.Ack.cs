@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
@@ -105,7 +106,7 @@ internal sealed partial class PvsSystem
     private unsafe void ProcessQueuedAck(PvsSession session)
     {
         var ackedTick = session.LastReceivedAck;
-        List<IntPtr>? ackedEnts;
+        List<PvsIndex>? ackedEnts;
 
         if (session.Overflow != null && session.Overflow.Value.Tick <= ackedTick)
         {
@@ -127,13 +128,12 @@ internal sealed partial class PvsSystem
 
         foreach (ref var intPtr in CollectionsMarshal.AsSpan(ackedEnts))
         {
-            ValidatePtr(intPtr);
+            ref var data = ref session.DataMemory.GetRef(intPtr.Index);
 #if DEBUG
-            var data = *(PvsData*)intPtr;
             DebugTools.AssertNotEqual(data.LastSeen, GameTick.Zero);
             DebugTools.Assert(data.LastSeen >= ackedTick); // LastSent may equal ackedTick if the packet was sent reliably.
 #endif
-            ((PvsData*)intPtr)->EntityLastAcked = ackedTick;
+            data.EntityLastAcked = ackedTick;
         }
 
         // The client acked a tick. If they requested a full state, this ack happened some time after that, so we can safely set this to false

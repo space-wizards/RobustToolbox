@@ -4,6 +4,7 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
   <Import Project="Robust.Custom.targets" Condition="Exists('Robust.Custom.targets')"/>

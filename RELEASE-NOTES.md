@@ -35,7 +35,10 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The unused `Robust.Physics` project has been deleted.
+* The project now uses [Central Package Management](https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management).
+* (Almost) all the NuGet packages have been updated. This causes many problems. I am so sorry.
+* Cleaned up some unused packages as well.
 
 ### New features
 
@@ -45,6 +48,7 @@ END TEMPLATE-->
 
 * Fix `IClipboardManager.GetText()` returning null in some cases.
 * Fix possible NRE in server-side console command completion code.
+* Avoid loading assemblies from content `/Assemblies` if Robust ships its own copy. This avoid duplicate or weird mismatching version issues.
 
 ### Other
 

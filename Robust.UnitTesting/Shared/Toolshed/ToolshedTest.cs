@@ -29,6 +29,7 @@ public abstract class ToolshedTest : RobustIntegrationTest, IInvocationContext
     public async Task TearDownInternal()
     {
         await TearDown();
+        Server.Dispose();
     }
 
     protected virtual async Task TearDown()

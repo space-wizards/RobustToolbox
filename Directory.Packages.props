@@ -34,7 +34,6 @@
     <PackageVersion Include="NUnit.Analyzers" Version="3.10.0" />
     <PackageVersion Include="NUnit.ConsoleRunner" Version="3.16.3" />
     <PackageVersion Include="NUnit3TestAdapter" Version="4.5.0" />
-    <PackageVersion Include="NVorbis" Version="0.10.5" />
     <PackageVersion Include="Nett" Version="0.15.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.4" />
     <PackageVersion Include="OpenTK.OpenAL" Version="4.7.7" />

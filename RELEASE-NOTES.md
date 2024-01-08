@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `TextEdit.OnTextChanged`
+* Add ICollection<T> versions of Pick and PickAndTake for System.Random.
 
 ### Bugfixes
 

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -8,6 +10,70 @@ namespace Robust.Shared.Random
 {
     public static class RandomExtensions
     {
+        public static void Shuffle<T>(this System.Random random, IList<T> list)
+        {
+            var n = list.Count;
+            while (n > 1)
+            {
+                n -= 1;
+                var k = random.Next(n + 1);
+                (list[k], list[n]) = (list[n], list[k]);
+            }
+        }
+
+        public static bool Prob(this System.Random random, double chance)
+        {
+            return random.NextDouble() < chance;
+        }
+
+        /// <summary>
+        /// Picks a random element from a collection and returns it.
+        /// This is O(n) as it iterates the entire collection until the selected index.
+        /// </summary>
+        public static T Pick<T>(this System.Random random, ICollection<T> collection)
+        {
+            var index = random.Next(collection.Count);
+            var i = 0;
+            foreach (var t in collection)
+            {
+                if (i++ == index)
+                {
+                    return t;
+                }
+            }
+
+            throw new UnreachableException("This should be unreachable!");
+        }
+
+        /// <summary>
+        /// Picks a random from a collection then removes it and returns it.
+        /// This is O(n) as it iterates the entire collection until the selected index.
+        /// </summary>
+        public static T PickAndTake<T>(this System.Random random, ICollection<T> set)
+        {
+            var tile = Pick(random, set);
+            set.Remove(tile);
+            return tile;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte NextByte(this System.Random random, byte maxValue)
+        {
+            return NextByte(random, 0, maxValue);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte NextByte(this System.Random random)
+        {
+            return NextByte(random, byte.MaxValue);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte NextByte(this System.Random random, byte minValue, byte maxValue)
+        {
+            return (byte) random.Next(minValue, maxValue);
+        }
+
         /// <summary>
         ///     Generate a random number from a normal (gaussian) distribution.
         /// </summary>
@@ -35,7 +101,7 @@ namespace Robust.Shared.Random
         /// <remarks>
         ///     This is O(n).
         /// </remarks>
-        public static T Pick<T>(this IRobustRandom random, IReadOnlyCollection<T> collection)
+        public static T Pick<T>(this IRobustRandom random, ICollection<T> collection)
         {
             var index = random.Next(collection.Count);
             var i = 0;
@@ -47,7 +113,7 @@ namespace Robust.Shared.Random
                 }
             }
 
-            throw new InvalidOperationException("This should be unreachable!");
+            throw new UnreachableException("This should be unreachable!");
         }
 
         public static T PickAndTake<T>(this IRobustRandom random, IList<T> list)

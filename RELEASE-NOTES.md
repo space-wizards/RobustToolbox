@@ -39,7 +39,8 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* New `EntitySystem` subscription helper for working with Bound User Interface events. You can find them by doing `Subs.BuiEvents<>()` in a system.
+* The `EntityManager.Subscriptions` type (for building helper extension methods) now uses
 
 ### Bugfixes
 

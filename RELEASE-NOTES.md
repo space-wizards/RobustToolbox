@@ -39,13 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* `TextEdit.OnTextChanged`
-* Add Pick and PickAndTake versions for System.Random for ICollections.
+*None yet*
 
 ### Bugfixes
 
-* Fix `IClipboardManager.GetText()` returning null in some cases.
-* Fix possible NRE in server-side console command completion code.
+*None yet*
 
 ### Other
 
@@ -54,6 +52,30 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 204.0.0
+
+### Breaking changes
+
+* Make EntityManager abstract and make IEntityManager.EntityNetManager not nullable.
+* Make VVAccess.ReadWrite default for all Datafields instead of VVAccess.ReadOnly
+
+### New features
+
+* `TextEdit.OnTextChanged`
+* Add Pick and PickAndTake versions for System.Random for ICollections.
+
+### Bugfixes
+
+* Fix `IClipboardManager.GetText()` returning null in some cases.
+* Fix possible NRE in server-side console command completion code.
+* Fix possible NRE on DebugConsole logs.
+* Fix exception when VVing non-networked components.
+
+### Other
+
+* Remove "Do not use from content" from IComponent.
 
 
 ## 203.0.0

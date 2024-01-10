@@ -25,6 +25,7 @@ namespace Robust.Shared.Containers
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] private readonly SharedJointSystem _joint = default!;
 
+        private EntityQuery<ContainerManagerComponent> _managerQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MapComponent> _mapQuery;
         protected EntityQuery<MetaDataComponent> MetaQuery;
@@ -42,6 +43,7 @@ namespace Robust.Shared.Containers
             SubscribeLocalEvent<ContainerManagerComponent, ComponentGetState>(OnContainerGetState);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentRemove>(OnContainerManagerRemove);
 
+            _managerQuery = GetEntityQuery<ContainerManagerComponent>();
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _mapQuery = GetEntityQuery<MapComponent>();
             MetaQuery = GetEntityQuery<MetaDataComponent>();
@@ -437,8 +439,7 @@ namespace Robust.Shared.Containers
         /// </summary>
         public bool TryGetOuterContainer(EntityUid uid, TransformComponent xform, [NotNullWhen(true)] out BaseContainer? container)
         {
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            return TryGetOuterContainer(uid, xform, out container, xformQuery);
+            return TryGetOuterContainer(uid, xform, out container, TransformQuery);
         }
 
         public bool TryGetOuterContainer(EntityUid uid, TransformComponent xform,
@@ -449,15 +450,13 @@ namespace Robust.Shared.Containers
             if (!uid.IsValid())
                 return false;
 
-            var conQuery = GetEntityQuery<ContainerManagerComponent>();
-            var metaQuery = GetEntityQuery<MetaDataComponent>();
             var child = uid;
             var parent = xform.ParentUid;
 
             while (parent.IsValid())
             {
-                if (((metaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) &&
-                    conQuery.TryGetComponent(parent, out var conManager) &&
+                if (((MetaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) &&
+                    _managerQuery.TryGetComponent(parent, out var conManager) &&
                     TryGetContainingContainer(parent, child, out var parentContainer, conManager))
                 {
                     container = parentContainer;

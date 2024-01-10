@@ -189,7 +189,7 @@ namespace Robust.Shared.CompNetworkGenerator
                             // get first ctor arg of the field attribute, which determines whether the field should be cloned
                             // (like if its a dict or list)
                             getStateInit.Append($@"
-                {name} = component.{name},");
+                {name} = new(component.{name}),");
 
                             handleStateSetters.Append($@"
             if (state.{name} == null)

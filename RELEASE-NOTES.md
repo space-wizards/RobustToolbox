@@ -44,7 +44,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Avoid buggy behavior if a Bound UI is closed inside the `BoundUIOpenedEvent` that's opening it.
 
 ### Other
 

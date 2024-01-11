@@ -17,19 +17,12 @@ public partial class PrototypeManager
     /// <summary>
     ///     Which files to force all prototypes within to be abstract.
     /// </summary>
-    private readonly HashSet<ResPath> _abstractFiles = new();
+    private readonly List<ResPath> _abstractFiles = new();
 
     /// <summary>
     ///     Which directories to force all prototypes recursively within to be abstract.
     /// </summary>
-    private readonly HashSet<ResPath> _abstractDirectories = new();
-
-    /// <summary>
-    ///     Whether or not any prototypes may be potentially forced to be abstract.
-    ///     This is true if either <see cref="_abstractFiles"/> or <see cref="_abstractDirectories"/> contain elements,
-    ///     and false otherwise.
-    /// </summary>
-    private bool _hasForcedAbstractPrototypes;
+    private readonly List<ResPath> _abstractDirectories = new();
 
     public event Action<DataNodeDocument>? LoadedData;
 
@@ -311,21 +304,16 @@ public partial class PrototypeManager
 
     public void AbstractFile(ResPath path)
     {
-        _hasForcedAbstractPrototypes = true;
         _abstractFiles.Add(path);
     }
 
     public void AbstractDirectory(ResPath path)
     {
-        _hasForcedAbstractPrototypes = true;
         _abstractDirectories.Add(path);
     }
 
     private bool IsFileAbstract(ResPath file)
     {
-        if (!_hasForcedAbstractPrototypes)
-            return false;
-
         if (_abstractFiles.Count > 0)
         {
             foreach (var abstractFile in _abstractFiles)

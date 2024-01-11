@@ -350,6 +350,30 @@ public interface IPrototypeManager
     /// Get the yaml data for a given prototype.
     /// </summary>
     IReadOnlyDictionary<string, MappingDataNode> GetPrototypeData(EntityPrototype prototype);
+
+    /// <summary>
+    ///     Forces all prototypes in the given file to be abstract.
+    ///     This makes them be read as abstract prototypes (mappings) instead of regular prototype instances.
+    ///     Calling this method will not retroactively abstract prototypes that have already been read.
+    /// </summary>
+    /// <param name="path">
+    ///     The directory to ignore prototypes in.
+    ///     This must start from the Resources-level directory, but not include Resources itself.
+    ///     For example: /Prototypes/Guidebook/antagonist.yml
+    /// </param>
+    void AbstractFile(ResPath path);
+
+    /// <summary>
+    ///     Forces all prototypes in files recursively within this directory to be abstract.
+    ///     This makes them be read as abstract prototypes (mappings) instead of regular prototype instances.
+    ///     Calling this method will not retroactively abstract prototypes that have already been read.
+    /// </summary>
+    /// <param name="path">
+    ///     The directory to ignore prototypes in.
+    ///     This must start from the Resources-level directory, but not include Resources itself.
+    ///     For example: /Prototypes/Guidebook
+    /// </param>
+    void AbstractDirectory(ResPath path);
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

@@ -20,6 +20,7 @@ namespace Robust.Client.UserInterface.Controls
     public class LineEdit : Control
     {
         [Dependency] private readonly IClyde _clyde = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         private const float MouseScrollDelay = 0.001f;
 
@@ -45,6 +46,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool _mouseSelectingText;
         private float _lastMousePosition;
+
+        private TimeSpan? LastClickTime;
+        private Vector2? LastClickPosition;
 
         private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
@@ -685,8 +689,27 @@ namespace Robust.Client.UserInterface.Controls
                     args.Handle();
                 }
             }
+
+            // Double-clicking. Clicks delay should be <= 250ms and the distance < 10 pixels (those are pixels, yeah?)
+            else if (args.Function == EngineKeyFunctions.UIClick
+                     && LastClickTime != null && _gameTiming.RealTime - LastClickTime <= TimeSpan.FromMilliseconds(250)
+                     && LastClickPosition != null && (LastClickPosition.Value - args.PointerLocation.Position).Length() < 10)
+            {
+                LastClickTime = _gameTiming.RealTime;
+                LastClickPosition = args.PointerLocation.Position;
+
+                _lastMousePosition = args.RelativePosition.X;
+
+                _selectionStart = TextEditShared.PrevWordPosition(_text, GetIndexAtPos(args.RelativePosition.X));
+                _cursorPosition = TextEditShared.EndWordPosition(_text, GetIndexAtPos(args.RelativePosition.X));
+
+                args.Handle();
+            }
             else
             {
+                LastClickTime = _gameTiming.RealTime;
+                LastClickPosition = args.PointerLocation.Position;
+
                 _mouseSelectingText = true;
                 _lastMousePosition = args.RelativePosition.X;
 

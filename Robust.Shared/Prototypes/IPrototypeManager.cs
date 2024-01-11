@@ -357,7 +357,7 @@ public interface IPrototypeManager
     ///     Calling this method will not retroactively abstract prototypes that have already been read.
     /// </summary>
     /// <param name="path">
-    ///     The directory to ignore prototypes in.
+    ///     The file to force prototypes to be abstract in.
     ///     This must start from the Resources-level directory, but not include Resources itself.
     ///     For example: /Prototypes/Guidebook/antagonist.yml
     /// </param>
@@ -369,7 +369,7 @@ public interface IPrototypeManager
     ///     Calling this method will not retroactively abstract prototypes that have already been read.
     /// </summary>
     /// <param name="path">
-    ///     The directory to ignore prototypes in.
+    ///     The directory to force prototypes to be abstract in.
     ///     This must start from the Resources-level directory, but not include Resources itself.
     ///     For example: /Prototypes/Guidebook
     /// </param>

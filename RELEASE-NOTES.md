@@ -48,7 +48,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Removed glibc version check warning.
 
 ### Internal
 

@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -20,7 +21,7 @@ namespace Robust.Client.UserInterface.Controls
     public class LineEdit : Control
     {
         [Dependency] private readonly IClyde _clyde = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IEntityManager _ent = default!;
 
         private const float MouseScrollDelay = 0.001f;
 
@@ -47,8 +48,11 @@ namespace Robust.Client.UserInterface.Controls
         private bool _mouseSelectingText;
         private float _lastMousePosition;
 
-        private TimeSpan? LastClickTime;
-        private Vector2? LastClickPosition;
+        private TimeSpan? _lastClickTime;
+        private Vector2? _lastClickPosition;
+
+        private const int DoubleClickDelay = 250;
+        private const int DoubleClickRange = 10;
 
         private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
@@ -690,13 +694,13 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
-            // Double-clicking. Clicks delay should be <= 250ms and the distance < 10 pixels (those are pixels, yeah?)
-            else if (args.Function == EngineKeyFunctions.UIClick
-                     && LastClickTime != null && _gameTiming.RealTime - LastClickTime <= TimeSpan.FromMilliseconds(250)
-                     && LastClickPosition != null && (LastClickPosition.Value - args.PointerLocation.Position).Length() < 10)
+            // Double-clicking. Clicks delay should be <= 250ms and the distance < 10 pixels.
+            else if (args.Function == EngineKeyFunctions.UIClick && _lastClickPosition != null && _lastClickTime != null
+                     && IoCManager.Resolve<IGameTiming>().RealTime - _lastClickTime <= TimeSpan.FromMilliseconds(DoubleClickDelay)
+                     && (_lastClickPosition.Value - args.PointerLocation.Position).Length() < DoubleClickRange)
             {
-                LastClickTime = _gameTiming.RealTime;
-                LastClickPosition = args.PointerLocation.Position;
+                _lastClickTime = IoCManager.Resolve<IGameTiming>().RealTime;
+                _lastClickPosition = args.PointerLocation.Position;
 
                 _lastMousePosition = args.RelativePosition.X;
 
@@ -707,8 +711,8 @@ namespace Robust.Client.UserInterface.Controls
             }
             else
             {
-                LastClickTime = _gameTiming.RealTime;
-                LastClickPosition = args.PointerLocation.Position;
+                _lastClickTime = IoCManager.Resolve<IGameTiming>().RealTime;
+                _lastClickPosition = args.PointerLocation.Position;
 
                 _mouseSelectingText = true;
                 _lastMousePosition = args.RelativePosition.X;

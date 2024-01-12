@@ -32,7 +32,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             serializer.DeserializeDirect<List<int>?>(stream, out var deserialized);
             if (list == null)
             {
-                Assert.Null(deserialized);
+                Assert.That(deserialized, Is.Null);
             }
             else
             {
@@ -59,7 +59,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             serializer.DeserializeDirect<Dictionary<string, int>?>(stream, out var deserialized);
             if (list == null)
             {
-                Assert.Null(deserialized);
+                Assert.That(deserialized, Is.Null);
             }
             else
             {
@@ -85,7 +85,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             serializer.DeserializeDirect<HashSet<int>?>(stream, out var deserialized);
             if (set == null)
             {
-                Assert.Null(deserialized);
+                Assert.That(deserialized, Is.Null);
             }
             else
             {

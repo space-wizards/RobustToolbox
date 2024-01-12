@@ -7,6 +7,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Utility;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
@@ -65,13 +66,12 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         {
             var document = new YamlDocument(root.ToYamlNode());
 
-            using var stream = new MemoryStream();
-            using var writer = new StreamWriter(stream) {NewLine = "\n"};
+            using var writer = new StringWriter();
 
             var yamlStream = new YamlStream(document);
-            yamlStream.Save(writer);
+            yamlStream.Save(new Emitter(writer, new EmitterSettings().WithNewLine("\n")), true);
             writer.Flush();
-            return EncodingHelpers.UTF8.GetString(stream.ToArray());
+            return writer.ToString();
         }
 
         // deserializes yaml text, loads the first document, and returns the first entity

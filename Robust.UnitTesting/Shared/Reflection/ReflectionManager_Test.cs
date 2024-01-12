@@ -53,7 +53,7 @@ namespace Robust.UnitTesting.Shared.Reflection
                     Assert.Fail("ReflectionManager returned too many types.");
                 }
             }
-            Assert.That(did1 && did2, Is.True, "IoCManager did not return both expected types. First: {0}, Second: {1}", did1, did2);
+            Assert.That(did1 && did2, Is.True, $"IoCManager did not return both expected types. First: {did1}, Second: {did2}");
         }
 
         public interface IReflectionManagerTest { }

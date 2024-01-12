@@ -172,14 +172,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             grid.SetTile(pos, new Tile(1));
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
-            Assert.False(entMan.GetComponent<TransformComponent>(ent1).Anchored);
+            Assert.That(entMan.GetComponent<TransformComponent>(ent1).Anchored, Is.False);
             Assert.That(!grid.GetAnchoredEntities(pos).Any());
             entMan.DeleteEntity(ent1);
 
             var ent2 = entMan.CreateEntityUninitialized(null, coordinates);
             entMan.AddComponent<AnchorOnInitComponent>(ent2);
             entMan.InitializeAndStartEntity(ent2);
-            Assert.True(entMan.GetComponent<TransformComponent>(ent2).Anchored);
+            Assert.That(entMan.GetComponent<TransformComponent>(ent2).Anchored);
             Assert.That(grid.GetAnchoredEntities(pos).Count(), Is.EqualTo(1));
             Assert.That(grid.GetAnchoredEntities(pos).Contains(ent2));
         }

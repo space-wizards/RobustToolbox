@@ -81,7 +81,7 @@ namespace Robust.UnitTesting.Client.GameStates
             timing.LastProcessedTick = new GameTick(2);
             processor.TryGetServerState(out var state, out _);
 
-            Assert.NotNull(state);
+            Assert.That(state, Is.Not.Null);
             Assert.That(state!.ToSequence.Value, Is.EqualTo(1));
         }
 

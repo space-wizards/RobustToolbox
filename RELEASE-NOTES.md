@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 204.1.0
+
+### New features
+
 * New `EntitySystem` subscription helper for working with Bound User Interface events. You can find them by doing `Subs.BuiEvents<>()` in a system.
 * The `EntityManager.Subscriptions` type (for building helper extension methods) now uses
 
@@ -49,10 +68,6 @@ END TEMPLATE-->
 ### Other
 
 * Removed glibc version check warning.
-
-### Internal
-
-*None yet*
 
 
 ## 204.0.0

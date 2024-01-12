@@ -35,10 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* The unused `Robust.Physics` project has been deleted.
-* The project now uses [Central Package Management](https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management).
-* (Almost) all the NuGet packages have been updated. This causes many problems. I am so sorry.
-* Cleaned up some unused packages as well.
+*None yet*
 
 ### New features
 
@@ -55,6 +52,16 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 205.0.0
+
+### Breaking changes
+
+* The unused `Robust.Physics` project has been deleted.
+* The project now uses [Central Package Management](https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management).
+* (Almost) all the NuGet packages have been updated. This causes many problems. I am so sorry.
+* Cleaned up some unused packages as well.
 
 
 ## 204.1.0

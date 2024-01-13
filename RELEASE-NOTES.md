@@ -18,7 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-* Fixed broken full state updates and excluded it from PVS budged.
+*None yet*
 
 ### Other
 
@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixe broken full state updates and exclude it from PVS budged.
 
 ### Other
 

@@ -4,7 +4,6 @@ using System.Numerics;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -21,7 +20,7 @@ namespace Robust.Client.UserInterface.Controls
     public class LineEdit : Control
     {
         [Dependency] private readonly IClyde _clyde = default!;
-        [Dependency] private readonly IEntityManager _ent = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         private const float MouseScrollDelay = 0.001f;
 
@@ -696,10 +695,10 @@ namespace Robust.Client.UserInterface.Controls
 
             // Double-clicking. Clicks delay should be <= 250ms and the distance < 10 pixels.
             else if (args.Function == EngineKeyFunctions.UIClick && _lastClickPosition != null && _lastClickTime != null
-                     && IoCManager.Resolve<IGameTiming>().RealTime - _lastClickTime <= TimeSpan.FromMilliseconds(DoubleClickDelay)
+                     && _timing.RealTime - _lastClickTime <= TimeSpan.FromMilliseconds(DoubleClickDelay)
                      && (_lastClickPosition.Value - args.PointerLocation.Position).Length() < DoubleClickRange)
             {
-                _lastClickTime = IoCManager.Resolve<IGameTiming>().RealTime;
+                _lastClickTime = _timing.RealTime;
                 _lastClickPosition = args.PointerLocation.Position;
 
                 _lastMousePosition = args.RelativePosition.X;
@@ -711,7 +710,7 @@ namespace Robust.Client.UserInterface.Controls
             }
             else
             {
-                _lastClickTime = IoCManager.Resolve<IGameTiming>().RealTime;
+                _lastClickTime = _timing.RealTime;
                 _lastClickPosition = args.PointerLocation.Position;
 
                 _mouseSelectingText = true;

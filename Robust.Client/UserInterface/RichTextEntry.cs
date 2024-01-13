@@ -175,6 +175,7 @@ namespace Robust.Client.UserInterface
             context.Clear();
             context.Color.Push(_defaultColor);
             context.Font.Push(defaultFont);
+            var fontStack = new StackedFont(defaultFont);
 
             var globalBreakCounter = 0;
             var lineBreakIndex = 0;
@@ -192,13 +193,7 @@ namespace Robust.Client.UserInterface
                     font = defaultFont;
                 }
 
-                if (font != defaultFont)
-                {
-                    font = new StackedFont([
-                        font,
-                        defaultFont
-                    ]);
-                }
+                fontStack.Stack[1] = font;
 
                 foreach (var rune in text.EnumerateRunes())
                 {
@@ -210,7 +205,7 @@ namespace Robust.Client.UserInterface
                         lineBreakIndex += 1;
                     }
 
-                    var advance = font.DrawChar(handle, rune, baseLine, uiScale, color);
+                    var advance = fontStack.DrawChar(handle, rune, baseLine, uiScale, color);
                     baseLine += new Vector2(advance, 0);
 
                     globalBreakCounter += 1;

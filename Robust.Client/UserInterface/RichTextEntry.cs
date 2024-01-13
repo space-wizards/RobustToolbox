@@ -192,6 +192,14 @@ namespace Robust.Client.UserInterface
                     font = defaultFont;
                 }
 
+                if (font != defaultFont)
+                {
+                    font = new StackedFont([
+                        font,
+                        defaultFont
+                    ]);
+                }
+
                 foreach (var rune in text.EnumerateRunes())
                 {
                     if (lineBreakIndex < LineBreaks.Count &&

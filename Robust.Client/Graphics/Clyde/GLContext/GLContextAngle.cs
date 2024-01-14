@@ -413,7 +413,7 @@ namespace Robust.Client.Graphics.Clyde
                     DXGI_ADAPTER_DESC1 desc;
                     ThrowIfFailed("GetDesc1", _adapter->GetDesc1(&desc));
 
-                    var descName = new ReadOnlySpan<char>(desc.Description, 128).TrimEnd('\0');
+                    var descName = ((ReadOnlySpan<char>)desc.Description).TrimEnd('\0');
 
                     Logger.DebugS("clyde.ogl.angle", "Successfully created D3D11 device!");
                     Logger.DebugS("clyde.ogl.angle", $"D3D11 Device Adapter: {descName.ToString()}");
@@ -493,7 +493,7 @@ namespace Robust.Client.Graphics.Clyde
                     DXGI_ADAPTER_DESC1 desc;
                     ThrowIfFailed("GetDesc1", adapter->GetDesc1(&desc));
 
-                    var descName = new ReadOnlySpan<char>(desc.Description, 128);
+                    var descName = ((ReadOnlySpan<char>)desc.Description);
 
                     if (descName.StartsWith(name))
                         return adapter;

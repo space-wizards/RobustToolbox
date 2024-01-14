@@ -27,7 +27,7 @@ namespace Robust.Server.Log
 
             if (valid)
             {
-                message.AddOrUpdateProperty(sawmillProperty);
+                message.AddOrUpdateProperty(sawmillProperty!);
             }
 
             _sLogger.Write(message);

@@ -63,6 +63,17 @@ namespace Robust.Client.GameObjects
             Insert((uid, TransformQuery.GetComponent(uid), MetaQuery.GetComponent(uid), null), container);
         }
 
+        public override void ShutdownContainer(BaseContainer container)
+        {
+            foreach (var ent in container.ExpectedEntities)
+            {
+                if (ExpectedEntities.Remove(ent, out var c))
+                    DebugTools.Assert(c == container);
+            }
+
+            base.ShutdownContainer(container);
+        }
+
         private void HandleComponentState(EntityUid uid, ContainerManagerComponent component, ref ComponentHandleState args)
         {
             if (args.Current is not ContainerManagerComponentState cast)

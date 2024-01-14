@@ -3,6 +3,7 @@ using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -33,6 +34,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
+                .RegisterEntitySystems(f => f.LoadExtraSystemType<MoveEventTestSystem>())
                 .RegisterPrototypes(f=>
                 {
                     f.LoadString(Prototypes);
@@ -69,7 +71,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var (sim, gridId) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
-            var xform = entMan.System<SharedTransformSystem>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
@@ -77,20 +78,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
-            int calledCount = 0;
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
-            xform.OnGlobalMoveEvent += MoveEventHandler;
 
             // Act
+            entMan.System<MoveEventTestSystem>().ResetCounters();
             entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
-
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).WorldPosition, Is.EqualTo(new Vector2(7.5f, 7.5f))); // centered on tile
-            Assert.That(calledCount, Is.EqualTo(1)); // because the ent was moved from snapping, a MoveEvent was raised.
-            xform.OnGlobalMoveEvent -= MoveEventHandler;
-            void MoveEventHandler(ref MoveEvent ev)
-            {
-                calledCount++;
-            }
+            entMan.System<MoveEventTestSystem>().AssertMoved(false);
         }
 
         [ComponentProtoName("AnchorOnInit")]
@@ -102,6 +96,55 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             {
                 base.Initialize();
                 SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => Transform(e).Anchored = true);
+            }
+        }
+
+        internal sealed class MoveEventTestSystem : EntitySystem
+        {
+            [Dependency] private readonly SharedTransformSystem _transform = default!;
+
+            public override void Initialize()
+            {
+                base.Initialize();
+                _transform.OnGlobalMoveEvent += OnMove;
+                SubscribeLocalEvent<EntParentChangedMessage>(OnReparent);
+            }
+
+
+            public override void Shutdown()
+            {
+                base.Shutdown();
+                _transform.OnGlobalMoveEvent -= OnMove;
+            }
+
+            public bool FailOnMove = false;
+            public int MoveCounter = 0;
+            public int ParentCounter = 0;
+
+            private void OnMove(ref MoveEvent ev)
+            {
+                MoveCounter++;
+                if (FailOnMove)
+                    Assert.Fail($"Move event was raised");
+            }
+            private void OnReparent(ref EntParentChangedMessage ev)
+            {
+                ParentCounter++;
+                if (FailOnMove)
+                    Assert.Fail($"Move event was raised");
+            }
+
+            public void ResetCounters()
+            {
+                ParentCounter = 0;
+                MoveCounter = 0;
+            }
+
+            public void AssertMoved(bool parentChanged = true)
+            {
+                if (parentChanged)
+                    Assert.That(ParentCounter, Is.EqualTo(1));
+                Assert.That(MoveCounter, Is.EqualTo(1));
             }
         }
 
@@ -129,14 +172,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             grid.SetTile(pos, new Tile(1));
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
-            Assert.False(entMan.GetComponent<TransformComponent>(ent1).Anchored);
+            Assert.That(entMan.GetComponent<TransformComponent>(ent1).Anchored, Is.False);
             Assert.That(!grid.GetAnchoredEntities(pos).Any());
             entMan.DeleteEntity(ent1);
 
             var ent2 = entMan.CreateEntityUninitialized(null, coordinates);
             entMan.AddComponent<AnchorOnInitComponent>(ent2);
             entMan.InitializeAndStartEntity(ent2);
-            Assert.True(entMan.GetComponent<TransformComponent>(ent2).Anchored);
+            Assert.That(entMan.GetComponent<TransformComponent>(ent2).Anchored);
             Assert.That(grid.GetAnchoredEntities(pos).Count(), Is.EqualTo(1));
             Assert.That(grid.GetAnchoredEntities(pos).Contains(ent2));
         }
@@ -159,23 +202,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var traversal = entMan.System<SharedGridTraversalSystem>();
             traversal.Enabled = false;
-
-            var subscriber = new Subscriber();
-            int calledCount = 0;
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
-            entMan.EventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, subscriber, ParentChangedHandler);
 
             // Act
+            entMan.System<MoveEventTestSystem>().ResetCounters();
             entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
-
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.Owner));
-            Assert.That(calledCount, Is.EqualTo(1));
-            void ParentChangedHandler(ref EntParentChangedMessage ev)
-            {
-                Assert.That(ev.Entity, Is.EqualTo(ent1));
-                calledCount++;
-
-            }
+            entMan.System<MoveEventTestSystem>().AssertMoved();
             traversal.Enabled = true;
         }
 
@@ -247,23 +280,16 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var grid = mapMan.GetGrid(gridId);
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
-            int calledCount = 0;
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
             entMan.GetComponent<TransformComponent>(ent1).Anchored = true; // Anchoring will change parent if needed, raising MoveEvent, subscribe after
-            xform.OnGlobalMoveEvent += MoveEventHandler;
+            entMan.System<MoveEventTestSystem>().FailOnMove = true;
 
             // Act
             entMan.GetComponent<TransformComponent>(ent1).WorldPosition = new Vector2(99, 99);
             entMan.GetComponent<TransformComponent>(ent1).LocalPosition = new Vector2(99, 99);
 
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).MapPosition, Is.EqualTo(coordinates));
-            Assert.That(calledCount, Is.EqualTo(0));
-            xform.OnGlobalMoveEvent -= MoveEventHandler;
-            void MoveEventHandler(ref MoveEvent ev)
-            {
-                Assert.Fail("MoveEvent raised when entity is anchored.");
-                calledCount++;
-            }
+            entMan.System<MoveEventTestSystem>().FailOnMove = false;
         }
 
         /// <summary>
@@ -517,22 +543,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var traversal = entMan.System<SharedGridTraversalSystem>();
             traversal.Enabled = false;
-
-            var subscriber = new Subscriber();
-            int calledCount = 0;
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
-            entMan.EventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, subscriber, ParentChangedHandler);
 
             // Act
+            entMan.System<MoveEventTestSystem>().FailOnMove = true;
             entMan.GetComponent<TransformComponent>(ent1).Anchored = false;
-
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(mapMan.GetMapEntityId(TestMapId)));
-            Assert.That(calledCount, Is.EqualTo(0));
-            void ParentChangedHandler(ref EntParentChangedMessage ev)
-            {
-                Assert.That(ev.Entity, Is.EqualTo(ent1));
-                calledCount++;
-            }
+            entMan.System<MoveEventTestSystem>().FailOnMove = false;
             traversal.Enabled = true;
         }
 

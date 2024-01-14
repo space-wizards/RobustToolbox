@@ -401,29 +401,14 @@ public partial class SharedPhysicsSystem
         }
         else
         {
-            // TODO C# event?
             var ev = new PhysicsSleepEvent(uid, body);
             RaiseLocalEvent(uid, ref ev, true);
-
-            // Reset the sleep timer.
-            if (ev.Cancelled && canWake)
-            {
-                body.Awake = true;
-                // TODO C# event?
-                var wakeEv = new PhysicsWakeEvent(uid, body);
-                RaiseLocalEvent(uid, ref wakeEv, true);
-
-                if (updateSleepTime)
-                    SetSleepTime(body, 0);
-
-                return;
-            }
-
             ResetDynamics(body, dirty: false);
         }
 
-        // Update wake system after we are sure that the wake/sleep event wasn't cancelled.
-        _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
+        // Update wake system last, if sleeping but still colliding.
+        if (!value && body.CanCollide)
+            _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
 
         if (updateSleepTime)
             SetSleepTime(body, 0);

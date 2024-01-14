@@ -72,7 +72,7 @@ internal sealed partial class MidiManager : IMidiManager
 
     // To avoid lock contention until some kind of MIDI refactor.
     private TimeSpan _nextUpdate;
-    private TimeSpan _updateFrequency = TimeSpan.FromSeconds(0.1f);
+    private TimeSpan _updateFrequency = TimeSpan.FromSeconds(0.25f);
 
     private SemaphoreSlim _updateSemaphore = new(1);
 

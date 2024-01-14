@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -13,12 +14,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         private const string TestComponentName = "A";
         private const string LowercaseTestComponentName = "a";
         private const string NonexistentComponentName = "B";
-
-        [OneTimeSetUp]
-        public void OneTimeSetUp()
-        {
-            IoCManager.Resolve<IComponentFactory>().RegisterClass<TestComponent>();
-        }
+        protected override Type[]? ExtraComponents => new[] {typeof(TestComponent)};
 
         [Test]
         public void GetComponentAvailabilityTest()
@@ -52,16 +48,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.Throws<UnknownComponentException>(() => componentFactory.GetComponent(NonexistentComponentName, true));
 
             // Normal casing, do not ignore case, should exist
-            Assert.IsInstanceOf<TestComponent>(componentFactory.GetComponent(TestComponentName));
+            Assert.That(componentFactory.GetComponent(TestComponentName), Is.InstanceOf<TestComponent>());
 
             // Normal casing, ignore case, should exist
-            Assert.IsInstanceOf<TestComponent>(componentFactory.GetComponent(TestComponentName, true));
+            Assert.That(componentFactory.GetComponent(TestComponentName, true), Is.InstanceOf<TestComponent>());
 
             // Lower casing, do not ignore case, should not exist
             Assert.Throws<UnknownComponentException>(() => componentFactory.GetComponent(LowercaseTestComponentName));
 
             // Lower casing, ignore case, should exist
-            Assert.IsInstanceOf<TestComponent>(componentFactory.GetComponent(LowercaseTestComponentName, true));
+            Assert.That(componentFactory.GetComponent(LowercaseTestComponentName, true), Is.InstanceOf<TestComponent>());
         }
 
         [Test]
@@ -92,20 +88,20 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var componentFactory = IoCManager.Resolve<IComponentFactory>();
 
             // Should not exist
-            Assert.False(componentFactory.TryGetRegistration(NonexistentComponentName, out _));
-            Assert.False(componentFactory.TryGetRegistration(NonexistentComponentName, out _, true));
+            Assert.That(componentFactory.TryGetRegistration(NonexistentComponentName, out _), Is.False);
+            Assert.That(componentFactory.TryGetRegistration(NonexistentComponentName, out _, true), Is.False);
 
             // Normal casing, do not ignore case, should exist
-            Assert.True(componentFactory.TryGetRegistration(TestComponentName, out _));
+            Assert.That(componentFactory.TryGetRegistration(TestComponentName, out _));
 
             // Normal casing, ignore case, should exist
-            Assert.True(componentFactory.TryGetRegistration(TestComponentName, out _, true));
+            Assert.That(componentFactory.TryGetRegistration(TestComponentName, out _, true));
 
             // Lower casing, do not ignore case, should not exist
-            Assert.False(componentFactory.TryGetRegistration(LowercaseTestComponentName, out _));
+            Assert.That(componentFactory.TryGetRegistration(LowercaseTestComponentName, out _), Is.False);
 
             // Lower casing, ignore case, should exist
-            Assert.True(componentFactory.TryGetRegistration(LowercaseTestComponentName, out _, true));
+            Assert.That(componentFactory.TryGetRegistration(LowercaseTestComponentName, out _, true));
         }
 
         [ComponentProtoName(TestComponentName)]

@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
 
     /// <inheritdoc />
     [Virtual]
-    public partial class EntityManager : IEntityManager
+    public abstract partial class EntityManager : IEntityManager
     {
         #region Dependencies
 
@@ -61,7 +61,7 @@ namespace Robust.Shared.GameObjects
         public IEntitySystemManager EntitySysManager => _entitySystemManager;
 
         /// <inheritdoc />
-        public virtual IEntityNetworkManager? EntityNetManager => null;
+        public abstract IEntityNetworkManager EntityNetManager { get; }
 
         protected readonly Queue<EntityUid> QueuedDeletions = new();
         protected readonly HashSet<EntityUid> QueuedDeletionsSet = new();
@@ -203,7 +203,7 @@ namespace Robust.Shared.GameObjects
             // TODO: Probably better to call this on its own given it's so infrequent.
             _entitySystemManager.Initialize();
             Started = true;
-            _eventBus.CalcOrdering();
+            _eventBus.LockSubscriptions();
             _mapSystem = System<SharedMapSystem>();
             _xforms = System<SharedTransformSystem>();
             _containers = System<SharedContainerSystem>();
@@ -216,7 +216,7 @@ namespace Robust.Shared.GameObjects
         {
             ShuttingDown = true;
             FlushEntities();
-            _eventBus.ClearEventTables();
+            _eventBus.ClearSubscriptions();
             _entitySystemManager.Shutdown();
             ClearComponents();
             ShuttingDown = false;

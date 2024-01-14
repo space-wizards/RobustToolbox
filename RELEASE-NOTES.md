@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* tpto will teleport you to physics-center instead of transform center instead.
 
 ### New features
 
@@ -43,7 +43,8 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix tpto short-circuiting if one of the listed entities isn't found.
+* Fix tpto not allowing grids as targets.
 
 ### Other
 
@@ -52,6 +53,88 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 205.0.0
+
+### Breaking changes
+
+* The unused `Robust.Physics` project has been deleted.
+* The project now uses [Central Package Management](https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management).
+* (Almost) all the NuGet packages have been updated. This causes many problems. I am so sorry.
+* Cleaned up some unused packages as well.
+
+
+## 204.1.0
+
+### New features
+
+* New `EntitySystem` subscription helper for working with Bound User Interface events. You can find them by doing `Subs.BuiEvents<>()` in a system.
+* The `EntityManager.Subscriptions` type (for building helper extension methods) now uses
+
+### Bugfixes
+
+* Avoid loading assemblies from content `/Assemblies` if Robust ships its own copy. This avoid duplicate or weird mismatching version issues.
+
+### Other
+
+* Removed glibc version check warning.
+
+
+## 204.0.0
+
+### Breaking changes
+
+* Make EntityManager abstract and make IEntityManager.EntityNetManager not nullable.
+* Make VVAccess.ReadWrite default for all Datafields instead of VVAccess.ReadOnly
+
+### New features
+
+* `TextEdit.OnTextChanged`
+* Add Pick and PickAndTake versions for System.Random for ICollections.
+
+### Bugfixes
+
+* Fix `IClipboardManager.GetText()` returning null in some cases.
+* Fix possible NRE in server-side console command completion code.
+* Fix possible NRE on DebugConsole logs.
+* Fix exception when VVing non-networked components.
+
+### Other
+
+* Remove "Do not use from content" from IComponent.
+
+
+## 203.0.0
+
+### Breaking changes
+
+* `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
+* Event bus subscriptions are now locked after `IEntityManager` has started, instead of after the first component gets added. Any event subscriptions now need to happen before startup (but after init).
+* Event bus subscriptions must now be locked before raising any events.
+* Delete FodyWeavers.xsd as it hasn't been used for a long time.
+* Remove physics sleep cancelling as it was, in hindsight, a bad idea.
+
+### New features
+
+* `RobustUnitTest` now has a `ExtraComponents` field for automatically registering additional components.
+* `IComponentFactory.RegisterIgnore()` now accepts more than one string.
+* Added `IComponentFactory.RegisterTypes` for simultaneously registering multiple components.
+
+### Bugfixes
+
+* Clamp volume calculations for audio rather than throwing.
+
+
+## 202.1.1
+
+### Bugfixes
+
+* Reverted some map/grid initialisation changes that might've been causing broadphase/physics errors.
+* Fixed PVS sometimes sending entities without first sending their children.
+* Fixed a container state handling bug caused by containers not removing expected entities when shutting down.
+* Fixed a `EnsureEntity<T>` state handling bug caused by improper handling of entity deletions.
+* Fixed a bad NetSyncEnabled debug assert.
 
 
 ## 202.1.0
@@ -66,7 +149,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Various entity manager methods now have a new `where T : IComponent` constraint.
-* The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations. 
+* The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations.
 * `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
 
 ### New features

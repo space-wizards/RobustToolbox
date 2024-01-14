@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -19,12 +20,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
     [TestOf(typeof(ComponentRegistrySerializer))]
     public sealed class ComponentRegistrySerializerTest : SerializationTest
     {
-        [OneTimeSetUp]
-        public new void OneTimeSetup()
-        {
-            var componentFactory = IoCManager.Resolve<IComponentFactory>();
-            componentFactory.RegisterClass<TestComponent>();
-        }
+        protected override Type[]? ExtraComponents => new[] {typeof(TestComponent)};
 
         [Test]
         public void SerializationTest()
@@ -34,7 +30,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             var node = Serialization.WriteValueAs<SequenceDataNode>(registry);
 
             Assert.That(node.Sequence.Count, Is.EqualTo(1));
-            Assert.IsInstanceOf<MappingDataNode>(node[0]);
+            Assert.That(node[0], Is.InstanceOf<MappingDataNode>());
 
             var mapping = node.Cast<MappingDataNode>(0);
             Assert.That(mapping.Cast<ValueDataNode>("type").Value, Is.EqualTo("Test"));
@@ -53,7 +49,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 
             Assert.That(deserializedRegistry.Count, Is.EqualTo(1));
             Assert.That(deserializedRegistry.ContainsKey("Test"));
-            Assert.IsInstanceOf<TestComponent>(deserializedRegistry["Test"].Component);
+            Assert.That(deserializedRegistry["Test"].Component, Is.InstanceOf<TestComponent>());
         }
     }
 

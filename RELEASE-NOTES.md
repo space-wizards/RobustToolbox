@@ -35,12 +35,36 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 206.0.0
+
+### Breaking changes
+
 * tpto will teleport you to physics-center instead of transform center instead.
 * Rename local EntityLookup methods to reflect they take local AABBs and not world AABBs.
 
 ### New features
 
 * Add some additional EntityLookup methods for local queries.
+* Add support to PrototypeManager for parsing specific files / directories as abstract.
 
 ### Bugfixes
 
@@ -49,11 +73,12 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Reduce MIDI source update rate from 10hz to 4hz.
 
 ### Internal
 
 * Remove some duplicate internal code in EntityLookupSystem.
+* Skip serialization sourcegen in GLFW and Lidgren.
 
 
 ## 205.0.0

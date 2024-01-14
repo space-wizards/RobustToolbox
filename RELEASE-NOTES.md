@@ -53,7 +53,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Remove some duplicate internal code in EntityLookupSystem.
 
 
 ## 205.0.0

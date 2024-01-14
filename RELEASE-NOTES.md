@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* tpto will teleport you to physics-center instead of transform center instead.
 
 ### New features
 
@@ -43,7 +43,8 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix tpto short-circuiting if one of the listed entities isn't found.
+* Fix tpto not allowing grids as targets.
 
 ### Other
 

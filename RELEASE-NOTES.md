@@ -36,10 +36,11 @@ END TEMPLATE-->
 ### Breaking changes
 
 * tpto will teleport you to physics-center instead of transform center instead.
+* Rename local EntityLookup methods to reflect they take local AABBs and not world AABBs.
 
 ### New features
 
-*None yet*
+* Add some additional EntityLookup methods for local queries.
 
 ### Bugfixes
 
@@ -52,7 +53,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Remove some duplicate internal code in EntityLookupSystem.
 
 
 ## 205.0.0

@@ -222,7 +222,7 @@ namespace Robust.Shared.Physics
         {
             var list = new List<T>();
 
-            QueryAabb(ref list, (ref List<T> lst, in T i) =>
+            QueryAabb(ref list, static (ref List<T> lst, in T i) =>
             {
                 lst.Add(i);
                 return true;

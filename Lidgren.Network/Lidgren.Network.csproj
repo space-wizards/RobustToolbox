@@ -16,6 +16,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="CursedHorrorsBeyondOurWildestImagination.cs" />
+
     <Compile Include="Lidgren.Network\Lidgren.Network\**\*.cs">
      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>

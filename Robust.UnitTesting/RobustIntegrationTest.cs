@@ -34,6 +34,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using ServerProgram = Robust.Server.Program;
@@ -679,6 +680,7 @@ namespace Robust.UnitTesting
                 deps.BuildGraph();
                 //ServerProgram.SetupLogging();
                 ServerProgram.InitReflectionManager(deps);
+                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 

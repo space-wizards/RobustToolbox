@@ -545,6 +545,30 @@ namespace Robust.Client.UserInterface
             Draw(renderHandle.DrawingHandleScreen);
         }
 
+        protected internal virtual void PreRenderChildren(IRenderHandle renderHandle, ref int total, Color modulate,
+            UIBox2i? scissorBox, ref Matrix3 coordinateTransform)
+        {
+
+        }
+
+        protected internal virtual void PostRenderChildren(IRenderHandle renderHandle, ref int total, Color modulate,
+            UIBox2i? scissorBox, ref Matrix3 coordinateTransform)
+        {
+
+        }
+
+        protected internal virtual void RenderChildOverride(IRenderHandle renderHandle, ref int total, Control control,
+            Vector2i position, Color modulate, UIBox2i? scissorBox, Matrix3 coordinateTransform)
+        {
+            RenderControl(renderHandle, ref total, control, position, modulate, scissorBox, coordinateTransform);
+        }
+
+        protected void RenderControl(IRenderHandle renderHandle, ref int total, Control control, Vector2i position,
+            Color modulate, UIBox2i? scissorBox, Matrix3 coordinateTransform)
+        {
+            UserInterfaceManagerInternal.RenderControl(renderHandle, ref total, control, position, modulate, scissorBox, coordinateTransform);
+        }
+
         public void UpdateDraw()
         {
         }

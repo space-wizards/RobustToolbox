@@ -862,6 +862,7 @@ namespace Robust.UnitTesting
                 deps.BuildGraph();
 
                 GameController.RegisterReflection(deps);
+                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var client = DependencyCollection.Resolve<GameController>();
 

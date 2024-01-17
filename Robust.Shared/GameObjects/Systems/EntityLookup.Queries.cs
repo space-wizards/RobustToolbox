@@ -427,7 +427,7 @@ public sealed partial class EntityLookupSystem
         }
     }
 
-    private bool AnyLocalEntitiesIntersecting(EntityUid lookupUid,
+    public bool AnyLocalEntitiesIntersecting(EntityUid lookupUid,
         Box2 localAABB,
         LookupFlags flags,
         EntityUid? ignored = null,
@@ -629,7 +629,7 @@ public sealed partial class EntityLookupSystem
 
     public bool AnyEntitiesIntersecting(EntityUid uid, LookupFlags flags = DefaultFlags)
     {
-        return AnyEntitiesInRange(uid, 0.0001f, flags);
+        return AnyEntitiesInRange(uid, LookupEpsilon, flags);
     }
 
     public bool AnyEntitiesInRange(EntityUid uid, float range, LookupFlags flags = DefaultFlags)
@@ -692,19 +692,62 @@ public sealed partial class EntityLookupSystem
         entities.Remove(uid);
     }
 
-    public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid uid, LookupFlags flags = DefaultFlags)
+    public void GetEntitiesIntersecting(EntityUid uid, HashSet<EntityUid> intersecting, LookupFlags flags = DefaultFlags)
     {
         var xform = _xformQuery.GetComponent(uid);
         var mapId = xform.MapID;
 
         if (mapId == MapId.Nullspace)
-            return new HashSet<EntityUid>();
+            return;
 
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
-        var bounds = GetAABBNoContainer(uid, worldPos, worldRot);
+        var worldAABB = GetAABBNoContainer(uid, worldPos, worldRot);
+        var existing = intersecting.Contains(uid);
+        var transform = new Transform(worldPos, worldRot);
+        var state = (uid, transform, intersecting, _fixturesQuery, this, flags);
 
-        var intersecting = GetEntitiesIntersecting(mapId, bounds, flags);
-        intersecting.Remove(uid);
+        // Unfortuantely I can't think of a way to de-dupe this with the other ones as it's slightly different.
+        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+            static (EntityUid gridUid, MapGridComponent grid,
+                ref (EntityUid entity, Transform transform, HashSet<EntityUid> intersecting,
+                    EntityQuery<FixturesComponent> fixturesQuery, EntityLookupSystem lookup, LookupFlags flags) tuple) =>
+            {
+                if (tuple.fixturesQuery.TryGetComponent(tuple.entity, out var fixturesComp))
+                {
+                    foreach (var fixture in fixturesComp.Fixtures.Values)
+                    {
+                        tuple.lookup.AddEntitiesIntersecting(gridUid, tuple.intersecting, fixture.Shape, tuple.transform, tuple.flags);
+                    }
+                }
+                // Single point check
+                else
+                {
+                    var shape = new PhysShapeCircle(LookupEpsilon);
+                    tuple.lookup.AddEntitiesIntersecting(gridUid, tuple.intersecting, shape, tuple.transform, tuple.flags);
+                }
+
+                return true;
+            }, approx: true);
+
+        GetEntitiesIntersecting(mapId, worldAABB, intersecting, flags);
+
+        // Remove the entity itself (unless it was passed in).
+        if (!existing)
+        {
+            intersecting.Remove(uid);
+        }
+    }
+
+    public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid uid, LookupFlags flags = DefaultFlags)
+    {
+        var xform = _xformQuery.GetComponent(uid);
+        var mapId = xform.MapID;
+        var intersecting = new HashSet<EntityUid>();
+
+        if (mapId == MapId.Nullspace)
+            return intersecting;
+
+        GetEntitiesIntersecting(uid, intersecting, flags);
         return intersecting;
     }
 
@@ -751,7 +794,7 @@ public sealed partial class EntityLookupSystem
         if (coordinates.MapId == MapId.Nullspace)
             return false;
 
-        return AnyEntitiesInRange(coordinates, float.Epsilon, flags);
+        return AnyEntitiesInRange(coordinates, LookupEpsilon, flags);
     }
 
     public bool AnyEntitiesInRange(MapCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
@@ -767,7 +810,7 @@ public sealed partial class EntityLookupSystem
     {
         if (coordinates.MapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
-        return GetEntitiesInRange(coordinates, float.Epsilon, flags);
+        return GetEntitiesInRange(coordinates, LookupEpsilon, flags);
     }
 
     public HashSet<EntityUid> GetEntitiesInRange(MapCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
@@ -852,9 +895,6 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return;
 
-        var mapUid = _mapManager.GetMapEntityId(mapId);
-        callback(mapUid, _broadQuery.GetComponent(mapUid));
-
         var state = (callback, _broadQuery);
 
         _mapManager.FindGridsIntersecting(mapId, worldBounds, ref state,
@@ -885,7 +925,7 @@ public sealed partial class EntityLookupSystem
 
     public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3? worldMatrix = null, Angle? angle = null)
     {
-        var grid = _mapManager.GetGrid(tileRef.GridUid);
+        var grid = _gridQuery.GetComponent(tileRef.GridUid);
 
         if (worldMatrix == null || angle == null)
         {

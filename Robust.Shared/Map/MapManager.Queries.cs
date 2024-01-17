@@ -336,9 +336,9 @@ internal partial class MapManager
             tuple.uid = iUid;
             tuple.grid = iGrid;
             return false;
-        }, approx: true);
+        }, approx: true, includeMap: false);
 
-        if (state.grid == null && EntityManager.TryGetComponent<MapGridComponent>(mapEnt, out var mapGrid))
+        if (state.grid == null && _gridQuery.TryGetComponent(mapEnt, out var mapGrid))
         {
             uid = mapEnt;
             grid = mapGrid;

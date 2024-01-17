@@ -435,87 +435,22 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return;
 
-        if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
-        {
-            foreach (var (uid, comp) in EntityManager.GetAllComponents(type, true))
-            {
-                var xform = _xformQuery.GetComponent(uid);
+        var shape = new PolygonShape();
+        shape.SetAsBox(worldAABB);
+        var transform = Physics.Transform.Empty;
 
-                if (xform.MapID != mapId ||
-                    !worldAABB.Contains(_transform.GetWorldPosition(xform)) ||
-                    ((flags & LookupFlags.Contained) == 0x0 &&
-                     _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform)))
-                {
-                    continue;
-                }
-
-                intersecting.Add((uid, comp));
-            }
-        }
-        else
-        {
-            var query = EntityManager.GetEntityQuery(type);
-
-            // Get grid entities
-            var state = (this, worldAABB, flags, query, intersecting);
-
-            _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
-                static (EntityUid uid, MapGridComponent grid,
-                    ref (EntityLookupSystem system,
-                        Box2 worldAABB,
-                        LookupFlags flags,
-                        EntityQuery<IComponent> query,
-                        HashSet<Entity<IComponent>> intersecting) tuple) =>
-                {
-                    tuple.system.AddLocalEntitiesIntersecting(uid, tuple.intersecting, tuple.worldAABB, tuple.flags, tuple.query);
-                    return true;
-                }, approx: true);
-
-            // Get map entities
-            var mapUid = _mapManager.GetMapEntityId(mapId);
-            AddLocalEntitiesIntersecting(mapUid, intersecting, worldAABB, flags, query);
-            AddContained(intersecting, flags, query);
-        }
+        GetEntitiesIntersecting(type, mapId, shape, transform, intersecting, flags);
     }
 
     public void GetEntitiesIntersecting<T>(MapId mapId, Box2 worldAABB, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return;
 
-        if (!UseBoundsQuery<T>(worldAABB.Height * worldAABB.Width))
-        {
-            var query = AllEntityQuery<T, TransformComponent>();
+        var shape = new PolygonShape();
+        shape.SetAsBox(worldAABB);
+        var shapeTransform = Physics.Transform.Empty;
 
-            while (query.MoveNext(out var uid, out var comp, out var xform))
-            {
-                if (xform.MapID != mapId || !worldAABB.Contains(_transform.GetWorldPosition(xform))) continue;
-                entities.Add((uid, comp));
-            }
-        }
-        else
-        {
-            var query = GetEntityQuery<T>();
-
-            // Get grid entities
-            var state = (this, worldAABB, flags, query, entities);
-
-            _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
-                static (EntityUid uid, MapGridComponent grid,
-                    ref (EntityLookupSystem system,
-                        Box2 worldAABB,
-                        LookupFlags flags,
-                        EntityQuery<T> query,
-                        HashSet<Entity<T>> intersecting) tuple) =>
-                {
-                    tuple.system.AddLocalEntitiesIntersecting(uid, tuple.intersecting, tuple.worldAABB, tuple.flags, tuple.query);
-                    return true;
-                }, approx: true);
-
-            // Get map entities
-            var mapUid = _mapManager.GetMapEntityId(mapId);
-            AddLocalEntitiesIntersecting(mapUid, entities, worldAABB, flags, query);
-            AddContained(entities, flags, query);
-        }
+        GetEntitiesIntersecting(mapId, shape, shapeTransform, entities, flags);
     }
 
     #endregion

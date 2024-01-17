@@ -64,6 +64,51 @@ public sealed partial class EntityLookupSystem
         }
     }
 
+    /// <summary>
+    /// Common method to determine if an entity overlaps the specified shape.
+    /// </summary>
+    private bool IsIntersecting(MapId mapId, EntityUid uid, TransformComponent xform, IPhysShape shape, Transform shapeTransform, Box2 worldAABB, LookupFlags flags)
+    {
+        var (entPos, entRot) = _transform.GetWorldPositionRotation(xform);
+
+        if (xform.MapID != mapId ||
+            !worldAABB.Contains(entPos) ||
+            ((flags & LookupFlags.Contained) == 0x0 &&
+             _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform)))
+        {
+            return false;
+        }
+
+        if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
+        {
+            var transform = new Transform(entPos, entRot);
+
+            bool anyFixture = false;
+            foreach (var fixture in fixtures.Fixtures.Values)
+            {
+                if (!sensors && !fixture.Hard)
+                    continue;
+
+                anyFixture = true;
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                {
+                    if (_manifoldManager.TestOverlap(shape, 0, fixture.Shape, i, shapeTransform, transform))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            if (anyFixture)
+                return false;
+        }
+
+        if (!_fixtures.TestPoint(shape, shapeTransform, pos))
+            return false;
+
+        return true;
+    }
+
     private void AddLocalEntitiesIntersecting<T>(
         EntityUid lookupUid,
         HashSet<Entity<T>> intersecting,
@@ -104,13 +149,12 @@ public sealed partial class EntityLookupSystem
 
         var localAABB = shape.ComputeAABB(lookupTransform, 0);
 
-        var state = new QueryState<T>(
+        var state = new EntityQueryState<T>(
             intersecting,
             shape,
             shapeTransform,
             _fixtures,
             _physics,
-            _transform,
             _manifoldManager,
             query,
             _fixturesQuery,
@@ -140,7 +184,7 @@ public sealed partial class EntityLookupSystem
 
         return;
 
-        static bool PhysicsQuery<T>(ref QueryState<T> state, in FixtureProxy value) where T : IComponent
+        static bool PhysicsQuery<T>(ref EntityQueryState<T> state, in FixtureProxy value) where T : IComponent
         {
             if (!state.Sensors && !value.Fixture.Hard)
                 return true;
@@ -161,7 +205,7 @@ public sealed partial class EntityLookupSystem
             return true;
         }
 
-        static bool SundriesQuery<T>(ref QueryState<T> state, in EntityUid value) where T : IComponent
+        static bool SundriesQuery<T>(ref EntityQueryState<T> state, in EntityUid value) where T : IComponent
         {
             if (!state.Query.TryGetComponent(value, out var comp))
                 return true;
@@ -378,8 +422,20 @@ public sealed partial class EntityLookupSystem
 
     public bool AnyComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, EntityUid? ignored = null, LookupFlags flags = DefaultFlags)
     {
+        var shape = new PolygonShape();
+        shape.SetAsBox(worldAABB);
+        var transform = Physics.Transform.Empty;
+
+        return AnyComponentsIntersecting(type, mapId, shape, transform, ignored, flags);
+    }
+
+    public bool AnyComponentsIntersecting(Type type, MapId mapId, IPhysShape shape, Transform shapeTransform, EntityUid? ignored = null, LookupFlags flags = DefaultFlags)
+    {
         DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
-        if (mapId == MapId.Nullspace) return false;
+        if (mapId == MapId.Nullspace)
+            return false;
+
+        var worldAABB = shape.ComputeAABB(shapeTransform, 0);
 
         if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
         {
@@ -387,13 +443,8 @@ public sealed partial class EntityLookupSystem
             {
                 var xform = _xformQuery.GetComponent(uid);
 
-                if (xform.MapID != mapId ||
-                    !worldAABB.Contains(_transform.GetWorldPosition(xform)) ||
-                    ((flags & LookupFlags.Contained) == 0x0 &&
-                    _container.IsEntityOrParentInContainer(uid, null, xform)))
-                {
+                if (!IsIntersecting(mapId, uid, xform, shape, shapeTransform, worldAABB, flags))
                     continue;
-                }
 
                 return true;
             }
@@ -463,53 +514,17 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return;
 
-        // TODO: Need local AABB.
-        throw new NotImplementedException();
         var worldAABB = shape.ComputeAABB(shapeTransform, 0);
-        var sensors = (flags & LookupFlags.Sensors) != 0;
+
         if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
         {
             foreach (var (uid, comp) in EntityManager.GetAllComponents(type, true))
             {
                 var xform = _xformQuery.GetComponent(uid);
-                var (pos, rot) = _transform.GetWorldPositionRotation(xform);
 
-                if (xform.MapID != mapId ||
-                    !worldAABB.Contains(pos) ||
-                    ((flags & LookupFlags.Contained) == 0x0 &&
-                     _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform)))
-                {
-                    continue;
-                }
-
-                if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
-                {
-                    var transform = new Transform(pos, rot);
-
-                    bool anyFixture = false;
-                    foreach (var fixture in fixtures.Fixtures.Values)
-                    {
-                        if (!sensors && !fixture.Hard)
-                            continue;
-
-                        anyFixture = true;
-                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                        {
-                            if (_manifoldManager.TestOverlap(shape, 0, fixture.Shape, i, shapeTransform, transform))
-                            {
-                                goto found;
-                            }
-                        }
-                    }
-
-                    if (anyFixture)
-                        continue;
-                }
-
-                if (!_fixtures.TestPoint(shape, shapeTransform, pos))
+                if (!IsIntersecting(mapId, uid, xform, shape, shapeTransform, worldAABB, flags))
                     continue;
 
-                found:
                 intersecting.Add((uid, comp));
             }
         }
@@ -529,7 +544,7 @@ public sealed partial class EntityLookupSystem
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
-            AddLocalEntitiesIntersecting(mapUid, intersecting, shape, worldAABB, flags, query);
+            AddLocalEntitiesIntersecting(mapUid, intersecting, shape, shapeTransform, worldAABB, flags, query);
             AddContained(intersecting, flags, query);
         }
     }
@@ -539,45 +554,16 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace) return;
 
         var worldAABB = shape.ComputeAABB(shapeTransform, 0);
-        var sensors = (flags & LookupFlags.Sensors) != 0;
+
         if (!UseBoundsQuery<T>(worldAABB.Height * worldAABB.Width))
         {
             var query = AllEntityQuery<T, TransformComponent>();
 
             while (query.MoveNext(out var uid, out var comp, out var xform))
             {
-                var (pos, rot) = _transform.GetWorldPositionRotation(xform);
-
-                if (xform.MapID != mapId || !worldAABB.Contains(pos))
+                if (!IsIntersecting(mapId, uid, xform, shape, shapeTransform, worldAABB, flags))
                     continue;
 
-                if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
-                {
-                    var transform = new Transform(pos, rot);
-                    bool anyFixture = false;
-                    foreach (var fixture in fixtures.Fixtures.Values)
-                    {
-                        if (!sensors && !fixture.Hard)
-                            continue;
-
-                        anyFixture = true;
-                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                        {
-                            if (_manifoldManager.TestOverlap(shape, 0, fixture.Shape, i, shapeTransform, transform))
-                            {
-                                goto found;
-                            }
-                        }
-                    }
-
-                    if (anyFixture)
-                        continue;
-                }
-
-                if (!_fixtures.TestPoint(shape, shapeTransform, pos))
-                    continue;
-
-                found:
                 entities.Add((uid, comp));
             }
         }
@@ -604,7 +590,7 @@ public sealed partial class EntityLookupSystem
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
-            AddLocalEntitiesIntersecting(mapUid, entities, shape, worldAABB, flags, query);
+            AddLocalEntitiesIntersecting(mapUid, entities, shape, shapeTransform, worldAABB, flags, query);
             AddContained(entities, flags, query);
         }
     }
@@ -713,13 +699,25 @@ public sealed partial class EntityLookupSystem
         EntityQuery<T> Query
     ) where T : IComponent;
 
-    private readonly record struct QueryState<T>(
+    private readonly record struct EntityQueryState<T>(
         HashSet<Entity<T>> Intersecting,
         IPhysShape Shape,
         Transform Transform,
         FixtureSystem Fixtures,
         SharedPhysicsSystem Physics,
-        SharedTransformSystem TransformSystem,
+        IManifoldManager Manifolds,
+        EntityQuery<T> Query,
+        EntityQuery<FixturesComponent> FixturesQuery,
+        bool Sensors,
+        bool Approximate
+    ) where T : IComponent;
+
+    private readonly record struct ComponentQueryState<T>(
+        HashSet<Entity<T>> Intersecting,
+        IPhysShape Shape,
+        Transform Transform,
+        FixtureSystem Fixtures,
+        SharedPhysicsSystem Physics,
         IManifoldManager Manifolds,
         EntityQuery<T> Query,
         EntityQuery<FixturesComponent> FixturesQuery,

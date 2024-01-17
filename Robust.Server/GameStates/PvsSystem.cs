@@ -294,19 +294,15 @@ internal sealed partial class PvsSystem : EntitySystem
 
         // After processing the entity's viewers, we set actual, budget limits.
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (!session.RequestedFull)
+        if (session.Channel != null)
         {
-            if (session.Channel != null)
-            {
-                session.Budget.NewLimit = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityBudget);
-                session.Budget.EnterLimit =
-                    _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityEnterBudget);
-            }
-            else
-            {
-                session.Budget.NewLimit = CVars.NetPVSEntityBudget.DefaultValue;
-                session.Budget.EnterLimit = CVars.NetPVSEntityEnterBudget.DefaultValue;
-            }
+            session.Budget.NewLimit= _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityBudget);
+            session.Budget.EnterLimit = _netConfigManager.GetClientCVar(session.Channel, CVars.NetPVSEntityEnterBudget);
+        }
+        else
+        {
+            session.Budget.NewLimit= CVars.NetPVSEntityBudget.DefaultValue;
+            session.Budget.EnterLimit = CVars.NetPVSEntityEnterBudget.DefaultValue;
         }
 
         // Process all PVS overrides.

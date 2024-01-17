@@ -287,7 +287,7 @@ namespace Robust.Shared.Physics.Systems
                 // TODO: Need to handle grids colliding with non-grid entities with the same layer
                 // (nothing in SS14 does this yet).
 
-                var transform = _physicsSystem.GetPhysicsTransform(gridUid, xformQuery: _xformQuery);
+                var transform = _physicsSystem.GetPhysicsTransform(gridUid);
                 var state = (gridUid, grid, transform, worldMatrix, invWorldMatrix, _map, _physicsSystem, _transform, _physicsQuery, _xformQuery);
 
                 _mapManager.FindGridsIntersecting(mapId, aabb, ref state,
@@ -311,7 +311,7 @@ namespace Robust.Shared.Physics.Systems
 
                         var (_, _, otherGridMatrix, otherGridInvMatrix) =  tuple.xformSystem.GetWorldPositionRotationMatrixWithInv(collidingXform, tuple.xformQuery);
                         var otherGridBounds = otherGridMatrix.TransformBox(component.LocalAABB);
-                        var otherTransform = tuple._physicsSystem.GetPhysicsTransform(uid, xformQuery: tuple.xformQuery);
+                        var otherTransform = tuple._physicsSystem.GetPhysicsTransform(uid);
 
                         // Get Grid2 AABB in grid1 ref
                         var aabb1 = tuple.grid.LocalAABB.Intersect(tuple.invWorldMatrix.TransformBox(otherGridBounds));

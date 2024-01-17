@@ -188,6 +188,19 @@ namespace Robust.Shared.Physics.Collision.Shapes
             Set(Vertices.AsSpan(), VertexCount);
         }
 
+        public bool Set(Box2Rotated bounds)
+        {
+            Span<Vector2> vertices = stackalloc Vector2[]
+            {
+                bounds.BottomLeft,
+                bounds.BottomRight,
+                bounds.TopRight,
+                bounds.TopLeft,
+            };
+
+            return Set(vertices, 4);
+        }
+
         public void SetAsBox(Box2 box)
         {
             Array.Resize(ref Vertices, 4);

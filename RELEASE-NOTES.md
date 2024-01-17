@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix broken full state updates and exclude it from the PVS budget.
+* Fix broken full state updates.
 
 ### Other
 

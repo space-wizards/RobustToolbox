@@ -121,6 +121,7 @@ internal partial class MapManager
             this,
             _fixtureSystem,
             _physics,
+            _transformSystem,
             _manifolds,
             _fixturesQuery,
             approx);
@@ -130,7 +131,9 @@ internal partial class MapManager
         {
             // Even for approximate we'll check if any chunks roughly overlap.
             var data = state.Tree.GetUserData(proxy);
-            var localAABB = new Box2();
+            var gridInvMatrix = state.TransformSystem.GetInvWorldMatrix(data.Uid);
+            var localAABB = gridInvMatrix.TransformBox(state.WorldAABB);
+
             var overlappingChunks = state.MapSystem.GetLocalMapChunks(data.Uid, data.Grid, localAABB);
 
             if (state.Approximate)
@@ -173,6 +176,7 @@ internal partial class MapManager
             this,
             _fixtureSystem,
             _physics,
+            _transformSystem,
             _manifolds,
             _fixturesQuery,
             approx);
@@ -182,7 +186,9 @@ internal partial class MapManager
         {
             // Even for approximate we'll check if any chunks roughly overlap.
             var data = state.Tree.GetUserData(proxy);
-            var localAABB = new Box2();
+            var gridInvMatrix = state.TransformSystem.GetInvWorldMatrix(data.Uid);
+            var localAABB = gridInvMatrix.TransformBox(state.WorldAABB);
+
             var overlappingChunks = state.MapSystem.GetLocalMapChunks(data.Uid, data.Grid, localAABB);
 
             if (state.Approximate)
@@ -201,6 +207,9 @@ internal partial class MapManager
 
             return true;
         }, worldAABB);
+
+        // By-ref things
+        state = gridState.State;
     }
 
     /// <summary>
@@ -364,40 +373,6 @@ internal partial class MapManager
 
     #endregion
 
-    #region Obsolete
-
-    [Obsolete]
-    public bool TryFindGridAt(MapId mapId, Vector2 worldPos, EntityQuery<TransformComponent> query, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
-    {
-        return TryFindGridAt(mapId, worldPos, out uid, out grid);
-    }
-
-    [Obsolete]
-    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false, bool includeMap = true)
-    {
-        var grids = new List<Entity<MapGridComponent>>();
-        FindGridsIntersecting(mapId, worldAabb, ref grids, approx, includeMap);
-
-        foreach (var grid in grids)
-        {
-            yield return grid.Comp;
-        }
-    }
-
-    [Obsolete]
-    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false, bool includeMap = true)
-    {
-        var grids = new List<Entity<MapGridComponent>>();
-        FindGridsIntersecting(mapId, worldArea, ref grids, approx, includeMap);
-
-        foreach (var grid in grids)
-        {
-            yield return grid.Comp;
-        }
-    }
-
-    #endregion
-
     private readonly record struct GridQueryState(
         GridCallback Callback,
         Box2 WorldAABB,
@@ -408,6 +383,7 @@ internal partial class MapManager
         MapManager MapManager,
         FixtureSystem Fixtures,
         SharedPhysicsSystem Physics,
+        SharedTransformSystem TransformSystem,
         IManifoldManager Manifolds,
         EntityQuery<FixturesComponent> FixturesQuery,
         bool Approximate);
@@ -423,6 +399,7 @@ internal partial class MapManager
         MapManager MapManager,
         FixtureSystem Fixtures,
         SharedPhysicsSystem Physics,
+        SharedTransformSystem TransformSystem,
         IManifoldManager Manifolds,
         EntityQuery<FixturesComponent> FixturesQuery,
         bool Approximate);

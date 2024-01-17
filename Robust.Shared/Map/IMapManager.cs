@@ -107,7 +107,7 @@ namespace Robust.Shared.Map
 
         IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId);
 
-        #region Queries
+        #region MapId
 
         public void FindGridsIntersecting(MapId mapId, IPhysShape shape, Transform transform,
             ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap);
@@ -196,6 +196,40 @@ namespace Robust.Shared.Map
         /// </summary>
         public bool TryFindGridAt(MapCoordinates mapCoordinates, out EntityUid uid,
             [NotNullWhen(true)] out MapGridComponent? grid);
+
+        #endregion
+
+        #region Obsolete
+
+        [Obsolete]
+        public bool TryFindGridAt(MapId mapId, Vector2 worldPos, EntityQuery<TransformComponent> query, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
+        {
+            return TryFindGridAt(mapId, worldPos, out uid, out grid);
+        }
+
+        [Obsolete]
+        public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false, bool includeMap = true)
+        {
+            var grids = new List<Entity<MapGridComponent>>();
+            FindGridsIntersecting(mapId, worldAabb, ref grids, approx, includeMap);
+
+            foreach (var grid in grids)
+            {
+                yield return grid.Comp;
+            }
+        }
+
+        [Obsolete]
+        public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false, bool includeMap = true)
+        {
+            var grids = new List<Entity<MapGridComponent>>();
+            FindGridsIntersecting(mapId, worldArea, ref grids, approx, includeMap);
+
+            foreach (var grid in grids)
+            {
+                yield return grid.Comp;
+            }
+        }
 
         #endregion
 

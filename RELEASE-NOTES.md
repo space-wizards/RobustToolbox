@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Add helper methods for TileRef / Vector2i to SharedMapSystem for ToCenterCoordinates (tile center EntityCoordinates) and ToCoordinates (tile origin to EntityCoordinates).
+* Copy some of the coordinates extensions to SharedTransformSystem.
 
 ### Bugfixes
 

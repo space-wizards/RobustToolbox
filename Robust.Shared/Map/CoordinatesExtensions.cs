@@ -1,5 +1,3 @@
-using System;
-using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map.Components;
@@ -9,12 +7,6 @@ namespace Robust.Shared.Map
 {
     public static class CoordinatesExtensions
     {
-        [Obsolete("Use SharedMapSystem.ToCoordinates")]
-        public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, EntityUid gridId, IMapManager? mapManager = null)
-        {
-            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedMapSystem>().ToCoordinates(gridId, vector);
-        }
-
         public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
         {
             IoCManager.Resolve(ref entityManager, ref mapManager);

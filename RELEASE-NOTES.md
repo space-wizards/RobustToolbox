@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix broken full state updates.
 
 ### Other
 

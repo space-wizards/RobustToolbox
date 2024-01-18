@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Remove obsolete CoordinatesExtension for ToEntityCoordinates from GridUid / Vector2i.
 
 ### New features
 

@@ -202,10 +202,10 @@ internal partial class MapManager
             }
 
             var callbackState = state.State;
-            state.Callback(data.Uid, data.Grid, ref callbackState);
+            var result = state.Callback(data.Uid, data.Grid, ref callbackState);
             state.State = callbackState;
 
-            return true;
+            return result;
         }, worldAABB);
 
         // By-ref things

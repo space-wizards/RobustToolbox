@@ -21,12 +21,14 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 
+        private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<TransformComponent> _xformQuery;
 
         public override void Initialize()
         {
             base.Initialize();
 
+            _gridQuery = GetEntityQuery<MapGridComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
 
             InitializeMap();

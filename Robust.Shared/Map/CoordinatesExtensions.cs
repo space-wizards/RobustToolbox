@@ -9,14 +9,10 @@ namespace Robust.Shared.Map
 {
     public static class CoordinatesExtensions
     {
+        [Obsolete("Use SharedMapSystem.ToCoordinates")]
         public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, EntityUid gridId, IMapManager? mapManager = null)
         {
-            IoCManager.Resolve(ref mapManager);
-
-            var grid = mapManager.GetGrid(gridId);
-            var tile = grid.TileSize;
-
-            return new EntityCoordinates(gridId, new Vector2(vector.X * tile, vector.Y * tile));
+            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedMapSystem>().ToCoordinates(gridId, vector);
         }
 
         public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)

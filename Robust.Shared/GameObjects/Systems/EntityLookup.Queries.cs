@@ -716,6 +716,9 @@ public sealed partial class EntityLookupSystem
                 {
                     foreach (var fixture in fixturesComp.Fixtures.Values)
                     {
+                        if (!fixture.Hard && (tuple.flags & LookupFlags.Sensors) != 0x0)
+                            continue;
+
                         tuple.lookup.AddEntitiesIntersecting(gridUid, tuple.intersecting, fixture.Shape, tuple.transform, tuple.flags);
                     }
                 }

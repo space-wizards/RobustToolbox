@@ -547,19 +547,6 @@ public sealed partial class EntityLookupSystem
             {
                 var localAABB = tuple.xformSystem.GetInvWorldMatrix(gridUid).TransformBox(tuple.worldAABB);
                 tuple.lookup.AddLocalEntitiesIntersecting(gridUid, tuple.intersecting, localAABB, tuple.flags);
-
-                if ((tuple.flags & LookupFlags.Static) != 0x0)
-                {
-                    // TODO: Need a struct enumerator version.
-                    foreach (var uid in tuple._map.GetAnchoredEntities(gridUid, grid, tuple.worldAABB))
-                    {
-                        if (tuple.lookup.Deleted(uid))
-                            continue;
-
-                        tuple.intersecting.Add(uid);
-                    }
-                }
-
                 return true;
             }, approx: true, includeMap: false);
 

@@ -7,9 +7,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
-using Robust.Shared.Physics.Systems;
 
 namespace Robust.Shared.Map;
 
@@ -119,11 +117,7 @@ internal partial class MapManager
             gridTree.Tree,
             _mapSystem,
             this,
-            _fixtureSystem,
-            _physics,
             _transformSystem,
-            _manifolds,
-            _fixturesQuery,
             approx);
 
 
@@ -174,11 +168,7 @@ internal partial class MapManager
             gridTree.Tree,
             _mapSystem,
             this,
-            _fixtureSystem,
-            _physics,
             _transformSystem,
-            _manifolds,
-            _fixturesQuery,
             approx);
 
 
@@ -381,11 +371,7 @@ internal partial class MapManager
         B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)> Tree,
         SharedMapSystem MapSystem,
         MapManager MapManager,
-        FixtureSystem Fixtures,
-        SharedPhysicsSystem Physics,
         SharedTransformSystem TransformSystem,
-        IManifoldManager Manifolds,
-        EntityQuery<FixturesComponent> FixturesQuery,
         bool Approximate);
 
     private record struct GridQueryState<TState>(
@@ -397,10 +383,6 @@ internal partial class MapManager
         B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)> Tree,
         SharedMapSystem MapSystem,
         MapManager MapManager,
-        FixtureSystem Fixtures,
-        SharedPhysicsSystem Physics,
         SharedTransformSystem TransformSystem,
-        IManifoldManager Manifolds,
-        EntityQuery<FixturesComponent> FixturesQuery,
         bool Approximate);
 }

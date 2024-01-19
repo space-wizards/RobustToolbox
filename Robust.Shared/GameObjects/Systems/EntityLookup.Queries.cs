@@ -593,26 +593,27 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return intersecting;
 
-        // Get grid entities
-        var state = (this, intersecting, worldBounds, flags);
+        var mapUid = _mapManager.GetMapEntityId(mapId);
 
-        _mapManager.FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), ref state, static
+        // Get grid entities
+        var shape = new PolygonShape();
+        shape.Set(worldBounds);
+
+        var state = (this, intersecting, shape, flags);
+
+        _mapManager.FindGridsIntersecting(mapUid, shape, Physics.Transform.Empty, ref state, static
         (EntityUid uid, MapGridComponent _,
             ref (EntityLookupSystem lookup,
                 HashSet<EntityUid> intersecting,
-                Box2Rotated worldBounds,
+                PolygonShape shape,
                 LookupFlags flags) tuple) =>
         {
-            var localAABB = tuple.lookup._transform.GetInvWorldMatrix(uid).TransformBox(tuple.worldBounds);
-            tuple.lookup.AddLocalEntitiesIntersecting(uid, tuple.intersecting, localAABB, tuple.flags);
+            tuple.lookup.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.shape, Physics.Transform.Empty, tuple.flags);
             return true;
         }, approx: true, includeMap: false);
 
         // Get map entities
-        var mapUid = _mapManager.GetMapEntityId(mapId);
-
-        var localAABB = _transform.GetInvWorldMatrix(mapUid).TransformBox(worldBounds);
-        AddLocalEntitiesIntersecting(mapUid, intersecting, localAABB, flags);
+        AddEntitiesIntersecting(mapUid, intersecting, shape, Physics.Transform.Empty, flags);
         AddContained(intersecting, flags);
 
         return intersecting;
@@ -666,7 +667,7 @@ public sealed partial class EntityLookupSystem
         }
 
         var mapUid = _mapManager.GetMapEntityId(mapPos.MapId);
-        return AnyLocalEntitiesIntersecting(mapUid, worldAABB, flags, uid);
+        return AnyEntitiesIntersecting(mapUid, circle, Physics.Transform.Empty, flags, uid);
     }
 
     public HashSet<EntityUid> GetEntitiesInRange(EntityUid uid, float range, LookupFlags flags = DefaultFlags)

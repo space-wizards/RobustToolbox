@@ -136,7 +136,7 @@ public sealed partial class EntityLookupSystem
             }, approx: true, includeMap: false);
 
         var mapUid = _mapManager.GetMapEntityId(mapId);
-        state.Lookup.AddEntitiesIntersecting(mapUid, intersecting, shape, shapeTransform, flags);
+        AddEntitiesIntersecting(mapUid, intersecting, shape, shapeTransform, flags);
         AddContained(intersecting, flags);
     }
 
@@ -712,33 +712,42 @@ public sealed partial class EntityLookupSystem
                 ref (EntityUid entity, Transform transform, HashSet<EntityUid> intersecting,
                     EntityQuery<FixturesComponent> fixturesQuery, EntityLookupSystem lookup, LookupFlags flags) tuple) =>
             {
-                if (tuple.fixturesQuery.TryGetComponent(tuple.entity, out var fixturesComp))
-                {
-                    foreach (var fixture in fixturesComp.Fixtures.Values)
-                    {
-                        // If our own fixture isn't hard and sensors ignored then ignore it.
-                        if (!fixture.Hard && (tuple.flags & LookupFlags.Sensors) == 0x0)
-                            continue;
-
-                        tuple.lookup.AddEntitiesIntersecting(gridUid, tuple.intersecting, fixture.Shape, tuple.transform, tuple.flags);
-                    }
-                }
-                // Single point check
-                else
-                {
-                    var shape = new PhysShapeCircle(LookupEpsilon);
-                    tuple.lookup.AddEntitiesIntersecting(gridUid, tuple.intersecting, shape, tuple.transform, tuple.flags);
-                }
+                EntityIntersectingQuery(gridUid, tuple);
 
                 return true;
             }, approx: true, includeMap: false);
 
-        GetEntitiesIntersecting(mapId, worldAABB, intersecting, flags);
+        var mapUid = _mapManager.GetMapEntityId(mapId);
+        EntityIntersectingQuery(mapUid, state);
 
         // Remove the entity itself (unless it was passed in).
         if (!existing)
         {
             intersecting.Remove(uid);
+        }
+
+        return;
+
+        static void EntityIntersectingQuery(EntityUid lookupUid, (EntityUid entity, Transform shapeTransform, HashSet<EntityUid> intersecting,
+            EntityQuery<FixturesComponent> fixturesQuery, EntityLookupSystem lookup, LookupFlags flags) tuple)
+        {
+            if (tuple.fixturesQuery.TryGetComponent(tuple.entity, out var fixturesComp))
+            {
+                foreach (var fixture in fixturesComp.Fixtures.Values)
+                {
+                    // If our own fixture isn't hard and sensors ignored then ignore it.
+                    if (!fixture.Hard && (tuple.flags & LookupFlags.Sensors) == 0x0)
+                        continue;
+
+                    tuple.lookup.AddEntitiesIntersecting(lookupUid, tuple.intersecting, fixture.Shape, tuple.shapeTransform, tuple.flags);
+                }
+            }
+            // Single point check
+            else
+            {
+                var shape = new PhysShapeCircle(LookupEpsilon);
+                tuple.lookup.AddEntitiesIntersecting(lookupUid, tuple.intersecting, shape, tuple.shapeTransform, tuple.flags);
+            }
         }
     }
 

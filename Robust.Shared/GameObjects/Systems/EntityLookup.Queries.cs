@@ -72,41 +72,6 @@ public sealed partial class EntityLookupSystem
         }
     }
 
-    private void AddLocalEntitiesIntersecting(
-        EntityUid lookupUid,
-        HashSet<EntityUid> intersecting,
-        Box2 localAABB,
-        LookupFlags flags,
-        BroadphaseComponent? lookup = null)
-    {
-        if (!_broadQuery.Resolve(lookupUid, ref lookup))
-            return;
-
-        var lookupPoly = new PolygonShape();
-        lookupPoly.SetAsBox(localAABB);
-        var (lookupPos, lookupRot) = _transform.GetWorldPositionRotation(lookupUid);
-        var lookupTransform = new Transform(lookupPos, lookupRot);
-
-        AddEntitiesIntersecting(lookupUid, intersecting, lookupPoly, lookupTransform, flags, lookup);
-    }
-
-    private void AddLocalEntitiesIntersecting(
-        EntityUid lookupUid,
-        HashSet<EntityUid> intersecting,
-        Box2Rotated localBounds,
-        LookupFlags flags,
-        BroadphaseComponent? lookup = null)
-    {
-        if (!_broadQuery.Resolve(lookupUid, ref lookup))
-            return;
-
-        var shape = new PolygonShape();
-        shape.Set(localBounds);
-
-        var transform = _physics.GetPhysicsTransform(lookupUid);
-        AddEntitiesIntersecting(lookupUid, intersecting, shape, transform, flags);
-    }
-
     /// <summary>
     /// Wrapper around the per-grid version.
     /// </summary>
@@ -435,21 +400,6 @@ public sealed partial class EntityLookupSystem
 
             return true;
         }
-    }
-
-    public bool AnyLocalEntitiesIntersecting(EntityUid lookupUid,
-        Box2 localAABB,
-        LookupFlags flags,
-        EntityUid? ignored = null,
-        BroadphaseComponent? lookup = null)
-    {
-        if (!_broadQuery.Resolve(lookupUid, ref lookup))
-            return false;
-
-        var shape = new PolygonShape();
-        shape.SetAsBox(localAABB);
-        var transform = _physics.GetPhysicsTransform(lookupUid);
-        return AnyEntitiesIntersecting(lookupUid, shape, transform, flags, ignored, lookup);
     }
 
     private bool AnyEntitiesIntersecting(EntityUid lookupUid,

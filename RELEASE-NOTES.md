@@ -35,8 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Update EntityLookup internally so non-approximate queries use the GJK solver and are much more accurate. This also means the approximate flag matters much more if you don't need narrowphase checks.
-* Add shape versions of queries for both EntityLookup and MapManager.
+*None yet*
 
 ### New features
 
@@ -44,7 +43,27 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix broken full state updates.
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 207.0.0
+
+### Breaking changes
+
+* Update EntityLookup internally so non-approximate queries use the GJK solver and are much more accurate. This also means the approximate flag matters much more if you don't need narrowphase checks.
+* Add shape versions of queries for both EntityLookup and MapManager.
+
+### Bugfixes
+
+* Fix PVS full state updates not clearing session entities and causing exceptions.
 
 ### Other
 

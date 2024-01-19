@@ -227,7 +227,7 @@ namespace Robust.Shared.Physics.Systems
                             ref var buffer = ref tuple.pairBuffer;
                             tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, uid, buffer);
                             return true;
-                        });
+                        }, approx: true);
 
                     // Struct ref moment, I have no idea what's fastest.
                     buffer = state.buffer;
@@ -360,7 +360,7 @@ namespace Robust.Shared.Physics.Systems
                         }
 
                         return true;
-                    }, includeMap: false);
+                    }, approx: true, includeMap: false);
             }
         }
 

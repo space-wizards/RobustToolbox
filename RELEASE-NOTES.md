@@ -44,11 +44,11 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix broken full state updates.
 
 ### Other
 
-*None yet*
+* Integration tests now run `NetMessage`s through serialization rather than passing the objects between client and server. This causes tests that missed `[NetSerializer]` attributes on any objects that need them to fail.
 
 ### Internal
 

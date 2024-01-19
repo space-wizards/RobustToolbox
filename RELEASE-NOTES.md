@@ -35,7 +35,8 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Update EntityLookup internally so non-approximate queries use the GJK solver and are much more accurate. This also means the approximate flag matters much more if you don't need narrowphase checks.
+* Add shape versions of queries for both EntityLookup and MapManager.
 
 ### New features
 
@@ -51,7 +52,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Remove a lot of duplicate code internally from EntityLookup and MapManager.
 
 
 ## 206.0.0

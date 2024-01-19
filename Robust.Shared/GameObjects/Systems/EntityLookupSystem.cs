@@ -98,6 +98,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
     public const float TileEnlargementRadius = -PhysicsConstants.PolygonRadius * 4f;
 
     /// <summary>
+    /// The minimum size an entity is assumed to be for point purposes.
+    /// </summary>
+    public const float LookupEpsilon = float.Epsilon * 10f;
+
+    /// <summary>
     /// Returns all non-grid entities. Consider using your own flags if you wish for a faster query.
     /// </summary>
     public const LookupFlags DefaultFlags = LookupFlags.All;

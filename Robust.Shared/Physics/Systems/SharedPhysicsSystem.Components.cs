@@ -628,7 +628,7 @@ public partial class SharedPhysicsSystem
 
     #endregion
 
-    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null, EntityQuery<TransformComponent>? xformQuery = null)
+    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
     {
         if (!_xformQuery.Resolve(uid, ref xform))
             return Physics.Transform.Empty;

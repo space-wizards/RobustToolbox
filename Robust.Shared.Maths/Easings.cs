@@ -10,7 +10,7 @@ namespace Robust.Shared.Maths;
 ///     The parameter "p" is the absolute progress of the animation between 0 and 1.
 /// </summary>
 [PublicAPI]
-internal static class Easings
+public static class Easings
 {
     #region Trig
 

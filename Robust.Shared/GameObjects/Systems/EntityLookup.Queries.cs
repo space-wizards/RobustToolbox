@@ -72,41 +72,6 @@ public sealed partial class EntityLookupSystem
         }
     }
 
-    private void AddLocalEntitiesIntersecting(
-        EntityUid lookupUid,
-        HashSet<EntityUid> intersecting,
-        Box2 localAABB,
-        LookupFlags flags,
-        BroadphaseComponent? lookup = null)
-    {
-        if (!_broadQuery.Resolve(lookupUid, ref lookup))
-            return;
-
-        var lookupPoly = new PolygonShape();
-        lookupPoly.SetAsBox(localAABB);
-        var (lookupPos, lookupRot) = _transform.GetWorldPositionRotation(lookupUid);
-        var lookupTransform = new Transform(lookupPos, lookupRot);
-
-        AddEntitiesIntersecting(lookupUid, intersecting, lookupPoly, lookupTransform, flags, lookup);
-    }
-
-    private void AddLocalEntitiesIntersecting(
-        EntityUid lookupUid,
-        HashSet<EntityUid> intersecting,
-        Box2Rotated localBounds,
-        LookupFlags flags,
-        BroadphaseComponent? lookup = null)
-    {
-        if (!_broadQuery.Resolve(lookupUid, ref lookup))
-            return;
-
-        var shape = new PolygonShape();
-        shape.Set(localBounds);
-
-        var transform = _physics.GetPhysicsTransform(lookupUid);
-        AddEntitiesIntersecting(lookupUid, intersecting, shape, transform, flags);
-    }
-
     /// <summary>
     /// Wrapper around the per-grid version.
     /// </summary>
@@ -437,21 +402,6 @@ public sealed partial class EntityLookupSystem
         }
     }
 
-    public bool AnyLocalEntitiesIntersecting(EntityUid lookupUid,
-        Box2 localAABB,
-        LookupFlags flags,
-        EntityUid? ignored = null,
-        BroadphaseComponent? lookup = null)
-    {
-        if (!_broadQuery.Resolve(lookupUid, ref lookup))
-            return false;
-
-        var shape = new PolygonShape();
-        shape.SetAsBox(localAABB);
-        var transform = _physics.GetPhysicsTransform(lookupUid);
-        return AnyEntitiesIntersecting(lookupUid, shape, transform, flags, ignored, lookup);
-    }
-
     private bool AnyEntitiesIntersecting(EntityUid lookupUid,
         Box2Rotated worldBounds,
         LookupFlags flags,
@@ -593,26 +543,27 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return intersecting;
 
-        // Get grid entities
-        var state = (this, intersecting, worldBounds, flags);
+        var mapUid = _mapManager.GetMapEntityId(mapId);
 
-        _mapManager.FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), ref state, static
+        // Get grid entities
+        var shape = new PolygonShape();
+        shape.Set(worldBounds);
+
+        var state = (this, intersecting, shape, flags);
+
+        _mapManager.FindGridsIntersecting(mapUid, shape, Physics.Transform.Empty, ref state, static
         (EntityUid uid, MapGridComponent _,
             ref (EntityLookupSystem lookup,
                 HashSet<EntityUid> intersecting,
-                Box2Rotated worldBounds,
+                PolygonShape shape,
                 LookupFlags flags) tuple) =>
         {
-            var localAABB = tuple.lookup._transform.GetInvWorldMatrix(uid).TransformBox(tuple.worldBounds);
-            tuple.lookup.AddLocalEntitiesIntersecting(uid, tuple.intersecting, localAABB, tuple.flags);
+            tuple.lookup.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.shape, Physics.Transform.Empty, tuple.flags);
             return true;
         }, approx: true, includeMap: false);
 
         // Get map entities
-        var mapUid = _mapManager.GetMapEntityId(mapId);
-
-        var localAABB = _transform.GetInvWorldMatrix(mapUid).TransformBox(worldBounds);
-        AddLocalEntitiesIntersecting(mapUid, intersecting, localAABB, flags);
+        AddEntitiesIntersecting(mapUid, intersecting, shape, Physics.Transform.Empty, flags);
         AddContained(intersecting, flags);
 
         return intersecting;
@@ -666,7 +617,7 @@ public sealed partial class EntityLookupSystem
         }
 
         var mapUid = _mapManager.GetMapEntityId(mapPos.MapId);
-        return AnyLocalEntitiesIntersecting(mapUid, worldAABB, flags, uid);
+        return AnyEntitiesIntersecting(mapUid, circle, Physics.Transform.Empty, flags, uid);
     }
 
     public HashSet<EntityUid> GetEntitiesInRange(EntityUid uid, float range, LookupFlags flags = DefaultFlags)

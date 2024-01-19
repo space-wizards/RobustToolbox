@@ -538,11 +538,11 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace) return;
 
         // Get grid entities
-        var state = (this, _map, intersecting, worldAABB, _transform, flags);
+        var state = (this, intersecting, worldAABB, _transform, flags);
 
         _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
-            static (EntityUid gridUid, MapGridComponent grid, ref (
-                EntityLookupSystem lookup, SharedMapSystem _map, HashSet<EntityUid> intersecting,
+            static (EntityUid gridUid, MapGridComponent _, ref (
+                EntityLookupSystem lookup, HashSet<EntityUid> intersecting,
                 Box2 worldAABB, SharedTransformSystem xformSystem, LookupFlags flags) tuple) =>
             {
                 var localAABB = tuple.xformSystem.GetInvWorldMatrix(gridUid).TransformBox(tuple.worldAABB);

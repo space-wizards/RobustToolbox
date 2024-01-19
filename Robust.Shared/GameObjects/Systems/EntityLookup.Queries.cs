@@ -133,7 +133,11 @@ public sealed partial class EntityLookupSystem
             {
                 state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, state.Transform, state.Flags);
                 return true;
-            }, approx: true);
+            }, approx: true, includeMap: false);
+
+        var mapUid = _mapManager.GetMapEntityId(mapId);
+        state.Lookup.AddEntitiesIntersecting(mapUid, intersecting, shape, shapeTransform, flags);
+        AddContained(intersecting, flags);
     }
 
     private void AddEntitiesIntersecting(
@@ -285,7 +289,13 @@ public sealed partial class EntityLookupSystem
                 }
 
                 return true;
-            }, true);
+            }, approx: true, includeMap: false);
+
+        if (!state.Found)
+        {
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            state.Found = AnyEntitiesIntersecting(mapUid, shape, shapeTransform, flags, ignored);
+        }
 
         return state.Found;
     }
@@ -507,7 +517,7 @@ public sealed partial class EntityLookupSystem
 
                 tuple.found = true;
                 return false;
-            }, approx: true);
+            }, approx: true, includeMap: false);
 
         if (state.found)
             return true;
@@ -551,13 +561,11 @@ public sealed partial class EntityLookupSystem
                 }
 
                 return true;
-            }, approx: true);
+            }, approx: true, includeMap: false);
 
         // Get map entities
         var mapUid = _mapManager.GetMapEntityId(mapId);
-        // Transform just in case future proofing?
-        var localAABB = _transform.GetInvWorldMatrix(mapUid).TransformBox(worldAABB);
-        AddLocalEntitiesIntersecting(mapUid, intersecting, localAABB, flags);
+        AddLocalEntitiesIntersecting(mapUid, intersecting, worldAABB, flags);
         AddContained(intersecting, flags);
     }
 
@@ -582,7 +590,7 @@ public sealed partial class EntityLookupSystem
                     return false;
                 }
                 return true;
-            }, approx: true);
+            }, approx: true, includeMap: false);
 
         if (state.found)
             return true;
@@ -611,7 +619,7 @@ public sealed partial class EntityLookupSystem
             var localAABB = tuple.lookup._transform.GetInvWorldMatrix(uid).TransformBox(tuple.worldBounds);
             tuple.lookup.AddLocalEntitiesIntersecting(uid, tuple.intersecting, localAABB, tuple.flags);
             return true;
-        }, approx: true);
+        }, approx: true, includeMap: false);
 
         // Get map entities
         var mapUid = _mapManager.GetMapEntityId(mapId);
@@ -663,7 +671,12 @@ public sealed partial class EntityLookupSystem
             }
 
             return true;
-        }, approx: true);
+        }, approx: true, includeMap: false);
+
+        if (state.found)
+        {
+            return true;
+        }
 
         var mapUid = _mapManager.GetMapEntityId(mapPos.MapId);
         return AnyLocalEntitiesIntersecting(mapUid, worldAABB, flags, uid);
@@ -731,7 +744,7 @@ public sealed partial class EntityLookupSystem
                 }
 
                 return true;
-            }, approx: true);
+            }, approx: true, includeMap: false);
 
         GetEntitiesIntersecting(mapId, worldAABB, intersecting, flags);
 
@@ -908,7 +921,10 @@ public sealed partial class EntityLookupSystem
             {
                 tuple.callback(uid, tuple._broadQuery.GetComponent(uid));
                 return true;
-            }, approx: true);
+            }, approx: true, includeMap: false);
+
+        var mapUid = _mapManager.GetMapEntityId(mapId);
+        callback(mapUid, _broadQuery.GetComponent(mapUid));
     }
 
     #endregion

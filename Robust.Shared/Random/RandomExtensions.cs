@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Robust.Shared.Collections;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -16,13 +17,7 @@ namespace Robust.Shared.Random
         /// <param name="σ">The standard deviation of the normal distribution.</param>
         public static double NextGaussian(this IRobustRandom random, double μ = 0, double σ = 1)
         {
-            // https://stackoverflow.com/a/218600
-            var α = random.NextDouble();
-            var β = random.NextDouble();
-
-            var randStdNormal = Math.Sqrt(-2.0 * Math.Log(α)) * Math.Sin(2.0 * Math.PI * β);
-
-            return μ + σ * randStdNormal;
+            return random.GetRandom().NextGaussian(μ, σ);
         }
 
         public static T Pick<T>(this IRobustRandom random, IReadOnlyList<T> list)
@@ -53,7 +48,7 @@ namespace Robust.Shared.Random
                 }
             }
 
-            throw new InvalidOperationException("This should be unreachable!");
+            throw new UnreachableException("This should be unreachable!");
         }
 
         public static T PickAndTake<T>(this IRobustRandom random, IList<T> list)
@@ -62,6 +57,53 @@ namespace Robust.Shared.Random
             var element = list[index];
             list.RemoveAt(index);
             return element;
+        }
+
+        /// <summary>
+        /// Picks a random element from a set and returns it.
+        /// This is O(n) as it has to iterate the collection until the target index.
+        /// </summary>
+        public static T Pick<T>(this System.Random random, ICollection<T> collection)
+        {
+            var index = random.Next(collection.Count);
+            var i = 0;
+            foreach (var t in collection)
+            {
+                if (i++ == index)
+                {
+                    return t;
+                }
+            }
+
+            throw new UnreachableException("This should be unreachable!");
+        }
+
+        /// <summary>
+        /// Picks a random from a collection then removes it and returns it.
+        /// This is O(n) as it has to iterate the collection until the target index.
+        /// </summary>
+        public static T PickAndTake<T>(this System.Random random, ICollection<T> set)
+        {
+            var tile = Pick(random, set);
+            set.Remove(tile);
+            return tile;
+        }
+
+        /// <summary>
+        ///     Generate a random number from a normal (gaussian) distribution.
+        /// </summary>
+        /// <param name="random">The random object to generate the number from.</param>
+        /// <param name="μ">The average or "center" of the normal distribution.</param>
+        /// <param name="σ">The standard deviation of the normal distribution.</param>
+        public static double NextGaussian(this System.Random random, double μ = 0, double σ = 1)
+        {
+            // https://stackoverflow.com/a/218600
+            var α = random.NextDouble();
+            var β = random.NextDouble();
+
+            var randStdNormal = Math.Sqrt(-2.0 * Math.Log(α)) * Math.Sin(2.0 * Math.PI * β);
+
+            return μ + σ * randStdNormal;
         }
 
         public static Angle NextAngle(this System.Random random) => NextFloat(random) * MathF.Tau;

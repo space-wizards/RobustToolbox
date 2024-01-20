@@ -10,26 +10,30 @@
     <!-- Try to fix sporadic errors against Robust.Packaging, apparently?? -->
     <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
     <RobustILLink>true</RobustILLink>
+    <NoWarn>CA1416</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
-    <PackageReference Include="SpaceWizards.HttpListener" Version="0.1.0" PrivateAssets="compile" />
-    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="6.0.9" />
-    <PackageReference Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.4" Condition="'$(UseSystemSqlite)' == 'True'" /> <!-- Cannot be private since Content.Server/Database/ServerDbManager.cs depends on SQLitePCL.raw -->
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.4" Condition="'$(UseSystemSqlite)' != 'True'" PrivateAssets="compile" />
-    <PackageReference Include="prometheus-net" Version="4.1.1" />
-    <PackageReference Include="Serilog.Sinks.Loki" Version="4.0.0-beta3" PrivateAssets="compile" />
-    <PackageReference Include="Microsoft.Extensions.Primitives" Version="6.0.0" />
-    <PackageReference Include="prometheus-net.DotNetRuntime" Version="4.2.2" />
-    <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.20348-rc2" PrivateAssets="compile" />
-    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="6.0.2" PrivateAssets="compile" />
-    <PackageReference Include="SpaceWizards.Sodium" Version="0.2.1" PrivateAssets="compile" />
-    <PackageReference Include="SharpZstd.Interop" Version="1.5.2-beta2" PrivateAssets="compile" />
-    <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" Version="1.2.0" />
+    <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
+    <PackageReference Include="SpaceWizards.HttpListener" PrivateAssets="compile" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" />
+    <PackageReference Include="SQLitePCLRaw.provider.sqlite3" Condition="'$(UseSystemSqlite)' == 'True'" /> <!-- Cannot be private since Content.Server/Database/ServerDbManager.cs depends on SQLitePCL.raw -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Condition="'$(UseSystemSqlite)' != 'True'" PrivateAssets="compile" />
+    <PackageReference Include="prometheus-net" />
+    <PackageReference Include="Serilog.Sinks.Loki" PrivateAssets="compile" />
+    <PackageReference Include="Microsoft.Extensions.Primitives" />
+    <!-- Needed to pull-up the dependency from prometheus-net -->
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="prometheus-net.DotNetRuntime" />
+    <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" PrivateAssets="compile" />
+    <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
+    <PackageReference Include="SharpZstd.Interop" PrivateAssets="compile" />
+    <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" />
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
-    <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />

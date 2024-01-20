@@ -165,7 +165,7 @@ namespace Robust.Server.Physics
 
             foreach (var session in _subscribedSessions)
             {
-                RaiseNetworkEvent(msg, session.ConnectedClient);
+                RaiseNetworkEvent(msg, session.Channel);
             }
         }
 
@@ -329,7 +329,7 @@ namespace Robust.Server.Physics
                             var bounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
 
                             _entSet.Clear();
-                            _lookup.GetEntitiesIntersecting(oldGridUid, tilePos, _entSet, 0f, LookupFlags.Dynamic | LookupFlags.Sundries);
+                            _lookup.GetLocalEntitiesIntersecting(oldGridUid, tilePos, _entSet, 0f, LookupFlags.Dynamic | LookupFlags.Sundries);
 
                             foreach (var ent in _entSet)
                             {

@@ -32,7 +32,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         /// This dictionary stores the full most recently received server state of any entity. This is used whenever predicted entities get reset.
         /// </summary>
-        internal readonly Dictionary<NetEntity, Dictionary<ushort, ComponentState>> _lastStateFullRep
+        internal readonly Dictionary<NetEntity, Dictionary<ushort, IComponentState>> _lastStateFullRep
             = new();
 
         /// <inheritdoc />
@@ -212,7 +212,7 @@ Had full state: {LastFullState != null}"
             {
                 if (!_lastStateFullRep.TryGetValue(entityState.NetEntity, out var compData))
                 {
-                    compData = new Dictionary<ushort, ComponentState>();
+                    compData = new Dictionary<ushort, IComponentState>();
                     _lastStateFullRep.Add(entityState.NetEntity, compData);
                 }
 
@@ -391,7 +391,7 @@ Had full state: {LastFullState != null}"
             LastFullStateRequested = null;
         }
 
-        public void MergeImplicitData(Dictionary<NetEntity, Dictionary<ushort, ComponentState>> implicitData)
+        public void MergeImplicitData(Dictionary<NetEntity, Dictionary<ushort, IComponentState>> implicitData)
         {
             foreach (var (netEntity, implicitEntState) in implicitData)
             {
@@ -425,18 +425,18 @@ Had full state: {LastFullState != null}"
             }
         }
 
-        public Dictionary<ushort, ComponentState> GetLastServerStates(NetEntity netEntity)
+        public Dictionary<ushort, IComponentState> GetLastServerStates(NetEntity netEntity)
         {
             return _lastStateFullRep[netEntity];
         }
 
-        public Dictionary<NetEntity, Dictionary<ushort, ComponentState>> GetFullRep()
+        public Dictionary<NetEntity, Dictionary<ushort, IComponentState>> GetFullRep()
         {
             return _lastStateFullRep;
         }
 
         public bool TryGetLastServerStates(NetEntity entity,
-            [NotNullWhen(true)] out Dictionary<ushort, ComponentState>? dictionary)
+            [NotNullWhen(true)] out Dictionary<ushort, IComponentState>? dictionary)
         {
             return _lastStateFullRep.TryGetValue(entity, out dictionary);
         }

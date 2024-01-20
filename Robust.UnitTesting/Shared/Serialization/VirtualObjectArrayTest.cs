@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -45,7 +45,7 @@ public sealed partial class VirtualObjectArrayTest : SerializationTest
 
             // Check that the yaml doesn't differ in any way.
             var diff = newSquence.Except(sequence);
-            Assert.IsNull(diff);
+            Assert.That(diff, Is.Null);
 
             // And finally, double check that the serialized data can be re-deserialized (dataNode.Except isn't perfect).
             arr = Serialization.Read<BaseTestDataDef[]>(newSquence, notNullableOverride: true);
@@ -64,7 +64,7 @@ public sealed partial class VirtualObjectArrayTest : SerializationTest
 
             var newSquence = Serialization.WriteValue(list, notNullableOverride: true);
             var diff = newSquence.Except(sequence);
-            Assert.IsNull(diff);
+            Assert.That(diff, Is.Null);
 
             list = Serialization.Read<List<BaseTestDataDef>>(sequence, notNullableOverride: true);
             Assert.That(list[0], Is.TypeOf(typeof(SealedTestDataDef)));
@@ -90,10 +90,10 @@ public sealed partial class VirtualObjectArrayTest : SerializationTest
             // The old sequence will now differ as it should not write the redundant !type tag
             var newSquence = Serialization.WriteValue(virtArr, notNullableOverride: true);
             var diff = newSquence.Except(sequence);
-            Assert.NotNull(diff);
+            Assert.That(diff, Is.Not.Null);
 
             diff = newSquence.Except(expectedSequence);
-            Assert.IsNull(diff);
+            Assert.That(diff, Is.Null);
 
             virtArr = Serialization.Read<VirtualTestDataDef[]>(newSquence, notNullableOverride: true);
             Assert.That(virtArr[0], Is.TypeOf(typeof(VirtualTestDataDef)));
@@ -108,10 +108,10 @@ public sealed partial class VirtualObjectArrayTest : SerializationTest
 
             var newSquence = Serialization.WriteValue(virtList, notNullableOverride: true);
             var diff = newSquence.Except(sequence);
-            Assert.NotNull(diff);
+            Assert.That(diff, Is.Not.Null);
 
             diff = newSquence.Except(expectedSequence);
-            Assert.IsNull(diff);
+            Assert.That(diff, Is.Null);
 
             virtList = Serialization.Read<List<VirtualTestDataDef>>(newSquence, notNullableOverride: true);
             Assert.That(virtList[0], Is.TypeOf(typeof(VirtualTestDataDef)));

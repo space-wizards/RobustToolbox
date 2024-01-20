@@ -90,8 +90,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  var container = sContainerSys.EnsureContainer<Container>(entityUid, "dummy");
                  Assert.That(sContainerSys.Insert(itemUid, container));
 
-                 // Move item out of PVS so that it doesn't get sent to the client
-                 sEntManager.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(100000, 0);
+                 // Modify visibility layer so that the item does not get sent ot the player
+                 sEntManager.System<VisibilitySystem>().AddLayer(itemUid, 10 );
              });
 
              // Needs minimum 4 to sync to client because buffer size is 3
@@ -118,8 +118,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
              await server.WaitAssertion(() =>
              {
-                 // Move item into PVS so it gets sent to the client
-                 sEntManager.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(0, 0);
+                 // Modify visibility layer so it now gets sent to the client
+                 sEntManager.System<VisibilitySystem>().RemoveLayer(itemUid, 10 );
              });
 
              await server.WaitRunTicks(1);
@@ -218,8 +218,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  var container = sContainerSys.GetContainer(sEntityUid, "dummy");
                  sContainerSys.Insert(sItemUid, container);
 
-                 // Move item out of PVS so that it doesn't get sent to the client
-                 sEntManager.GetComponent<TransformComponent>(sItemUid).LocalPosition = new Vector2(100000, 0);
+                 // Modify visibility layer so that the item does not get sent ot the player
+                 sEntManager.System<VisibilitySystem>().AddLayer(sItemUid, 10 );
              });
 
             await server.WaitRunTicks(1);
@@ -347,7 +347,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 }
 
                 var containerEnt = container.Owner;
-                Assert.NotNull(container.Comp);
+                Assert.That(container.Comp, Is.Not.Null);
 
                 Assert.That(sEntManager.GetComponent<MetaDataComponent>(containerEnt).EntityName, Is.EqualTo("ContainerEnt"));
 

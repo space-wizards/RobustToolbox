@@ -44,7 +44,7 @@ namespace Robust.Client.Placement.Modes
 
             var closestEntity = snapToEntities[0];
             var closestTransform = pManager.EntityManager.GetComponent<TransformComponent>(closestEntity);
-            if (!pManager.EntityManager.TryGetComponent<SpriteComponent?>(closestEntity, out var component) || component.BaseRSI == null)
+            if (!pManager.EntityManager.TryGetComponent(closestEntity, out SpriteComponent? component) || component.BaseRSI == null)
             {
                 return;
             }

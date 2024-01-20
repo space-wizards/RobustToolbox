@@ -913,9 +913,14 @@ namespace Robust.Shared.ContentPack
                 return null;
             }
 
-            public PEReader? Resolve(string simpleName)
+            public PEReader? ResolveAssembly(AssemblyName assemblyName)
             {
-                return _dictionary.GetOrAdd(simpleName, ResolveCore);
+                return _dictionary.GetOrAdd(assemblyName.Name!, ResolveCore);
+            }
+
+            public PEReader? ResolveModule(AssemblyName referencingAssembly, string fileName)
+            {
+                throw new NotSupportedException();
             }
 
             public void Dispose()

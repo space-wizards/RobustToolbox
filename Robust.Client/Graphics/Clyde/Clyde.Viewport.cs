@@ -198,6 +198,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             IRenderTexture IClydeViewport.RenderTarget => RenderTarget;
+            IRenderTexture IClydeViewport.LightRenderTarget => LightRenderTarget;
             public IEye? Eye { get; set; }
         }
     }

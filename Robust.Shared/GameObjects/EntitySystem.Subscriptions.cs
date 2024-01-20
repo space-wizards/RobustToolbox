@@ -206,6 +206,32 @@ namespace Robust.Shared.GameObjects
             {
                 System.SubscribeLocalEvent(handler, before, after);
             }
+
+            /// <summary>
+            /// Proxy to <see cref="M:Robust.Shared.GameObjects.EntitySystem.SubscribeLocalEvent``2(Robust.Shared.GameObjects.ComponentEventRefHandler{``0,``1},System.Type[],System.Type[])" />
+            /// on the owning system.
+            /// </summary>
+            public void SubscribeLocalEvent<TComp, TEvent>(
+                ComponentEventRefHandler<TComp, TEvent> handler,
+                Type[]? before = null, Type[]? after = null)
+                where TComp : IComponent
+                where TEvent : EntityEventArgs
+            {
+                System.SubscribeLocalEvent(handler, before, after);
+            }
+
+            /// <summary>
+            /// Proxy to <see cref="M:Robust.Shared.GameObjects.EntitySystem.SubscribeLocalEvent``2(Robust.Shared.GameObjects.EntityEventRefHandler{``0,``1},System.Type[],System.Type[])" />
+            /// on the owning system.
+            /// </summary>
+            public void SubscribeLocalEvent<TComp, TEvent>(
+                EntityEventRefHandler<TComp, TEvent> handler,
+                Type[]? before = null, Type[]? after = null)
+                where TComp : IComponent
+                where TEvent : EntityEventArgs
+            {
+                System.SubscribeLocalEvent(handler, before, after);
+            }
         }
 
         private abstract class SubBase

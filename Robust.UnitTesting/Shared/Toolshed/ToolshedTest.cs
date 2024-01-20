@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Errors;
@@ -28,11 +29,12 @@ public abstract class ToolshedTest : RobustIntegrationTest, IInvocationContext
     public async Task TearDownInternal()
     {
         await TearDown();
+        Server.Dispose();
     }
 
     protected virtual async Task TearDown()
     {
-        Assert.IsEmpty(_expectedErrors);
+        Assert.That(_expectedErrors, Is.Empty);
         ClearErrors();
     }
 
@@ -101,6 +103,8 @@ public abstract class ToolshedTest : RobustIntegrationTest, IInvocationContext
     }
 
     protected ICommonSession? InvocationSession { get; set; }
+
+    public NetUserId? User => Session?.UserId;
 
     public ICommonSession? Session
     {

@@ -162,11 +162,14 @@ namespace Robust.Client.Player
                 return true;
             }
 
-            if (!EntManager.EnsureComponent(uid.Value, out EyeComponent eye))
+            if (!EntManager.HasComponent<EyeComponent>(uid.Value))
             {
                 if (_client.RunLevel != ClientRunLevel.SinglePlayerGame)
                     Sawmill.Warning($"Attaching local player to an entity {EntManager.ToPrettyString(uid)} without an eye. This eye will not be netsynced and may cause issues.");
+                var eye = (EyeComponent) Factory.GetComponent(typeof(EyeComponent));
+                eye.Owner = uid.Value;
                 eye.NetSyncEnabled = false;
+                EntManager.AddComponent(uid.Value, eye);
             }
 
             Sawmill.Info($"Attaching local player to {EntManager.ToPrettyString(uid)}.");

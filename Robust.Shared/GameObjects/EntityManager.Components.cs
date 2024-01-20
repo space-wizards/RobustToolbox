@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -34,10 +35,10 @@ namespace Robust.Shared.GameObjects
         private const int EntityCapacity = 1024;
         private const int NetComponentCapacity = 8;
 
-        private static readonly ComponentState DefaultComponentState = new();
+        private static readonly IComponentState DefaultComponentState = new ComponentState();
 
-        private readonly Dictionary<Type, Dictionary<EntityUid, IComponent>> _entTraitDict
-            = new();
+        private FrozenDictionary<Type, Dictionary<EntityUid, IComponent>> _entTraitDict
+            = FrozenDictionary<Type, Dictionary<EntityUid, IComponent>>.Empty;
 
         private Dictionary<EntityUid, IComponent>[] _entTraitArray
             = Array.Empty<Dictionary<EntityUid, IComponent>>();
@@ -59,7 +60,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Already initialized.");
 
             FillComponentDict();
-            _componentFactory.ComponentAdded += OnComponentAdded;
+            _componentFactory.ComponentsAdded += OnComponentsAdded;
         }
 
         /// <summary>
@@ -76,16 +77,21 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void AddComponentRefType(CompIdx type)
+        private void RegisterComponents(IEnumerable<ComponentRegistration> components)
         {
-            var dict = new Dictionary<EntityUid, IComponent>();
-            _entTraitDict.Add(_componentFactory.IdxToType(type), dict);
-            CompIdx.AssignArray(ref _entTraitArray, type, dict);
+            var traitDict = _entTraitDict.ToDictionary();
+            foreach (var reg in components)
+            {
+                var dict = new Dictionary<EntityUid, IComponent>();
+                traitDict.Add(reg.Type, dict);
+                CompIdx.AssignArray(ref _entTraitArray, reg.Idx, dict);
+            }
+            _entTraitDict = traitDict.ToFrozenDictionary();
         }
 
-        private void OnComponentAdded(ComponentRegistration obj)
+        private void OnComponentsAdded(ComponentRegistration[] components)
         {
-            AddComponentRefType(obj.Idx);
+            RegisterComponents(components);
         }
 
         #region Component Management
@@ -109,7 +115,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.AssertOwner(uid, metadata);
             metadata ??= GetComponent<MetaDataComponent>(uid);
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
-            metadata.EntityLifeStage = EntityLifeStage.Initializing;
+            SetLifeStage(metadata, EntityLifeStage.Initializing);
 
             // Initialize() can modify the collection of components. Copy them.
             FixedArray32<IComponent?> compsFixed = default;
@@ -136,7 +142,7 @@ namespace Robust.Shared.GameObjects
 
 #endif
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
-            metadata.EntityLifeStage = EntityLifeStage.Initialized;
+            SetLifeStage(metadata, EntityLifeStage.Initialized);
         }
 
         public void StartComponents(EntityUid uid)
@@ -312,10 +318,8 @@ namespace Robust.Shared.GameObjects
                 metadata ??= MetaQuery.GetComponentInternal(uid);
                 metadata.NetComponents.Add(netId, component);
             }
-            else
-            {
-                component.Networked = false;
-            }
+
+            component.Networked = reg.NetID != null;
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
             ComponentAdded?.Invoke(eventArgs);
@@ -626,7 +630,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent<T>(EntityUid uid)
+        public bool HasComponent<T>(EntityUid uid) where T : IComponent
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
@@ -635,7 +639,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent<T>(EntityUid? uid)
+        public bool HasComponent<T>(EntityUid? uid) where T : IComponent
         {
             return uid.HasValue && HasComponent<T>(uid.Value);
         }
@@ -804,7 +808,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
+        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component) where T : IComponent?
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
@@ -822,7 +826,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component)
+        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component) where T : IComponent?
         {
             if (!uid.HasValue)
             {
@@ -1336,7 +1340,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? session, GameTick fromTick)
+        public IComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? session, GameTick fromTick)
         {
             DebugTools.Assert(component.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {component.GetType()}");
             var getState = new ComponentGetState(session, fromTick);
@@ -1357,13 +1361,9 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FillComponentDict()
         {
-            _entTraitDict.Clear();
+            _entTraitDict = FrozenDictionary<Type, Dictionary<EntityUid, IComponent>>.Empty;
             Array.Fill(_entTraitArray, null);
-
-            foreach (var refType in _componentFactory.GetAllRefTypes())
-            {
-                AddComponentRefType(refType);
-            }
+            RegisterComponents(_componentFactory.GetAllRegistrations());
         }
     }
 

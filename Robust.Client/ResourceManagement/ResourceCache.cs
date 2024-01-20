@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Robust.Client.Audio;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -45,13 +47,13 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         {
             if (useFallback && resource.Fallback != null)
             {
-                Logger.Error(
+                Sawmill.Error(
                     $"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}\n{e}");
                 return GetResource<T>(resource.Fallback.Value, false);
             }
             else
             {
-                Logger.Error(
+                Sawmill.Error(
                     $"Exception while loading resource {typeof(T)} at '{path}', no fallback available\n{Environment.StackTrace}\n{e}");
                 throw;
             }
@@ -81,11 +83,23 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
             cache[path] = resource;
             return true;
         }
-        catch
+        catch (FileNotFoundException)
         {
             resource = null;
             return false;
         }
+        catch (Exception e)
+        {
+            Sawmill.Error($"Exception while loading resource {typeof(T)} at '{path}'\n{e}");
+            resource = null;
+            return false;
+        }
+    }
+
+    public bool TryGetResource(AudioStream stream, [NotNullWhen(true)] out AudioResource? resource)
+    {
+        resource = new AudioResource(stream);
+        return true;
     }
 
     public void ReloadResource<T>(string path) where T : BaseResource, new()
@@ -109,7 +123,7 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         }
         catch (Exception e)
         {
-            Logger.Error($"Exception while reloading resource {typeof(T)} at '{path}'\n{e}");
+            Sawmill.Error($"Exception while reloading resource {typeof(T)} at '{path}'\n{e}");
             throw;
         }
     }

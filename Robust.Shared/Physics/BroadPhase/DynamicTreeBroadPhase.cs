@@ -71,7 +71,7 @@ public sealed class DynamicTreeBroadPhase : IBroadPhase
 
     public IEnumerable<FixtureProxy> QueryAabb(List<FixtureProxy> proxies, Box2 aabb, bool approx = false)
     {
-        QueryAabb(ref proxies, (ref List<FixtureProxy> lst, in FixtureProxy i) =>
+        QueryAabb(ref proxies, static (ref List<FixtureProxy> lst, in FixtureProxy i) =>
         {
             lst.Add(i);
             return true;
@@ -89,7 +89,7 @@ public sealed class DynamicTreeBroadPhase : IBroadPhase
     {
         var tuple = (state, _tree, callback, point, approx, _extractAabb);
         _tree.Query(ref tuple,
-            (ref (TState state, B2DynamicTree<FixtureProxy> tree, DynamicTree<FixtureProxy>.QueryCallbackDelegate<TState> callback, Vector2 point, bool approx, DynamicTree<FixtureProxy>.ExtractAabbDelegate extract) tuple,
+            static (ref (TState state, B2DynamicTree<FixtureProxy> tree, DynamicTree<FixtureProxy>.QueryCallbackDelegate<TState> callback, Vector2 point, bool approx, DynamicTree<FixtureProxy>.ExtractAabbDelegate extract) tuple,
                 DynamicTree.Proxy proxy) =>
             {
                 var item = tuple.tree.GetUserData(proxy)!;
@@ -112,7 +112,7 @@ public sealed class DynamicTreeBroadPhase : IBroadPhase
     {
         var list = new List<FixtureProxy>();
 
-        QueryPoint(ref list, (ref List<FixtureProxy> list, in FixtureProxy i) =>
+        QueryPoint(ref list, static (ref List<FixtureProxy> list, in FixtureProxy i) =>
         {
             list.Add(i);
             return true;

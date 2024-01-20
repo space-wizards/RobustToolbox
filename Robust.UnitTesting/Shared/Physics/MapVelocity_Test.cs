@@ -38,6 +38,8 @@ namespace Robust.UnitTesting.Shared.Physics
             var system = entityManager.EntitySysManager;
             var physicsSys = system.GetEntitySystem<SharedPhysicsSystem>();
             var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
+            var traversal = entityManager.System<SharedGridTraversalSystem>();
+            traversal.Enabled = false;
 
             await server.WaitAssertion(() =>
             {
@@ -93,6 +95,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(velocities.Item1, Is.Approximately(linearVelocity, 1e-6));
                 Assert.That(velocities.Item2, Is.Approximately(angularVelocity, 1e-6));
             });
+            traversal.Enabled = true;
         }
 
         // Check that if something has more than one parent, the velocities are properly added
@@ -107,6 +110,8 @@ namespace Robust.UnitTesting.Shared.Physics
             var system = entityManager.EntitySysManager;
             var physicsSys = system.GetEntitySystem<SharedPhysicsSystem>();
             var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
+            var traversal = entityManager.System<SharedGridTraversalSystem>();
+            traversal.Enabled = false;
 
             await server.WaitAssertion(() =>
             {
@@ -166,6 +171,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(velocities.Item1, Is.Approximately(linearVelocity, 1e-6));
                 Assert.That(velocities.Item2, Is.Approximately(angularVelocity, 1e-6));
             });
+        traversal.Enabled = true;
         }
     }
 }

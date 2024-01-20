@@ -372,7 +372,7 @@ namespace Robust.Shared.Map.Components
             FullGridData = fullGridData;
         }
 
-        public void ApplyToFullState(ComponentState fullState)
+        public void ApplyToFullState(IComponentState fullState)
         {
             var state = (MapGridComponentState)fullState;
             DebugTools.Assert(!FullState && state.FullState);
@@ -391,7 +391,7 @@ namespace Robust.Shared.Map.Components
             }
         }
 
-        public ComponentState CreateNewFullState(ComponentState fullState)
+        public IComponentState CreateNewFullState(IComponentState fullState)
         {
             var state = (MapGridComponentState)fullState;
             DebugTools.Assert(!FullState && state.FullState);

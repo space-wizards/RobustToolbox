@@ -90,7 +90,7 @@ entitiesImmutableList:
             var node = stream.Documents[0].RootNode.ToDataNode();
             var definition = Serialization.Read<PrototypeIdListSerializerTestDataDefinition>(node, notNullableOverride: true);
 
-            Assert.NotNull(definition);
+            Assert.That(definition, Is.Not.Null);
 
             Assert.That(definition!.EntitiesList.Count, Is.EqualTo(1));
             Assert.That(definition.EntitiesList[0], Is.EqualTo(TestEntityId));
@@ -111,16 +111,16 @@ entitiesImmutableList:
             var validSequence = new SequenceDataNode(TestEntityId);
 
             var validations = Serialization.ValidateNode<List<string>, SequenceDataNode, PrototypeIdListSerializer<EntityPrototype>>(validSequence);
-            Assert.True(validations.Valid);
+            Assert.That(validations.Valid);
 
             validations = Serialization.ValidateNode<List<string>, SequenceDataNode, PrototypeIdListSerializer<EntityPrototype>>(validSequence);
-            Assert.True(validations.Valid);
+            Assert.That(validations.Valid);
 
             validations = Serialization.ValidateNode<List<string>, SequenceDataNode, PrototypeIdListSerializer<EntityPrototype>>(validSequence);
-            Assert.True(validations.Valid);
+            Assert.That(validations.Valid);
 
             validations = Serialization.ValidateNode<List<string>, SequenceDataNode, PrototypeIdListSerializer<EntityPrototype>>(validSequence);
-            Assert.True(validations.Valid);
+            Assert.That(validations.Valid);
         }
 
         [Test]
@@ -129,16 +129,16 @@ entitiesImmutableList:
             var invalidSequence = new SequenceDataNode(TestInvalidEntityId);
 
             var validations = Serialization.ValidateNode<List<string>, SequenceDataNode, PrototypeIdListSerializer<EntityPrototype>>(invalidSequence);
-            Assert.False(validations.Valid);
+            Assert.That(validations.Valid, Is.False);
 
             validations = Serialization.ValidateNode<List<string>, SequenceDataNode, PrototypeIdListSerializer<EntityPrototype>>(invalidSequence);
-            Assert.False(validations.Valid);
+            Assert.That(validations.Valid, Is.False);
 
             validations = Serialization.ValidateNode<List<string>, SequenceDataNode, PrototypeIdListSerializer<EntityPrototype>>(invalidSequence);
-            Assert.False(validations.Valid);
+            Assert.That(validations.Valid, Is.False);
 
             validations = Serialization.ValidateNode<List<string>, SequenceDataNode, PrototypeIdListSerializer<EntityPrototype>>(invalidSequence);
-            Assert.False(validations.Valid);
+            Assert.That(validations.Valid, Is.False);
         }
     }
 

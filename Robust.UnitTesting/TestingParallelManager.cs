@@ -7,7 +7,7 @@ namespace Robust.UnitTesting;
 /// <summary>
 /// Only allows 1 parallel process for testing purposes.
 /// </summary>j
-public sealed class TestingParallelManager : IParallelManager
+public sealed class TestingParallelManager : IParallelManagerInternal
 {
     public event Action? ParallelCountChanged;
     public int ParallelProcessCount => 1;
@@ -51,5 +51,9 @@ public sealed class TestingParallelManager : IParallelManager
         var ev = new ManualResetEventSlim();
         ev.Set();
         return ev.WaitHandle;
+    }
+
+    public void Initialize()
+    {
     }
 }

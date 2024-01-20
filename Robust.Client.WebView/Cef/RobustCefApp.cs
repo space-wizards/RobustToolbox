@@ -31,10 +31,12 @@ namespace Robust.Client.WebView.Cef
             // Disable zygote on Linux.
             commandLine.AppendSwitch("--no-zygote");
 
-            // Work around https://bitbucket.org/chromiumembedded/cef/issues/3213/ozone-egl-initialization-does-not-have
+            // Work around https://github.com/chromiumembedded/cef/issues/3213
             // Desktop GL force makes Chromium not try to load its own ANGLE/Swiftshader so load paths aren't problematic.
-            if (OperatingSystem.IsLinux())
-                commandLine.AppendSwitch("--use-gl", "desktop");
+            // UPDATE: That bug got fixed and now this workaround breaks CEF.
+            // Keeping all this comment history in case I ever wanan remember what the `--use-gl` flag is.
+            //if (OperatingSystem.IsLinux())
+            //    commandLine.AppendSwitch("--use-gl", "desktop");
 
             // commandLine.AppendSwitch("--single-process");
 

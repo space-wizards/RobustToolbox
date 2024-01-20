@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
@@ -294,27 +295,22 @@ namespace Robust.Server.Scripting
                 loader: TextLoader.From(TextAndVersion.Create(SourceText.From(message.Code), VersionStamp.Create()))
             ));
 
-            var results = await CompletionService
-                .GetService(document)
-                .GetCompletionsAsync(document, message.Cursor);
+            var results = await (CompletionService
+                .GetService(document)?
+                .GetCompletionsAsync(document, message.Cursor) ?? Task.FromResult(CompletionList.Empty));
 
-            if (results is not null)
-            {
-                var ires = ImmutableArray.CreateBuilder<LiteResult>();
-                foreach  (var r in results.Items)
-                    ires.Add(new LiteResult(
-                                displayText: r.DisplayText,
-                                displayTextPrefix: r.DisplayTextPrefix,
-                                displayTextSuffix: r.DisplayTextSuffix,
-                                inlineDescription: r.InlineDescription,
-                                tags: r.Tags,
-                                properties: r.Properties
-                    ));
+            var ires = ImmutableArray.CreateBuilder<LiteResult>();
+            foreach  (var r in results.ItemsList)
+                ires.Add(new LiteResult(
+                            displayText: r.DisplayText,
+                            displayTextPrefix: r.DisplayTextPrefix,
+                            displayTextSuffix: r.DisplayTextSuffix,
+                            inlineDescription: r.InlineDescription,
+                            tags: r.Tags,
+                            properties: r.Properties
+                ));
 
-                replyMessage.Results = ires.ToImmutable();
-            }
-            else
-                replyMessage.Results = ImmutableArray<LiteResult>.Empty;
+            replyMessage.Results = ires.ToImmutable();
 
             _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
         }

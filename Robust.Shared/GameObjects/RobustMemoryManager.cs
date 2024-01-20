@@ -13,10 +13,10 @@ internal sealed class RobustMemoryManager
     // Let's be real this is a bandaid for pooling bullshit at an engine level and I don't know what
     // good memory management looks like for PVS or the RobustSerializer.
 
-    private static readonly RecyclableMemoryStreamManager MemStreamManager = new()
+    private static readonly RecyclableMemoryStreamManager MemStreamManager = new(new RecyclableMemoryStreamManager.Options
     {
         ThrowExceptionOnToArray = true,
-    };
+    });
 
     public RobustMemoryManager()
     {

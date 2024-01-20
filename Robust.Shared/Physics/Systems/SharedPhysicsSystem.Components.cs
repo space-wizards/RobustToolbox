@@ -202,7 +202,7 @@ public partial class SharedPhysicsSystem
     /// <summary>
     /// Completely resets a dynamic body.
     /// </summary>
-    public void ResetDynamics(PhysicsComponent body)
+    public void ResetDynamics(PhysicsComponent body, bool dirty = true)
     {
         var updated = false;
 
@@ -230,7 +230,7 @@ public partial class SharedPhysicsSystem
             updated = true;
         }
 
-        if (updated)
+        if (updated && dirty)
             Dirty(body);
     }
 
@@ -322,7 +322,7 @@ public partial class SharedPhysicsSystem
         body.AngularVelocity = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     /// <summary>
@@ -347,7 +347,7 @@ public partial class SharedPhysicsSystem
         body.LinearVelocity = velocity;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     public void SetAngularDamping(PhysicsComponent body, float value, bool dirty = true)
@@ -380,12 +380,16 @@ public partial class SharedPhysicsSystem
 
     public void SetAwake(Entity<PhysicsComponent> ent, bool value, bool updateSleepTime = true)
     {
-        var uid = ent.Owner;
-        var body = ent.Comp;
-        if (body.Awake == value)
-            return;
+        var (uid, body) = ent;
+        var canWake = body.BodyType != BodyType.Static && body.CanCollide;
 
-        if (value && (body.BodyType == BodyType.Static || !body.CanCollide))
+        if (body.Awake == value)
+        {
+            DebugTools.Assert(!body.Awake || canWake);
+            return;
+        }
+
+        if (value && !canWake)
             return;
 
         body.Awake = value;
@@ -399,18 +403,12 @@ public partial class SharedPhysicsSystem
         {
             var ev = new PhysicsSleepEvent(uid, body);
             RaiseLocalEvent(uid, ref ev, true);
-
-            // Reset the sleep timer.
-            if (ev.Cancelled)
-            {
-                if (updateSleepTime)
-                    SetSleepTime(body, 0);
-
-                return;
-            }
-
-            ResetDynamics(body);
+            ResetDynamics(body, dirty: false);
         }
+
+        // Update wake system last, if sleeping but still colliding.
+        if (!value && body.CanCollide)
+            _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
 
         if (updateSleepTime)
             SetSleepTime(body, 0);
@@ -630,7 +628,7 @@ public partial class SharedPhysicsSystem
 
     #endregion
 
-    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null, EntityQuery<TransformComponent>? xformQuery = null)
+    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
     {
         if (!_xformQuery.Resolve(uid, ref xform))
             return Physics.Transform.Empty;

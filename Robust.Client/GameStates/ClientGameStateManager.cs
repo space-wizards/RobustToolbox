@@ -49,16 +49,16 @@ namespace Robust.Client.GameStates
         // Game state dictionaries that get used every tick.
         private readonly Dictionary<EntityUid, (NetEntity NetEntity, MetaDataComponent Meta, bool EnteringPvs, GameTick LastApplied, EntityState? curState, EntityState? nextState)> _toApply = new();
         private readonly Dictionary<NetEntity, EntityState> _toCreate = new();
-        private readonly Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)> _compStateWork = new();
+        private readonly Dictionary<ushort, (IComponent Component, IComponentState? curState, IComponentState? nextState)> _compStateWork = new();
         private readonly Dictionary<EntityUid, HashSet<Type>> _pendingReapplyNetStates = new();
         private readonly HashSet<NetEntity> _stateEnts = new();
         private readonly List<EntityUid> _toDelete = new();
         private readonly List<IComponent> _toRemove = new();
-        private readonly Dictionary<NetEntity, Dictionary<ushort, ComponentState>> _outputData = new();
+        private readonly Dictionary<NetEntity, Dictionary<ushort, IComponentState>> _outputData = new();
         private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
 
-        private readonly ObjectPool<Dictionary<ushort, ComponentState>> _compDataPool =
-            new DefaultObjectPool<Dictionary<ushort, ComponentState>>(new DictPolicy<ushort, ComponentState>(), 256);
+        private readonly ObjectPool<Dictionary<ushort, IComponentState>> _compDataPool =
+            new DefaultObjectPool<Dictionary<ushort, IComponentState>>(new DictPolicy<ushort, IComponentState>(), 256);
 
         private uint _metaCompNetId;
 
@@ -257,7 +257,7 @@ namespace Robust.Client.GameStates
         public void UpdateFullRep(GameState state, bool cloneDelta = false)
             => _processor.UpdateFullRep(state, cloneDelta);
 
-        public Dictionary<NetEntity, Dictionary<ushort, ComponentState>> GetFullRep()
+        public Dictionary<NetEntity, Dictionary<ushort, IComponentState>> GetFullRep()
             => _processor.GetFullRep();
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
@@ -343,7 +343,7 @@ namespace Robust.Client.GameStates
                 }
 
                 // If we were waiting for a new state, we are now applying it.
-                if (_processor.WaitingForFull)
+                if (curState.FromSequence == GameTick.Zero)
                 {
                     _processor.OnFullStateReceived();
                     _timing.LastProcessedTick = curState.ToSequence;
@@ -351,7 +351,10 @@ namespace Robust.Client.GameStates
                     PartialStateReset(curState, true);
                 }
                 else
+                {
+                    DebugTools.Assert(!_processor.WaitingForFull);
                     _timing.LastProcessedTick += 1;
+                }
 
                 _timing.CurTick = _timing.LastRealTick = _timing.LastProcessedTick;
 
@@ -532,7 +535,6 @@ namespace Robust.Client.GameStates
             using var __ = _timing.StartStateApplicationArea();
 
             // This is terrible, and I hate it. This also needs to run even when prediction is disabled.
-            _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
             _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
 
             if (!PredictionNeedsResetting)
@@ -777,15 +779,13 @@ namespace Robust.Client.GameStates
                     newMeta.LastStateApplied = curState.ToSequence;
 
                     // Check if there's any component states awaiting this entity.
-                    if (_entityManager.PendingNetEntityStates.TryGetValue(es.NetEntity, out var value))
+                    if (_entityManager.PendingNetEntityStates.Remove(es.NetEntity, out var value))
                     {
                         foreach (var (type, owner) in value)
                         {
                             var pending = _pendingReapplyNetStates.GetOrNew(owner);
                             pending.Add(type);
                         }
-
-                        _entityManager.PendingNetEntityStates.Remove(es.NetEntity);
                     }
                 }
 
@@ -848,6 +848,17 @@ namespace Robust.Client.GameStates
                 // Original entity referencing the NetEntity may have been deleted.
                 if (!metas.TryGetComponent(uid, out var meta))
                     continue;
+
+                // It may also have been queued for deletion, in which case its last server state entry has already been removed.
+                // I love me some spaghetti order-of-operation dependent code
+
+                if (!_processor._lastStateFullRep.ContainsKey(meta.NetEntity))
+                {
+                    DebugTools.Assert(curState.EntityDeletions.Value.Contains(meta.NetEntity));
+                    continue;
+                }
+
+                DebugTools.Assert(!curState.EntityDeletions.Value.Contains(meta.NetEntity));
 
                 // State already being re-applied so don't bulldoze it.
                 ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_toApply, uid, out var exists);
@@ -982,16 +993,15 @@ namespace Robust.Client.GameStates
                 xformSys.DetachParentToNull(ent, xform);
 
                 // Then detach all children.
-                var childEnumerator = xform.ChildEnumerator;
-                while (childEnumerator.MoveNext(out var child))
+                foreach (var child in xform._children)
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
+                    xformSys.DetachParentToNull(child, xforms.GetComponent(child), xform);
 
                     if (deleteClientChildren
                         && !deleteClientEntities // don't add duplicates
-                        && _entities.IsClientSide(child.Value))
+                        && _entities.IsClientSide(child))
                     {
-                        _toDelete.Add(child.Value);
+                        _toDelete.Add(child);
                     }
                 }
 
@@ -1039,7 +1049,7 @@ namespace Robust.Client.GameStates
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
+                    xformSys.DetachParentToNull(child, xforms.GetComponent(child), xform);
                 }
 
                 // Finally, delete the entity.
@@ -1430,7 +1440,7 @@ namespace Robust.Client.GameStates
             void _recursiveRemoveState(NetEntity netEntity, TransformComponent xform, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery)
             {
                 _processor._lastStateFullRep.Remove(netEntity);
-                foreach (var child in xform.ChildEntities)
+                foreach (var child in xform._children)
                 {
                     if (xformQuery.TryGetComponent(child, out var childXform) &&
                         metaQuery.TryGetComponent(child, out var childMeta))

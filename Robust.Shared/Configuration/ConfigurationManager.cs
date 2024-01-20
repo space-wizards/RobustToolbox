@@ -799,11 +799,5 @@ namespace Robust.Shared.Configuration
         public InvalidConfigurationException(string message, Exception inner) : base(message, inner)
         {
         }
-
-        protected InvalidConfigurationException(
-            System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context)
-        {
-        }
     }
 }

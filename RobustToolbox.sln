@@ -23,8 +23,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetSerializer", "NetSeriali
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetSerializer", "NetSerializer\NetSerializer\NetSerializer.csproj", "{ECBCE1D8-05C2-4881-9446-197C4C8E1C14}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.Physics", "Robust.Physics\Robust.Physics.csproj", "{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Robust.LoaderApi", "Robust.LoaderApi", "{805C8FD2-0C32-4DA8-BC4B-143BA5D48FF4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.LoaderApi", "Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj", "{4FC5049F-AEEC-4DC0-9F4D-EB927AAB4F15}"
@@ -135,14 +133,6 @@ Global
 		{ECBCE1D8-05C2-4881-9446-197C4C8E1C14}.Release|Any CPU.Build.0 = Release|Any CPU
 		{ECBCE1D8-05C2-4881-9446-197C4C8E1C14}.Release|x64.ActiveCfg = Release|Any CPU
 		{ECBCE1D8-05C2-4881-9446-197C4C8E1C14}.Release|x64.Build.0 = Release|Any CPU
-		{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}.Debug|x64.Build.0 = Debug|Any CPU
-		{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}.Release|Any CPU.Build.0 = Release|Any CPU
-		{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}.Release|x64.ActiveCfg = Release|Any CPU
-		{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}.Release|x64.Build.0 = Release|Any CPU
 		{4FC5049F-AEEC-4DC0-9F4D-EB927AAB4F15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4FC5049F-AEEC-4DC0-9F4D-EB927AAB4F15}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FC5049F-AEEC-4DC0-9F4D-EB927AAB4F15}.Debug|x64.ActiveCfg = Debug|Any CPU

@@ -15,13 +15,18 @@ namespace Robust.Shared.Prototypes;
 [Virtual]
 public class PrototypeAttribute : Attribute
 {
-    private readonly string type;
-    public string Type => type;
+    public string? Type { get; internal set; }
     public readonly int LoadPriority = 1;
 
-    public PrototypeAttribute(string type, int loadPriority = 1)
+    public PrototypeAttribute(string? type = null, int loadPriority = 1)
     {
-        this.type = type;
+        Type = type;
+        LoadPriority = loadPriority;
+    }
+    
+    public PrototypeAttribute(int loadPriority)
+    {
+        Type = null;
         LoadPriority = loadPriority;
     }
 }

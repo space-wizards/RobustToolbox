@@ -18,10 +18,6 @@ public class PrototypeLoadException : Exception
     public PrototypeLoadException(string message, Exception inner) : base(message, inner)
     {
     }
-
-    public PrototypeLoadException(SerializationInfo info, StreamingContext context) : base(info, context)
-    {
-    }
 }
 
 [Serializable]

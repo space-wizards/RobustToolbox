@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Numerics;
@@ -88,6 +89,8 @@ public sealed class TextEdit : Control
     // Debug overlay stuff.
     internal bool DebugOverlay;
     private Vector2? _lastDebugMousePos;
+
+    public event Action<TextEditEventArgs>? OnTextChanged;
 
     public TextEdit()
     {
@@ -228,7 +231,7 @@ public sealed class TextEdit : Control
     private bool IsPlaceholderVisible => Rope.IsNullOrEmpty(_textRope) && _placeholder != null;
 
     // Table used by cursor movement system, see below.
-    private static readonly Dictionary<BoundKeyFunction, MoveType> MoveTypeMap = new()
+    private static readonly FrozenDictionary<BoundKeyFunction, MoveType> MoveTypeMap = new Dictionary<BoundKeyFunction, MoveType>()
     {
         // @formatter:off
         { EngineKeyFunctions.TextCursorLeft,            MoveType.Left        },
@@ -249,7 +252,7 @@ public sealed class TextEdit : Control
         { EngineKeyFunctions.TextCursorSelectBegin,     MoveType.BeginOfLine | MoveType.SelectFlag },
         { EngineKeyFunctions.TextCursorSelectEnd,       MoveType.EndOfLine   | MoveType.SelectFlag },
         // @formatter:on
-    };
+    }.ToFrozenDictionary();
 
     protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
     {
@@ -314,7 +317,7 @@ public sealed class TextEdit : Control
                 if (changed)
                 {
                     _selectionStart = _cursorPosition;
-                    // OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                    OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
                     // _updatePseudoClass();
                     // OnBackspace?.Invoke(new LineEditBackspaceEventArgs(oldText, _text, cursor, selectStart));
                 }
@@ -348,7 +351,7 @@ public sealed class TextEdit : Control
                 if (changed)
                 {
                     _selectionStart = _cursorPosition;
-                    // OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                    OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
                     // _updatePseudoClass();
                 }
 
@@ -381,7 +384,10 @@ public sealed class TextEdit : Control
                 }
 
                 if (changed)
+                {
                     _selectionStart = _cursorPosition;
+                    OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
+                }
 
                 InvalidateHorizontalCursorPos();
                 args.Handle();
@@ -410,7 +416,10 @@ public sealed class TextEdit : Control
                 }
 
                 if (changed)
+                {
                     _selectionStart = _cursorPosition;
+                    OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
+                }
 
                 InvalidateHorizontalCursorPos();
                 args.Handle();
@@ -747,6 +756,7 @@ public sealed class TextEdit : Control
 
             var startPos = _cursorPosition;
             TextRope = Rope.Insert(TextRope, startPos.Index, ev.Text);
+            OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
 
             _selectionStart = _cursorPosition = new CursorPos(startPos.Index + startChars, LineBreakBias.Top);
             _imeData = (startPos, ev.Text.Length);
@@ -843,6 +853,7 @@ public sealed class TextEdit : Control
         var upper = SelectionUpper.Index;
 
         TextRope = Rope.ReplaceSubstring(TextRope, lower, upper - lower, text);
+        OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
 
         _selectionStart = _cursorPosition = new CursorPos(lower + text.Length, LineBreakBias.Top);
         // OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
@@ -1438,6 +1449,12 @@ public sealed class TextEdit : Control
 
         _clyde.TextInputStop();
         AbortIme(delete: false);
+    }
+
+    public sealed class TextEditEventArgs(TextEdit control, Rope.Node textRope) : EventArgs
+    {
+        public TextEdit Control { get; } = control;
+        public Rope.Node TextRope { get; } = textRope;
     }
 
     /// <summary>

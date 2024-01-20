@@ -7,10 +7,4 @@ namespace Robust.Shared.Physics;
 public readonly record struct PhysicsWakeEvent(EntityUid Entity, PhysicsComponent Body);
 
 [ByRefEvent]
-public record struct PhysicsSleepEvent(EntityUid Entity, PhysicsComponent Body)
-{
-    /// <summary>
-    /// Marks the entity as still being awake and cancels sleeping.
-    /// </summary>
-    public bool Cancelled;
-};
+public record struct PhysicsSleepEvent(EntityUid Entity, PhysicsComponent Body);

@@ -156,6 +156,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         OpenInterfaces.GetOrNew(session).Add(bui);
         RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Owner, session));
+        if (!bui._subscribedSessions.Contains(session))
+        {
+            // This can happen if Content closed a BUI from inside the event handler.
+            // This will already have caused a redundant close event to be sent to the client, but whatever.
+            // Just avoid doing the rest to avoid any state corruption shit.
+            return false;
+        }
 
         RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new OpenBoundInterfaceMessage(), bui.UiKey), session.Channel);
 

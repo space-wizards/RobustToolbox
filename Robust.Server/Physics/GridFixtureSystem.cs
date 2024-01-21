@@ -329,7 +329,7 @@ namespace Robust.Server.Physics
                             var bounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
 
                             _entSet.Clear();
-                            _lookup.GetLocalEntitiesIntersecting(oldGridUid, tilePos, _entSet, 0f, LookupFlags.All | ~LookupFlags.Uncontained);
+                            _lookup.GetLocalEntitiesIntersecting(oldGridUid, tilePos, _entSet, 0f, LookupFlags.All | ~LookupFlags.Uncontained | LookupFlags.Approximate);
 
                             foreach (var ent in _entSet)
                             {

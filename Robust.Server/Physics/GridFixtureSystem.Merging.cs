@@ -15,6 +15,8 @@ public sealed partial class GridFixtureSystem
     /// Merges GridB into GridA.
     /// </summary>
     /// <param name="offset">Origin of GridB relative to GridA</param>
+    /// <param name="rotation">Rotation to apply to GridB when being merged.
+    /// Note that the rotation is applied before the offset so the offset itself will be rotated.</param>
     public void Merge(
         EntityUid gridAUid,
         EntityUid gridBUid,
@@ -33,6 +35,8 @@ public sealed partial class GridFixtureSystem
     /// Merges GridB into GridA.
     /// </summary>
     /// <param name="offset">Origin of GridB relative to GridA</param>
+    /// <param name="matrix">Matrix to apply to gridB when being merged.
+    /// Note that rotation is applied first and then offset so the offset itself will be rotated.</param>
     public void Merge(
         EntityUid gridAUid,
         EntityUid gridBUid,

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Add the ability to merge grids via GridFixtureSystem.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 207.1.0
+
+### New features
+
+* Add the ability to merge grids via GridFixtureSystem.
 
 
 ## 207.0.0

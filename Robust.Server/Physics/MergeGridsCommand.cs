@@ -1,19 +1,20 @@
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Toolshed;
 
 namespace Robust.Server.Physics;
 
-public sealed class MergeGridsCommand : IConsoleCommand
+public sealed class MergeGridsCommand : LocalizedCommands
 {
     [Dependency] private readonly IEntityManager _entManager = default!;
 
-    public string Command => "merge_grids";
-    public string Description => $"Combines 2 grids into 1 grid";
-    public string Help => $"{Command} <gridUid1> <gridUid2> <offsetX> <offsetY> [rotation]";
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    public override string Command => "merge_grids";
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length < 4)
         {
@@ -51,5 +52,18 @@ public sealed class MergeGridsCommand : IConsoleCommand
         var offset = new Vector2i(x, y);
         var fixtureSystem = _entManager.System<GridFixtureSystem>();
         fixtureSystem.Merge(gridAUid, gridBUid, offset, rotation, gridA: gridA, gridB: gridB);
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        return args.Length switch
+        {
+            1 => CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[0], _entManager), Loc.GetString("cmd-merge_grids-hintA")),
+            2 => CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[1], _entManager), Loc.GetString("cmd-merge_grids-hintB")),
+            3 => CompletionResult.FromHint(Loc.GetString("cmd-merge_grids-xOffset")),
+            4 => CompletionResult.FromHint(Loc.GetString("cmd-merge_grids-yOffset")),
+            5 => CompletionResult.FromHint(Loc.GetString("cmd-merge_grids-angle")),
+            _ => CompletionResult.Empty
+        };
     }
 }

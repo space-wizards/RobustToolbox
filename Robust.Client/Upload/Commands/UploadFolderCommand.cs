@@ -52,7 +52,6 @@ public sealed class UploadFolderCommand : IConsoleCommand
         //Grab all files in specified folder and upload them
         foreach (var filepath in _resourceManager.UserData.Find($"{folderPath.ToRelativePath()}/").files )
         {
-
             await using var filestream = _resourceManager.UserData.Open(filepath, FileMode.Open);
             {
                 var sizeLimit = _configManager.GetCVar(CVars.ResourceUploadingLimitMb);
@@ -64,11 +63,11 @@ public sealed class UploadFolderCommand : IConsoleCommand
 
                 var data = filestream.CopyToArray();
 
-                var msg = new NetworkResourceUploadMessage();
-                if (msg == null)
-                    throw new ArgumentNullException(nameof(msg));
-                msg.RelativePath = filepath.RelativeTo(BaseUploadFolderPath);
-                msg.Data = data;
+                var msg = new NetworkResourceUploadMessage
+                {
+                    RelativePath = filepath.RelativeTo(BaseUploadFolderPath),
+                    Data = data
+                };
 
                 _netMan.ClientSendMessage(msg);
                 fileCount++;

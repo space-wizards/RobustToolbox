@@ -290,7 +290,7 @@ namespace Robust.Server.Physics
                         }
                     }
 
-                    newGrid.Comp.SetTiles(tileData);
+                    _maps.SetTiles(newGrid.Owner, newGrid.Comp, tileData);
                     DebugTools.Assert(_mapManager.IsGrid(newGridUid), "A split grid had no tiles?");
 
                     // Set tiles on new grid + update anchored entities
@@ -329,7 +329,7 @@ namespace Robust.Server.Physics
                             var bounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
 
                             _entSet.Clear();
-                            _lookup.GetLocalEntitiesIntersecting(oldGridUid, tilePos, _entSet, 0f, LookupFlags.Dynamic | LookupFlags.Sundries);
+                            _lookup.GetLocalEntitiesIntersecting(oldGridUid, tilePos, _entSet, 0f, LookupFlags.All | ~LookupFlags.Uncontained);
 
                             foreach (var ent in _entSet)
                             {

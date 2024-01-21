@@ -1348,8 +1348,27 @@ public abstract partial class SharedMapSystem
 
     public EntityCoordinates GridTileToLocal(EntityUid uid, MapGridComponent grid, Vector2i gridTile)
     {
-        return new(uid,
-            new Vector2(gridTile.X * grid.TileSize + (grid.TileSize / 2f), gridTile.Y * grid.TileSize + (grid.TileSize / 2f)));
+        var position = TileToVector(uid, grid, gridTile);
+
+        return new(uid, position);
+    }
+
+    /// <summary>
+    /// Turns a gridtile into a Vector2, accounting for tile size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 TileToVector(EntityUid uid, MapGridComponent grid, Vector2i gridTile)
+    {
+        return TileToVector((uid, grid), gridTile);
+    }
+
+    /// <summary>
+    /// Turns a gridtile into a Vector2, accounting for tile size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 TileToVector(Entity<MapGridComponent> grid, Vector2i gridTile)
+    {
+        return new Vector2(gridTile.X * grid.Comp.TileSize, gridTile.Y * grid.Comp.TileSize) + grid.Comp.TileSizeHalfVector;
     }
 
     public Vector2 GridTileToWorldPos(EntityUid uid, MapGridComponent grid, Vector2i gridTile)

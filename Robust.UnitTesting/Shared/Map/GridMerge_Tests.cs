@@ -11,6 +11,7 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Map;
 
+[Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
 [TestFixture]
 public sealed class GridMerge_Tests
 {
@@ -28,7 +29,8 @@ public sealed class GridMerge_Tests
     {
         new TestCaseData(new Vector2i(-1, 0), Angle.Zero, new Box2(-1f, 0f, 1f, 3f)),
         new TestCaseData(new Vector2i(0, 3), Angle.Zero, new Box2(0f, 0f, 1f, 6f)),
-        new TestCaseData(new Vector2i(1, 1), Angle.FromDegrees(90), new Box2(-3f, 0f, 1f, 3f)),
+        new TestCaseData(new Vector2i(0, 1), Angle.FromDegrees(90), new Box2(-3f, 0f, 1f, 3f)),
+        new TestCaseData(new Vector2i(1, 3), Angle.FromDegrees(-90), new Box2(0f, 0f, 4f, 3f)),
     };
 
     /// <summary>

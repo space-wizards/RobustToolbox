@@ -11,6 +11,11 @@ namespace Robust.Server.Physics;
 
 public sealed partial class GridFixtureSystem
 {
+    /*
+     * Something to keep in mind is that they rotate around the origin of a tile (e.g. 0,0), so a rotation of -90 degrees
+     * moves the origin to 0, -1.
+     */
+
     /// <summary>
     /// Merges GridB into GridA.
     /// </summary>

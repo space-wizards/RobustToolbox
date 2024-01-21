@@ -10,6 +10,7 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Map;
 
+[Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
 [TestFixture]
 public sealed class GridSplit_Tests
 {

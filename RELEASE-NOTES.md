@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add the ability to merge grids via GridFixtureSystem.
 
 ### Bugfixes
 

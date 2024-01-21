@@ -263,14 +263,17 @@ namespace Robust.Shared.Maths
             switch (degrees)
             {
                 case -270:
+                    return new Angle(Math.PI * -1.5);
                 case 90:
                     return new Angle(Math.PI / 2);
                 case -180:
+                    return new Angle(-Math.PI);
                 case 180:
                     return new Angle(Math.PI);
                 case 270.0:
-                case -90:
                     return new Angle(Math.PI * 1.5);
+                case -90:
+                    return new Angle(Math.PI / -2);
                 default:
                     return new(MathHelper.DegreesToRadians(degrees));
             }

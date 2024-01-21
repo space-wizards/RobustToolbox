@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add LocalToTile method to SharedMapSystem for converting grid Vector2i tiles to Vector2s that accounts for the grid's TileSize.
 
 ### Bugfixes
 

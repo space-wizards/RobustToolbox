@@ -53,6 +53,7 @@ internal partial class Clyde
             SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
             SDL_SetHint(SDL_HINT_IME_SUPPORT_EXTENDED_TEXT, "1");
             SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+            // SDL_GL_SetSwapInterval(-1)
 
             var res = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
             if (res < 0)
@@ -164,7 +165,7 @@ internal partial class Clyde
             {
                 obj._sawmillSdl2.Info(Environment.StackTrace);
             }
-            
+
             var categoryName = SdlLogCategoryName(category);
             obj._sawmillSdl2.Log(level, $"[{categoryName}] {msg}");
         }

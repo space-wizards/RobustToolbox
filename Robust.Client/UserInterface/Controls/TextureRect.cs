@@ -210,11 +210,11 @@ namespace Robust.Client.UserInterface.Controls
                 case StretchMode.Tile:
                 // TODO: Implement Tile.
                 case StretchMode.Keep:
-                    return UIBox2.FromDimensions(Vector2.Zero, TextureSizeTarget * UIScale);
+                    return UIBox2.FromDimensions(Vector2.Zero, TextureSizeTarget).Scale(UIScale);
                 case StretchMode.KeepCentered:
                 {
-                    var position = (PixelSize - TextureSizeTarget * UIScale) / 2;
-                    return UIBox2.FromDimensions(position, TextureSizeTarget * UIScale);
+                    var position = (PixelSize - TextureSizeTarget) / 2;
+                    return UIBox2.FromDimensions(position, TextureSizeTarget).Scale(UIScale);
                 }
 
                 case StretchMode.KeepAspect:
@@ -236,7 +236,7 @@ namespace Robust.Client.UserInterface.Controls
                         position = (PixelSize - size) / 2;
                     }
 
-                    return UIBox2.FromDimensions(position, size);
+                    return UIBox2.FromDimensions(position, size).Scale(UIScale);
                 }
 
                 case StretchMode.KeepAspectCovered:
@@ -248,7 +248,7 @@ namespace Robust.Client.UserInterface.Controls
                     // Offset inside the actual texture.
                     var texDrawSize = texSize * scale;
                     var offset = (PixelSize - texDrawSize) / 2f;
-                    return UIBox2.FromDimensions(offset, texDrawSize);
+                    return UIBox2.FromDimensions(offset, texDrawSize).Scale(UIScale);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -305,7 +305,7 @@ namespace Robust.Client.UserInterface.Controls
             if (CanShrink || Texture == null)
                 return Vector2.Zero;
 
-            return GetDrawDimensions(Texture).Size;
+            return TextureSizeTarget;
         }
     }
 }

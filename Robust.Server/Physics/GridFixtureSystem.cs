@@ -23,16 +23,16 @@ namespace Robust.Server.Physics
     /// <summary>
     /// Handles generating fixtures for MapGrids.
     /// </summary>
-    public sealed class GridFixtureSystem : SharedGridFixtureSystem
+    public sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IConGroupController _conGroup = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedMapSystem _maps = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
-        private ISawmill _logger = default!;
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, ChunkNodeGroup>> _nodes = new();
 
         /// <summary>
@@ -47,10 +47,19 @@ namespace Robust.Server.Physics
 
         internal bool SplitAllowed = true;
 
+        private HashSet<EntityUid> _entSet = new();
+
+        private EntityQuery<MapGridComponent> _gridQuery;
+        private EntityQuery<PhysicsComponent> _bodyQuery;
+        private EntityQuery<TransformComponent> _xformQuery;
+
         public override void Initialize()
         {
             base.Initialize();
-            _logger = Logger.GetSawmill("gsplit");
+
+            _gridQuery = GetEntityQuery<MapGridComponent>();
+            _bodyQuery = GetEntityQuery<PhysicsComponent>();
+            _xformQuery = GetEntityQuery<TransformComponent>();
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
@@ -197,7 +206,7 @@ namespace Robust.Server.Physics
             }
 
             _isSplitting = true;
-            _logger.Debug($"Started split check for {ToPrettyString(uid)}");
+            Log.Debug($"Started split check for {ToPrettyString(uid)}");
             var splitFrontier = new Queue<ChunkSplitNode>(4);
             var grids = new List<HashSet<ChunkSplitNode>>(1);
 
@@ -234,7 +243,7 @@ namespace Robust.Server.Physics
             // Split time
             if (grids.Count > 1)
             {
-                _logger.Info($"Splitting {ToPrettyString(uid)} into {grids.Count} grids.");
+                Log.Info($"Splitting {ToPrettyString(uid)} into {grids.Count} grids.");
                 var sw = new Stopwatch();
                 sw.Start();
 
@@ -244,13 +253,10 @@ namespace Robust.Server.Physics
                     x.Sum(o => o.Indices.Count)
                         .CompareTo(y.Sum(o => o.Indices.Count)));
 
-                var xformQuery = GetEntityQuery<TransformComponent>();
-                var bodyQuery = GetEntityQuery<PhysicsComponent>();
-                var gridQuery = GetEntityQuery<MapGridComponent>();
-                var oldGridXform = xformQuery.GetComponent(oldGridUid);
-                var (gridPos, gridRot) = _xformSystem.GetWorldPositionRotation(oldGridXform, xformQuery);
-                var mapBody = bodyQuery.GetComponent(oldGridUid);
-                var oldGridComp = gridQuery.GetComponent(oldGridUid);
+                var oldGridXform = _xformQuery.GetComponent(oldGridUid);
+                var (gridPos, gridRot) = _xformSystem.GetWorldPositionRotation(oldGridXform);
+                var mapBody = _bodyQuery.GetComponent(oldGridUid);
+                var oldGridComp = _gridQuery.GetComponent(oldGridUid);
                 var newGrids = new EntityUid[grids.Count - 1];
                 var mapId = oldGridXform.MapID;
 
@@ -259,17 +265,17 @@ namespace Robust.Server.Physics
                     var group = grids[i];
                     var newGrid = _mapManager.CreateGridEntity(mapId);
                     var newGridUid = newGrid.Owner;
-                    var newGridXform = xformQuery.GetComponent(newGridUid);
+                    var newGridXform = _xformQuery.GetComponent(newGridUid);
                     newGrids[i] = newGridUid;
 
                     // Keep same origin / velocity etc; this makes updating a lot faster and easier.
                     _xformSystem.SetWorldPosition(newGridXform, gridPos);
-                    _xformSystem.SetWorldPositionRotation(newGridXform, gridPos, gridRot);
-                    var splitBody = bodyQuery.GetComponent(newGridUid);
+                    _xformSystem.SetWorldPositionRotation(newGridUid, gridPos, gridRot, newGridXform);
+                    var splitBody = _bodyQuery.GetComponent(newGridUid);
                     _physics.SetLinearVelocity(newGridUid, mapBody.LinearVelocity, body: splitBody);
                     _physics.SetAngularVelocity(newGridUid, mapBody.AngularVelocity, body: splitBody);
 
-                    var gridComp = gridQuery.GetComponent(newGridUid);
+                    var gridComp = _gridQuery.GetComponent(newGridUid);
                     var tileData = new List<(Vector2i GridIndices, Tile Tile)>(group.Sum(o => o.Indices.Count));
 
                     // Gather all tiles up front and set once to minimise fixture change events
@@ -284,7 +290,7 @@ namespace Robust.Server.Physics
                         }
                     }
 
-                    newGrid.Comp.SetTiles(tileData);
+                    _maps.SetTiles(newGrid.Owner, newGrid.Comp, tileData);
                     DebugTools.Assert(_mapManager.IsGrid(newGridUid), "A split grid had no tiles?");
 
                     // Set tiles on new grid + update anchored entities
@@ -303,8 +309,13 @@ namespace Robust.Server.Physics
                             for (var j = snapgrid.Count - 1; j >= 0; j--)
                             {
                                 var ent = snapgrid[j];
-                                var xform = xformQuery.GetComponent(ent);
-                                _xformSystem.ReAnchor(ent, xform, oldGridComp, gridComp, tilePos, oldGridUid, newGridUid, oldGridXform, newGridXform, xformQuery);
+                                var xform = _xformQuery.GetComponent(ent);
+                                _xformSystem.ReAnchor(ent, xform,
+                                    oldGridComp, gridComp,
+                                    tilePos, tilePos,
+                                    oldGridUid, newGridUid,
+                                    oldGridXform, newGridXform,
+                                    Angle.Zero);
                                 DebugTools.Assert(xform.Anchored);
                             }
                         }
@@ -317,15 +328,18 @@ namespace Robust.Server.Physics
                             var tilePos = offset + tile;
                             var bounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
 
-                            foreach (var ent in _lookup.GetLocalEntitiesIntersecting(oldGridUid, tilePos, 0f, LookupFlags.Dynamic | LookupFlags.Sundries))
+                            _entSet.Clear();
+                            _lookup.GetLocalEntitiesIntersecting(oldGridUid, tilePos, _entSet, 0f, LookupFlags.All | ~LookupFlags.Uncontained | LookupFlags.Approximate);
+
+                            foreach (var ent in _entSet)
                             {
                                 // Consider centre of entity position maybe?
-                                var entXform = xformQuery.GetComponent(ent);
+                                var entXform = _xformQuery.GetComponent(ent);
 
                                 if (entXform.ParentUid != oldGridUid ||
                                     !bounds.Contains(entXform.LocalPosition)) continue;
 
-                                _xformSystem.SetParent(ent, entXform, newGridUid, xformQuery, newGridXform);
+                                _xformSystem.SetParent(ent, entXform, newGridUid, _xformQuery, newGridXform);
                             }
                         }
 
@@ -365,10 +379,10 @@ namespace Robust.Server.Physics
                 var ev = new GridSplitEvent(newGrids, oldGridUid);
                 RaiseLocalEvent(uid, ref ev, true);
 
-                _logger.Debug($"Split {grids.Count} grids in {sw.Elapsed}");
+                Log.Debug($"Split {grids.Count} grids in {sw.Elapsed}");
             }
 
-            _logger.Debug($"Stopped split check for {ToPrettyString(uid)}");
+            Log.Debug($"Stopped split check for {ToPrettyString(uid)}");
             _isSplitting = false;
             SendNodeDebug(oldGridUid);
         }

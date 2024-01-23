@@ -10,6 +10,7 @@
     <RobustILLink>true</RobustILLink>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Alimer.Bindings.SDL" />
     <PackageReference Include="DiscordRichPresence" PrivateAssets="compile" />
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" PrivateAssets="compile" />

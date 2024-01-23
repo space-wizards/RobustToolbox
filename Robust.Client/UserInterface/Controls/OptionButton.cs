@@ -75,7 +75,7 @@ namespace Robust.Client.UserInterface.Controls
 
             _popup = new Popup()
             {
-                Children = { OptionsScroll },
+                Children = { new PanelContainer(), OptionsScroll },
                 StyleClasses = { StyleClassPopup }
             };
             _popup.OnPopupHide += OnPopupHide;
@@ -148,6 +148,8 @@ namespace Robust.Client.UserInterface.Controls
             if (show)
             {
                 var globalPos = GlobalPosition;
+                globalPos.Y += Size.Y + 1; // Place it below us, with a safety margin.
+                globalPos.Y -= Margin.SumVertical;
                 OptionsScroll.Measure(Window?.Size ?? Vector2Helpers.Infinity);
                 var (minX, minY) = OptionsScroll.DesiredSize;
                 var box = UIBox2.FromDimensions(globalPos, new Vector2(Math.Max(minX, Width), minY));

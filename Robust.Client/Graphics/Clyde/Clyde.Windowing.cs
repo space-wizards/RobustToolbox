@@ -110,7 +110,7 @@ internal partial class  Clyde
                 winImpl = new GlfwWindowingImpl(this, _deps);
                 break;
             case "sdl2":
-                winImpl = new Sdl2WindowingImpl(this, _deps);
+                winImpl = new SdlWindowingImpl(this, _deps);
                 break;
             default:
                 _logManager.GetSawmill("clyde.win").Log(

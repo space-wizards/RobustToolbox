@@ -3,17 +3,15 @@ using System.Numerics;
 using Robust.Client.Input;
 using Robust.Shared.Map;
 using TerraFX.Interop.Windows;
-using static SDL2.SDL;
-using static SDL2.SDL.SDL_EventType;
-using static SDL2.SDL.SDL_Keymod;
-using static SDL2.SDL.SDL_WindowEventID;
+using SDL;
+using static SDL.SDL;
 using Key = Robust.Client.Input.Keyboard.Key;
 
 namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
-    private sealed partial class Sdl2WindowingImpl
+    private sealed partial class SdlWindowingImpl
     {
         public void ProcessEvents(bool single = false)
         {
@@ -104,30 +102,30 @@ internal partial class Clyde
 
             switch (ev.EventId)
             {
-                case SDL_WINDOWEVENT_CLOSE:
+                case SDL_EventType.WindowCloseRequested:
                     _clyde.SendCloseWindow(window, new WindowRequestClosedEventArgs(window.Handle));
                     break;
-                case SDL_WINDOWEVENT_ENTER:
+                case SDL_EventType.WindowMouseEnter:
                     _clyde._currentHoveredWindow = window;
                     _clyde.SendMouseEnterLeave(new MouseEnterLeaveEventArgs(window.Handle, true));
                     break;
-                case SDL_WINDOWEVENT_LEAVE:
+                case SDL_EventType.WindowMouseLeave:
                     if (_clyde._currentHoveredWindow == window)
                         _clyde._currentHoveredWindow = null;
 
                     _clyde.SendMouseEnterLeave(new MouseEnterLeaveEventArgs(window.Handle, false));
                     break;
-                case SDL_WINDOWEVENT_MINIMIZED:
+                case SDL_EventType.WindowMinimized:
                     window.IsMinimized = true;
                     break;
-                case SDL_WINDOWEVENT_RESTORED:
+                case SDL_EventType.WindowRestored:
                     window.IsMinimized = false;
                     break;
-                case SDL_WINDOWEVENT_FOCUS_GAINED:
+                case SDL_EventType.WindowFocusGained:
                     window.IsFocused = true;
                     _clyde.SendWindowFocus(new WindowFocusedEventArgs(true, window.Handle));
                     break;
-                case SDL_WINDOWEVENT_FOCUS_LOST:
+                case SDL_EventType.WindowFocusLost:
                     window.IsFocused = false;
                     _clyde.SendWindowFocus(new WindowFocusedEventArgs(false, window.Handle));
                     break;
@@ -218,15 +216,15 @@ internal partial class Clyde
 
         private void ProcessEventKey(EventKey ev)
         {
-            EmitKeyEvent(ConvertSdl2Scancode(ev.Scancode), ev.Type, ev.Repeat, ev.Mods, ev.Scancode);
+            EmitKeyEvent(ConvertSdl2Scancode(ev.Scancode), ev.Type, ev.Repeat, (SDL_Keymod)ev.Mods, ev.Scancode);
         }
 
         private void EmitKeyEvent(Key key, SDL_EventType type, bool repeat, SDL_Keymod mods, SDL_Scancode scancode)
         {
-            var shift = (mods & KMOD_SHIFT) != 0;
-            var alt = (mods & KMOD_ALT) != 0;
-            var control = (mods & KMOD_CTRL) != 0;
-            var system = (mods & KMOD_GUI) != 0;
+            var shift = (mods & SDL_Keymod.Shift) != 0;
+            var alt = (mods & SDL_Keymod.Alt) != 0;
+            var control = (mods & SDL_Keymod.Ctrl) != 0;
+            var system = (mods & SDL_Keymod.Gui) != 0;
 
             var ev = new KeyEventArgs(
                 key,
@@ -236,12 +234,12 @@ internal partial class Clyde
 
             switch (type)
             {
-                case SDL_KEYUP:
-                case SDL_MOUSEBUTTONUP:
+                case SDL_EventType.KeyUp:
+                case SDL_EventType.MouseButtonUp:
                     _clyde.SendKeyUp(ev);
                     break;
-                case SDL_KEYDOWN:
-                case SDL_MOUSEBUTTONDOWN:
+                case SDL_EventType.KeyDown:
+                case SDL_EventType.MouseButtonDown:
                     _clyde.SendKeyDown(ev);
                     break;
             }
@@ -249,10 +247,10 @@ internal partial class Clyde
 
         private void ProcessWindowsFakeV(EventWindowsFakeV ev)
         {
-            var type = (int)ev.Message switch
+            var type = ev.Message switch
             {
-                WM.WM_KEYUP => SDL_KEYUP,
-                WM.WM_KEYDOWN => SDL_KEYDOWN,
+                WM.WM_KEYUP => SDL_EventType.KeyUp,
+                WM.WM_KEYDOWN => SDL_EventType.KeyDown,
                 _ => throw new ArgumentOutOfRangeException()
             };
 

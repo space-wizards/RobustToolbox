@@ -1,18 +1,13 @@
 ﻿using System;
+using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using static SDL2.SDL;
-using static SDL2.SDL.SDL_bool;
-using static SDL2.SDL.SDL_FlashOperation;
-using static SDL2.SDL.SDL_GLattr;
-using static SDL2.SDL.SDL_GLcontext;
-using static SDL2.SDL.SDL_GLprofile;
-using static SDL2.SDL.SDL_SYSWM_TYPE;
-using static SDL2.SDL.SDL_WindowFlags;
+using SDL;
+using static SDL.SDL;
 using BOOL = TerraFX.Interop.Windows.BOOL;
 using HWND = TerraFX.Interop.Windows.HWND;
 using GWLP = TerraFX.Interop.Windows.GWLP;
@@ -22,7 +17,7 @@ namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
-    private sealed partial class Sdl2WindowingImpl
+    private sealed partial class SdlWindowingImpl
     {
         private int _nextWindowId = 1;
 
@@ -78,7 +73,7 @@ internal partial class Clyde
             nint shareContext,
             nint owner)
         {
-            //
+
             // IF YOU'RE WONDERING WHY THIS IS TASK-BASED:
             // I originally wanted this to be async so we could avoid blocking the main thread
             // while the OS takes its stupid 100~ms just to initialize a fucking GL context.
@@ -87,11 +82,11 @@ internal partial class Clyde
             // (at least on WGL, I didn't test other platforms and I don't care to.)
             // Not worth it to avoid a main thread blockage by allowing Clyde to temporarily release the GL context,
             // because rendering would be locked up *anyways*.
-            //
+
             // Basically what I'm saying is that everything about OpenGL is a fucking mistake
             // and I should get on either Veldrid or Vulkan some time.
             // Probably Veldrid tbh.
-            //
+
 
             // Yes we ping-pong this TCS through the window thread and back, deal with it.
             var tcs = new TaskCompletionSource<Sdl2WindowCreateResult>();
@@ -114,7 +109,7 @@ internal partial class Clyde
 
             if (window == 0)
             {
-                var err = SDL_GetError();
+                var err = SDL_GetErrorString();
 
                 SendEvent(new EventWindowCreate(new Sdl2WindowCreateResult(null, err), tcs));
                 return;
@@ -138,18 +133,26 @@ internal partial class Clyde
                 // On Windows, closing the child window causes the owner to be minimized, apparently.
                 // Clear owner on close to avoid this.
 
-                SDL_SysWMinfo wmInfo = default;
-                SDL_VERSION(out wmInfo.version);
-                if (SDL_GetWindowWMInfo(cmd.Window, ref wmInfo) == SDL_TRUE && wmInfo.subsystem == SDL_SYSWM_WINDOWS)
-                {
-                    var hWnd = (HWND)wmInfo.info.win.window;
-                    DebugTools.Assert(hWnd != HWND.NULL);
+                var hWnd = (HWND)SDL_GetProperty(SDL_GetWindowProperties(cmd.Window), SDL_PROPERTY_WINDOW_WIN32_HWND_POINTER);
+                DebugTools.Assert(hWnd != HWND.NULL);
+                Windows.SetWindowLongPtrW(
+                    hWnd,
+                    GWLP.GWLP_HWNDPARENT,
+                    0);
 
-                    Windows.SetWindowLongPtrW(
-                        hWnd,
-                        GWLP.GWLP_HWNDPARENT,
-                        0);
-                }
+                // TODO test if still working
+                // SDL_SysWMinfo wmInfo = default;
+                // SDL_VERSION(out wmInfo.version);
+                // if (SDL_GetWindowWMInfo(cmd.Window, ref wmInfo) == SDL_TRUE && wmInfo.subsystem == SDL_SYSWM_WINDOWS)
+                // {
+                //     var hWnd = (HWND)wmInfo.info.win.window;
+                //     DebugTools.Assert(hWnd != HWND.NULL);
+                //
+                //     Windows.SetWindowLongPtrW(
+                //         hWnd,
+                //         GWLP.GWLP_HWNDPARENT,
+                //         0);
+                // }
             }
 
             SDL_DestroyWindow(cmd.Window);
@@ -162,50 +165,51 @@ internal partial class Clyde
             nint shareContext,
             nint ownerWindow)
         {
-            var windowFlags = SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE;
+            var windowFlags = SDL_WindowFlags.Hidden | SDL_WindowFlags.Resizable;
 
             if (spec is { } s)
             {
-                windowFlags |= SDL_WINDOW_OPENGL;
+                windowFlags |= SDL_WindowFlags.OpenGL;
 
-                SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-                SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-                SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-                SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-                SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-                SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, s.Profile == GLContextProfile.Es ? 0 : 1);
-                SDL_GLcontext ctxFlags = 0;
+                SDL_GL_SetAttribute(SDL_GLattr.RedSize, 8);
+                SDL_GL_SetAttribute(SDL_GLattr.GreenSize, 8);
+                SDL_GL_SetAttribute(SDL_GLattr.BlueSize, 8);
+                SDL_GL_SetAttribute(SDL_GLattr.AlphaSize, 8);
+                SDL_GL_SetAttribute(SDL_GLattr.StencilSize, 8);
+                SDL_GL_SetAttribute(SDL_GLattr.FramebufferSrgbCapable, s.Profile == GLContextProfile.Es ? 0 : 1);
+
+                var ctxFlags = SDL_GLcontextFlag.None;
 #if DEBUG
-                ctxFlags |= SDL_GL_CONTEXT_DEBUG_FLAG;
+                ctxFlags |= SDL_GLcontextFlag.DebugFlag;
 #endif
                 if (s.Profile == GLContextProfile.Core)
-                    ctxFlags |= SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
+                    ctxFlags |= SDL_GLcontextFlag.ForwardCompatibleFlag;
 
-                SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, (int)ctxFlags);
+                SDL_GL_SetAttribute(SDL_GLattr.ContextFlags, (int)ctxFlags);
 
                 if (shareContext != 0)
                 {
-                    SDL_GL_MakeCurrent(shareWindow, shareContext);
-                    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+                    SDL_GL_MakeCurrent(shareWindow, (SDL_GLContext) shareContext);
+                    SDL_GL_SetAttribute(SDL_GLattr.ShareWithCurrentContext, true);
                 }
                 else
                 {
-                    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 0);
+                    SDL_GL_SetAttribute(SDL_GLattr.ShareWithCurrentContext, false);
                 }
 
                 var profile = s.Profile switch
                 {
-                    GLContextProfile.Compatibility => SDL_GL_CONTEXT_PROFILE_COMPATIBILITY,
-                    GLContextProfile.Core => SDL_GL_CONTEXT_PROFILE_CORE,
-                    GLContextProfile.Es => SDL_GL_CONTEXT_PROFILE_ES,
-                    _ => SDL_GL_CONTEXT_PROFILE_COMPATIBILITY,
+                    GLContextProfile.Compatibility => SDL_GLprofile.Compatibility,
+                    GLContextProfile.Core => SDL_GLprofile.Core,
+                    GLContextProfile.Es => SDL_GLprofile.Es,
+                    _ => SDL_GLprofile.Compatibility,
                 };
 
-                SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, profile);
-                SDL_SetHint("SDL_OPENGL_ES_DRIVER", s.CreationApi == GLContextCreationApi.Egl ? "1" : "0");
+                SDL_GL_SetAttribute(SDL_GLattr.ContextProfileMask, profile);
+                SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, s.CreationApi == GLContextCreationApi.Egl);
 
-                SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, s.Major);
-                SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, s.Minor);
+                SDL_GL_SetAttribute(SDL_GLattr.ContextMajorVersion, s.Major);
+                SDL_GL_SetAttribute(SDL_GLattr.ContextMinorVersion, s.Minor);
 
                 if (s.CreationApi == GLContextCreationApi.Egl)
                     WsiShared.EnsureEglAvailable();
@@ -213,25 +217,37 @@ internal partial class Clyde
 
             if (OperatingSystem.IsMacOS())
             {
-                windowFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
+                windowFlags |= SDL_WindowFlags.HighPixelDensity;
             }
 
             if (parameters.Fullscreen)
             {
-                windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+                windowFlags |= SDL_WindowFlags.Fullscreen;
             }
 
-            nint window = SDL_CreateWindow(
-                "",
-                SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            if ((parameters.Styles & OSWindowStyles.NoTitleBar) != 0)
+            {
+                windowFlags |= SDL_WindowFlags.Borderless;
+            }
+
+            // if (ownerWindow != SDL_Window.Null)
+            // {
+            // var prop = SDL_CreateProperties();
+            // SDL_SetProperty(prop, "yeah"u8.ToArray())
+            // SDL_CreateWindowWithProperties()
+            //     TODO implement owner window
+            // }
+
+            var window = SDL_CreateWindow("",
                 parameters.Width, parameters.Height,
                 windowFlags);
 
-            if (window == 0)
+
+            if (window == SDL_Window.Null)
                 return default;
 
-            nint glContext = SDL_GL_CreateContext(window);
-            if (glContext == 0)
+            var glContext = SDL_GL_CreateContext(window);
+            if (glContext == SDL_GLContext.NULL)
             {
                 SDL_DestroyWindow(window);
                 return default;
@@ -241,15 +257,13 @@ internal partial class Clyde
             // TODO: a bunch of win32 calls for funny window properties I still haven't ported to other platforms.
 
             // Make sure window thread doesn't keep hold of the GL context.
-            SDL_GL_MakeCurrent(IntPtr.Zero, IntPtr.Zero);
-
+            SDL_GL_MakeCurrent(SDL_Window.Null, SDL_GLContext.NULL);
 
             if (OperatingSystem.IsWindows())
             {
-                SDL_SysWMinfo info = default;
-                SDL_VERSION(out info.version);
-                if (SDL_GetWindowWMInfo(window, ref info) == SDL_TRUE && info.subsystem == SDL_SYSWM_WINDOWS)
-                    WsiShared.WindowsSharedWindowCreate((HWND) info.info.win.window, _cfg);
+                var hWnd = (HWND)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROPERTY_WINDOW_WIN32_HWND_POINTER);
+                DebugTools.Assert(hWnd != HWND.NULL);
+                WsiShared.WindowsSharedWindowCreate(hWnd, _cfg);
             }
 
             if (parameters.Visible)
@@ -258,7 +272,7 @@ internal partial class Clyde
             return (window, glContext);
         }
 
-        private unsafe Sdl2WindowReg WinThreadSetupWindow(nint window, nint context)
+        private Sdl2WindowReg WinThreadSetupWindow(nint window, nint context)
         {
             var reg = new Sdl2WindowReg
             {
@@ -270,10 +284,7 @@ internal partial class Clyde
             var handle = new WindowHandle(_clyde, reg);
             reg.Handle = handle;
 
-            SDL_VERSION(out reg.SysWMinfo.version);
-            var res = SDL_GetWindowWMInfo(window, ref reg.SysWMinfo);
-            if (res == SDL_FALSE)
-                _sawmill.Error("Failed to get window WM info: {error}", SDL_GetError());
+            SDL_VERSION(out reg.SdlVersion);
 
             // LoadWindowIcon(window);
 
@@ -311,13 +322,8 @@ internal partial class Clyde
 
         private static void WinThreadWinSetMode(CmdWinWinSetMode cmd)
         {
-            var flags = cmd.Mode switch
-            {
-                WindowMode.Fullscreen => (uint) SDL_WINDOW_FULLSCREEN_DESKTOP,
-                _ => 0u
-            };
-
-            SDL_SetWindowFullscreen(cmd.Window, flags);
+            SDL_SetWindowFullscreen(cmd.Window,
+                cmd.Mode == WindowMode.Fullscreen ? SDL_bool.SDL_TRUE : SDL_bool.SDL_FALSE);
         }
 
         public void WindowSetTitle(WindowReg window, string title)
@@ -356,9 +362,8 @@ internal partial class Clyde
 
         private void WinThreadWinRequestAttention(CmdWinRequestAttention cmd)
         {
-            var res = SDL_FlashWindow(cmd.Window, SDL_FLASH_UNTIL_FOCUSED);
-            if (res < 0)
-                _sawmill.Error("Failed to flash window: {error}", SDL_GetError());
+            if (SDL_FlashWindow(cmd.Window, SDL_FlashOperation.UntilFocused) < 0)
+                _sawmill.Error("Failed to flash window: {error}", SDL_GetErrorString());
         }
 
         public unsafe void WindowSwapBuffers(WindowReg window)
@@ -378,7 +383,7 @@ internal partial class Clyde
             var dwmFlush = false;
             var swapInterval = 0;
 
-            if (OperatingSystem.IsWindows() && !reg.Fullscreen && reg.SwapInterval > 0)
+            if (OperatingSystem.IsWindows() && reg is { Fullscreen: false, SwapInterval: > 0 })
             {
                 BOOL compositing;
                 // 6.2 is Windows 8
@@ -415,37 +420,22 @@ internal partial class Clyde
         public uint? WindowGetX11Id(WindowReg window)
         {
             CheckWindowDisposed(window);
-
             var reg = (Sdl2WindowReg) window;
-
-            if (reg.SysWMinfo.subsystem != SDL_SYSWM_X11)
-                return null;
-
-            return (uint?) reg.SysWMinfo.info.x11.window;
+            return (uint?)SDL_GetProperty(SDL_GetWindowProperties(reg.Sdl2Window), SDL_PROPERTY_WINDOW_X11_WINDOW_NUMBER);
         }
 
         public nint? WindowGetX11Display(WindowReg window)
         {
             CheckWindowDisposed(window);
-
             var reg = (Sdl2WindowReg) window;
-
-            if (reg.SysWMinfo.subsystem != SDL_SYSWM_X11)
-                return null;
-
-            return reg.SysWMinfo.info.x11.display;
+            return SDL_GetProperty(SDL_GetWindowProperties(reg.Sdl2Window), SDL_PROPERTY_WINDOW_X11_DISPLAY_POINTER);
         }
 
         public nint? WindowGetWin32Window(WindowReg window)
         {
             CheckWindowDisposed(window);
-
             var reg = (Sdl2WindowReg) window;
-
-            if (reg.SysWMinfo.subsystem != SDL_SYSWM_WINDOWS)
-                return null;
-
-            return reg.SysWMinfo.info.win.window;
+            return SDL_GetProperty(SDL_GetWindowProperties(reg.Sdl2Window), SDL_PROPERTY_WINDOW_WIN32_HWND_POINTER);
         }
 
         public void RunOnWindowThread(Action a)
@@ -455,19 +445,21 @@ internal partial class Clyde
 
         public void TextInputSetRect(UIBox2i rect)
         {
-            SendCmd(new CmdTextInputSetRect(new SDL_Rect
+            // https://github.com/amerkoleci/Alimer.Bindings.SDL/issues/6
+            SendCmd(new CmdTextInputSetRect(new Rectangle
             {
-                x = rect.Left,
-                y = rect.Top,
-                w = rect.Width,
-                h = rect.Height
+                X = rect.Left,
+                Y = rect.Right,
+                Width = rect.Width,
+                Height = rect.Height
             }));
         }
 
-        private static void WinThreadSetTextInputRect(CmdTextInputSetRect cmdTextInput)
+        private static unsafe void WinThreadSetTextInputRect(CmdTextInputSetRect cmdTextInput)
         {
+            // https://github.com/amerkoleci/Alimer.Bindings.SDL/issues/6
             var rect = cmdTextInput.Rect;
-            SDL_SetTextInputRect(ref rect);
+            SDL_SetTextInputRect(&rect); // TODO check if it works
         }
 
         public void TextInputStart()
@@ -499,7 +491,7 @@ internal partial class Clyde
         {
             var res = SDL_SetClipboardText(cmd.Text);
             if (res < 0)
-                _sawmill.Error("Failed to set clipboard text: {error}", SDL_GetError());
+                _sawmill.Error("Failed to set clipboard text: {error}", SDL_GetErrorString());
         }
 
         public Task<string> ClipboardGetText(WindowReg mainWindow)
@@ -511,7 +503,7 @@ internal partial class Clyde
 
         private static void WinThreadGetClipboard(CmdGetClipboard cmd)
         {
-            cmd.Tcs.TrySetResult(SDL_GetClipboardText());
+            cmd.Tcs.TrySetResult(SDL_GetClipboardTextString() ?? "");
         }
 
         private static Vector2 GetWindowScale(nint window)
@@ -561,7 +553,7 @@ internal partial class Clyde
             public nint Sdl2Window;
             public uint WindowId;
             public nint GlContext;
-            public SDL_SysWMinfo SysWMinfo;
+            public SDL_version SdlVersion;
 #pragma warning disable CS0649
             public bool Fullscreen;
 #pragma warning restore CS0649

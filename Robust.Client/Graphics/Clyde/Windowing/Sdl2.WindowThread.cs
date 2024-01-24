@@ -6,13 +6,14 @@ using Robust.Shared;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using static SDL2.SDL;
+using SDL;
+using static SDL.SDL;
 
 namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
-    private sealed partial class Sdl2WindowingImpl
+    private sealed partial class SdlWindowingImpl
     {
         private bool _windowingRunning;
         private ChannelWriter<CmdBase> _cmdWriter = default!;
@@ -23,20 +24,20 @@ internal partial class Clyde
 
         private uint _sdlEventWakeup;
 
-        public void EnterWindowLoop()
+        public unsafe void EnterWindowLoop()
         {
             _windowingRunning = true;
 
             while (_windowingRunning)
             {
-                var res = SDL_WaitEvent(out Unsafe.NullRef<SDL_Event>());
+                var res = SDL_WaitEvent(null);
                 if (res == 0)
                 {
-                    _sawmill.Error("Error while waiting on SDL2 events: {error}", SDL_GetError());
+                    _sawmill.Error("Error while waiting on SDL2 events: {error}", SDL_GetErrorString());
                     continue; // Assume it's a transient failure?
                 }
 
-                while (SDL_PollEvent(out _) == 1)
+                while (SDL_PollEvent(null))
                 {
                     // We let callbacks process all events because of stuff like resizing.
                 }
@@ -48,9 +49,9 @@ internal partial class Clyde
             }
         }
 
-        public void PollEvents()
+        public unsafe void PollEvents()
         {
-            while (SDL_PollEvent(out _) == 1)
+            while (SDL_PollEvent(null))
             {
                 // We let callbacks process all events because of stuff like resizing.
             }
@@ -181,7 +182,7 @@ internal partial class Clyde
                 // This can fail if the event queue is full.
                 // That's not really a problem since in that case something else will be sure to wake the thread up anyways.
                 // NOTE: have to avoid using PushEvents since that invokes callbacks which causes a deadlock.
-                SDL_PeepEvents(&ev, 1, SDL_eventaction.SDL_ADDEVENT, ev.type, ev.type);
+                SDL_PeepEvents(&ev, 1, SDL_eventaction.AddEvent, ev.type, ev.type);
             }
             else
             {
@@ -288,7 +289,7 @@ internal partial class Clyde
         }
 
         private sealed record CmdTextInputSetRect(
-            SDL_Rect Rect
+            System.Drawing.Rectangle Rect
         ) : CmdBase;
     }
 }

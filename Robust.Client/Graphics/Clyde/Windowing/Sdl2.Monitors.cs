@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using SDL2;
+using SDL;
+using static SDL.SDL;
 
 namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
-    private sealed partial class Sdl2WindowingImpl
+    private sealed partial class SdlWindowingImpl
     {
         // NOTE: SDL2 calls them "displays". GLFW calls them monitors. GLFW's is the one I'm going with.
 
@@ -18,31 +19,31 @@ internal partial class Clyde
 
         private void InitMonitors()
         {
-            var numDisplays = SDL.SDL_GetNumVideoDisplays();
-            for (var i = 0; i < numDisplays; i++)
+            var numDisplays = SDL_GetDisplays();
+            foreach (var displayId in numDisplays)
             {
                 // SDL.SDL_GetDisplayDPI(i, out var ddpi, out var hdpi, out var vdpi);
                 // _sawmill.Info($"[{i}] {ddpi} {hdpi} {vdpi}");
-                WinThreadSetupMonitor(i);
+                WinThreadSetupMonitor(displayId);
             }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void WinThreadSetupMonitor(int displayIdx)
+        private unsafe void WinThreadSetupMonitor(SDL_DisplayID displayIdx)
         {
             var id = _nextMonitorId++;
 
-            var name = SDL.SDL_GetDisplayName(displayIdx);
-            var modeCount = SDL.SDL_GetNumDisplayModes(displayIdx);
-            SDL.SDL_GetCurrentDisplayMode(displayIdx, out var curMode);
+            var name = SDL_GetDisplayNameString(displayIdx);
+            var displayModes = SDL_GetFullscreenDisplayModes(displayIdx, out var modeCount);
+            var curMode = SDL_GetCurrentDisplayMode(displayIdx);
+
             var modes = new VideoMode[modeCount];
             for (var i = 0; i < modes.Length; i++)
             {
-                SDL.SDL_GetDisplayMode(displayIdx, i, out var mode);
-                modes[i] = ConvertVideoMode(mode);
+                modes[i] = ConvertVideoMode(displayModes[i]);
             }
 
-            _winThreadMonitors.Add(id, new WinThreadMonitorReg { Id = id, DisplayIdx = displayIdx });
+            _winThreadMonitors.Add(id, new WinThreadMonitorReg { Id = id, DisplayId = displayIdx });
 
             SendEvent(new EventMonitorSetup(id, name, ConvertVideoMode(curMode), modes));
 
@@ -50,13 +51,13 @@ internal partial class Clyde
                 _clyde._primaryMonitorId = id;
         }
 
-        private static VideoMode ConvertVideoMode(in SDL.SDL_DisplayMode mode)
+        private static unsafe VideoMode ConvertVideoMode(in SDL_DisplayMode* mode)
         {
-            return new()
+            return new VideoMode
             {
-                Width = (ushort)mode.w,
-                Height = (ushort)mode.h,
-                RefreshRate = (ushort)mode.refresh_rate,
+                Width = (ushort)mode->w,
+                Height = (ushort)mode->h,
+                RefreshRate = (ushort)mode->refresh_rate,
                 // TODO: set bits count based on format (I'm lazy)
                 RedBits = 8,
                 GreenBits = 8,
@@ -81,13 +82,13 @@ internal partial class Clyde
             };
         }
 
-        private void WinThreadDestroyMonitor(int displayIdx)
+        private void WinThreadDestroyMonitor(SDL_DisplayID displayIdx)
         {
             var monitorId = 0;
 
             foreach (var (id, monitorReg) in _winThreadMonitors)
             {
-                if (monitorReg.DisplayIdx == displayIdx)
+                if (monitorReg.DisplayId == displayIdx)
                 {
                     monitorId = id;
                     break;
@@ -97,18 +98,8 @@ internal partial class Clyde
             if (monitorId == 0)
                 return;
 
-            // So SDL2 doesn't have a very nice indexing system for monitors like GLFW does.
-            // This means that, when a monitor is disconnected, all monitors *after* it get shifted down one slot.
-            // Now, this happens *after* the event is fired, to make matters worse.
-            // So we're basically trying to match unspecified SDL2 internals here. Great.
-
             _winThreadMonitors.Remove(monitorId);
-
-            foreach (var (_, reg) in _winThreadMonitors)
-            {
-                if (reg.DisplayIdx > displayIdx)
-                    reg.DisplayIdx -= 1;
-            }
+            // TODO check if sdl2 bug still exist; new function just returns a list of SDL_DisplayID
 
             SendEvent(new EventMonitorDestroy(monitorId));
         }
@@ -127,7 +118,7 @@ internal partial class Clyde
         private sealed class WinThreadMonitorReg
         {
             public int Id;
-            public int DisplayIdx;
+            public SDL_DisplayID DisplayId;
         }
     }
 }

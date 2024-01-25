@@ -9,6 +9,9 @@ using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Timer = Robust.Shared.Timing.Timer;
 
+/// <summary>
+/// Represents a scrollable list of items in a user interface.
+/// </summary>
 namespace Robust.Client.UserInterface.Controls
 {
     [Virtual]
@@ -29,6 +32,10 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertySelectedItemBackground = "selected-item-background";
         public const string StylePropertyDisabledItemBackground = "disabled-item-background";
 
+        /// <summary>
+        /// Gets or sets the bottom margin of individual list items
+        /// </summary>
+        public int ItemBottomMargin { get; set; } = 0; // Default value is 0px
         public int Count => _itemList.Count;
         public bool IsReadOnly => false;
 
@@ -68,6 +75,7 @@ namespace Robust.Client.UserInterface.Controls
                 itemHeight += ActualItemBackground.MinimumSize.Y * UIScale;
 
                 _totalContentHeight += (int)Math.Ceiling(itemHeight);
+                _totalContentHeight += ItemBottomMargin;
             }
 
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
@@ -390,6 +398,9 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 offset += itemHeight;
+
+                // Add a margin at the bottom of each item.
+                offset += ItemBottomMargin;
             }
         }
 
@@ -399,7 +410,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var color = ActualFontColor;
             var offsetY = (int) (box.Height - font.GetHeight(UIScale)) / 2;
-            var baseLine = new Vector2i(0, offsetY + font.GetAscent(UIScale)) + box.TopLeft;
+            var baseLine = new Vector2i(5, offsetY + font.GetAscent(UIScale)) + box.TopLeft;
 
             foreach (var rune in text.EnumerateRunes())
             {

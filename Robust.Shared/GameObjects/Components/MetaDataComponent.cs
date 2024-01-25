@@ -149,7 +149,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
-        [DataField("flags")]
         public MetaDataFlags Flags
         {
             get => _flags;

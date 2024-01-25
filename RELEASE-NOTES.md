@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Metadata flags are no longer serialized as they get rebuilt on entity startup.
 
 ### New features
 

@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Metadata flags are no longer serialized as they get rebuilt on entity startup.
+*None yet*
 
 ### New features
 
@@ -52,6 +52,17 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 208.0.0
+
+### Breaking changes
+
+* Metadata flags are no longer serialized as they get rebuilt on entity startup.
+
+### Bugfixes
+
+* Log failing to load user keybinds and handle the exception.
 
 
 ## 207.1.0

@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyDisabledItemBackground = "disabled-item-background";
 
         /// <summary>
-        /// Gets or sets the bottom margin of individual list items
+        /// Gets or sets the ItemSeparation of individual list items
         /// </summary>
         public int ItemSeparation { get; set; } = 0; // Default value is 0px
         public int Count => _itemList.Count;
@@ -77,7 +77,8 @@ namespace Robust.Client.UserInterface.Controls
                 _totalContentHeight += (int)Math.Ceiling(itemHeight);
                 _totalContentHeight += ItemSeparation;
             }
-
+            //Remove unneeded ItemSeparation on last item.
+            _totalContentHeight -= ItemSeparation;
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             _updateScrollbarVisibility();
         }
@@ -399,7 +400,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 offset += itemHeight;
 
-                // Add a margin at the bottom of each item.
+                // Add a ItemSeparation at the bottom of each item.
                 offset += ItemSeparation;
             }
         }

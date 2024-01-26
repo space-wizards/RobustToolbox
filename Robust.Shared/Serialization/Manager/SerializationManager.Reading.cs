@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Localization;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
@@ -77,6 +78,12 @@ namespace Robust.Shared.Serialization.Manager
                     (typeof(T), type, node.GetType()!, notNullableOverride),
                     static (tuple, manager) => ReadDelegateValueFactory(tuple.baseType, tuple.actualType, tuple.node, tuple.notNullableOverride, manager),
                     this))(node, hookCtx, context, instanceProvider);
+            }
+
+            if (node.Tag == "!Loc" && node is ValueDataNode valueNode && typeof(T) == typeof(string))
+            {
+                var loc = DependencyCollection.Resolve<ILocalizationManager>();
+                return (T)(object)loc.GetString(valueNode.Value);
             }
 
             return ((ReadGenericDelegate<T>)_readGenericDelegates.GetOrAdd((typeof(T), node.GetType()!, notNullableOverride),

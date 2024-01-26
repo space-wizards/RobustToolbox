@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -35,7 +35,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Gets or sets the bottom margin of individual list items
         /// </summary>
-        public int ItemBottomMargin { get; set; } = 0; // Default value is 0px
+        public int ItemSeparation { get; set; } = 0; // Default value is 0px
         public int Count => _itemList.Count;
         public bool IsReadOnly => false;
 
@@ -75,7 +75,7 @@ namespace Robust.Client.UserInterface.Controls
                 itemHeight += ActualItemBackground.MinimumSize.Y * UIScale;
 
                 _totalContentHeight += (int)Math.Ceiling(itemHeight);
-                _totalContentHeight += ItemBottomMargin;
+                _totalContentHeight += ItemSeparation;
             }
 
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
@@ -400,7 +400,7 @@ namespace Robust.Client.UserInterface.Controls
                 offset += itemHeight;
 
                 // Add a margin at the bottom of each item.
-                offset += ItemBottomMargin;
+                offset += ItemSeparation;
             }
         }
 

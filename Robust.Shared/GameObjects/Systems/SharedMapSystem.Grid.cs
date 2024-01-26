@@ -1348,25 +1348,34 @@ public abstract partial class SharedMapSystem
 
     public EntityCoordinates GridTileToLocal(EntityUid uid, MapGridComponent grid, Vector2i gridTile)
     {
-        var position = TileToVector(uid, grid, gridTile);
+        var position = TileCenterToVector(uid, grid, gridTile);
 
         return new(uid, position);
     }
 
     /// <summary>
-    /// Turns a gridtile into a Vector2, accounting for tile size.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector2 TileToVector(EntityUid uid, MapGridComponent grid, Vector2i gridTile)
-    {
-        return TileToVector((uid, grid), gridTile);
-    }
-
-    /// <summary>
-    /// Turns a gridtile into a Vector2, accounting for tile size.
+    /// Turns a gridtile origin into a Vector2, accounting for tile size.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 TileToVector(Entity<MapGridComponent> grid, Vector2i gridTile)
+    {
+        return new Vector2(gridTile.X * grid.Comp.TileSize, gridTile.Y * grid.Comp.TileSize);
+    }
+
+    /// <summary>
+    /// Turns a gridtile center into a Vector2, accounting for tile size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 TileCenterToVector(EntityUid uid, MapGridComponent grid, Vector2i gridTile)
+    {
+        return TileCenterToVector((uid, grid), gridTile);
+    }
+
+    /// <summary>
+    /// Turns a gridtile center into a Vector2, accounting for tile size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 TileCenterToVector(Entity<MapGridComponent> grid, Vector2i gridTile)
     {
         return new Vector2(gridTile.X * grid.Comp.TileSize, gridTile.Y * grid.Comp.TileSize) + grid.Comp.TileSizeHalfVector;
     }

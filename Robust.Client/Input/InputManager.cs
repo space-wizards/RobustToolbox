@@ -124,7 +124,14 @@ namespace Robust.Client.Input
             var path = new ResPath(KeybindsPath);
             if (_resourceMan.UserData.Exists(path))
             {
-                LoadKeyFile(path, true);
+                try
+                {
+                    LoadKeyFile(path, true);
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("input", "Failed to load user keybindings: " + e);
+                }
             }
 
             if (_resourceMan.ContentFileExists(path))

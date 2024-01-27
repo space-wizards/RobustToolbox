@@ -16,10 +16,9 @@ namespace Robust.Shared.GameObjects
         ///     The current lifetime stage of this component. You can use this to check
         ///     if the component is initialized or being deleted.
         /// </summary>
-        ComponentLifeStage LifeStage { get; [Obsolete("Do not use from content")] set; }
+        ComponentLifeStage LifeStage { get; internal set; }
 
-        [Obsolete("Do not use from content")]
-        bool Networked { get; set; }
+        internal bool Networked { get; set; }
 
         /// <summary>
         ///     Whether this component should be synchronized with clients when modified.
@@ -68,22 +67,21 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Marks the component as dirty so that the network will re-sync it with clients.
         /// </summary>
+        [Obsolete]
         void Dirty(IEntityManager? entManager = null);
 
         /// <summary>
         ///     This is the tick the component was created.
         /// </summary>
-        GameTick CreationTick { get; set; }
+        GameTick CreationTick { get; internal set; }
 
         /// <summary>
         ///     This is the last game tick Dirty() was called.
         /// </summary>
-        GameTick LastModifiedTick { get;  set; }
+        GameTick LastModifiedTick { get; internal set; }
 
-        [Obsolete("Do not use from content")]
-        void ClearTicks();
+        internal void ClearTicks();
 
-        [Obsolete("Do not use from content")]
-        void ClearCreationTick();
+        internal void ClearCreationTick();
     }
 }

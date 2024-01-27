@@ -73,7 +73,9 @@ namespace Robust.Shared.Log
 
             public void Log(LogLevel level, Exception? exception, string message, params object?[] args)
             {
-                _sLogger.BindMessageTemplate(message, args, out var parsedTemplate, out var properties);
+                if (!_sLogger.BindMessageTemplate(message, args, out var parsedTemplate, out var properties))
+                    return;
+
                 var msg = new LogEvent(DateTimeOffset.Now, level.ToSerilog(), exception, parsedTemplate, properties);
                 LogInternal(Name, msg);
             }

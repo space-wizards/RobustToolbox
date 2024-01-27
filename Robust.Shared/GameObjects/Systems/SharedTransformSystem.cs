@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects
 
             var aabb = _lookup.GetLocalBounds(tileIndices, grid.TileSize);
 
-            foreach (var entity in _lookup.GetEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
+            foreach (var entity in _lookup.GetLocalEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
             {
                 if (!XformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
                     continue;

@@ -109,6 +109,11 @@ namespace Robust.Shared.Maths
             }
         }
 
+        public Vector2i Rotate(Angle angle)
+        {
+            return (Vector2i) angle.RotateVec(this);
+        }
+
         public static Vector2i operator -(Vector2i a, Vector2i b)
         {
             return new(a.X - b.X, a.Y - b.Y);

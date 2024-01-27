@@ -208,7 +208,7 @@ public sealed class ResPathTest
         Assert.That(empty?.Extension, Is.EqualTo(""));
         Assert.That(empty?.Filename, Is.EqualTo("."));
         Assert.That(empty?.FilenameWithoutExtension, Is.EqualTo("."));
-        Assert.False(empty.Equals(null));
+        Assert.That(empty.Equals(null), Is.False);
     }
 
     [Test]

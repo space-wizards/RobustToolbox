@@ -214,7 +214,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entMan.RemoveComponentDeferred(entity, component);
             Assert.That(component.LifeStage, Is.EqualTo(ComponentLifeStage.Stopped));
 
-            Assert.False(entMan.EnsureComponent<DummyComponent>(entity, out var comp2));
+            Assert.That(entMan.EnsureComponent<DummyComponent>(entity, out var comp2), Is.False);
             Assert.That(comp2.LifeStage, Is.LessThanOrEqualTo(ComponentLifeStage.Running));
             Assert.That(component.LifeStage, Is.EqualTo(ComponentLifeStage.Deleted));
         }

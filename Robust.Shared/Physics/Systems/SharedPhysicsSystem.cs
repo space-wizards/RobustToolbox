@@ -54,7 +54,6 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
         [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
-        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] private readonly CollisionWakeSystem _wakeSystem = default!;
@@ -81,7 +80,7 @@ namespace Robust.Shared.Physics.Systems
             PhysMapQuery = GetEntityQuery<PhysicsMapComponent>();
             MapQuery = GetEntityQuery<MapComponent>();
 
-            SubscribeLocalEvent<GridInitializeEvent>(OnGridAdd);
+            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
             SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
@@ -231,7 +230,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private void OnGridAdd(GridInitializeEvent ev)
+        private void OnGridAdd(GridAddEvent ev)
         {
             var guid = ev.EntityUid;
 

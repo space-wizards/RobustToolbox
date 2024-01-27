@@ -16,8 +16,13 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         private bool _netSync { get; set; } = true;
 
-        [Obsolete("Do not use from content")]
-        public bool Networked { get; set; } = true;
+        internal bool Networked { get; set; } = true;
+
+        bool IComponent.Networked
+        {
+            get => Networked;
+            set => Networked = value;
+        }
 
         /// <inheritdoc />
         public bool NetSyncEnabled
@@ -31,9 +36,14 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Update your API to allow accessing Owner through other means")]
         public EntityUid Owner { get; set; } = EntityUid.Invalid;
 
-        /// <inheritdoc />
         [ViewVariables]
-        public ComponentLifeStage LifeStage { get; [Obsolete("Do not use from content")] set; } = ComponentLifeStage.PreAdd;
+        public ComponentLifeStage LifeStage { get; internal set; } = ComponentLifeStage.PreAdd;
+
+        ComponentLifeStage IComponent.LifeStage
+        {
+            get => LifeStage;
+            set => LifeStage = value;
+        }
 
         public virtual bool SendOnlyToOwner => false;
 
@@ -51,13 +61,29 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Deleted => LifeStage >= ComponentLifeStage.Removing;
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     This is the tick the component was created.
+        /// </summary>
         [ViewVariables]
-        public GameTick CreationTick { get; [Obsolete("Do not use from content")] set; }
+        public GameTick CreationTick { get; internal set; }
 
-        /// <inheritdoc />
+        GameTick IComponent.CreationTick
+        {
+            get => CreationTick;
+            set => CreationTick = value;
+        }
+
+        /// <summary>
+        ///     Marks the component as dirty so that the network will re-sync it with clients.
+        /// </summary>
         [ViewVariables]
-        public GameTick LastModifiedTick { get; [Obsolete("Do not use from content")] set; }
+        public GameTick LastModifiedTick { get; internal set; }
+
+        GameTick IComponent.LastModifiedTick
+        {
+            get => LastModifiedTick;
+            set => LastModifiedTick = value;
+        }
 
         /// <inheritdoc />
         [Obsolete]
@@ -69,15 +95,23 @@ namespace Robust.Shared.GameObjects
 
         // these two methods clear the LastModifiedTick/CreationTick to mark it as "not different from prototype load".
         // This is used as optimization in the game state system to avoid sending redundant component data.
-        [Obsolete("Do not use from content")]
-        public virtual void ClearTicks()
+        void IComponent.ClearTicks()
+        {
+            ClearTicks();
+        }
+
+        private protected virtual void ClearTicks()
         {
             LastModifiedTick = GameTick.Zero;
             ClearCreationTick();
         }
 
-        [Obsolete("Do not use from content")]
-        public void ClearCreationTick()
+        void IComponent.ClearCreationTick()
+        {
+            ClearCreationTick();
+        }
+
+        private protected void ClearCreationTick()
         {
             CreationTick = GameTick.Zero;
         }

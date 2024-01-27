@@ -41,6 +41,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Subscribe
             int calledCount = 0;
             bus.SubscribeLocalEvent<MetaDataComponent, TestEvent>(HandleTestEvent);
+            bus.LockSubscriptions();
 
             // add a component to the system
             bus.OnEntityAdded(entUid);
@@ -98,6 +99,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             int calledCount = 0;
             bus.SubscribeLocalEvent<MetaDataComponent, TestEvent>(HandleTestEvent);
             bus.UnsubscribeLocalEvent<MetaDataComponent, TestEvent>();
+            bus.LockSubscriptions();
 
             // add a component to the system
             bus.OnEntityAdded(entUid);
@@ -153,6 +155,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Subscribe
             int calledCount = 0;
             bus.SubscribeLocalEvent<MetaDataComponent, ComponentInit>(HandleTestEvent);
+            bus.LockSubscriptions();
 
             // add a component to the system
             entManMock.Raise(m => m.EntityAdded += null, entUid);
@@ -232,6 +235,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             bus.SubscribeLocalEvent<OrderAComponent, TestEvent>(HandlerA, typeof(OrderAComponent), before: new []{typeof(OrderBComponent), typeof(OrderCComponent)});
             bus.SubscribeLocalEvent<OrderBComponent, TestEvent>(HandlerB, typeof(OrderBComponent), after: new []{typeof(OrderCComponent)});
             bus.SubscribeLocalEvent<OrderCComponent, TestEvent>(HandlerC, typeof(OrderCComponent));
+            bus.LockSubscriptions();
 
             // add a component to the system
             bus.OnEntityAdded(entUid);

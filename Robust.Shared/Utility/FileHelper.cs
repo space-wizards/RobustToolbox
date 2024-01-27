@@ -50,7 +50,7 @@ internal static class FileHelper
             fixed (char* pPath = path)
             {
                 file = Windows.CreateFileW(
-                    (ushort*)pPath,
+                    pPath,
                     Windows.GENERIC_READ,
                     FILE.FILE_SHARE_READ,
                     null,
@@ -61,7 +61,7 @@ internal static class FileHelper
 
             if (file == HANDLE.INVALID_VALUE)
             {
-                var lastError = Marshal.GetLastWin32Error();
+                var lastError = Marshal.GetLastSystemError();
                 if (lastError is ERROR.ERROR_FILE_NOT_FOUND or ERROR.ERROR_PATH_NOT_FOUND)
                 {
                     stream = null;

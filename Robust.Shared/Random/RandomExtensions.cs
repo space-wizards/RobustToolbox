@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Robust.Shared.Collections;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -47,7 +48,7 @@ namespace Robust.Shared.Random
                 }
             }
 
-            throw new InvalidOperationException("This should be unreachable!");
+            throw new UnreachableException("This should be unreachable!");
         }
 
         public static T PickAndTake<T>(this IRobustRandom random, IList<T> list)
@@ -56,6 +57,36 @@ namespace Robust.Shared.Random
             var element = list[index];
             list.RemoveAt(index);
             return element;
+        }
+
+        /// <summary>
+        /// Picks a random element from a set and returns it.
+        /// This is O(n) as it has to iterate the collection until the target index.
+        /// </summary>
+        public static T Pick<T>(this System.Random random, ICollection<T> collection)
+        {
+            var index = random.Next(collection.Count);
+            var i = 0;
+            foreach (var t in collection)
+            {
+                if (i++ == index)
+                {
+                    return t;
+                }
+            }
+
+            throw new UnreachableException("This should be unreachable!");
+        }
+
+        /// <summary>
+        /// Picks a random from a collection then removes it and returns it.
+        /// This is O(n) as it has to iterate the collection until the target index.
+        /// </summary>
+        public static T PickAndTake<T>(this System.Random random, ICollection<T> set)
+        {
+            var tile = Pick(random, set);
+            set.Remove(tile);
+            return tile;
         }
 
         /// <summary>

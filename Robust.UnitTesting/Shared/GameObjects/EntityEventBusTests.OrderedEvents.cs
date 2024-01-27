@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Reflection;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects;
@@ -41,6 +42,7 @@ public sealed partial class EntityEventBusTests
         Assert.That(foo.EventOrder, Is.EquivalentTo(new[]{"Foo", "Transform", "Metadata"}).Or.EquivalentTo(new[]{"Foo", "Metadata", "Transform"}));
     }
 
+    [Reflect(false)]
     private sealed class DifferentComponentsSameKeySubSystem : EntitySystem
     {
         public override void Initialize()
@@ -50,6 +52,7 @@ public sealed partial class EntityEventBusTests
         }
     }
 
+    [Reflect(false)]
     private sealed class DifferentComponentsSameKeySubSystem2 : EntitySystem
     {
         public override void Initialize()
@@ -60,7 +63,7 @@ public sealed partial class EntityEventBusTests
         }
     }
 
-
+    [Reflect(false)]
     private sealed partial class FooComponent : Component
     {
 

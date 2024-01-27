@@ -388,10 +388,10 @@ namespace Robust.Shared.GameObjects
         public void DoAutoRegistrations()
         {
             var types = _reflectionManager.FindTypesWithAttribute<RegisterComponentAttribute>().ToArray();
-            RegisterClasses(types, false);
+            RegisterTypesInternal(types, false);
         }
 
-        private void RegisterClasses(Type[] types, bool overwrite)
+        private void RegisterTypesInternal(Type[] types, bool overwrite)
         {
             var names = _names.ToDictionary();
             var lowerCaseNames = _lowerCaseNames.ToDictionary();
@@ -419,7 +419,19 @@ namespace Robust.Shared.GameObjects
         public void RegisterClass<T>(bool overwrite = false)
             where T : IComponent, new()
         {
-            RegisterClasses(new []{typeof(T)}, overwrite);
+            RegisterTypesInternal(new []{typeof(T)}, overwrite);
+        }
+
+        /// <inheritdoc />
+        public void RegisterTypes(params Type[] types)
+        {
+            foreach (var type in types)
+            {
+                if (!type.IsAssignableTo(typeof(IComponent)) || !type.HasParameterlessConstructor())
+                    throw new InvalidOperationException($"Invalid type: {type}");
+            }
+
+            RegisterTypesInternal(types, false);
         }
 
         public IEnumerable<CompIdx> GetAllRefTypes()

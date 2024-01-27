@@ -39,7 +39,7 @@ namespace Robust.Client.UserInterface.CustomControls
     // And also if Update() stops firing due to an exception loop the console will still work.
     // (At least from the main thread, which is what's throwing the exceptions..)
     [GenerateTypedNameReferences]
-    public sealed partial class DebugConsole : Control, IDebugConsoleView, IPostInjectInit
+    public sealed partial class DebugConsole : Control, IDebugConsoleView
     {
         [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly IResourceManager _resourceManager = default!;
@@ -49,13 +49,15 @@ namespace Robust.Client.UserInterface.CustomControls
         private static readonly ResPath HistoryPath = new("/debug_console_history.json");
 
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new();
-        private ISawmill _logger = default!;
+        private readonly ISawmill _logger;
 
         public DebugConsole()
         {
             RobustXamlLoader.Load(this);
 
             IoCManager.InjectDependencies(this);
+
+            _logger = _logMan.GetSawmill("dbgconsole");
 
             InitCompletions();
 
@@ -281,11 +283,6 @@ namespace Robust.Client.UserInterface.CustomControls
                     writer.Write(newHistory);
                 }
             });
-        }
-
-        void IPostInjectInit.PostInject()
-        {
-            _logger = _logMan.GetSawmill("dbgconsole");
         }
     }
 }

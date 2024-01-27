@@ -39,11 +39,22 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+- Controls can now hook before, after, and during rendering of their children.
+- IRenderHandle is now a public API, with the caveat that it's properties and methods are unstable.
+- ButtonGroup now exposes what buttons it contains, alongside which is currently pressed.
+- OptionButton has additional styleclasses, and has a hook for modifying it's internal buttons.
+- PanelContainer.GetStyleBox() is now protected rather than private.
+- TextureButton now uses a TextureRect instead of custom drawing code.
+- TextureRect has additional style properties exposed.
+    - A new property, TextureSizeTarget, was added, which allows specifying a size in virtual pixels that the control should attempt to draw at.
+    - Stretch mode is now a style property.
+    - Scale is now a style property.
+- Avalonia.Metadata.XmlnsDefinitionAttribute is now permitted by the sandbox.
 
 ### Bugfixes
 
-*None yet*
+- UI drawing now properly accounts for a control's draw routine potentially mangling the current matrix.
+- UI roots now properly update when the global stylesheet is changed. They previously only did so if they had a dedicated stylesheet (which is the one case where they would be unaffected by a global sheet update.)
 
 ### Other
 
@@ -66,7 +77,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Various entity manager methods now have a new `where T : IComponent` constraint.
-* The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations. 
+* The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations.
 * `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
 
 ### New features

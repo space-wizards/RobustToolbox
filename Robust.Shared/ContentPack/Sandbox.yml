@@ -73,10 +73,9 @@ WhitelistedNamespaces:
 # * The API is not *relevant* to content. e.g. System.Type.IsAnsiClass.
 # * I am lazy these API lists are huge dude.
 Types:
-  Avalonia:
-    Metadata:
-      XmlnsDefinitionAttribute:
-          All: True
+  Avalonia.Metadata:
+    XmlnsDefinitionAttribute:
+      All: True
   NetSerializer:
     NetListAsArray`1:
       Fields:

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.ResourceManagement;
@@ -67,9 +67,10 @@ namespace Robust.Client.Graphics
 
                     var hasLight = _rawMode != "unshaded";
                     ShaderBlendMode? blend = null;
-                    if (_rawBlendMode != null)
+                    if (!string.IsNullOrEmpty(_rawBlendMode))
                     {
-                        if (!Enum.TryParse<ShaderBlendMode>(_rawBlendMode.ToUpper(), out var parsed))
+                        var modeCapitalized = char.ToUpper(_rawBlendMode[0]) + _rawBlendMode[1..];
+                        if (!Enum.TryParse<ShaderBlendMode>(modeCapitalized, out var parsed))
                             Logger.Error($"invalid mode: {_rawBlendMode}");
                         else
                             blend = parsed;

@@ -67,10 +67,9 @@ namespace Robust.Client.Graphics
 
                     var hasLight = _rawMode != "unshaded";
                     ShaderBlendMode? blend = null;
-                    if (!string.IsNullOrEmpty(_rawBlendMode))
+                    if (_rawBlendMode != null)
                     {
-                        var modeCapitalized = char.ToUpper(_rawBlendMode[0]) + _rawBlendMode[1..];
-                        if (!Enum.TryParse<ShaderBlendMode>(modeCapitalized, out var parsed))
+                        if (!Enum.TryParse<ShaderBlendMode>(_rawBlendMode, true, out var parsed))
                             Logger.Error($"invalid mode: {_rawBlendMode}");
                         else
                             blend = parsed;

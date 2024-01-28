@@ -10,12 +10,11 @@ namespace Robust.Shared.GameObjects.Components.Localization
     /// <summary>
     ///     Overrides grammar attributes specified in prototypes or localization files.
     /// </summary>
-    [RegisterComponent]
-    [NetworkedComponent()]
+    [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
     public sealed partial class GrammarComponent : Component
     {
-        [DataField("attributes")]
-        public Dictionary<string, string> Attributes { get; private set; } = new();
+        [DataField, AutoNetworkedField]
+        public Dictionary<string, string> Attributes = new();
 
         [ViewVariables]
         public Gender? Gender

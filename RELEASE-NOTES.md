@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
 * Add dotted line drawing to DrawingHandleScreen.
 
 ### Bugfixes

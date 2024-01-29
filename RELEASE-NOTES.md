@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add dotted line drawing to DrawingHandleScreen.
 
 ### Bugfixes
 

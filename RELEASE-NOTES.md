@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add GetEntitiesOnMap / GetChildEntities to EntityLookupSystem to return components on the specified map and components with the specified parent respectively.
 
 ### Bugfixes
 

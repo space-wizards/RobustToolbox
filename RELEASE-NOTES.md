@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add MaxDimension property to Box2 to return the higher of the Width or Height.
 
 ### Bugfixes
 

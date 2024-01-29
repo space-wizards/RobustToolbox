@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* Add dotted line drawing to DrawingHandleScreen.
 * Add LocalToTile method to SharedMapSystem for converting grid Vector2i tiles to Vector2s that accounts for the grid's TileSize.
 
 ### Bugfixes

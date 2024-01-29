@@ -127,7 +127,31 @@ public abstract partial class SharedMapSystem
         SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
     }
 
-    public void OnGridBoundsChange(EntityUid uid, MapGridComponent component)
+    /// <summary>
+    /// <see cref="GetGridPosition(Robust.Shared.GameObjects.Entity{Robust.Shared.Physics.Components.PhysicsComponent?},System.Numerics.Vector2,Robust.Shared.Maths.Angle)"/>
+    /// </summary>
+    public Vector2 GetGridPosition(Entity<PhysicsComponent?> grid, Vector2 worldPos, Angle worldRot)
+    {
+        if (!Resolve(grid.Owner, ref grid.Comp))
+            return Vector2.Zero;
+
+        return worldPos + worldRot.RotateVec(grid.Comp.LocalCenter);
+    }
+
+    /// <summary>
+    /// Gets the mapgrid's position considering its local physics center.
+    /// </summary>
+    public Vector2 GetGridPosition(Entity<PhysicsComponent?, TransformComponent?> grid)
+    {
+        if (!Resolve(grid.Owner, ref grid.Comp1, ref grid.Comp2))
+            return Vector2.Zero;
+
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(grid.Comp2);
+
+        return GetGridPosition((grid.Owner, grid.Comp1), worldPos, worldRot);
+    }
+
+    private void OnGridBoundsChange(EntityUid uid, MapGridComponent component)
     {
         // Just MapLoader things.
         if (component.MapProxy == DynamicTree.Proxy.Free) return;

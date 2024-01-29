@@ -469,6 +469,14 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
+        /// Gets the screen coordinates position relative to the control.
+        /// </summary>
+        public Vector2 GetLocalPosition(ScreenCoordinates coordinates)
+        {
+            return coordinates.Position - GlobalPixelPosition;
+        }
+
+        /// <summary>
         /// Notify the layout system that this control's <see cref="Measure"/> result may have changed
         /// and must be recalculated.
         /// </summary>

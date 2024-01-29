@@ -44,6 +44,7 @@ END TEMPLATE-->
 * Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
 * Add dotted line drawing to DrawingHandleScreen.
 * Add LocalToTile method to SharedMapSystem for converting grid Vector2i tiles to Vector2s that accounts for the grid's TileSize.
+* Add GetLocalPosition to convert ScreenCoordinates to coordinates relative to the control. Ignores window.
 
 ### Bugfixes
 

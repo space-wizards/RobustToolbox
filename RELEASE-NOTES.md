@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* Add GetEntitiesOnMap / GetChildEntities to EntityLookupSystem to return components on the specified map and components with the specified parent respectively.
 * Add MaxDimension property to Box2 to return the higher of the Width or Height.
 * Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
 * Add dotted line drawing to DrawingHandleScreen.

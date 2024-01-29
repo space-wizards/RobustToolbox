@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
 
 ### Bugfixes
 

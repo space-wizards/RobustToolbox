@@ -1040,6 +1040,34 @@ namespace Robust.Shared.Prototypes
             _prototypeDataCache[prototype.ID] = data;
             return data;
         }
+
+        public bool TryGetRandom<T>(IRobustRandom random, [NotNullWhen(true)] out IPrototype? prototype) where T : class, IPrototype
+        {
+            var count = Count<T>();
+
+            if (count == 0)
+            {
+                prototype = null;
+                return false;
+            }
+
+            var index = 0;
+
+            var picked = random.Next(count);
+
+            foreach (var proto in EnumeratePrototypes<T>())
+            {
+                if (index == picked)
+                {
+                    prototype = proto;
+                    return true;
+                }
+
+                index++;
+            }
+
+            throw new ArgumentOutOfRangeException($"Unable to pick valid prototype for {typeof(T)}?");
+        }
     }
 
     public sealed class InvalidPrototypeNameException : Exception

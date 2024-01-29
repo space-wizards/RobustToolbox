@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add GetLocalPosition to convert ScreenCoordinates to coordinates relative to the control. Ignores window.
 
 ### Bugfixes
 

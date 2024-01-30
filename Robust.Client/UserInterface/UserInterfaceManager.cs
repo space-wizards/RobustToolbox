@@ -393,16 +393,24 @@ namespace Robust.Client.UserInterface
                 handle.UseShader(null);
             }
             handle.SetTransform(oldXform);
+            var args = new Control.ControlRenderArguments()
+            {
+                Handle = renderHandle,
+                Total = ref total,
+                Modulate = modulate,
+                ScissorBox = scissorRegion,
+                CoordinateTransform = ref coordinateTransform
+            };
 
-            control.PreRenderChildren(renderHandle, ref total, modulate, scissorRegion, ref coordinateTransform);
+            control.PreRenderChildren(ref args);
 
             foreach (var child in control.Children)
             {
                 var pos = position + (Vector2i) coordinateTransform.Transform(child.PixelPosition);
-                control.RenderChildOverride(renderHandle, ref total, child, pos, modulate, scissorRegion, coordinateTransform);
+                control.RenderChildOverride(ref args, child.GetPositionInParent(), pos);
             }
 
-            control.PostRenderChildren(renderHandle, ref total, modulate, scissorRegion, ref coordinateTransform);
+            control.PostRenderChildren(ref args);
 
             if (clip)
             {

@@ -545,28 +545,34 @@ namespace Robust.Client.UserInterface
             Draw(renderHandle.DrawingHandleScreen);
         }
 
-        protected internal virtual void PreRenderChildren(IRenderHandle renderHandle, ref int total, Color modulate,
-            UIBox2i? scissorBox, ref Matrix3 coordinateTransform)
+        protected internal virtual void PreRenderChildren(ref ControlRenderArguments args)
         {
 
         }
 
-        protected internal virtual void PostRenderChildren(IRenderHandle renderHandle, ref int total, Color modulate,
-            UIBox2i? scissorBox, ref Matrix3 coordinateTransform)
+        protected internal virtual void PostRenderChildren(ref ControlRenderArguments args)
         {
 
         }
 
-        protected internal virtual void RenderChildOverride(IRenderHandle renderHandle, ref int total, Control control,
-            Vector2i position, Color modulate, UIBox2i? scissorBox, Matrix3 coordinateTransform)
+        protected internal virtual void RenderChildOverride(ref ControlRenderArguments args, int childIndex, Vector2i position)
         {
-            RenderControl(renderHandle, ref total, control, position, modulate, scissorBox, coordinateTransform);
+            RenderControl(ref args, childIndex, position);
         }
 
-        protected void RenderControl(IRenderHandle renderHandle, ref int total, Control control, Vector2i position,
-            Color modulate, UIBox2i? scissorBox, Matrix3 coordinateTransform)
+        public ref struct ControlRenderArguments
         {
-            UserInterfaceManagerInternal.RenderControl(renderHandle, ref total, control, position, modulate, scissorBox, coordinateTransform);
+            public IRenderHandle Handle;
+            public ref int Total;
+            public Vector2i Position;
+            public Color Modulate;
+            public UIBox2i? ScissorBox;
+            public ref Matrix3 CoordinateTransform;
+        }
+
+        protected void RenderControl(ref ControlRenderArguments args, int childIndex, Vector2i position)
+        {
+            UserInterfaceManagerInternal.RenderControl(args.Handle, ref args.Total, GetChild(childIndex), position, args.Modulate, args.ScissorBox, args.CoordinateTransform);
         }
 
         public void UpdateDraw()

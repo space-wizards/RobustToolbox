@@ -1323,6 +1323,16 @@ namespace Robust.Shared
         public static readonly CVarDef<float> MidiVolume =
             CVarDef.Create("midi.volume", 0.50f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        /// <summary>
+        /// Controls amount of CPU cores and (by extension) polyphony for Fluidsynth.
+        /// </summary>
+        /// <remarks>
+        /// You probably don't want to set this to be multithreaded, the way Fluidsynth's multithreading works is
+        /// probably worse-than-nothing for Robust's usage.
+        /// </remarks>
+        public static readonly CVarDef<int> MidiParallelism =
+            CVarDef.Create("midi.parallelism", 1, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         /*
          * HUB
          * CVars related to public master server hub

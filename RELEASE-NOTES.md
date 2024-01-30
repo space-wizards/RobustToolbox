@@ -50,7 +50,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Important MIDI performance improvements.
 
 ### Internal
 

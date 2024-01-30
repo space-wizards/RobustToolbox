@@ -39,22 +39,26 @@ END TEMPLATE-->
 
 ### New features
 
-- Controls can now hook before, after, and during rendering of their children.
-- IRenderHandle is now a public API, with the caveat that it's properties and methods are unstable.
-- ButtonGroup now exposes what buttons it contains, alongside which is currently pressed.
-- OptionButton has additional styleclasses, and has a hook for modifying it's internal buttons.
-- PanelContainer.GetStyleBox() is now protected rather than private.
-- TextureButton now uses a TextureRect instead of custom drawing code.
-- TextureRect has additional style properties exposed.
-    - A new property, TextureSizeTarget, was added, which allows specifying a size in virtual pixels that the control should attempt to draw at.
-    - Stretch mode is now a style property.
-    - Scale is now a style property.
-- Avalonia.Metadata.XmlnsDefinitionAttribute is now permitted by the sandbox.
+* Controls can now hook before, after, and during rendering of their children.
+* IRenderHandle is now a public API, with the caveat that it's properties and methods are unstable.
+* ButtonGroup now exposes what buttons it contains, alongside which is currently pressed.
+* OptionButton has additional styleclasses, and has a hook for modifying it's internal buttons.
+* PanelContainer.GetStyleBox() is now protected rather than private.
+* TextureButton now uses a TextureRect instead of custom drawing code.
+* TextureRect has additional style properties exposed.
+    * A new property, TextureSizeTarget, was added, which allows specifying a size in virtual pixels that the control should attempt to draw at.
+    * Stretch mode is now a style property.
+    * Scale is now a style property.
+* Avalonia.Metadata.XmlnsDefinitionAttribute is now permitted by the sandbox.
+* Add MaxDimension property to Box2 to return the higher of the Width or Height.
+* Add GetLocalPosition to convert ScreenCoordinates to coordinates relative to the control. Ignores window.
+* Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
+* Add dotted line drawing to DrawingHandleScreen.
 
 ### Bugfixes
 
-- UI drawing now properly accounts for a control's draw routine potentially mangling the current matrix.
-- UI roots now properly update when the global stylesheet is changed. They previously only did so if they had a dedicated stylesheet (which is the one case where they would be unaffected by a global sheet update.)
+* UI drawing now properly accounts for a control's draw routine potentially mangling the current matrix.
+* UI roots now properly update when the global stylesheet is changed. They previously only did so if they had a dedicated stylesheet (which is the one case where they would be unaffected by a global sheet update.
 
 ### Other
 

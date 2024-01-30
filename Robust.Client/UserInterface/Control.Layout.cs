@@ -226,6 +226,10 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="Rect"/>
         public UIBox2i PixelRect => UIBox2i.FromDimensions(PixelPosition, PixelSize);
 
+        public UIBox2 GlobalRect => UIBox2.FromDimensions(GlobalPosition, _size);
+
+        public UIBox2i GlobalPixelRect => UIBox2i.FromDimensions(GlobalPixelPosition, PixelSize);
+
         /// <summary>
         /// Horizontal alignment mode.
         /// This determines how the control should be laid out horizontally
@@ -462,6 +466,14 @@ namespace Robust.Client.UserInterface
                 _maxHeight = value;
                 InvalidateMeasure();
             }
+        }
+
+        /// <summary>
+        /// Gets the screen coordinates position relative to the control.
+        /// </summary>
+        public Vector2 GetLocalPosition(ScreenCoordinates coordinates)
+        {
+            return coordinates.Position - GlobalPixelPosition;
         }
 
         /// <summary>

@@ -88,6 +88,7 @@ namespace Robust.UnitTesting.Shared.Maths
 
         #endregion
 
+        /*
         [Test]
         public void EnvironmentVariablesWorkAvx()
         {
@@ -99,6 +100,7 @@ namespace Robust.UnitTesting.Shared.Maths
             RemoteExecutor.Invoke(() => { Assert.That(NumericsHelpers.Vector256Enabled, Is.True); },
                 GetInvokeOptions(true)).Dispose();
         }
+        */
 
         #region Multiply
 

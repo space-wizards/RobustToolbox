@@ -19,13 +19,15 @@ internal sealed partial class MetricsManager
     {
         private readonly ISawmill _sawmill;
         private readonly HttpListener _listener;
+        private readonly CollectorRegistry _registry;
 
         public ManagedHttpListenerMetricsServer(ISawmill sawmill, string host, int port, string url = "metrics/",
-            CollectorRegistry? registry = null) : base(registry)
+            CollectorRegistry? registry = null)
         {
             _sawmill = sawmill;
             _listener = new HttpListener();
             _listener.Prefixes.Add($"http://{host}:{port}/{url}");
+            _registry = registry ?? Metrics.DefaultRegistry;
         }
 
         protected override Task StartServer(CancellationToken cancel)

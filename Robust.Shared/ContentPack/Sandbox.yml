@@ -1411,4 +1411,7 @@ Types:
       # should be fine to do All: True, but this has some methods to read filestreams. So just in case this ever adds an extension method that directly opens a file:
       Methods:
       - "!!0 ParseOrThrow<>(Pidgin.Parser`2<char, !!0>, string, System.Func`3<char, Pidgin.SourcePos, Pidgin.SourcePos>)"
+      - "!!0 ParseOrThrow<>(Pidgin.Parser`2<char, !!0>, string, Pidgin.Configuration.IConfiguration`1<char>)"
     SourcePos: { }
+  Pidgin.Configuration:
+    IConfiguration`1: { All: True }

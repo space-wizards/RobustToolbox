@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -14,7 +15,8 @@ internal sealed partial class EntityEventBus : IEventBus
     private IComponentFactory _comFac;
 
     // Data on individual events. Used to check ordering info and fire broadcast events.
-    private readonly Dictionary<Type, EventData> _eventData = new();
+    private FrozenDictionary<Type, EventData> _eventData = FrozenDictionary<Type, EventData>.Empty;
+    private readonly Dictionary<Type, EventData> _eventDataUnfrozen = new();
 
     // Inverse subscriptions to be able to unsubscribe an IEntityEventSubscriber.
     private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, BroadcastRegistration>> _inverseEventSubscriptions
@@ -28,10 +30,18 @@ internal sealed partial class EntityEventBus : IEventBus
     internal Dictionary<EntityUid, EventTable> _entEventTables = new();
 
     // CompType -> EventType -> Handler
-    internal Dictionary<Type, DirectedRegistration>?[] _entSubscriptions =
+    internal FrozenDictionary<Type, DirectedRegistration>?[] _entSubscriptions = default!;
+
+    // Variant of _entSubscriptions that omits any events with the ComponentEventAttribute
+    internal FrozenDictionary<Type, DirectedRegistration>?[] _entSubscriptionsNoCompEv = default!;
+
+    // pre-freeze _entSubscriptions data
+    internal Dictionary<Type, DirectedRegistration>?[] _entSubscriptionsUnfrozen =
         Array.Empty<Dictionary<Type, DirectedRegistration>?>();
 
     // EventType -> { CompType1, ... CompType N }
+    // Only required to sort ordered subscriptions, which only happens during initialization
+    // so doesn't need to be a frozen dictionary.
     private Dictionary<Type, HashSet<CompIdx>> _entSubscriptionsInv = new();
 
     // prevents shitcode, get your subscriptions figured out before you start spawning entities
@@ -52,7 +62,10 @@ internal sealed partial class EntityEventBus : IEventBus
 
     private void RegisterCommon(Type eventType, OrderingData? data, out EventData subs)
     {
-        subs = _eventData.GetOrNew(eventType);
+        if (_subscriptionLock)
+            throw new InvalidOperationException("Subscription locked.");
+
+        subs = _eventDataUnfrozen.GetOrNew(eventType);
 
         if (data == null)
             return;

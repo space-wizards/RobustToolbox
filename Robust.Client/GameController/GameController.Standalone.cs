@@ -35,8 +35,6 @@ namespace Robust.Client
                 throw new InvalidOperationException("Cannot start twice!");
             }
 
-            GlibcBug.Check();
-
             _hasStarted = true;
 
             if (CommandLineArgs.TryParse(args, out var parsed))

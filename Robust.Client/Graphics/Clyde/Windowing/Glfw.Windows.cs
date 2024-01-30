@@ -654,7 +654,7 @@ namespace Robust.Client.Graphics.Clyde
 
             private static void WinThreadGetClipboard(CmdGetClipboard cmd)
             {
-                var clipboard = GLFW.GetClipboardString((Window*) cmd.Window);
+                var clipboard = GLFW.GetClipboardString((Window*) cmd.Window) ?? "";
                 // Don't have to care about synchronization I don't think so just fire this immediately.
                 cmd.Tcs.TrySetResult(clipboard);
             }

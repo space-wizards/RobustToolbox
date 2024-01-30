@@ -1,14 +1,17 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Lidgren.Network;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -20,6 +23,8 @@ namespace Robust.UnitTesting
         {
             [Dependency] private readonly IGameTiming _gameTiming = default!;
             [Dependency] private readonly ITaskManager _taskManager = default!;
+            [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
+
             public bool IsServer { get; private set; }
             public bool IsClient => !IsServer;
             public bool IsRunning { get; private set; }
@@ -52,6 +57,10 @@ namespace Robust.UnitTesting
             ///     The channel we will connect to when <see cref="ClientConnect"/> is called.
             /// </summary>
             public ChannelWriter<object>? NextConnectChannel { get; set; }
+
+            // Used for faking NetMessage.ReadFromBuffer and WriteToBuffer.
+            private readonly NetOutgoingMessage _serializationMessage = new();
+            private readonly NetIncomingMessage _deserializationMessage = new();
 
             private int _genConnectionUid()
             {
@@ -171,7 +180,7 @@ namespace Robust.UnitTesting
                                 channel = ServerChannel;
                             }
 
-                            var message = data.Message;
+                            var message = DeserializeNetMessage(data);
                             message.MsgChannel = channel;
                             if (_callbacks.TryGetValue(message.GetType(), out var callback))
                             {
@@ -249,21 +258,8 @@ namespace Robust.UnitTesting
             {
                 DebugTools.Assert(IsServer);
 
-                if (message is MsgState stateMsg)
-                {
-                    // MsgState sending method depends on the size of the possible compressed buffer. But tests bypass buffer read/write.
-                    stateMsg._hasWritten = true;
-
-                    // Need to duplicate the state to avoid the server & client storing references to the same collections.
-                    stateMsg.State = stateMsg.State.Clone();
-                }
-                else if (message is MsgStateLeavePvs leaveMsg)
-                {
-                    leaveMsg.Entities = leaveMsg.Entities.ShallowClone();
-                }
-
                 var channel = (IntegrationNetChannel) recipient;
-                channel.OtherChannel.TryWrite(new DataMessage(message, channel.RemoteUid));
+                channel.OtherChannel.TryWrite(SerializeNetMessage(message, channel.RemoteUid));
             }
 
             public void ServerSendToMany(NetMessage message, List<INetChannel> recipients)
@@ -380,7 +376,7 @@ namespace Robust.UnitTesting
                     throw new InvalidOperationException("Not connected.");
                 }
 
-                channel.OtherChannel.TryWrite(new DataMessage(message, channel.RemoteUid));
+                channel.OtherChannel.TryWrite(SerializeNetMessage(message, channel.RemoteUid));
             }
 
             public void DispatchLocalNetMessage(NetMessage message)
@@ -389,6 +385,42 @@ namespace Robust.UnitTesting
                 {
                     callback(message);
                 }
+            }
+
+            private DataMessage SerializeNetMessage(NetMessage netMessage, int remoteUid)
+            {
+                byte[] pooledBuffer;
+                int length;
+                lock (_serializationMessage)
+                {
+                    netMessage.WriteToBuffer(_serializationMessage, _robustSerializer);
+                    length = _serializationMessage.LengthBytes;
+                    pooledBuffer = ArrayPool<byte>.Shared.Rent(length);
+                    _serializationMessage.Data.AsSpan(0, length).CopyTo(pooledBuffer);
+                    _serializationMessage.Position = 0;
+                    _serializationMessage.LengthBytes = 0;
+                }
+
+                return new DataMessage(pooledBuffer, length, netMessage.GetType(), remoteUid);
+            }
+
+            private NetMessage DeserializeNetMessage(DataMessage message)
+            {
+                var buffer = message.PooledNetBuffer;
+                var netMessage = (NetMessage) Activator.CreateInstance(message.MessageType)!;
+                lock (_deserializationMessage)
+                {
+                    _deserializationMessage.m_data = buffer;
+                    _deserializationMessage.LengthBytes = message.Length;
+                    _deserializationMessage.Position = 0;
+
+                    netMessage.ReadFromBuffer(_deserializationMessage, _robustSerializer);
+
+                    _deserializationMessage.m_data = null;
+                }
+
+                ArrayPool<byte>.Shared.Return(buffer);
+                return netMessage;
             }
 
             private sealed class IntegrationNetChannel : INetChannel
@@ -486,17 +518,7 @@ namespace Robust.UnitTesting
             {
             }
 
-            private sealed class DataMessage
-            {
-                public DataMessage(NetMessage message, int connection)
-                {
-                    Message = message;
-                    Connection = connection;
-                }
-
-                public NetMessage Message { get; }
-                public int Connection { get; }
-            }
+            private sealed record DataMessage(byte[] PooledNetBuffer, int Length, Type MessageType, int Connection);
 
             private sealed class DisconnectMessage
             {

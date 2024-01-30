@@ -10,5 +10,8 @@ charset = utf-8
 [*.{csproj,xml,yml,dll.config,targets,props}]
 indent_size = 2
 
+[nuget.config]
+indent_size = 2
+
 [*.gdsl]
 indent_style = tab

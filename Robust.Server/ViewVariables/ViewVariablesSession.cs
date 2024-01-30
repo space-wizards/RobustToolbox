@@ -97,7 +97,7 @@ namespace Robust.Server.ViewVariables
 
             // Auto-dirty component. Only works when modifying a field that is directly on a component,
             // Does not work for nested objects.
-            if (Object is Component comp)
+            if (Object is Component { NetSyncEnabled: true } comp)
                 EntityManager.Dirty(comp.Owner, comp);
         }
 

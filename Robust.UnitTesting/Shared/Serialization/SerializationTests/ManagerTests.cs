@@ -321,21 +321,21 @@ public sealed partial class ManagerTests : SerializationTest
     public void Read_NT_NV_Struct<T>(DataNode _, Func<T> __, Func<T> ___, bool useContext, object[] ____) where T : struct
     {
         var val = Serialization.Read<T?>(ValueDataNode.Null(), context: Context(useContext));
-        Assert.Null(val);
+        Assert.That(val, Is.Null);
     }
 
     [TestCaseSource(nameof(ReadWriteTypesClass))]
     public void Read_NT_NV_Class<T>(DataNode _, Func<T> __, Func<T> ___, bool useContext, object[] ____) where T : class
     {
         var val = Serialization.Read<T?>(ValueDataNode.Null(), context: Context(useContext));
-        Assert.Null(val);
+        Assert.That(val, Is.Null);
     }
 
     [TestCaseSource(nameof(ReadWriteTypesStruct))]
     public void Read_NT_RV_Struct<T>(DataNode node, Func<T> value, Func<T> _, bool useContext, object[] valueExtractors) where T : struct
     {
         var val = Serialization.Read<T?>(node, context: Context(useContext));
-        Assert.NotNull(val);
+        Assert.That(val, Is.Not.Null);
         AssertEqual(val!.Value, value(), valueExtractors);
     }
 
@@ -343,7 +343,7 @@ public sealed partial class ManagerTests : SerializationTest
     public void Read_NT_RV_Class<T>(DataNode node, Func<T> value, Func<T> _, bool useContext, object[] valueExtractors) where T : class
     {
         var val = Serialization.Read<T?>(node, context: Context(useContext));
-        Assert.NotNull(val);
+        Assert.That(val, Is.Not.Null);
         AssertEqual(val!, value(), valueExtractors);
     }
 
@@ -371,7 +371,7 @@ public sealed partial class ManagerTests : SerializationTest
     {
         T? target = null;
         Serialization.CopyTo<T?>(null, ref target, context: Context(useContext));
-        Assert.Null(target);
+        Assert.That(target, Is.Null);
     }
 
     [TestCaseSource(nameof(TestableTypesClass))]
@@ -380,7 +380,7 @@ public sealed partial class ManagerTests : SerializationTest
     {
         T? target = null;
         Serialization.CopyTo<T?>(null, ref target, context: Context(useContext));
-        Assert.Null(target);
+        Assert.That(target, Is.Null);
     }
 
     [TestCaseSource(nameof(TestableTypesStruct))]
@@ -389,7 +389,7 @@ public sealed partial class ManagerTests : SerializationTest
     {
         T? target = value();
         Serialization.CopyTo<T?>(null, ref target, context: Context(useContext));
-        Assert.Null(target);
+        Assert.That(target, Is.Null);
     }
 
     [TestCaseSource(nameof(TestableTypesClass))]
@@ -398,7 +398,7 @@ public sealed partial class ManagerTests : SerializationTest
     {
         T? target = value();
         Serialization.CopyTo<T?>(null, ref target, context: Context(useContext));
-        Assert.Null(target);
+        Assert.That(target, Is.Null);
     }
 
     [TestCaseSource(nameof(TestableTypesStruct))]
@@ -407,7 +407,7 @@ public sealed partial class ManagerTests : SerializationTest
     {
         T? target = null;
         Serialization.CopyTo<T?>(value(), ref target, context: Context(useContext));
-        Assert.NotNull(target);
+        Assert.That(target, Is.Not.Null);
         AssertEqual(target!.Value, value(), valueExtractors);
     }
 
@@ -417,7 +417,7 @@ public sealed partial class ManagerTests : SerializationTest
     {
         T? target = null;
         Serialization.CopyTo<T?>(value(), ref target, context: Context(useContext));
-        Assert.NotNull(target);
+        Assert.That(target, Is.Not.Null);
         AssertEqual(target!, value(), valueExtractors);
     }
 
@@ -427,7 +427,7 @@ public sealed partial class ManagerTests : SerializationTest
     {
         T? target = altValue();
         Serialization.CopyTo<T?>(value(), ref target, context: Context(useContext));
-        Assert.NotNull(target);
+        Assert.That(target, Is.Not.Null);
         AssertEqual(target!.Value, value(), valueExtractors);
     }
 
@@ -437,7 +437,7 @@ public sealed partial class ManagerTests : SerializationTest
     {
         T? target = altValue();
         Serialization.CopyTo<T?>(value(), ref target, context: Context(useContext));
-        Assert.NotNull(target);
+        Assert.That(target, Is.Not.Null);
         AssertEqual(target!, value(), valueExtractors);
     }
 
@@ -466,7 +466,7 @@ public sealed partial class ManagerTests : SerializationTest
     {
         T target = null!;
         Serialization.CopyTo(value(), ref target, context: Context(useContext));
-        Assert.NotNull(target);
+        Assert.That(target, Is.Not.Null);
         AssertEqual(target!, value(), valueExtractors);
     }
 
@@ -488,7 +488,7 @@ public sealed partial class ManagerTests : SerializationTest
         object[] valueExtractors) where T : struct
     {
         var copy = Serialization.CreateCopy<T?>(null, context: Context(useContext));
-        Assert.Null(copy);
+        Assert.That(copy, Is.Null);
     }
 
     [TestCaseSource(nameof(TestableTypesClass))]
@@ -496,7 +496,7 @@ public sealed partial class ManagerTests : SerializationTest
         object[] valueExtractors) where T : class
     {
         var copy = Serialization.CreateCopy<T?>(null, context: Context(useContext));
-        Assert.Null(copy);
+        Assert.That(copy, Is.Null);
     }
 
     [TestCaseSource(nameof(TestableTypesAll))]
@@ -504,7 +504,7 @@ public sealed partial class ManagerTests : SerializationTest
         object[] valueExtractors)
     {
         var copy = Serialization.CreateCopy<T?>(value(), context: Context(useContext));
-        Assert.NotNull(copy);
+        Assert.That(copy, Is.Not.Null);
         AssertEqual(copy!, value(), valueExtractors);
     }
 
@@ -536,7 +536,7 @@ public sealed partial class ManagerTests : SerializationTest
         CopyByRefTestClass target = null!;
         var source = new CopyByRefTestClass();
         Serialization.CopyTo(source, ref target, notNullableOverride: true);
-        Assert.NotNull(target);
+        Assert.That(target, Is.Not.Null);
         Assert.That(target!, Is.SameAs(source));
     }
 
@@ -545,7 +545,7 @@ public sealed partial class ManagerTests : SerializationTest
     {
         CopyByRefTestClass? target = null;
         Serialization.CopyTo(null, ref target);
-        Assert.Null(target);
+        Assert.That(target, Is.Null);
     }
 
     [Test]
@@ -560,7 +560,7 @@ public sealed partial class ManagerTests : SerializationTest
     public void CreateCopy_CopyByRef_NV_Class()
     {
         var copy = Serialization.CreateCopy<CopyByRefTestClass?>(null);
-        Assert.Null(copy);
+        Assert.That(copy, Is.Null);
     }
 
     [Test]
@@ -569,7 +569,7 @@ public sealed partial class ManagerTests : SerializationTest
         CopyByRefTestStruct? target = null;
         var source = new CopyByRefTestStruct{ID = 5};
         Serialization.CopyTo(source, ref target);
-        Assert.NotNull(target);
+        Assert.That(target, Is.Not.Null);
         Assert.That(target!.Value.ID, Is.EqualTo(source.ID));
     }
 
@@ -578,7 +578,7 @@ public sealed partial class ManagerTests : SerializationTest
     {
         CopyByRefTestStruct? target = null;
         Serialization.CopyTo(null, ref target);
-        Assert.Null(target);
+        Assert.That(target, Is.Null);
     }
 
     [Test]
@@ -593,7 +593,7 @@ public sealed partial class ManagerTests : SerializationTest
     public void CreateCopy_CopyByRef_NV_Struct()
     {
         var copy = Serialization.CreateCopy<CopyByRefTestStruct?>(null);
-        Assert.Null(copy);
+        Assert.That(copy, Is.Null);
     }
 
     #endregion

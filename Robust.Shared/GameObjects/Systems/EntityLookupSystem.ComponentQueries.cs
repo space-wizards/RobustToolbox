@@ -12,312 +12,13 @@ using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
 public sealed partial class EntityLookupSystem
 {
     #region Private
-
-    private void AddEntitiesIntersecting<T>(
-        EntityUid lookupUid,
-        HashSet<Entity<T>> intersecting,
-        Box2 worldAABB,
-        LookupFlags flags,
-        EntityQuery<T> query) where T : IComponent
-    {
-        var lookup = _broadQuery.GetComponent(lookupUid);
-        var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
-        var localAABB = invMatrix.TransformBox(worldAABB);
-        var state = (intersecting, query);
-
-        if ((flags & LookupFlags.Dynamic) != 0x0)
-        {
-            lookup.DynamicTree.QueryAabb(ref state, static (ref (HashSet<Entity<T>> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
-            {
-                if (!tuple.query.TryGetComponent(value.Entity, out var comp))
-                    return true;
-
-                tuple.intersecting.Add((value.Entity, comp));
-                return true;
-            }, localAABB, true);
-        }
-
-        if ((flags & (LookupFlags.Static)) != 0x0)
-        {
-            lookup.StaticTree.QueryAabb(ref state, static (ref (HashSet<Entity<T>> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
-            {
-                if (!tuple.query.TryGetComponent(value.Entity, out var comp))
-                    return true;
-
-                tuple.intersecting.Add((value.Entity, comp));
-                return true;
-            }, localAABB, true);
-        }
-
-        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
-        {
-            lookup.StaticSundriesTree.QueryAabb(ref state, static (ref (HashSet<Entity<T>> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>
-            {
-                if (!tuple.query.TryGetComponent(value, out var comp))
-                    return true;
-
-                tuple.intersecting.Add((value, comp));
-                return true;
-            }, localAABB, true);
-        }
-
-        if ((flags & LookupFlags.Sundries) != 0x0)
-        {
-            lookup.SundriesTree.QueryAabb(ref state, static (ref (HashSet<Entity<T>> intersecting, EntityQuery<T> query) tuple, in EntityUid value) =>
-            {
-                if (!tuple.query.TryGetComponent(value, out var comp))
-                    return true;
-
-                tuple.intersecting.Add((value, comp));
-                return true;
-            }, localAABB, true);
-        }
-    }
-
-    private void AddEntitiesIntersecting<T>(
-        EntityUid lookupUid,
-        HashSet<Entity<T>> intersecting,
-        IPhysShape shape,
-        Box2 worldAABB,
-        LookupFlags flags,
-        EntityQuery<T> query) where T : IComponent
-    {
-        var lookup = _broadQuery.GetComponent(lookupUid);
-        var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
-        var localAABB = invMatrix.TransformBox(worldAABB);
-        var transform = new Transform(0);
-        var state = new QueryState<T>(
-            intersecting,
-            shape,
-            transform,
-            _fixtures,
-            _physics,
-            _transform,
-            _manifoldManager,
-            query,
-            _fixturesQuery,
-            (flags & LookupFlags.Sensors) != 0
-        );
-
-        if ((flags & LookupFlags.Dynamic) != 0x0)
-        {
-            lookup.DynamicTree.QueryAabb(ref state, static (ref QueryState<T> state, in FixtureProxy value) =>
-            {
-                if (!state.Sensors && !value.Fixture.Hard)
-                    return true;
-
-                if (!state.Query.TryGetComponent(value.Entity, out var comp))
-                    return true;
-
-                var intersectingTransform = state.Physics.GetPhysicsTransform(value.Entity);
-                if (!state.Manifolds.TestOverlap(state.Shape, 0, value.Fixture.Shape, value.ChildIndex, state.Transform, intersectingTransform))
-                {
-                    return true;
-                }
-
-                state.Intersecting.Add((value.Entity, comp));
-                return true;
-            }, localAABB, true);
-        }
-
-        if ((flags & (LookupFlags.Static)) != 0x0)
-        {
-            lookup.StaticTree.QueryAabb(ref state, static (ref QueryState<T> state, in FixtureProxy value) =>
-            {
-                if (!state.Sensors && !value.Fixture.Hard)
-                    return true;
-
-                if (!state.Query.TryGetComponent(value.Entity, out var comp))
-                    return true;
-
-                var intersectingTransform = state.Physics.GetPhysicsTransform(value.Entity);
-                if (!state.Manifolds.TestOverlap(state.Shape, 0, value.Fixture.Shape, value.ChildIndex, state.Transform, intersectingTransform))
-                {
-                    return true;
-                }
-
-                state.Intersecting.Add((value.Entity, comp));
-                return true;
-            }, localAABB, true);
-        }
-
-        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
-        {
-            lookup.StaticSundriesTree.QueryAabb(ref state, static (ref QueryState<T> state, in EntityUid value) =>
-            {
-                if (!state.Query.TryGetComponent(value, out var comp))
-                    return true;
-
-                var intersectingTransform = state.Physics.GetPhysicsTransform(value);
-
-                if (state.FixturesQuery.TryGetComponent(value, out var fixtures))
-                {
-                    bool anyFixture = false;
-                    foreach (var fixture in fixtures.Fixtures.Values)
-                    {
-                        if (!state.Sensors && !fixture.Hard)
-                            continue;
-
-                        anyFixture = true;
-                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                        {
-                            if (state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform,
-                                    intersectingTransform))
-                            {
-                                state.Intersecting.Add((value, comp));
-                                return true;
-                            }
-                        }
-                    }
-
-                    if (anyFixture)
-                        return true;
-                }
-
-                if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
-                    state.Intersecting.Add((value, comp));
-
-                return true;
-            }, localAABB, true);
-        }
-
-        if ((flags & LookupFlags.Sundries) != 0x0)
-        {
-            lookup.SundriesTree.QueryAabb(ref state, static (ref QueryState<T> state,
-                in EntityUid value) =>
-            {
-                if (!state.Query.TryGetComponent(value, out var comp))
-                    return true;
-
-                var intersectingTransform = state.Physics.GetPhysicsTransform(value);
-
-                if (state.FixturesQuery.TryGetComponent(value, out var fixtures))
-                {
-                    bool anyFixture = false;
-                    foreach (var fixture in fixtures.Fixtures.Values)
-                    {
-                        if (!state.Sensors && !fixture.Hard)
-                            continue;
-
-                        anyFixture = true;
-                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                        {
-                            if (state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform,
-                                    intersectingTransform))
-                            {
-                                state.Intersecting.Add((value, comp));
-                                return true;
-                            }
-                        }
-                    }
-
-                    if (anyFixture)
-                        return true;
-                }
-
-                if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
-                    state.Intersecting.Add((value, comp));
-
-                return true;
-            }, localAABB, true);
-        }
-    }
-
-    private bool AnyComponentsIntersecting<T>(
-        EntityUid lookupUid,
-        Box2 worldAABB,
-        LookupFlags flags,
-        EntityQuery<T> query,
-        EntityUid? ignored = null) where T : IComponent
-    {
-        var lookup = _broadQuery.GetComponent(lookupUid);
-        var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
-        var localAABB = invMatrix.TransformBox(worldAABB);
-        var state = (query, ignored, found: false);
-
-        if ((flags & LookupFlags.Dynamic) != 0x0)
-        {
-            lookup.DynamicTree.QueryAabb(ref state,
-                static (ref (EntityQuery<T> query, EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
-                {
-                    if (value.Entity == tuple.ignored)
-                        return true;
-
-                    tuple.found = true;
-                    return false;
-                }, localAABB, true);
-
-            if (state.found)
-                return true;
-        }
-
-        if ((flags & LookupFlags.Static) != 0x0)
-        {
-            lookup.StaticTree.QueryAabb(ref state,
-                static (ref (EntityQuery<T> query, EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
-                {
-                    if (value.Entity == tuple.ignored)
-                        return true;
-
-                    tuple.found = true;
-                    return false;
-                }, localAABB, true);
-
-            if (state.found)
-                return true;
-        }
-
-        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
-        {
-            lookup.StaticSundriesTree.QueryAabb(ref state,
-                static (ref (EntityQuery<T> query, EntityUid? ignored, bool found) tuple, in EntityUid value) =>
-                {
-                    if (value == tuple.ignored)
-                        return true;
-
-                    tuple.found = true;
-                    return false;
-                }, localAABB, true);
-
-            if (state.found)
-                return true;
-        }
-
-        if ((flags & LookupFlags.Sundries) != 0x0)
-        {
-            lookup.SundriesTree.QueryAabb(ref state,
-                static (ref (EntityQuery<T> query, EntityUid? ignored, bool found) tuple, in EntityUid value) =>
-                {
-                    if (value == tuple.ignored)
-                        return true;
-
-                    tuple.found = true;
-                    return false;
-                }, localAABB, true);
-        }
-
-        return state.found;
-    }
-
-    private void RecursiveAdd<T>(EntityUid uid, ref ValueList<T> toAdd, EntityQuery<T> query) where T : IComponent
-    {
-        var xform = _xformQuery.GetComponent(uid);
-        foreach (var child in xform._children)
-        {
-            if (query.TryGetComponent(child, out var compies))
-            {
-                toAdd.Add(compies);
-            }
-
-            RecursiveAdd(child, ref toAdd, query);
-        }
-    }
 
     private void RecursiveAdd<T>(EntityUid uid, ref ValueList<Entity<T>> toAdd, EntityQuery<T> query) where T : IComponent
     {
@@ -331,14 +32,6 @@ public sealed partial class EntityLookupSystem
 
             RecursiveAdd(child, ref toAdd, query);
         }
-    }
-
-    [Obsolete]
-    private void AddContained<T>(HashSet<T> intersecting, LookupFlags flags, EntityQuery<T> query) where T : IComponent
-    {
-        var intersectingEntities = new HashSet<Entity<T>>();
-        AddContained(intersectingEntities, flags, query);
-        intersecting.UnionWith(intersectingEntities.Select(e => e.Comp));
     }
 
     private void AddContained<T>(HashSet<Entity<T>> intersecting, LookupFlags flags, EntityQuery<T> query) where T : IComponent
@@ -372,6 +65,354 @@ public sealed partial class EntityLookupSystem
     }
 
     /// <summary>
+    /// Common method to determine if an entity overlaps the specified shape.
+    /// </summary>
+    private bool IsIntersecting(MapId mapId, EntityUid uid, TransformComponent xform, IPhysShape shape, Transform shapeTransform, Box2 worldAABB, LookupFlags flags)
+    {
+        var (entPos, entRot) = _transform.GetWorldPositionRotation(xform);
+
+        if (xform.MapID != mapId ||
+            !worldAABB.Contains(entPos) ||
+            ((flags & LookupFlags.Contained) == 0x0 &&
+             _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform)))
+        {
+            return false;
+        }
+
+        if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
+        {
+            var transform = new Transform(entPos, entRot);
+            bool anyFixture = false;
+            var sensors = (flags & LookupFlags.Sensors) != 0x0;
+
+            foreach (var fixture in fixtures.Fixtures.Values)
+            {
+                if (!sensors && !fixture.Hard)
+                    continue;
+
+                anyFixture = true;
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                {
+                    if (_manifoldManager.TestOverlap(shape, 0, fixture.Shape, i, shapeTransform, transform))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            if (anyFixture)
+                return false;
+        }
+
+        if (!_fixtures.TestPoint(shape, shapeTransform, entPos))
+            return false;
+
+        return true;
+    }
+
+    private void AddLocalEntitiesIntersecting<T>(
+        EntityUid lookupUid,
+        HashSet<Entity<T>> intersecting,
+        Box2 localAABB,
+        LookupFlags flags,
+        EntityQuery<T> query,
+        BroadphaseComponent? lookup = null) where T : IComponent
+    {
+        if (!_broadQuery.Resolve(lookupUid, ref lookup))
+            return;
+
+        var lookupPoly = new PolygonShape();
+        lookupPoly.SetAsBox(localAABB);
+        var (lookupPos, lookupRot) = _transform.GetWorldPositionRotation(lookupUid);
+        var transform = new Transform(lookupPos, lookupRot);
+
+        AddEntitiesIntersecting(lookupUid, intersecting, lookupPoly, transform, flags, query, lookup);
+    }
+
+    private void AddEntitiesIntersecting<T>(
+        EntityUid lookupUid,
+        HashSet<Entity<T>> intersecting,
+        IPhysShape shape,
+        Transform shapeTransform,
+        LookupFlags flags,
+        EntityQuery<T> query,
+        BroadphaseComponent? lookup = null) where T : IComponent
+    {
+        if (!_broadQuery.Resolve(lookupUid, ref lookup))
+            return;
+
+        // Shape gets passed in via local terms
+        // Transform is in world terms
+        // Need to convert both back to lookup-local for AABB.
+        var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
+        var lookupTransform = new Transform(lookupInvMatrix.Transform(shapeTransform.Position),
+            shapeTransform.Quaternion2D.Angle - lookupRot);
+
+        var localAABB = shape.ComputeAABB(lookupTransform, 0);
+
+        var state = new QueryState<T>(
+            intersecting,
+            shape,
+            shapeTransform,
+            _fixtures,
+            _physics,
+            _manifoldManager,
+            query,
+            _fixturesQuery,
+            (flags & LookupFlags.Sensors) != 0,
+            (flags & LookupFlags.Approximate) != 0x0
+        );
+
+        if ((flags & LookupFlags.Dynamic) != 0x0)
+        {
+            lookup.DynamicTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
+        }
+
+        if ((flags & LookupFlags.Static) != 0x0)
+        {
+            lookup.StaticTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
+        }
+
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        {
+            lookup.StaticSundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
+        }
+
+        if ((flags & LookupFlags.Sundries) != 0x0)
+        {
+            lookup.SundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
+        }
+
+        return;
+
+        static bool PhysicsQuery<T>(ref QueryState<T> state, in FixtureProxy value) where T : IComponent
+        {
+            if (!state.Sensors && !value.Fixture.Hard)
+                return true;
+
+            if (!state.Query.TryGetComponent(value.Entity, out var comp))
+                return true;
+
+            if (!state.Approximate)
+            {
+                var intersectingTransform = state.Physics.GetPhysicsTransform(value.Entity);
+                if (!state.Manifolds.TestOverlap(state.Shape, 0, value.Fixture.Shape, value.ChildIndex, state.Transform, intersectingTransform))
+                {
+                    return true;
+                }
+            }
+
+            state.Intersecting.Add((value.Entity, comp));
+            return true;
+        }
+
+        static bool SundriesQuery<T>(ref QueryState<T> state, in EntityUid value) where T : IComponent
+        {
+            if (!state.Query.TryGetComponent(value, out var comp))
+                return true;
+
+            if (state.Approximate)
+            {
+                state.Intersecting.Add((value, comp));
+                return true;
+            }
+
+            var intersectingTransform = state.Physics.GetPhysicsTransform(value);
+
+            if (state.FixturesQuery.TryGetComponent(value, out var fixtures))
+            {
+                bool anyFixture = false;
+                foreach (var fixture in fixtures.Fixtures.Values)
+                {
+                    if (!state.Sensors && !fixture.Hard)
+                        continue;
+
+                    anyFixture = true;
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        if (state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform,
+                                intersectingTransform))
+                        {
+                            state.Intersecting.Add((value, comp));
+                            return true;
+                        }
+                    }
+                }
+
+                if (anyFixture)
+                    return true;
+            }
+
+            if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
+                state.Intersecting.Add((value, comp));
+
+            return true;
+        }
+    }
+
+    private bool AnyLocalComponentsIntersecting<T>(
+        EntityUid lookupUid,
+        Box2 localAABB,
+        LookupFlags flags,
+        EntityQuery<T> query,
+        EntityUid? ignored = null,
+        BroadphaseComponent? lookup = null) where T : IComponent
+    {
+        if (!_broadQuery.Resolve(lookupUid, ref lookup))
+            return false;
+
+        var shape = new PolygonShape();
+        shape.SetAsBox(localAABB);
+        var (lookupPos, lookupRot) = _transform.GetWorldPositionRotation(lookupUid);
+        var transform = new Transform(lookupPos, lookupRot);
+
+        return AnyComponentsIntersecting(lookupUid, shape, transform, flags, query, ignored, lookup);
+    }
+
+    private bool AnyComponentsIntersecting<T>(
+        EntityUid lookupUid,
+        IPhysShape shape,
+        Transform shapeTransform,
+        LookupFlags flags,
+        EntityQuery<T> query,
+        EntityUid? ignored = null,
+        BroadphaseComponent? lookup = null) where T : IComponent
+    {
+        /*
+         * Unfortunately this is split from the other query as we can short-circuit here, hence the code duplication.
+         * Alternatively you can make them both use callbacks.
+         */
+
+        if (!_broadQuery.Resolve(lookupUid, ref lookup))
+            return false;
+
+        var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
+        var lookupTransform = new Transform(lookupInvMatrix.Transform(shapeTransform.Position),
+            shapeTransform.Quaternion2D.Angle - lookupRot);
+
+        var localAABB = shape.ComputeAABB(lookupTransform, 0);
+
+        var state = new AnyQueryState<T>(false,
+            ignored,
+            shape,
+            shapeTransform,
+            _fixtures,
+            _physics,
+            _manifoldManager,
+            query,
+            _fixturesQuery,
+            flags);
+
+        if ((flags & LookupFlags.Dynamic) != 0x0)
+        {
+            lookup.DynamicTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
+
+            if (state.Found)
+                return true;
+        }
+
+        if ((flags & LookupFlags.Static) != 0x0)
+        {
+            lookup.StaticTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
+
+            if (state.Found)
+                return true;
+        }
+
+        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        {
+            lookup.StaticSundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
+
+            if (state.Found)
+                return true;
+        }
+
+        if ((flags & LookupFlags.Sundries) != 0x0)
+        {
+            lookup.SundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
+        }
+
+        return state.Found;
+
+        static bool PhysicsQuery<T>(ref AnyQueryState<T> state, in FixtureProxy value) where T : IComponent
+        {
+            if (value.Entity == state.Ignored)
+                return true;
+
+            if (!state.Query.HasComponent(value.Entity))
+                return true;
+
+            var approx = (state.Flags & LookupFlags.Approximate) != 0x0;
+
+            if (!approx)
+            {
+                var intersectingTransform = state.Physics.GetPhysicsTransform(value.Entity);
+
+                if (!state.Manifolds.TestOverlap(state.Shape, 0, value.Fixture.Shape, value.ChildIndex,
+                        state.Transform, intersectingTransform))
+                {
+                    return true;
+                }
+            }
+
+            state.Found = true;
+            return false;
+        }
+
+        static bool SundriesQuery(ref AnyQueryState<T> state, in EntityUid value)
+        {
+            if (state.Ignored == value)
+                return true;
+
+            if (!state.Query.HasComponent(value))
+                return true;
+
+            var approx = (state.Flags & LookupFlags.Approximate) != 0x0;
+
+            if (approx)
+            {
+                state.Found = true;
+                return false;
+            }
+
+            var intersectingTransform = state.Physics.GetPhysicsTransform(value);
+
+            if (state.FixturesQuery.TryGetComponent(value, out var fixtures))
+            {
+                var sensors = (state.Flags & LookupFlags.Sensors) != 0x0;
+                bool anyFixture = false;
+                foreach (var fixture in fixtures.Fixtures.Values)
+                {
+                    if (!sensors && !fixture.Hard)
+                        continue;
+
+                    anyFixture = true;
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        if (state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform,
+                                intersectingTransform))
+                        {
+                            state.Found = true;
+                            return false;
+                        }
+                    }
+                }
+
+                if (anyFixture)
+                    return true;
+            }
+
+            if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
+            {
+                state.Found = true;
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    /// <summary>
     /// Should we just iterate every component and check position or do bounds checks.
     /// </summary>
     private bool UseBoundsQuery(Type type, float area)
@@ -397,8 +438,20 @@ public sealed partial class EntityLookupSystem
 
     public bool AnyComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, EntityUid? ignored = null, LookupFlags flags = DefaultFlags)
     {
+        var shape = new PolygonShape();
+        shape.SetAsBox(worldAABB);
+        var transform = Physics.Transform.Empty;
+
+        return AnyComponentsIntersecting(type, mapId, shape, transform, ignored, flags);
+    }
+
+    public bool AnyComponentsIntersecting(Type type, MapId mapId, IPhysShape shape, Transform shapeTransform, EntityUid? ignored = null, LookupFlags flags = DefaultFlags)
+    {
         DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
-        if (mapId == MapId.Nullspace) return false;
+        if (mapId == MapId.Nullspace)
+            return false;
+
+        var worldAABB = shape.ComputeAABB(shapeTransform, 0);
 
         if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
         {
@@ -406,13 +459,8 @@ public sealed partial class EntityLookupSystem
             {
                 var xform = _xformQuery.GetComponent(uid);
 
-                if (xform.MapID != mapId ||
-                    !worldAABB.Contains(_transform.GetWorldPosition(xform)) ||
-                    ((flags & LookupFlags.Contained) == 0x0 &&
-                    _container.IsEntityOrParentInContainer(uid, null, xform)))
-                {
+                if (!IsIntersecting(mapId, uid, xform, shape, shapeTransform, worldAABB, flags))
                     continue;
-                }
 
                 return true;
             }
@@ -433,15 +481,21 @@ public sealed partial class EntityLookupSystem
                     EntityUid? ignored,
                     bool found) tuple) =>
                 {
-                    if (!tuple.system.AnyComponentsIntersecting(uid, tuple.worldAABB, tuple.flags, tuple.query, tuple.ignored))
+                    if (!tuple.system.AnyLocalComponentsIntersecting(uid, tuple.worldAABB, tuple.flags, tuple.query, tuple.ignored))
                         return true;
+
                     tuple.found = true;
                     return false;
-                }, approx: true);
+                }, approx: true, includeMap: false);
+
+            if (state.found)
+            {
+                return true;
+            }
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
-            AnyComponentsIntersecting(mapUid, worldAABB, flags, query, ignored);
+            AnyLocalComponentsIntersecting(mapUid, worldAABB, flags, query, ignored);
         }
 
         return false;
@@ -453,145 +507,45 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return;
 
-        if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
-        {
-            foreach (var (uid, comp) in EntityManager.GetAllComponents(type, true))
-            {
-                var xform = _xformQuery.GetComponent(uid);
+        var shape = new PolygonShape();
+        shape.SetAsBox(worldAABB);
+        var transform = Physics.Transform.Empty;
 
-                if (xform.MapID != mapId ||
-                    !worldAABB.Contains(_transform.GetWorldPosition(xform)) ||
-                    ((flags & LookupFlags.Contained) == 0x0 &&
-                     _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform)))
-                {
-                    continue;
-                }
-
-                intersecting.Add((uid, comp));
-            }
-        }
-        else
-        {
-            var query = EntityManager.GetEntityQuery(type);
-
-            // Get grid entities
-            var state = (this, worldAABB, flags, query, intersecting);
-
-            _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
-                static (EntityUid uid, MapGridComponent grid,
-                    ref (EntityLookupSystem system,
-                        Box2 worldAABB,
-                        LookupFlags flags,
-                        EntityQuery<IComponent> query,
-                        HashSet<Entity<IComponent>> intersecting) tuple) =>
-                {
-                    tuple.system.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.worldAABB, tuple.flags, tuple.query);
-                    return true;
-                }, approx: true);
-
-            // Get map entities
-            var mapUid = _mapManager.GetMapEntityId(mapId);
-            AddEntitiesIntersecting(mapUid, intersecting, worldAABB, flags, query);
-            AddContained(intersecting, flags, query);
-        }
+        GetEntitiesIntersecting(type, mapId, shape, transform, intersecting, flags);
     }
 
     public void GetEntitiesIntersecting<T>(MapId mapId, Box2 worldAABB, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return;
 
-        if (!UseBoundsQuery<T>(worldAABB.Height * worldAABB.Width))
-        {
-            var query = AllEntityQuery<T, TransformComponent>();
+        var shape = new PolygonShape();
+        shape.SetAsBox(worldAABB);
+        var shapeTransform = Physics.Transform.Empty;
 
-            while (query.MoveNext(out var uid, out var comp, out var xform))
-            {
-                if (xform.MapID != mapId || !worldAABB.Contains(_transform.GetWorldPosition(xform))) continue;
-                entities.Add((uid, comp));
-            }
-        }
-        else
-        {
-            var query = GetEntityQuery<T>();
-
-            // Get grid entities
-            var state = (this, worldAABB, flags, query, entities);
-
-            _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
-                static (EntityUid uid, MapGridComponent grid,
-                    ref (EntityLookupSystem system,
-                        Box2 worldAABB,
-                        LookupFlags flags,
-                        EntityQuery<T> query,
-                        HashSet<Entity<T>> intersecting) tuple) =>
-                {
-                    tuple.system.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.worldAABB, tuple.flags, tuple.query);
-                    return true;
-                }, approx: true);
-
-            // Get map entities
-            var mapUid = _mapManager.GetMapEntityId(mapId);
-            AddEntitiesIntersecting(mapUid, entities, worldAABB, flags, query);
-            AddContained(entities, flags, query);
-        }
+        GetEntitiesIntersecting(mapId, shape, shapeTransform, entities, flags);
     }
 
     #endregion
 
     #region IPhysShape
 
-    public void GetEntitiesIntersecting(Type type, MapId mapId, IPhysShape shape, HashSet<Entity<IComponent>> intersecting, LookupFlags flags = DefaultFlags)
+    public void GetEntitiesIntersecting(Type type, MapId mapId, IPhysShape shape, Transform shapeTransform, HashSet<Entity<IComponent>> intersecting, LookupFlags flags = DefaultFlags)
     {
         DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         if (mapId == MapId.Nullspace)
             return;
 
-        var shapeTransform = new Transform(0);
         var worldAABB = shape.ComputeAABB(shapeTransform, 0);
-        var sensors = (flags & LookupFlags.Sensors) != 0;
+
         if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
         {
             foreach (var (uid, comp) in EntityManager.GetAllComponents(type, true))
             {
                 var xform = _xformQuery.GetComponent(uid);
-                var (pos, rot) = _transform.GetWorldPositionRotation(xform);
 
-                if (xform.MapID != mapId ||
-                    !worldAABB.Contains(pos) ||
-                    ((flags & LookupFlags.Contained) == 0x0 &&
-                     _container.IsEntityOrParentInContainer(uid, _metaQuery.GetComponent(uid), xform)))
-                {
-                    continue;
-                }
-
-                if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
-                {
-                    var transform = new Transform(pos, rot);
-
-                    bool anyFixture = false;
-                    foreach (var fixture in fixtures.Fixtures.Values)
-                    {
-                        if (!sensors && !fixture.Hard)
-                            continue;
-
-                        anyFixture = true;
-                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                        {
-                            if (_manifoldManager.TestOverlap(shape, 0, fixture.Shape, i, shapeTransform, transform))
-                            {
-                                goto found;
-                            }
-                        }
-                    }
-
-                    if (anyFixture)
-                        continue;
-                }
-
-                if (!_fixtures.TestPoint(shape, shapeTransform, pos))
+                if (!IsIntersecting(mapId, uid, xform, shape, shapeTransform, worldAABB, flags))
                     continue;
 
-                found:
                 intersecting.Add((uid, comp));
             }
         }
@@ -600,67 +554,37 @@ public sealed partial class EntityLookupSystem
             var query = EntityManager.GetEntityQuery(type);
 
             // Get grid entities
-            var state = new GridQueryState<IComponent>(intersecting, shape, worldAABB, this, flags, query);
+            var state = new GridQueryState<IComponent>(intersecting, shape, shapeTransform, this, flags, query);
 
             _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
                 static (EntityUid uid, MapGridComponent grid, ref GridQueryState<IComponent> state) =>
                 {
-                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, state.WorldAABB, state.Flags, state.Query);
+                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, state.Transform, state.Flags, state.Query);
                     return true;
-                }, approx: true);
+                }, approx: true, includeMap: false);
 
-            // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
-            AddEntitiesIntersecting(mapUid, intersecting, shape, worldAABB, flags, query);
+            AddEntitiesIntersecting(mapUid, intersecting, shape, shapeTransform, flags, query);
+
             AddContained(intersecting, flags, query);
         }
     }
 
-    public void GetEntitiesIntersecting<T>(MapId mapId, IPhysShape shape, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
+    public void GetEntitiesIntersecting<T>(MapId mapId, IPhysShape shape, Transform shapeTransform, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return;
 
-        var shapeTransform = new Transform(0);
         var worldAABB = shape.ComputeAABB(shapeTransform, 0);
-        var sensors = (flags & LookupFlags.Sensors) != 0;
+
         if (!UseBoundsQuery<T>(worldAABB.Height * worldAABB.Width))
         {
             var query = AllEntityQuery<T, TransformComponent>();
 
             while (query.MoveNext(out var uid, out var comp, out var xform))
             {
-                var (pos, rot) = _transform.GetWorldPositionRotation(xform);
-
-                if (xform.MapID != mapId || !worldAABB.Contains(pos))
+                if (!IsIntersecting(mapId, uid, xform, shape, shapeTransform, worldAABB, flags))
                     continue;
 
-                if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
-                {
-                    var transform = new Transform(pos, rot);
-                    bool anyFixture = false;
-                    foreach (var fixture in fixtures.Fixtures.Values)
-                    {
-                        if (!sensors && !fixture.Hard)
-                            continue;
-
-                        anyFixture = true;
-                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                        {
-                            if (_manifoldManager.TestOverlap(shape, 0, fixture.Shape, i, shapeTransform, transform))
-                            {
-                                goto found;
-                            }
-                        }
-                    }
-
-                    if (anyFixture)
-                        continue;
-                }
-
-                if (!_fixtures.TestPoint(shape, shapeTransform, pos))
-                    continue;
-
-                found:
                 entities.Add((uid, comp));
             }
         }
@@ -669,24 +593,19 @@ public sealed partial class EntityLookupSystem
             var query = GetEntityQuery<T>();
 
             // Get grid entities
-            var state = (this, shape, worldAABB, flags, query, entities);
+            var state = new GridQueryState<T>(entities, shape, shapeTransform, this, flags, query);
 
             _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
-                static (EntityUid uid, MapGridComponent grid,
-                    ref (EntityLookupSystem system,
-                        IPhysShape shape,
-                        Box2 worldAABB,
-                        LookupFlags flags,
-                        EntityQuery<T> query,
-                        HashSet<Entity<T>> intersecting) tuple) =>
+                static (EntityUid uid, MapGridComponent grid, ref GridQueryState<T> state) =>
                 {
-                    tuple.system.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.shape, tuple.worldAABB, tuple.flags, tuple.query);
+                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, state.Transform, state.Flags, state.Query);
                     return true;
-                }, approx: true);
+                }, approx: true, includeMap: false);
 
             // Get map entities
             var mapUid = _mapManager.GetMapEntityId(mapId);
-            AddEntitiesIntersecting(mapUid, entities, shape, worldAABB, flags, query);
+            AddEntitiesIntersecting(mapUid, entities, shape, shapeTransform, flags, query);
+
             AddContained(entities, flags, query);
         }
     }
@@ -754,8 +673,9 @@ public sealed partial class EntityLookupSystem
 
         if (mapId == MapId.Nullspace) return;
 
-        var circle = new PhysShapeCircle(range, worldPos);
-        GetEntitiesIntersecting(type, mapId, circle, entities, flags);
+        var circle = new PhysShapeCircle(range);
+        var transform = new Transform(worldPos, 0f);
+        GetEntitiesIntersecting(type, mapId, circle, transform, entities, flags);
     }
 
     [Obsolete]
@@ -763,32 +683,57 @@ public sealed partial class EntityLookupSystem
     {
         var entities = new HashSet<Entity<T>>();
         GetEntitiesInRange(mapId, worldPos, range, entities);
-        return new HashSet<T>(entities.Select(e => e.Comp));
+        return [..entities.Select(e => e.Comp)];
     }
 
     public void GetEntitiesInRange<T>(MapId mapId, Vector2 worldPos, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
-        GetEntitiesInRange(mapId, new PhysShapeCircle(range, worldPos), entities, flags);
+        var shape = new PhysShapeCircle(range);
+        var transform = new Transform(worldPos, 0f);
+
+        GetEntitiesInRange(mapId, shape, transform, entities, flags);
     }
 
-    public void GetEntitiesInRange<T>(MapId mapId, IPhysShape shape, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
+    public void GetEntitiesInRange<T>(MapId mapId, IPhysShape shape, Transform transform, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         DebugTools.Assert(shape.Radius > 0, "Range must be a positive float");
 
         if (mapId == MapId.Nullspace) return;
 
-        GetEntitiesIntersecting(mapId, shape, entities, flags);
+        GetEntitiesIntersecting(mapId, shape, transform, entities, flags);
     }
 
     #endregion
 
-    private readonly record struct GridQueryState<T>(
-        HashSet<Entity<T>> Intersecting,
+    private readonly record struct GridQueryCompState<T>(
+        HashSet<Entity<IComponent>> Intersecting,
         IPhysShape Shape,
-        Box2 WorldAABB,
+        Transform Transform,
         EntityLookupSystem Lookup,
         LookupFlags Flags,
         EntityQuery<T> Query
+    ) where T : IComponent;
+
+    private readonly record struct GridQueryState<T>(
+        HashSet<Entity<T>> Intersecting,
+        IPhysShape Shape,
+        Transform Transform,
+        EntityLookupSystem Lookup,
+        LookupFlags Flags,
+        EntityQuery<T> Query
+    ) where T : IComponent;
+
+    private record struct AnyQueryState<T>(
+        bool Found,
+        EntityUid? Ignored,
+        IPhysShape Shape,
+        Transform Transform,
+        FixtureSystem Fixtures,
+        SharedPhysicsSystem Physics,
+        IManifoldManager Manifolds,
+        EntityQuery<T> Query,
+        EntityQuery<FixturesComponent> FixturesQuery,
+        LookupFlags Flags
     ) where T : IComponent;
 
     private readonly record struct QueryState<T>(
@@ -797,10 +742,10 @@ public sealed partial class EntityLookupSystem
         Transform Transform,
         FixtureSystem Fixtures,
         SharedPhysicsSystem Physics,
-        SharedTransformSystem TransformSystem,
         IManifoldManager Manifolds,
         EntityQuery<T> Query,
         EntityQuery<FixturesComponent> FixturesQuery,
-        bool Sensors
+        bool Sensors,
+        bool Approximate
     ) where T : IComponent;
 }

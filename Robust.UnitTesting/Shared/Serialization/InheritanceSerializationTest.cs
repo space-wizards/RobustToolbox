@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -43,16 +44,11 @@ namespace Robust.UnitTesting.Shared.Serialization
     inheritorField: {InheritorComponentFieldValue}
     finalField: {FinalComponentFieldValue}";
 
+        protected override Type[]? ExtraComponents => new[] {typeof(TestBaseComponent), typeof(TestInheritorComponent), typeof(TestFinalComponent)};
+
         [Test]
         public void Test()
         {
-            var componentFactory = IoCManager.Resolve<IComponentFactory>();
-
-            componentFactory.RegisterClass<TestBaseComponent>();
-            componentFactory.RegisterClass<TestInheritorComponent>();
-            componentFactory.RegisterClass<TestFinalComponent>();
-            componentFactory.GenerateNetIds();
-
             var serializationManager = IoCManager.Resolve<ISerializationManager>();
             serializationManager.Initialize();
 

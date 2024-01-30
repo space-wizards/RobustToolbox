@@ -69,19 +69,19 @@ public sealed class GridTraversalTest : RobustIntegrationTest
             // Spawning an entity far away from the grid will leave it parented to the map.
             entity = sEntMan.SpawnEntity(null, new MapCoordinates(new Vector2(100f, 100f), mapId));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).MapUid, Is.EqualTo(map));
-            Assert.Null(sEntMan.GetComponent<TransformComponent>(entity).GridUid);
+            Assert.That(sEntMan.GetComponent<TransformComponent>(entity).GridUid, Is.Null);
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(map));
             sEntMan.Deleted(entity);
 
             entity = sEntMan.SpawnEntity(null, new EntityCoordinates(map, new Vector2(100f, 100f)));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).MapUid, Is.EqualTo(map));
-            Assert.Null(sEntMan.GetComponent<TransformComponent>(entity).GridUid);
+            Assert.That(sEntMan.GetComponent<TransformComponent>(entity).GridUid, Is.Null);
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(map));
             sEntMan.Deleted(entity);
 
             entity = sEntMan.SpawnEntity(null, new EntityCoordinates(grid, 100f, 100f));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).MapUid, Is.EqualTo(map));
-            Assert.Null(sEntMan.GetComponent<TransformComponent>(entity).GridUid);
+            Assert.That(sEntMan.GetComponent<TransformComponent>(entity).GridUid, Is.Null);
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(map));
             sEntMan.Deleted(entity);
         });

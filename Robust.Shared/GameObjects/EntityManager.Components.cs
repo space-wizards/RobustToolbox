@@ -318,10 +318,8 @@ namespace Robust.Shared.GameObjects
                 metadata ??= MetaQuery.GetComponentInternal(uid);
                 metadata.NetComponents.Add(netId, component);
             }
-            else
-            {
-                component.Networked = false;
-            }
+
+            component.Networked = reg.NetID != null;
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
             ComponentAdded?.Invoke(eventArgs);

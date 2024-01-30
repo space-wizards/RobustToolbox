@@ -112,8 +112,8 @@ public sealed class SpawnInContainerOrDropTest : EntitySpawnHelpersTest
             var xform = EntMan.GetComponent<TransformComponent>(uid);
             Assert.That(xform.ParentUid, Is.EqualTo(EntityUid.Invalid));
             Assert.That(xform.MapID, Is.EqualTo(MapId.Nullspace));
-            Assert.Null(xform.MapUid);
-            Assert.Null(xform.GridUid);
+            Assert.That(xform.MapUid, Is.Null);
+            Assert.That(xform.GridUid, Is.Null);
         });
 
         await Server.WaitPost(() =>MapMan.DeleteMap(MapId));

@@ -326,10 +326,23 @@ public abstract partial class SharedPhysicsSystem
 
         if (contact.IsTouching)
         {
-            var ev1 = new EndCollideEvent(aUid, bUid, contact.FixtureAId, contact.FixtureBId ,fixtureA, fixtureB, bodyA, bodyB);
-            var ev2 = new EndCollideEvent(bUid, aUid, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
-            RaiseLocalEvent(aUid, ref ev1);
-            RaiseLocalEvent(bUid, ref ev2);
+            var stillTouching = false;
+            foreach (var fixture in fixtureA.Contacts)
+            {
+                if (fixture.Key == fixtureB)
+                    continue;
+
+                if (fixture.Key.Owner == bUid)
+                    stillTouching = true;
+            }
+
+            if (!stillTouching)
+            {
+                var ev1 = new EndCollideEvent(aUid, bUid, contact.FixtureAId, contact.FixtureBId ,fixtureA, fixtureB, bodyA, bodyB);
+                var ev2 = new EndCollideEvent(bUid, aUid, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
+                RaiseLocalEvent(aUid, ref ev1);
+                RaiseLocalEvent(bUid, ref ev2);
+            }
         }
 
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)

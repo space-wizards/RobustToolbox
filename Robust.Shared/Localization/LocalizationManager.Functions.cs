@@ -9,7 +9,6 @@ using Linguini.Bundle.Types;
 using Linguini.Shared.Types.Bundle;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Localization;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -174,9 +173,9 @@ namespace Robust.Shared.Localization
             {
                 EntityUid entity = (EntityUid)entity0.Value;
 
-                if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) && grammar.Gender.HasValue)
+                if (_grammar.GetGender(entity) is {} g)
                 {
-                    return new LocValueString(grammar.Gender.Value.ToString().ToLowerInvariant());
+                    return new LocValueString(g.ToString().ToLowerInvariant());
                 }
 
                 if (TryGetEntityLocAttrib(entity, "gender", out var gender))
@@ -307,9 +306,9 @@ namespace Robust.Shared.Localization
             {
                 EntityUid entity = (EntityUid)entity0.Value;
 
-                if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) && grammar.ProperNoun.HasValue)
+                if (_grammar.GetProperNoun(entity) is {} p)
                 {
-                    return new LocValueString(grammar.ProperNoun.Value.ToString().ToLowerInvariant());
+                    return new LocValueString(p.ToString().ToLowerInvariant());
                 }
 
                 if (TryGetEntityLocAttrib(entity, "proper", out var proper))

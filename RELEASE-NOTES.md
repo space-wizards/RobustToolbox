@@ -43,6 +43,7 @@ END TEMPLATE-->
 * Add GetLocalPosition to convert ScreenCoordinates to coordinates relative to the control. Ignores window.
 * Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
 * Add dotted line drawing to DrawingHandleScreen.
+* `IConfigurationManager.LoadDefaultsFromTomlStream` properly does type conversions. This fixes scenarios like loading of `long` CVars.
 
 ### Bugfixes
 

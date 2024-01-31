@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `replay.max_compressed_size` and `replay.max_uncompressed_size` CVars are now `long`.
 
 ### New features
 
@@ -43,10 +43,12 @@ END TEMPLATE-->
 * Add GetLocalPosition to convert ScreenCoordinates to coordinates relative to the control. Ignores window.
 * Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
 * Add dotted line drawing to DrawingHandleScreen.
+* `IConfigurationManager.LoadDefaultsFromTomlStream` properly does type conversions. This fixes scenarios like loading of `long` CVars.
 
 ### Bugfixes
 
-*None yet*
+* Fixed integer overflows in replay max size calculation.
+* Explicitly capped `replay.replay_tick_batchSize` internally to avoid high values causing allocation failures.
 
 ### Other
 

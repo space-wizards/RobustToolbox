@@ -35,15 +35,59 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `replay.max_compressed_size` and `replay.max_uncompressed_size` CVars are now `long`.
 
 ### New features
 
-*None yet*
+* Add GetEntitiesOnMap / GetChildEntities to EntityLookupSystem to return components on the specified map and components with the specified parent respectively.
+* Add MaxDimension property to Box2 to return the higher of the Width or Height.
+* Add GetLocalPosition to convert ScreenCoordinates to coordinates relative to the control. Ignores window.
+* Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
+* Add dotted line drawing to DrawingHandleScreen.
+* `IConfigurationManager.LoadDefaultsFromTomlStream` properly does type conversions. This fixes scenarios like loading of `long` CVars.
 
 ### Bugfixes
 
+* Fixed integer overflows in replay max size calculation.
+* Explicitly capped `replay.replay_tick_batchSize` internally to avoid high values causing allocation failures.
+
+### Other
+
+* Important MIDI performance improvements.
+
+### Internal
+
 *None yet*
+
+
+## 208.0.0
+
+### Breaking changes
+
+* Metadata flags are no longer serialized as they get rebuilt on entity startup.
+
+### Bugfixes
+
+* Log failing to load user keybinds and handle the exception.
+
+
+## 207.1.0
+
+### New features
+
+* Add the ability to merge grids via GridFixtureSystem.
+
+
+## 207.0.0
+
+### Breaking changes
+
+* Update EntityLookup internally so non-approximate queries use the GJK solver and are much more accurate. This also means the approximate flag matters much more if you don't need narrowphase checks.
+* Add shape versions of queries for both EntityLookup and MapManager.
+
+### Bugfixes
+
+* Fix PVS full state updates not clearing session entities and causing exceptions.
 
 ### Other
 
@@ -51,7 +95,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Remove a lot of duplicate code internally from EntityLookup and MapManager.
 
 
 ## 206.0.0

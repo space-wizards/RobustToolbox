@@ -722,6 +722,21 @@ public abstract partial class SharedMapSystem
         return new GridTileEnumerator(uid, grid.Chunks.GetEnumerator(), grid.ChunkSize, ignoreEmpty);
     }
 
+    public void SetTile(Entity<MapGridComponent> grid, EntityCoordinates coordinates, Tile tile)
+    {
+        SetTile(grid.Owner, grid.Comp, coordinates, tile);
+    }
+
+    public void SetTile(Entity<MapGridComponent> grid, Vector2i gridIndices, Tile tile)
+    {
+        SetTile(grid.Owner, grid.Comp, gridIndices, tile);
+    }
+
+    public void SetTiles(Entity<MapGridComponent> grid, List<(Vector2i GridIndices, Tile Tile)> tiles)
+    {
+        SetTiles(grid.Owner, grid.Comp, tiles);
+    }
+
     public void SetTile(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, Tile tile)
     {
         var localTile = CoordinatesToTile(uid, grid, coords);

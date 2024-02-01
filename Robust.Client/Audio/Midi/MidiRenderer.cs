@@ -38,6 +38,7 @@ internal sealed class MidiRenderer : IMidiRenderer
     private readonly Synth _synth;
     private readonly Sequencer _sequencer;
     private NFluidsynth.Player? _player;
+    private int _playerTotalTicks;
     private MidiDriver? _driver;
     private byte _midiProgram = 1;
     private byte _midiBank = 1;
@@ -144,7 +145,21 @@ internal sealed class MidiRenderer : IMidiRenderer
     public bool DisableProgramChangeEvent { get; set; } = true;
 
     [ViewVariables(VVAccess.ReadWrite)]
-    public int PlayerTotalTick => _player?.GetTotalTicks ?? 0;
+    public int PlayerTotalTick
+    {
+        get
+        {
+            // GetTotalTicks is really expensive (has to iterate the entire file, not cached).
+            // Slight problem with caching it ourselves: the value only becomes available when the player loads the MIDI file.
+            // And that only happens after playback really starts, with the timer and synth and all that stuff.
+            // So we cache it "as soon as it's available", i.e. not 0.
+            // We don't care about playlists and such, so it shouldn't change anymore after.
+            if (_playerTotalTicks != 0)
+                return _playerTotalTicks;
+
+            return _playerTotalTicks = _player?.GetTotalTicks ?? 0;
+        }
+    }
 
     [ViewVariables(VVAccess.ReadWrite)]
     public int PlayerTick
@@ -339,6 +354,7 @@ internal sealed class MidiRenderer : IMidiRenderer
                 return false;
             }
 
+            _playerTotalTicks = 0;
             _player?.Dispose();
             _player = new NFluidsynth.Player(_synth);
             _player.SetPlaybackCallback(MidiPlayerEventHandler);
@@ -377,6 +393,7 @@ internal sealed class MidiRenderer : IMidiRenderer
             _player?.Join();
             _player?.Dispose();
             _player = null;
+            _playerTotalTicks = 0;
         }
 
         StopAllNotes();

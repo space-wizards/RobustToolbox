@@ -312,24 +312,32 @@ public abstract partial class SharedPhysicsSystem
 
     public void DestroyContact(Contact contact)
     {
-        // Don't recursive update or we're in for a bad time.
-        if ((contact.Flags & ContactFlags.Deleting) != 0x0)
-            return;
-
         Fixture fixtureA = contact.FixtureA!;
         Fixture fixtureB = contact.FixtureB!;
         var bodyA = contact.BodyA!;
         var bodyB = contact.BodyB!;
         var aUid = contact.EntityA;
         var bUid = contact.EntityB;
-        contact.Flags |= ContactFlags.Deleting;
 
-        if (contact.IsTouching)
+        // If the contact is in the process of deletion, don't raise the event
+        // i.e. DestroyContact was called as an aftermath of EndCollideEvent
+        if ((contact.Flags & ContactFlags.Deleting) == 0x0)
         {
-            var ev1 = new EndCollideEvent(aUid, bUid, contact.FixtureAId, contact.FixtureBId ,fixtureA, fixtureB, bodyA, bodyB);
-            var ev2 = new EndCollideEvent(bUid, aUid, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
-            RaiseLocalEvent(aUid, ref ev1);
-            RaiseLocalEvent(bUid, ref ev2);
+            contact.Flags |= ContactFlags.Deleting;
+
+            if (contact.IsTouching)
+            {
+                var ev1 = new EndCollideEvent(aUid, bUid, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
+                var ev2 = new EndCollideEvent(bUid, aUid, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
+                RaiseLocalEvent(aUid, ref ev1);
+                RaiseLocalEvent(bUid, ref ev2);
+            }
+        }
+
+        // If the contact was already deleted by EndCollideEvent - don't proceed
+        if (!_activeContacts.Contains(contact))
+        {
+            return;
         }
 
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)

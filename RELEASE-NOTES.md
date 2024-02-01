@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * `replay.max_compressed_size` and `replay.max_uncompressed_size` CVars are now `long`.
+* Remove obsolete CoordinatesExtension for ToEntityCoordinates from GridUid / Vector2i.
 
 ### New features
 
@@ -45,6 +46,8 @@ END TEMPLATE-->
 * Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
 * Add dotted line drawing to DrawingHandleScreen.
 * `IConfigurationManager.LoadDefaultsFromTomlStream` properly does type conversions. This fixes scenarios like loading of `long` CVars.
+* Add helper methods for TileRef / Vector2i to SharedMapSystem for ToCenterCoordinates (tile center EntityCoordinates) and ToCoordinates (tile origin to EntityCoordinates).
+* Copy some of the coordinates extensions to SharedTransformSystem.
 
 ### Bugfixes
 

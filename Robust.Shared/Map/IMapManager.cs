@@ -6,6 +6,8 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision.Shapes;
 
 namespace Robust.Shared.Map
 {
@@ -18,6 +20,9 @@ namespace Robust.Shared.Map
     /// </summary>
     public interface IMapManager
     {
+        public const bool Approximate = false;
+        public const bool IncludeMap = true;
+
         [Obsolete("Use EntityQuery<MapGridComponent>")]
         IEnumerable<MapGridComponent> GetAllGrids();
 
@@ -102,82 +107,131 @@ namespace Robust.Shared.Map
 
         IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId);
 
+        #region MapId
+
+        public void FindGridsIntersecting(MapId mapId, IPhysShape shape, Transform transform,
+            ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting(MapId mapId, PolygonShape shape, Transform transform, GridCallback callback,
+            bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = Approximate,
+            bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state,
+            GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, ref List<Entity<MapGridComponent>> grids,
+            bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback,
+            bool approx = Approximate,
+            bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting<TState>(MapId mapId, Box2Rotated worldBounds, ref TState state,
+            GridCallback<TState> callback,
+            bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> grids,
+            bool approx = Approximate, bool includeMap = IncludeMap);
+
+        #endregion
+
+        #region MapEnt
+
+        public void FindGridsIntersecting(EntityUid mapEnt, PolygonShape shape, Transform transform, GridCallback callback,
+            bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting<TState>(EntityUid mapEnt, IPhysShape shape, Transform transform,
+            ref TState state, GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap);
+
+        /// <summary>
+        /// Returns true if any grids overlap the specified shapes.
+        /// </summary>
+        public void FindGridsIntersecting(EntityUid mapEnt, List<IPhysShape> shapes, Transform transform,
+            ref List<Entity<MapGridComponent>> entities, bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting(EntityUid mapEnt, IPhysShape shape, Transform transform,
+            ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, GridCallback callback,
+            bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting<TState>(EntityUid mapEnt, Box2 worldAABB, ref TState state,
+            GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, ref List<Entity<MapGridComponent>> grids,
+            bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting(EntityUid mapEnt, Box2Rotated worldBounds, GridCallback callback,
+            bool approx = Approximate,
+            bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting<TState>(EntityUid mapEnt, Box2Rotated worldBounds, ref TState state,
+            GridCallback<TState> callback,
+            bool approx = Approximate, bool includeMap = IncludeMap);
+
+        public void FindGridsIntersecting(EntityUid mapEnt, Box2Rotated worldBounds,
+            ref List<Entity<MapGridComponent>> grids,
+            bool approx = Approximate, bool includeMap = IncludeMap);
+
+        #endregion
+
+        #region TryFindGridAt
+
+        public bool TryFindGridAt(
+            EntityUid mapEnt,
+            Vector2 worldPos,
+            out EntityUid uid,
+            [NotNullWhen(true)] out MapGridComponent? grid);
+
         /// <summary>
         /// Attempts to find the map grid under the map location.
         /// </summary>
-        /// <remarks>
-        /// This method will never return the map's default grid.
-        /// </remarks>
-        /// <param name="mapId">Map to search.</param>
-        /// <param name="worldPos">Location on the map to check for a grid.</param>
-        /// <param name="grid">Grid that was found, if any.</param>
-        /// <returns>Returns true when a grid was found under the location.</returns>
-        bool TryFindGridAt(MapId mapId, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid);
+        public bool TryFindGridAt(MapId mapId, Vector2 worldPos, out EntityUid uid,
+            [NotNullWhen(true)] out MapGridComponent? grid);
 
         /// <summary>
         /// Attempts to find the map grid under the map location.
         /// </summary>
-        /// <remarks>
-        /// This method will never return the map's default grid.
-        /// </remarks>
-        /// <param name="mapId">Map to search.</param>
-        /// <param name="worldPos">Location on the map to check for a grid.</param>
-        /// <param name="grid">Grid that was found, if any.</param>
-        /// <returns>Returns true when a grid was found under the location.</returns>
-        bool TryFindGridAt(EntityUid mapId, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid);
+        public bool TryFindGridAt(MapCoordinates mapCoordinates, out EntityUid uid,
+            [NotNullWhen(true)] out MapGridComponent? grid);
 
-        /// <summary>
-        /// Attempts to find the map grid under the map location.
-        /// </summary>
-        /// <remarks>
-        /// This method will never return the map's default grid.
-        /// </remarks>
-        /// <param name="mapId">Map to search.</param>
-        /// <param name="worldPos">Location on the map to check for a grid.</param>
-        /// <param name="grid">Grid that was found, if any.</param>
-        /// <returns>Returns true when a grid was found under the location.</returns>
-        bool TryFindGridAt(MapId mapId, Vector2 worldPos, EntityQuery<TransformComponent> query, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid);
+        #endregion
 
-        /// <summary>
-        /// Attempts to find the map grid under the map location.
-        /// </summary>
-        /// <remarks>
-        /// This method will never return the map's default grid.
-        /// </remarks>
-        /// <param name="mapCoordinates">Location on the map to check for a grid.</param>
-        /// <param name="grid">Grid that was found, if any.</param>
-        /// <returns>Returns true when a grid was found under the location.</returns>
-        bool TryFindGridAt(MapCoordinates mapCoordinates, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid);
+        #region Obsolete
 
-        void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = false, bool includeMap = true);
+        [Obsolete]
+        public bool TryFindGridAt(MapId mapId, Vector2 worldPos, EntityQuery<TransformComponent> query, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
+        {
+            return TryFindGridAt(mapId, worldPos, out uid, out grid);
+        }
 
-        void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false, bool includeMap = true);
+        [Obsolete]
+        public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false, bool includeMap = true)
+        {
+            var grids = new List<Entity<MapGridComponent>>();
+            FindGridsIntersecting(mapId, worldAabb, ref grids, approx, includeMap);
 
-        void FindGridsIntersecting(MapId mapId, Box2 worldAABB, ref List<Entity<MapGridComponent>> state, bool approx = false, bool includeMap = true);
-        void FindGridsIntersecting(EntityUid map, Box2 worldAABB, ref List<Entity<MapGridComponent>> state, bool approx = false, bool includeMap = true);
+            foreach (var grid in grids)
+            {
+                yield return grid.Comp;
+            }
+        }
 
-        void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false, bool includeMap = true);
+        [Obsolete]
+        public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false, bool includeMap = true)
+        {
+            var grids = new List<Entity<MapGridComponent>>();
+            FindGridsIntersecting(mapId, worldArea, ref grids, approx, includeMap);
 
-        void FindGridsIntersecting<TState>(MapId mapId, Box2Rotated worldBounds, ref TState state, GridCallback<TState> callback, bool approx = false, bool includeMap = true);
+            foreach (var grid in grids)
+            {
+                yield return grid.Comp;
+            }
+        }
 
-        void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> state, bool approx = false, bool includeMap = true);
-
-        /// <summary>
-        /// Returns the grids intersecting this AABB.
-        /// </summary>
-        /// <param name="mapId">The relevant MapID</param>
-        /// <param name="worldAabb">The AABB to intersect</param>
-        /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
-        /// <returns></returns>
-        IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false, bool includeMap = true);
-
-        /// <summary>
-        /// Returns the grids intersecting this AABB.
-        /// </summary>
-        /// <param name="mapId">The relevant MapID</param>
-        /// <param name="worldArea">The AABB to intersect</param>
-        /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
-        IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false, bool includeMap = true);
+        #endregion
 
         void DeleteGrid(EntityUid euid);
 

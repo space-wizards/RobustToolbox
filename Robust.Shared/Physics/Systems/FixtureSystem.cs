@@ -248,7 +248,7 @@ namespace Robust.Shared.Physics.Systems
             var computeProperties = false;
 
             // Given a bunch of data isn't serialized need to sort of re-initialise it
-            var newFixtures = new Dictionary<string, Fixture>(state.Fixtures.Count());
+            var newFixtures = new Dictionary<string, Fixture>(state.Fixtures.Count);
 
             foreach (var (id, fixture) in state.Fixtures)
             {

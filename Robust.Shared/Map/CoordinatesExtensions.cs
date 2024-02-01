@@ -30,7 +30,9 @@ namespace Robust.Shared.Map
             var gridSearchBox = Box2.UnitCentered.Scale(searchBoxSize).Translated(mapCoords.Position);
 
             // find grids in search box
-            var gridsInArea = mapManager.FindGridsIntersecting(mapCoords.MapId, gridSearchBox);
+            var gridsInArea = new List<Entity<MapGridComponent>>();
+
+            mapManager.FindGridsIntersecting(mapCoords.MapId, gridSearchBox, ref gridsInArea);
 
             // find closest grid intersecting our search box.
             gridUid = EntityUid.Invalid;
@@ -45,7 +47,7 @@ namespace Robust.Shared.Map
                 // TODO: Use CollisionManager to get nearest edge.
 
                 // figure out closest intersect
-                var gridIntersect = gridSearchBox.Intersect(gridXform.WorldMatrix.TransformBox(grid.LocalAABB));
+                var gridIntersect = gridSearchBox.Intersect(gridXform.WorldMatrix.TransformBox(grid.Comp.LocalAABB));
                 var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared();
 
                 if (gridDist >= distance)

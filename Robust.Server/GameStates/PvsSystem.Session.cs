@@ -193,5 +193,6 @@ internal sealed partial class PvsSystem
 
         session.PreviouslySent.Clear();
         session.LastSent = null;
+        session.Entities.Clear();
     }
 }

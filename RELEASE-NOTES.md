@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 209.0.0
+
+### Breaking changes
+
 * `replay.max_compressed_size` and `replay.max_uncompressed_size` CVars are now `long`.
 * Remove obsolete CoordinatesExtension for ToEntityCoordinates from GridUid / Vector2i.
 
@@ -57,10 +80,6 @@ END TEMPLATE-->
 ### Other
 
 * Important MIDI performance improvements.
-
-### Internal
-
-*None yet*
 
 
 ## 208.0.0

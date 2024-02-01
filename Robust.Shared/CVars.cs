@@ -1239,7 +1239,7 @@ namespace Robust.Shared
         /// Enable Discord rich presence integration.
         /// </summary>
         public static readonly CVarDef<bool> DiscordEnabled =
-            CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY);
+            CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<string> DiscordRichPresenceMainIconId =
             CVarDef.Create("discord.rich_main_icon_id", "devstation", CVar.SERVER | CVar.REPLICATED);

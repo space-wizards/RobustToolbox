@@ -25,7 +25,6 @@ public sealed class MarkupTagManager
         new FontTag(),
         new HeadingTag(),
         new ItalicTag(),
-        new TimeTag()
     }.ToDictionary(x => x.Name.ToLower(), x => x);
 
     /// <summary>
@@ -41,7 +40,6 @@ public sealed class MarkupTagManager
         typeof(FontTag),
         typeof(HeadingTag),
         typeof(ItalicTag),
-        typeof(TimeTag)
     };
 
     public void Initialize()

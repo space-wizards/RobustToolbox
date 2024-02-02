@@ -37,7 +37,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public ValueList<int> LineBreaks;
 
-        private TimeSpan? _timeWrite;
+        private readonly object? _tagsState;
 
         private readonly Dictionary<int, Control> _tagControls = new();
 
@@ -51,9 +51,9 @@ namespace Robust.Client.UserInterface
             Init(parent);
         }
 
-        public RichTextEntry(FormattedMessage message, TimeSpan timeWrite, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        public RichTextEntry(FormattedMessage message, object tagsState, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
-            _timeWrite = timeWrite;
+            _tagsState = tagsState;
             Message = message;
             _defaultColor = defaultColor ?? new(200, 200, 200);
             _tagManager = tagManager;
@@ -75,6 +75,10 @@ namespace Robust.Client.UserInterface
 
                 if (node.Name == null)
                     continue;
+
+                if (!node.Attributes.ContainsKey("state")
+                    && _tagsState != null)
+                    node.Attributes.Add("state", new(_tagsState));
 
                 if (!_tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag) || !tag.TryGetControl(node, out var control))
                     continue;
@@ -113,11 +117,6 @@ namespace Robust.Client.UserInterface
             {
                 nodeIndex++;
                 var text = ProcessNode(node, context);
-
-                if (node.Name == "time"
-                    && !node.Attributes.ContainsKey("time")
-                    && _timeWrite != null)
-                    node.Attributes.Add("time", new( _timeWrite?.ToString(@"hh\:mm\:ss")));
 
                 if (!context.Font.TryPeek(out var font))
                     font = defaultFont;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
@@ -30,10 +31,10 @@ namespace Robust.Client.UserInterface.Controls
             InvalidateMeasure();
         }
 
-        public void SetMessage(FormattedMessage message, TimeSpan timeWrite, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        public void SetMessage(FormattedMessage message, object tagsState, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
             _message = message;
-            _entry = new RichTextEntry(_message, timeWrite, this, _tagManager, tagsAllowed, defaultColor);
+            _entry = new RichTextEntry(_message, tagsState, this, _tagManager, tagsAllowed, defaultColor);
             InvalidateMeasure();
         }
 

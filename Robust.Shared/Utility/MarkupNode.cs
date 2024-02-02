@@ -73,7 +73,7 @@ public sealed class MarkupNode : IComparable<MarkupNode>
 }
 
 [Serializable, NetSerializable]
-public readonly record struct MarkupParameter(string? StringValue = null, long? LongValue = null, Color? ColorValue = null)
+public readonly record struct MarkupParameter(string? StringValue = null, long? LongValue = null, Color? ColorValue = null, object? CompoundValue = null)
 {
     public MarkupParameter(string? stringValue) : this(StringValue: stringValue)
     {
@@ -84,6 +84,10 @@ public readonly record struct MarkupParameter(string? StringValue = null, long? 
     }
 
     public MarkupParameter(Color? colorValue) : this(ColorValue: colorValue)
+    {
+    }
+
+    public MarkupParameter(object compoundValue) : this(CompoundValue: compoundValue)
     {
     }
 
@@ -105,6 +109,11 @@ public readonly record struct MarkupParameter(string? StringValue = null, long? 
         return ColorValue.HasValue;
     }
 
+    public bool TryGetCompound([NotNullWhen(true)] out object? value)
+    {
+        value = CompoundValue;
+        return CompoundValue != null;
+    }
 
     public override string ToString()
     {

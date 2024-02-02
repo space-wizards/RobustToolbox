@@ -37,17 +37,36 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public ValueList<int> LineBreaks;
 
+        private TimeSpan? _timeWrite;
+
         private readonly Dictionary<int, Control> _tagControls = new();
 
         public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
             Message = message;
-            Height = 0;
-            Width = 0;
-            LineBreaks = default;
             _defaultColor = defaultColor ?? new(200, 200, 200);
             _tagManager = tagManager;
             _tagsAllowed = tagsAllowed;
+
+            Init(parent);
+        }
+
+        public RichTextEntry(FormattedMessage message, TimeSpan timeWrite, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        {
+            _timeWrite = timeWrite;
+            Message = message;
+            _defaultColor = defaultColor ?? new(200, 200, 200);
+            _tagManager = tagManager;
+            _tagsAllowed = tagsAllowed;
+
+            Init(parent);
+        }
+
+        private void Init(Control parent)
+        {
+            Height = 0;
+            Width = 0;
+            LineBreaks = default;
 
             var nodeIndex = -1;
             foreach (var node in Message.Nodes)
@@ -94,6 +113,11 @@ namespace Robust.Client.UserInterface
             {
                 nodeIndex++;
                 var text = ProcessNode(node, context);
+
+                if (node.Name == "time"
+                    && !node.Attributes.ContainsKey("time")
+                    && _timeWrite != null)
+                    node.Attributes.Add("time", new( _timeWrite?.ToString(@"hh\:mm\:ss")));
 
                 if (!context.Font.TryPeek(out var font))
                     font = defaultFont;

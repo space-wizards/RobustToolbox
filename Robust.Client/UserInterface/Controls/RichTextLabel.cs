@@ -30,6 +30,13 @@ namespace Robust.Client.UserInterface.Controls
             InvalidateMeasure();
         }
 
+        public void SetMessage(FormattedMessage message, TimeSpan timeWrite, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        {
+            _message = message;
+            _entry = new RichTextEntry(_message, timeWrite, this, _tagManager, tagsAllowed, defaultColor);
+            InvalidateMeasure();
+        }
+
         public void SetMessage(string message, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
             var msg = new FormattedMessage();

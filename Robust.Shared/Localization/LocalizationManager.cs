@@ -342,7 +342,7 @@ namespace Robust.Shared.Localization
             _contexts.Add(culture, bundle);
             AddBuiltInFunctions(bundle);
 
-            _loadData(_res, culture, bundle);
+            _initData(_res, culture, bundle);
             DefaultCulture ??= culture;
         }
 
@@ -388,6 +388,35 @@ namespace Robust.Shared.Localization
 
         private void _loadData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context)
         {
+            var resources = ReadLocaleFolder(resourceManager, culture);
+
+            foreach (var (path, resource, data) in resources)
+            {
+                var errors = resource.Errors;
+                context.AddResourceOverriding(resource);
+                WriteWarningForErrs(path, errors, data);
+            }
+        }
+
+        private void _initData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context)
+        {
+            var resources = ReadLocaleFolder(resourceManager, culture);
+
+            foreach (var (path, resource, data) in resources)
+            {
+                var errors = resource.Errors;
+                WriteWarningForErrs(path, errors, data);
+                if (context.AddResource(resource, out var errs))
+                {
+                    continue;
+                }
+                WriteWarningForErrs(errs, path);
+            }
+        }
+
+        private static ParallelQuery<(ResPath path, Resource resource, string contents)> ReadLocaleFolder(
+            IResourceManager resourceManager, CultureInfo culture)
+        {
             // Load data from .ftl files.
             // Data is loaded from /Locale/<language-code>/*
 
@@ -411,13 +440,7 @@ namespace Robust.Shared.Localization
                 var resource = parser.Parse();
                 return (path, resource, contents);
             });
-
-            foreach (var (path, resource, data) in resources)
-            {
-                var errors = resource.Errors;
-                context.AddResourceOverriding(resource);
-                WriteWarningForErrs(path, errors, data);
-            }
+            return resources;
         }
 
         private void WriteWarningForErrs(ResPath path, List<ParseError> errs, string resource)
@@ -434,6 +457,15 @@ namespace Robust.Shared.Localization
             foreach (var err in errs)
             {
                 _logSawmill.Error("Error extracting `{locId}`\n{e1}", locId, err);
+            }
+        }
+
+        private void WriteWarningForErrs(IList<FluentError>? errs, ResPath path)
+        {
+            if (errs == null) return;
+            foreach (var err in errs)
+            {
+                _logSawmill.Error($"{path}:\n{err}");
             }
         }
     }

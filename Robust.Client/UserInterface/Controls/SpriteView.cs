@@ -256,15 +256,22 @@ namespace Robust.Client.UserInterface.Controls
             [NotNullWhen(true)] out SpriteComponent? sprite,
             [NotNullWhen(true)] out TransformComponent? xform)
         {
-            if (Entity != null)
-            {
-                (uid, sprite, xform) = Entity.Value;
-                return true;
-            }
-
             sprite = null;
             xform = null;
             uid = default;
+
+            if (Entity != null)
+            {
+                if (!_entMan.EntityExists(Entity.Value))
+                {
+                    Entity = null;
+                    NetEnt = null;
+                    return false;
+                }
+
+                (uid, sprite, xform) = Entity.Value;
+                return true;
+            }
 
             if (NetEnt == null)
                 return false;

@@ -406,11 +406,11 @@ namespace Robust.Shared.Localization
             {
                 var errors = resource.Errors;
                 WriteWarningForErrs(path, errors, data);
-                if (context.AddResource(resource, out var errs))
+                if (context.InsertResourcesAndReport(resource, path, out var errs))
                 {
                     continue;
                 }
-                WriteWarningForErrs(errs, path);
+                WriteLocErrors(errs);
             }
         }
 
@@ -460,12 +460,12 @@ namespace Robust.Shared.Localization
             }
         }
 
-        private void WriteWarningForErrs(IList<FluentError>? errs, ResPath path)
+        private void WriteLocErrors(IList<LocError>? errs)
         {
             if (errs == null) return;
             foreach (var err in errs)
             {
-                _logSawmill.Error($"{path}:\n{err}");
+                _logSawmill.Error(err.ToString());
             }
         }
     }

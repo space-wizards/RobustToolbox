@@ -192,7 +192,12 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["synth.midi-bank-select"].StringValue = "gm";
             //_settings["synth.verbose"].IntValue = 1; // Useful for debugging.
 
-            _parallel.AddAndInvokeParallelCountChanged(UpdateParallelCount);
+            var midiParallel = _cfgMan.GetCVar(CVars.MidiParallelism);
+            _settings["synth.polyphony"].IntValue = Math.Clamp(1024 + (int)(Math.Log2(midiParallel) * 2048), 1, 65535);
+            _settings["synth.cpu-cores"].IntValue = Math.Clamp(midiParallel, 1, 256);
+
+            _midiSawmill.Debug($"Synth Cores: {_settings["synth.cpu-cores"].IntValue}");
+            _midiSawmill.Debug($"Synth Polyphony: {_settings["synth.polyphony"].IntValue}");
         }
         catch (Exception e)
         {
@@ -201,7 +206,10 @@ internal sealed partial class MidiManager : IMidiManager
             return;
         }
 
-        _midiThread = new Thread(ThreadUpdate);
+        _midiThread = new Thread(ThreadUpdate)
+        {
+            Name = "RobustToolbox MIDI Thread"
+        };
         _midiThread.Start();
 
         _updateJob = new MidiUpdateJob()
@@ -217,18 +225,6 @@ internal sealed partial class MidiManager : IMidiManager
         _entityManager.GetEntityQuery<TransformComponent>();
 
         FluidsynthInitialized = true;
-    }
-
-    private void UpdateParallelCount()
-    {
-        if (_settings == null)
-            return;
-
-        _settings["synth.polyphony"].IntValue = Math.Clamp(1024 + (int)(Math.Log2(_parallel.ParallelProcessCount) * 2048), 1, 65535);
-        _settings["synth.cpu-cores"].IntValue = Math.Clamp(_parallel.ParallelProcessCount, 1, 256);
-
-        _midiSawmill.Debug($"Synth Cores: {_settings["synth.cpu-cores"].IntValue}");
-        _midiSawmill.Debug($"Synth Polyphony: {_settings["synth.polyphony"].IntValue}");
     }
 
     private void LoggerDelegate(NFluidsynth.Logger.LogLevel level, string message, IntPtr data)

@@ -1,6 +1,6 @@
 <Project>
   <ItemGroup>
-    <PackageVersion Include="Alimer.Bindings.SDL" Version="3.4.5" />
+    <PackageVersion Include="Alimer.Bindings.SDL" Version="3.4.7" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.13.12" />
     <PackageVersion Include="DiscordRichPresence" Version="1.2.1.24" />
     <PackageVersion Include="ILReader.Core" Version="1.0.0.4" />

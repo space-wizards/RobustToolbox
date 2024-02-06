@@ -41,6 +41,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
     [Dependency] private readonly IAudioInternal _audio = default!;
+    [Dependency] private readonly MetaDataSystem _metadata = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
@@ -170,13 +171,19 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return;
         }
 
-        SetupSource(component, audioResource);
+        SetupSource((uid, component), audioResource);
         component.Loaded = true;
     }
 
-    private void SetupSource(AudioComponent component, AudioResource audioResource, TimeSpan? length = null)
+    private void SetupSource(Entity<AudioComponent> entity, AudioResource audioResource, TimeSpan? length = null)
     {
+        var component = entity.Comp;
         var source = _audio.CreateAudioSource(audioResource);
+
+        if ((component.Flags & AudioFlags.GridAudio) != 0x0)
+        {
+            _metadata.SetFlag(entity.Owner, MetaDataFlags.Undetachable, true);
+        }
 
         if (source == null)
         {
@@ -583,13 +590,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return PlayGlobal(filename, audioParams);
     }
 
-    public override void LoadStream<T>(AudioComponent component, T stream)
+    public override void LoadStream<T>(Entity<AudioComponent> entity, T stream)
     {
         if (stream is AudioStream audioStream)
         {
             TryGetAudio(audioStream, out var audio);
-            SetupSource(component, audio!, audioStream.Length);
-            component.Loaded = true;
+            SetupSource(entity, audio!, audioStream.Length);
+            entity.Comp.Loaded = true;
         }
     }
 
@@ -628,7 +635,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var audioP = audioParams ?? AudioParams.Default;
         var entity = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
         var comp = SetupAudio(entity, null, audioP, stream.Length);
-        LoadStream(comp, stream);
+        LoadStream((entity, comp), stream);
         EntityManager.InitializeAndStartEntity(entity);
         var source = comp.Source;
 

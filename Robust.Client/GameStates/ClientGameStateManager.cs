@@ -1120,7 +1120,7 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                if ((meta.Flags & MetaDataFlags.Detached) != 0)
+                if ((meta.Flags & (MetaDataFlags.Detached | MetaDataFlags.Undetachable)) != 0)
                     continue;
 
                 if (lastStateApplied.HasValue)

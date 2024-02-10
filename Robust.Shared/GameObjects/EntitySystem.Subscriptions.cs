@@ -1,12 +1,12 @@
 using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Shared.Collections;
 
 namespace Robust.Shared.GameObjects
 {
     public abstract partial class EntitySystem
     {
-        private List<SubBase>? _subscriptions;
+        private ValueList<SubBase> _subscriptions;
 
         /// <summary>
         /// A handle to allow subscription on this entity system's behalf.
@@ -84,7 +84,6 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
 
-            _subscriptions ??= new();
             _subscriptions.Add(new SubBroadcast<T>(src));
         }
 
@@ -96,7 +95,6 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
 
-            _subscriptions ??= new();
             _subscriptions.Add(new SubBroadcast<T>(src));
         }
 
@@ -108,7 +106,6 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.SubscribeSessionEvent(src, this, handler, GetType(), before, after);
 
-            _subscriptions ??= new();
             _subscriptions.Add(new SubBroadcast<EntitySessionMessage<T>>(src));
         }
 
@@ -122,7 +119,6 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
 
-            _subscriptions ??= new();
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
         }
 
@@ -134,7 +130,6 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
 
-            _subscriptions ??= new();
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
         }
 
@@ -146,21 +141,17 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
 
-            _subscriptions ??= new();
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
         }
 
         private void ShutdownSubscriptions()
         {
-            if (_subscriptions == null)
-                return;
-
             foreach (var sub in _subscriptions)
             {
                 sub.Unsubscribe(this, EntityManager.EventBus);
             }
 
-            _subscriptions = null;
+            _subscriptions = default;
         }
 
         /// <summary>

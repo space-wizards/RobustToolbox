@@ -223,6 +223,19 @@ namespace Robust.Shared.GameObjects
             {
                 System.SubscribeLocalEvent(handler, before, after);
             }
+
+            /// <summary>
+            /// Register an action to be ran when this entity system is shut down.
+            /// </summary>
+            /// <remarks>
+            /// This can be used by extension methods for <see cref="Subscriptions"/>
+            /// to unsubscribe from from external sources such as CVars.
+            /// </remarks>
+            /// <param name="action">An action to be ran when the entity system is shut down.</param>
+            public void RegisterUnsubscription(Action action)
+            {
+                System._subscriptions.Add(new SubAction(action));
+            }
         }
 
         private abstract class SubBase
@@ -250,6 +263,14 @@ namespace Robust.Shared.GameObjects
             public override void Unsubscribe(EntitySystem sys, IEventBus bus)
             {
                 bus.UnsubscribeLocalEvent<TComp, TBase>();
+            }
+        }
+
+        private sealed class SubAction(Action action) : SubBase
+        {
+            public override void Unsubscribe(EntitySystem sys, IEventBus bus)
+            {
+                action();
             }
         }
     }

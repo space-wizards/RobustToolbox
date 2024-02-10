@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* You can use `Subs.CVar()` from an entity systems to subscribe to CVar changes. This is more convenient than `IConfigurationManager.OnValueChanged` as it automatically unsubscribes on system shutdown.
 
 ### Bugfixes
 

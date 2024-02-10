@@ -36,8 +36,8 @@ namespace Robust.Shared.GameObjects
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
 
-            _cfg.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
-            _cfg.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
+            Subs.CVar(_cfg, CVars.GenerateGridFixtures, SetEnabled, true);
+            Subs.CVar(_cfg, CVars.GridFixtureEnlargement, SetEnlargement, true);
 
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
             SubscribeLocalEvent<RegenerateGridBoundsEvent>(OnGridBoundsRegenerate);
@@ -56,14 +56,6 @@ namespace Robust.Shared.GameObjects
             // This will also check for grid splits if applicable.
             var grid = Comp<MapGridComponent>(ev.EntityUid);
             _map.RegenerateCollision(ev.EntityUid, grid, _map.GetMapChunks(ev.EntityUid, grid).Values.ToHashSet());
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-
-            _cfg.UnsubValueChanged(CVars.GenerateGridFixtures, SetEnabled);
-            _cfg.UnsubValueChanged(CVars.GridFixtureEnlargement, SetEnlargement);
         }
 
         private void SetEnabled(bool value) => _enabled = value;

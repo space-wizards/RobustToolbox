@@ -717,6 +717,8 @@ Types:
         ChunkEnumerator: { All: True }
         AppendInterpolatedStringHandler: { All: True }
     StringRuneEnumerator: { All: True }
+  System.Text.Unicode:
+    UnicodeRange: { All: True }
   System.Threading.Tasks:
     Task: { All: True }
     Task`1: { All: True }

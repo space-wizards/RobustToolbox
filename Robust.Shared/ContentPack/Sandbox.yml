@@ -626,6 +626,7 @@ Types:
       - "System.Text.Encoding get_UTF7()"
       - "System.Text.Encoding get_UTF8()"
       - "System.Text.Encoding get_UTF32()"
+      - "System.Text.Encoding GetEncoding(string)"
     NormalizationForm: { } # Enum
     Rune: { All: True }
     StringBuilder:

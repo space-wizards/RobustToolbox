@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * You can use `Subs.CVar()` from an entity systems to subscribe to CVar changes. This is more convenient than `IConfigurationManager.OnValueChanged` as it automatically unsubscribes on system shutdown.
+* There is now a built-in type serializer for `DateTime`, so you can put `DateTime`s in your data fields.
 
 ### Bugfixes
 

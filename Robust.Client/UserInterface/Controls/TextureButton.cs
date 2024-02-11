@@ -21,9 +21,11 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassPressed = "pressed";
         private string? _texturePath;
 
+        private TextureRect _rect = new();
 
         public TextureButton()
         {
+            AddChild(_rect);
             DrawModeChanged();
         }
 
@@ -36,6 +38,15 @@ namespace Robust.Client.UserInterface.Controls
                 _textureNormal = value;
                 InvalidateMeasure();
             }
+        }
+
+        protected override void StylePropertiesChanged()
+        {
+            base.StylePropertiesChanged();
+            var texture = TextureNormal;
+
+            _rect.ForceRunStyleUpdate();
+            _rect.Texture = texture;
         }
 
         protected override void OnThemeUpdated()
@@ -82,34 +93,6 @@ namespace Robust.Client.UserInterface.Controls
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-        }
-
-        protected internal override void Draw(DrawingHandleScreen handle)
-        {
-            var texture = TextureNormal;
-
-            if (texture == null)
-            {
-                TryGetStyleProperty(StylePropertyTexture, out texture);
-                if (texture == null)
-                {
-                    return;
-                }
-            }
-
-            handle.DrawTextureRectRegion(texture, PixelSizeBox);
-        }
-
-        protected override Vector2 MeasureOverride(Vector2 availableSize)
-        {
-            var texture = TextureNormal;
-
-            if (texture == null)
-            {
-                TryGetStyleProperty(StylePropertyTexture, out texture);
-            }
-
-            return Scale * (texture?.Size ?? Vector2.Zero);
         }
     }
 }

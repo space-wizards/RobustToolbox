@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Client.Audio;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.ContentPack;
@@ -37,8 +38,10 @@ namespace Robust.Client.UserInterface.Controls
             get => _group;
             set
             {
+                if (value?.InternalButtons.Contains(this) ?? false)
+                    return; // No work to do.
                 // Remove from old group.
-                _group?.Buttons.Remove(this);
+                _group?.InternalButtons.Remove(this);
 
                 _group = value;
 
@@ -47,11 +50,12 @@ namespace Robust.Client.UserInterface.Controls
                     return;
                 }
 
-                value.Buttons.Add(this);
+                value.InternalButtons.Add(this);
                 ToggleMode = true;
 
-                // Set us to pressed if we're the first button.
-                Pressed = value.Buttons.Count == 0;
+                // Set us to pressed if we're the first button. Doesn't go through the setter to avoid setting off our own error check.
+                _pressed = value.InternalButtons.Count == 1;
+                DrawModeChanged();
             }
         }
 
@@ -326,7 +330,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            foreach (var button in _group.Buttons)
+            foreach (var button in _group.InternalButtons)
             {
                 if (button != this && button.Pressed)
                 {
@@ -440,6 +444,9 @@ namespace Robust.Client.UserInterface.Controls
     /// </remarks>
     public sealed class ButtonGroup
     {
-        internal readonly List<BaseButton> Buttons = new();
+        internal readonly List<BaseButton> InternalButtons = new();
+        public IReadOnlyList<BaseButton> Buttons => InternalButtons;
+
+        public BaseButton? Pressed => InternalButtons.FirstOrDefault(x => x.Pressed);
     }
 }

@@ -495,7 +495,7 @@ namespace Robust.Client.Placement
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            if (EntityManager.TryGetComponent(PlayerManager.LocalPlayer?.ControlledEntity, out TransformComponent? xform))
+            if (EntityManager.TryGetComponent(PlayerManager.LocalEntity, out TransformComponent? xform))
             {
                 map = xform.MapID;
             }
@@ -512,7 +512,7 @@ namespace Robust.Client.Placement
 
         private bool CurrentEraserMouseCoordinates(out EntityCoordinates coordinates)
         {
-            var ent = PlayerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            var ent = PlayerManager.LocalEntity ?? EntityUid.Invalid;
             if (ent == EntityUid.Invalid)
             {
                 coordinates = new EntityCoordinates();
@@ -640,7 +640,7 @@ namespace Robust.Client.Placement
 
             if (CurrentPermission is not {Range: > 0} ||
                 !CurrentMode.RangeRequired ||
-                PlayerManager.LocalPlayer?.ControlledEntity is not {Valid: true} controlled)
+                PlayerManager.LocalEntity is not {Valid: true} controlled)
                 return;
 
             var worldPos = EntityManager.GetComponent<TransformComponent>(controlled).WorldPosition;

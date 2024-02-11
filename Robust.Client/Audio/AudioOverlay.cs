@@ -39,7 +39,7 @@ public sealed class AudioOverlay : Overlay
 
     protected internal override void Draw(in OverlayDrawArgs args)
     {
-        var localPlayer = _playerManager.LocalPlayer?.ControlledEntity;
+        var localPlayer = _playerManager.LocalEntity;
 
         if (args.ViewportControl == null || localPlayer == null)
             return;

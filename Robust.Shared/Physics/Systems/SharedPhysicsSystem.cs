@@ -92,9 +92,9 @@ namespace Robust.Shared.Physics.Systems
             InitializeIsland();
             InitializeContacts();
 
-            _configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
-            _configManager.OnValueChanged(CVars.NetTickrate, UpdateSubsteps, true);
-            _configManager.OnValueChanged(CVars.TargetMinimumTickrate, UpdateSubsteps, true);
+            Subs.CVar(_configManager, CVars.AutoClearForces, OnAutoClearChange);
+            Subs.CVar(_configManager, CVars.NetTickrate, UpdateSubsteps, true);
+            Subs.CVar(_configManager, CVars.TargetMinimumTickrate, UpdateSubsteps, true);
         }
 
         private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
@@ -250,8 +250,6 @@ namespace Robust.Shared.Physics.Systems
             base.Shutdown();
 
             ShutdownContacts();
-            ShutdownIsland();
-            _configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         private void UpdateMapAwakeState(EntityUid uid, PhysicsComponent body)

@@ -232,9 +232,9 @@ namespace Robust.Client.GameStates
                 return default;
             }
 
-            DebugTools.AssertNotNull(_players.LocalPlayer);
+            DebugTools.Assert(_players.LocalSession != null);
 
-            var evArgs = new EntitySessionEventArgs(_players.LocalPlayer!.Session);
+            var evArgs = new EntitySessionEventArgs(_players.LocalSession);
             _pendingSystemMessages.Enqueue((_nextInputCmdSeq, _timing.CurTick, message,
                 new EntitySessionMessage<T>(evArgs, message)));
 

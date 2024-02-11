@@ -64,7 +64,7 @@ namespace Robust.Server.Physics
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
 
-            _cfg.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
+            Subs.CVar(_cfg, CVars.GridSplitting, SetSplitAllowed, true);
         }
 
         private void SetSplitAllowed(bool value) => SplitAllowed = value;
@@ -73,7 +73,6 @@ namespace Robust.Server.Physics
         {
             base.Shutdown();
             _subscribedSessions.Clear();
-            _cfg.UnsubValueChanged(CVars.GridSplitting, SetSplitAllowed);
         }
 
         /// <summary>

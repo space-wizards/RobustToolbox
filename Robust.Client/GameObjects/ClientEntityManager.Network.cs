@@ -42,6 +42,8 @@ public sealed partial class ClientEntityManager
         var pending = PendingNetEntityStates.GetOrNew(nEntity);
         pending.Add((typeof(T), callerEntity));
 
+
+
         return entity.Item1;
     }
 

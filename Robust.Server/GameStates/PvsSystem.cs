@@ -126,11 +126,12 @@ internal sealed partial class PvsSystem : EntitySystem
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         _transform.OnGlobalMoveEvent += OnEntityMove;
 
-        _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
-        _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
-        _configManager.OnValueChanged(CVars.NetLowLodRange, OnLodChanged, true);
-        _configManager.OnValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged, true);
-        _configManager.OnValueChanged(CVars.NetPvsAsync, OnAsyncChanged, true);
+        Subs.CVar(_configManager, CVars.NetPVS, SetPvs, true);
+        Subs.CVar(_configManager, CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
+        Subs.CVar(_configManager, CVars.NetLowLodRange, OnLodChanged, true);
+        Subs.CVar(_configManager, CVars.NetForceAckThreshold, OnForceAckChanged, true);
+        Subs.CVar(_configManager, CVars.NetPvsAsync, OnAsyncChanged, true);
+        Subs.CVar(_configManager, CVars.NetPvsCompressLevel, ResetParallelism, true);
 
         _serverGameStateManager.ClientAck += OnClientAck;
         _serverGameStateManager.ClientRequestFull += OnClientRequestFull;
@@ -138,7 +139,6 @@ internal sealed partial class PvsSystem : EntitySystem
         InitializeDirty();
 
         _parallelMgr.ParallelCountChanged += ResetParallelism;
-        _configManager.OnValueChanged(CVars.NetPvsCompressLevel, ResetParallelism, true);
     }
 
     public override void Shutdown()
@@ -148,10 +148,6 @@ internal sealed partial class PvsSystem : EntitySystem
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         _transform.OnGlobalMoveEvent -= OnEntityMove;
 
-        _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
-        _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
-        _configManager.UnsubValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged);
-        _configManager.UnsubValueChanged(CVars.NetPvsCompressLevel, ResetParallelism);
         _parallelMgr.ParallelCountChanged -= ResetParallelism;
 
         _serverGameStateManager.ClientAck -= OnClientAck;

@@ -9,13 +9,13 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [RegisterComponent, NetworkedComponent, Access(typeof(SharedEyeSystem)), AutoGenerateComponentState(true)]
+    [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true)]
     public sealed partial class EyeComponent : Component
     {
         public const int DefaultVisibilityMask = 1;
 
         [ViewVariables]
-        public readonly Eye Eye = new();
+        public Eye Eye = new();
 
         /// <summary>
         ///     If not null, this entity is used to update the eye's position instead of just using the component's owner.

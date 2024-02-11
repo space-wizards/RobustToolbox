@@ -156,8 +156,8 @@ internal partial class Clyde
 
     private PointLight[] _lightsToRenderList = default!;
 
-        private LightCapacityComparer _lightCap = new();
-        private ShadowCapacityComparer _shadowCap = new ShadowCapacityComparer();
+    private LightCapacityComparer _lightCap = new();
+    private ShadowCapacityComparer _shadowCap = new ShadowCapacityComparer();
 
     private unsafe void InitLighting()
     {
@@ -671,25 +671,21 @@ internal partial class Clyde
         return true;
     }
 
-        private sealed class LightCapacityComparer : IComparer<(PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
+        private sealed class LightCapacityComparer : IComparer<PointLight>
         {
-            public int Compare(
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
+            public int Compare(PointLight x, PointLight y)
             {
-                if (x.light.CastShadows && !y.light.CastShadows) return 1;
-                if (!x.light.CastShadows && y.light.CastShadows) return -1;
+                if (x.CastShadows && !y.CastShadows) return 1;
+                if (!x.CastShadows && y.CastShadows) return -1;
                 return 0;
             }
         }
 
-        private sealed class ShadowCapacityComparer : IComparer<(PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
+        private sealed class ShadowCapacityComparer : IComparer<PointLight>
         {
-            public int Compare(
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
+            public int Compare(PointLight x, PointLight y)
             {
-                return x.distanceSquared.CompareTo(y.distanceSquared);
+                return x.DistFromCentreSq.CompareTo(y.DistFromCentreSq);
             }
         }
 

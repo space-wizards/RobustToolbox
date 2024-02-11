@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Utility;
+using Robust.Shared.Graphics;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;

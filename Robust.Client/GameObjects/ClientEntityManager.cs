@@ -221,7 +221,7 @@ namespace Robust.Client.GameObjects
         public void DispatchReceivedNetworkMsg(EntityEventArgs msg)
         {
             var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
-            var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(_playerManager.LocalPlayer!.Session), msg)!;
+            var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(_playerManager.LocalSession!), msg)!;
             ReceivedSystemMessage?.Invoke(this, msg);
             ReceivedSystemMessage?.Invoke(this, sessionMsg);
         }

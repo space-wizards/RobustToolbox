@@ -56,6 +56,7 @@ END TEMPLATE-->
 * Add dotted line drawing to DrawingHandleScreen.
 * You can use `Subs.CVar()` from an entity systems to subscribe to CVar changes. This is more convenient than `IConfigurationManager.OnValueChanged` as it automatically unsubscribes on system shutdown.
 * There is now a built-in type serializer for `DateTime`, so you can put `DateTime`s in your data fields.
+* `System.Text.Unicode.UnicodeRange` and `UnicodeRanges` are now available in the sandbox.
 
 ### Bugfixes
 

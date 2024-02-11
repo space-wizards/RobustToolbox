@@ -2,15 +2,14 @@
 using NUnit.Framework;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
-using TerraFX.Interop.Windows;
 
 namespace Robust.UnitTesting.Shared.Serialization;
 
 [TestFixture]
-public sealed class CompositionTest : SerializationTest
+public sealed partial class CompositionTest : SerializationTest
 {
     [DataDefinition]
-    private sealed class CompositionTestClass
+    private sealed partial class CompositionTestClass
     {
         [DataField("f1")] public int ChildValue;
         [DataField("f2")] public int Parent1Value;

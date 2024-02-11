@@ -9,7 +9,10 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public sealed class EntityState
     {
-        public EntityUid Uid { get; }
+        /// <summary>
+        /// Network identifier for the entity.
+        /// </summary>
+        public NetEntity NetEntity;
 
         public NetListAsArray<ComponentChange> ComponentChanges { get; }
 
@@ -23,9 +26,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public HashSet<ushort>? NetComponents;
 
-        public EntityState(EntityUid uid, NetListAsArray<ComponentChange> changedComponents, GameTick lastModified, HashSet<ushort>? netComps = null)
+        public EntityState(NetEntity netEntity, NetListAsArray<ComponentChange> changedComponents, GameTick lastModified, HashSet<ushort>? netComps = null)
         {
-            Uid = uid;
+            NetEntity = netEntity;
             ComponentChanges = changedComponents;
             EntityLastModified = lastModified;
             NetComponents = netComps;
@@ -39,7 +42,7 @@ namespace Robust.Shared.GameObjects
 
         /// State data for the created/modified component, if any.
         /// </summary>
-        public readonly ComponentState State;
+        public readonly IComponentState State;
 
         /// <summary>
         ///     The Network ID of the component to remove.
@@ -48,7 +51,7 @@ namespace Robust.Shared.GameObjects
 
         public readonly GameTick LastModifiedTick;
 
-        public ComponentChange(ushort netId, ComponentState state, GameTick lastModifiedTick)
+        public ComponentChange(ushort netId, IComponentState state, GameTick lastModifiedTick)
         {
             State = state;
             NetID = netId;

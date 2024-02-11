@@ -8,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
@@ -17,9 +18,9 @@ internal sealed class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
 {
     [Dependency] private readonly IPrototypeManager _prototype = default!;
 
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var proto = parser.GetWord(char.IsLetterOrDigit);
+        var proto = parserContext.GetWord(ParserContext.IsToken);
 
         if (proto is null || !_prototype.TryIndex<T>(proto, out var resolved))
         {
@@ -36,7 +37,7 @@ internal sealed class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
     {
         IEnumerable<CompletionOption> options;
 
@@ -62,7 +63,7 @@ public readonly record struct Prototype<T>(T Value) : IAsType<string>
     }
 }
 
-public record struct NotAValidPrototype(string Proto, string Kind) : IConError
+public record NotAValidPrototype(string Proto, string Kind) : IConError
 {
     public FormattedMessage DescribeInner()
     {

@@ -32,19 +32,19 @@ public sealed class GridMovement_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            var grid = mapManager.CreateGridEntity(mapId);
 
             // Setup 1 body on grid, 1 body off grid, and assert that it's all gucci.
-            grid.SetTile(Vector2i.Zero, new Tile(1));
-            var fixtures = entManager.GetComponent<FixturesComponent>(grid.Owner);
+            grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            var fixtures = entManager.GetComponent<FixturesComponent>(grid);
             Assert.That(fixtures.FixtureCount, Is.EqualTo(1));
 
-            var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, 0.5f, 0.5f ));
+            var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid, 0.5f, 0.5f ));
             var onGridBody = entManager.AddComponent<PhysicsComponent>(onGrid);
             physSystem.SetBodyType(onGrid, BodyType.Dynamic, body: onGridBody);
             var shapeA = new PolygonShape();
             shapeA.SetAsBox(0.5f, 0.5f);
-            fixtureSystem.CreateFixture(onGrid, new Fixture("fix1", shapeA, 1, 0, false), body: onGridBody);
+            fixtureSystem.CreateFixture(onGrid, "fix1", new Fixture(shapeA, 1, 0, false), body: onGridBody);
             Assert.That(fixtureSystem.GetFixtureCount(onGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(onGrid).ParentUid, Is.EqualTo(grid.Owner));
             physSystem.WakeBody(onGrid, body: onGridBody);
@@ -55,7 +55,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             physSystem.SetBodyType(offGrid, BodyType.Dynamic, body: offGridBody);
             var shapeB = new PolygonShape();
             shapeB.SetAsBox(0.5f, 0.5f);
-            fixtureSystem.CreateFixture(offGrid, new Fixture("fix1", shapeB, 0, 1, false), body: offGridBody);
+            fixtureSystem.CreateFixture(offGrid, "fix1", new Fixture(shapeB, 0, 1, false), body: offGridBody);
             Assert.That(fixtureSystem.GetFixtureCount(offGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(offGrid).ParentUid, Is.Not.EqualTo((grid.Owner)));
             physSystem.WakeBody(offGrid, body: offGridBody);

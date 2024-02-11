@@ -1,10 +1,8 @@
-using System;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Reflection;
-using Robust.Shared.Utility;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -50,24 +48,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 Assert.That(args.TestNumber, Is.EqualTo(5));
                 args.TestNumber = 10;
             }
-        }
-
-        [Test]
-        public void SubscriptionNoMixedRefValueDirectedEvent()
-        {
-            // Arrange.
-            var simulation = RobustServerSimulation
-                .NewSimulation()
-                .RegisterComponents(factory =>
-                {
-                    factory.RegisterClass<DummyComponent>();
-                    factory.RegisterClass<DummyTwoComponent>();
-                })
-                .RegisterEntitySystems(factory =>
-                    factory.LoadExtraSystemType<SubscriptionNoMixedRefValueDirectedEventSystem>());
-
-            // Act. No mixed ref and value subscriptions are allowed.
-            Assert.Throws(typeof(InvalidOperationException), () => simulation.InitializeInstance());
         }
 
         [Reflect(false)]
@@ -177,7 +157,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             }
         }
 
-        private sealed class DummyTwoComponent : Component
+        private sealed partial class DummyTwoComponent : Component
         {
         }
 

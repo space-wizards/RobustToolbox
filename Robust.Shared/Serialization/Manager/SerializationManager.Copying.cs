@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
+#pragma warning disable CS0618 // Type or member is obsolete
 
 // Avoid accidentally mixing up overloads.
 // ReSharper disable RedundantTypeArgumentsOfMethod
@@ -77,6 +80,14 @@ public sealed partial class SerializationManager
 
             Expression call;
             var sameType = baseType == actualType;
+
+            if (baseType.IsGenericType)
+            {
+                // Frozen dictionaries/sets are abstract and have a bunch of implementations, but we always serialize them as their abstract type.
+                var t = baseType.GetGenericTypeDefinition();
+                if (t == typeof(FrozenDictionary<,>) || t == typeof(FrozenSet<>))
+                    actualType = baseType;
+            }
 
             var targetVar = sameType ? targetParam : Expression.Variable(actualType);
             Expression sourceVar = sameType ? sourceParam : Expression.Convert(sourceParam, actualType);
@@ -329,20 +340,34 @@ public sealed partial class SerializationManager
 
     private T CreateCopyInternal<T>(T source, SerializationHookContext hookCtx, ISerializationContext context, DataDefinition<T>? definition) where T : notnull
     {
-        if (ShouldReturnSource(typeof(T)))
-            return source;
-
         if (source is DataNode node)
             return (T)(object)node.Copy();
 
-        var isRecord = definition?.IsRecord ?? false;
-        var target = GetOrCreateInstantiator<T>(isRecord)();
-
-        if (!GetOrCreateCopyToGenericDelegate<T>(source)(source, ref target, hookCtx, context))
+        ref readonly var information = ref SerializedType<T>.Information;
+        if (information.ReturnSource)
         {
-            throw new CopyToFailedException<T>();
+            return source;
         }
-        return target!;
+
+        if (information.SerializationGenerated)
+        {
+            var generated = Unsafe.As<ISerializationGenerated<T>>(source);
+            var target = generated.Instantiate();
+            generated.Copy(ref target, this, hookCtx, context);
+            RunAfterHook(target, hookCtx);
+            return target;
+        }
+        else
+        {
+            var isRecord = definition?.IsRecord ?? false;
+            var target = GetOrCreateInstantiator<T>(isRecord)();
+
+            if (!GetOrCreateCopyToGenericDelegate<T>(source)(source, ref target, hookCtx, context))
+            {
+                throw new CopyToFailedException<T>();
+            }
+            return target!;
+        }
     }
 
     private void NotNullOverrideCheck(bool notNullableOverride, Type? type = null)
@@ -369,6 +394,13 @@ public sealed partial class SerializationManager
         {
             NotNullOverrideCheck(notNullableOverride);
             target = null;
+            return;
+        }
+
+        if (source is ISerializationGenerated generated)
+        {
+            generated.Copy(ref target!, this, hookCtx, context);
+            RunAfterHook(target, hookCtx);
             return;
         }
 
@@ -402,6 +434,16 @@ public sealed partial class SerializationManager
         {
             NotNullOverrideCheck<T>(notNullableOverride);
             target = default!;
+            return;
+        }
+
+        ref readonly var information = ref SerializedType<T>.Information;
+        if (information.SerializationGenerated)
+        {
+            var generated = Unsafe.As<ISerializationGenerated<T>>(source);
+            target ??= generated.Instantiate();
+            generated.Copy(ref target, this, hookCtx, context);
+            RunAfterHook(target, hookCtx);
             return;
         }
 
@@ -446,10 +488,21 @@ public sealed partial class SerializationManager
             return;
         }
 
-        target ??= GetOrCreateInstantiator<T>(false)();
+        ref readonly var information = ref SerializedType<T>.Information;
+        if (target == null)
+        {
+            if (information.SerializationGenerated)
+            {
+                var generated = Unsafe.As<ISerializationGenerated<T>>(source);
+                target = generated.Instantiate();
+            }
+            else
+            {
+                target = GetOrCreateInstantiator<T>(false)();
+            }
+        }
 
         copier.CopyTo(this, source, ref target, DependencyCollection, hookCtx, context);
-
         RunAfterHook(target, hookCtx);
     }
 
@@ -510,6 +563,22 @@ public sealed partial class SerializationManager
         {
             NotNullOverrideCheck<T>(notNullableOverride);
             return default!;
+        }
+
+        ref readonly var information = ref SerializedType<T>.Information;
+        if (information.ReturnSource)
+        {
+            return source;
+        }
+
+        if (information.SerializationGenerated)
+        {
+            var generated = Unsafe.As<ISerializationGenerated<T>>(source);
+            var target = generated.Instantiate();
+            generated.Copy(ref target, this, hookCtx, context);
+            RunAfterHook(target, hookCtx);
+
+            return target;
         }
 
         var res = GetOrCreateCreateCopyGenericDelegate<T>()(source, hookCtx, context);

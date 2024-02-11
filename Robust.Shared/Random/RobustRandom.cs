@@ -5,9 +5,14 @@ namespace Robust.Shared.Random
 {
     public sealed class RobustRandom : IRobustRandom
     {
-        private readonly System.Random _random = new();
+        private System.Random _random = new();
 
         public System.Random GetRandom() => _random;
+
+        public void SetSeed(int seed)
+        {
+            _random = new(seed);
+        }
 
         public float NextFloat()
         {

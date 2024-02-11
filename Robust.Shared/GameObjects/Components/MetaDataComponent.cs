@@ -1,13 +1,13 @@
-using JetBrains.Annotations;
+using System;
+using System.Collections.Generic;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using System;
 
 namespace Robust.Shared.GameObjects
 {
@@ -57,11 +57,24 @@ namespace Robust.Shared.GameObjects
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
     [RegisterComponent, NetworkedComponent]
-    public sealed class MetaDataComponent : Component
+    public sealed partial class MetaDataComponent : Component
     {
         [DataField("name")] internal string? _entityName;
         [DataField("desc")] internal string? _entityDescription;
         internal EntityPrototype? _entityPrototype;
+
+        /// <summary>
+        /// The components attached to the entity that are currently networked.
+        /// </summary>
+        [ViewVariables]
+        internal readonly Dictionary<ushort, IComponent> NetComponents = new();
+
+        /// <summary>
+        /// Network identifier for this entity.
+        /// </summary>
+        [ViewVariables]
+        [Access(typeof(EntityManager), Other = AccessPermissions.ReadExecute)]
+        public NetEntity NetEntity { get; internal set; } = NetEntity.Invalid;
 
         /// <summary>
         /// When this entity was paused, if applicable. Note that this is the actual time, not the duration which gets
@@ -71,7 +84,7 @@ namespace Robust.Shared.GameObjects
 
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]
-        public GameTick EntityLastModifiedTick { get; internal set; } = GameTick.Zero;
+        public GameTick EntityLastModifiedTick { get; internal set; } = GameTick.First;
 
         /// <summary>
         ///     This is the tick at which the client last applied state data received from the server.
@@ -80,7 +93,8 @@ namespace Robust.Shared.GameObjects
         public GameTick LastStateApplied { get; internal set; } = GameTick.Zero;
 
         /// <summary>
-        ///     This is the most recent tick at which some component was removed from this entity.
+        ///     This is the most recent tick at which a networked component was removed from this entity.
+        ///     Currently only reliable server-side, client side prediction may cause the value to be wrong.
         /// </summary>
         [ViewVariables]
         public GameTick LastComponentRemoved { get; internal set; } = GameTick.Zero;
@@ -97,14 +111,6 @@ namespace Robust.Shared.GameObjects
                     return _entityPrototype != null ? _entityPrototype.Name : string.Empty;
                 return _entityName;
             }
-            [Obsolete("Use MetaDataSystem.SetEntityName")]
-            set
-            {
-                if (value == EntityName)
-                    return;
-
-                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetEntityName(Owner, value, this);
-            }
         }
 
         /// <summary>
@@ -118,14 +124,6 @@ namespace Robust.Shared.GameObjects
                 if (_entityDescription == null)
                     return _entityPrototype != null ? _entityPrototype.Description : string.Empty;
                 return _entityDescription;
-            }
-            [Obsolete("Use MetaDataSystem.SetEntityDescription")]
-            set
-            {
-                if (value == EntityDescription)
-                    return;
-
-                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetEntityDescription(Owner, value, this);
             }
         }
 
@@ -151,7 +149,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
-        [DataField("flags")]
         public MetaDataFlags Flags
         {
             get => _flags;
@@ -174,15 +171,8 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         ///     Every entity will always have the first bit set to true.
         /// </remarks>
-        [Access(typeof(MetaDataSystem))]
-        public int VisibilityMask = 1;
-
-        [UsedImplicitly, ViewVariables(VVAccess.ReadWrite)]
-        private int VVVisibilityMask
-        {
-            get => VisibilityMask;
-            set => IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetVisibilityMask(Owner, value, this);
-        }
+        [ViewVariables] // TODO ACCESS RRestrict writing to server-side visibility system
+        public ushort VisibilityMask { get; internal set; }= 1;
 
         [ViewVariables]
         public bool EntityPaused => PauseTime != null;
@@ -191,7 +181,17 @@ namespace Robust.Shared.GameObjects
         public bool EntityInitializing => EntityLifeStage == EntityLifeStage.Initializing;
         public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
 
-        internal override void ClearTicks()
+        /// <summary>
+        /// The PVS chunk that this entity is currently stored on.
+        /// This should always be set properly if the entity is directly attached to a grid or map.
+        /// If it is null, it implies that either:
+        /// - The entity nested is somewhere in some chunk that has already been marked as dirty
+        /// - The entity is in nullspace
+        /// </summary>
+        [ViewVariables]
+        internal PvsChunkLocation? LastPvsLocation;
+
+        private protected override void ClearTicks()
         {
             // Do not clear modified ticks.
             // MetaDataComponent is used in the game state system to carry initial data like prototype ID.
@@ -220,5 +220,17 @@ namespace Robust.Shared.GameObjects
         /// Used by clients to indicate that an entity has left their visible set.
         /// </summary>
         Detached = 1 << 2,
+
+        /// <summary>
+        /// If true, then this entity is considered a "high priority" entity and will be sent to players from further
+        /// away. Useful for things like light sources and occluders. Only works if the entity is directly parented to
+        /// a grid or map.
+        /// </summary>
+        PvsPriority = 1 << 3,
     }
+
+    /// <summary>
+    /// Key struct for uniquely identifying a PVS chunk.
+    /// </summary>
+    internal readonly record struct PvsChunkLocation(EntityUid Uid, Vector2i Indices);
 }

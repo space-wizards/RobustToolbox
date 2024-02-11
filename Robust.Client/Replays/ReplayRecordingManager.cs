@@ -9,7 +9,7 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -95,12 +95,12 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
     {
         var tick = _timing.LastRealTick;
         var players = _player.Sessions.Select(GetPlayerState).ToArray();
-        var deletions = Array.Empty<EntityUid>();
+        var deletions = Array.Empty<NetEntity>();
 
         var fullRep = _state.GetFullRep();
         var entStates = new EntityState[fullRep.Count];
         var i = 0;
-        foreach (var (uid, dict) in fullRep)
+        foreach (var (netEntity, dict) in fullRep)
         {
             var compData = new ComponentChange[dict.Count];
             var netComps = new HashSet<ushort>(dict.Keys);
@@ -110,7 +110,7 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
                 compData[j++] = new ComponentChange(id, compState, tick);
             }
 
-            entStates[i++] = new EntityState(uid, compData, tick, netComps);
+            entStates[i++] = new EntityState(netEntity, compData, tick, netComps);
         }
 
         var state = new GameState(
@@ -121,30 +121,31 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
             players,
             deletions);
 
-        var detached = new List<EntityUid>();
+        var detached = new List<NetEntity>();
         var query = _entMan.AllEntityQueryEnumerator<MetaDataComponent>();
         while (query.MoveNext(out var uid, out var comp))
         {
-            if (uid.IsClientSide())
+            if (_entMan.IsClientSide(uid))
                 continue;
 
-            DebugTools.Assert(fullRep.ContainsKey(uid));
+            var nent = comp.NetEntity;
+            DebugTools.Assert(fullRep.ContainsKey(nent));
             if ((comp.Flags & MetaDataFlags.Detached) != 0)
-                detached.Add(uid);
+                detached.Add(nent);
         }
 
         var detachMsg = detached.Count > 0 ? new ReplayMessage.LeavePvs(detached, tick) : null;
         return (state, detachMsg);
     }
 
-    private PlayerState GetPlayerState(ICommonSession session)
+    private SessionState GetPlayerState(ICommonSession session)
     {
-        return new PlayerState
+        return new SessionState
         {
             UserId = session.UserId,
             Status = session.Status,
             Name = session.Name,
-            ControlledEntity = session.AttachedEntity,
+            ControlledEntity = _entMan.GetNetEntity(session.AttachedEntity),
         };
     }
 }

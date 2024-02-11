@@ -8,7 +8,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.Shared.GameObjects;
 
 [Serializable, NetSerializable, DataDefinition]
-public sealed class PrototypeLayerData
+public sealed partial class PrototypeLayerData
 {
     /// <summary>
     /// The shader prototype to use for this layer.
@@ -28,6 +28,8 @@ public sealed class PrototypeLayerData
     [DataField("color")] public Color? Color;
     [DataField("map")] public HashSet<string>? MapKeys;
     [DataField("renderingStrategy")] public LayerRenderingStrategy? RenderingStrategy;
+
+    [DataField] public bool Cycle;
 }
 
 [Serializable, NetSerializable]

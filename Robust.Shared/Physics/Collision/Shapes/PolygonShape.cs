@@ -36,7 +36,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class PolygonShape : IPhysShape, ISerializationHooks, IEquatable<PolygonShape>, IApproxEquatable<PolygonShape>
+    public sealed partial class PolygonShape : IPhysShape, ISerializationHooks, IEquatable<PolygonShape>, IApproxEquatable<PolygonShape>
     {
         // TODO: Serialize this someday. This probably needs a dedicated shapeserializer that derives vertexcount
         // from the yml nodes just for convenience.
@@ -186,6 +186,37 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             // TODO: Someday don't need this.
             Set(Vertices.AsSpan(), VertexCount);
+        }
+
+        public bool Set(Box2Rotated bounds)
+        {
+            Span<Vector2> vertices = stackalloc Vector2[]
+            {
+                bounds.BottomLeft,
+                bounds.BottomRight,
+                bounds.TopRight,
+                bounds.TopLeft,
+            };
+
+            return Set(vertices, 4);
+        }
+
+        public void SetAsBox(Box2 box)
+        {
+            Array.Resize(ref Vertices, 4);
+            Array.Resize(ref Normals, 4);
+
+            Vertices[0] = box.BottomLeft;
+            Vertices[1] = box.BottomRight;
+            Vertices[2] = box.TopRight;
+            Vertices[3] = box.TopLeft;
+
+            Normals[0] = new Vector2(0.0f, -1.0f);
+            Normals[1] = new Vector2(1.0f, 0.0f);
+            Normals[2] = new Vector2(0.0f, 1.0f);
+            Normals[3] = new Vector2(-1.0f, 0.0f);
+
+            Centroid = box.Center;
         }
 
         public void SetAsBox(float halfWidth, float halfHeight)

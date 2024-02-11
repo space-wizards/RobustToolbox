@@ -68,6 +68,7 @@ sealed class RemoveMapCommand : LocalizedCommands
 
 sealed class RemoveGridCommand : LocalizedCommands
 {
+    [Dependency] private readonly IEntityManager _entManager = default!;
     [Dependency] private readonly IMapManager _map = default!;
 
     public override string Command => "rmgrid";
@@ -81,15 +82,15 @@ sealed class RemoveGridCommand : LocalizedCommands
             return;
         }
 
-        var gridId = EntityUid.Parse(args[0]);
+        var gridIdNet = NetEntity.Parse(args[0]);
 
-        if (!_map.GridExists(gridId))
+        if (!_entManager.TryGetEntity(gridIdNet, out var gridId) || !_map.GridExists(gridId))
         {
             shell.WriteError($"Grid {gridId} does not exist.");
             return;
         }
 
-        _map.DeleteGrid(gridId);
+        _map.DeleteGrid(gridId.Value);
         shell.WriteLine($"Grid {gridId} was removed.");
     }
 }
@@ -130,6 +131,7 @@ internal sealed class RunMapInitCommand : LocalizedCommands
 
 internal sealed class ListMapsCommand : LocalizedCommands
 {
+    [Dependency] private readonly IEntityManager _entManager = default!;
     [Dependency] private readonly IMapManager _map = default!;
 
     public override string Command => "lsmap";
@@ -143,11 +145,14 @@ internal sealed class ListMapsCommand : LocalizedCommands
 
         foreach (var mapId in _map.GetAllMapIds().OrderBy(id => id.Value))
         {
-            msg.AppendFormat("{0}: init: {1}, paused: {2}, ent: {3}, grids: {4}\n",
-                mapId, _map.IsMapInitialized(mapId),
+            var mapUid = _map.GetMapEntityId(mapId);
+
+            msg.AppendFormat("{0}: {1}, init: {2}, paused: {3}, nent: {4}, grids: {5}\n",
+                mapId, _entManager.GetComponent<MetaDataComponent>(mapUid).EntityName,
+                _map.IsMapInitialized(mapId),
                 _map.IsMapPaused(mapId),
-                _map.GetMapEntityId(mapId),
-                string.Join(",", _map.GetAllMapGrids(mapId).Select(grid => grid.Owner)));
+                _entManager.GetNetEntity(_map.GetMapEntityId(mapId)),
+                string.Join(",", _map.GetAllGrids(mapId).Select(grid => grid.Owner)));
         }
 
         shell.WriteLine(msg.ToString());

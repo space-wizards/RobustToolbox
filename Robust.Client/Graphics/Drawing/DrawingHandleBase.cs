@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -54,7 +55,11 @@ namespace Robust.Client.Graphics
 
         public abstract void SetTransform(in Matrix3 matrix);
 
+        public abstract Matrix3 GetTransform();
+
         public abstract void UseShader(ShaderInstance? shader);
+
+        public abstract ShaderInstance? GetShader();
 
         // ---- DrawPrimitives: Vector2 API ----
 

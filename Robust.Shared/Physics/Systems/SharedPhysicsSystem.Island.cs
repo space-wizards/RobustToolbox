@@ -344,7 +344,7 @@ public abstract partial class SharedPhysicsSystem
 
             if (!metaQuery.TryGetComponent(seedUid, out var metadata))
             {
-                _sawmill.Error($"Found deleted entity {ToPrettyString(seedUid)} on map!");
+                Log.Error($"Found deleted entity {ToPrettyString(seedUid)} on map!");
                 RemoveSleepBody(seedUid, seed, component);
                 continue;
             }
@@ -385,8 +385,8 @@ public abstract partial class SharedPhysicsSystem
                     var contact = node.Value;
                     node = node.Next;
 
-                    // Has this contact already been added to an island?
-                    if ((contact.Flags & ContactFlags.Island) != 0x0) continue;
+                    // Has this contact already been added to an island / is it pre-init?
+                    if ((contact.Flags & (ContactFlags.Island | ContactFlags.PreInit)) != 0x0) continue;
 
                     // Is this contact solid and touching?
                     if (!contact.Enabled || !contact.IsTouching) continue;
@@ -423,16 +423,19 @@ public abstract partial class SharedPhysicsSystem
 
                             var uidA = joint.BodyAUid;
                             var uidB = joint.BodyBUid;
+                            DebugTools.AssertNotEqual(uidA, uidB);
 
                             if (jointQuery.TryGetComponent(uidA, out var jointCompA) &&
                                 jointCompA.Relay != null)
                             {
+                                DebugTools.AssertNotEqual(uidB, jointCompA.Relay.Value);
                                 uidA = jointCompA.Relay.Value;
                             }
 
                             if (jointQuery.TryGetComponent(uidB, out var jointCompB) &&
                                 jointCompB.Relay != null)
                             {
+                                DebugTools.AssertNotEqual(uidA, jointCompB.Relay.Value);
                                 uidB = jointCompB.Relay.Value;
                             }
 

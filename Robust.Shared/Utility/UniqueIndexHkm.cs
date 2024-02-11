@@ -15,7 +15,7 @@ namespace Robust.Shared.Utility
     /// <remarks>
     /// Use when the index's keys change more rapidly or when insertion and removal of keys is preferred over read time.
     /// It is intended to explicitly construct this index before use.
-    /// Do not refer to a <see cref="UniqueIndexHkm{TKey,TValue}"/> by it's interface.
+    /// Do not refer to a <see cref="UniqueIndexHkm{TKey,TValue}"/> by its interface.
     /// See <see cref="IUniqueIndex{TKey,TValue}"/> for details.
     /// </remarks>
     /// <typeparam name="TKey">The type of key.</typeparam>
@@ -26,7 +26,6 @@ namespace Robust.Shared.Utility
     public struct UniqueIndexHkm<TKey, TValue> : IUniqueIndex<TKey, TValue> where TKey : notnull
     {
 
-        [NotNull]
         private readonly Dictionary<TKey, HashSet<TValue>> _index;
 
         public UniqueIndexHkm(int capacity)
@@ -44,14 +43,7 @@ namespace Robust.Shared.Utility
         public bool Add(TKey key, TValue value)
         {
             InitializedCheck();
-
-            if (_index.TryGetValue(key, out var set))
-            {
-                return set.Add(value);
-            }
-
-            _index.Add(key, new HashSet<TValue> {value});
-            return true;
+            return _index.GetOrNew(key).Add(value);
         }
 
         /// <inheritdoc />

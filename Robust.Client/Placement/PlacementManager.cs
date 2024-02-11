@@ -20,6 +20,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.Log;
+using Direction = Robust.Shared.Maths.Direction;
 
 namespace Robust.Client.Placement
 {
@@ -225,7 +226,7 @@ namespace Robust.Client.Placement
                         }
                     }))
                 .Bind(EngineKeyFunctions.EditorPlaceObject, new PointerStateInputCmdHandler(
-                    (session, coords, uid) =>
+                    (session, netCoords, nent) =>
                     {
                         if (!IsActive)
                             return false;
@@ -239,15 +240,15 @@ namespace Robust.Client.Placement
 
                         if (Eraser)
                         {
-                            if (HandleDeletion(coords))
+                            if (HandleDeletion(netCoords))
                                 return true;
 
-                            if (uid == EntityUid.Invalid)
+                            if (nent == EntityUid.Invalid)
                             {
                                 return false;
                             }
 
-                            HandleDeletion(uid);
+                            HandleDeletion(nent);
                         }
                         else
                         {
@@ -285,23 +286,17 @@ namespace Robust.Client.Placement
                     }, outsidePrediction: true))
                 .Register<PlacementManager>();
 
-            var localPlayer = PlayerManager.LocalPlayer;
-            localPlayer!.EntityAttached += OnEntityAttached;
+            PlayerManager.LocalPlayerDetached += OnDetached;
         }
 
         private void TearDownInput()
         {
             CommandBinds.Unregister<PlacementManager>();
-
-            if (PlayerManager.LocalPlayer != null)
-            {
-                PlayerManager.LocalPlayer.EntityAttached -= OnEntityAttached;
-            }
+            PlayerManager.LocalPlayerDetached -= OnDetached;
         }
 
-        private void OnEntityAttached(EntityAttachedEventArgs eventArgs)
+        private void OnDetached(EntityUid obj)
         {
-            // player attached to a new entity, basically disable the editor
             Clear();
         }
 
@@ -428,7 +423,7 @@ namespace Robust.Client.Placement
 
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
-            msg.EntityUid = entity;
+            msg.EntityUid = EntityManager.GetNetEntity(entity);
             _networkManager.ClientSendMessage(msg);
         }
 
@@ -436,7 +431,7 @@ namespace Robust.Client.Placement
         {
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
-            msg.EntityCoordinates = new EntityCoordinates(StartPoint.EntityId, rect.BottomLeft);
+            msg.NetCoordinates = new NetCoordinates(EntityManager.GetNetEntity(StartPoint.EntityId), rect.BottomLeft);
             msg.RectSize = rect.Size;
             _networkManager.ClientSendMessage(msg);
         }
@@ -532,7 +527,7 @@ namespace Robust.Client.Placement
                     return false;
                 }
                 coordinates = EntityCoordinates.FromMap(MapManager,
-                                                        EyeManager.ScreenToMap(InputManager.MouseScreenPosition));
+                                                        EyeManager.PixelToMap(InputManager.MouseScreenPosition));
                 return true;
             }
         }
@@ -790,7 +785,7 @@ namespace Robust.Client.Placement
                 message.EntityTemplateName = CurrentPermission.EntityType;
 
             // world x and y
-            message.EntityCoordinates = coordinates;
+            message.NetCoordinates = EntityManager.GetNetCoordinates(coordinates);
 
             message.DirRcv = Direction;
 

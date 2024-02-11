@@ -98,9 +98,7 @@ public static class ConHelpers
     /// <returns>A formatted message with highlighting applied.</returns>
     public static FormattedMessage HighlightSpan(string input, Vector2i span, Color color)
     {
-        if (span.X == span.Y)
-            return new FormattedMessage();
-        var msg = FormattedMessage.FromMarkup(input[..span.X]);
+        var msg = FormattedMessage.FromUnformatted(input[..span.X]);
         msg.PushColor(color);
         msg.AddText(input[span.X..span.Y]);
         msg.Pop();
@@ -118,6 +116,6 @@ public static class ConHelpers
         var builder = new StringBuilder();
         builder.Append(' ', span.X);
         builder.Append('^', span.Y - span.X);
-        return FormattedMessage.FromMarkup(builder.ToString());
+        return FormattedMessage.FromUnformatted(builder.ToString());
     }
 }

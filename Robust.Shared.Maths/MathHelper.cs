@@ -338,6 +338,16 @@ namespace Robust.Shared.Maths
             return MathF.Max(MathF.Min(a, b), MathF.Min(MathF.Max(a, b), c));
         }
 
+        public static TimeSpan Min(TimeSpan a, TimeSpan b)
+        {
+            return a < b ? a : b;
+        }
+
+        public static TimeSpan Max(TimeSpan a, TimeSpan b)
+        {
+            return a > b ? a : b;
+        }
+
         #endregion MinMax
 
         #region Mod
@@ -590,6 +600,11 @@ namespace Robust.Shared.Maths
         public static float Lerp(float a, float b, float blend)
         {
             return a + (b - a) * blend;
+        }
+
+        public static TimeSpan Lerp(TimeSpan a, TimeSpan b, double t)
+        {
+            return a + t * (b - a);
         }
 
         #endregion Lerp

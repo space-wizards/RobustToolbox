@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
@@ -16,7 +15,7 @@ namespace Robust.Shared.GameObjects;
 ///     Visualization works client side with derivatives of the <see cref="Robust.Client.GameObjects.VisualizerSystem">VisualizerSystem</see> class and corresponding components.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-public sealed class AppearanceComponent : Component
+public sealed partial class AppearanceComponent : Component
 {
     /// <summary>
     /// Whether or not the appearance needs to be updated.
@@ -32,14 +31,6 @@ public sealed class AppearanceComponent : Component
     [ViewVariables] internal bool UpdateQueued;
 
     [ViewVariables] internal Dictionary<Enum, object> AppearanceData = new();
-
-    [Dependency] private readonly IEntitySystemManager _sysMan = default!;
-
-    [Obsolete("Use SharedAppearanceSystem instead")]
-    public void SetData(Enum key, object value)
-    {
-        _sysMan.GetEntitySystem<SharedAppearanceSystem>().SetData(Owner, key, value, this);
-    }
 
     [Obsolete("Use SharedAppearanceSystem instead")]
     public bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T data)

@@ -24,12 +24,12 @@
 //
 
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Xml.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 using SysVector3 = System.Numerics.Vector3;
@@ -404,7 +404,7 @@ namespace Robust.Shared.Maths
         /// </param>
         public static Color FromHsl(Vector4 hsl)
         {
-            var hue = hsl.X * 360.0f;
+            var hue = (hsl.X - MathF.Truncate(hsl.X)) * 360.0f;
             var saturation = hsl.Y;
             var lightness = hsl.Z;
 
@@ -515,7 +515,7 @@ namespace Robust.Shared.Maths
         /// </param>
         public static Color FromHsv(Vector4 hsv)
         {
-            var hue = hsv.X * 360.0f;
+            var hue = (hsv.X - MathF.Truncate(hsv.X)) * 360.0f;
             var saturation = hsv.Y;
             var value = hsv.Z;
 
@@ -1639,6 +1639,11 @@ namespace Robust.Shared.Maths
         public static Color RoyalBlue => new(65, 105, 225, 255);
 
         /// <summary>
+        ///     Gets the system color with (R, G, B, A) = (204, 71, 120, 255).
+        /// </summary>
+        public static Color Ruber => new(204, 71, 120, 255);
+
+        /// <summary>
         ///     Gets the system color with (R, G, B, A) = (139, 69, 19, 255).
         /// </summary>
         public static Color SaddleBrown => new(139, 69, 19, 255);
@@ -1652,6 +1657,11 @@ namespace Robust.Shared.Maths
         ///     Gets the system color with (R, G, B, A) = (244, 164, 96, 255).
         /// </summary>
         public static Color SandyBrown => new(244, 164, 96, 255);
+
+        /// <summary>
+        ///     Gets the system color with (R, G, B, A) = (0, 66, 153, 255).
+        /// </summary>
+        public static Color SeaBlue => new(0, 66, 153, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (46, 139, 87, 255).
@@ -1734,6 +1744,16 @@ namespace Robust.Shared.Maths
         public static Color Violet => new(238, 130, 238, 255);
 
         /// <summary>
+        ///     Gets the system color with (R, G, B, A) = (126, 3, 168, 255).
+        /// </summary>
+        public static Color BetterViolet => new(126, 3, 168, 255);
+
+        /// <summary>
+        ///     Gets the system color with (R, G, B, A) = (255, 153, 0, 255).
+        /// </summary>
+        public static Color VividGamboge => new(255, 153, 0, 255);
+
+        /// <summary>
         ///     Gets the system color with (R, G, B, A) = (245, 222, 179, 255).
         /// </summary>
         public static Color Wheat => new(245, 222, 179, 255);
@@ -1758,7 +1778,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         public static Color YellowGreen => new(154, 205, 50, 255);
 
-        private static readonly Dictionary<string, Color> DefaultColors = new()
+        private static readonly FrozenDictionary<string, Color> DefaultColors = new Dictionary<string, Color>()
         {
             ["transparent"] = Transparent,
             ["aliceblue"] = AliceBlue,
@@ -1767,6 +1787,7 @@ namespace Robust.Shared.Maths
             ["aquamarine"] = Aquamarine,
             ["azure"] = Azure,
             ["beige"] = Beige,
+            ["betterviolet"] = BetterViolet,
             ["bisque"] = Bisque,
             ["black"] = Black,
             ["blanchedalmond"] = BlanchedAlmond,
@@ -1877,9 +1898,11 @@ namespace Robust.Shared.Maths
             ["red"] = Red,
             ["rosybrown"] = RosyBrown,
             ["royalblue"] = RoyalBlue,
+            ["ruber"] = Ruber,
             ["saddlebrown"] = SaddleBrown,
             ["salmon"] = Salmon,
             ["sandybrown"] = SandyBrown,
+            ["seablue"] = SeaBlue,
             ["seagreen"] = SeaGreen,
             ["seashell"] = SeaShell,
             ["sienna"] = Sienna,
@@ -1896,17 +1919,18 @@ namespace Robust.Shared.Maths
             ["tomato"] = Tomato,
             ["turquoise"] = Turquoise,
             ["violet"] = Violet,
+            ["vividgamboge"] = VividGamboge,
             ["wheat"] = Wheat,
             ["white"] = White,
             ["whitesmoke"] = WhiteSmoke,
             ["yellow"] = Yellow,
             ["yellowgreen"] = YellowGreen,
-        };
+        }.ToFrozenDictionary();
 
         #endregion
 
-        private static readonly Dictionary<Color, string> DefaultColorsInverted =
-            DefaultColors.ToLookup(pair => pair.Value).ToDictionary(i => i.Key, i => i.First().Key);
+        private static readonly FrozenDictionary<Color, string> DefaultColorsInverted =
+            DefaultColors.ToLookup(pair => pair.Value).ToFrozenDictionary(i => i.Key, i => i.First().Key);
 
         public readonly string? Name()
         {

@@ -8,12 +8,12 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
-internal sealed class SearchCommand : ToolshedCommand
+public sealed class SearchCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<FormattedMessage> Search<T>([PipedArgument] IEnumerable<T> input, [CommandArgument] string term)
     {
-        var list = input.Select(x => Toolshed.PrettyPrintType(x)).ToList();
+        var list = input.Select(x => Toolshed.PrettyPrintType(x, out _)).ToList();
         return list.Where(x => x.Contains(term, StringComparison.InvariantCultureIgnoreCase)).Select(x =>
         {
             var startIdx = x.IndexOf(term, StringComparison.InvariantCultureIgnoreCase);

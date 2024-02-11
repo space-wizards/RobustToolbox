@@ -100,6 +100,11 @@ namespace Robust.Shared.Serialization
         public byte[] GetSerializableTypesHash() => Convert.FromHexString(_serializer.GetSHA256());
         public string GetSerializableTypesHashString() => _serializer.GetSHA256();
 
+        internal void GetHashManifest(Stream stream, bool writeNewline=false)
+        {
+            _serializer.GetHashManifest(stream, writeNewline);
+        }
+
         public (byte[] Hash, byte[] Package) GetStringSerializerPackage() => MappedStringSerializer.GeneratePackage();
 
         public Dictionary<Type, uint> GetTypeMap() => _serializer.GetTypeMap();

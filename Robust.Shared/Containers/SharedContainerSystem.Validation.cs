@@ -1,9 +1,6 @@
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
-using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Utility;
-using System;
 
 namespace Robust.Shared.Containers;
 
@@ -13,22 +10,18 @@ public abstract partial class SharedContainerSystem : EntitySystem
 {
     private void OnStartupValidation(EntityUid uid, ContainerManagerComponent component, ComponentStartup args)
     {
-        var metaQuery = GetEntityQuery<MetaDataComponent>();
-        var xformQuery = GetEntityQuery<TransformComponent>();
-        var physicsQuery = GetEntityQuery<PhysicsComponent>();
-        var jointQuery = GetEntityQuery<JointComponent>();
         foreach (var cont in component.Containers.Values)
         {
             foreach (var ent in cont.ContainedEntities)
             {
-                if (!metaQuery.TryGetComponent(ent, out var meta))
+                if (!MetaQuery.TryGetComponent(ent, out var meta))
                 {
                     ValidateMissingEntity(uid, cont, ent);
                     continue;
                 }
 
-                var xform = xformQuery.GetComponent(ent);
-                physicsQuery.TryGetComponent(ent, out var physics);
+                var xform = TransformQuery.GetComponent(ent);
+                PhysicsQuery.TryGetComponent(ent, out var physics);
 
                 DebugTools.Assert(xform.ParentUid == uid,
                     $"Entity not parented to its container. Entity: {ToPrettyString(ent)}, parent: {ToPrettyString(uid)}");
@@ -46,30 +39,29 @@ public abstract partial class SharedContainerSystem : EntitySystem
                 // entities in containers without having to "re-insert" them.
                 meta.Flags |= MetaDataFlags.InContainer;
                 _lookup.RemoveFromEntityTree(ent, xform);
-                ((BaseContainer)cont).RecursivelyUpdatePhysics(ent, xform, physics, _physics, physicsQuery, xformQuery);
+                RecursivelyUpdatePhysics((ent, xform, physics));
 
                 // assert children have correct properties
-                ValidateChildren(xform, xformQuery, physicsQuery);
+                ValidateChildren(xform, TransformQuery, PhysicsQuery);
             }
         }
     }
 
-    protected abstract void ValidateMissingEntity(EntityUid uid, IContainer cont, EntityUid missing);
+    protected abstract void ValidateMissingEntity(EntityUid uid, BaseContainer cont, EntityUid missing);
 
     private void ValidateChildren(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> physicsQuery)
     {
-        var enumerator = xform.ChildEnumerator;
-        while (enumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
             if (!xformQuery.TryGetComponent(child, out var childXform))
                 continue;
 
             DebugTools.Assert(!xform.Anchored,
-                $"Child of contained entity is anchored, Entity: {ToPrettyString(child.Value)}");
+                $"Child of contained entity is anchored, Entity: {ToPrettyString(child)}");
             DebugTools.Assert(!physicsQuery.TryGetComponent(child, out var physics) || (!physics.Awake && !physics.CanCollide),
-                $"Child of contained entity is can collide, Entity: {ToPrettyString(child.Value)}");
+                $"Child of contained entity is can collide, Entity: {ToPrettyString(child)}");
             DebugTools.Assert(xform.Broadphase == null,
-                $"Child of contained entity is has non-null broadphase, Entity: {ToPrettyString(child.Value)}");
+                $"Child of contained entity is has non-null broadphase, Entity: {ToPrettyString(child)}");
             ValidateChildren(childXform, xformQuery, physicsQuery);
         }
     }

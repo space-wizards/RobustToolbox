@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -38,21 +39,8 @@ namespace Robust.Shared.Physics.Dynamics
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class Fixture : IEquatable<Fixture>, ISerializationHooks
+    public sealed partial class Fixture : IEquatable<Fixture>, ISerializationHooks
     {
-        /// <summary>
-        /// Allows us to reference a specific fixture when we contain multiple
-        /// This is useful for stuff like slippery objects that might have a non-hard layer for mob collisions and
-        /// a hard layer for wall collisions.
-        /// <remarks>
-        /// We can also use this for networking to make cross-referencing fixtures easier.
-        /// Won't call Dirty() by default
-        /// Not a DataField as the component already stores the key and we would have to double it in yaml.
-        /// </remarks>
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public string ID;
-
         [ViewVariables]
         [field: NonSerialized]
         public FixtureProxy[] Proxies { get; set; } = Array.Empty<FixtureProxy>();
@@ -64,10 +52,8 @@ namespace Robust.Shared.Physics.Dynamics
         [DataField("shape")]
         public IPhysShape Shape { get; private set; } = new PhysShapeAabb();
 
-        [Obsolete("Use other means to obtain the PhysicsComponent for the fixture.")]
-        [ViewVariables]
-        [field:NonSerialized]
-        internal PhysicsComponent Body { get; set; } = default!;
+        [NonSerialized]
+        public EntityUid Owner;
 
         /// <summary>
         /// All of the other fixtures this fixture has a contact with.
@@ -142,7 +128,6 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         internal Fixture(
-            string id,
             IPhysShape shape,
             int collisionLayer,
             int collisionMask,
@@ -151,7 +136,6 @@ namespace Robust.Shared.Physics.Dynamics
             float friction = PhysicsConstants.DefaultContactFriction,
             float restitution = PhysicsConstants.DefaultRestitution)
         {
-            ID = id;
             Shape = shape;
             CollisionLayer = collisionLayer;
             CollisionMask = collisionMask;
@@ -163,7 +147,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         public Fixture()
         {
-            ID = string.Empty;
         }
 
         /// <summary>
@@ -172,7 +155,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// <param name="fixture"></param>
         internal void CopyTo(Fixture fixture)
         {
-            fixture.ID = ID;
             fixture.Shape = Shape;
             fixture.Friction = Friction;
             fixture.Restitution = Restitution;
@@ -187,8 +169,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public bool Equivalent(Fixture other)
         {
-            return ID.Equals(other.ID) &&
-                   Hard == other.Hard &&
+            return Hard == other.Hard &&
                    CollisionLayer == other.CollisionLayer &&
                    CollisionMask == other.CollisionMask &&
                    Shape.Equals(other.Shape) &&
@@ -200,7 +181,10 @@ namespace Robust.Shared.Physics.Dynamics
         {
             if (other == null) return false;
 
-            return Equivalent(other) && other.Body == Body;
+            // Owner field shouldn't be required, fixtures on other entities shouldn't be getting compared to each other.
+            // This is mainly here because it might've intruded some physics bugs, so this is here just in case.
+            DebugTools.Assert(Owner == other.Owner);
+            return Equivalent(other) && Owner == other.Owner;
         }
     }
 

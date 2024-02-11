@@ -31,17 +31,15 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.InteropServices.JavaScript;
-using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Events;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
@@ -121,26 +119,42 @@ public abstract partial class SharedPhysicsSystem
 
         public bool Return(Contact obj)
         {
-            SetContact(obj, EntityUid.Invalid, EntityUid.Invalid, null, 0, null, 0);
+            SetContact(obj,
+                false,
+                EntityUid.Invalid, EntityUid.Invalid,
+                string.Empty, string.Empty,
+                null, 0,
+                null, 0,
+                null, null);
             return true;
         }
     }
 
-    private static void SetContact(Contact contact, EntityUid uidA, EntityUid uidB, Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
+    private static void SetContact(Contact contact,
+        bool enabled,
+        EntityUid uidA, EntityUid uidB,
+        string fixtureAId, string fixtureBId,
+        Fixture? fixtureA, int indexA,
+        Fixture? fixtureB, int indexB,
+        PhysicsComponent? bodyA,
+        PhysicsComponent? bodyB)
     {
-        contact.Enabled = true;
+        contact.Enabled = enabled;
         contact.IsTouching = false;
-        contact.Flags = ContactFlags.None;
+        contact.Flags = ContactFlags.None | ContactFlags.PreInit;
         // TOIFlag = false;
 
         contact.EntityA = uidA;
         contact.EntityB = uidB;
 
+        contact.FixtureAId = fixtureAId;
+        contact.FixtureBId = fixtureBId;
+
         contact.FixtureA = fixtureA;
         contact.FixtureB = fixtureB;
 
-        contact.BodyA = fixtureA?.Body;
-        contact.BodyB = fixtureB?.Body;
+        contact.BodyA = bodyA;
+        contact.BodyB = bodyB;
 
         contact.ChildIndexA = indexA;
         contact.ChildIndexB = indexB;
@@ -164,6 +178,21 @@ public abstract partial class SharedPhysicsSystem
             4096);
 
         InitializePool();
+        EntityManager.EntityQueueDeleted += OnContactEntityQueueDel;
+    }
+
+    private void ShutdownContacts()
+    {
+        EntityManager.EntityQueueDeleted -= OnContactEntityQueueDel;
+    }
+
+    private void OnContactEntityQueueDel(EntityUid obj)
+    {
+        // If an entity is queuedeleted then we want to purge its contacts before SimulateWorld runs in the same tick.
+        if (!TryComp<PhysicsComponent>(obj, out var physicsComp))
+            return;
+
+        DestroyContacts(physicsComp);
     }
 
     private void InitializePool()
@@ -181,7 +210,12 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private Contact CreateContact(EntityUid uidA, EntityUid uidB, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+    private Contact CreateContact(
+        EntityUid uidA, EntityUid uidB,
+        string fixtureAId, string fixtureBId,
+        Fixture fixtureA, int indexA,
+        Fixture fixtureB, int indexB,
+        PhysicsComponent bodyA, PhysicsComponent bodyB)
     {
         var type1 = fixtureA.Shape.ShapeType;
         var type2 = fixtureB.Shape.ShapeType;
@@ -195,11 +229,11 @@ public abstract partial class SharedPhysicsSystem
         // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
         if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
         {
-            SetContact(contact, uidA, uidB, fixtureA, indexA, fixtureB, indexB);
+            SetContact(contact, true, uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB, bodyA, bodyB);
         }
         else
         {
-            SetContact(contact, uidB, uidA, fixtureB, indexB, fixtureA, indexA);
+            SetContact(contact, true, uidB, uidA, fixtureBId, fixtureAId, fixtureB, indexB, fixtureA, indexA, bodyB, bodyA);
         }
 
         contact.Type = _registers[(int)type1, (int)type2];
@@ -210,7 +244,9 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     /// Try to create a contact between these 2 fixtures.
     /// </summary>
-    internal void AddPair(EntityUid uidA, EntityUid uidB,
+    internal void AddPair(
+        EntityUid uidA, EntityUid uidB,
+        string fixtureAId, string fixtureBId,
         Fixture fixtureA, int indexA,
         Fixture fixtureB, int indexB,
         PhysicsComponent bodyA, PhysicsComponent bodyB,
@@ -233,35 +269,36 @@ public abstract partial class SharedPhysicsSystem
             return;
 
         // Call the factory.
-        var contact = CreateContact(uidA, uidB, fixtureA, indexA, fixtureB, indexB);
+        var contact = CreateContact(uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB, bodyA, bodyB);
         contact.Flags = flags;
 
         // Contact creation may swap fixtures.
-        fixtureA = contact.FixtureA!;
-        fixtureB = contact.FixtureB!;
-        bodyA = contact.BodyA!;
-        bodyB = contact.BodyB!;
+        var fixA = contact.FixtureA!;
+        var fixB = contact.FixtureB!;
+        var bodA = contact.BodyA!;
+        var bodB = contact.BodyB!;
 
         // Insert into world
         _activeContacts.AddLast(contact.MapNode);
 
         // Connect to body A
-        DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB));
-        fixtureA.Contacts.Add(fixtureB, contact);
-        bodyA.Contacts.AddLast(contact.BodyANode);
+        DebugTools.Assert(!fixA.Contacts.ContainsKey(fixB));
+        fixA.Contacts.Add(fixB, contact);
+        bodA.Contacts.AddLast(contact.BodyANode);
 
         // Connect to body B
-        DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
-        fixtureB.Contacts.Add(fixtureA, contact);
-        bodyB.Contacts.AddLast(contact.BodyBNode);
+        DebugTools.Assert(!fixB.Contacts.ContainsKey(fixA));
+        fixB.Contacts.Add(fixA, contact);
+        bodB.Contacts.AddLast(contact.BodyBNode);
     }
 
     /// <summary>
     ///     Go through the cached broadphase movement and update contacts.
     /// </summary>
-    internal void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
+    internal void AddPair(string fixtureAId, string fixtureBId, in FixtureProxy proxyA, in FixtureProxy proxyB)
     {
         AddPair(proxyA.Entity, proxyB.Entity,
+            fixtureAId, fixtureBId,
             proxyA.Fixture, proxyA.ChildIndex,
             proxyB.Fixture, proxyB.ChildIndex,
             proxyA.Body, proxyB.Body);
@@ -275,17 +312,22 @@ public abstract partial class SharedPhysicsSystem
 
     public void DestroyContact(Contact contact)
     {
+        // Don't recursive update or we're in for a bad time.
+        if ((contact.Flags & ContactFlags.Deleting) != 0x0)
+            return;
+
         Fixture fixtureA = contact.FixtureA!;
         Fixture fixtureB = contact.FixtureB!;
         var bodyA = contact.BodyA!;
         var bodyB = contact.BodyB!;
         var aUid = contact.EntityA;
         var bUid = contact.EntityB;
+        contact.Flags |= ContactFlags.Deleting;
 
         if (contact.IsTouching)
         {
-            var ev1 = new EndCollideEvent(aUid, bUid, fixtureA, fixtureB, bodyA, bodyB);
-            var ev2 = new EndCollideEvent(bUid, aUid, fixtureB, fixtureA, bodyB, bodyA);
+            var ev1 = new EndCollideEvent(aUid, bUid, contact.FixtureAId, contact.FixtureBId ,fixtureA, fixtureB, bodyA, bodyB);
+            var ev2 = new EndCollideEvent(bUid, aUid, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
             RaiseLocalEvent(aUid, ref ev1);
             RaiseLocalEvent(bUid, ref ev2);
         }
@@ -334,6 +376,12 @@ public abstract partial class SharedPhysicsSystem
             var contact = node.Value;
             node = node.Next;
 
+            // It's possible the contact was destroyed by content in which case we just skip it.
+            if (!contact.Enabled)
+                continue;
+
+            // No longer pre-init and can be used in the solver.
+            contact.Flags &= ~ContactFlags.PreInit;
             Fixture fixtureA = contact.FixtureA!;
             Fixture fixtureB = contact.FixtureB!;
             int indexA = contact.ChildIndexA;
@@ -388,8 +436,8 @@ public abstract partial class SharedPhysicsSystem
             // Special-case grid contacts.
             if ((contact.Flags & ContactFlags.Grid) != 0x0)
             {
-                var gridABounds = fixtureA.Shape.ComputeAABB(GetPhysicsTransform(uidA, xformA, _xformQuery), 0);
-                var gridBBounds = fixtureB.Shape.ComputeAABB(GetPhysicsTransform(uidB, xformB, _xformQuery), 0);
+                var gridABounds = fixtureA.Shape.ComputeAABB(GetPhysicsTransform(uidA, xformA), 0);
+                var gridBBounds = fixtureB.Shape.ComputeAABB(GetPhysicsTransform(uidB, xformB), 0);
 
                 if (!gridABounds.Intersects(gridBBounds))
                 {
@@ -401,7 +449,7 @@ public abstract partial class SharedPhysicsSystem
                     contact.Flags &= ~ContactFlags.Island;
                     if (index >= contacts.Length)
                     {
-                        _sawmill.Error($"Insufficient contact length at 388! Index {index} and length is {contacts.Length}. Tell Sloth");
+                        Log.Error($"Insufficient contact length at 388! Index {index} and length is {contacts.Length}. Tell Sloth");
                     }
                     contacts[index++] = contact;
                 }
@@ -411,14 +459,14 @@ public abstract partial class SharedPhysicsSystem
 
             if (indexA >= fixtureA.Proxies.Length)
             {
-                _sawmill.Error($"Found invalid contact index of {indexA} on {fixtureA.ID} / {ToPrettyString(uidA)}, expected {fixtureA.Proxies.Length}");
+                Log.Error($"Found invalid contact index of {indexA} on {contact.FixtureAId} / {ToPrettyString(uidA)}, expected {fixtureA.Proxies.Length}");
                 DestroyContact(contact);
                 continue;
             }
 
             if (indexB >= fixtureB.Proxies.Length)
             {
-                _sawmill.Error($"Found invalid contact index of {indexB} on {fixtureB.ID} / {ToPrettyString(uidB)}, expected {fixtureB.Proxies.Length}");
+                Log.Error($"Found invalid contact index of {indexB} on {contact.FixtureBId} / {ToPrettyString(uidB)}, expected {fixtureB.Proxies.Length}");
                 DestroyContact(contact);
                 continue;
             }
@@ -460,8 +508,9 @@ public abstract partial class SharedPhysicsSystem
             contact.Flags &= ~ContactFlags.Island;
             if (index >= contacts.Length)
             {
-                _sawmill.Error($"Insufficient contact length at 429! Index {index} and length is {contacts.Length}. Tell Sloth");
+                Log.Error($"Insufficient contact length at 429! Index {index} and length is {contacts.Length}. Tell Sloth");
             }
+
             contacts[index++] = contact;
         }
 
@@ -476,11 +525,17 @@ public abstract partial class SharedPhysicsSystem
         {
             if (i >= contacts.Length)
             {
-                _sawmill.Error($"Invalid contact length for contact events!");
+                Log.Error($"Invalid contact length for contact events!");
                 continue;
             }
 
             var contact = contacts[i];
+
+            // It's possible the contact was disabled above if DestroyContact lead to even more being destroyed.
+            if (!contact.Enabled)
+            {
+                continue;
+            }
 
             switch (status[i])
             {
@@ -496,8 +551,8 @@ public abstract partial class SharedPhysicsSystem
                     var uidB = contact.EntityB;
                     var worldPoint = worldPoints[i];
 
-                    var ev1 = new StartCollideEvent(uidA, uidB, fixtureA, fixtureB, bodyA, bodyB, worldPoint);
-                    var ev2 = new StartCollideEvent(uidB, uidA, fixtureB, fixtureA, bodyB, bodyA, worldPoint);
+                    var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, worldPoint);
+                    var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, worldPoint);
 
                     RaiseLocalEvent(uidA, ref ev1, true);
                     RaiseLocalEvent(uidB, ref ev2, true);
@@ -519,8 +574,8 @@ public abstract partial class SharedPhysicsSystem
                     var uidA = contact.EntityA;
                     var uidB = contact.EntityB;
 
-                    var ev1 = new EndCollideEvent(uidA, uidB, fixtureA, fixtureB, bodyA, bodyB);
-                    var ev2 = new EndCollideEvent(uidB, uidA, fixtureB, fixtureA, bodyB, bodyA);
+                    var ev1 = new EndCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
+                    var ev2 = new EndCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
 
                     RaiseLocalEvent(uidA, ref ev1);
                     RaiseLocalEvent(uidB, ref ev2);
@@ -540,24 +595,19 @@ public abstract partial class SharedPhysicsSystem
 
     private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
     {
+        if (count == 0)
+            return;
+
         var wake = ArrayPool<bool>.Shared.Rent(count);
 
-        if (count > ContactsPerThread * 2)
+        _parallel.ProcessNow(new ManifoldsJob()
         {
-            var batches = (int) Math.Ceiling((float) count / ContactsPerThread);
-
-            Parallel.For(0, batches, i =>
-            {
-                var start = i * ContactsPerThread;
-                var end = Math.Min(start + ContactsPerThread, count);
-                UpdateContacts(contacts, start, end, status, wake, worldPoints);
-            });
-
-        }
-        else
-        {
-            UpdateContacts(contacts, 0, count, status, wake, worldPoints);
-        }
+            Physics = this,
+            Status = status,
+            WorldPoints = worldPoints,
+            Contacts = contacts,
+            Wake = wake,
+        }, count);
 
         // Can't do this during UpdateContacts due to IoC threading issues.
         for (var i = 0; i < count; i++)
@@ -578,35 +628,49 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<bool>.Shared.Return(wake);
     }
 
-    private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
+    private record struct ManifoldsJob : IParallelRobustJob
     {
-        for (var i = start; i < end; i++)
+        public int BatchSize => ContactsPerThread;
+
+        public SharedPhysicsSystem Physics;
+
+        public Contact[] Contacts;
+        public ContactStatus[] Status;
+        public Vector2[] WorldPoints;
+        public bool[] Wake;
+
+        public void Execute(int index)
         {
-            var contact = contacts[i];
+            Physics.UpdateContact(Contacts, index, Status, Wake, WorldPoints);
+        }
+    }
 
-            // TODO: Temporary measure. When Box2D 3.0 comes out expect a major refactor
-            // of everything
-            if (contact.FixtureA == null || contact.FixtureB == null)
-            {
-                _sawmill.Error($"Found a null contact for contact at {i}");
-                status[i] = ContactStatus.NoContact;
-                wake[i] = false;
-                DebugTools.Assert(false);
-                continue;
-            }
+    private void UpdateContact(Contact[] contacts, int index, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
+    {
+        var contact = contacts[index];
 
-            var uidA = contact.EntityA;
-            var uidB = contact.EntityB;
-            var bodyATransform = GetPhysicsTransform(uidA, Transform(uidA));
-            var bodyBTransform = GetPhysicsTransform(uidB, Transform(uidB));
+        // TODO: Temporary measure. When Box2D 3.0 comes out expect a major refactor
+        // of everything
+        // It's okay past sloth it can't hurt you anymore.
+        // This can happen if DestroyContact is called and content deletes contacts that were already processed.
+        if (!contact.Enabled)
+        {
+            status[index] = ContactStatus.NoContact;
+            wake[index] = false;
+            return;
+        }
 
-            var contactStatus = contact.Update(bodyATransform, bodyBTransform, out wake[i]);
-            status[i] = contactStatus;
+        var uidA = contact.EntityA;
+        var uidB = contact.EntityB;
+        var bodyATransform = GetPhysicsTransform(uidA);
+        var bodyBTransform = GetPhysicsTransform(uidB);
 
-            if (contactStatus == ContactStatus.StartTouching)
-            {
-                worldPoints[i] = Physics.Transform.Mul(bodyATransform, contacts[i].Manifold.LocalPoint);
-            }
+        var contactStatus = contact.Update(bodyATransform, bodyBTransform, out wake[index]);
+        status[index] = contactStatus;
+
+        if (contactStatus == ContactStatus.StartTouching)
+        {
+            worldPoints[index] = Physics.Transform.Mul(bodyATransform, contacts[index].Manifold.LocalPoint);
         }
     }
 

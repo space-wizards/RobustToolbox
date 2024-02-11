@@ -44,14 +44,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                         continue;
 
                     case ComponentAvailability.Unknown:
-                        Logger.ErrorS(SerializationManager.LogCategory, $"Unknown component '{compType}' in prototype!");
+                        dependencies
+                            .Resolve<ILogManager>()
+                            .GetSawmill(SerializationManager.LogCategory)
+                            .Error($"Unknown component '{compType}' in prototype!");
                         continue;
                 }
 
                 // Has this type already been added?
                 if (components.ContainsKey(compType))
                 {
-                    Logger.ErrorS(SerializationManager.LogCategory, $"Component of type '{compType}' defined twice in prototype!");
+                    dependencies
+                        .Resolve<ILogManager>()
+                        .GetSawmill(SerializationManager.LogCategory)
+                        .Error(SerializationManager.LogCategory, $"Component of type '{compType}' defined twice in prototype!");
                     continue;
                 }
 
@@ -59,7 +65,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
-                var read = (IComponent)serializationManager.Read(type, copy, hookCtx)!;
+                var read = (IComponent)serializationManager.Read(type, copy, hookCtx, context)!;
 
                 components[compType] = new ComponentRegistryEntry(read, copy);
             }
@@ -69,16 +75,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             foreach (var componentName in components.Keys)
             {
                 var registration = factory.GetRegistration(componentName);
-                foreach (var compType in registration.References)
-                {
-                    if (referenceTypes.Contains(compType))
-                    {
-                        throw new InvalidOperationException(
-                            $"Duplicate component reference in prototype: '{compType}'");
-                    }
+                var compType = registration.Idx;
 
-                    referenceTypes.Add(compType);
+                if (referenceTypes.Contains(compType))
+                {
+                    throw new InvalidOperationException(
+                        $"Duplicate component reference in prototype: '{compType}'");
                 }
+
+                referenceTypes.Add(compType);
             }
 
             return components;
@@ -133,16 +138,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             foreach (var componentName in components.Keys)
             {
                 var registration = factory.GetRegistration(componentName);
+                var compType = registration.Idx;
 
-                foreach (var compType in registration.References)
+                if (referenceTypes.Contains(compType))
                 {
-                    if (referenceTypes.Contains(compType))
-                    {
-                        return new ErrorNode(node, "Duplicate ComponentReference.");
-                    }
-
-                    referenceTypes.Add(compType);
+                    return new ErrorNode(node, "Duplicate ComponentReference.");
                 }
+
+                referenceTypes.Add(compType);
             }
 
             return new ValidatedSequenceNode(list);
@@ -196,18 +199,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             {
                 foreach (var (childReg, idx) in newCompRegDict)
                 {
-                    foreach (var x in reg.References)
+                    if (childReg.Idx.Equals(reg.Idx))
                     {
-                        if (childReg.References.Contains(x))
-                        {
-                            newCompReg[idx] = serializationManager.PushCompositionWithGenericNode(
-                                reg.Type,
-                                new[] { parent[mapping] },
-                                newCompReg[idx],
-                                context);
+                        newCompReg[idx] = serializationManager.PushCompositionWithGenericNode(
+                            reg.Type,
+                            new[] { parent[mapping] },
+                            newCompReg[idx],
+                            context);
 
-                            goto found;
-                        }
+                        goto found;
                     }
                 }
 

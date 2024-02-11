@@ -11,7 +11,7 @@ namespace Robust.Shared.Physics;
 
 [RegisterComponent]
 [NetworkedComponent]
-public sealed class JointComponent : Component
+public sealed partial class JointComponent : Component
 {
     /// <summary>
     /// Are we relaying our joints to a parent entity.
@@ -31,10 +31,10 @@ public sealed class JointComponent : Component
 [Serializable, NetSerializable]
 public sealed class JointComponentState : ComponentState
 {
-    public EntityUid? Relay;
+    public NetEntity? Relay;
     public Dictionary<string, JointState> Joints;
 
-    public JointComponentState(EntityUid? relay, Dictionary<string, JointState> joints)
+    public JointComponentState(NetEntity? relay, Dictionary<string, JointState> joints)
     {
         Relay = relay;
         Joints = joints;

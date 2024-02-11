@@ -12,17 +12,17 @@ internal sealed class BlockTypeParser : TypeParser<Block>
     {
     }
 
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var r = Block.TryParse(false, parser, null, out var block, out _, out error);
+        var r = Block.TryParse(false, parserContext, null, out var block, out _, out error);
         result = block;
         return r;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        Block.TryParse(true, parser, null, out _, out var autocomplete, out _);
+        Block.TryParse(true, parserContext, null, out _, out var autocomplete, out _);
         if (autocomplete is null)
             return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((null, null));
 
@@ -37,17 +37,17 @@ internal sealed class BlockTypeParser<T> : TypeParser<Block<T>>
     {
     }
 
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var r = Block<T>.TryParse(false, parser, null, out var block, out _, out error);
+        var r = Block<T>.TryParse(false, parserContext, null, out var block, out _, out error);
         result = block;
         return r;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        Block<T>.TryParse(true, parser, null, out _, out var autocomplete, out _);
+        Block<T>.TryParse(true, parserContext, null, out _, out var autocomplete, out _);
         if (autocomplete is null)
             return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((null, null));
 
@@ -61,17 +61,17 @@ internal sealed class BlockTypeParser<TIn, TOut> : TypeParser<Block<TIn, TOut>>
     {
     }
 
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var r = Block<TIn, TOut>.TryParse(false, parser, null, out var block, out _, out error);
+        var r = Block<TIn, TOut>.TryParse(false, parserContext, null, out var block, out _, out error);
         result = block;
         return r;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        Block<TIn, TOut>.TryParse(true, parser, null, out _, out var autocomplete, out _);
+        Block<TIn, TOut>.TryParse(true, parserContext, null, out _, out var autocomplete, out _);
         if (autocomplete is null)
             return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((null, null));
 

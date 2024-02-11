@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -16,6 +17,7 @@ namespace Robust.Client.Graphics
         ///     The render target that is rendered to when rendering this viewport.
         /// </summary>
         IRenderTexture RenderTarget { get; }
+        IRenderTexture LightRenderTarget { get; }
         IEye? Eye { get; set; }
         Vector2i Size { get; }
 

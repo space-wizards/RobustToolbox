@@ -6,7 +6,9 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
@@ -19,6 +21,7 @@ namespace Robust.Shared.Physics.Systems
     public partial class SharedPhysicsSystem
     {
         [Dependency] private readonly SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
+        [Dependency] private readonly INetManager _netMan = default!;
 
         /// <summary>
         /// Checks to see if the specified collision rectangle collides with any of the physBodies under management.
@@ -150,11 +153,12 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Get all entities colliding with a certain body.
         /// </summary>
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2Rotated worldBounds)
+        public IEnumerable<Entity<PhysicsComponent>> GetCollidingEntities(MapId mapId, in Box2Rotated worldBounds)
         {
-            if (mapId == MapId.Nullspace) return Array.Empty<PhysicsComponent>();
+            if (mapId == MapId.Nullspace)
+                return Array.Empty<Entity<PhysicsComponent>>();
 
-            var bodies = new HashSet<PhysicsComponent>();
+            var bodies = new HashSet<Entity<PhysicsComponent>>();
 
             foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
             {
@@ -162,12 +166,12 @@ namespace Robust.Shared.Physics.Systems
 
                 foreach (var proxy in broadphase.StaticTree.QueryAabb(gridAABB, false))
                 {
-                    bodies.Add(proxy.Body);
+                    bodies.Add(new Entity<PhysicsComponent>(proxy.Entity, proxy.Body));
                 }
 
                 foreach (var proxy in broadphase.DynamicTree.QueryAabb(gridAABB, false))
                 {
-                    bodies.Add(proxy.Body);
+                    bodies.Add(new Entity<PhysicsComponent>(proxy.Entity, proxy.Body));
                 }
             }
 
@@ -298,7 +302,9 @@ namespace Robust.Shared.Physics.Systems
                     // Need to convert it back to world-space.
                     var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
                     results.Add(result);
-                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, result));
+#if DEBUG
+                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, result, _netMan.IsServer, mapId));
+#endif
                     return true;
                 }, gridRay);
 
@@ -324,15 +330,19 @@ namespace Robust.Shared.Physics.Systems
                     // Need to convert it back to world-space.
                     var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
                     results.Add(result);
-                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, result));
+#if DEBUG
+                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, result, _netMan.IsServer, mapId));
+#endif
                     return true;
                 }, gridRay);
             }
 
+#if DEBUG
             if (results.Count == 0)
             {
-                _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
+                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, null, _netMan.IsServer, mapId));
             }
+#endif
 
             results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
             return results;
@@ -421,7 +431,9 @@ namespace Robust.Shared.Physics.Systems
             }
 
             // This hid rays that didn't penetrate something. Don't hide those because that causes rays to disappear that shouldn't.
-            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
+#if DEBUG
+            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, null, _netMan.IsServer, mapId));
+#endif
 
             return penetration;
         }
@@ -475,11 +487,12 @@ namespace Robust.Shared.Physics.Systems
             }
 
             distance = float.MaxValue;
-            var input = new DistanceInput();
-
-            input.TransformA = xfA;
-            input.TransformB = xfB;
-            input.UseRadii = true;
+            var input = new DistanceInput
+            {
+                TransformA = xfA,
+                TransformB = xfB,
+                UseRadii = true
+            };
 
             // No requirement on collision being enabled so chainshapes will fail
             foreach (var fixtureA in managerA.Fixtures.Values)
@@ -487,24 +500,28 @@ namespace Robust.Shared.Physics.Systems
                 if (bodyA.Hard && !fixtureA.Hard)
                     continue;
 
-                DebugTools.Assert(fixtureA.ProxyCount <= 1);
-
-                foreach (var fixtureB in managerB.Fixtures.Values)
+                for (var i = 0; i < fixtureA.Shape.ChildCount; i++)
                 {
-                    if (bodyB.Hard && !fixtureB.Hard)
-                        continue;
+                    input.ProxyA.Set(fixtureA.Shape, i);
 
-                    DebugTools.Assert(fixtureB.ProxyCount <= 1);
-                    input.ProxyA.Set(fixtureA.Shape, 0);
-                    input.ProxyB.Set(fixtureB.Shape, 0);
-                    DistanceManager.ComputeDistance(out var output, out _, input);
+                    foreach (var fixtureB in managerB.Fixtures.Values)
+                    {
+                        if (bodyB.Hard && !fixtureB.Hard)
+                            continue;
 
-                    if (distance < output.Distance)
-                        continue;
+                        for (var j = 0; j < fixtureB.Shape.ChildCount; j++)
+                        {
+                            input.ProxyB.Set(fixtureB.Shape, j);
+                            DistanceManager.ComputeDistance(out var output, out _, input);
 
-                    pointA = output.PointA;
-                    pointB = output.PointB;
-                    distance = output.Distance;
+                            if (distance < output.Distance)
+                                continue;
+
+                            pointA = output.PointA;
+                            pointB = output.PointB;
+                            distance = output.Distance;
+                        }
+                    }
                 }
             }
 
@@ -515,8 +532,66 @@ namespace Robust.Shared.Physics.Systems
         /// Gets the nearest points in map terms and the distance between them.
         /// If a body is hard it only considers hard fixtures.
         /// </summary>
+        public bool TryGetNearest(EntityUid uid, MapCoordinates coordinates,
+            out Vector2 point, out float distance,
+            TransformComponent? xformA = null, FixturesComponent? manager = null, PhysicsComponent? body = null)
+        {
+            if (!Resolve(uid, ref xformA) ||
+                xformA.MapID != coordinates.MapId)
+            {
+                point = Vector2.Zero;
+                distance = 0f;
+                return false;
+            }
+
+            point = Vector2.Zero;
+
+            if (!Resolve(uid, ref manager, ref body) ||
+                manager.FixtureCount == 0)
+            {
+                distance = 0f;
+                return false;
+            }
+
+            var xfA = GetPhysicsTransform(uid, xformA);
+            var xfB = new Transform(coordinates.Position, Angle.Zero);
+
+            distance = float.MaxValue;
+            var input = new DistanceInput();
+
+            input.TransformA = xfA;
+            input.TransformB = xfB;
+            input.UseRadii = true;
+            var pointShape = new PhysShapeCircle(10 * float.Epsilon, Vector2.Zero);
+
+            // No requirement on collision being enabled so chainshapes will fail
+            foreach (var fixtureA in manager.Fixtures.Values)
+            {
+                if (body.Hard && !fixtureA.Hard)
+                    continue;
+
+                DebugTools.Assert(fixtureA.ProxyCount <= 1);
+
+                input.ProxyA.Set(fixtureA.Shape, 0);
+                input.ProxyB.Set(pointShape, 0);
+                DistanceManager.ComputeDistance(out var output, out _, input);
+
+                if (distance < output.Distance)
+                    continue;
+
+                point = output.PointA;
+                distance = output.Distance;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the nearest points in map terms and the distance between them.
+        /// If a body is hard it only considers hard fixtures.
+        /// </summary>
         public bool TryGetNearest(EntityUid uidA, EntityUid uidB,
-            out Vector2 pointA,
+            out Vector2 point,
             out Vector2 pointB,
             out float distance,
             TransformComponent? xformA = null, TransformComponent? xformB = null,
@@ -526,17 +601,16 @@ namespace Robust.Shared.Physics.Systems
             if (!Resolve(uidA, ref xformA) || !Resolve(uidB, ref xformB) ||
                 xformA.MapID != xformB.MapID)
             {
-                pointA = Vector2.Zero;
+                point = Vector2.Zero;
                 pointB = Vector2.Zero;
                 distance = 0f;
                 return false;
             }
 
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var xfA = GetPhysicsTransform(uidA, xformA, xformQuery);
-            var xfB = GetPhysicsTransform(uidB, xformB, xformQuery);
+            var xfA = GetPhysicsTransform(uidA, xformA);
+            var xfB = GetPhysicsTransform(uidB, xformB);
 
-            return TryGetNearest(uidA, uidB, out pointA, out pointB, out distance, xfA, xfB, managerA, managerB, bodyA, bodyB);
+            return TryGetNearest(uidA, uidB, out point, out pointB, out distance, xfA, xfB, managerA, managerB, bodyA, bodyB);
         }
 
         #endregion

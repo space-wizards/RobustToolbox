@@ -8,6 +8,7 @@ import subprocess
 import sys
 import zipfile
 import argparse
+import glob
 
 from typing import List, Optional
 
@@ -55,10 +56,11 @@ def main() -> None:
 
     if os.path.exists("release"):
         print(Fore.BLUE + Style.DIM +
-              "Cleaning old release packages (release/)..." + Style.RESET_ALL)
-        shutil.rmtree("release")
-
-    os.mkdir("release")
+              "Cleaning old release packages (release/Robust.Client.WebView_*)..." + Style.RESET_ALL)
+        for past in glob.glob("release/Robust.Client.WebView_*"):
+            os.remove(past)
+    else:
+        os.mkdir("release")
 
     if PLATFORM_WINDOWS in platforms:
         if not skip_build:
@@ -83,7 +85,7 @@ def build_windows(skip_build: bool) -> None:
     # Run a full build.
     print(Fore.GREEN + "Building project for Windows x64..." + Style.RESET_ALL)
 
-    base_bin = p("Robust.Client.WebView", "bin", "Release", "net7.0")
+    base_bin = p("Robust.Client.WebView", "bin", "Release", "net8.0")
 
     if not skip_build:
         build_client_rid("Windows", "win-x64")
@@ -104,8 +106,8 @@ def build_windows(skip_build: bool) -> None:
         "Robust.Client.WebView.runtimeconfig.json",
         "Robust.Client.WebView.pdb",
         "Robust.Client.WebView.deps.json",
-        "Xilium.CefGlue.dll",
-        "Xilium.CefGlue.pdb",
+        "SpaceWizards.CefGlue.dll",
+        "SpaceWizards.CefGlue.pdb",
         # These are copies of regular Robust dlls that Robust.Client.WebView needs when ran on its own.
         "Robust.Client.dll",
         "Robust.Shared.dll",
@@ -142,7 +144,7 @@ def build_linux(skip_build: bool) -> None:
     # Run a full build.
     print(Fore.GREEN + "Building project for Linux x64..." + Style.RESET_ALL)
 
-    base_bin = p("Robust.Client.WebView", "bin", "Release", "net7.0")
+    base_bin = p("Robust.Client.WebView", "bin", "Release", "net8.0")
 
     if not skip_build:
         build_client_rid("Linux", "linux-x64")
@@ -160,8 +162,8 @@ def build_linux(skip_build: bool) -> None:
         "Robust.Client.WebView.pdb",
         "Robust.Client.WebView",
         "Robust.Client.WebView.deps.json",
-        "Xilium.CefGlue.dll",
-        "Xilium.CefGlue.pdb",
+        "SpaceWizards.CefGlue.dll",
+        "SpaceWizards.CefGlue.pdb",
         # These are copies of regular Robust dlls that Robust.Client.WebView needs when ran on its own.
         "Robust.Client.dll",
         "Robust.Shared.dll",

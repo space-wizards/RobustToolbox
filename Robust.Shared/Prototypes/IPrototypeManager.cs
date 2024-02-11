@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -9,7 +10,6 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
 
@@ -71,12 +71,23 @@ public interface IPrototypeManager
     IEnumerable<IPrototype> EnumerateParents(Type kind, string id, bool includeSelf = false);
 
     /// <summary>
+    /// Returns all of the registered prototype kinds.
+    /// </summary>
+    IEnumerable<Type> EnumeratePrototypeKinds();
+
+    /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.
     /// </summary>
     /// <exception cref="KeyNotFoundException">
     /// Thrown if the type of prototype is not registered.
     /// </exception>
     T Index<T>(string id) where T : class, IPrototype;
+
+    /// <inheritdoc cref="Index{T}(string)"/>
+    EntityPrototype Index(EntProtoId id);
+
+    /// <inheritdoc cref="Index{T}(string)"/>
+    T Index<T>(ProtoId<T> id) where T : class, IPrototype;
 
     /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.
@@ -91,8 +102,33 @@ public interface IPrototypeManager
     /// </summary>
     bool HasIndex<T>(string id) where T : class, IPrototype;
 
+    /// <inheritdoc cref="HasIndex{T}(string)"/>
+    bool HasIndex(EntProtoId id);
+
+    /// <inheritdoc cref="HasIndex{T}(string)"/>
+    bool HasIndex<T>(ProtoId<T> id) where T : class, IPrototype;
+
     bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
     bool TryIndex(Type kind, string id, [NotNullWhen(true)] out IPrototype? prototype);
+
+    /// <summary>
+    /// Attempts to get a dictionary containing all current instances of a given prototype kind.
+    /// The dictionary will be valid up until prototypes are next reloaded.
+    /// </summary>
+    bool TryGetInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)
+        where T : IPrototype;
+
+    /// <summary>
+    /// Gets a dictionary containing all current instances of a given prototype kind.
+    /// The dictionary will be valid up until prototypes are next reloaded.
+    /// </summary>
+    FrozenDictionary<string, T> GetInstances<T>() where T : IPrototype;
+
+    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
+    bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
+
+    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
+    bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
 
     bool HasMapping<T>(string id);
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
@@ -294,13 +330,13 @@ public interface IPrototypeManager
     void RegisterType(Type protoClass);
 
     /// <summary>
-    /// Loads a single prototype kind into the manager.
+    /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.
     /// </summary>
     /// <param name="kind">
     /// The type of the prototype kind that implements <see cref="IPrototype"/>. This type also
     /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.
     /// </param>
-    void RegisterKind(Type kind);
+    void RegisterKind(params Type[] kinds);
 
     /// <summary>
     ///     Fired when prototype are reloaded. The event args contain the modified and removed prototypes.
@@ -309,6 +345,35 @@ public interface IPrototypeManager
     ///     This does NOT fire on initial prototype load.
     /// </remarks>
     event Action<PrototypesReloadedEventArgs> PrototypesReloaded;
+
+    /// <summary>
+    /// Get the yaml data for a given prototype.
+    /// </summary>
+    IReadOnlyDictionary<string, MappingDataNode> GetPrototypeData(EntityPrototype prototype);
+
+    /// <summary>
+    ///     Forces all prototypes in the given file to be abstract.
+    ///     This makes them be read as abstract prototypes (mappings) instead of regular prototype instances.
+    ///     Calling this method will not retroactively abstract prototypes that have already been read.
+    /// </summary>
+    /// <param name="path">
+    ///     The file to force prototypes to be abstract in.
+    ///     This must start from the Resources-level directory, but not include Resources itself.
+    ///     For example: /Prototypes/Guidebook/antagonist.yml
+    /// </param>
+    void AbstractFile(ResPath path);
+
+    /// <summary>
+    ///     Forces all prototypes in files recursively within this directory to be abstract.
+    ///     This makes them be read as abstract prototypes (mappings) instead of regular prototype instances.
+    ///     Calling this method will not retroactively abstract prototypes that have already been read.
+    /// </summary>
+    /// <param name="path">
+    ///     The directory to force prototypes to be abstract in.
+    ///     This must start from the Resources-level directory, but not include Resources itself.
+    ///     For example: /Prototypes/Guidebook
+    /// </param>
+    void AbstractDirectory(ResPath path);
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager
@@ -316,9 +381,40 @@ internal interface IPrototypeManagerInternal : IPrototypeManager
     event Action<DataNodeDocument>? LoadedData;
 }
 
-public sealed record PrototypesReloadedEventArgs(
+/// <summary>
+/// This is event contains information about prototypes that have been modified. It is broadcast as a system event,
+/// whenever <see cref="IPrototypeManager.PrototypesReloaded"/> gets invoked.
+/// </summary>
+public sealed record PrototypesReloadedEventArgs(HashSet<Type> Modified,
     IReadOnlyDictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet> ByType,
     IReadOnlyDictionary<Type, HashSet<string>>? Removed = null)
 {
     public sealed record PrototypeChangeSet(IReadOnlyDictionary<string, IPrototype> Modified);
+
+    /// <summary>
+    /// Checks whether a given prototype kind was modified at all. This includes both changes and removals.
+    /// </summary>
+    public bool WasModified<T>() where T : IPrototype
+    {
+        return Modified.Contains(typeof(T));
+    }
+
+    /// <summary>
+    /// Returns a set of all modified prototype instances of a given kind. This includes both changes and removals.
+    /// </summary>
+    public bool TryGetModified<T>([NotNullWhen(true)] out HashSet<string>? modified) where T : IPrototype
+    {
+        modified = null;
+        if (!WasModified<T>())
+            return false;
+
+        modified = new();
+        if (ByType.TryGetValue(typeof(T), out var mod))
+            modified.UnionWith(mod.Modified.Keys);
+
+        if (Removed != null && Removed.TryGetValue(typeof(T), out var rem))
+            modified.UnionWith(rem);
+
+        return true;
+    }
 }

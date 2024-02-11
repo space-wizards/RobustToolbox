@@ -8,7 +8,7 @@ using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -31,6 +31,9 @@ namespace Robust.Shared.Console
         [ViewVariables] protected readonly Dictionary<string, IConsoleCommand> RegisteredCommands = new();
 
         private readonly CommandBuffer _commandBuffer = new CommandBuffer();
+
+        // TODO add Initialize() method.
+        protected ISawmill Sawmill => LogManager.GetSawmill(SawmillName);
 
         /// <inheritdoc />
         public bool IsServer { get; }
@@ -337,6 +340,11 @@ namespace Robust.Shared.Console
                     return ValueTask.FromResult(CompletionCallback(shell, args));
 
                 return ValueTask.FromResult(CompletionResult.Empty);
+            }
+
+            public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+            {
+                return CompletionCallback?.Invoke(shell, args) ?? CompletionResult.Empty;
             }
         }
     }

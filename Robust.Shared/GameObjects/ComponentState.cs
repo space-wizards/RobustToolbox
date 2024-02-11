@@ -6,7 +6,18 @@ namespace Robust.Shared.GameObjects
     [RequiresSerializable]
     [Serializable, NetSerializable]
     [Virtual]
-    public class ComponentState { }
+    public class ComponentState : IComponentState
+    {
+
+    }
+
+    /// <summary>
+    /// Represents the state of a component for networking purposes.
+    /// </summary>
+    public interface IComponentState
+    {
+
+    }
 
     /// <summary>
     ///     Interface for components that support delta-states.
@@ -21,12 +32,12 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     This function will apply the current delta state to the provided full state, modifying it in the process.
         /// </summary>
-        public void ApplyToFullState(ComponentState fullState);
+        public void ApplyToFullState(IComponentState fullState);
 
         /// <summary>
         ///     This function should take in a full state and return a new full state with the current delta applied,
         ///     WITHOUT modifying the original input state.
         /// </summary>
-        public ComponentState CreateNewFullState(ComponentState fullState);
+        public IComponentState CreateNewFullState(IComponentState fullState);
     }
 }

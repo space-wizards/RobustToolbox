@@ -1,3 +1,4 @@
+using System.Linq;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -14,12 +15,18 @@ public sealed class BoldTag : IMarkupTag
 
     public string Name => "bold";
 
+    /// <inheritdoc/>
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
-        var font = FontTag.CreateFont(context.Font, node, _resourceCache, _prototypeManager, BoldFont);
+        var font = FontTag.CreateFont(context.Font, node, _resourceCache, _prototypeManager,
+            context.Tags.Any(static x => x is ItalicTag)
+                ? BoldItalicTag.BoldItalicFont
+                : BoldFont
+        );
         context.Font.Push(font);
     }
 
+    /// <inheritdoc/>
     public void PopDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
         context.Font.Pop();

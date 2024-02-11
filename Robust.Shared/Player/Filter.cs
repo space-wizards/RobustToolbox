@@ -5,8 +5,6 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Physics;
-using Robust.Shared.Players;
 
 namespace Robust.Shared.Player
 {
@@ -23,6 +21,8 @@ namespace Robust.Shared.Player
         public bool CheckPrediction { get; private set; } = true;
 
         public bool SendReliable { get; private set; }
+
+        public int Count => _recipients.Count;
 
         public IEnumerable<ICommonSession> Recipients => _recipients;
 
@@ -184,7 +184,7 @@ namespace Robust.Shared.Player
 
             return RemoveWhere(session =>
                 session.AttachedEntity == null
-                || !entMan.TryGetComponent(session.AttachedEntity, out SharedEyeComponent? eye)
+                || !entMan.TryGetComponent(session.AttachedEntity, out EyeComponent? eye)
                 || (eye.VisibilityMask & flag) == 0);
         }
 

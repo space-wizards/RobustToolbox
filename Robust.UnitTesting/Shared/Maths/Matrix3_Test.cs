@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
@@ -11,6 +12,20 @@ namespace Robust.UnitTesting.Shared.Maths
     [TestOf(typeof(Matrix3))]
     public sealed class Matrix3_Test
     {
+        [Test]
+        public void GetRotationTest()
+        {
+            Assert.That(Matrix3.Identity.Rotation(), Is.EqualTo(Angle.Zero));
+
+            var piOver2 = new Angle(Math.PI / 2);
+            var piOver2Mat = Matrix3.CreateRotation(piOver2.Theta);
+            Assert.That(piOver2Mat.Rotation(), Is.EqualTo(piOver2));
+
+            var pi = new Angle(Math.PI);
+            var piMat = Matrix3.CreateRotation(pi.Theta);
+            Assert.That(piMat.Rotation(), Is.EqualTo(pi));
+        }
+
         [Test]
         public void TranslationTest()
         {

@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Client.Map;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -18,13 +23,13 @@ namespace Robust.Client.Map
 {
     internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
     {
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly IResourceManager _manager = default!;
 
         private Texture? _tileTextureAtlas;
 
         public Texture TileTextureAtlas => _tileTextureAtlas ?? Texture.Transparent;
 
-        private readonly Dictionary<ushort, Box2[]> _tileRegions = new();
+        private readonly Dictionary<int, Box2[]> _tileRegions = new();
 
         public Box2 ErrorTileRegion { get; private set; }
 
@@ -35,7 +40,7 @@ namespace Robust.Client.Map
         }
 
         /// <inheritdoc />
-        public Box2[]? TileAtlasRegion(ushort tileType)
+        public Box2[]? TileAtlasRegion(int tileType)
         {
             if (_tileRegions.TryGetValue(tileType, out var region))
             {
@@ -52,8 +57,11 @@ namespace Robust.Client.Map
             _genTextureAtlas();
         }
 
-        private void _genTextureAtlas()
+        internal void _genTextureAtlas()
         {
+            _tileRegions.Clear();
+            _tileTextureAtlas = null;
+
             var defList = TileDefs.Where(t => t.Sprite != null).ToList();
 
             // If there are no tile definitions, we do nothing.
@@ -79,7 +87,7 @@ namespace Robust.Client.Map
                     0, (h - EyeManager.PixelsPerMeter) / h,
                     tileSize / w, tileSize / h);
                 Image<Rgba32> image;
-                using (var stream = _resourceCache.ContentFileRead("/Textures/noTile.png"))
+                using (var stream = _manager.ContentFileRead("/Textures/noTile.png"))
                 {
                     image = Image.Load<Rgba32>(stream);
                 }
@@ -103,7 +111,7 @@ namespace Robust.Client.Map
                 // Already know it's not null above
                 var path = def.Sprite!.Value;
 
-                using (var stream = _resourceCache.ContentFileRead(path))
+                using (var stream = _manager.ContentFileRead(path))
                 {
                     image = Image.Load<Rgba32>(stream);
                 }
@@ -144,4 +152,17 @@ namespace Robust.Client.Map
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
         }
     }
+
+    public sealed class ReloadTileTexturesCommand : LocalizedCommands
+    {
+        [Dependency] private readonly ClydeTileDefinitionManager _tile = default!;
+
+        public override string Command => "reloadtiletextures";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            _tile._genTextureAtlas();
+        }
+    }
 }
+

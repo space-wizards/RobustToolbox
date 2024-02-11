@@ -5,6 +5,7 @@ using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared.Graphics;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -35,6 +36,11 @@ namespace Robust.Client.Graphics.Clyde
             public void SetModelTransform(in Matrix3 matrix)
             {
                 _clyde.DrawSetModelTransform(matrix);
+            }
+
+            public Matrix3 GetModelTransform()
+            {
+                return _clyde.DrawGetModelTransform();
             }
 
             public void SetProjView(in Matrix3 proj, in Matrix3 view)
@@ -221,7 +227,14 @@ namespace Robust.Client.Graphics.Clyde
 
                 var clydeShader = (ClydeShaderInstance?) shader;
 
-                _clyde.DrawUseShader(clydeShader?.Handle ?? _clyde._defaultShader.Handle);
+                _clyde.DrawUseShader(clydeShader ?? _clyde._defaultShader);
+            }
+
+            public ShaderInstance? GetShader()
+            {
+                return _clyde._queuedShaderInstance == _clyde._defaultShader
+                    ? null
+                    : _clyde._queuedShaderInstance;
             }
 
             public void Viewport(Box2i viewport)
@@ -284,9 +297,19 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.SetModelTransform(matrix);
                 }
 
+                public override Matrix3 GetTransform()
+                {
+                    return _renderHandle.GetModelTransform();
+                }
+
                 public override void UseShader(ShaderInstance? shader)
                 {
                     _renderHandle.UseShader(shader);
+                }
+
+                public override ShaderInstance? GetShader()
+                {
+                    return _renderHandle.GetShader();
                 }
 
                 public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
@@ -379,9 +402,19 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.SetModelTransform(matrix);
                 }
 
+                public override Matrix3 GetTransform()
+                {
+                    return _renderHandle.GetModelTransform();
+                }
+
                 public override void UseShader(ShaderInstance? shader)
                 {
                     _renderHandle.UseShader(shader);
+                }
+
+                public override ShaderInstance? GetShader()
+                {
+                    return _renderHandle.GetShader();
                 }
 
                 public override void DrawCircle(Vector2 position, float radius, Color color, bool filled = true)

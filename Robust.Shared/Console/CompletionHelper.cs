@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -146,42 +144,31 @@ public static class CompletionHelper
 
     public static IEnumerable<CompletionOption> MapUids(IEntityManager? entManager = null)
     {
-        IoCManager.Resolve(ref entManager);
-
-        var query = entManager.AllEntityQueryEnumerator<MapComponent>();
-        while (query.MoveNext(out var uid, out _))
-        {
-            yield return new CompletionOption(uid.ToString());
-        }
+        return Components<MapComponent>(string.Empty, entManager);
     }
 
-    public static IEnumerable<CompletionOption> EntityUids(string text, IEntityManager? entManager = null)
+    public static IEnumerable<CompletionOption> NetEntities(string text, IEntityManager? entManager = null)
+    {
+        return Components<MetaDataComponent>(text, entManager);
+    }
+
+    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null) where T : IComponent
     {
         IoCManager.Resolve(ref entManager);
 
-        foreach (var ent in entManager.GetEntities())
-        {
-            var entString = ent.ToString();
+        var query = entManager.AllEntityQueryEnumerator<T, MetaDataComponent>();
 
-            if (!entString.StartsWith(text))
+        while (query.MoveNext(out var uid, out _, out var metadata))
+        {
+            if (!entManager.TryGetNetEntity(uid, out var netEntity, metadata: metadata))
                 continue;
 
-            yield return new CompletionOption(entString);
-        }
-    }
+            var netString = netEntity.Value.ToString();
 
-    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null) where T : Component
-    {
-        IoCManager.Resolve(ref entManager);
-
-        var query = entManager.AllEntityQueryEnumerator<T>();
-
-        while (query.MoveNext(out var uid, out _))
-        {
-            if (!uid.ToString().StartsWith(text))
+            if (!netString.StartsWith(text))
                 continue;
 
-            yield return new CompletionOption(uid.ToString());
+            yield return new CompletionOption(netString, metadata.EntityName);
         }
     }
 }

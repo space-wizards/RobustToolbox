@@ -35,7 +35,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -221,19 +221,22 @@ namespace Robust.UnitTesting.Server
 
             //Tier 2: Simulation
             container.RegisterInstance<IConsoleHost>(new Mock<IConsoleHost>().Object); //Console is technically a frontend, we want to run headless
-            container.Register<IEntityManager, EntityManager>();
-            container.Register<EntityManager, EntityManager>();
-            container.Register<IMapManager, MapManager>();
+            container.Register<IEntityManager, ServerEntityManager>();
+            container.Register<IServerEntityNetworkManager, ServerEntityManager>();
+            container.Register<EntityManager, ServerEntityManager>();
+            container.Register<IMapManager, NetworkedMapManager>();
+            container.Register<INetworkedMapManager, NetworkedMapManager>();
+            container.Register<IMapManagerInternal, NetworkedMapManager>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IPrototypeManager, ServerPrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IManifoldManager, CollisionManager>();
-            container.Register<IMapManagerInternal, MapManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<ITileDefinitionManager, TileDefinitionManager>();
             container.Register<IParallelManager, TestingParallelManager>();
+            container.Register<IParallelManagerInternal, TestingParallelManager>();
             // Needed for grid fixture debugging.
             container.Register<IConGroupController, ConGroupController>();
 
@@ -283,6 +286,8 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<OccluderComponent>();
             compFactory.RegisterClass<OccluderTreeComponent>();
             compFactory.RegisterClass<Gravity2DComponent>();
+            compFactory.RegisterClass<CollideOnAnchorComponent>();
+            compFactory.RegisterClass<ActorComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -309,6 +314,8 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
             entitySystemMan.LoadExtraSystemType<PvsSystem>();
+            entitySystemMan.LoadExtraSystemType<InputSystem>();
+            entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 
@@ -322,6 +329,7 @@ namespace Robust.UnitTesting.Server
             container.Resolve<ISerializationManager>().Initialize();
 
             var protoMan = container.Resolve<IPrototypeManager>();
+            protoMan.Initialize();
             protoMan.RegisterKind(typeof(EntityPrototype));
             _protoDelegate?.Invoke(protoMan);
             protoMan.ResolveResults();

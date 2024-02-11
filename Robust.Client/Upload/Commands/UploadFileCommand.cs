@@ -11,15 +11,17 @@ namespace Robust.Client.Upload.Commands;
 
 public sealed class UploadFileCommand : IConsoleCommand
 {
+    [Dependency] private readonly IConfigurationManager _cfgManager = default!;
+    [Dependency] private readonly IFileDialogManager _dialog = default!;
+    [Dependency] private readonly INetManager _netManager = default!;
+
     public string Command => "uploadfile";
     public string Description => "Uploads a resource to the server.";
     public string Help => $"{Command} [relative path for the resource]";
 
     public async void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        var cfgMan = IoCManager.Resolve<IConfigurationManager>();
-
-        if (!cfgMan.GetCVar(CVars.ResourceUploadingEnabled))
+        if (!_cfgManager.GetCVar(CVars.ResourceUploadingEnabled))
         {
             shell.WriteError("Network Resource Uploading is currently disabled by the server.");
             return;
@@ -33,10 +35,8 @@ public sealed class UploadFileCommand : IConsoleCommand
 
         var path = new ResPath(args[0]).ToRelativePath();
 
-        var dialog = IoCManager.Resolve<IFileDialogManager>();
-
         var filters = new FileDialogFilters(new FileDialogFilters.Group(path.Extension));
-        await using var file = await dialog.OpenFile(filters);
+        await using var file = await _dialog.OpenFile(filters);
 
         if (file == null)
         {
@@ -44,7 +44,7 @@ public sealed class UploadFileCommand : IConsoleCommand
             return;
         }
 
-        var sizeLimit = cfgMan.GetCVar(CVars.ResourceUploadingLimitMb);
+        var sizeLimit = _cfgManager.GetCVar(CVars.ResourceUploadingLimitMb);
 
         if (sizeLimit > 0f && file.Length * SharedNetworkResourceManager.BytesToMegabytes > sizeLimit)
         {
@@ -54,12 +54,12 @@ public sealed class UploadFileCommand : IConsoleCommand
 
         var data = file.CopyToArray();
 
-        var netManager = IoCManager.Resolve<INetManager>();
-        var msg = netManager.CreateNetMessage<NetworkResourceUploadMessage>();
+        var msg = new NetworkResourceUploadMessage
+        {
+            RelativePath = path,
+            Data = data
+        };
 
-        msg.RelativePath = path;
-        msg.Data = data;
-
-        netManager.ClientSendMessage(msg);
+        _netManager.ClientSendMessage(msg);
     }
 }

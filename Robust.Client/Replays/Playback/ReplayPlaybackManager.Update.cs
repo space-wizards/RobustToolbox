@@ -42,7 +42,9 @@ internal sealed partial class ReplayPlaybackManager
         {
             var state = Replay.CurState;
             _gameState.UpdateFullRep(state, cloneDelta: true);
-            _gameState.ApplyGameState(state, Replay.NextState);
+            var next = Replay.NextState;
+            BeforeApplyState?.Invoke((state, next));
+            _gameState.ApplyGameState(state, next);
             DebugTools.Assert(Replay.LastApplied >= state.FromSequence);
             DebugTools.Assert(Replay.LastApplied + 1 <= state.ToSequence);
             Replay.LastApplied = state.ToSequence;
@@ -50,7 +52,7 @@ internal sealed partial class ReplayPlaybackManager
         }
 
         _timing.CurTick += 1;
-        _entMan.TickUpdate(args.DeltaSeconds, noPredictions: true);
+        _cEntManager.TickUpdate(args.DeltaSeconds, noPredictions: true);
 
         if (!Playing || AutoPauseCountdown == null)
             return;
@@ -82,7 +84,7 @@ internal sealed partial class ReplayPlaybackManager
                 // Maybe track our own detach queue and use _gameState.DetachImmediate()?
                 // That way we don't have to clone this. Downside would be that all entities will be immediately
                 // detached. I.e., the detach budget cvar will simply be ignored.
-                var clone = new List<EntityUid>(leavePvs.Entities);
+                var clone = new List<NetEntity>(leavePvs.Entities);
 
                 _gameState.QueuePvsDetach(clone, leavePvs.Tick);
                 continue;

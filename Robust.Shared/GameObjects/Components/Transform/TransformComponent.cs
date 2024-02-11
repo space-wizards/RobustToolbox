@@ -1,18 +1,17 @@
-using Robust.Shared.Animations;
-using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Timing;
-using Robust.Shared.Utility;
-using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using Robust.Shared.Map.Components;
+using Robust.Shared.Animations;
+using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
@@ -20,10 +19,14 @@ namespace Robust.Shared.GameObjects
     ///     Stores the position and orientation of the entity.
     /// </summary>
     [RegisterComponent, NetworkedComponent]
-    public sealed class TransformComponent : Component, IComponentDebug
+    public sealed partial class TransformComponent : Component, IComponentDebug
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
+
+        // Currently this field just exists for VV. In future, it might become a real field
+        [ViewVariables]
+        private NetEntity NetParent => _entMan.GetNetEntity(_parent);
 
         [DataField("parent")] internal EntityUid _parent;
         [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
@@ -81,8 +84,9 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public Angle PrevRotation { get; internal set; }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        internal bool ActivelyLerping { get; set; }
+        [ViewVariables] public bool ActivelyLerping;
+
+        [ViewVariables] public GameTick LastLerp = GameTick.Zero;
 
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
@@ -125,7 +129,7 @@ namespace Robust.Shared.GameObjects
                     LocalRotation = Angle.Zero;
 
                 _noLocalRotation = value;
-                _entMan.Dirty(this);
+                _entMan.Dirty(Owner, this);
             }
         }
 
@@ -147,14 +151,16 @@ namespace Robust.Shared.GameObjects
 
                 var oldRotation = _localRotation;
                 _localRotation = value;
-                _entMan.Dirty(this);
+                var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
+                _entMan.Dirty(Owner, this, meta);
                 MatricesDirty = true;
 
                 if (!Initialized)
                     return;
 
-                var moveEvent = new MoveEvent(Owner, Coordinates, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
+                var moveEvent = new MoveEvent((Owner, this, meta), Coordinates, Coordinates, oldRotation, _localRotation, _gameTiming.ApplyingState);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
             }
         }
 
@@ -308,6 +314,7 @@ namespace Robust.Shared.GameObjects
         ///     This is effectively a more complete version of <see cref="WorldPosition"/>
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Obsolete("Use TransformSystem.GetMapCoordinates")]
         public MapCoordinates MapPosition => new(WorldPosition, MapID);
 
         /// <summary>
@@ -330,14 +337,16 @@ namespace Robust.Shared.GameObjects
 
                 var oldGridPos = Coordinates;
                 _localPosition = value;
-                _entMan.Dirty(this);
+                var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
+                _entMan.Dirty(Owner, this, meta);
                 MatricesDirty = true;
 
                 if (!Initialized)
                     return;
 
-                var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
+                var moveEvent = new MoveEvent((Owner, this, meta), oldGridPos, Coordinates, _localRotation, _localRotation, _gameTiming.ApplyingState);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
+                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
             }
         }
 
@@ -370,30 +379,15 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        [ViewVariables]
-        public IEnumerable<TransformComponent> Children
-        {
-            get
-            {
-                if (_children.Count == 0) yield break;
-
-                var xforms = _entMan.GetEntityQuery<TransformComponent>();
-                var children = ChildEnumerator;
-
-                while (children.MoveNext(out var child))
-                {
-                    yield return xforms.GetComponent(child.Value);
-                }
-            }
-        }
-
-        [ViewVariables] public IEnumerable<EntityUid> ChildEntities => _children;
+        [Obsolete("Use ChildEnumerator")]
+        public IEnumerable<EntityUid> ChildEntities => _children;
 
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
 
         [ViewVariables] public int ChildCount => _children.Count;
 
-        [ViewVariables] internal EntityUid LerpParent { get; set; }
+        [ViewVariables] public EntityUid LerpParent;
+        public bool PredictedLerp;
 
         /// <summary>
         /// Detaches this entity from its parent.
@@ -441,15 +435,13 @@ namespace Robust.Shared.GameObjects
             EntityQuery<MetaDataComponent> metaQuery,
             MetaDataSystem system)
         {
-            var childEnumerator = ChildEnumerator;
-
-            while (childEnumerator.MoveNext(out var child))
+            foreach (var child in _children)
             {
                 //Set Paused state
-                var metaData = metaQuery.GetComponent(child.Value);
-                system.SetEntityPaused(child.Value, mapPaused, metaData);
+                var metaData = metaQuery.GetComponent(child);
+                system.SetEntityPaused(child, mapPaused, metaData);
 
-                var concrete = xformQuery.GetComponent(child.Value);
+                var concrete = xformQuery.GetComponent(child);
 
                 concrete.MapUid = newUid;
                 concrete.MapID = newMapId;
@@ -606,39 +598,33 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
-    ///     Raised whenever an entity translates or rotates relative to their parent.
+    /// Raised directed at an entity whenever is position or rotation changes relative to their parent, or if their
+    /// parent changed. Note that this event does not get broadcast. If you need to receive information about ALL
+    /// move events, subscribe to the <see cref="SharedTransformSystem.OnGlobalMoveEvent"/>.
     /// </summary>
-    /// <remarks>
-    ///     This will also get raised if the entity's parent changes, even if the local position and rotation remains
-    ///     unchanged.
-    /// </remarks>
     [ByRefEvent]
-    public readonly struct MoveEvent
+    public readonly struct MoveEvent(Entity<TransformComponent, MetaDataComponent> entity, EntityCoordinates oldPos,
+        EntityCoordinates newPos, Angle oldRotation, Angle newRotation, bool stateHandling = false)
     {
-        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, Angle oldRotation, Angle newRotation, TransformComponent component, bool stateHandling)
-        {
-            Sender = sender;
-            OldPosition = oldPos;
-            NewPosition = newPos;
-            OldRotation = oldRotation;
-            NewRotation = newRotation;
-            Component = component;
-            FromStateHandling = stateHandling;
-        }
+        public readonly Entity<TransformComponent, MetaDataComponent> Entity = entity;
+        public readonly EntityCoordinates OldPosition = oldPos;
+        public readonly EntityCoordinates NewPosition = newPos;
+        public readonly Angle OldRotation = oldRotation;
+        public readonly Angle NewRotation = newRotation;
 
-        public readonly EntityUid Sender;
-        public readonly EntityCoordinates OldPosition;
-        public readonly EntityCoordinates NewPosition;
-        public readonly Angle OldRotation;
-        public readonly Angle NewRotation;
-        public readonly TransformComponent Component;
+        public EntityUid Sender => Entity.Owner;
+        public TransformComponent Component => Entity.Comp1;
 
         public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
 
-        /// <summary>
-        ///     If true, this event was generated during component state handling. This means it can be ignored in some instances.
-        /// </summary>
-        public readonly bool FromStateHandling;
+        [Obsolete("Check IGameTiming.ApplyingState")]
+        public readonly bool FromStateHandling = stateHandling;
+
+        [Obsolete]
+        public MoveEvent(EntityUid uid, EntityCoordinates oldPos, EntityCoordinates newPos, Angle oldRot, Angle newRot, TransformComponent xform, bool state)
+            : this((uid, xform, default!), oldPos, newPos, oldRot, newRot)
+        {
+        }
     }
 
     public struct TransformChildrenEnumerator : IDisposable
@@ -650,11 +636,11 @@ namespace Robust.Shared.GameObjects
             _children = children;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out EntityUid? child)
+        public bool MoveNext(out EntityUid child)
         {
             if (!_children.MoveNext())
             {
-                child = null;
+                child = default;
                 return false;
             }
 

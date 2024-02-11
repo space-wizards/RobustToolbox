@@ -113,12 +113,12 @@ namespace Robust.Shared.Input
         /// <summary>
         ///     Local Coordinates of the pointer when the command was created.
         /// </summary>
-        public EntityCoordinates Coordinates { get; }
+        public NetCoordinates Coordinates { get; }
 
         /// <summary>
         ///     Entity that was under the pointer when the command was created (if any).
         /// </summary>
-        public EntityUid Uid { get; }
+        public NetEntity Uid { get; }
 
         /// <summary>
         ///     Creates an instance of <see cref="PointerInputCmdMessage"/>.
@@ -126,8 +126,8 @@ namespace Robust.Shared.Input
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
-        public PointerInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId, EntityCoordinates coordinates)
-            : this(tick, subTick, inputFunctionId, coordinates, EntityUid.Invalid) { }
+        public PointerInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId, NetCoordinates coordinates)
+            : this(tick, subTick, inputFunctionId, coordinates, NetEntity.Invalid) { }
 
         /// <summary>
         ///     Creates an instance of <see cref="PointerInputCmdMessage"/> with an optional Entity reference.
@@ -136,7 +136,7 @@ namespace Robust.Shared.Input
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="uid">Entity that was under the pointer when the command was created.</param>
-        public PointerInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId, EntityCoordinates coordinates, EntityUid uid)
+        public PointerInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId, NetCoordinates coordinates, NetEntity uid)
             : base(tick, subTick, inputFunctionId)
         {
             Coordinates = coordinates;
@@ -145,10 +145,50 @@ namespace Robust.Shared.Input
     }
 
     /// <summary>
+    /// Handles inputs clientside. This is used so the client can still interact with client-only entities without relying on
+    /// <see cref="NetEntity"/>.
+    /// </summary>
+    public sealed class ClientFullInputCmdMessage : InputCmdMessage, IFullInputCmdMessage
+    {
+        /// <summary>
+        ///     New state of the Input Function.
+        /// </summary>
+        public BoundKeyState State { get; init; }
+
+        /// <summary>
+        ///     Local Coordinates of the pointer when the command was created.
+        /// </summary>
+        public EntityCoordinates Coordinates { get; init; }
+
+        /// <summary>
+        ///     Screen Coordinates of the pointer when the command was created.
+        /// </summary>
+        public ScreenCoordinates ScreenCoordinates { get; init; }
+
+        /// <summary>
+        ///     Entity that was under the pointer when the command was created (if any).
+        /// </summary>
+        public EntityUid Uid { get; init; }
+
+        public ClientFullInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId) : base(tick, subTick, inputFunctionId)
+        {
+        }
+    }
+
+    public interface IFullInputCmdMessage
+    {
+        GameTick Tick { get; }
+        BoundKeyState State { get; }
+        KeyFunctionId InputFunctionId { get; }
+        ushort SubTick { get; }
+        uint InputSequence { get; set; }
+    }
+
+    /// <summary>
     ///     An input command that has both state and pointer info.
     /// </summary>
     [Serializable, NetSerializable]
-    public sealed class FullInputCmdMessage : InputCmdMessage
+    public sealed class FullInputCmdMessage : InputCmdMessage, IFullInputCmdMessage
     {
         /// <summary>
         ///     New state of the Input Function.
@@ -158,7 +198,7 @@ namespace Robust.Shared.Input
         /// <summary>
         ///     Local Coordinates of the pointer when the command was created.
         /// </summary>
-        public EntityCoordinates Coordinates { get; }
+        public NetCoordinates Coordinates { get; }
 
         /// <summary>
         ///     Screen Coordinates of the pointer when the command was created.
@@ -168,7 +208,7 @@ namespace Robust.Shared.Input
         /// <summary>
         ///     Entity that was under the pointer when the command was created (if any).
         /// </summary>
-        public EntityUid Uid { get; }
+        public NetEntity Uid { get; init; }
 
         /// <summary>
         ///     Creates an instance of <see cref="FullInputCmdMessage"/>.
@@ -179,8 +219,8 @@ namespace Robust.Shared.Input
         /// <param name="state">New state of the Input Function.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="screenCoordinates"></param>
-        public FullInputCmdMessage(GameTick tick, ushort subTick, int inputSequence, KeyFunctionId inputFunctionId, BoundKeyState state, EntityCoordinates coordinates, ScreenCoordinates screenCoordinates)
-            : this(tick, subTick, inputFunctionId, state, coordinates, screenCoordinates, EntityUid.Invalid) { }
+        public FullInputCmdMessage(GameTick tick, ushort subTick, int inputSequence, KeyFunctionId inputFunctionId, BoundKeyState state, NetCoordinates coordinates, ScreenCoordinates screenCoordinates)
+            : this(tick, subTick, inputFunctionId, state, coordinates, screenCoordinates, NetEntity.Invalid) { }
 
         /// <summary>
         ///     Creates an instance of <see cref="FullInputCmdMessage"/> with an optional Entity reference.
@@ -191,7 +231,7 @@ namespace Robust.Shared.Input
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="screenCoordinates"></param>
         /// <param name="uid">Entity that was under the pointer when the command was created.</param>
-        public FullInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId, BoundKeyState state, EntityCoordinates coordinates, ScreenCoordinates screenCoordinates, EntityUid uid)
+        public FullInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId, BoundKeyState state, NetCoordinates coordinates, ScreenCoordinates screenCoordinates, NetEntity uid)
             : base(tick, subTick, inputFunctionId)
         {
             State = state;

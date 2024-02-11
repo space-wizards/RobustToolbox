@@ -1,51 +1,41 @@
 using System.Numerics;
+using Robust.Client.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects;
 
 public sealed partial class TransformSystem
 {
-    public override void SetLocalPosition(TransformComponent xform, Vector2 value)
+    public override void SetLocalPosition(EntityUid uid, Vector2 value, TransformComponent? xform = null)
     {
-        xform.PrevPosition = xform._localPosition;
+        if (!XformQuery.Resolve(uid, ref xform))
+            return;
+
         xform.NextPosition = value;
-        xform.LerpParent = xform.ParentUid;
-        base.SetLocalPosition(xform, value);
-        ActivateLerp(xform);
+        ActivateLerp(uid, xform);
+        base.SetLocalPosition(uid, value, xform);
     }
 
-    public override void SetLocalPositionNoLerp(TransformComponent xform, Vector2 value)
+    public override void SetLocalRotation(EntityUid uid, Angle value, TransformComponent? xform = null)
     {
-        xform.NextPosition = null;
-        xform.LerpParent = EntityUid.Invalid;
-        base.SetLocalPositionNoLerp(xform, value);
+        if (!XformQuery.Resolve(uid, ref xform))
+            return;
+
+        xform.NextRotation = value;
+        ActivateLerp(uid, xform);
+        base.SetLocalRotation(uid, value, xform);
     }
 
-    public override void SetLocalRotationNoLerp(TransformComponent xform, Angle angle)
+    public override void SetLocalPositionRotation(EntityUid uid, Vector2 pos, Angle rot, TransformComponent? xform = null)
     {
-        xform.NextRotation = null;
-        xform.LerpParent = EntityUid.Invalid;
-        base.SetLocalRotationNoLerp(xform, angle);
-    }
+        if (!XformQuery.Resolve(uid, ref xform))
+            return;
 
-    public override void SetLocalRotation(TransformComponent xform, Angle angle)
-    {
-        xform.PrevRotation = xform._localRotation;
-        xform.NextRotation = angle;
-        xform.LerpParent = xform.ParentUid;
-        base.SetLocalRotation(xform, angle);
-        ActivateLerp(xform);
-    }
-
-    public override void SetLocalPositionRotation(TransformComponent xform, Vector2 pos, Angle rot)
-    {
-        xform.PrevPosition = xform._localPosition;
         xform.NextPosition = pos;
-        xform.PrevRotation = xform._localRotation;
         xform.NextRotation = rot;
-        xform.LerpParent = xform.ParentUid;
-        base.SetLocalPositionRotation(xform, pos, rot);
-        ActivateLerp(xform);
+        ActivateLerp(uid, xform);
+        base.SetLocalPositionRotation(uid, pos, rot, xform);
     }
 }

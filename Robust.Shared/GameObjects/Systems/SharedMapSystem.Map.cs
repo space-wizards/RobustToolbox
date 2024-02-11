@@ -57,7 +57,7 @@ public abstract partial class SharedMapSystem
     private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
     {
         DebugTools.Assert(component.MapId != MapId.Nullspace);
-        Logger.InfoS("map", $"Deleting map {component.MapId}");
+        Log.Info($"Deleting map {component.MapId}");
 
         var iMap = (IMapManagerInternal)MapManager;
         iMap.RemoveMapId(component.MapId);

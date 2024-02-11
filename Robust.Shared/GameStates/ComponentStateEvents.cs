@@ -1,5 +1,5 @@
 using Robust.Shared.GameObjects;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameStates
@@ -7,10 +7,10 @@ namespace Robust.Shared.GameStates
     [ByRefEvent, ComponentEvent]
     public readonly struct ComponentHandleState
     {
-        public ComponentState? Current { get; }
-        public ComponentState? Next { get; }
+        public IComponentState? Current { get; }
+        public IComponentState? Next { get; }
 
-        public ComponentHandleState(ComponentState? current, ComponentState? next)
+        public ComponentHandleState(IComponentState? current, IComponentState? next)
         {
             Current = current;
             Next = next;
@@ -28,7 +28,7 @@ namespace Robust.Shared.GameStates
         /// <summary>
         ///     Output parameter. Set this to the component's state for the player.
         /// </summary>
-        public ComponentState? State { get; set; }
+        public IComponentState? State { get; set; }
 
         /// <summary>
         ///     If true, this state is intended for replays or some other server spectator entity, not for specific

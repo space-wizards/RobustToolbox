@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Globalization;
 using System.Linq.Expressions;
 using Robust.Shared.Serialization.Manager.Definition;
@@ -56,7 +57,6 @@ public sealed partial class SerializationManager
                 alwaysWrite,
                 contextParam).Compile();
         }, this);
-
     }
 
     private WriteGenericDelegate<T> GetOrCreateWriteGenericDelegate<T>(T value, bool notNullableOverride)
@@ -74,6 +74,14 @@ public sealed partial class SerializationManager
             Expression objAccess = baseType.IsNullable()
                 ? Expression.Convert(objParam, sameType ? baseType.EnsureNotNullableType() : actualType)
                 : sameType ? objParam : Expression.Convert(objParam, actualType);
+
+            if (baseType.IsGenericType)
+            {
+                // Frozen dictionaries/sets are abstract and have a bunch of implementations, but we always serialize them as their abstract type.
+                var t = baseType.GetGenericTypeDefinition();
+                if (t == typeof(FrozenDictionary<,>) || t == typeof(FrozenSet<>))
+                    actualType = baseType;
+            }
 
             Expression call;
             if (serializationManager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeWriter<>), actualType, out var serializer))
@@ -125,8 +133,8 @@ public sealed partial class SerializationManager
                 call = Expression.Call(
                     instanceParam,
                     nameof(WriteArray),
-                    Type.EmptyTypes,
-                    Expression.Convert(objParam, typeof(Array)),
+                    new []{ actualType.GetElementType()! },
+                    Expression.Convert(objParam, actualType),
                     alwaysWriteParam,
                     contextParam);
             }
@@ -193,7 +201,7 @@ public sealed partial class SerializationManager
         }
 
         var type = typeof(T);
-        if (type.IsAbstract || type.IsInterface)
+        if (!type.IsSealed) // abstract classes, virtual classes, and interfaces.
         {
             return (WriteGenericDelegate<T>)_writeGenericBaseDelegates.GetOrAdd((type, value!.GetType(), notNullableOverride),
                 static (tuple, manager) => ValueFactory(tuple.baseType, tuple.actualType, tuple.Item3, manager), this);
@@ -213,13 +221,13 @@ public sealed partial class SerializationManager
         return new ValueDataNode(obj.Serialize());
     }
 
-    private DataNode WriteArray(Array obj, bool alwaysWrite, ISerializationContext? context)
+    private DataNode WriteArray<TElement>(TElement[] obj, bool alwaysWrite, ISerializationContext? context)
     {
         var sequenceNode = new SequenceDataNode();
 
         foreach (var val in obj)
         {
-            var serializedVal = WriteValue(val.GetType(), val, alwaysWrite, context);
+            var serializedVal = WriteValue(val, alwaysWrite, context);
             sequenceNode.Add(serializedVal);
         }
 

@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Client.Audio;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
@@ -107,8 +112,23 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
+        /// Sets the button's press state and also handles click sounds.
+        /// </summary>
+        /// <returns></returns>
+        public void SetClickPressed(bool value)
+        {
+            Pressed = value;
+
+            if (Pressed != value)
+                return;
+
+            UserInterfaceManager.ClickSound();
+        }
+
+        /// <summary>
         ///     Whether key functions other than <see cref="EngineKeyFunctions.UIClick"/> trigger the button.
         /// </summary>
+        [ViewVariables]
         public bool EnableAllKeybinds
         {
             get => _enableAllKeybinds;
@@ -220,7 +240,7 @@ namespace Robust.Client.UserInterface.Controls
                     // Can't un press a radio button directly.
                     if (Group == null || !Pressed)
                     {
-                        Pressed = !Pressed;
+                        SetClickPressed(!Pressed);
                         OnPressed?.Invoke(buttonEventArgs);
                         OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
                         UnsetOtherGroupButtons();
@@ -261,7 +281,11 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (args.Function == EngineKeyFunctions.UIClick && ToggleMode && _attemptingPress == 1)
                     {
-                        Pressed = !Pressed;
+                        SetClickPressed(!Pressed);
+                    }
+                    else
+                    {
+                        UserInterfaceManager.ClickSound();
                     }
 
                     OnPressed?.Invoke(buttonEventArgs);
@@ -315,6 +339,11 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void MouseEntered()
         {
             base.MouseEntered();
+
+            if (!Disabled)
+            {
+                UserInterfaceManager.HoverSound();
+            }
 
             var drawMode = DrawMode;
             _beingHovered = true;

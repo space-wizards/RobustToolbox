@@ -22,13 +22,11 @@ namespace Robust.UnitTesting.Shared.Prototypes
         private const string LoadStringTestDummyId = "LoadStringTestDummy";
         private IPrototypeManager manager = default!;
 
+        protected override Type[] ExtraComponents => new[] {typeof(TestBasicPrototypeComponent), typeof(PointLightComponent)};
+
         [OneTimeSetUp]
         public void Setup()
         {
-            var factory = IoCManager.Resolve<IComponentFactory>();
-            factory.RegisterClass<TestBasicPrototypeComponent>();
-            factory.RegisterClass<PointLightComponent>();
-
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.RegisterKind(typeof(EntityPrototype));
@@ -59,7 +57,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 
-            var componentData = prototype.Components["PointLight"].Component as PointLightComponent;
+            var componentData = prototype.Components["PointLight"].Component as SharedPointLightComponent;
 
             Assert.That(componentData!.NetSyncEnabled, Is.EqualTo(false));
         }
@@ -72,7 +70,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
             var componentData = prototype.Components["TestBasicPrototype"].Component as TestBasicPrototypeComponent;
 
-            Assert.NotNull(componentData);
+            Assert.That(componentData, Is.Not.Null);
             Assert.That(componentData!.Str, Is.EqualTo("hi!"));
             Assert.That(componentData!.int_field, Is.EqualTo(10));
             Assert.That(componentData!.float_field, Is.EqualTo(10f));
@@ -147,9 +145,9 @@ namespace Robust.UnitTesting.Shared.Prototypes
         private sealed class CircleTestPrototype : IPrototype, IInheritingPrototype
         {
             [IdDataField()]
-            public string ID { get; } = default!;
+            public string ID { get; private set; } = default!;
             [ParentDataField(typeof(AbstractPrototypeIdArraySerializer<CircleTestPrototype>))]
-            public string[]? Parents { get; }
+            public string[]? Parents { get; private set; }
             [AbstractDataField]
             public bool Abstract { get; }
         }
@@ -223,7 +221,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
   name: {LoadStringTestDummyId}";
     }
 
-    public sealed class TestBasicPrototypeComponent : Component
+    public sealed partial class TestBasicPrototypeComponent : Component
     {
 
         [DataField("foo")] public string Foo = null!;

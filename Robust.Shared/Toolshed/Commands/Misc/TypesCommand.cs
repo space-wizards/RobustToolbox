@@ -13,7 +13,7 @@ internal sealed class TypesCommand : ToolshedCommand
 
         ctx.WriteLine($"Valid intakers for {t.PrettyName()}:");
 
-        foreach (var (command, subCommand) in Toolshed.CommandsTakingType(t))
+        foreach (var (command, subCommand) in ctx.Environment.CommandsTakingType(t))
         {
             if (subCommand is null)
                 ctx.WriteLine($"{command.Name}");

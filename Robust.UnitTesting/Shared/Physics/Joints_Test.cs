@@ -21,10 +21,6 @@ public sealed class Joints_Test
     public void JointsRelayTest()
     {
         var factory = RobustServerSimulation.NewSimulation();
-        factory.RegisterComponents(fac =>
-        {
-            fac.RegisterClass<CollideOnAnchorComponent>();
-        });
         var sim = factory.InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
@@ -41,18 +37,19 @@ public sealed class Joints_Test
         entManager.AddComponent<PhysicsComponent>(uidB);
         entManager.AddComponent<PhysicsComponent>(uidC);
 
-        var container = entManager.System<SharedContainerSystem>().EnsureContainer<Container>(uidC, "weh");
+        var containerSys = entManager.System<SharedContainerSystem>();
+        var container = containerSys.EnsureContainer<Container>(uidC, "weh");
         var joint = jointSystem.CreateDistanceJoint(uidA, uidB);
         jointSystem.Update(0.016f);
 
-        container.Insert(uidA, entManager);
+        containerSys.Insert(uidA, container);
         Assert.Multiple(() =>
         {
             Assert.That(container.Contains(uidA));
             Assert.That(entManager.HasComponent<JointRelayTargetComponent>(uidC));
             Assert.That(entManager.GetComponent<JointComponent>(uidA).Relay, Is.EqualTo(uidC));
 
-            container.Remove(uidA);
+            containerSys.Remove(uidA, container);
             Assert.That(entManager.GetComponent<JointRelayTargetComponent>(uidC).Relayed, Is.Empty);
             Assert.That(entManager.GetComponent<JointComponent>(uidA).Relay, Is.EqualTo(null));
         });
@@ -86,8 +83,8 @@ public sealed class Joints_Test
         physicsSystem.SetBodyType(ent1, BodyType.Dynamic, manager: manager1, body: body1);
         physicsSystem.SetBodyType(ent2, BodyType.Dynamic, manager: manager2, body: body2);
 
-        fixtureSystem.CreateFixture(ent1, new Fixture("fix1", new PhysShapeCircle(0.1f), 1, 1, false), manager: manager1, body: body1);
-        fixtureSystem.CreateFixture(ent2, new Fixture("fix1", new PhysShapeCircle(0.1f), 1, 1, false), manager: manager2, body: body2);
+        fixtureSystem.CreateFixture(ent1, "fix1", new Fixture(new PhysShapeCircle(0.1f), 1, 1, false), manager: manager1, body: body1);
+        fixtureSystem.CreateFixture(ent2, "fix1", new Fixture(new PhysShapeCircle(0.1f), 1, 1, false), manager: manager2, body: body2);
 
         var joint = jointSystem.CreateDistanceJoint(ent1, ent2);
         Assert.That(joint.CollideConnected, Is.EqualTo(true));

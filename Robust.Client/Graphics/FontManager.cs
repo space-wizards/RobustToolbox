@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Utility;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SharpFont;

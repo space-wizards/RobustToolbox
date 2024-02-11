@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -78,6 +79,16 @@ namespace Robust.Client.Graphics
         /// <param name="point">Point on screen to transform.</param>
         /// <returns>Corresponding point in the world.</returns>
         MapCoordinates ScreenToMap(Vector2 point);
+
+        /// <summary>
+        /// Similar to <see cref="ScreenToMap(ScreenCoordinates)"/>, except it should compensate for the effects of shaders on viewports.
+        /// </summary>
+        MapCoordinates PixelToMap(ScreenCoordinates point);
+
+        /// <summary>
+        /// Similar to <see cref="ScreenToMap(Vector2)"/>, except it should compensate for the effects of shaders on viewports.
+        /// </summary>
+        MapCoordinates PixelToMap(Vector2 point);
 
         void ClearCurrentEye();
         void Initialize();

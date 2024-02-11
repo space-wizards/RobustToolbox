@@ -71,11 +71,8 @@ namespace Robust.Shared.ContentPack
             }
             else
             {
-                _sawmill.Debug("Robust directory is {0}", ourPath);
                 loadDirs.Add(Path.GetDirectoryName(ourPath)!);
             }
-
-            _sawmill.Debug(".NET runtime directory is {0}", dotnetDir);
 
             if (EngineModuleDirectories != null)
             {
@@ -916,9 +913,14 @@ namespace Robust.Shared.ContentPack
                 return null;
             }
 
-            public PEReader? Resolve(string simpleName)
+            public PEReader? ResolveAssembly(AssemblyName assemblyName)
             {
-                return _dictionary.GetOrAdd(simpleName, ResolveCore);
+                return _dictionary.GetOrAdd(assemblyName.Name!, ResolveCore);
+            }
+
+            public PEReader? ResolveModule(AssemblyName referencingAssembly, string fileName)
+            {
+                throw new NotSupportedException();
             }
 
             public void Dispose()

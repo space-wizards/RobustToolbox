@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -95,12 +96,16 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            var fixtures = new List<Fixture>(mapChunks.Count);
+            var fixtures = new Dictionary<string, Fixture>(mapChunks.Count);
 
             foreach (var (chunk, rectangles) in mapChunks)
             {
                 UpdateFixture(uid, chunk, rectangles, body, manager, xform);
-                fixtures.AddRange(chunk.Fixtures);
+
+                foreach (var (id, fixture) in chunk.Fixtures)
+                {
+                    fixtures[id] = fixture;
+                }
             }
 
             EntityManager.EventBus.RaiseLocalEvent(uid,new GridFixtureChangeEvent {NewFixtures = fixtures}, true);
@@ -126,7 +131,7 @@ namespace Robust.Shared.GameObjects
 
             // Additionally, we need to handle map deserialization where content may have stored its own data
             // on the grid (e.g. mass) which we want to preserve.
-            var newFixtures = new List<Fixture>();
+            var newFixtures = new ValueList<(string Id, Fixture Fixture)>();
 
             Span<Vector2> vertices = stackalloc Vector2[4];
 
@@ -144,21 +149,23 @@ namespace Robust.Shared.GameObjects
 
 #pragma warning disable CS0618
                 var newFixture = new Fixture(
-                    $"grid_chunk-{bounds.Left}-{bounds.Bottom}",
                     poly,
                     MapGridHelpers.CollisionGroup,
                     MapGridHelpers.CollisionGroup,
-                    true) { Body = body};
+                    true)
+                {
+                    Owner = uid
+                };
 #pragma warning restore CS0618
 
-                newFixtures.Add(newFixture);
+                newFixtures.Add(($"grid_chunk-{bounds.Left}-{bounds.Bottom}", newFixture));
             }
 
-            var toRemove = new RemQueue<Fixture>();
+            var toRemove = new ValueList<(string Id, Fixture Fixture)>();
             // Check if we even need to issue an eventbus event
             var updated = false;
 
-            foreach (var oldFixture in chunk.Fixtures)
+            foreach (var (oldId, oldFixture) in chunk.Fixtures)
             {
                 var existing = false;
 
@@ -166,8 +173,10 @@ namespace Robust.Shared.GameObjects
                 // (TODO: Check IDs and cross-reference for updates?)
                 for (var i = newFixtures.Count - 1; i >= 0; i--)
                 {
-                    var fixture = newFixtures[i];
-                    if (!oldFixture.Equals(fixture)) continue;
+                    var fixture = newFixtures[i].Fixture;
+                    if (!oldFixture.Equals(fixture))
+                        continue;
+
                     existing = true;
                     newFixtures.RemoveSwap(i);
                     break;
@@ -176,36 +185,36 @@ namespace Robust.Shared.GameObjects
                 // Doesn't align with any new fixtures so delete
                 if (existing) continue;
 
-                toRemove.Add(oldFixture);
+                toRemove.Add((oldId, oldFixture));
             }
 
-            foreach (var fixture in toRemove)
+            foreach (var (id, fixture) in toRemove)
             {
                 // TODO add a DestroyFixture() override that takes in a list.
                 // reduced broadphase lookups
-                chunk.Fixtures.Remove(fixture);
-                _fixtures.DestroyFixture(uid, fixture, false, body: body, manager: manager, xform: xform);
+                chunk.Fixtures.Remove(id);
+                _fixtures.DestroyFixture(uid, id, fixture, false, body: body, manager: manager, xform: xform);
             }
 
-            if (newFixtures.Count > 0 || toRemove.List?.Count > 0)
+            if (newFixtures.Count > 0 || toRemove.Count > 0)
             {
                 updated = true;
             }
 
             // Anything remaining is a new fixture (or at least, may have not serialized onto the chunk yet).
-            foreach (var fixture in newFixtures)
+            foreach (var (id, fixture) in newFixtures)
             {
-                var existingFixture = _fixtures.GetFixtureOrNull(uid, fixture.ID, manager: manager);
+                var existingFixture = _fixtures.GetFixtureOrNull(uid, id, manager: manager);
                 // Check if it's the same (otherwise remove anyway).
                 if (existingFixture?.Shape is PolygonShape poly &&
                     poly.EqualsApprox((PolygonShape) fixture.Shape))
                 {
-                    chunk.Fixtures.Add(existingFixture);
+                    chunk.Fixtures.Add(id, existingFixture);
                     continue;
                 }
 
-                chunk.Fixtures.Add(fixture);
-                _fixtures.CreateFixture(uid, fixture, false, manager, body, xform);
+                chunk.Fixtures.Add(id, fixture);
+                _fixtures.CreateFixture(uid, id, fixture, false, manager, body, xform);
             }
 
             return updated;
@@ -218,13 +227,13 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public sealed class GridFixtureChangeEvent : EntityEventArgs
     {
-        public List<Fixture> NewFixtures { get; init; } = default!;
+        public Dictionary<string, Fixture> NewFixtures { get; init; } = default!;
     }
 
     [Serializable, NetSerializable]
     public sealed class ChunkSplitDebugMessage : EntityEventArgs
     {
-        public EntityUid Grid;
+        public NetEntity Grid;
         public Dictionary<Vector2i, List<List<Vector2i>>> Nodes = new ();
         public List<(Vector2 Start, Vector2 End)> Connections = new();
     }

@@ -24,6 +24,8 @@ namespace Robust.Shared.GameObjects
             SubEvent(EventSource.Network, handler, before, after);
         }
 
+        /// <seealso cref="SubscribeLocalEvent{T}(EntityEventRefHandler{T}, Type[], Type[])"/>
+        // [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
         protected void SubscribeLocalEvent<T>(
             EntityEventHandler<T> handler,
             Type[]? before = null, Type[]? after = null)
@@ -72,6 +74,8 @@ namespace Robust.Shared.GameObjects
             SubSessionEvent(EventSource.All, handler, before, after);
         }
 
+        /// <seealso cref="SubEvent{T}(EventSource, EntityEventRefHandler{T}, Type[], Type[])"/>
+        // [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
         private void SubEvent<T>(
             EventSource src,
             EntityEventHandler<T> handler,
@@ -108,6 +112,8 @@ namespace Robust.Shared.GameObjects
             _subscriptions.Add(new SubBroadcast<EntitySessionMessage<T>>(src));
         }
 
+        /// <seealso cref="SubscribeLocalEvent{TComp, TEvent}(ComponentEventRefHandler{TComp, TEvent}, Type[], Type[])"/>
+        // [Obsolete("Subscribe to the event by ref instead (ComponentEventRefHandler)")]
         protected void SubscribeLocalEvent<TComp, TEvent>(
             ComponentEventHandler<TComp, TEvent> handler,
             Type[]? before = null, Type[]? after = null)
@@ -122,6 +128,18 @@ namespace Robust.Shared.GameObjects
 
         protected void SubscribeLocalEvent<TComp, TEvent>(
             ComponentEventRefHandler<TComp, TEvent> handler,
+            Type[]? before = null, Type[]? after = null)
+            where TComp : IComponent
+            where TEvent : notnull
+        {
+            EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
+
+            _subscriptions ??= new();
+            _subscriptions.Add(new SubLocal<TComp, TEvent>());
+        }
+
+        protected void SubscribeLocalEvent<TComp, TEvent>(
+            EntityEventRefHandler<TComp, TEvent> handler,
             Type[]? before = null, Type[]? after = null)
             where TComp : IComponent
             where TEvent : notnull
@@ -182,6 +200,32 @@ namespace Robust.Shared.GameObjects
 
             public void SubscribeLocalEvent<TComp, TEvent>(
                 ComponentEventHandler<TComp, TEvent> handler,
+                Type[]? before = null, Type[]? after = null)
+                where TComp : IComponent
+                where TEvent : EntityEventArgs
+            {
+                System.SubscribeLocalEvent(handler, before, after);
+            }
+
+            /// <summary>
+            /// Proxy to <see cref="M:Robust.Shared.GameObjects.EntitySystem.SubscribeLocalEvent``2(Robust.Shared.GameObjects.ComponentEventRefHandler{``0,``1},System.Type[],System.Type[])" />
+            /// on the owning system.
+            /// </summary>
+            public void SubscribeLocalEvent<TComp, TEvent>(
+                ComponentEventRefHandler<TComp, TEvent> handler,
+                Type[]? before = null, Type[]? after = null)
+                where TComp : IComponent
+                where TEvent : EntityEventArgs
+            {
+                System.SubscribeLocalEvent(handler, before, after);
+            }
+
+            /// <summary>
+            /// Proxy to <see cref="M:Robust.Shared.GameObjects.EntitySystem.SubscribeLocalEvent``2(Robust.Shared.GameObjects.EntityEventRefHandler{``0,``1},System.Type[],System.Type[])" />
+            /// on the owning system.
+            /// </summary>
+            public void SubscribeLocalEvent<TComp, TEvent>(
+                EntityEventRefHandler<TComp, TEvent> handler,
                 Type[]? before = null, Type[]? after = null)
                 where TComp : IComponent
                 where TEvent : EntityEventArgs

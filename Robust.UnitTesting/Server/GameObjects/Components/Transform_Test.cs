@@ -1,17 +1,12 @@
 using System.IO;
 using System.Numerics;
-using System.Reflection;
-using Moq;
 using NUnit.Framework;
-using Robust.Server.Containers;
 using Robust.Server.GameObjects;
-using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
@@ -26,14 +21,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
         private IServerEntityManagerInternal EntityManager = default!;
         private IMapManager MapManager = default!;
+        private SharedTransformSystem XformSystem => EntityManager.System<SharedTransformSystem>();
 
-        const string PROTOTYPES = @"
-- type: entity
-  name: dummy
-  id: dummy
-  components:
-  - type: Transform
-
+        const string Prototypes = @"
 - type: entity
   name: dummy
   id: mapDummy
@@ -46,11 +36,11 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 ";
 
         private MapId MapA;
-        private MapGridComponent GridA = default!;
+        private Entity<MapGridComponent> GridA;
         private MapId MapB;
-        private MapGridComponent GridB = default!;
+        private Entity<MapGridComponent> GridB;
 
-        private static readonly EntityCoordinates InitialPos = new(new EntityUid(1), new Vector2(0, 0));
+        private static readonly EntityCoordinates InitialPos = new(EntityUid.FirstUid, new Vector2(0, 0));
 
         [OneTimeSetUp]
         public void Setup()
@@ -64,15 +54,15 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.RegisterKind(typeof(EntityPrototype));
-            manager.LoadFromStream(new StringReader(PROTOTYPES));
+            manager.LoadFromStream(new StringReader(Prototypes));
             manager.ResolveResults();
 
             // build the net dream
             MapA = MapManager.CreateMap();
-            GridA = MapManager.CreateGrid(MapA);
+            GridA = MapManager.CreateGridEntity(MapA);
 
             MapB = MapManager.CreateMap();
-            GridB = MapManager.CreateGrid(MapB);
+            GridB = MapManager.CreateGridEntity(MapB);
 
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the test
         }
@@ -88,46 +78,45 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void ParentMapSwitchTest()
         {
             // two entities
-            var parent = EntityManager.SpawnEntity("dummy", InitialPos);
-            var child = EntityManager.SpawnEntity("dummy", InitialPos);
+            var parent = EntityManager.SpawnEntity(null, InitialPos);
+            var child = EntityManager.SpawnEntity(null, InitialPos);
 
             var parentTrans = EntityManager.GetComponent<TransformComponent>(parent);
             var childTrans = EntityManager.GetComponent<TransformComponent>(child);
 
             // that are not on the same map
-            parentTrans.Coordinates = new EntityCoordinates(GridA.Owner, new Vector2(5, 5));
-            childTrans.Coordinates = new EntityCoordinates(GridB.Owner, new Vector2(4, 4));
+            XformSystem.SetCoordinates(parent, parentTrans, new EntityCoordinates(GridA, new Vector2(5, 5)));
+            XformSystem.SetCoordinates(child, childTrans, new EntityCoordinates(GridB, new Vector2(4, 4)));
 
             // if they are parented, the child keeps its world position, but moves to the parents map
-            childTrans.AttachParent(parentTrans);
-
+            XformSystem.SetParent(child, childTrans, parent, parentXform: parentTrans);
 
             Assert.Multiple(() =>
             {
-                Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
-                Assert.That(childTrans.GridUid, Is.EqualTo(parentTrans.GridUid));
-                Assert.That(childTrans.Coordinates, Is.EqualTo(new EntityCoordinates(parentTrans.Owner, new Vector2(-1, -1))));
-                Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(4, 4)));
+                Assert.That(childTrans.MapID, NUnit.Framework.Is.EqualTo(parentTrans.MapID));
+                Assert.That(childTrans.GridUid, NUnit.Framework.Is.EqualTo(parentTrans.GridUid));
+                Assert.That(childTrans.Coordinates, NUnit.Framework.Is.EqualTo(new EntityCoordinates(parent, new Vector2(-1, -1))));
+                Assert.That(XformSystem.GetWorldPosition(childTrans), NUnit.Framework.Is.EqualTo(new Vector2(4, 4)));
             });
 
             // move the parent, and the child should move with it
-            childTrans.LocalPosition = new Vector2(6, 6);
-            parentTrans.WorldPosition = new Vector2(-8, -8);
+            XformSystem.SetLocalPosition(child, new Vector2(6, 6), childTrans);
+            XformSystem.SetWorldPosition(parentTrans, new Vector2(-8, -8));
 
-            Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(-2, -2)));
+            Assert.That(XformSystem.GetWorldPosition(childTrans), NUnit.Framework.Is.EqualTo(new Vector2(-2, -2)));
 
             // if we detach parent, the child should be left where it was, still relative to parents grid
             var oldLpos = new Vector2(-2, -2);
-            var oldWpos = childTrans.WorldPosition;
+            var oldWpos = XformSystem.GetWorldPosition(childTrans);
 
-            childTrans.AttachToGridOrMap();
+            XformSystem.AttachToGridOrMap(child, childTrans);
 
             // the gridId won't match, because we just detached from the grid entity
 
             Assert.Multiple(() =>
             {
-                Assert.That(childTrans.Coordinates.Position, Is.EqualTo(oldLpos));
-                Assert.That(childTrans.WorldPosition, Is.EqualTo(oldWpos));
+                Assert.That(childTrans.Coordinates.Position, NUnit.Framework.Is.EqualTo(oldLpos));
+                Assert.That(XformSystem.GetWorldPosition(childTrans), NUnit.Framework.Is.EqualTo(oldWpos));
             });
         }
 
@@ -138,20 +127,20 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void ParentAttachMoveTest()
         {
             // Arrange
-            var parent = EntityManager.SpawnEntity("dummy", InitialPos);
-            var child = EntityManager.SpawnEntity("dummy", InitialPos);
+            var parent = EntityManager.SpawnEntity(null, InitialPos);
+            var child = EntityManager.SpawnEntity(null, InitialPos);
             var parentTrans = EntityManager.GetComponent<TransformComponent>(parent);
             var childTrans = EntityManager.GetComponent<TransformComponent>(child);
-            parentTrans.WorldPosition = new Vector2(5, 5);
-            childTrans.WorldPosition = new Vector2(6, 6);
+            XformSystem.SetWorldPosition(parentTrans, new Vector2(5, 5));
+            XformSystem.SetWorldPosition(childTrans, new Vector2(6, 6));
 
             // Act
-            var oldWpos = childTrans.WorldPosition;
-            childTrans.AttachParent(parentTrans);
-            var newWpos = childTrans.WorldPosition;
+            var oldWpos = XformSystem.GetWorldPosition(childTrans);
+            XformSystem.SetParent(child, childTrans, parent, parentXform: parentTrans);
+            var newWpos = XformSystem.GetWorldPosition(childTrans);
 
             // Assert
-            Assert.That(oldWpos == newWpos);
+            Assert.That(oldWpos, NUnit.Framework.Is.EqualTo(newWpos));
         }
 
         /// <summary>
@@ -161,31 +150,31 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void ParentDoubleAttachMoveTest()
         {
             // Arrange
-            var parent = EntityManager.SpawnEntity("dummy", InitialPos);
-            var childOne = EntityManager.SpawnEntity("dummy", InitialPos);
-            var childTwo = EntityManager.SpawnEntity("dummy", InitialPos);
+            var parent = EntityManager.SpawnEntity(null, InitialPos);
+            var childOne = EntityManager.SpawnEntity(null, InitialPos);
+            var childTwo = EntityManager.SpawnEntity(null, InitialPos);
             var parentTrans = EntityManager.GetComponent<TransformComponent>(parent);
             var childOneTrans = EntityManager.GetComponent<TransformComponent>(childOne);
             var childTwoTrans = EntityManager.GetComponent<TransformComponent>(childTwo);
-            parentTrans.WorldPosition = new Vector2(1, 1);
-            childOneTrans.WorldPosition = new Vector2(2, 2);
-            childTwoTrans.WorldPosition = new Vector2(3, 3);
+            XformSystem.SetWorldPosition(parentTrans, new Vector2(1, 1));
+            XformSystem.SetWorldPosition(childOneTrans, new Vector2(2, 2));
+            XformSystem.SetWorldPosition(childTwoTrans, new Vector2(3, 3));
 
             // Act
-            var oldWpos = childOneTrans.WorldPosition;
-            childOneTrans.AttachParent(parentTrans);
-            var newWpos = childOneTrans.WorldPosition;
-            Assert.That(oldWpos, Is.EqualTo(newWpos));
+            var oldWpos = XformSystem.GetWorldPosition(childOneTrans);
+            XformSystem.SetParent(childOne, childOneTrans, parent, parentXform: parentTrans);
+            var newWpos = XformSystem.GetWorldPosition(childOneTrans);
+            Assert.That(oldWpos, NUnit.Framework.Is.EqualTo(newWpos));
 
-            oldWpos = childTwoTrans.WorldPosition;
-            childTwoTrans.AttachParent(parentTrans);
-            newWpos = childTwoTrans.WorldPosition;
-            Assert.That(oldWpos, Is.EqualTo(newWpos));
+            oldWpos = XformSystem.GetWorldPosition(childTwoTrans);
+            XformSystem.SetParent(childOne, childOneTrans, parent, parentXform: parentTrans);
+            newWpos = XformSystem.GetWorldPosition(childTwoTrans);
+            Assert.That(oldWpos, NUnit.Framework.Is.EqualTo(newWpos));
 
-            oldWpos = childTwoTrans.WorldPosition;
-            childTwoTrans.AttachParent(childOneTrans);
-            newWpos = childTwoTrans.WorldPosition;
-            Assert.That(oldWpos, Is.EqualTo(newWpos));
+            oldWpos = XformSystem.GetWorldPosition(childTwoTrans);
+            XformSystem.SetParent(childTwo, childTwoTrans, childOne, parentXform: childOneTrans);
+            newWpos = XformSystem.GetWorldPosition(childTwoTrans);
+            Assert.That(oldWpos, NUnit.Framework.Is.EqualTo(newWpos));
         }
 
         /// <summary>
@@ -195,19 +184,19 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void ParentRotateTest()
         {
             // Arrange
-            var parent = EntityManager.SpawnEntity("dummy", InitialPos);
-            var child = EntityManager.SpawnEntity("dummy", InitialPos);
+            var parent = EntityManager.SpawnEntity(null, InitialPos);
+            var child = EntityManager.SpawnEntity(null, InitialPos);
             var parentTrans = EntityManager.GetComponent<TransformComponent>(parent);
             var childTrans = EntityManager.GetComponent<TransformComponent>(child);
-            parentTrans.WorldPosition = new Vector2(0, 0);
-            childTrans.WorldPosition = new Vector2(2, 0);
-            childTrans.AttachParent(parentTrans);
+            XformSystem.SetWorldPosition(parentTrans, new Vector2(0, 0));
+            XformSystem.SetWorldPosition(childTrans, new Vector2(2, 0));
+            XformSystem.SetParent(child, childTrans, parent, parentXform: parentTrans);
 
             //Act
             parentTrans.LocalRotation = new Angle(MathHelper.Pi / 2);
 
             //Assert
-            var result = childTrans.WorldPosition;
+            var result = XformSystem.GetWorldPosition(childTrans);
             Assert.Multiple(() =>
             {
                 Assert.That(MathHelper.CloseToPercent(result.X, 0));
@@ -222,19 +211,19 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void ParentTransRotateTest()
         {
             // Arrange
-            var parent = EntityManager.SpawnEntity("dummy", InitialPos);
-            var child = EntityManager.SpawnEntity("dummy", InitialPos);
+            var parent = EntityManager.SpawnEntity(null, InitialPos);
+            var child = EntityManager.SpawnEntity(null, InitialPos);
             var parentTrans = EntityManager.GetComponent<TransformComponent>(parent);
             var childTrans = EntityManager.GetComponent<TransformComponent>(child);
-            parentTrans.WorldPosition = new Vector2(1, 1);
-            childTrans.WorldPosition = new Vector2(2, 1);
-            childTrans.AttachParent(parentTrans);
+            XformSystem.SetWorldPosition(parentTrans, new Vector2(1, 1));
+            XformSystem.SetWorldPosition(childTrans, new Vector2(2, 1));
+            XformSystem.SetParent(child, childTrans, parent, parentXform: parentTrans);
 
             //Act
             parentTrans.LocalRotation = new Angle(MathHelper.Pi / 2);
 
             //Assert
-            var result = childTrans.WorldPosition;
+            var result = XformSystem.GetWorldPosition(childTrans);
             Assert.Multiple(() =>
             {
                 Assert.That(MathHelper.CloseToPercent(result.X, 1));
@@ -249,30 +238,30 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void PositionCompositionTest()
         {
             // Arrange
-            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node4 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node1 = EntityManager.SpawnEntity(null, InitialPos);
+            var node2 = EntityManager.SpawnEntity(null, InitialPos);
+            var node3 = EntityManager.SpawnEntity(null, InitialPos);
+            var node4 = EntityManager.SpawnEntity(null, InitialPos);
 
             var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
             var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
             var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
             var node4Trans = EntityManager.GetComponent<TransformComponent>(node4);
 
-            node1Trans.WorldPosition = new Vector2(0, 0);
-            node2Trans.WorldPosition = new Vector2(1, 1);
-            node3Trans.WorldPosition = new Vector2(2, 2);
-            node4Trans.WorldPosition = new Vector2(0, 2);
+            XformSystem.SetWorldPosition(node1Trans, new Vector2(0, 0));
+            XformSystem.SetWorldPosition(node2Trans, new Vector2(1, 1));
+            XformSystem.SetWorldPosition(node3Trans, new Vector2(2, 2));
+            XformSystem.SetWorldPosition(node4Trans, new Vector2(0, 2));
 
-            node2Trans.AttachParent(node1Trans);
-            node3Trans.AttachParent(node2Trans);
-            node4Trans.AttachParent(node3Trans);
+            XformSystem.SetParent(node2, node2Trans, node1, parentXform: node1Trans);
+            XformSystem.SetParent(node3, node3Trans, node2, parentXform: node2Trans);
+            XformSystem.SetParent(node4, node4Trans, node3, parentXform: node3Trans);
 
             //Act
             node1Trans.LocalRotation = new Angle(MathHelper.Pi / 2);
 
             //Assert
-            var result = node4Trans.WorldPosition;
+            var result = XformSystem.GetWorldPosition(node4Trans);
 
             Assert.Multiple(() =>
             {
@@ -288,33 +277,33 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void ParentLocalPositionRoundingErrorTest()
         {
             // Arrange
-            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node1 = EntityManager.SpawnEntity(null, InitialPos);
+            var node2 = EntityManager.SpawnEntity(null, InitialPos);
+            var node3 = EntityManager.SpawnEntity(null, InitialPos);
 
             var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
             var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
             var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
 
-            node1Trans.WorldPosition = new Vector2(0, 0);
-            node2Trans.WorldPosition = new Vector2(1, 1);
-            node3Trans.WorldPosition = new Vector2(2, 2);
+            XformSystem.SetWorldPosition(node1Trans, new Vector2(0, 0));
+            XformSystem.SetWorldPosition(node2Trans, new Vector2(1, 1));
+            XformSystem.SetWorldPosition(node3Trans, new Vector2(2, 2));
 
-            node2Trans.AttachParent(node1Trans);
-            node3Trans.AttachParent(node2Trans);
+            XformSystem.SetParent(node1, node1Trans, node2, parentXform: node2Trans);
+            XformSystem.SetParent(node2, node2Trans, node3, parentXform: node3Trans);
 
             // Act
-            var oldWpos = node3Trans.WorldPosition;
+            var oldWpos = XformSystem.GetWorldPosition(node3Trans);
 
             for (var i = 0; i < 10000; i++)
             {
                 var dx = i % 2 == 0 ? 5 : -5;
-                node1Trans.LocalPosition += new Vector2(dx, dx);
-                node2Trans.LocalPosition += new Vector2(dx, dx);
-                node3Trans.LocalPosition += new Vector2(dx, dx);
+                XformSystem.SetLocalPosition(node1, node1Trans.LocalPosition + new Vector2(dx, dx), node1Trans);
+                XformSystem.SetLocalPosition(node2, node2Trans.LocalPosition + new Vector2(dx, dx), node2Trans);
+                XformSystem.SetLocalPosition(node3, node3Trans.LocalPosition + new Vector2(dx, dx), node3Trans);
             }
 
-            var newWpos = node3Trans.WorldPosition;
+            var newWpos = XformSystem.GetWorldPosition(node3Trans);
 
             // Assert
             Assert.Multiple(() =>
@@ -333,23 +322,23 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
 
             // Arrange
-            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node1 = EntityManager.SpawnEntity(null, InitialPos);
+            var node2 = EntityManager.SpawnEntity(null, InitialPos);
+            var node3 = EntityManager.SpawnEntity(null, InitialPos);
 
             var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
             var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
             var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
 
-            node1Trans.WorldPosition = new Vector2(0, 0);
-            node2Trans.WorldPosition = new Vector2(1, 1);
-            node3Trans.WorldPosition = new Vector2(2, 2);
+            XformSystem.SetWorldPosition(node1Trans, new Vector2(0, 0));
+            XformSystem.SetWorldPosition(node2Trans, new Vector2(1, 1));
+            XformSystem.SetWorldPosition(node3Trans, new Vector2(2, 2));
 
-            node2Trans.AttachParent(node1Trans);
-            node3Trans.AttachParent(node2Trans);
+            XformSystem.SetParent(node2, node2Trans, node1, parentXform: node1Trans);
+            XformSystem.SetParent(node3, node3Trans, node2, parentXform: node2Trans);
 
             // Act
-            var oldWpos = node3Trans.WorldPosition;
+            var oldWpos = XformSystem.GetWorldPosition(node3Trans);
 
             for (var i = 0; i < 100; i++)
             {
@@ -358,7 +347,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
                 node3Trans.LocalRotation += new Angle(MathHelper.Pi);
             }
 
-            var newWpos = node3Trans.WorldPosition;
+            var newWpos = XformSystem.GetWorldPosition(node3Trans);
 
             //NOTE: Yes, this does cause a non-zero error
 
@@ -366,8 +355,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             Assert.Multiple(() =>
             {
-                Assert.That(MathHelper.CloseToPercent(oldWpos.X, newWpos.Y));
-                Assert.That(MathHelper.CloseToPercent(oldWpos.Y, newWpos.Y));
+                Assert.That(MathHelper.CloseToPercent(oldWpos.X, newWpos.Y, 0.0001f));
+                Assert.That(MathHelper.CloseToPercent(oldWpos.Y, newWpos.Y, 0.0001f));
             });
         }
 
@@ -380,31 +369,31 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             // Arrange
             var control = Matrix3.Identity;
 
-            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node4 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node1 = EntityManager.SpawnEntity(null, InitialPos);
+            var node2 = EntityManager.SpawnEntity(null, InitialPos);
+            var node3 = EntityManager.SpawnEntity(null, InitialPos);
+            var node4 = EntityManager.SpawnEntity(null, InitialPos);
 
             var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
             var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
             var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
             var node4Trans = EntityManager.GetComponent<TransformComponent>(node4);
 
-            node1Trans.WorldPosition = new Vector2(0, 0);
-            node2Trans.WorldPosition = new Vector2(1, 1);
-            node3Trans.WorldPosition = new Vector2(2, 2);
-            node4Trans.WorldPosition = new Vector2(0, 2);
+            XformSystem.SetWorldPosition(node1Trans, new Vector2(0, 0));
+            XformSystem.SetWorldPosition(node2Trans, new Vector2(1, 1));
+            XformSystem.SetWorldPosition(node3Trans, new Vector2(2, 2));
+            XformSystem.SetWorldPosition(node4Trans, new Vector2(0, 2));
 
-            node2Trans.AttachParent(node1Trans);
-            node3Trans.AttachParent(node2Trans);
-            node4Trans.AttachParent(node3Trans);
+            XformSystem.SetParent(node2, node2Trans, node1, parentXform: node1Trans);
+            XformSystem.SetParent(node3, node3Trans, node2, parentXform: node2Trans);
+            XformSystem.SetParent(node4, node4Trans, node3, parentXform: node3Trans);
 
             //Act
             node1Trans.LocalRotation = new Angle(MathHelper.Pi / 6.37);
-            node1Trans.WorldPosition = new Vector2(1, 1);
+            XformSystem.SetWorldPosition(node1Trans, new Vector2(1, 1));
 
-            var worldMat = node4Trans.WorldMatrix;
-            var invWorldMat = node4Trans.InvWorldMatrix;
+            var worldMat = XformSystem.GetWorldMatrix(node4Trans);
+            var invWorldMat = XformSystem.GetInvWorldMatrix(node4Trans);
 
             Matrix3.Multiply(in worldMat, in invWorldMat, out var leftVerifyMatrix);
             Matrix3.Multiply(in invWorldMat, in worldMat, out var rightVerifyMatrix);
@@ -428,16 +417,16 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void WorldRotationTest()
         {
             // Arrange
-            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node1 = EntityManager.SpawnEntity(null, InitialPos);
+            var node2 = EntityManager.SpawnEntity(null, InitialPos);
+            var node3 = EntityManager.SpawnEntity(null, InitialPos);
 
             var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
             var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
             var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
 
-            node2Trans.AttachParent(node1Trans);
-            node3Trans.AttachParent(node2Trans);
+            XformSystem.SetParent(node2, node2Trans, node1, parentXform: node1Trans);
+            XformSystem.SetParent(node3, node3Trans, node2, parentXform: node2Trans);
 
             node1Trans.LocalRotation = Angle.FromDegrees(0);
             node2Trans.LocalRotation = Angle.FromDegrees(45);
@@ -447,7 +436,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             node1Trans.LocalRotation = Angle.FromDegrees(135);
 
             // Assert (135 + 45 + 45 = 225)
-            var result = node3Trans.WorldRotation;
+            var result = XformSystem.GetWorldRotation(node3Trans);
             Assert.That(result, new ApproxEqualityConstraint(Angle.FromDegrees(225)));
         }
 
@@ -457,22 +446,22 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [Test]
         public void MatrixUpdateTest()
         {
-            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
-            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node1 = EntityManager.SpawnEntity(null, InitialPos);
+            var node2 = EntityManager.SpawnEntity(null, InitialPos);
+            var node3 = EntityManager.SpawnEntity(null, InitialPos);
 
             var node1Trans = EntityManager.GetComponent<TransformComponent>(node1);
             var node2Trans = EntityManager.GetComponent<TransformComponent>(node2);
             var node3Trans = EntityManager.GetComponent<TransformComponent>(node3);
 
-            node2Trans.AttachParent(node1Trans);
-            node3Trans.AttachParent(node2Trans);
+            XformSystem.SetParent(node2, node2Trans, node1, parentXform: node1Trans);
+            XformSystem.SetParent(node3, node3Trans, node2, parentXform: node2Trans);
 
-            node3Trans.LocalPosition = new Vector2(5, 5);
-            node2Trans.LocalPosition = new Vector2(5, 5);
-            node1Trans.LocalPosition = new Vector2(5, 5);
+            XformSystem.SetLocalPosition(node3, new Vector2(5, 5), node3Trans);
+            XformSystem.SetLocalPosition(node2, new Vector2(5, 5), node2Trans);
+            XformSystem.SetLocalPosition(node1, new Vector2(5, 5), node1Trans);
 
-            Assert.That(node3Trans.WorldPosition, new ApproxEqualityConstraint(new Vector2(15, 15)));
+            Assert.That(XformSystem.GetWorldPosition(node3Trans), new ApproxEqualityConstraint(new Vector2(15, 15)));
         }
 
         /*

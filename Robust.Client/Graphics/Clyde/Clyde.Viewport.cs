@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -197,6 +198,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             IRenderTexture IClydeViewport.RenderTarget => RenderTarget;
+            IRenderTexture IClydeViewport.LightRenderTarget => LightRenderTarget;
             public IEye? Eye { get; set; }
         }
     }

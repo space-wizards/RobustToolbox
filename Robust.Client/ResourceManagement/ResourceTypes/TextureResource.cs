@@ -1,6 +1,8 @@
 ﻿using System.IO;
 using System.Threading;
 using Robust.Client.Graphics;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -18,10 +20,8 @@ namespace Robust.Client.ResourceManagement
 
         public Texture Texture => _texture;
 
-        public override void Load(IResourceCache cache, ResPath path)
+        public override void Load(IDependencyCollection dependencies, ResPath path)
         {
-            var clyde = IoCManager.Resolve<IClyde>();
-
             if (path.Directory.Filename.EndsWith(".rsi"))
             {
                 Logger.WarningS(
@@ -32,12 +32,12 @@ namespace Robust.Client.ResourceManagement
 
             var data = new LoadStepData {Path = path};
 
-            LoadPreTexture(cache, data);
-            LoadTexture(clyde, data);
-            LoadFinish(cache, data);
+            LoadPreTexture(dependencies.Resolve<IResourceManager>(), data);
+            LoadTexture(dependencies.Resolve<IClyde>(), data);
+            LoadFinish(dependencies.Resolve<IResourceCache>(), data);
         }
 
-        internal static void LoadPreTexture(IResourceCache cache, LoadStepData data)
+        internal static void LoadPreTexture(IResourceManager cache, LoadStepData data)
         {
             using (var stream = cache.ContentFileRead(data.Path))
             {
@@ -64,7 +64,7 @@ namespace Robust.Client.ResourceManagement
             data.Image.Dispose();
         }
 
-        private static TextureLoadParameters? TryLoadTextureParameters(IResourceCache cache, ResPath path)
+        private static TextureLoadParameters? TryLoadTextureParameters(IResourceManager cache, ResPath path)
         {
             var metaPath = path.WithName(path.Filename + ".yml");
             if (cache.TryContentFileRead(metaPath, out var stream))
@@ -91,12 +91,11 @@ namespace Robust.Client.ResourceManagement
             return null;
         }
 
-        public override void Reload(IResourceCache cache, ResPath path, CancellationToken ct = default)
+        public override void Reload(IDependencyCollection dependencies, ResPath path, CancellationToken ct = default)
         {
-            var clyde = IoCManager.Resolve<IClyde>();
-
             var data = new LoadStepData {Path = path};
-            LoadPreTexture(cache, data);
+
+            LoadPreTexture(dependencies.Resolve<IResourceManager>(), data);
 
             if (data.Image.Width == Texture.Width && data.Image.Height == Texture.Height)
             {
@@ -107,7 +106,7 @@ namespace Robust.Client.ResourceManagement
             {
                 // Dimensions do not match, make new texture.
                 _texture.Dispose();
-                LoadTexture(clyde, data);
+                LoadTexture(dependencies.Resolve<IClyde>(), data);
                 _texture = data.Texture;
             }
 

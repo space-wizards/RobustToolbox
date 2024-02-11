@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -64,6 +65,8 @@ namespace Robust.Client.Graphics
         uint? GetX11WindowId();
 
         void RegisterGridEcsEvents();
+
+        void ShutdownGridEcsEvents();
 
         void RunOnWindowThread(Action action);
     }

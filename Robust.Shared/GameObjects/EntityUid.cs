@@ -2,10 +2,8 @@ using System;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -14,15 +12,10 @@ namespace Robust.Shared.GameObjects
     ///     This type contains a network identification number of an entity.
     ///     This can be used by the EntityManager to access an entity
     /// </summary>
-    [Serializable, NetSerializable, CopyByRef]
+    [CopyByRef]
     public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>, ISpanFormattable
     {
-        /// <summary>
-        ///     If this bit is set on a UID, it's client sided.
-        ///     Use <see cref="IsClientSide" /> to check this.
-        /// </summary>
-        internal const int ClientUid = 2 << 29;
-        readonly int _uid;
+        public readonly int Id;
 
         /// <summary>
         ///     An Invalid entity UID you can compare against.
@@ -37,9 +30,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates an instance of this structure, with the given network ID.
         /// </summary>
-        public EntityUid(int uid)
+        public EntityUid(int id)
         {
-            _uid = uid;
+            Id = id;
         }
 
         public bool Valid => IsValid();
@@ -49,14 +42,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public static EntityUid Parse(ReadOnlySpan<char> uid)
         {
-            if (uid.StartsWith("c"))
-            {
-                return new EntityUid(int.Parse(uid[1..]) | ClientUid);
-            }
-            else
-            {
-                return new EntityUid(int.Parse(uid));
-            }
+            return new EntityUid(int.Parse(uid));
         }
 
         public static bool TryParse(ReadOnlySpan<char> uid, out EntityUid entityUid)
@@ -80,19 +66,13 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool IsValid()
         {
-            return _uid > 0;
-        }
-
-        [Pure]
-        public bool IsClientSide()
-        {
-            return (_uid & (2 << 29)) != 0;
+            return Id > 0;
         }
 
         /// <inheritdoc />
         public bool Equals(EntityUid other)
         {
-            return _uid == other._uid;
+            return Id == other.Id;
         }
 
         /// <inheritdoc />
@@ -105,7 +85,12 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return _uid;
+            unchecked
+            {
+                // * 397 for whenever we get versioning back
+                // and avoid hashcode bugs in the interim.
+                return Id.GetHashCode() * 397;
+            }
         }
 
         /// <summary>
@@ -113,7 +98,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public static bool operator ==(EntityUid a, EntityUid b)
         {
-            return a._uid == b._uid;
+            return a.Id == b.Id;
         }
 
         /// <summary>
@@ -130,17 +115,13 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public static explicit operator int(EntityUid self)
         {
-            return self._uid;
+            return self.Id;
         }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            if (IsClientSide())
-            {
-                return $"c{_uid & ~ClientUid}";
-            }
-            return _uid.ToString();
+            return Id.ToString();
         }
 
         public string ToString(string? format, IFormatProvider? formatProvider)
@@ -154,21 +135,13 @@ namespace Robust.Shared.GameObjects
             ReadOnlySpan<char> format,
             IFormatProvider? provider)
         {
-            if (IsClientSide())
-            {
-                return FormatHelpers.TryFormatInto(
-                    destination,
-                    out charsWritten,
-                    $"c{_uid & ~ClientUid}");
-            }
-
-            return _uid.TryFormat(destination, out charsWritten);
+            return Id.TryFormat(destination, out charsWritten);
         }
 
         /// <inheritdoc />
         public int CompareTo(EntityUid other)
         {
-            return _uid.CompareTo(other._uid);
+            return Id.CompareTo(other.Id);
         }
 
         #region ViewVariables
@@ -184,7 +157,7 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (MetaData is {} metaData)
-                    metaData.EntityName = value;
+                    IoCManager.Resolve<IEntityManager>().System<MetaDataSystem>().SetEntityName(this, value, metaData);
             }
         }
 
@@ -194,8 +167,11 @@ namespace Robust.Shared.GameObjects
             get => MetaData?.EntityDescription ?? string.Empty;
             set
             {
-                if (MetaData is {} metaData)
-                    metaData.EntityDescription = value;
+                if (MetaData is { } metaData)
+                {
+                    var entManager = IoCManager.Resolve<IEntityManager>();
+                    entManager.System<MetaDataSystem>().SetEntityDescription(this, value, metaData);
+                }
             }
         }
 
@@ -221,8 +197,10 @@ namespace Robust.Shared.GameObjects
 
         // This might seem useless, but it allows you to retrieve remote entities that don't exist on the client.
         [ViewVariables]
-        private EntityUid Uid => this;
+        private EntityUid _uid => this;
 
+        [ViewVariables]
+        private NetEntity _netId => IoCManager.Resolve<IEntityManager>().GetNetEntity(this);
         #endregion
     }
 }

@@ -9,7 +9,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Component that this event relates to.
         /// </summary>
-        public Component Component { get; }
+        public IComponent Component { get; }
 
         /// <summary>
         /// EntityUid of the entity this component belongs to.
@@ -21,7 +21,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="component">The relevant component</param>
         /// <param name="owner">EntityUid of the entity this component belongs to.</param>
-        public ComponentEventArgs(Component component, EntityUid owner)
+        public ComponentEventArgs(IComponent component, EntityUid owner)
         {
             Component = component;
             Owner = owner;
@@ -31,9 +31,9 @@ namespace Robust.Shared.GameObjects
     public readonly struct AddedComponentEventArgs
     {
         public readonly ComponentEventArgs BaseArgs;
-        public readonly CompIdx ComponentType;
+        public readonly ComponentRegistration ComponentType;
 
-        public AddedComponentEventArgs(ComponentEventArgs baseArgs, CompIdx componentType)
+        public AddedComponentEventArgs(ComponentEventArgs baseArgs, ComponentRegistration componentType)
         {
             BaseArgs = baseArgs;
             ComponentType = componentType;
@@ -46,23 +46,13 @@ namespace Robust.Shared.GameObjects
 
         public readonly bool Terminating;
 
-        public RemovedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating)
+        public readonly MetaDataComponent Meta;
+
+        public RemovedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating, MetaDataComponent meta)
         {
             BaseArgs = baseArgs;
             Terminating = terminating;
-        }
-    }
-
-    public readonly struct DeletedComponentEventArgs
-    {
-        public readonly ComponentEventArgs BaseArgs;
-
-        public readonly bool Terminating;
-
-        public DeletedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating)
-        {
-            BaseArgs = baseArgs;
-            Terminating = terminating;
+            Meta = meta;
         }
     }
 }

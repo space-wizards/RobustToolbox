@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Shared.Input.Binding
 {
@@ -33,7 +34,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 return name;
             }
 
-            public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
+            public override bool HandleCmdMessage(IEntityManager entManager, ICommonSession? session, IFullInputCmdMessage message)
             {
                 return false;
             }
@@ -43,7 +44,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
         [TestCase(10,10)]
         public void ResolvesHandlers_WhenNoDependencies(int handlersPerType, int numFunctions)
         {
-            var registry = new CommandBindRegistry();
+            var registry = new CommandBindRegistry(new DummySawmill());
             var allHandlers = new Dictionary<BoundKeyFunction,List<InputCmdHandler>>();
             for (int i = 0; i < numFunctions; i++)
             {
@@ -83,7 +84,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 var expectedHandlers = bkfToExpectedHandlers.Value;
                 HashSet<InputCmdHandler> returnedHandlers = registry.GetHandlers(bkf).ToHashSet();
 
-                CollectionAssert.AreEqual(returnedHandlers, expectedHandlers);
+                Assert.That(expectedHandlers, Is.EqualTo(returnedHandlers).AsCollection);
             }
 
             // type b stuff should no longer fire
@@ -95,7 +96,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 var expectedHandlers = bkfToExpectedHandlers.Value;
                 expectedHandlers.RemoveAll(handler => ((TestInputCmdHandler) handler).ForType == typeof(TypeB));
                 HashSet<InputCmdHandler> returnedHandlers = registry.GetHandlers(bkf).ToHashSet();
-                CollectionAssert.AreEqual(returnedHandlers, expectedHandlers);
+                Assert.That(expectedHandlers, Is.EqualTo(returnedHandlers).AsCollection);
             }
         }
 
@@ -105,7 +106,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
         [TestCase(true, true)]
         public void ResolvesHandlers_WithDependency(bool before, bool after)
         {
-            var registry = new CommandBindRegistry();
+            var registry = new CommandBindRegistry(new DummySawmill());
             var bkf = new BoundKeyFunction("test");
 
             var aHandler1 = new TestInputCmdHandler( );
@@ -187,7 +188,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 }
                 else if (returnedHandler == aHandler2)
                 {
-                    Assert.True(foundB1 && foundB2 && foundC1 && foundC2, "bind registry didn't respect" +
+                    Assert.That(foundB1 && foundB2 && foundC1 && foundC2, "bind registry didn't respect" +
                                                                           " handler dependency order");
                 }
             }
@@ -197,14 +198,14 @@ namespace Robust.UnitTesting.Shared.Input.Binding
             var returnedHandlerSet = new HashSet<InputCmdHandler>(returnedHandlers);
             foreach (var expectedHandler in expectedHandlers)
             {
-                Assert.True(returnedHandlerSet.Contains(expectedHandler));
+                Assert.That(returnedHandlerSet.Contains(expectedHandler));
             }
         }
 
         [Test]
         public void ThrowsError_WhenCircularDependency()
         {
-            var registry = new CommandBindRegistry();
+            var registry = new CommandBindRegistry(new DummySawmill());
             var bkf = new BoundKeyFunction("test");
 
             var aHandler1 = new TestInputCmdHandler();

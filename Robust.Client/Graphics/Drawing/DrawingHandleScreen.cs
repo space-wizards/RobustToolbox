@@ -2,7 +2,9 @@ using System;
 using System.Numerics;
 using System.Text;
 using Robust.Client.GameObjects;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -11,6 +13,79 @@ namespace Robust.Client.Graphics
     {
         protected DrawingHandleScreen(Texture white) : base(white)
         {
+        }
+
+        /// <summary>
+        /// Simialr to DrawLine but has dashes interspersed.
+        /// </summary>
+        /// <param name="offset">Offset from the start of the line.</param>
+        /// <param name="dashSize">How long a dash is.</param>
+        /// <param name="gapSize">How long the gap between dashes is.</param>
+        public void DrawDottedLine(Vector2 from, Vector2 to, Color color, float offset = 0f, float dashSize = 8f, float gapSize = 2f)
+        {
+            var lineVector = to - from;
+
+            // No drawing for you.
+            if (lineVector.LengthSquared() < 10f * float.Epsilon)
+                return;
+
+            var lineAndGap = gapSize + dashSize;
+            var lines = new ValueList<Vector2>();
+
+            // Minimum distance.
+            if (lineVector.Length() < lineAndGap)
+            {
+                lines.Add(from);
+                lines.Add(to);
+            }
+            else
+            {
+                var maxLength = lineVector.Length();
+                var normalizedLine = lineVector.Normalized();
+                var dashVector = normalizedLine * dashSize;
+                var gapVector = normalizedLine * gapSize;
+
+                var position = from;
+                offset %= (dashSize + gapSize);
+                var length = offset;
+                var dashLength = dashSize;
+
+                // If offset is less than gap size then start with a gap
+                // otherwise start with a partial line
+                if (offset > 0f)
+                {
+                    if (offset < gapSize)
+                    {
+                        position += normalizedLine * offset;
+                        length += offset;
+                    }
+                    else
+                    {
+                        dashLength = (offset - gapSize);
+                    }
+                }
+
+                while (length < maxLength)
+                {
+                    lines.Add(position);
+
+                    position += normalizedLine * dashLength;
+                    var lengthFromStart = (position - from).Length();
+
+                    // if over length then cap the thing.
+                    if (lengthFromStart > maxLength)
+                    {
+                        position = to;
+                    }
+
+                    lines.Add(position);
+                    dashLength = dashVector.Length();
+                    position += gapVector;
+                    length = (position - from).Length();
+                }
+            }
+
+            DrawPrimitives(DrawPrimitiveTopology.LineList, lines.Span, color);
         }
 
         public abstract void DrawRect(UIBox2 rect, Color color, bool filled = true);
@@ -113,9 +188,9 @@ namespace Robust.Client.Graphics
             {
                 if (rune == new Rune('\n'))
                 {
-                    baseLine.X = 0f;
                     baseLine.Y += lineHeight;
                     advanceTotal.Y += lineHeight;
+                    baseLine.X = 0f;
                     continue;
                 }
 
@@ -125,8 +200,8 @@ namespace Robust.Client.Graphics
                     continue;
 
                 var advance = metrics.Value.Advance;
-                advanceTotal.X += advance;
                 baseLine += new Vector2(advance, 0);
+                advanceTotal.X = MathF.Max(baseLine.X, advanceTotal.X);
             }
 
             return advanceTotal;
@@ -154,7 +229,7 @@ namespace Robust.Client.Graphics
             Vector2 scale,
             Angle? worldRot,
             Angle eyeRotation = default,
-            Direction? overrideDirection = null,
+            Shared.Maths.Direction? overrideDirection = null,
             SpriteComponent? sprite = null,
             TransformComponent? xform = null,
             SharedTransformSystem? xformSystem = null);

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -52,6 +53,16 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> NetReceiveBufferSize =
             CVarDef.Create("net.receivebuffersize", 131071, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Size of the pool for Lidgren's array buffers to send messages.
+        /// Set to 0 to disable pooling; max is 8192.
+        /// </summary>
+        /// <remarks>
+        /// Higher just means more potentially wasted space and slower pool retrieval.
+        /// </remarks>
+        public static readonly CVarDef<int> NetPoolSize =
+            CVarDef.Create("net.pool_size", 512, CVar.CLIENT | CVar.SERVER);
 
         /// <summary>
         /// Maximum UDP payload size to send.
@@ -120,6 +131,13 @@ namespace Robust.Shared
             CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// The maximum size of the game state buffer. If this is exceeded the client will request a full game state.
+        /// Values less than <see cref="GameStateProcessor.MinimumMaxBufferSize"/> will be ignored.
+        /// </summary>
+        public static readonly CVarDef<int> NetMaxBufferSize =
+            CVarDef.Create("net.max_buffer_size", 512, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// Enable verbose game state/networking logging.
         /// </summary>
         public static readonly CVarDef<bool> NetLogging =
@@ -166,11 +184,32 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// If false, this will run more parts of PVS synchronously. This will generally slow it down, can be useful
+        /// for collecting tick timing metrics.
+        /// </summary>
+        public static readonly CVarDef<bool> NetPvsAsync =
+            CVarDef.Create("net.pvs_async", true, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
         /// View size to take for PVS calculations,
         /// as the size of the sides of a square centered on the view points of clients.
         /// </summary>
         public static readonly CVarDef<float> NetMaxUpdateRange =
-            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("net.pvs_range", 25f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Chunks whose centre is further than this distance away from a player's eye will contain fewer entities.
+        /// This has no effect if it is smaller than <see cref="NetMaxUpdateRange"/>
+        /// </summary>
+        public static readonly CVarDef<float> NetLowLodRange =
+            CVarDef.Create("net.low_lod_distance", 100f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Maximum allowed delay between the current tick and a client's last acknowledged tick before we send the
+        /// next game state reliably and simply force update the acked tick,
+        /// </summary>
+        public static readonly CVarDef<int> NetForceAckThreshold =
+            CVarDef.Create("net.force_ack_threshold", 60, CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
         /// This limits the number of new entities that can be sent to a client in a single game state. This exists to
@@ -197,7 +236,7 @@ namespace Robust.Shared
         /// <summary>
         /// ZSTD compression level to use when compressing game states. Used by both networking and replays.
         /// </summary>
-        public static readonly CVarDef<int> NetPVSCompressLevel =
+        public static readonly CVarDef<int> NetPvsCompressLevel =
             CVarDef.Create("net.pvs_compress_level", 3, CVar.ARCHIVE);
 
         /// <summary>
@@ -282,6 +321,12 @@ namespace Robust.Shared
         /// 0 = no packets duplicated, 1 = all packets duplicated.
         /// </summary>
         public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
+
+        /// <summary>
+        /// When using Happy Eyeballs to try both IPv6 over IPv4, the delay that IPv4 gets to get less priority.
+        /// </summary>
+        public static readonly CVarDef<float> NetHappyEyeballsDelay =
+            CVarDef.Create("net.happy_eyeballs_delay", 0.025f, CVar.CLIENTONLY);
 
         /**
          * SUS
@@ -987,7 +1032,7 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<int> AudioAttenuation =
-            CVarDef.Create("audio.attenuation", (int) Attenuation.Default, CVar.REPLICATED | CVar.ARCHIVE);
+            CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Audio device to try to output audio to by default.
@@ -999,13 +1044,16 @@ namespace Robust.Shared
         /// Master volume for audio output.
         /// </summary>
         public static readonly CVarDef<float> AudioMasterVolume =
-            CVarDef.Create("audio.mastervolume", 1.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("audio.mastervolume", 0.50f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Maximum raycast distance for audio occlusion.
         /// </summary>
         public static readonly CVarDef<float> AudioRaycastLength =
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        public static readonly CVarDef<float> AudioZOffset =
+            CVarDef.Create("audio.z_offset", -5f, CVar.REPLICATED);
 
         /*
          * PLAYER
@@ -1139,6 +1187,11 @@ namespace Robust.Shared
         public static readonly CVarDef<string> InterfaceTheme =
             CVarDef.Create("interface.theme", "", CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        /// <summary>
+        /// Should UI have audio at all.
+        /// </summary>
+        public static readonly CVarDef<bool> InterfaceAudio =
+            CVarDef.Create("interface.audio", true, CVar.REPLICATED);
 
         /// <summary>
         ///Minimum resolution to start clamping autoscale to 1
@@ -1189,10 +1242,10 @@ namespace Robust.Shared
             CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY);
 
         public static readonly CVarDef<string> DiscordRichPresenceMainIconId =
-            CVarDef.Create("discord.rich_main_icon_id", "devstation", CVar.CLIENTONLY);
+            CVarDef.Create("discord.rich_main_icon_id", "devstation", CVar.SERVER | CVar.REPLICATED);
 
         public static readonly CVarDef<string> DiscordRichPresenceSecondIconId =
-            CVarDef.Create("discord.rich_second_icon_id", "logo", CVar.CLIENTONLY);
+            CVarDef.Create("discord.rich_second_icon_id", "logo", CVar.SERVER | CVar.REPLICATED);
 
         /*
          * RES
@@ -1268,16 +1321,17 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<float> MidiVolume =
-            CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("midi.volume", 0.50f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
-        public static readonly CVarDef<int> MidiMinRendererParallel =
-            CVarDef.Create("midi.min_renderers_parallel_update", 3, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        public static readonly CVarDef<float> MidiPositionUpdateDelay =
-            CVarDef.Create("midi.position_update_delay", 0.125f, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        public static readonly CVarDef<float> MidiOcclusionUpdateDelay =
-            CVarDef.Create("midi.occlusion_update_delay", 0.25f, CVar.CLIENTONLY | CVar.ARCHIVE);
+        /// <summary>
+        /// Controls amount of CPU cores and (by extension) polyphony for Fluidsynth.
+        /// </summary>
+        /// <remarks>
+        /// You probably don't want to set this to be multithreaded, the way Fluidsynth's multithreading works is
+        /// probably worse-than-nothing for Robust's usage.
+        /// </remarks>
+        public static readonly CVarDef<int> MidiParallelism =
+            CVarDef.Create("midi.parallelism", 1, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * HUB
@@ -1297,10 +1351,10 @@ namespace Robust.Shared
             CVarDef.Create("hub.tags", "", CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
-        /// URL of the master hub server to advertise to.
+        /// Comma-separated list of URLs of hub servers to advertise to.
         /// </summary>
-        public static readonly CVarDef<string> HubMasterUrl =
-            CVarDef.Create("hub.master_url", "https://central.spacestation14.io/hub/", CVar.SERVERONLY);
+        public static readonly CVarDef<string> HubUrls =
+            CVarDef.Create("hub.hub_urls", "https://central.spacestation14.io/hub/", CVar.SERVERONLY);
 
         /// <summary>
         /// URL of this server to advertise.
@@ -1443,14 +1497,14 @@ namespace Robust.Shared
         /// <summary>
         /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
-        public static readonly CVarDef<int> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size",
-            1024 * 256, CVar.ARCHIVE);
+        public static readonly CVarDef<long> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size",
+            1024L * 256, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum uncompressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
-        public static readonly CVarDef<int> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
-            1024 * 1024, CVar.ARCHIVE);
+        public static readonly CVarDef<long> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
+            1024L * 1024, CVar.ARCHIVE);
 
         /// <summary>
         /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data
@@ -1509,8 +1563,8 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ReplayDynamicalScrubbing = CVarDef.Create("replay.dynamical_scrubbing", true);
 
         /// <summary>
-        /// When recording replays,
-        /// should we attempt to make a valid content bundle that can be directly executed by the launcher?
+        /// When recording replays, should we attempt to make a valid content bundle that can be directly executed by
+        /// the launcher?
         /// </summary>
         /// <remarks>
         /// This requires the server's build information to be sufficiently filled out.
@@ -1518,6 +1572,16 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ReplayMakeContentBundle =
             CVarDef.Create("replay.make_content_bundle", true);
 
+        /// <summary>
+        /// If true, this will cause the replay client to ignore some errors while loading a replay file.
+        /// </summary>
+        /// <remarks>
+        /// This might make otherwise broken replays playable, but ignoring these errors is also very likely to
+        /// cause unexpected and confusing errors elsewhere. By default this is disabled so that users report the
+        /// original exception rather than sending people on a wild-goose chase to find a non-existent bug.
+        /// </remarks>
+        public static readonly CVarDef<bool> ReplayIgnoreErrors =
+            CVarDef.Create("replay.ignore_errors", false, CVar.CLIENTONLY | CVar.ARCHIVE);
         /*
          * CFG
          */

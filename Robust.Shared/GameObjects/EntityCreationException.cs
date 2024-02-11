@@ -24,11 +24,5 @@ namespace Robust.Shared.GameObjects
         public EntityCreationException(string message, Exception inner) : base(message, inner)
         {
         }
-
-        protected EntityCreationException(
-            SerializationInfo info,
-            StreamingContext context) : base(info, context)
-        {
-        }
     }
 }

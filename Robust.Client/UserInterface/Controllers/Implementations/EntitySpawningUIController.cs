@@ -10,6 +10,7 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using static Robust.Client.UserInterface.Controls.BaseButton;
 using static Robust.Client.UserInterface.Controls.LineEdit;
@@ -199,7 +200,7 @@ public sealed class EntitySpawningUIController : UIController
                 continue;
             }
 
-            if (prototype.NoSpawn)
+            if (prototype.HideSpawnMenu)
             {
                 continue;
             }
@@ -212,7 +213,12 @@ public sealed class EntitySpawningUIController : UIController
             _shownEntities.Add(prototype);
         }
 
-        _shownEntities.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+        _shownEntities.Sort((a, b) => {
+                var namesComparation = string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+                if (namesComparation == 0)
+                    return string.Compare(a.EditorSuffix, b.EditorSuffix, StringComparison.Ordinal);
+                return namesComparation;
+        });
 
         _window.PrototypeList.TotalItemCount = _shownEntities.Count;
         _window.PrototypeScrollContainer.SetScrollValue(new Vector2(0, 0));

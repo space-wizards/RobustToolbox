@@ -41,7 +41,8 @@ namespace Robust.Client.ViewVariables.Instances
         private const int TabServerComponents = 3;
 
         private TabContainer _tabs = default!;
-        private EntityUid _entity = default!;
+        private EntityUid _entity;
+        private NetEntity _netEntity = default!;
 
         private ViewVariablesAddWindow? _addComponentWindow;
         private bool _addComponentServer;
@@ -71,7 +72,8 @@ namespace Robust.Client.ViewVariables.Instances
 
         public override void Initialize(DefaultWindow window, object obj)
         {
-            _entity = (EntityUid) obj;
+            _netEntity = (NetEntity) obj;
+            _entity = _entityManager.GetEntity(_netEntity);
 
             var scrollContainer = new ScrollContainer();
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
@@ -118,7 +120,11 @@ namespace Robust.Client.ViewVariables.Instances
                     };
                     top.HorizontalExpand = true;
                     hBox.AddChild(top);
-                    hBox.AddChild(new SpriteView {Sprite = sprite, OverrideDirection = Direction.South});
+
+                    var view = new SpriteView { OverrideDirection = Direction.South };
+                    view.SetEntity(_entity);
+                    hBox.AddChild(view);
+
                     vBoxContainer.AddChild(hBox);
                 }
                 else
@@ -163,7 +169,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             PopulateClientComponents();
 
-            if (!_entity.IsClientSide())
+            if (!_entityManager.IsClientSide(_entity))
             {
                 _serverVariables = new BoxContainer
                 {
@@ -268,12 +274,12 @@ namespace Robust.Client.ViewVariables.Instances
                 button.OnPressed += _ =>
                 {
                     ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entity, componentType.FullName));
+                        new ViewVariablesComponentSelector(_netEntity, componentType.FullName));
                 };
                 removeButton.OnPressed += _ =>
                 {
                     // We send a command to remove the component.
-                    IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"rmcomp {_entity} {componentType.ComponentName}");
+                    IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"rmcomp {_netEntity} {componentType.ComponentName}");
                     PopulateServerComponents();
                 };
                 button.AddChild(removeButton);
@@ -417,7 +423,7 @@ namespace Robust.Client.ViewVariables.Instances
             if (_addComponentServer)
             {
                 // Attempted to add a component to the server entity... We send a command.
-                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_entity} {eventArgs.Entry}");
+                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_netEntity} {eventArgs.Entry}");
                 PopulateServerComponents();
                 _addComponentWindow?.Populate(await GetValidServerComponentsForAdding());
                 return;
@@ -429,8 +435,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             try
             {
-                var comp = (Component) componentFactory.GetComponent(registration.Type);
-                comp.Owner = _entity;
+                var comp = componentFactory.GetComponent(registration.Type);
                 _entityManager.AddComponent(_entity, comp);
             }
             catch (Exception e)
@@ -467,8 +472,7 @@ namespace Robust.Client.ViewVariables.Instances
             _entitySession = session;
 
             _membersBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobMembers>(session, new ViewVariablesRequestMembers());
-
-            var uid = (EntityUid) _membersBlob.MemberGroups.SelectMany(p => p.Item2).Single(p => p.Name == "Uid").Value;
+            var uid = (NetEntity) _membersBlob.MemberGroups.SelectMany(p => p.Item2).First(p => p.Value is NetEntity).Value;
 
             Initialize(window, uid);
         }
@@ -504,7 +508,7 @@ namespace Robust.Client.ViewVariables.Instances
                 try
                 {
                     _entitySession =
-                        await ViewVariablesManager.RequestSession(new ViewVariablesEntitySelector(_entity));
+                        await ViewVariablesManager.RequestSession(new ViewVariablesEntitySelector(_netEntity));
                 }
                 catch (SessionDenyException e)
                 {

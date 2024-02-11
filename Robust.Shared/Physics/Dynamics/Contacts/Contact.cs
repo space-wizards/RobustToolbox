@@ -69,6 +69,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public EntityUid EntityA;
         public EntityUid EntityB;
 
+        public string FixtureAId = string.Empty;
+        public string FixtureBId = string.Empty;
+
         public Fixture? FixtureA;
         public Fixture? FixtureB;
 
@@ -284,19 +287,23 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     _manifoldManager.CollideEdgeAndPolygon(ref manifold, (EdgeShape) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.ChainAndCircle:
-                    throw new NotImplementedException();
-                    /*
-                    ChainShape chain = (ChainShape)FixtureA.Shape;
-                    chain.GetChildEdge(_edge, ChildIndexA);
-                    Collision.CollisionManager.CollideEdgeAndCircle(ref manifold, _edge, ref transformA, (CircleShape)FixtureB.Shape, ref transformB);
-                    */
+                {
+                    var chain = (ChainShape) FixtureA!.Shape;
+                    var edge = _manifoldManager.GetContactEdge();
+                    chain.GetChildEdge(ref edge, ChildIndexA);
+                    _manifoldManager.CollideEdgeAndCircle(ref manifold, edge, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
+                    _manifoldManager.ReturnEdge(edge);
+                    break;
+                }
                 case ContactType.ChainAndPolygon:
-                    throw new NotImplementedException();
-                    /*
-                    ChainShape loop2 = (ChainShape)FixtureA.Shape;
-                    loop2.GetChildEdge(_edge, ChildIndexA);
-                    Collision.CollisionManager.CollideEdgeAndPolygon(ref manifold, _edge, ref transformA, (PolygonShape)FixtureB.Shape, ref transformB);
-                    */
+                {
+                    var loop2 = (ChainShape) FixtureA!.Shape;
+                    var edge = _manifoldManager.GetContactEdge();
+                    loop2.GetChildEdge(ref edge, ChildIndexA);
+                    _manifoldManager.CollideEdgeAndPolygon(ref manifold, edge, in transformA, (PolygonShape) FixtureB!.Shape, in transformB);
+                    _manifoldManager.ReturnEdge(edge);
+                    break;
+                }
                 case ContactType.Circle:
                     _manifoldManager.CollideCircles(ref manifold, (PhysShapeCircle) FixtureA!.Shape, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
                     break;
@@ -348,19 +355,27 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
     internal enum ContactFlags : byte
     {
         None = 0,
+
+        /// <summary>
+        /// Is the contact pending its first manifold generation.
+        /// </summary>
+        PreInit = 1 << 0,
+
         /// <summary>
         ///     Has this contact already been added to an island?
         /// </summary>
-        Island = 1 << 0,
+        Island = 1 << 1,
 
         /// <summary>
         ///     Does this contact need re-filtering?
         /// </summary>
-        Filter = 1 << 1,
+        Filter = 1 << 2,
 
         /// <summary>
         /// Is this a special contact for grid-grid collisions
         /// </summary>
-        Grid = 1 << 2,
+        Grid = 1 << 3,
+
+        Deleting = 1 << 4,
     }
 }

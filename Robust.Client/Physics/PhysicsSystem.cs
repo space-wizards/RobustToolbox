@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Physics;
@@ -16,7 +15,6 @@ namespace Robust.Client.Physics
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly IPlayerManager _player = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
 
         public override void Update(float frameTime)
@@ -27,7 +25,7 @@ namespace Robust.Client.Physics
 
         protected override void Cleanup(PhysicsMapComponent component, float frameTime)
         {
-            var toRemove = new List<PhysicsComponent>();
+            var toRemove = new List<Entity<PhysicsComponent>>();
 
             // Because we're not predicting 99% of bodies its sleep timer never gets incremented so we'll just do it ourselves.
             // (and serializing it over the network isn't necessary?)
@@ -39,13 +37,13 @@ namespace Robust.Client.Physics
                 body.SleepTime += frameTime;
                 if (body.SleepTime > TimeToSleep)
                 {
-                    toRemove.Add(body);
+                    toRemove.Add(new Entity<PhysicsComponent>(body.Owner, body));
                 }
             }
 
             foreach (var body in toRemove)
             {
-                SetAwake(body.Owner, body, false);
+                SetAwake(body, false);
             }
 
             base.Cleanup(component, frameTime);
@@ -83,11 +81,8 @@ namespace Robust.Client.Physics
                     continue;
                 }
 
-                xform.PrevPosition = position;
-                xform.PrevRotation = rotation;
-                xform.LerpParent = parentUid;
-                xform.NextPosition = xform.LocalPosition;
-                xform.NextRotation = xform.LocalRotation;
+                // Transform system will handle lerping.
+                _transform.SetLocalPositionRotation(uid, xform.LocalPosition, xform.LocalRotation, xform);
             }
 
             component.LerpData.Clear();

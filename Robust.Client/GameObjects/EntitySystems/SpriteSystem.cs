@@ -44,12 +44,12 @@ namespace Robust.Client.GameObjects
 
         private ISawmill _sawmill = default!;
 
-        internal void Render(EntityUid uid, SpriteComponent sprite, DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
+        internal void Render(EntityUid uid, SpriteComponent sprite, DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition, int? layerIndex = null)
         {
             if (!sprite.IsInert)
                 _queuedFrameUpdate.Add(uid);
 
-            sprite.RenderInternal(drawingHandle, eyeRotation, worldRotation, worldPosition, sprite.EnableDirectionOverride ? sprite.DirectionOverride : null);
+            sprite.RenderInternal(drawingHandle, eyeRotation, worldRotation, worldPosition, sprite.EnableDirectionOverride ? sprite.DirectionOverride : null, layerIndex);
         }
 
         public override void Initialize()

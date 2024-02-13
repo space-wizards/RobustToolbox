@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using Robust.Roslyn.Shared;
 using static Microsoft.CodeAnalysis.SymbolEqualityComparer;
 
 namespace Robust.Analyzers;

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Revert changes to `TextureButton` that broke style property handling.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 210.0.1
+
+### Bugfixes
+
+* Revert changes to `TextureButton` that broke style property handling.
 
 
 ## 210.0.0

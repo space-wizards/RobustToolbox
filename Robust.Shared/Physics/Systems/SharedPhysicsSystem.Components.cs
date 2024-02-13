@@ -186,17 +186,25 @@ public partial class SharedPhysicsSystem
     {
         if (body.Contacts.Count == 0) return;
 
+        // This variable is only used in edge-case scenario when contact flagged Deleting raises
+        // EndCollideEvent which will QueueDelete contact's entity
+        ushort contactsFlaggedDeleting = 0;
         var node = body.Contacts.First;
 
         while (node != null)
         {
             var contact = node.Value;
             node = node.Next;
+
             // Destroy last so the linked-list doesn't get touched.
-            DestroyContact(contact);
+            if (!DestroyContact(contact))
+            {
+                contactsFlaggedDeleting++;
+            }
         }
 
-        DebugTools.Assert(body.Contacts.Count == 0);
+        // This contact will be deleted before SimulateWorld runs since it is already set to be Deleted
+        DebugTools.Assert(body.Contacts.Count == contactsFlaggedDeleting);
     }
 
     /// <summary>

@@ -310,46 +310,38 @@ public abstract partial class SharedPhysicsSystem
                  (fixtureB.CollisionMask & fixtureA.CollisionLayer) == 0x0);
     }
 
-    public void DestroyContact(Contact contact)
+    public bool DestroyContact(Contact contact)
     {
+        if ((contact.Flags & ContactFlags.Deleting) != 0x0)
+            return false;
+
         Fixture fixtureA = contact.FixtureA!;
         Fixture fixtureB = contact.FixtureB!;
         var bodyA = contact.BodyA!;
         var bodyB = contact.BodyB!;
         var aUid = contact.EntityA;
         var bUid = contact.EntityB;
+        contact.Flags |= ContactFlags.Deleting;
 
-        // If the contact is in the process of deletion, don't raise the event
-        // i.e. DestroyContact was called as an aftermath of EndCollideEvent
-        if ((contact.Flags & ContactFlags.Deleting) == 0x0)
+        if (contact.IsTouching)
         {
-            contact.Flags |= ContactFlags.Deleting;
-
-            if (contact.IsTouching)
-            {
-                var ev1 = new EndCollideEvent(aUid, bUid, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
-                var ev2 = new EndCollideEvent(bUid, aUid, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
-                RaiseLocalEvent(aUid, ref ev1);
-                RaiseLocalEvent(bUid, ref ev2);
-            }
-        }
-
-        // If the contact was already deleted by EndCollideEvent - don't proceed
-        if (!_activeContacts.Contains(contact))
-        {
-            return;
+            var ev1 = new EndCollideEvent(aUid, bUid, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
+            var ev2 = new EndCollideEvent(bUid, aUid, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
+            RaiseLocalEvent(aUid, ref ev1);
+            RaiseLocalEvent(bUid, ref ev2);
         }
 
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
         {
             if (bodyA.CanCollide)
-                SetAwake(aUid, bodyA, true);
+                SetAwake((aUid, bodyA), true);
 
             if (bodyB.CanCollide)
-                SetAwake(bUid, bodyB, true);
+                SetAwake((bUid, bodyB), true);
         }
 
         // Remove from the world
+        DebugTools.Assert(_activeContacts.Contains(contact));
         _activeContacts.Remove(contact.MapNode);
 
         // Remove from body 1
@@ -361,10 +353,13 @@ public abstract partial class SharedPhysicsSystem
         // Remove from body 2
         DebugTools.Assert(fixtureB.Contacts.ContainsKey(fixtureA));
         fixtureB.Contacts.Remove(fixtureA);
+        DebugTools.Assert(bodyB.Contacts.Contains(contact.BodyBNode!.Value));
         bodyB.Contacts.Remove(contact.BodyBNode);
 
         // Insert into the pool.
         _contactPool.Return(contact);
+
+        return true;
     }
 
     internal void CollideContacts()

@@ -1,6 +1,8 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
@@ -22,30 +24,39 @@ namespace Robust.Client.Graphics.Clyde;
 internal partial class Clyde
 {
     [Shared.IoC.Dependency] private readonly IParallelManager _parMan = default!;
-    private readonly RefList<SpriteData> _drawingSpriteList = new();
+    private readonly Dictionary<int, RefList<SpriteData>> _drawingSpriteList = new();
     private const int _spriteProcessingBatchSize = 25;
 
-    private void GetSprites(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, out int[] indexList)
+    private void GetSprites(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, out SortedDictionary<int, int[]> layeredIndexList)
     {
+        layeredIndexList = [];
+
         ProcessSpriteEntities(map, view, eye, worldBounds, _drawingSpriteList);
 
-        // We use a separate list for indexing sprites so that the sort is faster.
-        indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
+        var layerIndexes = _drawingSpriteList.ToImmutableSortedDictionary();
 
-        // populate index list
-        for (var i = 0; i < _drawingSpriteList.Count; i++)
-            indexList[i] = i;
+        foreach (var layerIndex in _drawingSpriteList.Keys)
+        {
+            // We use a separate list for indexing sprites so that the sort is faster.
+            layeredIndexList[layerIndex] = ArrayPool<int>.Shared.Rent(_drawingSpriteList[layerIndex].Count);
 
-        // sort index list
-        // TODO better sorting? parallel merge sort?
-        Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
+            // populate index list
+            for (var i = 0; i < _drawingSpriteList[layerIndex].Count; i++)
+                layeredIndexList[layerIndex][i] = i;
+
+            // sort index list
+            // TODO better sorting? parallel merge sort?
+            Array.Sort(layeredIndexList[layerIndex], 0, _drawingSpriteList[layerIndex].Count, new SpriteDrawingOrderComparer(_drawingSpriteList[layerIndex]));
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void ProcessSpriteEntities(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, RefList<SpriteData> list)
+    private void ProcessSpriteEntities(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, Dictionary<int, RefList<SpriteData>> layerRefList)
     {
         var query = _entityManager.GetEntityQuery<TransformComponent>();
         var viewScale = eye.Scale * view.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
+
+
         var treeData = new BatchData()
         {
             Sys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>(),
@@ -63,11 +74,33 @@ internal partial class Clyde
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
         var xformSystem = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
-        foreach (var (treeOwner, comp) in _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().GetIntersectingTrees(map, worldBounds))
+
+        int? lastLayer = null;
+        foreach (var (treeOwner, comp, treeLayer, layerIndex) in _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().GetIntersectingTreeLayers(map, worldBounds))
         {
+
+            if (lastLayer != layerIndex)
+            {
+                lastLayer = layerIndex;
+                index = 0;
+                added = 0;
+            }
+            var currentLayerReflist = layerRefList.GetOrNew(layerIndex);
+
             var treeXform = query.GetComponent(treeOwner);
             var bounds = xformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
             DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
+
+
+            treeLayer.QueryAabb(ref currentLayerReflist,
+                static (ref RefList<SpriteData> state, in ComponentTreeEntry<SpriteComponent> value) =>
+                {
+                    ref var entry = ref state.AllocAdd();
+                    entry.Uid = value.Uid;
+                    entry.Sprite = value.Component;
+                    entry.Xform = value.Transform;
+                    return true;
+                }, bounds, true);
 
             treeData = treeData with
             {
@@ -78,29 +111,19 @@ internal partial class Clyde
                 Cos = MathF.Cos((float)treeXform.LocalRotation),
             };
 
-            comp.Tree.QueryAabb(ref list,
-                static (ref RefList<SpriteData> state, in ComponentTreeEntry<SpriteComponent> value) =>
-                {
-                    ref var entry = ref state.AllocAdd();
-                    entry.Uid = value.Uid;
-                    entry.Sprite = value.Component;
-                    entry.Xform = value.Transform;
-                    return true;
-                }, bounds, true);
-
             // Get bounding boxes & world positions
-            added = list.Count - index;
-            var batches = added/_spriteProcessingBatchSize;
+            added = currentLayerReflist.Count - index;
+            var batches = added / _spriteProcessingBatchSize;
 
             // TODO also do sorting here & use a merge sort later on for y-sorting?
             if (batches > 1)
-                Parallel.For(0, batches, opts, (i) => ProcessSprites(list, index + i * _spriteProcessingBatchSize, _spriteProcessingBatchSize, treeData));
+                Parallel.For(0, batches, opts, (i) => ProcessSprites(currentLayerReflist, index + i * _spriteProcessingBatchSize, _spriteProcessingBatchSize, treeData));
             else
                 batches = 0;
 
             var remainder = added - _spriteProcessingBatchSize * batches;
             if (remainder > 0)
-                ProcessSprites(list, index + batches * _spriteProcessingBatchSize, remainder, treeData);
+                ProcessSprites(currentLayerReflist, index + batches * _spriteProcessingBatchSize, remainder, treeData);
 
             index += batches * _spriteProcessingBatchSize + remainder;
         }
@@ -138,7 +161,7 @@ internal partial class Clyde
             data.WorldRot = rot;
             data.WorldPos = pos;
 
-            var finalRotation = (float) (data.Sprite.NoRotation
+            var finalRotation = (float)(data.Sprite.NoRotation
                 ? data.Sprite.Rotation
                 : data.Sprite.Rotation + rot + batch.ViewRotation);
 
@@ -228,7 +251,7 @@ internal partial class Clyde
         public Vector2 TreePos { get; init; }
         public Angle TreeRot { get; init; }
         public float Sin { get; init; }
-        public float Cos { get;  init; }
+        public float Cos { get; init; }
     }
 
     private sealed class SpriteDrawingOrderComparer : IComparer<int>

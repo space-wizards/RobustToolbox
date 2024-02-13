@@ -125,7 +125,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var comp in comps)
             {
-                if (comp is { LifeStage:  ComponentLifeStage.Added })
+                if (comp is { LifeStage: ComponentLifeStage.Added })
                     LifeInitialize(comp, CompIdx.Index(comp.GetType()));
             }
 
@@ -214,10 +214,10 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 if (!Comp.Initialized)
-                    ((EntityManager) _entMan).LifeInitialize(Comp, CompType);
+                    ((EntityManager)_entMan).LifeInitialize(Comp, CompType);
 
                 if (metadata.EntityInitialized && !Comp.Running)
-                    ((EntityManager) _entMan).LifeStartup(Comp);
+                    ((EntityManager)_entMan).LifeStartup(Comp);
             }
 
             public static implicit operator T(CompInitializeHandle<T> handle)
@@ -1168,8 +1168,8 @@ namespace Robust.Shared.GameObjects
                         continue;
 
                     yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp);
+                        (TComp1)t1Comp,
+                        (TComp2)t2Comp);
                 }
             }
             else
@@ -1189,8 +1189,8 @@ namespace Robust.Shared.GameObjects
                     if (meta.EntityPaused) continue;
 
                     yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp);
+                        (TComp1)t1Comp,
+                        (TComp2)t2Comp);
                 }
             }
         }
@@ -1216,9 +1216,9 @@ namespace Robust.Shared.GameObjects
                         continue;
 
                     yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp,
-                        (TComp3) t3Comp);
+                        (TComp1)t1Comp,
+                        (TComp2)t2Comp,
+                        (TComp3)t3Comp);
                 }
             }
             else
@@ -1241,9 +1241,9 @@ namespace Robust.Shared.GameObjects
                     if (meta.EntityPaused) continue;
 
                     yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp,
-                        (TComp3) t3Comp);
+                        (TComp1)t1Comp,
+                        (TComp2)t2Comp,
+                        (TComp3)t3Comp);
                 }
             }
         }
@@ -1275,10 +1275,10 @@ namespace Robust.Shared.GameObjects
                         continue;
 
                     yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp,
-                        (TComp3) t3Comp,
-                        (TComp4) t4Comp);
+                        (TComp1)t1Comp,
+                        (TComp2)t2Comp,
+                        (TComp3)t3Comp,
+                        (TComp4)t4Comp);
                 }
             }
             else
@@ -1304,10 +1304,10 @@ namespace Robust.Shared.GameObjects
                     if (meta.EntityPaused) continue;
 
                     yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp,
-                        (TComp3) t3Comp,
-                        (TComp4) t4Comp);
+                        (TComp1)t1Comp,
+                        (TComp2)t2Comp,
+                        (TComp3)t3Comp,
+                        (TComp4)t4Comp);
                 }
             }
         }
@@ -1411,7 +1411,7 @@ namespace Robust.Shared.GameObjects
         public TComp1 GetComponent(EntityUid uid)
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
-                return (TComp1) comp;
+                return (TComp1)comp;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
@@ -1420,11 +1420,13 @@ namespace Robust.Shared.GameObjects
         public Entity<TComp1> Get(EntityUid uid)
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
-                return new Entity<TComp1>(uid, (TComp1) comp);
+                return new Entity<TComp1>(uid, (TComp1)comp);
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
 
+
+        // TODO: This should not force a nullable out. If we want a nullable, we should specify that when implementing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
@@ -1444,7 +1446,7 @@ namespace Robust.Shared.GameObjects
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
             {
-                component = (TComp1) comp;
+                component = (TComp1)comp;
                 return true;
             }
 
@@ -1514,7 +1516,7 @@ namespace Robust.Shared.GameObjects
         internal TComp1 GetComponentInternal(EntityUid uid)
         {
             if (_traitDict.TryGetValue(uid, out var comp))
-                return (TComp1) comp;
+                return (TComp1)comp;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
@@ -1544,7 +1546,7 @@ namespace Robust.Shared.GameObjects
         {
             if (_traitDict.TryGetValue(uid, out var comp))
             {
-                component = (TComp1) comp;
+                component = (TComp1)comp;
                 return true;
             }
 

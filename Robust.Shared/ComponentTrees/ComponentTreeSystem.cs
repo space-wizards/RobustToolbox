@@ -10,23 +10,28 @@ using System.Collections.Generic;
 using Robust.Shared.Collections;
 using System.Numerics;
 using Robust.Shared.Map.Components;
+using System.Linq;
 
 namespace Robust.Shared.ComponentTrees;
+
+
+
+#region FLAT
 
 /// <summary>
 ///     Keeps track of <see cref="DynamicTree{T}"/>s for various rendering-related components.
 /// </summary>
 [UsedImplicitly]
 public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
-    where TTreeComp : Component, IComponentTreeComponent<TComp>, new()
-    where TComp : Component, IComponentTreeEntry<TComp>, new()
+where TTreeComp : Component, IComponentTreeComponent<TComp>, new()
+where TComp : Component, IComponentTreeEntry<TComp>, new()
 {
     [Dependency] private readonly RecursiveMoveSystem _recursiveMoveSys = default!;
     [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
     [Dependency] private readonly IMapManager _mapManager = default!;
 
-    private readonly Queue<ComponentTreeEntry<TComp>> _updateQueue = new();
-    private readonly HashSet<EntityUid> _updated = new();
+    protected readonly Queue<ComponentTreeEntry<TComp>> _updateQueue = new();
+    protected readonly HashSet<EntityUid> _updated = new();
     protected EntityQuery<TComp> Query;
 
     /// <summary>
@@ -98,9 +103,9 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     }
 
     private void HandleMove(EntityUid uid, TComp component, ref MoveEvent args)
-        => QueueTreeUpdate(uid, component, args.Component);
+=> QueueTreeUpdate(uid, component, args.Component);
 
-    public void QueueTreeUpdate(EntityUid uid, TComp component, TransformComponent? xform = null)
+    public virtual void QueueTreeUpdate(EntityUid uid, TComp component, TransformComponent? xform = null)
     {
         if (component.TreeUpdateQueued || !Resolve(uid, ref xform))
             return;
@@ -112,10 +117,10 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
     #region Component Management
     protected virtual void OnCompStartup(EntityUid uid, TComp component, ComponentStartup args)
-        => QueueTreeUpdate(uid, component);
+=> QueueTreeUpdate(uid, component);
 
     protected virtual void OnCompRemoved(EntityUid uid, TComp component, ComponentRemove args)
-        => RemoveFromTree(component);
+=> RemoveFromTree(component);
 
     protected virtual void OnTreeAdd(EntityUid uid, TTreeComp component, ComponentAdd args)
     {
@@ -183,6 +188,9 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         {
             var (comp, xform) = entry;
 
+            // Our new tree should belong to either our current grid or our current map
+            var newTreeId = xform.GridUid ?? xform.MapUid;
+
             comp.TreeUpdateQueued = false;
             if (!comp.Running)
                 continue;
@@ -196,43 +204,55 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
                 continue;
             }
 
-            var newTree = xform.GridUid ?? xform.MapUid;
-            if (!trees.TryGetComponent(newTree, out var newTreeComp) && comp.TreeUid == null)
+            // Attempt to grab the tree from the current entry's grid/map
+            if (!trees.TryGetComponent(newTreeId, out var newTreeComp) && comp.TreeUid == null)
                 continue;
 
-            Vector2 pos;
-            Angle rot;
-            if (comp.TreeUid == newTree)
-            {
-                (pos, rot) = XformSystem.GetRelativePositionRotation(
-                    entry.Transform,
-                    newTree!.Value,
-                    xforms);
-
-                newTreeComp!.Tree.Update(entry, ExtractAabb(entry, pos, rot));
-                continue;
-            }
-
-            RemoveFromTree(comp);
-
-            if (newTreeComp == null)
-                return;
-
-            comp.TreeUid = newTree;
-            comp.Tree = newTreeComp.Tree;
-
-            (pos, rot) = XformSystem.GetRelativePositionRotation(
-                entry.Transform,
-                newTree!.Value,
-                xforms);
-
-            newTreeComp.Tree.Add(entry, ExtractAabb(entry, pos, rot));
+            AddOrUpdateTreeEntry(newTreeId!.Value, newTreeComp, entry, xforms);
         }
 
         _updated.Clear();
     }
 
-    private void RemoveFromTree(TComp component)
+    /// <summary>
+    /// Handles updating a given queue entry's tree position.\n
+    /// Removes the component from the tree if it's in a different tree than the one it's being added to.\n
+    /// And then adds or updates the component in the given tree\n
+    /// </summary>
+    /// <remarks> //
+    /// If running in a loop, pass <paramref name="xforms"/> to avoid excessively querying the xForm query
+    /// </remarks>
+    /// <param name="newTreeId"></param>
+    /// <param name="newTreeComp"></param>
+    /// <param name="entry"></param>
+    /// <param name="xforms"></param>
+    protected virtual void AddOrUpdateTreeEntry(EntityUid newTreeId, TTreeComp? newTreeComp, in ComponentTreeEntry<TComp> entry, EntityQuery<TransformComponent>? xforms, DynamicTree<ComponentTreeEntry<TComp>>? tree = null)
+    {
+
+        xforms ??= GetEntityQuery<TransformComponent>();
+
+        // If the component is currently in another tree, remove it
+        if (entry.Component.TreeUid != newTreeId) RemoveFromTree(entry.Component);
+
+        // If we have nothing to add to, then leave
+        if (newTreeComp == null) return;
+
+        // If no tree was passed, get use the newTreeComp's
+        tree ??= newTreeComp.Tree;
+
+        Vector2 pos;
+        Angle rot;
+
+        (pos, rot) = XformSystem.GetRelativePositionRotation(entry.Transform, newTreeId, xforms.Value);
+
+        entry.Component.TreeUid = newTreeId;
+        entry.Component.Tree = tree;
+
+        tree.AddOrUpdate(entry, ExtractAabb(entry, pos, rot));
+
+
+    }
+    protected virtual void RemoveFromTree(TComp component)
     {
         component.Tree?.Remove(new() { Component = component });
         component.Tree = null;
@@ -258,8 +278,9 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     #endregion
 
     #region Queries
+
     public IEnumerable<(EntityUid, TTreeComp)> GetIntersectingTrees(MapId mapId, Box2Rotated worldBounds)
-        => GetIntersectingTrees(mapId, worldBounds.CalcBoundingBox());
+=> GetIntersectingTrees(mapId, worldBounds.CalcBoundingBox());
 
     public IEnumerable<(EntityUid Uid, TTreeComp Comp)> GetIntersectingTrees(MapId mapId, Box2 worldAABB)
     {
@@ -297,7 +318,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     }
 
     public HashSet<ComponentTreeEntry<TComp>> QueryAabb(MapId mapId, Box2 worldBounds, bool approx = true)
-        => QueryAabb(mapId, new Box2Rotated(worldBounds, default, default), approx);
+=> QueryAabb(mapId, new Box2Rotated(worldBounds, default, default), approx);
 
     public HashSet<ComponentTreeEntry<TComp>> QueryAabb(MapId mapId, Box2Rotated worldBounds, bool approx = true)
     {
@@ -344,7 +365,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         TState state, Func<EntityUid, TState, bool> predicate, bool returnOnFirstHit = true)
     {
         if (mapId == MapId.Nullspace)
-            return new ();
+            return new();
 
         var queryState = new QueryState<TState>(maxLength, returnOnFirstHit, state, predicate);
 
@@ -385,7 +406,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         public readonly TState State;
         public readonly Func<EntityUid, TState, bool> Predicate;
 
-        public QueryState(float maxLength, bool returnOnFirstHit, TState state, Func<EntityUid, TState, bool>  predictate)
+        public QueryState(float maxLength, bool returnOnFirstHit, TState state, Func<EntityUid, TState, bool> predictate)
         {
             MaxLength = maxLength;
             ReturnOnFirstHit = returnOnFirstHit;
@@ -394,5 +415,122 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         }
     }
     #endregion
-}
 
+}
+#endregion
+
+
+
+
+
+#region LAYERED
+
+/// <summary>
+///     Keeps track of layered <see cref="DynamicTree{T}"/>s for various rendering-related components.
+/// </summary>
+[UsedImplicitly]
+public abstract class LayeredComponentTreeSystem<TLayeredTreeComp, TLayeredComp> : ComponentTreeSystem<TLayeredTreeComp, TLayeredComp>
+    where TLayeredTreeComp : Component, ILayeredComponentTreeComponent<TLayeredComp>, new()
+    where TLayeredComp : Component, ILayeredComponentTreeEntry<TLayeredComp>, new()
+{
+
+    /// <summary>
+    ///     Initial number of trees to generate as separate "layers"
+    ///     i.e, number of drawDepth layers for sprites, etc.
+    /// </summary>
+    /// <value></value>
+    protected virtual int InitialLayers { get; } = 1;
+
+    protected override void OnTreeAdd(EntityUid uid, TLayeredTreeComp component, ComponentAdd args)
+    {
+        // Standard flat tree handling
+        base.OnTreeAdd(uid, component, args);
+        // Initialize layers as well
+        component.Trees = new();
+        for (int i = 0; i < InitialLayers; i++)
+        {
+            GetOrCreateLayer(component, i);
+        }
+    }
+
+    protected virtual DynamicTree<ComponentTreeEntry<TLayeredComp>> GetOrCreateLayer(TLayeredTreeComp treeComp, int layer)
+    {
+        if (!treeComp.Trees.TryGetValue(layer, out var tree))
+        {
+            tree = new(ExtractAabb, capacity: InitialCapacity);
+            treeComp.Trees.Add(layer, tree);
+        }
+        return tree;
+    }
+    protected override void OnTreeRemove(EntityUid uid, TLayeredTreeComp component, ComponentRemove args)
+    {
+        if (Terminating(uid))
+            return;
+        base.OnTreeRemove(uid, component, args);
+        foreach (var tree in component.Trees)
+        {
+            foreach (var entry in tree.Value)
+            {
+                entry.Component.TreeUid = null;
+            }
+            tree.Value.Clear();
+        }
+        component.Trees.Clear();
+    }
+
+
+    protected override void AddOrUpdateTreeEntry(EntityUid newTreeId, TLayeredTreeComp? newTreeComp, in ComponentTreeEntry<TLayeredComp> entry, EntityQuery<TransformComponent>? xforms, DynamicTree<ComponentTreeEntry<TLayeredComp>>? tree = null)
+    {
+        base.AddOrUpdateTreeEntry(newTreeId, newTreeComp, entry, xforms, tree);
+
+        // If no tree was passed, repeat this update for each layer in our treeComp
+        if (tree == null && newTreeComp != null)
+        {
+
+            foreach (var layerIndex in entry.Component.LayersUsed)
+            {
+                // GetOrCreateLayer will ensure we have a layer to add to
+                var treeLayer = GetOrCreateLayer(newTreeComp, layerIndex);
+                AddOrUpdateTreeEntry(newTreeId, newTreeComp, entry, xforms, treeLayer);
+            }
+
+            if (entry.Component.TreeUid == newTreeId) entry.Component.Trees = newTreeComp.Trees;
+        }
+    }
+
+    protected override void RemoveFromTree(TLayeredComp component)
+    {
+        if (component.Trees != null)
+        {
+            foreach (var tree in component.Trees.Values)
+            {
+                tree.Remove(new() { Component = component });
+            }
+        }
+        component.Trees = null;
+        base.RemoveFromTree(component);
+    }
+
+    #region Queries
+    public IEnumerable<(EntityUid, TLayeredTreeComp, DynamicTree<ComponentTreeEntry<TLayeredComp>>, int layerIndex)> GetIntersectingTreeLayers(MapId mapId, Box2Rotated worldBounds, int[]? layers = null)
+        => GetIntersectingTreeLayers(mapId, worldBounds.CalcBoundingBox(), layers);
+    public IEnumerable<(EntityUid, TLayeredTreeComp, DynamicTree<ComponentTreeEntry<TLayeredComp>>, int layerIndex)> GetIntersectingTreeLayers(MapId mapId, Box2 worldBox, int[]? layers = null)
+    {
+        foreach (var (tree, treeComp) in GetIntersectingTrees(mapId, worldBox))
+        {
+            // If layers are not passed, then return all layers
+            layers ??= [.. treeComp.Trees.Keys];
+            foreach (int i in layers)
+            {
+                // Don't call GetOrCreateLayer as we are querying existing layers
+                if (treeComp.Trees.TryGetValue(i, out var treeLayer))
+                {
+                    yield return (tree, treeComp, treeLayer, i);
+                }
+            }
+        }
+    }
+
+    #endregion
+}
+#endregion

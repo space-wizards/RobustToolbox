@@ -459,5 +459,6 @@ namespace Robust.Shared.Maths
                    && MathHelper.CloseToPercent(Right, other.Right, tolerance)
                    && MathHelper.CloseToPercent(Top, other.Top, tolerance);
         }
+
     }
 }

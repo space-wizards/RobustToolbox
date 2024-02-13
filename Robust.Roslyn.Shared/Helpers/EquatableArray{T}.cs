@@ -9,6 +9,8 @@ using System.Runtime.CompilerServices;
 
 namespace Robust.Roslyn.Shared.Helpers;
 
+#nullable enable
+
 /// <summary>
 /// Extensions for <see cref="EquatableArray{T}"/>.
 /// </summary>

@@ -10,6 +10,8 @@ using System.Security.Cryptography;
 
 namespace System;
 
+#nullable enable
+
 /// <summary>
 /// A polyfill type that mirrors some methods from <see cref="HashCode"/> on .NET 6.
 /// </summary>

@@ -3,6 +3,8 @@ using Microsoft.CodeAnalysis;
 
 namespace Robust.Roslyn.Shared;
 
+#nullable enable
+
 public static class AttributeHelper
 {
     public static bool HasAttribute(ISymbol symbol, string attributeMetadataName, [NotNullWhen(true)] out AttributeData? matchedAttribute)

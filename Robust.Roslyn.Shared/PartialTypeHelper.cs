@@ -7,6 +7,8 @@ using Robust.Roslyn.Shared.Helpers;
 
 namespace Robust.Roslyn.Shared;
 
+#nullable enable
+
 /// <summary>
 /// All the information to make a partial type alternative for a type.
 /// </summary>

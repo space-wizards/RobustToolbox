@@ -2,6 +2,8 @@
 
 namespace Robust.Roslyn.Shared;
 
+#nullable enable
+
 public static class TypeSymbolHelper
 {
     public static bool ShittyTypeMatch(INamedTypeSymbol type, string attributeMetadataName)

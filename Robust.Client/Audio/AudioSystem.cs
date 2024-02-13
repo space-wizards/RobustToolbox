@@ -106,8 +106,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<PlayAudioEntityMessage>(OnEntityAudio);
         SubscribeNetworkEvent<PlayAudioPositionalMessage>(OnEntityCoordinates);
 
-        CfgManager.OnValueChanged(CVars.AudioAttenuation, OnAudioAttenuation, true);
-        CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
+        Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
+        Subs.CVar(CfgManager, CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
     }
 
     private void OnAudioState(EntityUid uid, AudioComponent component, ref AfterAutoHandleStateEvent args)
@@ -131,13 +131,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public void SetMasterVolume(float value)
     {
         _audio.SetMasterGain(value);
-    }
-
-    public override void Shutdown()
-    {
-        CfgManager.UnsubValueChanged(CVars.AudioAttenuation, OnAudioAttenuation);
-        CfgManager.UnsubValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged);
-        base.Shutdown();
     }
 
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)

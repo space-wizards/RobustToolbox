@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 210.0.2
+
+### Bugfixes
+
+* Revert changes to `TextureRect` too.
+
+
 ## 210.0.1
 
 ### Bugfixes

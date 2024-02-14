@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `NetUserId` implements `ISelfSerialize` so can be used in data fields.
 
 ### Bugfixes
 

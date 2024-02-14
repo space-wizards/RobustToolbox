@@ -114,7 +114,7 @@ internal sealed partial class MidiManager : IMidiManager
         "/usr/share/sounds/sf2/TimGM6mb.sf2",
     };
 
-    private const string WindowsSoundfont = @"C:\WINDOWS\system32\drivers\gm.dls";
+    private static readonly string WindowsSoundfont = $@"{Environment.GetEnvironmentVariable("SystemRoot")}\system32\drivers\gm.dls";
 
     private const string OsxSoundfont =
         "/System/Library/Components/CoreAudio.component/Contents/Resources/gs_instruments.dls";

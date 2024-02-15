@@ -56,7 +56,7 @@ namespace Robust.Client.UserInterface.Controls
                 if (value.IsNoneSetAllowed)
                 {
                     // Still UNPRESS if there's another pressed button, but don't PRESS it otherwise.
-                    if (value.Pressed != null)
+                    if (value.Pressed != this)
                         _pressed = false;
                 }
                 else

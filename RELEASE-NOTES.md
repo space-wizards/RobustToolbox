@@ -39,8 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `NetUserId` implements `ISelfSerialize` so can be used in data fields.
-* `ButtonGroup.IsNoneSetAllowed` to allow a button group to have no buttons pressed by default.
+*None yet*
 
 ### Bugfixes
 
@@ -53,6 +52,14 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 210.1.0
+
+### New features
+
+* `NetUserId` implements `ISelfSerialize` so can be used in data fields.
+* `ButtonGroup.IsNoneSetAllowed` to allow a button group to have no buttons pressed by default.
 
 
 ## 210.0.3

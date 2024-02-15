@@ -14,12 +14,13 @@ internal struct ChunkEnumerator
     private int _xIndex;
     private int _yIndex;
 
-    internal ChunkEnumerator(Dictionary<Vector2i, MapChunk> chunks, Box2 localAABB, int chunkSize)
+    internal ChunkEnumerator(Box2 gridAABB, Dictionary<Vector2i, MapChunk> chunks, Box2 localAABB, int chunkSize)
     {
         _chunks = chunks;
+        var compAABB = gridAABB.Union(localAABB);
 
-        _chunkLB = new Vector2i((int)Math.Floor(localAABB.Left / chunkSize), (int)Math.Floor(localAABB.Bottom / chunkSize));
-        _chunkRT = new Vector2i((int)Math.Floor(localAABB.Right / chunkSize), (int)Math.Floor(localAABB.Top / chunkSize));
+        _chunkLB = new Vector2i((int)Math.Floor(compAABB.Left / chunkSize), (int)Math.Floor(compAABB.Bottom / chunkSize));
+        _chunkRT = new Vector2i((int)Math.Floor(compAABB.Right / chunkSize), (int)Math.Floor(compAABB.Top / chunkSize));
 
         _xIndex = _chunkLB.X;
         _yIndex = _chunkLB.Y;

@@ -39,6 +39,42 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 210.0.3
+
+
+## 210.0.2
+
+### Bugfixes
+
+* Revert changes to `TextureRect` too.
+
+
+## 210.0.1
+
+### Bugfixes
+
+* Revert changes to `TextureButton` that broke style property handling.
+
+
+## 210.0.0
+
+### New features
+
 * Controls can now hook before, after, and during rendering of their children.
 * IRenderHandle is now a public API, with the caveat that it's properties and methods are unstable.
 * ButtonGroup now exposes what buttons it contains, alongside which is currently pressed.
@@ -62,14 +98,6 @@ END TEMPLATE-->
 
 * UI drawing now properly accounts for a control's draw routine potentially mangling the current matrix.
 * UI roots now properly update when the global stylesheet is changed. They previously only did so if they had a dedicated stylesheet (which is the one case where they would be unaffected by a global sheet update.
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
 
 
 ## 209.0.1

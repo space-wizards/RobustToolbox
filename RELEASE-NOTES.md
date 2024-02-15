@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `NetUserId` implements `ISelfSerialize` so can be used in data fields.
+* `ButtonGroup.IsNoneSetAllowed` to allow a button group to have no buttons pressed by default.
 
 ### Bugfixes
 

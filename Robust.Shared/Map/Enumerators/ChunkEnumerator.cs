@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map.Enumerators;
 
 internal struct ChunkEnumerator
 {
+    public static ChunkEnumerator Empty => new(new Dictionary<Vector2i, MapChunk>(), Box2.Empty, 16);
+
     private Dictionary<Vector2i, MapChunk> _chunks;
     private Vector2i _chunkLB;
     private Vector2i _chunkRT;
@@ -14,13 +18,12 @@ internal struct ChunkEnumerator
     private int _xIndex;
     private int _yIndex;
 
-    internal ChunkEnumerator(Box2 gridAABB, Dictionary<Vector2i, MapChunk> chunks, Box2 localAABB, int chunkSize)
+    internal ChunkEnumerator(Dictionary<Vector2i, MapChunk> chunks, Box2 localAABB, int chunkSize)
     {
         _chunks = chunks;
-        var compAABB = gridAABB.Union(localAABB);
 
-        _chunkLB = new Vector2i((int)Math.Floor(compAABB.Left / chunkSize), (int)Math.Floor(compAABB.Bottom / chunkSize));
-        _chunkRT = new Vector2i((int)Math.Floor(compAABB.Right / chunkSize), (int)Math.Floor(compAABB.Top / chunkSize));
+        _chunkLB = new Vector2i((int)Math.Floor(localAABB.Left / chunkSize), (int)Math.Floor(localAABB.Bottom / chunkSize));
+        _chunkRT = new Vector2i((int)Math.Floor(localAABB.Right / chunkSize), (int)Math.Floor(localAABB.Top / chunkSize));
 
         _xIndex = _chunkLB.X;
         _yIndex = _chunkLB.Y;

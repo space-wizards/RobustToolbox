@@ -998,19 +998,34 @@ public abstract partial class SharedMapSystem
     internal ChunkEnumerator GetMapChunks(EntityUid uid, MapGridComponent grid, Box2 worldAABB)
     {
         var localAABB = _transform.GetInvWorldMatrix(uid).TransformBox(worldAABB);
-        return new ChunkEnumerator(grid.LocalAABB, grid.Chunks, localAABB, grid.ChunkSize);
+        var compAABB = grid.LocalAABB.Intersect(localAABB);
+
+        if (compAABB.IsEmpty())
+            return ChunkEnumerator.Empty;
+
+        return new ChunkEnumerator(grid.Chunks, compAABB, grid.ChunkSize);
     }
 
     internal ChunkEnumerator GetMapChunks(EntityUid uid, MapGridComponent grid, Box2Rotated worldArea)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
         var localArea = matrix.TransformBox(worldArea);
-        return new ChunkEnumerator(grid.LocalAABB, grid.Chunks, localArea, grid.ChunkSize);
+        var compAABB = grid.LocalAABB.Intersect(localArea);
+
+        if (compAABB.IsEmpty())
+            return ChunkEnumerator.Empty;
+
+        return new ChunkEnumerator(grid.Chunks, compAABB, grid.ChunkSize);
     }
 
     internal ChunkEnumerator GetLocalMapChunks(EntityUid uid, MapGridComponent grid, Box2 localAABB)
     {
-        return new ChunkEnumerator(grid.LocalAABB, grid.Chunks, localAABB, grid.ChunkSize);
+        var compAABB = grid.LocalAABB.Intersect(localAABB);
+
+        if (compAABB.IsEmpty())
+            return ChunkEnumerator.Empty;
+
+        return new ChunkEnumerator(grid.Chunks, compAABB, grid.ChunkSize);
     }
 
     #endregion ChunkAccess

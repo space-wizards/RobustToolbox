@@ -217,7 +217,7 @@ public abstract partial class SharedMapSystem
 
         if (xform.ParentUid != xform.MapUid && meta.EntityLifeStage < EntityLifeStage.Terminating  && _netManager.IsServer)
         {
-            Log.Error($"Grid {ToPrettyString(uid, meta)} it not parented to a map.  y'all need jesus. {Environment.StackTrace}");
+            Log.Error($"Grid {ToPrettyString(uid, meta)} is not parented to {ToPrettyString(xform._parent)} which is not a map.  y'all need jesus. {Environment.StackTrace}");
             return;
         }
 

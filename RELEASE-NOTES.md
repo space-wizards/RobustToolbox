@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add an overload to DrawingHandleBase.DrawPrimitives that allows a `List<Vector2>` to be passed in.
 
 ### Bugfixes
 

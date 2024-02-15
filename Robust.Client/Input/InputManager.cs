@@ -559,7 +559,7 @@ namespace Robust.Client.Input
                 {
                     // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
                     // Because they've been explicitly cleared.
-                    _modifiedKeyFunctions.UnionWith(leaveEmpty);
+                    _modifiedKeyFunctions.Add(bind);
 
                     // Adding to bindingsByFunction because if the keybind is not valid(For example if it's from another
                     // server then we will have problems saving the file)

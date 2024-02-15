@@ -229,7 +229,7 @@ namespace Robust.Client
 
             // Don't invoke PlayerLeaveServer if PlayerJoinedServer & GameStartedSetup hasn't been called yet.
             if (RunLevel > ClientRunLevel.Connecting)
-                PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
+                PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalSession));
 
             LastDisconnectReason = args.Reason;
             GameStoppedReset();

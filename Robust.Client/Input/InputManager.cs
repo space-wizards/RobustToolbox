@@ -126,7 +126,7 @@ namespace Robust.Client.Input
             {
                 try
                 {
-                    LoadKeyFile(path, true);
+                    LoadKeyFile(path, false, true);
                 }
                 catch (Exception e)
                 {
@@ -136,7 +136,7 @@ namespace Robust.Client.Input
 
             if (_resourceMan.ContentFileExists(path))
             {
-                LoadKeyFile(path, false);
+                LoadKeyFile(path, true);
             }
         }
 
@@ -496,7 +496,13 @@ namespace Robust.Client.Input
             return true;
         }
 
-        private void LoadKeyFile(ResPath file, bool userData)
+        /// <summary>
+        /// Loads a keybind file, configuring keybinds.
+        /// </summary>
+        /// <param name="file">File to load from the content package</param>
+        /// <param name="defaultRegistration">Whether or not this is a "default" keybind set. If it is, then it won't override the current configuration, only the defaults.</param>
+        /// <param name="userData">Whether or not to load from the user data directory instead of the content package.</param>
+        public void LoadKeyFile(ResPath file, bool defaultRegistration, bool userData = false)
         {
             TextReader reader;
             if (userData)
@@ -529,7 +535,7 @@ namespace Robust.Client.Input
                         invalid = true;
                     }
 
-                    if (!userData)
+                    if (defaultRegistration)
                     {
                         _defaultRegistrations.Add(reg);
 
@@ -541,11 +547,11 @@ namespace Robust.Client.Input
                         }
                     }
 
-                    RegisterBinding(reg, markModified: userData, invalid);
+                    RegisterBinding(reg, markModified: defaultRegistration, invalid);
                 }
             }
 
-            if (userData && mapping.TryGet("leaveEmpty", out var node))
+            if (!defaultRegistration && mapping.TryGet("leaveEmpty", out var node))
             {
                 var leaveEmpty = _serialization.Read<BoundKeyFunction[]>(node, notNullableOverride: true);
 

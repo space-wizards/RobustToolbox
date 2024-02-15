@@ -105,12 +105,10 @@ namespace Robust.Client.GameObjects
         /// <param name="inputCmd">Input command to handle as predicted.</param>
         public void PredictInputCommand(IFullInputCmdMessage inputCmd)
         {
-            DebugTools.AssertNotNull(_playerManager.LocalPlayer);
-
             var keyFunc = _inputManager.NetworkBindMap.KeyFunctionName(inputCmd.InputFunctionId);
 
             Predicted = true;
-            var session = _playerManager.LocalPlayer!.Session;
+            var session = _playerManager.LocalSession;
             foreach (var handler in BindRegistry.GetHandlers(keyFunc))
             {
                 if (handler.HandleCmdMessage(EntityManager, session, inputCmd))
@@ -145,27 +143,22 @@ namespace Robust.Client.GameObjects
 
         private void GenerateInputCommand(IConsoleShell shell, string argstr, string[] args)
         {
-            var localPlayer = _playerManager.LocalPlayer;
-            if(localPlayer is null)
-                return;
-
-            var pent = localPlayer.ControlledEntity;
-            if(pent is null)
+            if (_playerManager.LocalEntity is not { } pent)
                 return;
 
             BoundKeyFunction keyFunction = new BoundKeyFunction(args[0]);
             BoundKeyState state = args[1] == "u" ? BoundKeyState.Up: BoundKeyState.Down;
 
-            var pxform = Transform(pent.Value);
+            var pxform = Transform(pent);
             var wPos = pxform.WorldPosition + new Vector2(float.Parse(args[2]), float.Parse(args[3]));
-            var coords = EntityCoordinates.FromMap(EntityManager, pent.Value, new MapCoordinates(wPos, pxform.MapID));
+            var coords = EntityCoordinates.FromMap(EntityManager, pent, new MapCoordinates(wPos, pxform.MapID));
 
             var funcId = _inputManager.NetworkBindMap.KeyFunctionID(keyFunction);
 
             var message = new FullInputCmdMessage(_timing.CurTick, _timing.TickFraction, funcId, state,
                 GetNetCoordinates(coords), new ScreenCoordinates(0, 0, default), NetEntity.Invalid);
 
-            HandleInputCommand(localPlayer.Session, keyFunction, message);
+            HandleInputCommand(_playerManager.LocalSession, keyFunction, message);
         }
 
         private void OnAttachedEntityChanged(LocalPlayerAttachedEvent message)
@@ -208,11 +201,8 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void SetEntityContextActive()
         {
-            var controlled = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
-            if (controlled == EntityUid.Invalid)
-            {
+            if (_playerManager.LocalEntity is not { } controlled)
                 return;
-            }
 
             SetEntityContextActive(_inputManager, controlled);
         }

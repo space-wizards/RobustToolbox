@@ -313,7 +313,7 @@ namespace Robust.Client.GameStates
 
                 if (args.Length == 0)
                 {
-                    entity = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+                    entity = _playerManager.LocalEntity ?? EntityUid.Invalid;
                 }
                 else if (!NetEntity.TryParse(args[0], out var netEntity) || !_entManager.TryGetEntity(netEntity, out entity))
                 {

@@ -544,7 +544,7 @@ namespace Robust.Client.Input
                         }
                     }
 
-                    RegisterBinding(reg, markModified: defaultRegistration);
+                    RegisterBinding(reg, markModified: !defaultRegistration);
                 }
             }
 

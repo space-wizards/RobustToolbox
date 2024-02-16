@@ -198,9 +198,6 @@ where TComp : Component, IComponentTreeEntry<TComp>, new()
             if (!_updated.Add(entry.Uid))
                 continue;
 
-            if (!newTreeId.HasValue)
-                continue;
-
             if (!comp.AddToTree || comp.Deleted || xform.MapUid == null)
             {
                 RemoveFromTree(comp);
@@ -208,10 +205,10 @@ where TComp : Component, IComponentTreeEntry<TComp>, new()
             }
 
             // Attempt to grab the tree from the current entry's grid/map
-            if (!trees.TryGetComponent(newTreeId.Value, out var newTreeComp) && comp.TreeUid == null)
+            if (!trees.TryGetComponent(newTreeId, out var newTreeComp) && comp.TreeUid == null)
                 continue;
 
-            AddOrUpdateTreeEntry(newTreeId.Value, newTreeComp, entry, xforms);
+            AddOrUpdateTreeEntry(newTreeId!.Value, newTreeComp, entry, xforms);
         }
 
         _updated.Clear();
@@ -243,22 +240,19 @@ where TComp : Component, IComponentTreeEntry<TComp>, new()
         // If no tree was passed, get use the newTreeComp's
         tree ??= newTreeComp.Tree;
 
-        // Get our aabb
-        (Vector2 pos, Angle rot) = XformSystem.GetRelativePositionRotation(entry.Transform, newTreeId, xforms.Value);
-        var aabb = ExtractAabb(entry, pos, rot);
+        Vector2 pos;
+        Angle rot;
 
-        // New component tree matches the components current one, so just update the position
-        if (entry.Component.TreeUid == newTreeId)
-        {
-            tree.Update(entry, aabb);
-            return;
-        }
+        (pos, rot) = XformSystem.GetRelativePositionRotation(entry.Transform, newTreeId, xforms.Value);
 
         entry.Component.TreeUid = newTreeId;
         entry.Component.Tree = tree;
-        tree.Add(entry, aabb);
+
+        tree.AddOrUpdate(entry, ExtractAabb(entry, pos, rot));
+
+
     }
-    private void RemoveFromTree(TComp component)
+    protected virtual void RemoveFromTree(TComp component)
     {
         component.Tree?.Remove(new() { Component = component });
         component.Tree = null;
@@ -437,7 +431,7 @@ where TComp : Component, IComponentTreeEntry<TComp>, new()
 [UsedImplicitly]
 public abstract class LayeredComponentTreeSystem<TLayeredTreeComp, TLayeredComp> : ComponentTreeSystem<TLayeredTreeComp, TLayeredComp>
     where TLayeredTreeComp : Component, ILayeredComponentTreeComponent<TLayeredComp>, new()
-    where TLayeredComp : Component, IComponentTreeEntry<TLayeredComp>, new()
+    where TLayeredComp : Component, ILayeredComponentTreeEntry<TLayeredComp>, new()
 {
 
     /// <summary>
@@ -452,33 +446,22 @@ public abstract class LayeredComponentTreeSystem<TLayeredTreeComp, TLayeredComp>
         // Standard flat tree handling
         base.OnTreeAdd(uid, component, args);
         // Initialize layers as well
+        component.Trees = new();
         for (int i = 0; i < InitialLayers; i++)
         {
             GetOrCreateLayer(component, i);
         }
     }
 
-    /// <summary>
-    /// Get the tree for the given layer. If none exists, create one
-    /// </summary>
-    /// <param name="component"></param>
-    /// <param name="layer"></param>
-    /// <returns></returns> <summary>
-    ///
-    /// </summary>
-    /// <param name="component"></param>
-    /// <param name="layer"></param>
-    /// <returns></returns>
-    protected virtual DynamicTree<ComponentTreeEntry<TLayeredComp>> GetOrCreateLayer(TLayeredTreeComp component, int layer)
+    protected virtual DynamicTree<ComponentTreeEntry<TLayeredComp>> GetOrCreateLayer(TLayeredTreeComp treeComp, int layer)
     {
-        if (!component.Trees.TryGetValue(layer, out var tree))
+        if (!treeComp.Trees.TryGetValue(layer, out var tree))
         {
             tree = new(ExtractAabb, capacity: InitialCapacity);
-            component.Trees.Add(layer, tree);
+            treeComp.Trees.Add(layer, tree);
         }
         return tree;
     }
-
     protected override void OnTreeRemove(EntityUid uid, TLayeredTreeComp component, ComponentRemove args) // Really Needs refactor
     {
         if (Terminating(uid))
@@ -492,6 +475,7 @@ public abstract class LayeredComponentTreeSystem<TLayeredTreeComp, TLayeredComp>
             }
             tree.Value.Clear();
         }
+        component.Trees.Clear();
     }
 
 
@@ -502,18 +486,29 @@ public abstract class LayeredComponentTreeSystem<TLayeredTreeComp, TLayeredComp>
         // If no tree was passed, repeat this update for each layer in our treeComp
         if (tree == null && newTreeComp != null)
         {
-            foreach (var treeLayer in newTreeComp.Trees.Values)
+            
+            foreach (var layerIndex in entry.Component.LayersUsed)
             {
+                // GetOrCreateLayer will ensure we have a layer to add to
+                var treeLayer = GetOrCreateLayer(newTreeComp, layerIndex);
                 AddOrUpdateTreeEntry(newTreeId, newTreeComp, entry, xforms, treeLayer);
             }
+
+            if (entry.Component.TreeUid == newTreeId) entry.Component.Trees = newTreeComp.Trees;
         }
     }
 
-    private void RemoveFromTree(TLayeredComp component)
+    protected override void RemoveFromTree(TLayeredComp component)
     {
-        component.Tree?.Remove(new() { Component = component });
-        component.Tree = null;
-        component.TreeUid = null;
+        if (component.Trees != null)
+        {
+            foreach (var tree in component.Trees.Values)
+            {
+                tree.Remove(new() { Component = component });
+            }
+        }
+        component.Trees = null;
+        base.RemoveFromTree(component);
     }
 
     #region Queries

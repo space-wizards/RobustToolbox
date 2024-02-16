@@ -1,6 +1,8 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
@@ -25,25 +27,27 @@ internal partial class Clyde
     private readonly Dictionary<int,RefList<SpriteData>> _drawingSpriteList = new();
     private const int _spriteProcessingBatchSize = 25;
 
-    private void GetSprites(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, out Dictionary<int, int[]> layeredIndexList)
+    private void GetSprites(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, out SortedDictionary<int, int[]> layeredIndexList)
     {
-        layeredIndexList = new Dictionary<int, int[]>();
+        layeredIndexList = [];
 
         ProcessSpriteEntities(map, view, eye, worldBounds, _drawingSpriteList);
 
-        for (var layerIndex = 0; layerIndex < _drawingSpriteList.Count; layerIndex++)
+        var layerIndexes = _drawingSpriteList.ToImmutableSortedDictionary();
+
+        foreach (var layerIndex in _drawingSpriteList.Keys)
         {
             // We use a separate list for indexing sprites so that the sort is faster.
             layeredIndexList[layerIndex] = ArrayPool<int>.Shared.Rent(_drawingSpriteList[layerIndex].Count);
 
             // populate index list
-            for (var i = 0; i < _drawingSpriteList.Count; i++)
+            for (var i = 0; i < _drawingSpriteList[layerIndex].Count; i++)
                 layeredIndexList[layerIndex][i] = i;
 
             // sort index list
             // TODO better sorting? parallel merge sort?
-            Array.Sort(layeredIndexList[layerIndex], 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList[layerIndex]));
-        }        
+            Array.Sort(layeredIndexList[layerIndex], 0, _drawingSpriteList[layerIndex].Count, new SpriteDrawingOrderComparer(_drawingSpriteList[layerIndex]));
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -82,10 +86,10 @@ internal partial class Clyde
                 TreePos = treeXform.LocalPosition,
                 TreeRot = treeXform.LocalRotation,
                 Sin = MathF.Sin((float)treeXform.LocalRotation),
-                Cos = MathF.Cos((float)treeXform.LocalRotation),
+                Cos = MathF.Cos((float)treeXform.LocalRotation), 
             };
 
-            comp.Tree.QueryAabb(ref currentLayerReflist,
+            treeLayer.QueryAabb(ref currentLayerReflist,
                 static (ref RefList<SpriteData> state, in ComponentTreeEntry<SpriteComponent> value) =>
                 {
                     ref var entry = ref state.AllocAdd();

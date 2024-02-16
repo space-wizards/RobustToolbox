@@ -40,3 +40,14 @@ public interface IComponentTreeEntry<TComp> where TComp : Component
 
     public bool TreeUpdateQueued { get; set; }
 }
+
+public interface ILayeredComponentTreeEntry<TComp> : IComponentTreeEntry<TComp> where TComp : Component
+{
+    public HashSet<int> LayersUsed {get; set;}
+
+    /// <summary>
+    /// Dynamic Trees dictionary that this component is a part of.
+    /// We aren't necessarily in ALL of them, but this ref is used to remove us from all of them on deletion.
+    /// </summary>
+    public Dictionary<int, DynamicTree<ComponentTreeEntry<TComp>>>? Trees { get; set; }
+}

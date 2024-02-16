@@ -1,6 +1,8 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Numerics;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
@@ -22,6 +24,8 @@ namespace Robust.Client.Graphics.Clyde
     // The idea is this shouldn't contain too much GL specific stuff.
     internal partial class Clyde
     {
+
+        public int[] drawTheseLayers = [-2];
         public ClydeDebugLayers DebugLayers { get; set; }
 
         // TODO allow this scale to be passed with PostShader as variable
@@ -267,34 +271,45 @@ namespace Robust.Client.Graphics.Clyde
             RenderTexture? entityPostRenderTarget = null;
             bool flushed = false;
 
-            for (var layerIndex = 0; layerIndex < _drawingSpriteList.Count; layerIndex++)
+            foreach (var layerIndex in indexList.Keys)
             {
 
                 var drawingSpriteListLayer = _drawingSpriteList[layerIndex];
                 var layerIndexList = indexList[layerIndex];
 
+                if (!drawTheseLayers.Contains(layerIndex))
+                {
+                    continue;
+                }
+
+                for (; overlayIndex < worldOverlays.Count; overlayIndex++)
+                {
+
+
+                    var overlay = worldOverlays[overlayIndex];
+
+                    if (overlay.ZIndex > layerIndex)
+                    {
+                        flushed = false;
+                        break;
+                    }
+
+                    if (!flushed)
+                    {
+                        FlushRenderQueue();
+                        flushed = true;
+                    }
+
+                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
+                }
+
+                
+
                 for (var i = 0; i < drawingSpriteListLayer.Count; i++)
                 {
+                    
+
                     ref var entry = ref drawingSpriteListLayer[layerIndexList[i]];
-
-                    for (; overlayIndex < worldOverlays.Count; overlayIndex++)
-                    {
-                        var overlay = worldOverlays[overlayIndex];
-
-                        if (overlay.ZIndex > entry.Sprite.DrawDepth)
-                        {
-                            flushed = false;
-                            break;
-                        }
-
-                        if (!flushed)
-                        {
-                            FlushRenderQueue();
-                            flushed = true;
-                        }
-
-                        RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
-                    }
 
                     Vector2i roundedPos = default;
                     if (entry.Sprite.PostShader != null)
@@ -388,13 +403,16 @@ namespace Robust.Client.Graphics.Clyde
                         _renderHandle.SetProjView(oldProj, oldView);
                         _renderHandle.UseShader(null);
                     }
+
+                    FlushRenderQueue();
                 }
             }
+
             // draw remainder of overlays
             for (; overlayIndex < worldOverlays.Count; overlayIndex++)
             {
                 if (!flushed)
-                {
+                { 
                     FlushRenderQueue();
                     flushed = true;
                 }
@@ -406,7 +424,10 @@ namespace Robust.Client.Graphics.Clyde
                 ArrayPool<int>.Shared.Return(index);
             entityPostRenderTarget?.DisposeDeferred();
 
+            // TODO: This isn't accurate anymore
             _debugStats.Entities += _drawingSpriteList.Count;
+
+
             _drawingSpriteList.Clear();
             FlushRenderQueue();
         }

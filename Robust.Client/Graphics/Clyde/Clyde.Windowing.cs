@@ -224,8 +224,8 @@ namespace Robust.Client.Graphics.Clyde
                     fixed (char* pCaption = "RobustToolbox: Failed to create window")
                     {
                         Windows.MessageBoxW(HWND.NULL,
-                            (ushort*) pText,
-                            (ushort*) pCaption,
+                            pText,
+                            pCaption,
                             MB.MB_OK | MB.MB_ICONERROR);
                     }
                 }
@@ -260,14 +260,14 @@ namespace Robust.Client.Graphics.Clyde
                 yield break;
             }
 
-            foreach (var file in _resourceCache.ContentFindFiles(_windowIconPath))
+            foreach (var file in _resManager.ContentFindFiles(_windowIconPath))
             {
                 if (file.Extension != "png")
                 {
                     continue;
                 }
 
-                using var stream = _resourceCache.ContentFileRead(file);
+                using var stream = _resManager.ContentFileRead(file);
                 yield return Image.Load<Rgba32>(stream);
             }
         }

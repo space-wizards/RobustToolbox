@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,6 +16,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -197,6 +199,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+#if DEBUG
     internal sealed class ShowRayCommand : LocalizedCommands
     {
         [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
@@ -223,6 +226,7 @@ namespace Robust.Client.Console.Commands
             mgr.DebugRayLifetime = TimeSpan.FromSeconds(duration);
         }
     }
+#endif
 
     internal sealed class DisconnectCommand : LocalizedCommands
     {
@@ -458,13 +462,13 @@ namespace Robust.Client.Console.Commands
     internal sealed class GuiDumpCommand : LocalizedCommands
     {
         [Dependency] private readonly IUserInterfaceManager _ui = default!;
-        [Dependency] private readonly IResourceCache _res = default!;
+        [Dependency] private readonly IResourceManager _resManager = default!;
 
         public override string Command => "guidump";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            using var writer = _res.UserData.OpenWriteText(new ResPath("/guidump.txt"));
+            using var writer = _resManager.UserData.OpenWriteText(new ResPath("/guidump.txt"));
 
             foreach (var root in _ui.AllRoots)
             {
@@ -491,9 +495,9 @@ namespace Robust.Client.Console.Commands
             }
         }
 
-        internal static List<(string, string)> PropertyValuesFor(Control control)
+        internal static List<MemberInfo> GetAllMembers(Control control)
         {
-            var members = new List<(string, string)>();
+            var members = new List<MemberInfo>();
             var type = control.GetType();
 
             foreach (var fieldInfo in type.GetAllFields())
@@ -503,7 +507,7 @@ namespace Robust.Client.Console.Commands
                     continue;
                 }
 
-                members.Add((fieldInfo.Name, fieldInfo.GetValue(control)?.ToString() ?? "null"));
+                members.Add(fieldInfo);
             }
 
             foreach (var propertyInfo in type.GetAllProperties())
@@ -513,7 +517,19 @@ namespace Robust.Client.Console.Commands
                     continue;
                 }
 
-                members.Add((propertyInfo.Name, propertyInfo.GetValue(control)?.ToString() ?? "null"));
+                members.Add(propertyInfo);
+            }
+
+            return members;
+        }
+
+        internal static List<(string, string)> PropertyValuesFor(Control control)
+        {
+            var members = new List<(string, string)>();
+
+            foreach (var fieldInfo in GetAllMembers(control))
+            {
+                members.Add((fieldInfo.Name, fieldInfo.GetValue(control)?.ToString() ?? "null"));
             }
 
             foreach (var (attachedProperty, value) in control.AllAttachedProperties)
@@ -524,6 +540,35 @@ namespace Robust.Client.Console.Commands
 
             members.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
             return members;
+        }
+
+        internal static Dictionary<string, List<(string, string)>> PropertyValuesForInheritance(Control control)
+        {
+            var returnVal = new Dictionary<string, List<(string, string)>>();
+            var engine = typeof(Control).Assembly;
+
+            foreach (var member in GetAllMembers(control))
+            {
+                var type = member.DeclaringType!;
+                var cname = type.Assembly == engine ? type.Name : type.ToString();
+
+                if (type != typeof(Control))
+                    cname = $"Control > {cname}";
+
+                returnVal.GetOrNew(cname).Add((member.Name, member.GetValue(control)?.ToString() ?? "null"));
+            }
+
+            foreach (var (attachedProperty, value) in control.AllAttachedProperties)
+            {
+                var cname = $"Attached > {attachedProperty.OwningType.Name}";
+                returnVal.GetOrNew(cname).Add((attachedProperty.Name, value?.ToString() ?? "null"));
+            }
+
+            foreach (var v in returnVal.Values)
+            {
+                v.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
+            }
+            return returnVal;
         }
     }
 
@@ -644,7 +689,8 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ReloadShadersCommand : LocalizedCommands
     {
-        [Dependency] private readonly IResourceCacheInternal _res = default!;
+        [Dependency] private readonly IResourceCache _cache = default!;
+        [Dependency] private readonly IResourceManagerInternal _resManager = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
 
         public override string Command => "rldshader";
@@ -655,7 +701,7 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var resC = _res;
+            var resC = _resManager;
             if (args.Length == 1)
             {
                 if (args[0] == "+watch")
@@ -679,9 +725,9 @@ namespace Robust.Client.Console.Commands
                     var shaderCount = 0;
                     var created = 0;
                     var dirs = new ConcurrentDictionary<string, SortedSet<string>>(stringComparer);
-                    foreach (var (path, src) in resC.GetAllResources<ShaderSourceResource>())
+                    foreach (var (path, src) in _cache.GetAllResources<ShaderSourceResource>())
                     {
-                        if (!resC.TryGetDiskFilePath(path, out var fullPath))
+                        if (!_resManager.TryGetDiskFilePath(path, out var fullPath))
                         {
                             throw new NotImplementedException();
                         }
@@ -730,7 +776,7 @@ namespace Robust.Client.Console.Commands
                                     {
                                         try
                                         {
-                                            resC.ReloadResource<ShaderSourceResource>(resPath);
+                                            _cache.ReloadResource<ShaderSourceResource>(resPath);
                                             shell.WriteLine($"Reloaded shader: {resPath}");
                                         }
                                         catch (Exception)
@@ -791,11 +837,11 @@ namespace Robust.Client.Console.Commands
 
             shell.WriteLine("Reloading content shader resources...");
 
-            foreach (var (path, _) in resC.GetAllResources<ShaderSourceResource>())
+            foreach (var (path, _) in _cache.GetAllResources<ShaderSourceResource>())
             {
                 try
                 {
-                    resC.ReloadResource<ShaderSourceResource>(path);
+                    _cache.ReloadResource<ShaderSourceResource>(path);
                 }
                 catch (Exception)
                 {

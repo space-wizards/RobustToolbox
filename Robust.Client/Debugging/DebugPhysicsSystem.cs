@@ -46,7 +46,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -207,6 +206,7 @@ namespace Robust.Client.Debugging
         private readonly Font _font;
 
         private HashSet<Joint> _drawnJoints = new();
+        private List<Entity<MapGridComponent>> _grids = new();
 
         public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem)
         {
@@ -231,32 +231,33 @@ namespace Robust.Client.Debugging
             {
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
-                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody)) continue;
 
-                    var xform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
+                    var xform = _physicsSystem.GetPhysicsTransform(physBody);
+                    var comp = physBody.Comp;
 
                     const float AlphaModifier = 0.2f;
 
-                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody.Owner).Fixtures.Values)
+                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody).Fixtures.Values)
                     {
                         // Invalid shape - Box2D doesn't check for IsSensor but we will for sanity.
-                        if (physBody.BodyType == BodyType.Dynamic && fixture.Density == 0f && fixture.Hard)
+                        if (comp.BodyType == BodyType.Dynamic && fixture.Density == 0f && fixture.Hard)
                         {
                             DrawShape(worldHandle, fixture, xform, Color.Red.WithAlpha(AlphaModifier));
                         }
-                        else if (!physBody.CanCollide)
+                        else if (!comp.CanCollide)
                         {
                             DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.5f, 0.3f).WithAlpha(AlphaModifier));
                         }
-                        else if (physBody.BodyType == BodyType.Static)
+                        else if (comp.BodyType == BodyType.Static)
                         {
                             DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.9f, 0.5f).WithAlpha(AlphaModifier));
                         }
-                        else if ((physBody.BodyType & (BodyType.Kinematic | BodyType.KinematicController)) != 0x0)
+                        else if ((comp.BodyType & (BodyType.Kinematic | BodyType.KinematicController)) != 0x0)
                         {
                             DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.5f, 0.9f).WithAlpha(AlphaModifier));
                         }
-                        else if (!physBody.Awake)
+                        else if (!comp.Awake)
                         {
                             DrawShape(worldHandle, fixture, xform, new Color(0.6f, 0.6f, 0.6f).WithAlpha(AlphaModifier));
                         }
@@ -275,15 +276,18 @@ namespace Robust.Client.Debugging
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
                     var color = Color.Purple.WithAlpha(Alpha);
-                    var transform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
-                    worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 0.2f, color);
+                    var transform = _physicsSystem.GetPhysicsTransform(physBody);
+                    worldHandle.DrawCircle(Transform.Mul(transform, physBody.Comp.LocalCenter), 0.2f, color);
                 }
 
-                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, viewBounds))
+                _grids.Clear();
+                _mapManager.FindGridsIntersecting(mapId, viewBounds, ref _grids);
+
+                foreach (var grid in _grids)
                 {
-                    var physBody = _entityManager.GetComponent<PhysicsComponent>(grid.Owner);
+                    var physBody = _entityManager.GetComponent<PhysicsComponent>(grid);
                     var color = Color.Orange.WithAlpha(Alpha);
-                    var transform = _physicsSystem.GetPhysicsTransform(grid.Owner);
+                    var transform = _physicsSystem.GetPhysicsTransform(grid);
                     worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 1f, color);
                 }
             }
@@ -292,14 +296,14 @@ namespace Robust.Client.Debugging
             {
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
-                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody)) continue;
 
-                    var xform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
+                    var xform = _physicsSystem.GetPhysicsTransform(physBody);
 
                     const float AlphaModifier = 0.2f;
                     Box2? aabb = null;
 
-                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody.Owner).Fixtures.Values)
+                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody).Fixtures.Values)
                     {
                         for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
@@ -318,10 +322,11 @@ namespace Robust.Client.Debugging
             {
                 _drawnJoints.Clear();
 
-                foreach (var jointComponent in _entityManager.EntityQuery<JointComponent>(true))
+                var query = _entityManager.AllEntityQueryEnumerator<JointComponent>();
+                while (query.MoveNext(out var uid, out var jointComponent))
                 {
                     if (jointComponent.JointCount == 0 ||
-                        !_entityManager.TryGetComponent(jointComponent.Owner, out TransformComponent? xf1) ||
+                        !_entityManager.TryGetComponent(uid, out TransformComponent? xf1) ||
                         !viewAABB.Contains(xf1.WorldPosition)) continue;
 
                     foreach (var (_, joint) in jointComponent.Joints)
@@ -361,6 +366,9 @@ namespace Robust.Client.Debugging
 
                 _debugPhysicsSystem.PointCount = 0;
             }
+
+            worldHandle.UseShader(null);
+            worldHandle.SetTransform(Matrix3.Identity);
         }
 
         private void DrawScreen(DrawingHandleScreen screenHandle, OverlayDrawArgs args)
@@ -370,28 +378,31 @@ namespace Robust.Client.Debugging
 
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.ShapeInfo) != 0x0)
             {
-                var hoverBodies = new List<PhysicsComponent>();
+                var hoverBodies = new List<Entity<PhysicsComponent>>();
                 var bounds = Box2.UnitCentered.Translated(_eyeManager.PixelToMap(mousePos.Position).Position);
 
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, bounds))
                 {
-                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
-                    hoverBodies.Add(physBody);
+                    var uid = physBody.Owner;
+                    if (_entityManager.HasComponent<MapGridComponent>(uid)) continue;
+                    hoverBodies.Add((uid, physBody));
                 }
 
                 var lineHeight = _font.GetLineHeight(1f);
                 var drawPos = mousePos.Position + new Vector2(20, 0) + new Vector2(0, -(hoverBodies.Count * 4 * lineHeight / 2f));
                 int row = 0;
 
-                foreach (var body in hoverBodies)
+                foreach (var bodyEnt in hoverBodies)
                 {
-                    if (body != hoverBodies[0])
+                    if (bodyEnt != hoverBodies[0])
                     {
                         screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), "------");
                         row++;
                     }
 
-                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Owner}");
+                    var body = bodyEnt.Comp;
+
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {bodyEnt.Owner}");
                     row++;
                     screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
                     row++;
@@ -409,7 +420,7 @@ namespace Robust.Client.Debugging
                 if (mapPos.MapId != args.MapId)
                     return;
 
-                var player = _playerManager.LocalPlayer?.ControlledEntity;
+                var player = _playerManager.LocalEntity;
 
                 if (!_entityManager.TryGetComponent<TransformComponent>(player, out var playerXform) ||
                     playerXform.MapID != args.MapId)
@@ -430,6 +441,9 @@ namespace Robust.Client.Debugging
                     }
                 }
             }
+
+            screenHandle.UseShader(null);
+            screenHandle.SetTransform(Matrix3.Identity);
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)
@@ -451,11 +465,26 @@ namespace Robust.Client.Debugging
         {
             switch (fixture.Shape)
             {
+                case ChainShape cShape:
+                {
+                    var count = cShape.Count;
+                    var vertices = cShape.Vertices;
+
+                    var v1 = Transform.Mul(xform, vertices[0]);
+                    for (var i = 1; i < count; ++i)
+                    {
+                        var v2 = Transform.Mul(xform, vertices[i]);
+                        worldHandle.DrawLine(v1, v2, color);
+                        v1 = v2;
+                    }
+                }
+                    break;
                 case PhysShapeCircle circle:
                     var center = Transform.Mul(xform, circle.Position);
                     worldHandle.DrawCircle(center, circle.Radius, color);
                     break;
                 case EdgeShape edge:
+                {
                     var v1 = Transform.Mul(xform, edge.Vertex1);
                     var v2 = Transform.Mul(xform, edge.Vertex2);
                     worldHandle.DrawLine(v1, v2, color);
@@ -465,6 +494,7 @@ namespace Robust.Client.Debugging
                         worldHandle.DrawCircle(v1, 0.1f, color);
                         worldHandle.DrawCircle(v2, 0.1f, color);
                     }
+                }
 
                     break;
                 case PolygonShape poly:

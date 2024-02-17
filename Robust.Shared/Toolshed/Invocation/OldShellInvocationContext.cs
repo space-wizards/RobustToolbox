@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
+using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 
@@ -18,29 +19,33 @@ internal sealed class OldShellInvocationContext : IInvocationContext
     private readonly List<IConError> _errors = new();
 
     /// <summary>
-    ///     Old system's shell associated with this context
+    ///     Old system's shell associated with this context. May be null if the player is currently disconnected.
     /// </summary>
-    public IConsoleShell Shell;
+    public IConsoleShell? Shell;
 
     public OldShellInvocationContext(IConsoleShell shell)
     {
         IoCManager.InjectDependencies(this);
         Shell = shell;
+        User = Session?.UserId;
     }
 
     /// <inheritdoc />
-    public ICommonSession? Session => Shell.Player;
+    public NetUserId? User { get; }
+
+    /// <inheritdoc />
+    public ICommonSession? Session => Shell?.Player;
 
     /// <inheritdoc />
     public void WriteLine(string line)
     {
-        Shell.WriteLine(line);
+        Shell?.WriteLine(line);
     }
 
     /// <inheritdoc />
     public void WriteLine(FormattedMessage line)
     {
-        Shell.WriteLine(line);
+        Shell?.WriteLine(line);
     }
 
     /// <inheritdoc />

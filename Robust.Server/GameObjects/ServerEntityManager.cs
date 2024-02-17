@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Server.Player;
@@ -15,6 +14,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
@@ -116,12 +116,6 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public override EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata = null)
-        {
-            _actorQuery.TryGetComponent(uid, out ActorComponent? actor);
-            return base.ToPrettyString(uid) with { Session = actor?.PlayerSession };
-        }
-
         #region IEntityNetworkManager impl
 
         public override IEntityNetworkManager EntityNetManager => this;
@@ -131,7 +125,7 @@ namespace Robust.Server.GameObjects
 
         private readonly PriorityQueue<MsgEntity> _queue = new(new MessageSequenceComparer());
 
-        private readonly Dictionary<IPlayerSession, uint> _lastProcessedSequencesCmd =
+        private readonly Dictionary<ICommonSession, uint> _lastProcessedSequencesCmd =
             new();
 
         private bool _logLateMsgs;
@@ -162,9 +156,9 @@ namespace Robust.Server.GameObjects
             EntitiesCount.Set(Entities.Count);
         }
 
-        public uint GetLastMessageSequence(IPlayerSession session)
+        public uint GetLastMessageSequence(ICommonSession? session)
         {
-            return _lastProcessedSequencesCmd[session];
+            return session == null ? default : _lastProcessedSequencesCmd.GetValueOrDefault(session);
         }
 
         /// <inheritdoc />

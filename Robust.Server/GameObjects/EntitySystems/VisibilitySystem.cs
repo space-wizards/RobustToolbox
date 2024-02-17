@@ -1,26 +1,35 @@
 using System;
-using Robust.Server.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
     public sealed class VisibilitySystem : EntitySystem
     {
-        [Dependency] private readonly PvsSystem _pvs = default!;
+        [Dependency] private readonly IViewVariablesManager _vvManager = default!;
 
         private EntityQuery<TransformComponent> _xformQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
-        private EntityQuery<VisibilityComponent> _visiblityQuery;
+        private EntityQuery<VisibilityComponent> _visibilityQuery;
 
         public override void Initialize()
         {
             base.Initialize();
             _xformQuery = GetEntityQuery<TransformComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
-            _visiblityQuery = GetEntityQuery<VisibilityComponent>();
+            _visibilityQuery = GetEntityQuery<VisibilityComponent>();
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             EntityManager.EntityInitialized += OnEntityInit;
+
+            _vvManager.GetTypeHandler<VisibilityComponent>()
+                .AddPath(nameof(VisibilityComponent.Layer), (_, comp) => comp.Layer, (uid, value, comp) =>
+                {
+                    if (!Resolve(uid, ref comp))
+                        return;
+
+                    SetLayer((uid, comp), value);
+                });
         }
 
         public override void Shutdown()
@@ -29,55 +38,63 @@ namespace Robust.Server.GameObjects
             EntityManager.EntityInitialized -= OnEntityInit;
         }
 
+        [Obsolete("Use Entity<T> variant")]
         public void AddLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
         {
-            if ((layer & component.Layer) == layer)
+            AddLayer((uid, component), (ushort)layer, refresh);
+        }
+
+        public void AddLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
+        {
+            ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<VisibilityComponent>(ent.Owner);
+
+            if ((layer & ent.Comp.Layer) == layer)
                 return;
 
-            component.Layer |= layer;
+            ent.Comp.Layer |= layer;
 
             if (refresh)
-                RefreshVisibility(uid, visibilityComponent: component);
+                RefreshVisibility(ent);
         }
 
-        [Obsolete("Use overload that takes an EntityUid instead")]
-        public void AddLayer(VisibilityComponent component, int layer, bool refresh = true)
-        {
-            AddLayer(component.Owner, component, layer, refresh);
-        }
 
+        [Obsolete("Use Entity<T> variant")]
         public void RemoveLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
         {
-            if ((layer & component.Layer) != layer)
+            RemoveLayer((uid, component), (ushort)layer, refresh);
+        }
+
+        public void RemoveLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
+        {
+            if (!_visibilityQuery.Resolve(ent.Owner, ref ent.Comp, false))
                 return;
 
-            component.Layer &= ~layer;
+            if ((layer & ent.Comp.Layer) != layer)
+                return;
+
+            ent.Comp.Layer &= (ushort)~layer;
 
             if (refresh)
-                RefreshVisibility(uid, visibilityComponent: component);
+                RefreshVisibility(ent);
         }
 
-        [Obsolete("Use overload that takes an EntityUid instead")]
-        public void RemoveLayer(VisibilityComponent component, int layer, bool refresh = true)
-        {
-            RemoveLayer(component.Owner, component, layer, refresh);
-        }
-
+        [Obsolete("Use Entity<T> variant")]
         public void SetLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
         {
-            if (component.Layer == layer)
-                return;
-
-            component.Layer = layer;
-
-            if (refresh)
-                RefreshVisibility(uid, visibilityComponent: component);
+            SetLayer((uid, component), (ushort)layer, refresh);
         }
 
-        [Obsolete("Use overload that takes an EntityUid instead")]
-        public void SetLayer(VisibilityComponent component, int layer, bool refresh = true)
+        public void SetLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
         {
-            SetLayer(component.Owner, component, layer, refresh);
+            ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<VisibilityComponent>(ent.Owner);
+
+            if (ent.Comp.Layer == layer)
+                return;
+
+            ent.Comp.Layer = layer;
+
+            if (refresh)
+                RefreshVisibility(ent);
         }
 
         private void OnParentChange(ref EntParentChangedMessage ev)
@@ -85,62 +102,60 @@ namespace Robust.Server.GameObjects
             RefreshVisibility(ev.Entity);
         }
 
-        private void OnEntityInit(EntityUid uid)
+        private void OnEntityInit(Entity<MetaDataComponent> ent)
         {
-            RefreshVisibility(uid);
+            RefreshVisibility(ent.Owner, null, ent.Comp);
         }
 
         public void RefreshVisibility(EntityUid uid,
             VisibilityComponent? visibilityComponent = null,
             MetaDataComponent? meta = null)
         {
-            if (!_metaQuery.Resolve(uid, ref meta, false))
+            RefreshVisibility((uid, visibilityComponent, meta));
+        }
+
+        public void RefreshVisibility(Entity<VisibilityComponent?, MetaDataComponent?> ent)
+        {
+            if (!_metaQuery.Resolve(ent, ref ent.Comp2, false))
                 return;
 
             // Iterate up through parents and calculate the cumulative visibility mask.
-            var mask = GetParentVisibilityMask(uid, visibilityComponent);
+            var mask = GetParentVisibilityMask(ent);
 
             // Iterate down through children and propagate mask changes.
-            RecursivelyApplyVisibility(uid, mask, meta);
+            RecursivelyApplyVisibility(ent.Owner, mask, ent.Comp2);
         }
 
-        private void RecursivelyApplyVisibility(EntityUid uid, int mask, MetaDataComponent meta)
+        private void RecursivelyApplyVisibility(EntityUid uid, ushort mask, MetaDataComponent meta)
         {
             if (meta.VisibilityMask == mask)
                 return;
 
             var xform = _xformQuery.GetComponent(uid);
             meta.VisibilityMask = mask;
-            _pvs.MarkDirty(uid, xform);
 
-            foreach (var child in xform.ChildEntities)
+            foreach (var child in xform._children)
             {
                 if (!_metaQuery.TryGetComponent(child, out var childMeta))
                     continue;
 
                 var childMask = mask;
 
-                if (_visiblityQuery.TryGetComponent(child, out VisibilityComponent? hildVis))
-                    childMask |= hildVis.Layer;
+                if (_visibilityQuery.TryGetComponent(child, out var childVis))
+                    childMask |= childVis.Layer;
 
                 RecursivelyApplyVisibility(child, childMask, childMeta);
             }
         }
 
-        [Obsolete("Use overload that takes an EntityUid instead")]
-        public void RefreshVisibility(VisibilityComponent visibilityComponent)
+        private ushort GetParentVisibilityMask(Entity<VisibilityComponent?> ent)
         {
-            RefreshVisibility(visibilityComponent.Owner, visibilityComponent);
-        }
-
-        private int GetParentVisibilityMask(EntityUid uid, VisibilityComponent? visibilityComponent = null)
-        {
-            int visMask = 1; // apparently some content expects everything to have the first bit/flag set to true.
-            if (_visiblityQuery.Resolve(uid, ref visibilityComponent, false))
-                visMask |= visibilityComponent.Layer;
+            ushort visMask = 1; // apparently some content expects everything to have the first bit/flag set to true.
+            if (_visibilityQuery.Resolve(ent.Owner, ref ent.Comp, false))
+                visMask |= ent.Comp.Layer;
 
             // Include parent vis masks
-            if (_xformQuery.TryGetComponent(uid, out var xform) && xform.ParentUid.IsValid())
+            if (_xformQuery.TryGetComponent(ent.Owner, out var xform) && xform.ParentUid.IsValid())
                 visMask |= GetParentVisibilityMask(xform.ParentUid);
 
             return visMask;

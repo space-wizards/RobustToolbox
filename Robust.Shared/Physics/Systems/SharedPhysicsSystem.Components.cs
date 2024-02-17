@@ -22,6 +22,7 @@
  * PhysicsComponent is heavily modified from Box2D.
  */
 
+using System;
 using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -201,7 +202,7 @@ public partial class SharedPhysicsSystem
     /// <summary>
     /// Completely resets a dynamic body.
     /// </summary>
-    public void ResetDynamics(PhysicsComponent body)
+    public void ResetDynamics(PhysicsComponent body, bool dirty = true)
     {
         var updated = false;
 
@@ -229,7 +230,7 @@ public partial class SharedPhysicsSystem
             updated = true;
         }
 
-        if (updated)
+        if (updated && dirty)
             Dirty(body);
     }
 
@@ -321,7 +322,7 @@ public partial class SharedPhysicsSystem
         body.AngularVelocity = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     /// <summary>
@@ -346,7 +347,7 @@ public partial class SharedPhysicsSystem
         body.LinearVelocity = velocity;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     public void SetAngularDamping(PhysicsComponent body, float value, bool dirty = true)
@@ -371,12 +372,24 @@ public partial class SharedPhysicsSystem
             Dirty(body);
     }
 
+    [Obsolete("Use SetAwake with EntityUid<PhysicsComponent>")]
     public void SetAwake(EntityUid uid, PhysicsComponent body, bool value, bool updateSleepTime = true)
     {
-        if (body.Awake == value)
-            return;
+        SetAwake(new Entity<PhysicsComponent>(uid, body), value, updateSleepTime);
+    }
 
-        if (value && (body.BodyType == BodyType.Static || !body.CanCollide))
+    public void SetAwake(Entity<PhysicsComponent> ent, bool value, bool updateSleepTime = true)
+    {
+        var (uid, body) = ent;
+        var canWake = body.BodyType != BodyType.Static && body.CanCollide;
+
+        if (body.Awake == value)
+        {
+            DebugTools.Assert(!body.Awake || canWake);
+            return;
+        }
+
+        if (value && !canWake)
             return;
 
         body.Awake = value;
@@ -390,13 +403,25 @@ public partial class SharedPhysicsSystem
         {
             var ev = new PhysicsSleepEvent(uid, body);
             RaiseLocalEvent(uid, ref ev, true);
-            ResetDynamics(body);
+            ResetDynamics(body, dirty: false);
         }
+
+        // Update wake system last, if sleeping but still colliding.
+        if (!value && body.CanCollide)
+            _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
 
         if (updateSleepTime)
             SetSleepTime(body, 0);
 
-        Dirty(body);
+        if (body.Awake != value)
+        {
+            Log.Error($"Found a corrupted physics awake state for {ToPrettyString(ent)}! Did you forget to cancel the sleep subscription? Forcing body awake");
+            DebugTools.Assert(false);
+            body.Awake = true;
+        }
+
+        UpdateMapAwakeState(uid, body);
+        Dirty(ent);
     }
 
     public void TrySetBodyType(EntityUid uid, BodyType value, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
@@ -603,13 +628,12 @@ public partial class SharedPhysicsSystem
 
     #endregion
 
-    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null, EntityQuery<TransformComponent>? xformQuery = null)
+    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
     {
-        if (!Resolve(uid, ref xform))
-            return new Transform();
+        if (!_xformQuery.Resolve(uid, ref xform))
+            return Physics.Transform.Empty;
 
-        xformQuery ??= GetEntityQuery<TransformComponent>();
-        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery.Value);
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
 
         return new Transform(worldPos, worldRot);
     }
@@ -622,7 +646,7 @@ public partial class SharedPhysicsSystem
         if (!Resolve(uid, ref manager, ref body, ref xform))
             return new Box2();
 
-        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, GetEntityQuery<TransformComponent>());
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
 
         var transform = new Transform(worldPos, (float) worldRot.Theta);
 
@@ -644,10 +668,10 @@ public partial class SharedPhysicsSystem
     {
         if (!Resolve(uid, ref body, ref xform, ref manager))
         {
-            return new Box2();
+            return Box2.Empty;
         }
 
-        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, GetEntityQuery<TransformComponent>());
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
 
         var transform = new Transform(worldPos, (float) worldRot.Theta);
 

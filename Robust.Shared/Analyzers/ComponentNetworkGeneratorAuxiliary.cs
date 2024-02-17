@@ -10,7 +10,7 @@ namespace Robust.Shared.Analyzers;
 ///     component state replication beyond just directly setting variables should not use this attribute.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-[BaseTypeRequired(typeof(Component))]
+[BaseTypeRequired(typeof(IComponent))]
 public sealed class AutoGenerateComponentStateAttribute : Attribute
 {
     /// <summary>
@@ -40,4 +40,4 @@ public sealed class AutoNetworkedFieldAttribute : Attribute
 ///     can have effects after handling state without having to redefine all replication.
 /// </summary>
 [ByRefEvent]
-public record struct AfterAutoHandleStateEvent(ComponentState State);
+public record struct AfterAutoHandleStateEvent(IComponentState State);

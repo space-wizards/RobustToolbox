@@ -350,7 +350,7 @@ namespace Robust.Client.Graphics.Clyde
                         _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
 
                         if (entry.Sprite.RaiseShaderEvent)
-                            _entityManager.EventBus.RaiseLocalEvent(entry.Sprite.Owner,
+                            _entityManager.EventBus.RaiseLocalEvent(entry.Uid,
                                 new BeforePostShaderRenderEvent(entry.Sprite, viewport), false);
                     }
                 }
@@ -497,7 +497,7 @@ namespace Robust.Client.Graphics.Clyde
                     using (DebugGroup("Grids"))
                     using (_prof.Group("Grids"))
                     {
-                        _drawGrids(viewport, worldBounds, eye);
+                        _drawGrids(viewport, worldAABB, worldBounds, eye);
                     }
 
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
@@ -512,7 +512,7 @@ namespace Robust.Client.Graphics.Clyde
                         RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB, worldBounds);
                     }
 
-                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
+                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawLight && eye.DrawFov)
                     {
                         ApplyFovToBuffer(viewport, eye);
                     }

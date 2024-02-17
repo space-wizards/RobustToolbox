@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Packaging;
@@ -24,7 +25,8 @@ namespace Robust.Server.ServerStatus;
 internal sealed partial class StatusHost
 {
     private (string binFolder, string[] assemblies)? _aczInfo;
-    private IMagicAczProvider? _aczProvider;
+    private IMagicAczProvider? _magicAczProvider;
+    private IFullHybridAczProvider? _fullHybridAczProvider;
 
     // -- Dictionary<string, OnDemandFile> methods --
 
@@ -102,24 +104,37 @@ internal sealed partial class StatusHost
         return (writerPass.ManifestContent!, writerPass.ManifestEntries!, writerPass.BlobData!);
     }
 
-    private Task<bool> SourceAczDictionaryViaFile(AssetPass pass, IPackageLogger logger)
+    private async Task<bool> SourceAczDictionaryViaFile(AssetPass pass, IPackageLogger logger)
     {
         var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
         if (!FileHelper.TryOpenFileRead(path, out var fileStream))
-            return Task.FromResult(false);
+            return false;
 
         _aczSawmill.Info($"StatusHost found client zip: {path}");
         using var zip = new ZipArchive(fileStream, ZipArchiveMode.Read, leaveOpen: false);
-        SourceAczDictionaryViaZipStream(zip, pass, logger);
-        return Task.FromResult(true);
+        await SourceAczDictionaryViaZipStream(zip, pass, logger);
+        return true;
     }
 
-    private static void SourceAczDictionaryViaZipStream(ZipArchive zip, AssetPass pass, IPackageLogger logger)
+    private async Task SourceAczDictionaryViaZipStream(ZipArchive zip, AssetPass outputPass, IPackageLogger logger)
     {
-        var inputPass = new AssetPassPipe { Parallelize = true };
-        pass.AddDependency(inputPass);
+        var inputPass = new AssetPassPipe { Parallelize = true, Name = "HybridPackageInput" };
 
-        AssetGraph.CalculateGraph(new []{inputPass, pass}, logger);
+        if (_fullHybridAczProvider is { } fullProvider)
+        {
+            logger.Debug("Using Full Hybrid ACZ with custom provider");
+
+            await fullProvider.Package(inputPass, outputPass, logger, CancellationToken.None);
+        }
+        else
+        {
+            logger.Debug("Using standard Hybrid ACZ without custom provider");
+
+            outputPass.AddDependency(inputPass);
+            AssetGraph.CalculateGraph(new []{inputPass, outputPass}, logger);
+        }
+
+        logger.Verbose("Injecting Hybrid ACZ files");
 
         foreach (var entry in zip.Entries)
         {
@@ -137,9 +152,11 @@ internal sealed partial class StatusHost
 
     private async Task<bool> SourceAczViaMagic(AssetPass pass, IPackageLogger logger)
     {
-        var provider = _aczProvider;
+        _aczSawmill.Debug("Using Magic ACZ");
+        var provider = _magicAczProvider;
         if (provider == null)
         {
+            _aczSawmill.Verbose("Using default magic ACZ provider");
             // Default provider
             var (binFolderPath, assemblyNames) =
                 _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
@@ -172,7 +189,12 @@ internal sealed partial class StatusHost
 
     public void SetMagicAczProvider(IMagicAczProvider provider)
     {
-        _aczProvider = provider;
+        _magicAczProvider = provider;
+    }
+
+    public void SetFullHybridAczProvider(IFullHybridAczProvider provider)
+    {
+        _fullHybridAczProvider = provider;
     }
 
     private sealed class AssetPassAczWriter : AssetPass, IDisposable

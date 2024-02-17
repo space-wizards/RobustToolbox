@@ -7,7 +7,6 @@ using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System.Threading.Tasks;
-using Robust.Client.Upload.Commands;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Replays;
@@ -101,7 +100,7 @@ public sealed partial class ReplayLoadManager
 
         await callback(0, states.Count, LoadingState.ProcessingFiles, true);
         var playerSpan = state0.PlayerStates.Value;
-        Dictionary<NetUserId, PlayerState> playerStates = new(playerSpan.Count);
+        Dictionary<NetUserId, SessionState> playerStates = new(playerSpan.Count);
         foreach (var player in playerSpan)
         {
             playerStates.Add(player.UserId, player);
@@ -391,7 +390,7 @@ public sealed partial class ReplayLoadManager
         return new EntityState(newState.NetEntity, combined, newState.EntityLastModified, newState.NetComponents ?? oldNetComps);
     }
 
-    private void UpdatePlayerStates(ReadOnlySpan<PlayerState> span, Dictionary<NetUserId, PlayerState> playerStates)
+    private void UpdatePlayerStates(ReadOnlySpan<SessionState> span, Dictionary<NetUserId, SessionState> playerStates)
     {
         foreach (var player in span)
         {

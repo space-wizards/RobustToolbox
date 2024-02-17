@@ -1,5 +1,5 @@
 using System;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects

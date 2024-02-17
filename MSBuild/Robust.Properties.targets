@@ -3,7 +3,8 @@
   <!-- Import this at the end of any project files in Robust and Content. -->
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
   <Import Project="Robust.Custom.targets" Condition="Exists('Robust.Custom.targets')"/>
@@ -27,5 +28,5 @@
   <Import Project="Robust.Analyzers.targets" Condition="'$(SkipRobustAnalyzer)' != 'true'" />
 
   <!-- serialization generator -->
-  <Import Project="Robust.Serialization.Generator.targets" />
+  <Import Project="Robust.Serialization.Generator.targets" Condition="'$(SkipRobustAnalyzer)' != 'true'" />
 </Project>

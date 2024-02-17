@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -34,13 +36,14 @@ public sealed class UITheme : IPrototype
     private ResPath _path;
 
     [DataField("colors", readOnly: true)] // This is a prototype, why is this readonly??
-    public Dictionary<string, Color>? Colors { get; }
+    public FrozenDictionary<string, Color>? Colors { get; }
     public ResPath Path => _path == default ? new ResPath(DefaultPath+"/"+ID) : _path;
 
-    private void ValidateFilePath(IResourceCache resourceCache)
+    private void ValidateFilePath(IResourceManager manager)
     {
-        var foundFolders = resourceCache.ContentFindFiles(Path.ToRootedPath());
-        if (!foundFolders.Any()) throw new Exception("UITheme: "+ID+" not found in resources!");
+        var foundFolders = manager.ContentFindFiles(Path.ToRootedPath());
+        if (!foundFolders.Any())
+            throw new Exception("UITheme: "+ID+" not found in resources!");
     }
 
     public Texture ResolveTexture(string texturePath)

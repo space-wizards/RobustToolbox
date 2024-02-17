@@ -1,5 +1,5 @@
-using Robust.Server.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Player;
 
 namespace Robust.Server.GameObjects
 {
@@ -18,7 +18,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Subscribes the session to get PVS updates from the point of view of the specified entity.
         /// </summary>
-        public void AddViewSubscriber(EntityUid uid, IPlayerSession session)
+        public void AddViewSubscriber(EntityUid uid, ICommonSession session)
         {
             // If the entity doesn't have the component, it will be added.
             var viewSubscriber = EntityManager.EnsureComponent<ViewSubscriberComponent>(uid);
@@ -27,7 +27,7 @@ namespace Robust.Server.GameObjects
                 return; // Already subscribed, do nothing else.
 
             viewSubscriber.SubscribedSessions.Add(session);
-            session.AddViewSubscription(uid);
+            session.ViewSubscriptions.Add(uid);
 
             RaiseLocalEvent(uid, new ViewSubscriberAddedEvent(uid, session), true);
         }
@@ -35,7 +35,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Unsubscribes the session from getting PVS updates from the point of view of the specified entity.
         /// </summary>
-        public void RemoveViewSubscriber(EntityUid uid, IPlayerSession session)
+        public void RemoveViewSubscriber(EntityUid uid, ICommonSession session)
         {
             if(!EntityManager.TryGetComponent(uid, out ViewSubscriberComponent? viewSubscriber))
                 return; // Entity didn't have any subscriptions, do nothing.
@@ -43,7 +43,7 @@ namespace Robust.Server.GameObjects
             if (!viewSubscriber.SubscribedSessions.Remove(session))
                 return; // Session wasn't subscribed, do nothing.
 
-            session.RemoveViewSubscription(uid);
+            session.ViewSubscriptions.Remove(uid);
             RaiseLocalEvent(uid, new ViewSubscriberRemovedEvent(uid, session), true);
         }
 
@@ -51,7 +51,7 @@ namespace Robust.Server.GameObjects
         {
             foreach (var session in component.SubscribedSessions)
             {
-                session.RemoveViewSubscription(uid);
+                session.ViewSubscriptions.Remove(uid);
             }
         }
     }
@@ -62,9 +62,9 @@ namespace Robust.Server.GameObjects
     public sealed class ViewSubscriberAddedEvent : EntityEventArgs
     {
         public EntityUid View { get; }
-        public IPlayerSession Subscriber { get; }
+        public ICommonSession Subscriber { get; }
 
-        public ViewSubscriberAddedEvent(EntityUid view, IPlayerSession subscriber)
+        public ViewSubscriberAddedEvent(EntityUid view, ICommonSession subscriber)
         {
             View = view;
             Subscriber = subscriber;
@@ -78,9 +78,9 @@ namespace Robust.Server.GameObjects
     public sealed class ViewSubscriberRemovedEvent : EntityEventArgs
     {
         public EntityUid View { get; }
-        public IPlayerSession Subscriber { get; }
+        public ICommonSession Subscriber { get; }
 
-        public ViewSubscriberRemovedEvent(EntityUid view, IPlayerSession subscriber)
+        public ViewSubscriberRemovedEvent(EntityUid view, ICommonSession subscriber)
         {
             View = view;
             Subscriber = subscriber;

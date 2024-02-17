@@ -25,7 +25,7 @@ namespace Robust.Shared.Localization
 
         private bool TryGetEntityLocAttrib(EntityUid entity, string attribute, [NotNullWhen(true)] out string? value)
         {
-            if (_entMan.TryGetComponent<GrammarComponent?>(entity, out var grammar) &&
+            if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) &&
                 grammar.Attributes.TryGetValue(attribute, out value))
             {
                 return true;
@@ -44,10 +44,8 @@ namespace Robust.Shared.Localization
         // Flush caches conservatively on prototype/localization changes.
         private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
         {
-            if (!args.ByType.ContainsKey(typeof(EntityPrototype)))
-                return;
-
-            FlushEntityCache();
+            if (args.WasModified<EntityPrototype>())
+                FlushEntityCache();
         }
 
         private EntityLocData CalcEntityLoc(string prototypeId)

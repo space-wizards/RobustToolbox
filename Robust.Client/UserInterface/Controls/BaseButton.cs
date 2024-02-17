@@ -1,6 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Robust.Client.Audio;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
@@ -32,8 +38,10 @@ namespace Robust.Client.UserInterface.Controls
             get => _group;
             set
             {
+                if (value?.InternalButtons.Contains(this) ?? false)
+                    return; // No work to do.
                 // Remove from old group.
-                _group?.Buttons.Remove(this);
+                _group?.InternalButtons.Remove(this);
 
                 _group = value;
 
@@ -42,11 +50,21 @@ namespace Robust.Client.UserInterface.Controls
                     return;
                 }
 
-                value.Buttons.Add(this);
+                value.InternalButtons.Add(this);
                 ToggleMode = true;
 
-                // Set us to pressed if we're the first button.
-                Pressed = value.Buttons.Count == 0;
+                if (value.IsNoneSetAllowed)
+                {
+                    // Still UNPRESS if there's another pressed button, but don't PRESS it otherwise.
+                    if (value.Pressed != this)
+                        _pressed = false;
+                }
+                else
+                {
+                    // Set us to pressed if we're the first button. Doesn't go through the setter to avoid setting off our own error check.
+                    _pressed = value.InternalButtons.Count == 1;
+                }
+                DrawModeChanged();
             }
         }
 
@@ -90,7 +108,7 @@ namespace Robust.Client.UserInterface.Controls
                     return;
                 }
 
-                if (!value && Group != null)
+                if (!value && Group is { IsNoneSetAllowed: false })
                 {
                     throw new InvalidOperationException("Cannot directly unset a grouped button. Set another button in the group instead.");
                 }
@@ -107,8 +125,23 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
+        /// Sets the button's press state and also handles click sounds.
+        /// </summary>
+        /// <returns></returns>
+        public void SetClickPressed(bool value)
+        {
+            Pressed = value;
+
+            if (Pressed != value)
+                return;
+
+            UserInterfaceManager.ClickSound();
+        }
+
+        /// <summary>
         ///     Whether key functions other than <see cref="EngineKeyFunctions.UIClick"/> trigger the button.
         /// </summary>
+        [ViewVariables]
         public bool EnableAllKeybinds
         {
             get => _enableAllKeybinds;
@@ -220,7 +253,7 @@ namespace Robust.Client.UserInterface.Controls
                     // Can't un press a radio button directly.
                     if (Group == null || !Pressed)
                     {
-                        Pressed = !Pressed;
+                        SetClickPressed(!Pressed);
                         OnPressed?.Invoke(buttonEventArgs);
                         OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
                         UnsetOtherGroupButtons();
@@ -261,7 +294,11 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (args.Function == EngineKeyFunctions.UIClick && ToggleMode && _attemptingPress == 1)
                     {
-                        Pressed = !Pressed;
+                        SetClickPressed(!Pressed);
+                    }
+                    else
+                    {
+                        UserInterfaceManager.ClickSound();
                     }
 
                     OnPressed?.Invoke(buttonEventArgs);
@@ -302,7 +339,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            foreach (var button in _group.Buttons)
+            foreach (var button in _group.InternalButtons)
             {
                 if (button != this && button.Pressed)
                 {
@@ -315,6 +352,11 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void MouseEntered()
         {
             base.MouseEntered();
+
+            if (!Disabled)
+            {
+                UserInterfaceManager.HoverSound();
+            }
 
             var drawMode = DrawMode;
             _beingHovered = true;
@@ -411,6 +453,29 @@ namespace Robust.Client.UserInterface.Controls
     /// </remarks>
     public sealed class ButtonGroup
     {
-        internal readonly List<BaseButton> Buttons = new();
+        /// <summary>
+        /// Whether it is legal for this button group to have no selected button.
+        /// </summary>
+        /// <remarks>
+        /// If true, it's legal for no button in the group to be active.
+        /// This is then the initial state of a new group of buttons (no button is automatically selected),
+        /// and it becomes legal to manually clear the active button through code.
+        /// The user cannot manually unselect the active button regardless, only by selecting a difference button.
+        /// </remarks>
+        public bool IsNoneSetAllowed { get; }
+
+        /// <summary>
+        /// Create a new <see cref="ButtonGroup"/>
+        /// </summary>
+        /// <param name="isNoneSetAllowed">The value of <see cref="IsNoneSetAllowed"/> on the new button group.</param>
+        public ButtonGroup(bool isNoneSetAllowed = true)
+        {
+            IsNoneSetAllowed = isNoneSetAllowed;
+        }
+
+        internal readonly List<BaseButton> InternalButtons = new();
+        public IReadOnlyList<BaseButton> Buttons => InternalButtons;
+
+        public BaseButton? Pressed => InternalButtons.FirstOrDefault(x => x.Pressed);
     }
 }

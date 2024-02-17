@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
@@ -8,7 +9,6 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
-using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
 
@@ -42,8 +42,16 @@ namespace Robust.Shared.GameObjects
                     name = name.Substring(0, name.Length - "System".Length);
 
                 // Convert CamelCase to snake_case
-                name = string.Concat(name.Select(x => char.IsUpper(x) ? $"_{char.ToLower(x)}" : x.ToString()));
-                name = name.Trim('_');
+                // Ignore if all uppercase, assume acronym (e.g. NPC or HTN)
+                if (name.All(char.IsUpper))
+                {
+                    name = name.ToLower(CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    name = string.Concat(name.Select(x => char.IsUpper(x) ? $"_{char.ToLower(x)}" : x.ToString()));
+                    name = name.Trim('_');
+                }
 
                 return $"system.{name}";
             }
@@ -118,7 +126,7 @@ namespace Robust.Shared.GameObjects
 
         protected void RaiseNetworkEvent(EntityEventArgs message, ICommonSession session)
         {
-            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.Channel);
         }
 
         /// <summary>
@@ -134,14 +142,14 @@ namespace Robust.Shared.GameObjects
 
             foreach (var session in filter.Recipients)
             {
-                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
+                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.Channel);
             }
         }
 
         protected void RaiseNetworkEvent(EntityEventArgs message, EntityUid recipient)
         {
             if (_playerMan.TryGetSessionByEntity(recipient, out var session))
-                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
+                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.Channel);
         }
 
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)

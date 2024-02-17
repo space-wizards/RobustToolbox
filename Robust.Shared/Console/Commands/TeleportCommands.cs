@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -9,7 +10,8 @@ using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Players;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console.Commands;
@@ -84,11 +86,18 @@ public sealed class TeleportToCommand : LocalizedCommands
 
         var target = args[0];
 
-        if (!TryGetTransformFromUidOrUsername(target, shell, out _, out var targetTransform))
+        if (!TryGetTransformFromUidOrUsername(target, shell, out var targetUid, out _))
             return;
 
         var transformSystem = _entities.System<SharedTransformSystem>();
-        var targetCoords = targetTransform.Coordinates;
+        var targetCoords = new EntityCoordinates(targetUid.Value, Vector2.Zero);
+
+        if (_entities.TryGetComponent(targetUid, out PhysicsComponent? targetPhysics))
+        {
+            targetCoords = targetCoords.Offset(targetPhysics.LocalCenter);
+        }
+
+        var victims = new List<(EntityUid Entity, TransformComponent Transform)>();
 
         if (args.Length == 1)
         {
@@ -100,8 +109,7 @@ public sealed class TeleportToCommand : LocalizedCommands
                 return;
             }
 
-            transformSystem.SetCoordinates(ent.Value, targetCoords);
-            playerTransform.AttachToGridOrMap();
+            victims.Add((ent.Value, playerTransform));
         }
         else
         {
@@ -111,11 +119,16 @@ public sealed class TeleportToCommand : LocalizedCommands
                     continue;
 
                 if (!TryGetTransformFromUidOrUsername(victim, shell, out var uid, out var victimTransform))
-                    return;
+                    continue;
 
-                transformSystem.SetCoordinates(uid.Value, targetCoords);
-                victimTransform.AttachToGridOrMap();
+                victims.Add((uid.Value, victimTransform));
             }
+        }
+
+        foreach (var victim in victims)
+        {
+            transformSystem.SetCoordinates(victim.Entity, targetCoords);
+            transformSystem.AttachToGridOrMap(victim.Entity, victim.Transform);
         }
     }
 
@@ -125,13 +138,16 @@ public sealed class TeleportToCommand : LocalizedCommands
         [NotNullWhen(true)] out EntityUid? victimUid,
         [NotNullWhen(true)] out TransformComponent? transform)
     {
-        if (NetEntity.TryParse(str, out var uidNet) && _entities.TryGetEntity(uidNet, out var uid) && _entities.TryGetComponent(uid, out transform))
+        if (NetEntity.TryParse(str, out var uidNet)
+            && _entities.TryGetEntity(uidNet, out var uid)
+            && _entities.TryGetComponent(uid, out transform)
+            && !_entities.HasComponent<MapComponent>(uid))
         {
             victimUid = uid;
             return true;
         }
 
-        if (_players.Sessions.TryFirstOrDefault(x => x.ConnectedClient.UserName == str, out var session)
+        if (_players.Sessions.TryFirstOrDefault(x => x.Channel.UserName == str, out var session)
             && _entities.TryGetComponent(session.AttachedEntity, out transform))
         {
             victimUid = session.AttachedEntity;
@@ -191,37 +207,70 @@ sealed class TpGridCommand : LocalizedCommands
     [Dependency] private readonly IMapManager _map = default!;
 
     public override string Command => "tpgrid";
+    public override string Description => Loc.GetString("cmd-tpgrid-desc");
+    public override string Help => Loc.GetString("cmd-tpgrid-help");
     public override bool RequireServerOrSingleplayer => true;
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length is < 3 or > 4)
         {
-            shell.WriteError($"Usage: {Help}");
+            shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
             return;
         }
 
-        var gridIdNet = NetEntity.Parse(args[0]);
+        if (!NetEntity.TryParse(args[0], out var gridIdNet))
+        {
+            shell.WriteError(Loc.GetString("cmd-parse-failure-uid", ("arg", args[0])));
+            return;
+        }
+
+        if (!_ent.TryGetEntity(gridIdNet, out var uid)
+            || !_ent.HasComponent<MapGridComponent>(uid)
+            || _ent.HasComponent<MapComponent>(uid))
+        {
+            shell.WriteError(Loc.GetString("cmd-parse-failure-grid", ("arg", args[0])));
+            return;
+        }
+
         var xPos = float.Parse(args[1], CultureInfo.InvariantCulture);
         var yPos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
-        if (!_ent.TryGetEntity(gridIdNet, out var gridId) || !_ent.EntityExists(gridId))
+        var gridXform = _ent.GetComponent<TransformComponent>(uid.Value);
+
+        var mapId = gridXform.MapID;
+
+        if (args.Length > 3)
         {
-            shell.WriteError($"Entity does not exist: {args[0]}");
+            if (!int.TryParse(args[3], out var map))
+            {
+                shell.WriteError(Loc.GetString("cmd-parse-failure-mapid", ("arg", args[3])));
+                return;
+            }
+
+            mapId = new MapId(map);
+        }
+
+        var id = _map.GetMapEntityId(mapId);
+        if (id == EntityUid.Invalid)
+        {
+            shell.WriteError(Loc.GetString("cmd-parse-failure-mapid", ("arg", mapId.Value)));
             return;
         }
 
-        if (!_ent.HasComponent<MapGridComponent>(gridId))
+        var pos = new EntityCoordinates(_map.GetMapEntityId(mapId), new Vector2(xPos, yPos));
+        _ent.System<SharedTransformSystem>().SetCoordinates(uid.Value, pos);
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        return args.Length switch
         {
-            shell.WriteError($"No grid found with id {args[0]}");
-            return;
-        }
-
-        var gridXform = _ent.GetComponent<TransformComponent>(gridId.Value);
-        var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
-
-        gridXform.Coordinates = new EntityCoordinates(_map.GetMapEntityId(mapId), new Vector2(xPos, yPos));
-
-        shell.WriteLine("Grid was teleported.");
+            1 => CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[^1], _ent), "<GridUid>"),
+            2 => CompletionResult.FromHint("<x>"),
+            3 => CompletionResult.FromHint("<y>"),
+            4 => CompletionResult.FromHintOptions(CompletionHelper.MapIds(_ent), "[MapId]"),
+            _ => CompletionResult.Empty
+        };
     }
 }

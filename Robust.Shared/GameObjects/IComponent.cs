@@ -1,5 +1,5 @@
+using System;
 using Robust.Shared.GameStates;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 
@@ -7,7 +7,6 @@ namespace Robust.Shared.GameObjects
 {
     /// <remarks>
     ///     Base component for the ECS system.
-    ///     All discoverable implementations of IComponent must override the <see cref="Name" />.
     ///     Instances are dynamically instantiated by a <c>ComponentFactory</c>, and will have their IoC Dependencies resolved.
     /// </remarks>
     [ImplicitDataDefinitionForInheritors]
@@ -17,7 +16,9 @@ namespace Robust.Shared.GameObjects
         ///     The current lifetime stage of this component. You can use this to check
         ///     if the component is initialized or being deleted.
         /// </summary>
-        ComponentLifeStage LifeStage { get; }
+        ComponentLifeStage LifeStage { get; internal set; }
+
+        internal bool Networked { get; set; }
 
         /// <summary>
         ///     Whether this component should be synchronized with clients when modified.
@@ -29,10 +30,24 @@ namespace Robust.Shared.GameObjects
         bool NetSyncEnabled { get; set; }
 
         /// <summary>
+        ///     If true, and if this is a networked component, then component data will only be sent to players if their
+        ///     controlled entity is the owner of this component. This is less performance intensive than <see cref="SessionSpecific"/>.
+        /// </summary>
+        bool SendOnlyToOwner { get; }
+
+        /// <summary>
+        ///     If true, and if this is a networked component, then this component will cause <see
+        ///     cref="ComponentGetStateAttemptEvent"/> events to be raised to check whether a given player should
+        ///     receive this component's state.
+        /// </summary>
+        bool SessionSpecific { get; }
+
+        /// <summary>
         ///     Entity that this component is attached to.
         /// </summary>
         /// <seealso cref="EntityQueryEnumerator{TComp1}"/>
-        EntityUid Owner { get; }
+        [Obsolete("Update your API to allow accessing Owner through other means")]
+        EntityUid Owner { get; set; }
 
         /// <summary>
         /// Component has been (or is currently being) initialized.
@@ -52,16 +67,21 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Marks the component as dirty so that the network will re-sync it with clients.
         /// </summary>
+        [Obsolete]
         void Dirty(IEntityManager? entManager = null);
 
         /// <summary>
         ///     This is the tick the component was created.
         /// </summary>
-        GameTick CreationTick { get; }
+        GameTick CreationTick { get; internal set; }
 
         /// <summary>
         ///     This is the last game tick Dirty() was called.
         /// </summary>
-        GameTick LastModifiedTick { get; }
+        GameTick LastModifiedTick { get; internal set; }
+
+        internal void ClearTicks();
+
+        internal void ClearCreationTick();
     }
 }

@@ -132,9 +132,10 @@ internal sealed partial class UserInterfaceManager
             try
             {
                 var total = 0;
-                _render(renderHandle, ref total, root, Vector2i.Zero, Color.White, null);
                 var drawingHandle = renderHandle.DrawingHandleScreen;
-                drawingHandle.SetTransform(Vector2.Zero, Angle.Zero, Vector2.One);
+                drawingHandle.SetTransform(Matrix3.Identity);
+                RenderControl(renderHandle, ref total, root, Vector2i.Zero, Color.White, null, Matrix3.Identity);
+                drawingHandle.SetTransform(Matrix3.Identity);
                 OnPostDrawUIRoot?.Invoke(new PostDrawUIRootEventArgs(root, drawingHandle));
 
                 _prof.WriteValue("Controls rendered", ProfData.Int32(total));

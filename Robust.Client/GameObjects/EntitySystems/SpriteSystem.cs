@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -15,6 +18,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using static Robust.Client.GameObjects.SpriteComponent;
 
 namespace Robust.Client.GameObjects
@@ -54,11 +58,11 @@ namespace Robust.Client.GameObjects
 
             UpdatesAfter.Add(typeof(SpriteTreeSystem));
 
-            _proto.PrototypesReloaded += OnPrototypesReloaded;
+            SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
             SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
-            _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
+            Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
             _sawmill = _logManager.GetSawmill("sprite");
         }
 
@@ -66,13 +70,6 @@ namespace Robust.Client.GameObjects
         {
             // I'm not 100% this is needed, but I CBF with this ATM. Somebody kill server sprite component please.
             QueueUpdateInert(uid, component);
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            _proto.PrototypesReloaded -= OnPrototypesReloaded;
-            _cfg.UnsubValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged);
         }
 
         private void OnBiasChanged(double value)
@@ -182,6 +179,48 @@ namespace Robust.Client.GameObjects
         public void ForceUpdate(EntityUid uid)
         {
             _queuedFrameUpdate.Add(uid);
+        }
+
+        /// <summary>
+        /// Gets the specified frame for this sprite at the specified time.
+        /// </summary>
+        public Texture GetFrame(SpriteSpecifier spriteSpec, TimeSpan curTime)
+        {
+            Texture? sprite = null;
+
+            switch (spriteSpec)
+            {
+                case SpriteSpecifier.Rsi rsi:
+                    var rsiActual = _resourceCache.GetResource<RSIResource>(rsi.RsiPath).RSI;
+                    rsiActual.TryGetState(rsi.RsiState, out var state);
+                    var frames = state!.GetFrames(RsiDirection.South);
+                    var delays = state.GetDelays();
+                    var totalDelay = delays.Sum();
+                    var time = curTime.TotalSeconds % totalDelay;
+                    var delaySum = 0f;
+
+                    for (var i = 0; i < delays.Length; i++)
+                    {
+                        var delay = delays[i];
+                        delaySum += delay;
+
+                        if (time > delaySum)
+                            continue;
+
+                        sprite = frames[i];
+                        break;
+                    }
+
+                    sprite ??= Frame0(spriteSpec);
+                    break;
+                case SpriteSpecifier.Texture texture:
+                    sprite = texture.GetTexture(_resourceCache);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            return sprite;
         }
     }
 

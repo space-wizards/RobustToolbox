@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 using System.Text.Json.Nodes;
+using System.Web;
 using Robust.Shared;
 using Robust.Shared.Utility;
 
@@ -77,6 +79,8 @@ namespace Robust.Server.ServerStatus
 
             if (string.IsNullOrEmpty(downloadUrl))
             {
+                var query = HttpUtility.ParseQueryString(context.Url.Query);
+                var optional = query.Keys;
                 buildInfo = await PrepareACZBuildInfo();
             }
             else

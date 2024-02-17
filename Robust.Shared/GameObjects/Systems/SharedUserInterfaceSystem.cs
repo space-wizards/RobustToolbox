@@ -1,10 +1,16 @@
 using System;
-using Robust.Shared.Players;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Enums;
+using Robust.Shared.Player;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract class SharedUserInterfaceSystem : EntitySystem
 {
+    protected readonly Dictionary<ICommonSession, List<PlayerBoundUserInterface>> OpenInterfaces = new();
+
     public override void Initialize()
     {
         base.Initialize();
@@ -99,6 +105,80 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
     }
 
+    public bool TryGetUi(EntityUid uid, Enum uiKey, [NotNullWhen(true)] out PlayerBoundUserInterface? bui, UserInterfaceComponent? ui = null)
+    {
+        bui = null;
+
+        return Resolve(uid, ref ui, false) && ui.Interfaces.TryGetValue(uiKey, out bui);
+    }
+
+    /// <summary>
+    ///     Switches between closed and open for a specific client.
+    /// </summary>
+    public virtual bool TryToggleUi(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
+    {
+        if (!TryGetUi(uid, uiKey, out var bui, ui))
+            return false;
+
+        ToggleUi(bui, session);
+        return true;
+    }
+
+    /// <summary>
+    ///     Switches between closed and open for a specific client.
+    /// </summary>
+    public void ToggleUi(PlayerBoundUserInterface bui, ICommonSession session)
+    {
+        if (bui._subscribedSessions.Contains(session))
+            CloseUi(bui, session);
+        else
+            OpenUi(bui, session);
+    }
+
+    public bool TryOpen(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
+    {
+        if (!TryGetUi(uid, uiKey, out var bui, ui))
+            return false;
+
+        return OpenUi(bui, session);
+    }
+
+    /// <summary>
+    ///     Opens this interface for a specific client.
+    /// </summary>
+    public bool OpenUi(PlayerBoundUserInterface bui, ICommonSession session)
+    {
+        if (session.Status == SessionStatus.Connecting || session.Status == SessionStatus.Disconnected)
+            return false;
+
+        if (!bui._subscribedSessions.Add(session))
+            return false;
+
+        OpenInterfaces.GetOrNew(session).Add(bui);
+        RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Owner, session));
+        if (!bui._subscribedSessions.Contains(session))
+        {
+            // This can happen if Content closed a BUI from inside the event handler.
+            // This will already have caused a redundant close event to be sent to the client, but whatever.
+            // Just avoid doing the rest to avoid any state corruption shit.
+            return false;
+        }
+
+        RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new OpenBoundInterfaceMessage(), bui.UiKey), session.Channel);
+
+        // Fun fact, clients needs to have BUIs open before they can receive the state.....
+        if (bui.LastStateMsg != null)
+            RaiseNetworkEvent(bui.LastStateMsg, session.Channel);
+
+        ActivateInterface(bui);
+        return true;
+    }
+
+    private void ActivateInterface(PlayerBoundUserInterface ui)
+    {
+        EnsureComp<ActiveUserInterfaceComponent>(ui.Owner).Interfaces.Add(ui);
+    }
+
     internal bool TryCloseUi(ICommonSession? session, EntityUid uid, Enum uiKey, bool remoteCall = false, UserInterfaceComponent? uiComp = null)
     {
         if (!Resolve(uid, ref uiComp))
@@ -116,6 +196,27 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (session != null)
             RaiseLocalEvent(uid, new BoundUIClosedEvent(uiKey, uid, session), true);
 
+        return true;
+    }
+
+    public bool TryClose(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
+    {
+        if (!TryGetUi(uid, uiKey, out var bui, ui))
+            return false;
+
+        return CloseUi(bui, session);
+    }
+
+    /// <summary>
+    ///     Close this interface for a specific client.
+    /// </summary>
+    public bool CloseUi(PlayerBoundUserInterface bui, ICommonSession session, ActiveUserInterfaceComponent? activeUis = null)
+    {
+        if (!bui._subscribedSessions.Remove(session))
+            return false;
+
+        RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new CloseBoundInterfaceMessage(), bui.UiKey), session.Channel);
+        CloseShared(bui, session, activeUis);
         return true;
     }
 

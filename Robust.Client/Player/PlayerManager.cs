@@ -2,16 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Utility;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Player
 {
@@ -20,154 +17,215 @@ namespace Robust.Client.Player
     ///     Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated.
     ///     This class also communicates with the server to let the server control what entity it is attached to.
     /// </summary>
-    public sealed class PlayerManager : IPlayerManager
+    internal sealed class PlayerManager : SharedPlayerManager, IPlayerManager
     {
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IEntityManager _entManager = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
 
         /// <summary>
-        ///     Active sessions of connected clients to the server.
+        /// Received player states that had an unknown <see cref="NetEntity"/>.
         /// </summary>
-        private readonly Dictionary<NetUserId, ICommonSession> _sessions = new();
+        private Dictionary<NetUserId, SessionState> _pendingStates = new ();
+        private List<SessionState> _pending = new();
 
         /// <inheritdoc />
-        public IEnumerable<ICommonSession> NetworkedSessions
+        public override ICommonSession[] NetworkedSessions
         {
             get
             {
-                if (LocalPlayer is not null)
-                    return new[] {LocalPlayer.Session};
-
-                return Enumerable.Empty<ICommonSession>();
+                return LocalSession != null
+                    ? new [] { LocalSession }
+                    : Array.Empty<ICommonSession>();
             }
         }
 
         /// <inheritdoc />
-        IEnumerable<ICommonSession> ISharedPlayerManager.Sessions => _sessions.Values;
+        public override int MaxPlayers => _client.GameInfo?.ServerMaxPlayers ?? -1;
+
+        public LocalPlayer? LocalPlayer { get; private set; }
+
+        public event Action<SessionStatusEventArgs>? LocalStatusChanged;
+        public event Action? PlayerListUpdated;
+        public event Action<EntityUid>? LocalPlayerDetached;
+        public event Action<EntityUid>? LocalPlayerAttached;
+        public event Action<(ICommonSession? Old, ICommonSession? New)>? LocalSessionChanged;
 
         /// <inheritdoc />
-        public int PlayerCount => _sessions.Values.Count;
-
-        /// <inheritdoc />
-        public int MaxPlayers => _client.GameInfo?.ServerMaxPlayers ?? 0;
-
-        public ICommonSession? LocalSession => LocalPlayer?.Session;
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public LocalPlayer? LocalPlayer
+        public override void Initialize(int maxPlayers)
         {
-            get => _localPlayer;
-            private set
-            {
-                if (_localPlayer == value) return;
-                var oldValue = _localPlayer;
-                _localPlayer = value;
-                LocalPlayerChanged?.Invoke(new LocalPlayerChangedEventArgs(oldValue, _localPlayer));
-            }
-        }
-        private LocalPlayer? _localPlayer;
-        private ISawmill _sawmill = default!;
-
-        public event Action<LocalPlayerChangedEventArgs>? LocalPlayerChanged;
-
-        /// <inheritdoc />
-        [ViewVariables]
-        IEnumerable<ICommonSession> IPlayerManager.Sessions => _sessions.Values;
-
-        /// <inheritdoc />
-        public IReadOnlyDictionary<NetUserId, ICommonSession> SessionsDict => _sessions;
-
-        /// <inheritdoc />
-        public event EventHandler? PlayerListUpdated;
-
-        /// <inheritdoc />
-        public void Initialize()
-        {
-            _client.RunLevelChanged += OnRunLevelChanged;
-
-            _sawmill = _logMan.GetSawmill("player");
+            base.Initialize(maxPlayers);
             _network.RegisterNetMessage<MsgPlayerListReq>();
             _network.RegisterNetMessage<MsgPlayerList>(HandlePlayerList);
+            PlayerStatusChanged += StatusChanged;
+        }
+
+        private void StatusChanged(object? sender, SessionStatusEventArgs e)
+        {
+            if (e.Session == LocalPlayer?.Session)
+                LocalStatusChanged?.Invoke(e);
+        }
+
+        public void SetupSinglePlayer(string name)
+        {
+            if (LocalSession != null)
+                throw new InvalidOperationException($"Player manager already running?");
+
+            var session = CreateAndAddSession(default, name);
+            session.ClientSide = true;
+            SetLocalSession(session);
+            Startup();
+            PlayerListUpdated?.Invoke();
+        }
+
+        public void SetupMultiplayer(INetChannel channel)
+        {
+            if (LocalSession != null)
+                throw new InvalidOperationException($"Player manager already running?");
+
+            SetLocalSession(CreateAndAddSession(channel));
+            Startup();
+            _network.ClientSendMessage(new MsgPlayerListReq());
+        }
+
+        public void SetLocalSession(ICommonSession? session)
+        {
+            if (session == LocalSession)
+                return;
+
+            var old = LocalSession;
+
+            if (old?.AttachedEntity is {} oldUid)
+            {
+                LocalSession = null;
+                LocalPlayer = null;
+                Sawmill.Info($"Detaching local player from {EntManager.ToPrettyString(oldUid)}.");
+                EntManager.EventBus.RaiseLocalEvent(oldUid, new LocalPlayerDetachedEvent(oldUid), true);
+                LocalPlayerDetached?.Invoke(oldUid);
+            }
+
+            LocalSession = session;
+            LocalPlayer = session == null ? null : new LocalPlayer(session);
+            Sawmill.Info($"Changing local session from {old?.ToString() ?? "null"} to {session?.ToString() ?? "null"}.");
+            LocalSessionChanged?.Invoke((old, LocalSession));
+
+            if (session?.AttachedEntity is {} newUid)
+            {
+                Sawmill.Info($"Attaching local player to {EntManager.ToPrettyString(newUid)}.");
+                EntManager.EventBus.RaiseLocalEvent(newUid, new LocalPlayerAttachedEvent(newUid), true);
+                LocalPlayerAttached?.Invoke(newUid);
+            }
         }
 
         /// <inheritdoc />
-        public void Startup()
+        public override void Shutdown()
         {
-            DebugTools.Assert(LocalPlayer == null);
-            LocalPlayer = new LocalPlayer();
-
-            var msgList = new MsgPlayerListReq();
-            // message is empty
-            _network.ClientSendMessage(msgList);
-        }
-
-        /// <inheritdoc />
-        public void Shutdown()
-        {
-            LocalPlayer?.DetachEntity();
+            SetAttachedEntity(LocalSession, null, out _);
             LocalPlayer = null;
-            _sessions.Clear();
+            LocalSession = null;
+            _pendingStates.Clear();
+            base.Shutdown();
+            PlayerListUpdated?.Invoke();
         }
 
-        /// <inheritdoc />
-        public void ApplyPlayerStates(IReadOnlyCollection<PlayerState> list)
+        public override bool SetAttachedEntity(ICommonSession? session, EntityUid? uid, out ICommonSession? kicked, bool force = false)
+        {
+            kicked = null;
+            if (session == null)
+                return false;
+
+            if (session.AttachedEntity == uid)
+                return true;
+
+            var old = session.AttachedEntity;
+            if (!base.SetAttachedEntity(session, uid, out kicked, force))
+                return false;
+
+            if (session != LocalSession)
+                return true;
+
+            if (old.HasValue)
+            {
+                Sawmill.Info($"Detaching local player from {EntManager.ToPrettyString(old)}.");
+                EntManager.EventBus.RaiseLocalEvent(old.Value, new LocalPlayerDetachedEvent(old.Value), true);
+                LocalPlayerDetached?.Invoke(old.Value);
+            }
+
+            if (uid == null)
+            {
+                Sawmill.Info($"Local player is no longer attached to any entity.");
+                return true;
+            }
+
+            if (!EntManager.EntityExists(uid))
+            {
+                Sawmill.Error($"Attempted to attach player to non-existent entity {uid}!");
+                return true;
+            }
+
+            if (!EntManager.HasComponent<EyeComponent>(uid.Value))
+            {
+                if (_client.RunLevel != ClientRunLevel.SinglePlayerGame)
+                    Sawmill.Warning($"Attaching local player to an entity {EntManager.ToPrettyString(uid)} without an eye. This eye will not be netsynced and may cause issues.");
+                var eye = (EyeComponent) Factory.GetComponent(typeof(EyeComponent));
+                eye.Owner = uid.Value;
+                eye.NetSyncEnabled = false;
+                EntManager.AddComponent(uid.Value, eye);
+            }
+
+            Sawmill.Info($"Attaching local player to {EntManager.ToPrettyString(uid)}.");
+            EntManager.EventBus.RaiseLocalEvent(uid.Value, new LocalPlayerAttachedEvent(uid.Value), true);
+            LocalPlayerAttached?.Invoke(uid.Value);
+            return true;
+        }
+
+        public void ApplyPlayerStates(IReadOnlyCollection<SessionState> list)
+        {
+            var dirty = ApplyStates(list, true);
+
+            if (_pendingStates.Count == 0)
+            {
+                // This is somewhat inefficient as it might try to re-apply states that failed just a moment ago.
+                _pending.Clear();
+                _pending.AddRange(_pendingStates.Values);
+                _pendingStates.Clear();
+                dirty |= ApplyStates(_pending, false);
+            }
+
+            if (dirty)
+                PlayerListUpdated?.Invoke();
+        }
+
+        private bool ApplyStates(IReadOnlyCollection<SessionState> list, bool fullList)
         {
             if (list.Count == 0)
-            {
-                // This happens when the server says "nothing changed!"
-                return;
-            }
+                return false;
+
             DebugTools.Assert(_network.IsConnected ||  _client.RunLevel == ClientRunLevel.SinglePlayerGame // replays use state application.
                 , "Received player state without being connected?");
-            DebugTools.Assert(LocalPlayer != null, "Call Startup()");
-            DebugTools.Assert(LocalPlayer!.Session != null, "Received player state before Session finished setup.");
+            DebugTools.Assert(LocalSession != null, "Received player state before Session finished setup.");
 
-            var myState = list.FirstOrDefault(s => s.UserId == LocalPlayer.UserId);
+            var state = list.FirstOrDefault(s => s.UserId == LocalSession.UserId);
 
-            if (myState != null)
+            bool dirty = false;
+            if (state != null)
             {
-                var uid = _entManager.GetEntity(myState.ControlledEntity);
-                if (myState.ControlledEntity is {Valid: true} && !_entManager.EntityExists(uid))
+                dirty = true;
+                if (!EntManager.TryGetEntity(state.ControlledEntity, out var uid)
+                    && state.ControlledEntity is { Valid:true } )
                 {
-                    _sawmill.Error($"Received player state for local player with an unknown net entity!");
+                    Sawmill.Error($"Received player state for local player with an unknown net entity!");
+                    _pendingStates[state.UserId] = state;
+                }
+                else
+                {
+                    _pendingStates.Remove(state.UserId);
                 }
 
-                UpdateAttachedEntity(uid);
-                UpdateSessionStatus(myState.Status);
+                SetAttachedEntity(LocalSession, uid, out _, true);
+                SetStatus(LocalSession, state.Status);
             }
 
-            UpdatePlayerList(list);
-        }
-
-        /// <summary>
-        ///     Compares the server sessionStatus to the client one, and updates if needed.
-        /// </summary>
-        private void UpdateSessionStatus(SessionStatus myStateStatus)
-        {
-            if (LocalPlayer!.Session.Status != myStateStatus)
-                LocalPlayer.SwitchState(myStateStatus);
-        }
-
-        /// <summary>
-        ///     Compares the server attachedEntity to the client one, and updates if needed.
-        /// </summary>
-        /// <param name="entity">AttachedEntity in the server session.</param>
-        private void UpdateAttachedEntity(EntityUid? entity)
-        {
-            if (LocalPlayer!.ControlledEntity == entity)
-            {
-                return;
-            }
-            if (entity == null)
-            {
-                LocalPlayer.DetachEntity();
-                return;
-            }
-
-            LocalPlayer.AttachEntity(entity.Value, _entManager, _client);
+            return UpdatePlayerList(list, fullList) || dirty;
         }
 
         /// <summary>
@@ -175,117 +233,88 @@ namespace Robust.Client.Player
         /// </summary>
         private void HandlePlayerList(MsgPlayerList msg)
         {
-            UpdatePlayerList(msg.Plyrs);
+            ApplyPlayerStates(msg.Plyrs);
         }
 
         /// <summary>
         ///     Compares the server player list to the client one, and updates if needed.
         /// </summary>
-        private void UpdatePlayerList(IEnumerable<PlayerState> remotePlayers)
+        private bool UpdatePlayerList(IEnumerable<SessionState> remotePlayers, bool fullList)
         {
             var dirty = false;
-
-            var hitSet = new List<NetUserId>();
-
+            var users = new List<NetUserId>();
             foreach (var state in remotePlayers)
             {
-                hitSet.Add(state.UserId);
+                users.Add(state.UserId);
 
-                if (_sessions.TryGetValue(state.UserId, out var session))
+                if (!EntManager.TryGetEntity(state.ControlledEntity, out var controlled)
+                    && state.ControlledEntity is {Valid: true})
                 {
-                    var local = (PlayerSession) session;
-                    var controlled = _entManager.GetEntity(state.ControlledEntity);
-
-                    // Exists, update data.
-                    if (local.Name == state.Name
-                        && local.Status == state.Status
-                        && local.Ping == state.Ping
-                        && local.AttachedEntity == controlled)
-                    {
-                        continue;
-                    }
-
-                    dirty = true;
-                    local.Name = state.Name;
-                    local.Status = state.Status;
-                    local.Ping = state.Ping;
-                    local.AttachedEntity = controlled;
+                    _pendingStates[state.UserId] = state;
                 }
                 else
                 {
-                    // New, give him a slot.
-                    dirty = true;
-
-                    var newSession = new PlayerSession(state.UserId)
-                    {
-                        Name = state.Name,
-                        Status = state.Status,
-                        Ping = state.Ping,
-                        AttachedEntity = _entManager.GetEntity(state.ControlledEntity),
-                    };
-                    _sessions.Add(state.UserId, newSession);
-                    if (state.UserId == LocalPlayer!.UserId)
-                    {
-                        LocalPlayer.InternalSession = newSession;
-                        newSession.ConnectedClient = _network.ServerChannel!;
-                        // We just connected to the server, hurray!
-                        LocalPlayer.SwitchState(SessionStatus.Connecting, newSession.Status);
-                    }
+                    _pendingStates.Remove(state.UserId);
                 }
-            }
 
-            foreach (var existing in _sessions.Keys.ToArray())
-            {
-                // clear slot, player left
-                if (!hitSet.Contains(existing))
+                if (!InternalSessions.TryGetValue(state.UserId, out var session))
                 {
-                    DebugTools.Assert(LocalPlayer!.UserId != existing || _client.RunLevel == ClientRunLevel.SinglePlayerGame, // replays apply player states.
-                        "I'm still connected to the server, but i left?");
-                    _sessions.Remove(existing);
+                    // This is a new userid, so we create a new session.
+                    DebugTools.Assert(state.UserId != LocalPlayer?.UserId);
+                    var newSession = (CommonSession) CreateAndAddSession(state.UserId, state.Name);
+                    newSession.Ping = state.Ping;
+                    SetStatus(newSession, state.Status);
+                    SetAttachedEntity(newSession, controlled, out _, true);
+                    dirty = true;
+                    continue;
+                }
+
+                // Check if the data is actually different
+                if (session.Name == state.Name
+                    && session.Status == state.Status
+                    && session.Ping == state.Ping
+                    && session.AttachedEntity == controlled)
+                {
+                    continue;
+                }
+
+                dirty = true;
+                var local = (CommonSession) session;
+                local.Name = state.Name;
+                local.Ping = state.Ping;
+                SetStatus(local, state.Status);
+                SetAttachedEntity(local, controlled, out _, true);
+            }
+
+            // Remove old users. This only works if the provided state is a list of all players
+            if (fullList)
+            {
+                foreach (var oldUser in InternalSessions.Keys.ToArray())
+                {
+                    if (users.Contains(oldUser))
+                        continue;
+
+                    if (InternalSessions[oldUser].ClientSide)
+                        continue;
+
+                    DebugTools.Assert(oldUser != LocalUser
+                                      || LocalUser == null
+                                      || LocalUser == default(NetUserId),
+                        "Client is still connected to the server but not in the list of players?");
+                    RemoveSession(oldUser);
+                    _pendingStates.Remove(oldUser);
                     dirty = true;
                 }
             }
 
-            if (dirty)
-            {
-                PlayerListUpdated?.Invoke(this, EventArgs.Empty);
-            }
+            return dirty;
         }
 
-        private void OnRunLevelChanged(object? sender, RunLevelChangedEventArgs e)
+        public override bool TryGetSessionByEntity(EntityUid uid, [NotNullWhen(true)] out ICommonSession? session)
         {
-            if (e.NewLevel != ClientRunLevel.SinglePlayerGame)
-                return;
-
-            DebugTools.AssertNotNull(LocalPlayer);
-
-            // We do some further setup steps for singleplayer here...
-
-            // The local player's GUID in singleplayer will always be the default.
-            var guid = default(NetUserId);
-
-            var session = new PlayerSession(guid)
+            if (LocalEntity == uid)
             {
-                Name = LocalPlayer!.Name,
-                Ping = 0,
-            };
-
-            LocalPlayer.UserId = guid;
-            LocalPlayer.InternalSession = session;
-
-            // Add the local session to the list.
-            _sessions.Add(guid, session);
-
-            LocalPlayer.SwitchState(SessionStatus.InGame);
-
-            PlayerListUpdated?.Invoke(this, EventArgs.Empty);
-        }
-
-        public bool TryGetSessionByEntity(EntityUid uid, [NotNullWhen(true)] out ICommonSession? session)
-        {
-            if (LocalPlayer?.ControlledEntity == uid)
-            {
-                session = LocalPlayer.Session;
+                session = LocalSession!;
                 return true;
             }
 

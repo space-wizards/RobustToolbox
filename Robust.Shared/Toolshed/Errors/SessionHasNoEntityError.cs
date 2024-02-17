@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using Robust.Shared.Maths;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Errors;

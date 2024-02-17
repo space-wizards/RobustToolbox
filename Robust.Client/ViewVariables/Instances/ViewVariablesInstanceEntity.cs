@@ -120,7 +120,11 @@ namespace Robust.Client.ViewVariables.Instances
                     };
                     top.HorizontalExpand = true;
                     hBox.AddChild(top);
-                    hBox.AddChild(new SpriteView {Sprite = sprite, OverrideDirection = Direction.South});
+
+                    var view = new SpriteView { OverrideDirection = Direction.South };
+                    view.SetEntity(_entity);
+                    hBox.AddChild(view);
+
                     vBoxContainer.AddChild(hBox);
                 }
                 else
@@ -431,8 +435,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             try
             {
-                var comp = (Component) componentFactory.GetComponent(registration.Type);
-                comp.Owner = _entity;
+                var comp = componentFactory.GetComponent(registration.Type);
                 _entityManager.AddComponent(_entity, comp);
             }
             catch (Exception e)

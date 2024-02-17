@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
@@ -10,7 +9,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Players;
+using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Errors;
@@ -188,13 +188,13 @@ namespace Robust.Shared.Scripting
         }
 
         #region EntityManager proxy methods
-        public T Comp<T>(EntityUid uid) where T : Component
+        public T Comp<T>(EntityUid uid) where T : IComponent
             => ent.GetComponent<T>(uid);
 
-        public bool TryComp<T>(EntityUid uid, out T? comp) where T : Component
+        public bool TryComp<T>(EntityUid uid, out T? comp) where T : IComponent
             => ent.TryGetComponent(uid, out comp);
 
-        public bool HasComp<T>(EntityUid uid)
+        public bool HasComp<T>(EntityUid uid)  where T : IComponent
             => ent.HasComponent<T>(uid);
 
         public EntityUid Spawn(string? prototype, EntityCoordinates position)
@@ -207,7 +207,7 @@ namespace Robust.Shared.Scripting
             => ent.DirtyEntity(uid);
 
         public void Dirty(Component comp)
-            => ent.Dirty(comp);
+            => ent.Dirty(comp.Owner, comp);
 
         public string Name(EntityUid uid)
             => ent.GetComponent<MetaDataComponent>(uid).EntityName;
@@ -261,6 +261,7 @@ namespace Robust.Shared.Scripting
             return true; // Do as I say!
         }
 
+        public NetUserId? User => null;
         public ICommonSession? Session => null;
 
         public void WriteLine(string line)

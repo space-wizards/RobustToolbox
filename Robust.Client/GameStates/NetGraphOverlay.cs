@@ -68,7 +68,7 @@ namespace Robust.Client.GameStates
             var lag = _netManager.ServerChannel!.Ping;
 
             // calc interp info
-            var buffer = _gameStateManager.CurrentBufferSize;
+            var buffer = _gameStateManager.GetApplicableStateCount();
 
             _totalHistoryPayload += sz;
             _history.Add((toSeq, sz, lag, buffer));
@@ -268,7 +268,7 @@ namespace Robust.Client.GameStates
                 handle.DrawString(_font, new Vector2(LeftMargin + width, lastLagY), $"{lastLagMs.ToString()}ms");
 
             // buffer text
-            handle.DrawString(_font, new Vector2(LeftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
+            handle.DrawString(_font, new Vector2(LeftMargin, height + LowerGraphOffset), $"{_gameStateManager.GetApplicableStateCount().ToString()} states");
         }
 
         protected override void DisposeBehavior()
@@ -313,7 +313,7 @@ namespace Robust.Client.GameStates
 
                 if (args.Length == 0)
                 {
-                    entity = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+                    entity = _playerManager.LocalEntity ?? EntityUid.Invalid;
                 }
                 else if (!NetEntity.TryParse(args[0], out var netEntity) || !_entManager.TryGetEntity(netEntity, out entity))
                 {

@@ -113,10 +113,46 @@ namespace Robust.Shared.Configuration
         {
             var loaded = new HashSet<string>();
 
-            foreach (var (cvar, value) in ParseCVarValuesFromToml(stream))
+            var callbackEvents = new ValueList<ValueChangedInvoke>();
+
+            // Ensure callbacks are raised OUTSIDE the write lock.
+            using (Lock.WriteGuard())
             {
-                loaded.Add(cvar);
-                OverrideDefault(cvar, value);
+                foreach (var (cVarName, value) in ParseCVarValuesFromToml(stream))
+                {
+                    if (!_configVars.TryGetValue(cVarName, out var cVar) || !cVar.Registered)
+                    {
+                        _sawmill.Error($"Trying to set unregistered variable '{cVarName}'");
+                        continue;
+                    }
+
+                    var convertedValue = value;
+                    if (!cVar.DefaultValue.GetType().IsEnum && cVar.DefaultValue.GetType() != value.GetType())
+                    {
+                        try
+                        {
+                            convertedValue = ConvertToCVarType(value, cVar.DefaultValue.GetType());
+                        }
+                        catch
+                        {
+                            _sawmill.Error($"Override TOML parsed cvar does not match registered cvar type. Name: {cVarName}. Code Type: {cVar.DefaultValue.GetType()}. Toml type: {value.GetType()}");
+                            continue;
+                        }
+                    }
+
+                    cVar.DefaultValue = value;
+
+                    if (cVar.OverrideValue == null && cVar.Value == null)
+                    {
+                        if (SetupInvokeValueChanged(cVar, convertedValue) is { } invoke)
+                            callbackEvents.Add(invoke);
+                    }
+                }
+            }
+
+            foreach (var callback in callbackEvents)
+            {
+                InvokeValueChanged(callback);
             }
 
             return loaded;
@@ -303,8 +339,7 @@ namespace Robust.Shared.Configuration
                 {
                     try
                     {
-                        // try convert thing like int to float.
-                        cVar.Value = Convert.ChangeType(cVar.Value, type);
+                        cVar.Value = ConvertToCVarType(cVar.Value, type);
                     }
                     catch
                     {
@@ -617,6 +652,11 @@ namespace Robust.Shared.Configuration
                 return long.Parse(value);
             }
 
+            if (type == typeof(ushort))
+            {
+                return ushort.Parse(value);
+            }
+
             // Must be a string.
             return value;
         }
@@ -707,6 +747,26 @@ namespace Robust.Shared.Configuration
         }
 
         /// <summary>
+        /// Try to convert a compatible value to the actual registration type of a CVar.
+        /// </summary>
+        /// <remarks>
+        /// When CVars are parsed from TOML, their in-code type is not known.
+        /// This function does the necessary conversions from e.g. int to long.
+        /// </remarks>
+        /// <param name="value">
+        /// The value to convert.
+        /// This must be a simple type like strings or integers.
+        /// </param>
+        /// <param name="cVar">
+        /// The registration type of the CVar.
+        /// </param>
+        /// <returns></returns>
+        private static object ConvertToCVarType(object value, Type cVar)
+        {
+            return Convert.ChangeType(value, cVar);
+        }
+
+        /// <summary>
         ///     Holds the data for a single configuration variable.
         /// </summary>
         protected sealed class ConfigVar
@@ -792,12 +852,6 @@ namespace Robust.Shared.Configuration
         }
 
         public InvalidConfigurationException(string message, Exception inner) : base(message, inner)
-        {
-        }
-
-        protected InvalidConfigurationException(
-            System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context)
         {
         }
     }

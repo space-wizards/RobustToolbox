@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.Players;
+using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
 
@@ -27,6 +28,8 @@ internal record ReduceContext<T>(IInvocationContext Inner, T Value) : IInvocatio
 
     public ICommonSession? Session => Inner.Session;
     public ToolshedManager Toolshed => Inner.Toolshed;
+    public NetUserId? User => Inner.User;
+
     public ToolshedEnvironment Environment => Inner.Environment;
 
     public void WriteLine(string line)

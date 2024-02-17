@@ -12,16 +12,10 @@ namespace Robust.Shared.GameObjects
     [RegisterComponent, NetworkedComponent, Access(typeof(SharedEyeSystem)), AutoGenerateComponentState(true)]
     public sealed partial class EyeComponent : Component
     {
-        #region Client
-
-        [ViewVariables] internal Eye? _eye = default!;
-
-        public IEye? Eye => _eye;
+        public const int DefaultVisibilityMask = 1;
 
         [ViewVariables]
-        public MapCoordinates? Position => _eye?.Position;
-
-        #endregion
+        public readonly Eye Eye = new();
 
         /// <summary>
         ///     If not null, this entity is used to update the eye's position instead of just using the component's owner.
@@ -37,6 +31,9 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite), DataField("drawFov"), AutoNetworkedField]
         public bool DrawFov = true;
 
+        [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField]
+        public bool DrawLight = true;
+
         // yes it's not networked, don't ask.
         [ViewVariables(VVAccess.ReadWrite), DataField("rotation")]
         public Angle Rotation;
@@ -47,18 +44,21 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite), DataField("offset"), AutoNetworkedField]
         public Vector2 Offset;
 
-        public const int DefaultVisibilityMask = 1;
-
         /// <summary>
         ///     The visibility mask for this eye.
         ///     The player will be able to get updates for entities whose layers match the mask.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite), DataField("visMask", customTypeSerializer:typeof(FlagSerializer<VisibilityMaskLayer>)), AutoNetworkedField]
         public int VisibilityMask = DefaultVisibilityMask;
+
+        /// <summary>
+        /// Overrides the PVS view range of this eye, Effectively a per-eye <see cref="CVars.NetMaxUpdateRange"/> cvar.
+        /// </summary>
+        [DataField] public float? PvsSize;
     }
 
     /// <summary>
-    /// Single layer used for Eye visiblity. Controls what entities they are allowed to see.
+    /// Single layer used for Eye visibility. Controls what entities they are allowed to see.
     /// </summary>
     public sealed class VisibilityMaskLayer {}
 }

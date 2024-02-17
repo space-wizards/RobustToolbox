@@ -34,7 +34,7 @@ public partial class SharedPhysicsSystem
 
     internal void AddAwakeBody(EntityUid uid, PhysicsComponent body, EntityUid mapUid, PhysicsMapComponent? map = null)
     {
-        Resolve(mapUid, ref map, false);
+        PhysMapQuery.Resolve(mapUid, ref map, false);
         AddAwakeBody(uid, body, map);
     }
 
@@ -45,7 +45,7 @@ public partial class SharedPhysicsSystem
 
     internal void RemoveSleepBody(EntityUid uid, PhysicsComponent body, EntityUid mapUid, PhysicsMapComponent? map = null)
     {
-        Resolve(mapUid, ref map, false);
+        PhysMapQuery.Resolve(mapUid, ref map, false);
         RemoveSleepBody(uid, body, map);
     }
 

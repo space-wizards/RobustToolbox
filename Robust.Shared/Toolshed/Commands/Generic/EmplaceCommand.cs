@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Players;
+using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
 
@@ -50,6 +51,8 @@ internal record EmplaceContext<T>(IInvocationContext Inner, T Value, IEntityMana
 
     public ICommonSession? Session => Inner.Session;
     public ToolshedManager Toolshed => Inner.Toolshed;
+    public NetUserId? User => Inner.User;
+
     public ToolshedEnvironment Environment => Inner.Environment;
 
     public void WriteLine(string line)

@@ -1,14 +1,11 @@
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using static Robust.Shared.GameObjects.OccluderComponent;
 
 namespace Robust.Client.GameObjects;
@@ -30,17 +27,15 @@ internal sealed class ClientOccluderSystem : OccluderSystem
         base.Initialize();
 
         SubscribeLocalEvent<OccluderComponent, AnchorStateChangedEvent>(OnAnchorChanged);
-        SubscribeLocalEvent<OccluderComponent, ReAnchorEvent>(OnReAnchor);
         SubscribeLocalEvent<OccluderComponent, ComponentShutdown>(OnShutdown);
     }
 
-    public override void SetEnabled(EntityUid uid, bool enabled, OccluderComponent? comp = null)
+    public override void SetEnabled(EntityUid uid, bool enabled, OccluderComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!Resolve(uid, ref comp, false) || enabled == comp.Enabled)
             return;
 
-        comp.Enabled = enabled;
-        Dirty(uid, comp);
+        base.SetEnabled(uid, enabled, comp, meta);
 
         var xform = Transform(uid);
         QueueTreeUpdate(uid, comp, xform);
@@ -92,11 +87,6 @@ internal sealed class ClientOccluderSystem : OccluderSystem
     private void OnAnchorChanged(EntityUid uid, OccluderComponent comp, ref AnchorStateChangedEvent args)
     {
         AnchorStateChanged(uid, comp, args.Transform);
-    }
-
-    private void OnReAnchor(EntityUid uid, OccluderComponent comp, ref ReAnchorEvent args)
-    {
-        AnchorStateChanged(uid, comp, args.Xform);
     }
 
     private void QueueOccludedDirectionUpdate(EntityUid sender, OccluderComponent occluder, TransformComponent? xform = null)
@@ -178,8 +168,9 @@ internal sealed class ClientOccluderSystem : OccluderSystem
 
         var tile = grid.TileIndicesFor(xform.Coordinates);
 
-        DebugTools.Assert(occluder.LastPosition == null
-            || occluder.LastPosition.Value.Grid == xform.GridUid && occluder.LastPosition.Value.Tile == tile);
+        // TODO: Sub to parent changes instead or something.
+        // DebugTools.Assert(occluder.LastPosition == null
+            // || occluder.LastPosition.Value.Grid == xform.GridUid && occluder.LastPosition.Value.Tile == tile);
         occluder.LastPosition = (xform.GridUid.Value, tile);
 
         // dir starts at the relative effective south direction;

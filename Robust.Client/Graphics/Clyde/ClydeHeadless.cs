@@ -292,123 +292,6 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        [Virtual]
-        private class DummyAudioSource : IClydeAudioSource
-        {
-            public static DummyAudioSource Instance { get; } = new();
-
-            public bool IsPlaying => default;
-            public bool IsLooping { get; set; }
-
-            public void Dispose()
-            {
-                // Nada.
-            }
-
-            public void StartPlaying()
-            {
-                // Nada.
-            }
-
-            public void StopPlaying()
-            {
-                // Nada.
-            }
-
-            public bool IsGlobal { get; }
-
-            public bool SetPosition(Vector2 position)
-            {
-                return true;
-            }
-
-            public void SetPitch(float pitch)
-            {
-                // Nada.
-            }
-
-            public void SetGlobal()
-            {
-                // Nada.
-            }
-
-            public void SetVolume(float decibels)
-            {
-                // Nada.
-            }
-
-            public void SetVolumeDirect(float gain)
-            {
-                // Nada.
-            }
-
-            public void SetMaxDistance(float maxDistance)
-            {
-                // Nada.
-            }
-
-            public void SetRolloffFactor(float rolloffFactor)
-            {
-                // Nada.
-            }
-
-            public void SetReferenceDistance(float refDistance)
-            {
-                // Nada.
-            }
-
-            public void SetOcclusion(float blocks)
-            {
-                // Nada.
-            }
-
-            public void SetPlaybackPosition(float seconds)
-            {
-                // Nada.
-            }
-
-            public void SetVelocity(Vector2 velocity)
-            {
-                // Nada.
-            }
-        }
-
-        private sealed class DummyBufferedAudioSource : DummyAudioSource, IClydeBufferedAudioSource
-        {
-            public new static DummyBufferedAudioSource Instance { get; } = new();
-            public int SampleRate { get; set; } = 0;
-
-            public void WriteBuffer(int handle, ReadOnlySpan<ushort> data)
-            {
-                // Nada.
-            }
-
-            public void WriteBuffer(int handle, ReadOnlySpan<float> data)
-            {
-                // Nada.
-            }
-
-            public void QueueBuffers(ReadOnlySpan<int> handles)
-            {
-                // Nada.
-            }
-
-            public void EmptyBuffers()
-            {
-                // Nada.
-            }
-
-            public void GetBuffersProcessed(Span<int> handles)
-            {
-                // Nada.
-            }
-
-            public int GetNumberOfBuffersProcessed()
-            {
-                return 0;
-            }
-        }
-
         private sealed class DummyTexture : OwnedTexture
         {
             public DummyTexture(Vector2i size) : base(size)
@@ -578,6 +461,9 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public IRenderTexture RenderTarget { get; } =
+                new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
+
+            public IRenderTexture LightRenderTarget { get; } =
                 new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
 
             public IEye? Eye { get; set; }

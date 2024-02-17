@@ -545,6 +545,36 @@ namespace Robust.Client.UserInterface
             Draw(renderHandle.DrawingHandleScreen);
         }
 
+        protected internal virtual void PreRenderChildren(ref ControlRenderArguments args)
+        {
+
+        }
+
+        protected internal virtual void PostRenderChildren(ref ControlRenderArguments args)
+        {
+
+        }
+
+        protected internal virtual void RenderChildOverride(ref ControlRenderArguments args, int childIndex, Vector2i position)
+        {
+            RenderControl(ref args, childIndex, position);
+        }
+
+        public ref struct ControlRenderArguments
+        {
+            public IRenderHandle Handle;
+            public ref int Total;
+            public Vector2i Position;
+            public Color Modulate;
+            public UIBox2i? ScissorBox;
+            public ref Matrix3 CoordinateTransform;
+        }
+
+        protected void RenderControl(ref ControlRenderArguments args, int childIndex, Vector2i position)
+        {
+            UserInterfaceManagerInternal.RenderControl(args.Handle, ref args.Total, GetChild(childIndex), position, args.Modulate, args.ScissorBox, args.CoordinateTransform);
+        }
+
         public void UpdateDraw()
         {
         }
@@ -820,8 +850,18 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
+            // If it was at the top index and we re-add it there then don't throw.
             Parent._orderedChildren.RemoveAt(posInParent);
-            Parent._orderedChildren.Insert(position, this);
+
+            if (position == Parent._orderedChildren.Count)
+            {
+                Parent._orderedChildren.Add(this);
+            }
+            else
+            {
+                Parent._orderedChildren.Insert(position, this);
+            }
+
             Parent.ChildMoved(this, posInParent, position);
         }
 

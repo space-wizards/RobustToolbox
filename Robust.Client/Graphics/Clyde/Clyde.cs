@@ -11,17 +11,16 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
-using SixLabors.ImageSharp;
-using Color = Robust.Shared.Maths.Color;
-using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
@@ -38,6 +37,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly IResourceManager _resManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -76,6 +76,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private Thread? _gameThread;
 
+        private ISawmill _clydeSawmill = default!;
         private ISawmill _sawmillOgl = default!;
 
         private IBindingsContext _glBindingsContext = default!;
@@ -91,6 +92,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public bool InitializePreWindowing()
         {
+            _clydeSawmill = _logManager.GetSawmill("clyde");
             _sawmillOgl = _logManager.GetSawmill("clyde.ogl");
 
             _cfg.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
@@ -175,7 +177,6 @@ namespace Robust.Client.Graphics.Clyde
             _entityManager.EventBus.SubscribeEvent<TileChangedEvent>(EventSource.Local, this, _updateTileMapOnUpdate);
             _entityManager.EventBus.SubscribeEvent<GridStartupEvent>(EventSource.Local, this, _updateOnGridCreated);
             _entityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, _updateOnGridRemoved);
-            _entityManager.EventBus.SubscribeEvent<GridModifiedEvent>(EventSource.Local, this, _updateOnGridModified);
         }
 
         public void ShutdownGridEcsEvents()
@@ -183,7 +184,6 @@ namespace Robust.Client.Graphics.Clyde
             _entityManager.EventBus.UnsubscribeEvent<TileChangedEvent>(EventSource.Local, this);
             _entityManager.EventBus.UnsubscribeEvent<GridStartupEvent>(EventSource.Local, this);
             _entityManager.EventBus.UnsubscribeEvent<GridRemovalEvent>(EventSource.Local, this);
-            _entityManager.EventBus.UnsubscribeEvent<GridModifiedEvent>(EventSource.Local, this);
         }
 
         private void GLInitBindings(bool gles)

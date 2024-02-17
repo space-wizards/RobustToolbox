@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 
 namespace Robust.Shared.ViewVariables;
 

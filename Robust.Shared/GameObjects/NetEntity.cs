@@ -48,6 +48,9 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// </summary>
     public static NetEntity Parse(ReadOnlySpan<char> uid)
     {
+        if (uid.Length == 0)
+            return default;
+
         if (uid[0] != 'c')
             return new NetEntity(int.Parse(uid));
 
@@ -184,8 +187,11 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
         get => MetaData?.EntityName ?? string.Empty;
         set
         {
-            if (MetaData is {} metaData)
-                metaData.EntityName = value;
+            if (MetaData is { } metaData)
+            {
+                var entManager = IoCManager.Resolve<IEntityManager>();
+                entManager.System<MetaDataSystem>().SetEntityName(entManager.GetEntity(this), value, metaData);
+            }
         }
     }
 
@@ -195,8 +201,11 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
         get => MetaData?.EntityDescription ?? string.Empty;
         set
         {
-            if (MetaData is {} metaData)
-                metaData.EntityDescription = value;
+            if (MetaData is { } metaData)
+            {
+                var entManager = IoCManager.Resolve<IEntityManager>();
+                entManager.System<MetaDataSystem>().SetEntityDescription(entManager.GetEntity(this), value, metaData);
+            }
         }
     }
 

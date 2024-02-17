@@ -155,10 +155,4 @@ public class RSILoadException : Exception
     public RSILoadException(string message, Exception inner) : base(message, inner)
     {
     }
-
-    protected RSILoadException(
-        System.Runtime.Serialization.SerializationInfo info,
-        System.Runtime.Serialization.StreamingContext context) : base(info, context)
-    {
-    }
 }

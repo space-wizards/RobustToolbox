@@ -4,6 +4,7 @@ using Robust.Shared.Resources;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Png.Chunks;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace Robust.Packaging.AssetProcessing.Passes;
@@ -61,7 +62,7 @@ internal sealed class AssetPassPackRsis : AssetPass
         foreach (var (key, dat) in _foundRsis)
         {
             if (dat.MetaJson == null)
-                return;
+                continue;
 
             RunJob(() =>
             {
@@ -168,7 +169,7 @@ internal sealed class AssetPassPackRsis : AssetPass
         }
 
         var ms = new MemoryStream();
-        sheet.Metadata.GetPngMetadata().TextData.Add(new PngTextData("Description", metaJson, null, null));
+        sheet.Metadata.GetPngMetadata().TextData.Add(new PngTextData("Description", metaJson, "", ""));
         sheet.SaveAsPng(ms);
 
         sheet.Dispose();

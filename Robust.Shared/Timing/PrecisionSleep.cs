@@ -63,7 +63,7 @@ internal sealed unsafe class PrecisionSleepWindowsHighResolution : PrecisionSlee
             Windows.TIMER_ALL_ACCESS);
 
         if (_timerHandle == HANDLE.NULL)
-            Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            Marshal.ThrowExceptionForHR(Windows.HRESULT_FROM_WIN32(Marshal.GetLastSystemError()));
     }
 
     public override void Sleep(TimeSpan time)
@@ -82,11 +82,11 @@ internal sealed unsafe class PrecisionSleepWindowsHighResolution : PrecisionSlee
         );
 
         if (!success)
-            Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            Marshal.ThrowExceptionForHR(Windows.HRESULT_FROM_WIN32(Marshal.GetLastSystemError()));
 
         var waitResult = Windows.WaitForSingleObject(_timerHandle, Windows.INFINITE);
         if (waitResult == WAIT.WAIT_FAILED)
-            Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            Marshal.ThrowExceptionForHR(Windows.HRESULT_FROM_WIN32(Marshal.GetLastSystemError()));
 
         GC.KeepAlive(this);
     }

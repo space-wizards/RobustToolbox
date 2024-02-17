@@ -523,13 +523,16 @@ namespace Robust.Client.Input
             {
                 var baseKeyRegs = _serialization.Read<KeyBindingRegistration[]>(BaseKeyRegsNode, notNullableOverride: true);
 
+
                 foreach (var reg in baseKeyRegs)
                 {
+                    var invalid = false;
+
                     if (reg.Type != KeyBindingType.Command && !NetworkBindMap.FunctionExists(reg.Function.FunctionName))
                     {
-                        Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
+                        Logger.DebugS("input", "Key function in {0} does not exist: '{1}'.", file,
                             reg.Function);
-                        continue;
+                        invalid = true;
                     }
 
                     if (defaultRegistration)
@@ -544,7 +547,7 @@ namespace Robust.Client.Input
                         }
                     }
 
-                    RegisterBinding(reg, markModified: !defaultRegistration);
+                    RegisterBinding(reg, markModified: !defaultRegistration, invalid);
                 }
             }
 
@@ -552,11 +555,16 @@ namespace Robust.Client.Input
             {
                 var leaveEmpty = _serialization.Read<BoundKeyFunction[]>(node, notNullableOverride: true);
 
-                if (leaveEmpty.Length > 0)
+                foreach (var bind in leaveEmpty)
                 {
                     // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
                     // Because they've been explicitly cleared.
-                    _modifiedKeyFunctions.UnionWith(leaveEmpty);
+                    _modifiedKeyFunctions.Add(bind);
+
+                    // Adding to bindingsByFunction because if the keybind is not valid(For example if it's from another
+                    // server then we will have problems saving the file)
+                    _bindingsByFunction.GetOrNew(bind);
+
                 }
             }
         }
@@ -584,7 +592,7 @@ namespace Robust.Client.Input
             return binding;
         }
 
-        public IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified = true)
+        public IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified = true, bool invalid = false)
         {
             var binding = new KeyBinding(this, reg.Function.FunctionName, reg.Type, reg.BaseKey, reg.CanFocus, reg.CanRepeat,
                 reg.AllowSubCombs, reg.Priority, reg.Mod1, reg.Mod2, reg.Mod3);
@@ -615,7 +623,7 @@ namespace Robust.Client.Input
 
         public void InputModeChanged() => OnInputModeChanged?.Invoke();
 
-        private void RegisterBinding(KeyBinding binding, bool markModified = true)
+        private void RegisterBinding(KeyBinding binding, bool markModified = true, bool invalid = false)
         {
             // we sort larger combos first so they take priority over smaller (single key) combos,
             // so they get processed first in KeyDown and such.
@@ -630,7 +638,8 @@ namespace Robust.Client.Input
                 _modifiedKeyFunctions.Add(binding.Function);
             }
 
-            _bindings.Insert(pos, binding);
+            if (!invalid)
+                _bindings.Insert(pos, binding);
             _bindingsByFunction.GetOrNew(binding.Function).Add(binding);
             OnKeyBindingAdded?.Invoke(binding);
         }

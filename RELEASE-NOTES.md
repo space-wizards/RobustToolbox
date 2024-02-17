@@ -43,15 +43,26 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 210.1.1
+
+### Bugfixes
+
 * Fixed multiple recent bugs with key binding storage.
 
 ### Other
 
 * Change default of `ButtonGroup.IsNoneSetAllowed` to `true`. This makes it default again to the previous (unintentional) behavior.
-
-### Internal
-
-*None yet*
 
 
 ## 210.1.0

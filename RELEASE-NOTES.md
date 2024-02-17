@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed multiple recent bugs with key binding storage.
 
 ### Other
 

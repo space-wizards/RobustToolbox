@@ -468,7 +468,7 @@ namespace Robust.Client.UserInterface.Controls
         /// Create a new <see cref="ButtonGroup"/>
         /// </summary>
         /// <param name="isNoneSetAllowed">The value of <see cref="IsNoneSetAllowed"/> on the new button group.</param>
-        public ButtonGroup(bool isNoneSetAllowed = false)
+        public ButtonGroup(bool isNoneSetAllowed = true)
         {
             IsNoneSetAllowed = isNoneSetAllowed;
         }

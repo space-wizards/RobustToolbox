@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Change default of `ButtonGroup.IsNoneSetAllowed` to `true`. This makes it default again to the previous (unintentional) behavior.
 
 ### Internal
 

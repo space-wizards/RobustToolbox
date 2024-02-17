@@ -4,6 +4,7 @@ using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Robust.Shared.GameObjects;
 
@@ -28,6 +29,12 @@ public sealed partial class PrototypeLayerData
     [DataField("color")] public Color? Color;
     [DataField("map")] public HashSet<string>? MapKeys;
     [DataField("renderingStrategy")] public LayerRenderingStrategy? RenderingStrategy;
+
+    /// <summary>
+    /// A drawdepth for this layer specifically. If null, then the one on SpriteComponent will be used.
+    /// </summary>
+    [DataField(customTypeSerializer: typeof(ConstantSerializer<DrawDepth>))]
+    public int? DrawDepth;
 
     [DataField] public bool Cycle;
 }

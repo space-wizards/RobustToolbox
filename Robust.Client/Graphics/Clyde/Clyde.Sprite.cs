@@ -22,7 +22,7 @@ namespace Robust.Client.Graphics.Clyde;
 internal partial class Clyde
 {
     [Shared.IoC.Dependency] private readonly IParallelManager _parMan = default!;
-    private readonly RefList<SpriteData> _drawingSpriteList = new();
+    private readonly RefList<SpriteLayerData> _drawingSpriteList = new();
     private const int _spriteProcessingBatchSize = 25;
 
     private void GetSprites(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, out int[] indexList)
@@ -42,7 +42,7 @@ internal partial class Clyde
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void ProcessSpriteEntities(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, RefList<SpriteData> list)
+    private void ProcessSpriteEntities(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, RefList<SpriteLayerData> list)
     {
         var query = _entityManager.GetEntityQuery<TransformComponent>();
         var viewScale = eye.Scale * view.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
@@ -79,12 +79,17 @@ internal partial class Clyde
             };
 
             comp.Tree.QueryAabb(ref list,
-                static (ref RefList<SpriteData> state, in ComponentTreeEntry<SpriteComponent> value) =>
+                static (ref RefList<SpriteLayerData> state, in ComponentTreeEntry<SpriteComponent> value) =>
                 {
-                    ref var entry = ref state.AllocAdd();
-                    entry.Uid = value.Uid;
-                    entry.Sprite = value.Component;
-                    entry.Xform = value.Transform;
+                    for (var index = 0; index < value.Component.Layers.Count; index++)
+                    {
+                        ref var entry = ref state.AllocAdd();
+                        entry.Layer = value.Component.Layers[index];
+                        entry.LayerOrder = index;
+                        entry.Uid = value.Uid;
+                        entry.Sprite = value.Component;
+                        entry.Xform = value.Transform;
+                    }
                     return true;
                 }, bounds, true);
 
@@ -112,7 +117,7 @@ internal partial class Clyde
     ///     sprite has a post processing shader.
     /// </summary>
     private void ProcessSprites(
-        RefList<SpriteData> list,
+        RefList<SpriteLayerData> list,
         int startIndex,
         int count,
         in BatchData batch)
@@ -206,8 +211,10 @@ internal partial class Clyde
         return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
     }
 
-    private struct SpriteData
+    private struct SpriteLayerData
     {
+        public SpriteComponent.Layer Layer;
+        public int LayerOrder;
         public EntityUid Uid;
         public SpriteComponent Sprite;
         public TransformComponent Xform;
@@ -233,9 +240,9 @@ internal partial class Clyde
 
     private sealed class SpriteDrawingOrderComparer : IComparer<int>
     {
-        private readonly RefList<SpriteData> _drawList;
+        private readonly RefList<SpriteLayerData> _drawList;
 
-        public SpriteDrawingOrderComparer(RefList<SpriteData> drawList)
+        public SpriteDrawingOrderComparer(RefList<SpriteLayerData> drawList)
         {
             _drawList = drawList;
         }
@@ -245,7 +252,10 @@ internal partial class Clyde
             var a = _drawList[x];
             var b = _drawList[y];
 
-            var cmp = a.Sprite.DrawDepth.CompareTo(b.Sprite.DrawDepth);
+            var aDepth = a.Layer.DrawDepth ?? a.Sprite.DrawDepth;
+            var bDepth = b.Layer.DrawDepth ?? b.Sprite.DrawDepth;
+
+            var cmp = aDepth.CompareTo(bDepth);
             if (cmp != 0)
                 return cmp;
 
@@ -257,6 +267,10 @@ internal partial class Clyde
             // compare the top of the sprite's BB for y-sorting. Because screen coordinates are flipped, the "top" of the BB is actually the "bottom".
             cmp = a.SpriteScreenBB.Top.CompareTo(b.SpriteScreenBB.Top);
 
+            if (cmp != 0)
+                return cmp;
+
+            cmp = a.LayerOrder.CompareTo(b.LayerOrder);
             if (cmp != 0)
                 return cmp;
 

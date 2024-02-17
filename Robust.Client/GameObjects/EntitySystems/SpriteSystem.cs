@@ -52,6 +52,62 @@ namespace Robust.Client.GameObjects
             sprite.RenderInternal(drawingHandle, eyeRotation, worldRotation, worldPosition, sprite.EnableDirectionOverride ? sprite.DirectionOverride : null);
         }
 
+        internal void RenderLayer(Entity<SpriteComponent> ent, DrawingHandleWorld drawingHandleWorld, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition, Layer layer)
+        {
+            var sprite = ent.Comp;
+            if (!sprite.IsInert)
+                _queuedFrameUpdate.Add(ent);
+
+            Direction? overrideDirection = sprite.EnableDirectionOverride ? sprite.DirectionOverride : null;
+
+            var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
+            angle = angle.Reduced().FlipPositive();  // Reduce the angles to fix math shenanigans
+
+            var cardinal = Angle.Zero;
+
+            // If we have a 1-directional sprite then snap it to try and always face it south if applicable.
+            if (!sprite.NoRotation && sprite.SnapCardinals)
+            {
+                cardinal = angle.GetCardinalDir().ToAngle();
+            }
+
+            // worldRotation + eyeRotation should be the angle of the entity on-screen. If no-rot is enabled this is just set to zero.
+            // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
+            var entityMatrix = Matrix3.CreateTransform(worldPosition, sprite.NoRotation ? -eyeRotation : worldRotation - cardinal);
+            var localMatrix = sprite.GetLocalMatrix();
+
+            Matrix3.Multiply(in localMatrix, in entityMatrix, out var transformSprite);
+
+            //Default rendering
+            entityMatrix = Matrix3.CreateTransform(worldPosition, worldRotation);
+            Matrix3.Multiply(in localMatrix, in entityMatrix, out var transformDefault);
+            //Snap to cardinals
+            entityMatrix = Matrix3.CreateTransform(worldPosition, worldRotation - angle.GetCardinalDir().ToAngle());
+            Matrix3.Multiply(in localMatrix, in entityMatrix, out var transformSnap);
+            //No rotation
+            entityMatrix = Matrix3.CreateTransform(worldPosition, -eyeRotation);
+            Matrix3.Multiply(in localMatrix, in entityMatrix, out var transformNoRot);
+
+            switch (layer.RenderingStrategy)
+            {
+                case LayerRenderingStrategy.NoRotation:
+                    layer.Render(drawingHandleWorld, ref transformNoRot, angle, overrideDirection);
+                    break;
+                case LayerRenderingStrategy.SnapToCardinals:
+                    layer.Render(drawingHandleWorld, ref transformSnap, angle, overrideDirection);
+                    break;
+                case LayerRenderingStrategy.Default:
+                    layer.Render(drawingHandleWorld, ref transformDefault, angle, overrideDirection);
+                    break;
+                case LayerRenderingStrategy.UseSpriteStrategy:
+                    layer.Render(drawingHandleWorld, ref transformSprite, angle, overrideDirection);
+                    break;
+                default:
+                    Log.Error($"Tried to render a layer with unknown rendering strategy: {layer.RenderingStrategy}");
+                    break;
+            }
+        }
+
         public override void Initialize()
         {
             base.Initialize();

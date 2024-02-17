@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Reflection.Metadata;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
@@ -9,7 +10,9 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
@@ -269,12 +272,13 @@ namespace Robust.Client.Graphics.Clyde
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];
+                var layer = entry.Layer;
 
                 for (; overlayIndex < worldOverlays.Count; overlayIndex++)
                 {
                     var overlay = worldOverlays[overlayIndex];
 
-                    if (overlay.ZIndex > entry.Sprite.DrawDepth)
+                    if (overlay.ZIndex > layer.DrawDepth)
                     {
                         flushed = false;
                         break;
@@ -355,7 +359,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                spriteSystem.Render(entry.Uid, entry.Sprite, _renderHandle.DrawingHandleWorld, eye.Rotation, in entry.WorldRot, in entry.WorldPos);
+                spriteSystem.RenderLayer((entry.Uid, entry.Sprite), _renderHandle.DrawingHandleWorld, eye.Rotation, in entry.WorldRot, in entry.WorldPos, layer);
 
                 if (entry.Sprite.PostShader != null && entityPostRenderTarget != null)
                 {

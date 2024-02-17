@@ -530,7 +530,7 @@ namespace Robust.Client.Input
 
                     if (reg.Type != KeyBindingType.Command && !NetworkBindMap.FunctionExists(reg.Function.FunctionName))
                     {
-                        Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
+                        Logger.DebugS("input", "Key function in {0} does not exist: '{1}'.", file,
                             reg.Function);
                         invalid = true;
                     }

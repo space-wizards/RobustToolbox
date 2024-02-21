@@ -993,25 +993,10 @@ public abstract partial class SharedTransformSystem
     /// Sets the position of the entity in world-terms to the specified position.
     /// May also de-parent the entity.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(Entity<TransformComponent> entity, Vector2 worldPos)
     {
-        var component = entity.Comp;
-
-        if (!component._parent.IsValid() || component.MapUid == null)
-        {
-            DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
-            return;
-        }
-
-        if (!_gridQuery.HasComponent(entity.Owner) && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
-        {
-            var invWorldMatrix = GetInvWorldMatrix(targetGrid);
-            SetCoordinates(entity.Owner, entity, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(worldPos)));
-        }
-        else
-        {
-            SetCoordinates(entity.Owner, entity, new EntityCoordinates(component.MapUid.Value, worldPos));
-        }
+        SetWorldPositionRotation(entity.Owner, worldPos, entity.Comp.LocalRotation, entity.Comp);
     }
 
     #endregion
@@ -1101,20 +1086,22 @@ public abstract partial class SharedTransformSystem
         if (!XformQuery.Resolve(uid, ref component))
             return;
 
-        if (!component._parent.IsValid())
+        if (!component._parent.IsValid() || component.MapUid == null)
         {
             DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
             return;
         }
 
-        var (curWorldPos, curWorldRot) = GetWorldPositionRotation(component);
-
-        var negativeParentWorldRot = component.LocalRotation - curWorldRot;
-
-        var newLocalPos = component.LocalPosition + negativeParentWorldRot.RotateVec(worldPos - curWorldPos);
-        var newLocalRot = component.LocalRotation + worldRot - curWorldRot;
-
-        SetLocalPositionRotation(uid, newLocalPos, newLocalRot, component);
+        if (!_gridQuery.HasComponent(uid) && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
+        {
+            var (_, gridRot, invWorldMatrix) = GetWorldPositionRotationInvMatrix(targetGrid);
+            var localRot = worldRot - gridRot;
+            SetCoordinates(uid, component, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(worldPos)), rotation: localRot);
+        }
+        else
+        {
+            SetCoordinates(uid, component, new EntityCoordinates(component.MapUid.Value, worldPos), rotation: worldRot);
+        }
     }
 
     [Obsolete("Use override with EntityUid")]

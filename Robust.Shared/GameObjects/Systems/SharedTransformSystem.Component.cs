@@ -1003,7 +1003,7 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        if (_mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
+        if (!_gridQuery.HasComponent(entity.Owner) && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
         {
             var invWorldMatrix = GetInvWorldMatrix(targetGrid);
             SetCoordinates(entity.Owner, entity, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(worldPos)));

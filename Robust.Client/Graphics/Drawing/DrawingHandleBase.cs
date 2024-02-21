@@ -81,6 +81,21 @@ namespace Robust.Client.Graphics
         ///     Draws arbitrary geometry primitives with a flat color.
         /// </summary>
         /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
+        /// <param name="vertices">The list of vertices to render.</param>
+        /// <param name="start">Start index for the list.</param>
+        /// <param name="count">The count of the entries in the supplied list to draw</param>
+        /// <param name="color">The color to draw with.</param>
+        public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, List<Vector2> vertices, int start, int count,
+            Color color)
+        {
+            var span = CollectionsMarshal.AsSpan(vertices);
+            DrawPrimitives(primitiveTopology, span.Slice(start, count), color);
+        }
+
+        /// <summary>
+        ///     Draws arbitrary geometry primitives with a flat color.
+        /// </summary>
+        /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
         /// <param name="vertices">The set of vertices to render.</param>
         /// <param name="color">The color to draw with.</param>
         public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<Vector2> vertices,

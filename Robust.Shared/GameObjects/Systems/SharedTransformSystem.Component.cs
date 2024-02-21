@@ -978,56 +978,40 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(EntityUid uid, Vector2 worldPos)
     {
-        var xform = Transform(uid);
+        var xform = XformQuery.GetComponent(uid);
         SetWorldPosition(xform, worldPos);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPosition(EntityUid uid, Vector2 worldPos, EntityQuery<TransformComponent> xformQuery)
-    {
-        var component = xformQuery.GetComponent(uid);
-        SetWorldPosition(component, worldPos, xformQuery);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(TransformComponent component, Vector2 worldPos)
     {
-        SetWorldPosition(component, worldPos, XformQuery);
+        SetWorldPosition((component.Owner, component), worldPos);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPosition(TransformComponent component, Vector2 worldPos, EntityQuery<TransformComponent> xformQuery)
+    /// <summary>
+    /// Sets the position of the entity in world-terms to the specified position.
+    /// May also de-parent the entity.
+    /// </summary>
+    public void SetWorldPosition(Entity<TransformComponent> entity, Vector2 worldPos)
     {
-        if (!component._parent.IsValid())
+        var component = entity.Comp;
+
+        if (!component._parent.IsValid() || component.MapUid == null)
         {
             DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
             return;
         }
 
-        var (curWorldPos, curWorldRot) = GetWorldPositionRotation(component);
-        var negativeParentWorldRot = component._localRotation - curWorldRot;
-        var newLocalPos = component._localPosition + negativeParentWorldRot.RotateVec(worldPos - curWorldPos);
-
-        // Need to remove them from a container if they were in one directly.
-        if (_container.TryGetContainingContainer(component.Owner, out var container, transform: component))
+        if (_mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
         {
-            EntityCoordinates destination;
-
-            if (component.MapUid != null && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
-            {
-                var invWorldMatrix = GetInvWorldMatrix(targetGrid);
-                destination = new EntityCoordinates(targetGrid, invWorldMatrix.Transform(worldPos));
-            }
-            else
-            {
-                destination = new EntityCoordinates(component.MapUid!.Value, worldPos);
-            }
-
-            _container.Remove((component.Owner, component), container, destination: destination);
-            return;
+            var invWorldMatrix = GetInvWorldMatrix(targetGrid);
+            SetCoordinates(entity.Owner, entity, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(worldPos)));
         }
-
-        SetLocalPosition(component, newLocalPos);
+        else
+        {
+            SetCoordinates(entity.Owner, entity, new EntityCoordinates(component.MapUid.Value, worldPos));
+        }
     }
 
     #endregion

@@ -1004,9 +1004,29 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        var (curWorldPos, curWorldRot) = GetWorldPositionRotation(component, xformQuery);
+        var (curWorldPos, curWorldRot) = GetWorldPositionRotation(component);
         var negativeParentWorldRot = component._localRotation - curWorldRot;
         var newLocalPos = component._localPosition + negativeParentWorldRot.RotateVec(worldPos - curWorldPos);
+
+        // Need to remove them from a container if they were in one directly.
+        if (_container.TryGetContainingContainer(component.Owner, out var container, transform: component))
+        {
+            EntityCoordinates destination;
+
+            if (component.MapUid != null && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
+            {
+                var invWorldMatrix = GetInvWorldMatrix(targetGrid);
+                destination = new EntityCoordinates(targetGrid, invWorldMatrix.Transform(worldPos));
+            }
+            else
+            {
+                destination = new EntityCoordinates(component.MapUid!.Value, worldPos);
+            }
+
+            _container.Remove((component.Owner, component), container, destination: destination);
+            return;
+        }
+
         SetLocalPosition(component, newLocalPos);
     }
 

@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Robust.Shared.Graphics;
+using System.Runtime.Intrinsics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -114,12 +114,43 @@ namespace Robust.Client.Graphics
             DrawPrimitives(primitiveTopology, White, indices, drawVertices);
         }
 
-        private void PadVerticesV2(ReadOnlySpan<Vector2> input, Span<DrawVertexUV2DColor> output, Color color)
+        private static void PadVerticesV2(ReadOnlySpan<Vector2> input, Span<DrawVertexUV2DColor> output, Color color)
         {
-            Color colorLinear = Color.FromSrgb(color);
-            for (var i = 0; i < output.Length; i++)
+            if (input.Length == 0)
+                return;
+
+            if (input.Length != output.Length)
             {
-                output[i] = new DrawVertexUV2DColor(input[i], new Vector2(0.5f, 0.5f), colorLinear);
+                throw new InvalidOperationException("Invalid lengths!");
+            }
+
+            var colorLinear = Color.FromSrgb(color);
+            var colorVec = Unsafe.As<Color, Vector128<float>>(ref colorLinear);
+            var uvVec = Vector128.Create(0, 0, 0.5f, 0.5f);
+            var maskVec = Vector128.Create(0xFFFFFFFF, 0xFFFFFFFF, 0, 0).AsSingle();
+
+            var simdVectors = (nuint)(input.Length / 2);
+            ref readonly var srcBase = ref Unsafe.As<Vector2, float>(ref Unsafe.AsRef(in input[0]));
+            ref var dstBase = ref Unsafe.As<DrawVertexUV2DColor, float>(ref output[0]);
+
+            for (nuint i = 0; i < simdVectors; i++)
+            {
+                var positions = Vector128.LoadUnsafe(in srcBase, i * 4);
+
+                var posColorLower = (positions & maskVec) | uvVec;
+                var posColorUpper = (Vector128.Shuffle(positions, Vector128.Create(2, 3, 0, 0)) & maskVec) | uvVec;
+
+                posColorLower.StoreUnsafe(ref dstBase, i * 16);
+                colorVec.StoreUnsafe(ref dstBase, i * 16 + 4);
+                posColorUpper.StoreUnsafe(ref dstBase, i * 16 + 8);
+                colorVec.StoreUnsafe(ref dstBase, i * 16 + 12);
+            }
+
+            var lastPos = (int)simdVectors * 2;
+            if (lastPos != output.Length)
+            {
+                // Odd number of vertices. Handle the last manually.
+                output[lastPos] = new DrawVertexUV2DColor(input[lastPos], new Vector2(0.5f, 0.5f), colorLinear);
             }
         }
 

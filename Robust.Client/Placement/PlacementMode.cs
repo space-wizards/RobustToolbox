@@ -216,7 +216,7 @@ namespace Robust.Client.Placement
         {
             if (!RangeRequired)
                 return true;
-            var controlled = pManager.PlayerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            var controlled = pManager.PlayerManager.LocalEntity ?? EntityUid.Invalid;
             if (controlled == EntityUid.Invalid)
             {
                 return false;

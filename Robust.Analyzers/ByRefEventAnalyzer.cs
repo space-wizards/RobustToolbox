@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using Robust.Roslyn.Shared;
 using static Microsoft.CodeAnalysis.SymbolEqualityComparer;
 
 namespace Robust.Analyzers;
@@ -16,7 +17,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor ByRefEventSubscribedByValueRule = new(
         Diagnostics.IdByRefEventSubscribedByValue,
         "By-ref event subscribed to by value",
-        "Tried to subscribe to a by-ref event '{0}' by value.",
+        "Tried to subscribe to a by-ref event '{0}' by value",
         "Usage",
         DiagnosticSeverity.Error,
         true,
@@ -26,7 +27,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor ByRefEventRaisedByValueRule = new(
         Diagnostics.IdByRefEventRaisedByValue,
         "By-ref event raised by value",
-        "Tried to raise a by-ref event '{0}' by value.",
+        "Tried to raise a by-ref event '{0}' by value",
         "Usage",
         DiagnosticSeverity.Error,
         true,
@@ -36,7 +37,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor ByValueEventRaisedByRefRule = new(
         Diagnostics.IdValueEventRaisedByRef,
         "Value event raised by-ref",
-        "Tried to raise a value event '{0}' by-ref.",
+        "Tried to raise a value event '{0}' by-ref",
         "Usage",
         DiagnosticSeverity.Error,
         true,

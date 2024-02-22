@@ -36,12 +36,12 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
 
     private void OnRecordingStarted(MappingDataNode metadata, List<object> messages)
     {
-        if (_player.LocalPlayer == null)
+        if (_player.LocalSession == null)
             return;
 
         // Add information about the user doing the recording. This is used to set the default replay observer position
         // when playing back the replay.
-        var guid = _player.LocalPlayer.UserId.UserId.ToString();
+        var guid = _player.LocalUser.ToString();
         metadata[ReplayConstants.MetaKeyRecordedBy] = new ValueDataNode(guid);
     }
 

@@ -73,8 +73,8 @@ public sealed class DisconnectTest : RobustIntegrationTest
 
             session = sPlayerMan.Sessions.Single();
             Assert.That(session.Status, Is.EqualTo(SessionStatus.Connected));
-            Assert.That(session.UserId, Is.EqualTo(cPlayerMan!.LocalPlayer?.UserId));
-            Assert.That(cPlayerMan.LocalPlayer, Is.Not.Null);
+            Assert.That(session.UserId, Is.EqualTo(cPlayerMan.LocalUser));
+            Assert.That(cPlayerMan.LocalSession, Is.Not.Null);
         }
 
         void AssertDisconnected()

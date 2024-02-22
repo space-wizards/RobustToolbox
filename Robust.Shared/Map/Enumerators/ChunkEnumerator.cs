@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map.Enumerators;
 
 internal struct ChunkEnumerator
 {
+    public static ChunkEnumerator Empty => new(new Dictionary<Vector2i, MapChunk>(), Box2.Empty, 16);
+
     private Dictionary<Vector2i, MapChunk> _chunks;
     private Vector2i _chunkLB;
     private Vector2i _chunkRT;

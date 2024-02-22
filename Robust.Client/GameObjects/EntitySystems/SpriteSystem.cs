@@ -62,7 +62,7 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
-            _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
+            Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
             _sawmill = _logManager.GetSawmill("sprite");
         }
 
@@ -70,12 +70,6 @@ namespace Robust.Client.GameObjects
         {
             // I'm not 100% this is needed, but I CBF with this ATM. Somebody kill server sprite component please.
             QueueUpdateInert(uid, component);
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            _cfg.UnsubValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged);
         }
 
         private void OnBiasChanged(double value)

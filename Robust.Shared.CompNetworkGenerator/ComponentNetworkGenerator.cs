@@ -32,7 +32,7 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string GlobalHashSetName = "global::System.Collections.Generic.HashSet<T>";
         private const string GlobalListName = "global::System.Collections.Generic.List<T>";
 
-        private static string GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
+        private static string? GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
         {
             var nameSpace = classSymbol.ContainingNamespace.ToDisplayString();
             var componentName = classSymbol.Name;
@@ -280,10 +280,10 @@ public partial class {componentName}
                 {
                     var attr = type.Attribute;
                     var raiseEv = false;
-                    if (attr.ConstructorArguments.Length == 1 && attr.ConstructorArguments[0].Value != null)
+                    if (attr.ConstructorArguments is [{Value: bool raise}])
                     {
                         // Get the afterautohandle bool, which is first constructor arg
-                        raiseEv = (bool) attr.ConstructorArguments[0].Value;
+                        raiseEv = raise;
                     }
 
                     var source = GenerateSource(context, type.Type, comp, raiseEv);
@@ -325,11 +325,11 @@ public partial class {componentName}
                     attr.AttributeClass != null &&
                     attr.AttributeClass.Equals(attributeSymbol, SymbolEqualityComparer.Default));
 
+                if (typeSymbol == null)
+                    continue;
+
                 if (relevantAttribute == null)
                 {
-                    if (typeSymbol == null)
-                        continue;
-
                     foreach (var mem in typeSymbol.GetMembers())
                     {
                         var attribute = mem.GetAttributes().FirstOrDefault(a =>

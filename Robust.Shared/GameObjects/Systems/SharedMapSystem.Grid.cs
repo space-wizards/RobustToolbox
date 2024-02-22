@@ -189,7 +189,7 @@ public abstract partial class SharedMapSystem
         if (xform.MapUid == null && meta.EntityLifeStage < EntityLifeStage.Terminating && _netManager.IsServer)
             Log.Error($"Grid {ToPrettyString(uid, meta)} was moved to nullspace! AAAAAAAAAAAAAAAAAAAAAAAAA! {Environment.StackTrace}");
 
-        DebugTools.Assert(!HasComp<MapComponent>(uid));
+        DebugTools.Assert(!_mapQuery.HasComponent(uid));
 
         if (xform.ParentUid != xform.MapUid && meta.EntityLifeStage < EntityLifeStage.Terminating  && _netManager.IsServer)
         {
@@ -454,7 +454,7 @@ public abstract partial class SharedMapSystem
         if (xform.MapUid != null && xform.MapUid != uid)
             _transform.SetParent(uid, xform, xform.MapUid.Value);
 
-        if (!HasComp<MapComponent>(uid))
+        if (!_mapQuery.HasComponent(uid))
         {
             var aabb = GetWorldAABB(uid, component);
 
@@ -506,7 +506,7 @@ public abstract partial class SharedMapSystem
 
     private void AddGrid(EntityUid uid, MapGridComponent grid)
     {
-        DebugTools.Assert(!EntityManager.HasComponent<MapComponent>(uid));
+        DebugTools.Assert(!_mapQuery.HasComponent(uid));
         var aabb = GetWorldAABB(uid, grid);
 
         if (!_xformQuery.TryGetComponent(uid, out var xform))
@@ -974,19 +974,34 @@ public abstract partial class SharedMapSystem
     internal ChunkEnumerator GetMapChunks(EntityUid uid, MapGridComponent grid, Box2 worldAABB)
     {
         var localAABB = _transform.GetInvWorldMatrix(uid).TransformBox(worldAABB);
-        return new ChunkEnumerator(grid.Chunks, localAABB, grid.ChunkSize);
+        var compAABB = grid.LocalAABB.Intersect(localAABB);
+
+        if (compAABB.IsEmpty())
+            return ChunkEnumerator.Empty;
+
+        return new ChunkEnumerator(grid.Chunks, compAABB, grid.ChunkSize);
     }
 
     internal ChunkEnumerator GetMapChunks(EntityUid uid, MapGridComponent grid, Box2Rotated worldArea)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
         var localArea = matrix.TransformBox(worldArea);
-        return new ChunkEnumerator(grid.Chunks, localArea, grid.ChunkSize);
+        var compAABB = grid.LocalAABB.Intersect(localArea);
+
+        if (compAABB.IsEmpty())
+            return ChunkEnumerator.Empty;
+
+        return new ChunkEnumerator(grid.Chunks, compAABB, grid.ChunkSize);
     }
 
     internal ChunkEnumerator GetLocalMapChunks(EntityUid uid, MapGridComponent grid, Box2 localAABB)
     {
-        return new ChunkEnumerator(grid.Chunks, localAABB, grid.ChunkSize);
+        var compAABB = grid.LocalAABB.Intersect(localAABB);
+
+        if (compAABB.IsEmpty())
+            return ChunkEnumerator.Empty;
+
+        return new ChunkEnumerator(grid.Chunks, compAABB, grid.ChunkSize);
     }
 
     #endregion ChunkAccess
@@ -1254,7 +1269,7 @@ public abstract partial class SharedMapSystem
                 $"Grid {uid} is on map {mapId}, but coords are on map {posWorld.MapId}.",
                 nameof(posWorld));
 
-        if (!TryComp<MapGridComponent>(uid, out var grid))
+        if (!_gridQuery.TryGetComponent(uid, out var grid))
         {
             return new EntityCoordinates(MapManager.GetMapEntityId(posWorld.MapId), new Vector2(posWorld.X, posWorld.Y));
         }

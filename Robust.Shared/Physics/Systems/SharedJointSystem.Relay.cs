@@ -70,6 +70,18 @@ public abstract partial class SharedJointSystem
         if (_container.TryGetOuterContainer(uid, Transform(uid), out var container))
         {
             relay = container.Owner;
+
+            // Validate that the relay target is not being set to our own container.
+            foreach (var joint in component.Joints.Values)
+            {
+                var other = joint.GetOther(uid);
+
+                if (other == relay)
+                {
+                    SetRelay(uid, null, component);
+                    return;
+                }
+            }
         }
 
         SetRelay(uid, relay, component);

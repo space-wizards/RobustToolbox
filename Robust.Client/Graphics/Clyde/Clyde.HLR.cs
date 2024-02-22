@@ -25,7 +25,6 @@ namespace Robust.Client.Graphics.Clyde
     internal partial class Clyde
     {
 
-        public int[] drawTheseLayers = [-2];
         public ClydeDebugLayers DebugLayers { get; set; }
 
         // TODO allow this scale to be passed with PostShader as variable
@@ -277,10 +276,6 @@ namespace Robust.Client.Graphics.Clyde
                 var drawingSpriteListLayer = _drawingSpriteList[layerIndex];
                 var layerIndexList = indexList[layerIndex];
 
-                if (!drawTheseLayers.Contains(layerIndex))
-                {
-                    continue;
-                }
 
                 for (; overlayIndex < worldOverlays.Count; overlayIndex++)
                 {
@@ -404,7 +399,6 @@ namespace Robust.Client.Graphics.Clyde
                         _renderHandle.UseShader(null);
                     }
 
-                    FlushRenderQueue();
                 }
             }
 

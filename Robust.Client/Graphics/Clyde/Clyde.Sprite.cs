@@ -24,7 +24,7 @@ namespace Robust.Client.Graphics.Clyde;
 internal partial class Clyde
 {
     [Shared.IoC.Dependency] private readonly IParallelManager _parMan = default!;
-    private readonly Dictionary<int,RefList<SpriteData>> _drawingSpriteList = new();
+    private readonly Dictionary<int, RefList<SpriteData>> _drawingSpriteList = new();
     private const int _spriteProcessingBatchSize = 25;
 
     private void GetSprites(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, out SortedDictionary<int, int[]> layeredIndexList)
@@ -55,6 +55,8 @@ internal partial class Clyde
     {
         var query = _entityManager.GetEntityQuery<TransformComponent>();
         var viewScale = eye.Scale * view.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
+
+
         var treeData = new BatchData()
         {
             Sys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>(),
@@ -72,22 +74,23 @@ internal partial class Clyde
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
         var xformSystem = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
+
+        int? lastLayer = null;
         foreach (var (treeOwner, comp, treeLayer, layerIndex) in _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().GetIntersectingTreeLayers(map, worldBounds))
         {
+
+            if (lastLayer != layerIndex)
+            {
+                lastLayer = layerIndex;
+                index = 0;
+                added = 0;
+            }
             var currentLayerReflist = layerRefList.GetOrNew(layerIndex);
 
             var treeXform = query.GetComponent(treeOwner);
             var bounds = xformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
             DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
 
-            treeData = treeData with
-            {
-                TreeOwner = treeOwner,
-                TreePos = treeXform.LocalPosition,
-                TreeRot = treeXform.LocalRotation,
-                Sin = MathF.Sin((float)treeXform.LocalRotation),
-                Cos = MathF.Cos((float)treeXform.LocalRotation), 
-            };
 
             treeLayer.QueryAabb(ref currentLayerReflist,
                 static (ref RefList<SpriteData> state, in ComponentTreeEntry<SpriteComponent> value) =>
@@ -99,9 +102,18 @@ internal partial class Clyde
                     return true;
                 }, bounds, true);
 
+            treeData = treeData with
+            {
+                TreeOwner = treeOwner,
+                TreePos = treeXform.LocalPosition,
+                TreeRot = treeXform.LocalRotation,
+                Sin = MathF.Sin((float)treeXform.LocalRotation),
+                Cos = MathF.Cos((float)treeXform.LocalRotation),
+            };
+
             // Get bounding boxes & world positions
             added = currentLayerReflist.Count - index;
-            var batches = added/_spriteProcessingBatchSize;
+            var batches = added / _spriteProcessingBatchSize;
 
             // TODO also do sorting here & use a merge sort later on for y-sorting?
             if (batches > 1)
@@ -149,7 +161,7 @@ internal partial class Clyde
             data.WorldRot = rot;
             data.WorldPos = pos;
 
-            var finalRotation = (float) (data.Sprite.NoRotation
+            var finalRotation = (float)(data.Sprite.NoRotation
                 ? data.Sprite.Rotation
                 : data.Sprite.Rotation + rot + batch.ViewRotation);
 
@@ -239,7 +251,7 @@ internal partial class Clyde
         public Vector2 TreePos { get; init; }
         public Angle TreeRot { get; init; }
         public float Sin { get; init; }
-        public float Cos { get;  init; }
+        public float Cos { get; init; }
     }
 
     private sealed class SpriteDrawingOrderComparer : IComparer<int>

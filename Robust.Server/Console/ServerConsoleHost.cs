@@ -260,11 +260,9 @@ namespace Robust.Server.Console
 
             done:
 
-            result ??= CompletionResult.Empty;
-
             var msg = new MsgConCompletionResp
             {
-                Result = result,
+                Result = result ?? CompletionResult.Empty,
                 Seq = message.Seq
             };
 
@@ -286,6 +284,12 @@ namespace Robust.Server.Console
         private ValueTask<CompletionResult?> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
         {
             // Logger.Debug(string.Join(", ", args));
+
+            if (args.Length > 0 && args[0] == "sudo")
+            {
+                args = args[1..];
+                argStr = argStr["sudo ".Length..];
+            }
 
             if (args.Length <= 1)
             {

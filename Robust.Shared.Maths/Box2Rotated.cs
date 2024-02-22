@@ -30,7 +30,7 @@ namespace Robust.Shared.Maths
         public readonly Vector2 TopLeft => Origin + Rotation.RotateVec(Box.TopLeft - Origin);
         public readonly Vector2 TopRight => Origin + Rotation.RotateVec(Box.TopRight - Origin);
         public readonly Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
-        public readonly Vector2 Center => Origin + Rotation.RotateVec((Box.BottomLeft + Box.TopRight) / 2 - Origin);
+        public readonly Vector2 Center => Origin + Rotation.RotateVec((Box.BottomLeft + Box.TopRight)/2 - Origin);
 
         public Matrix3 Transform => Matrix3.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation);
 
@@ -78,8 +78,8 @@ namespace Robust.Shared.Maths
             var originX = Vector128.Create(Origin.X);
             var originY = Vector128.Create(Origin.Y);
 
-            var cos = Vector128.Create((float)Math.Cos(Rotation));
-            var sin = Vector128.Create((float)Math.Sin(Rotation));
+            var cos = Vector128.Create((float) Math.Cos(Rotation));
+            var sin = Vector128.Create((float) Math.Sin(Rotation));
 
             var allX = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
             var allY = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));

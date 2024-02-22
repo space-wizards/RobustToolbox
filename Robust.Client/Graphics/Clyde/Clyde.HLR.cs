@@ -24,7 +24,6 @@ namespace Robust.Client.Graphics.Clyde
     // The idea is this shouldn't contain too much GL specific stuff.
     internal partial class Clyde
     {
-
         public ClydeDebugLayers DebugLayers { get; set; }
 
         // TODO allow this scale to be passed with PostShader as variable
@@ -269,18 +268,14 @@ namespace Robust.Client.Graphics.Clyde
 
             RenderTexture? entityPostRenderTarget = null;
             bool flushed = false;
-
             foreach (var layerIndex in indexList.Keys)
             {
 
                 var drawingSpriteListLayer = _drawingSpriteList[layerIndex];
                 var layerIndexList = indexList[layerIndex];
 
-
                 for (; overlayIndex < worldOverlays.Count; overlayIndex++)
                 {
-
-
                     var overlay = worldOverlays[overlayIndex];
 
                     if (overlay.ZIndex > layerIndex)
@@ -297,8 +292,6 @@ namespace Robust.Client.Graphics.Clyde
 
                     RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
                 }
-
-                
 
                 for (var i = 0; i < drawingSpriteListLayer.Count; i++)
                 {
@@ -406,7 +399,7 @@ namespace Robust.Client.Graphics.Clyde
             for (; overlayIndex < worldOverlays.Count; overlayIndex++)
             {
                 if (!flushed)
-                { 
+                {
                     FlushRenderQueue();
                     flushed = true;
                 }
@@ -420,8 +413,6 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO: This isn't accurate anymore
             _debugStats.Entities += _drawingSpriteList.Count;
-
-
             _drawingSpriteList.Clear();
             FlushRenderQueue();
         }
@@ -440,7 +431,7 @@ namespace Robust.Client.Graphics.Clyde
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
 
-        private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color? clearColor = default)
+        private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color? clearColor=default)
         {
             // TODO: for the love of god all this state pushing/popping needs to be cleaned up.
 

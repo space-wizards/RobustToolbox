@@ -40,7 +40,6 @@ namespace Robust.Shared.Utility
 
         public static bool TryGetValue<T>(this IList<T> list, int index, out T value)
         {
-
             if (list.Count > index && index >= 0)
             {
                 value = list[index];

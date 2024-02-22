@@ -14,8 +14,6 @@ using System.Linq;
 
 namespace Robust.Shared.ComponentTrees;
 
-
-
 #region FLAT
 
 /// <summary>
@@ -23,8 +21,8 @@ namespace Robust.Shared.ComponentTrees;
 /// </summary>
 [UsedImplicitly]
 public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
-where TTreeComp : Component, IComponentTreeComponent<TComp>, new()
-where TComp : Component, IComponentTreeEntry<TComp>, new()
+    where TTreeComp : Component, IComponentTreeComponent<TComp>, new()
+    where TComp : Component, IComponentTreeEntry<TComp>, new()
 {
     [Dependency] private readonly RecursiveMoveSystem _recursiveMoveSys = default!;
     [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
@@ -103,7 +101,7 @@ where TComp : Component, IComponentTreeEntry<TComp>, new()
     }
 
     private void HandleMove(EntityUid uid, TComp component, ref MoveEvent args)
-=> QueueTreeUpdate(uid, component, args.Component);
+        => QueueTreeUpdate(uid, component, args.Component);
 
     public virtual void QueueTreeUpdate(EntityUid uid, TComp component, TransformComponent? xform = null)
     {
@@ -117,10 +115,10 @@ where TComp : Component, IComponentTreeEntry<TComp>, new()
 
     #region Component Management
     protected virtual void OnCompStartup(EntityUid uid, TComp component, ComponentStartup args)
-=> QueueTreeUpdate(uid, component);
+        => QueueTreeUpdate(uid, component);
 
     protected virtual void OnCompRemoved(EntityUid uid, TComp component, ComponentRemove args)
-=> RemoveFromTree(component);
+        => RemoveFromTree(component);
 
     protected virtual void OnTreeAdd(EntityUid uid, TTreeComp component, ComponentAdd args)
     {
@@ -278,9 +276,8 @@ where TComp : Component, IComponentTreeEntry<TComp>, new()
     #endregion
 
     #region Queries
-
     public IEnumerable<(EntityUid, TTreeComp)> GetIntersectingTrees(MapId mapId, Box2Rotated worldBounds)
-=> GetIntersectingTrees(mapId, worldBounds.CalcBoundingBox());
+        => GetIntersectingTrees(mapId, worldBounds.CalcBoundingBox());
 
     public IEnumerable<(EntityUid Uid, TTreeComp Comp)> GetIntersectingTrees(MapId mapId, Box2 worldAABB)
     {
@@ -318,7 +315,7 @@ where TComp : Component, IComponentTreeEntry<TComp>, new()
     }
 
     public HashSet<ComponentTreeEntry<TComp>> QueryAabb(MapId mapId, Box2 worldBounds, bool approx = true)
-=> QueryAabb(mapId, new Box2Rotated(worldBounds, default, default), approx);
+        => QueryAabb(mapId, new Box2Rotated(worldBounds, default, default), approx);
 
     public HashSet<ComponentTreeEntry<TComp>> QueryAabb(MapId mapId, Box2Rotated worldBounds, bool approx = true)
     {
@@ -365,7 +362,7 @@ where TComp : Component, IComponentTreeEntry<TComp>, new()
         TState state, Func<EntityUid, TState, bool> predicate, bool returnOnFirstHit = true)
     {
         if (mapId == MapId.Nullspace)
-            return new();
+            return new ();
 
         var queryState = new QueryState<TState>(maxLength, returnOnFirstHit, state, predicate);
 
@@ -406,7 +403,7 @@ where TComp : Component, IComponentTreeEntry<TComp>, new()
         public readonly TState State;
         public readonly Func<EntityUid, TState, bool> Predicate;
 
-        public QueryState(float maxLength, bool returnOnFirstHit, TState state, Func<EntityUid, TState, bool> predictate)
+        public QueryState(float maxLength, bool returnOnFirstHit, TState state, Func<EntityUid, TState, bool>  predictate)
         {
             MaxLength = maxLength;
             ReturnOnFirstHit = returnOnFirstHit;
@@ -415,12 +412,9 @@ where TComp : Component, IComponentTreeEntry<TComp>, new()
         }
     }
     #endregion
-
 }
+
 #endregion
-
-
-
 
 
 #region LAYERED

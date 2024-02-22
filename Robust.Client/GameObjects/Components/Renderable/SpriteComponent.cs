@@ -302,7 +302,7 @@ namespace Robust.Client.GameObjects
                 if (!string.IsNullOrWhiteSpace(rsi))
                 {
                     var rsiPath = TextureRoot / rsi;
-                    if (resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
+                    if(resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
                     {
                         BaseRSI = resource.RSI;
                     }
@@ -330,7 +330,6 @@ namespace Robust.Client.GameObjects
                     });
                     state = null;
                     texture = null;
-
                 }
             }
 
@@ -1523,8 +1522,7 @@ namespace Robust.Client.GameObjects
 
 
             private RSI? _rsi;
-            [ViewVariables]
-            public RSI? RSI
+            [ViewVariables] public RSI? RSI
             {
                 get => _rsi;
                 set
@@ -1538,8 +1536,7 @@ namespace Robust.Client.GameObjects
             }
 
             private RSI.StateId _state;
-            [ViewVariables]
-            public RSI.StateId State
+            [ViewVariables] public RSI.StateId State
             {
                 get => _state;
                 set
@@ -1924,7 +1921,7 @@ namespace Robust.Client.GameObjects
             /// <inheritdoc/>
             public Box2 CalculateBoundingBox()
             {
-                var textureSize = (Vector2)PixelSize / EyeManager.PixelsPerMeter;
+                var textureSize = (Vector2) PixelSize / EyeManager.PixelsPerMeter;
                 var longestSide = MathF.Max(textureSize.X, textureSize.Y);
                 var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));
 
@@ -2070,7 +2067,7 @@ namespace Robust.Client.GameObjects
 
                 var layerColor = _parent.color * Color;
                 var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
-                var quad = Box2.FromDimensions(textureSize / -2, textureSize);
+                var quad = Box2.FromDimensions(textureSize/-2, textureSize);
 
                 drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
 

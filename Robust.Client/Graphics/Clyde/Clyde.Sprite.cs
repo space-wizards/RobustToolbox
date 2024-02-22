@@ -55,8 +55,6 @@ internal partial class Clyde
     {
         var query = _entityManager.GetEntityQuery<TransformComponent>();
         var viewScale = eye.Scale * view.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
-
-
         var treeData = new BatchData()
         {
             Sys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>(),
@@ -73,7 +71,6 @@ internal partial class Clyde
         var added = 0;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
         var xformSystem = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
-
 
         int? lastLayer = null;
         foreach (var (treeOwner, comp, treeLayer, layerIndex) in _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().GetIntersectingTreeLayers(map, worldBounds))
@@ -113,7 +110,7 @@ internal partial class Clyde
 
             // Get bounding boxes & world positions
             added = currentLayerReflist.Count - index;
-            var batches = added / _spriteProcessingBatchSize;
+            var batches = added/_spriteProcessingBatchSize;
 
             // TODO also do sorting here & use a merge sort later on for y-sorting?
             if (batches > 1)
@@ -161,7 +158,7 @@ internal partial class Clyde
             data.WorldRot = rot;
             data.WorldPos = pos;
 
-            var finalRotation = (float)(data.Sprite.NoRotation
+            var finalRotation = (float) (data.Sprite.NoRotation
                 ? data.Sprite.Rotation
                 : data.Sprite.Rotation + rot + batch.ViewRotation);
 
@@ -251,7 +248,7 @@ internal partial class Clyde
         public Vector2 TreePos { get; init; }
         public Angle TreeRot { get; init; }
         public float Sin { get; init; }
-        public float Cos { get; init; }
+        public float Cos { get;  init; }
     }
 
     private sealed class SpriteDrawingOrderComparer : IComparer<int>

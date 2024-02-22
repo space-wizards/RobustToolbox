@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Significantly optimise ChunkEnumerator / FindGridsIntersecting in certain use cases by intersecting the grid's AABB with the local AABB to avoid iterating dummy chunks.
 
 
 ## 210.1.1

@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 211.0.1
+
+### Bugfixes
+
+* Fix GridChunkEnumerator on maps.
+
+
 ## 211.0.0
 
 ### Breaking changes

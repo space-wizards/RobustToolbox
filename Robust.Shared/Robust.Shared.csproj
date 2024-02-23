@@ -7,7 +7,7 @@
     <NoWarn>CA1416</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-  	<PackageReference Include="Collections.Pooled" Version="2.0.0-preview.27" PrivateAssets="compile" />
+  	<PackageReference Include="Collections.Pooled" PrivateAssets="compile" />
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" />
     <PackageReference Include="Microsoft.ILVerification" PrivateAssets="compile" />

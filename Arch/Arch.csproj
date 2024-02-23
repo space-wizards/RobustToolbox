@@ -73,11 +73,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arch.LowLevel" Version="1.1.0" />
-    <PackageReference Include="Collections.Pooled" Version="2.0.0-preview.27" />
-    <PackageReference Include="CommunityToolkit.HighPerformance" Version="7.1.2" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
-    <PackageReference Include="ZeroAllocJobScheduler" Version="1.0.2" />
+    <PackageReference Include="Arch.LowLevel"/>
+    <PackageReference Include="Collections.Pooled"/>
+    <PackageReference Include="CommunityToolkit.HighPerformance"/>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe"/>
+    <PackageReference Include="ZeroAllocJobScheduler"/>
   </ItemGroup>
 
   <ItemGroup>

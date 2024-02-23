@@ -30,8 +30,8 @@ public struct ChunkIndicesEnumerator
 
     public ChunkIndicesEnumerator(Box2 localAABB, int chunkSize)
     {
-        _chunkLB = new Vector2i((int)Math.Floor(localAABB.Left / chunkSize), (int)Math.Floor(localAABB.Bottom / chunkSize));
-        _chunkRT = new Vector2i((int)Math.Floor(localAABB.Right / chunkSize), (int)Math.Floor(localAABB.Top / chunkSize));
+        _chunkLB = (localAABB.BottomLeft / chunkSize).Floored();
+        _chunkRT = (localAABB.TopRight / chunkSize).Floored();
 
         _xIndex = _chunkLB.X;
         _yIndex = _chunkLB.Y;

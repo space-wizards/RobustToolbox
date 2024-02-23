@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Moved ChunkIndicesEnumerator to engine and to a re-useable namespace at Robust.Shared/Maps.
+*None yet*
 
 ### New features
 
-* Added an Enlarged method for Box2Rotated.
+*None yet*
 
 ### Bugfixes
 
@@ -48,6 +48,21 @@ END TEMPLATE-->
 ### Other
 
 *None yet*
+
+### Internal
+
+*None yet*
+
+
+## 211.0.0
+
+### Breaking changes
+
+* Moved ChunkIndicesEnumerator to engine and to a re-useable namespace at Robust.Shared/Maps.
+
+### New features
+
+* Added an Enlarged method for Box2Rotated.
 
 ### Internal
 

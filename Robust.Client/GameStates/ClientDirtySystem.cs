@@ -39,7 +39,7 @@ public sealed class ClientDirtySystem : EntitySystem
 
     private void OnTerminate(ref EntityTerminatingEvent ev)
     {
-        if (!_timing.InPrediction || IsClientSide(ev.Entity))
+        if (!_timing.InPrediction || IsClientSide(ev.Entity, ev.Metadata))
             return;
 
         // Client-side entity deletion is not supported and will cause errors.

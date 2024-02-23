@@ -62,6 +62,7 @@ namespace Robust.Shared.Physics.Systems
 
         public bool MetricsEnabled { get; protected set; }
 
+        private EntityQuery<CollideOnAnchorComponent> _collideAnchorQuery;
         private EntityQuery<FixturesComponent> _fixturesQuery;
         protected EntityQuery<PhysicsComponent> PhysicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;
@@ -73,6 +74,7 @@ namespace Robust.Shared.Physics.Systems
         {
             base.Initialize();
 
+            _collideAnchorQuery = GetEntityQuery<CollideOnAnchorComponent>();
             _fixturesQuery = GetEntityQuery<FixturesComponent>();
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
@@ -230,7 +232,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private void OnGridAdd(GridAddEvent ev)
+        private void OnGridAdd(GridInitializeEvent ev)
         {
             var guid = ev.EntityUid;
 

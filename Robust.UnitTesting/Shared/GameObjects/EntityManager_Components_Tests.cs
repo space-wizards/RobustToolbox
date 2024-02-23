@@ -48,7 +48,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             };
 
             // Act
-            entMan.AddComponent(entity, component, true);
+            entMan.AddComponent(entity, component);
 
             // Assert
             var result = entMan.GetComponent<DummyComponent>(entity);

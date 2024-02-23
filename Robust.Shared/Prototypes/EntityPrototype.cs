@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using Arch.Core.Utils;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -12,6 +14,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 using Robust.Shared.ViewVariables;
+using Component = Robust.Shared.GameObjects.Component;
 
 namespace Robust.Shared.Prototypes
 {
@@ -251,24 +254,27 @@ namespace Robust.Shared.Prototypes
             ISerializationManager serManager,
             string compName,
             IComponent data,
-            ISerializationContext? context)
+            ISerializationContext? context,
+            MetaDataComponent metadata)
         {
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
                 var newComponent = factory.GetComponent(compName);
-                entityManager.AddComponent(entity, newComponent);
+                newComponent.Owner = entity;
                 component = newComponent;
+                add = true;
             }
 
             if (context is not MapSerializationContext map)
             {
                 serManager.CopyTo(data, ref component, context, notNullableOverride: true);
-                return;
+                return (compReg, component, add);
             }
 
             map.CurrentComponent = compName;
             serManager.CopyTo(data, ref component, context, notNullableOverride: true);
             map.CurrentComponent = null;
+            return (compReg, component, add);
         }
 
         public override string ToString()

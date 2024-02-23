@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
+using Arch.Core.Utils;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -13,6 +14,7 @@ public readonly struct CompIdx : IEquatable<CompIdx>
     private static readonly Dictionary<Type, CompIdx> SlowStore = new();
 
     internal readonly int Value;
+    internal readonly ComponentType Type;
 
     internal static CompIdx Index<T>() => Store<T>.Index;
 
@@ -62,12 +64,13 @@ public readonly struct CompIdx : IEquatable<CompIdx>
     private static class Store<T>
     {
         // ReSharper disable once StaticMemberInGenericType
-        public static readonly CompIdx Index = new(Interlocked.Increment(ref _CompIdxMaster));
+        public static readonly CompIdx Index = new(Interlocked.Increment(ref _CompIdxMaster), typeof(T));
     }
 
-    internal CompIdx(int value)
+    internal CompIdx(int value, in ComponentType type)
     {
         Value = value;
+        Type = type;
     }
 
     public bool Equals(CompIdx other)

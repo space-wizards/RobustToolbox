@@ -122,7 +122,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         SubscribeLocalEvent<BroadphaseComponent, EntityTerminatingEvent>(OnBroadphaseTerminating);
         SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
-        SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
         SubscribeLocalEvent<MapChangedEvent>(OnMapChange);
 
         _transform.OnGlobalMoveEvent += OnMove;
@@ -198,12 +197,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
         {
             EnsureComp<BroadphaseComponent>(ev.Uid);
         }
-    }
-
-    private void OnGridAdd(GridAddEvent ev)
-    {
-        // Must be done before initialization as that's when broadphase data starts getting set.
-        EnsureComp<BroadphaseComponent>(ev.EntityUid);
     }
 
     private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)
@@ -445,7 +438,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
     {
         DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid));
         DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadUid, default, false, staticBody));
-        xform.Broadphase ??= new(broadUid, default, false, staticBody);
+        xform.Broadphase ??= new BroadphaseData(broadUid, EntityUid.Invalid, false, staticBody);
         (staticBody ? broadphase.StaticSundriesTree : broadphase.SundriesTree).AddOrUpdate(uid, aabb);
     }
 

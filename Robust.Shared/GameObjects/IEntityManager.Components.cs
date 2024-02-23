@@ -71,7 +71,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity being modified.</param>
         /// <param name="component">Component to add.</param>
         /// <param name="overwrite">Should it overwrite existing components?</param>
-        void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : IComponent;
+        void AddComponent<T>(EntityUid uid, T component, MetaDataComponent? metadata = null) where T : IComponent;
 
         /// <summary>
         ///     Removes the component with the specified reference type,
@@ -497,5 +497,7 @@ namespace Robust.Shared.GameObjects
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.
         /// </summary>
         void CullRemovedComponents();
+
+        void CleanupArch();
     }
 }

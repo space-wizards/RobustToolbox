@@ -699,17 +699,18 @@ namespace Robust.Shared.GameObjects
             // First, we directly delete all maps. This will delete most entities while reducing the number of component
             // lookups
 
-            var maps = _entTraitDict[typeof(MapComponent)].Keys.ToArray();
+            var maps = EntityQuery<MapComponent>(includePaused: true).ToList();
+
             foreach (var map in maps)
             {
                 try
                 {
-                    DeleteEntity(map);
+                    DeleteEntity(map.Owner);
                 }
                 catch (Exception e)
                 {
                     _sawmill.Log(LogLevel.Error, e,
-                        $"Caught exception while trying to delete map entity {ToPrettyString(map)}, this might corrupt the game state...");
+                        $"Caught exception while trying to delete map entity {ToPrettyString(map.Owner)}, this might corrupt the game state...");
 #if !EXCEPTION_TOLERANCE
                     throw;
 #endif
@@ -717,11 +718,12 @@ namespace Robust.Shared.GameObjects
             }
 
             // Then delete all other entities.
-            var ents = _entTraitDict[typeof(MetaDataComponent)].ToArray();
-            DebugTools.Assert(ents.Length == Entities.Count);
-            foreach (var (uid, comp) in ents)
+            var ents = EntityQuery<MetaDataComponent>(includePaused: true).ToList();
+            DebugTools.Assert(ents.Count == EntityCount);
+            foreach (var meta in ents)
             {
-                var meta = (MetaDataComponent) comp;
+                var uid = meta.Owner;
+
                 if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
                     continue;
 

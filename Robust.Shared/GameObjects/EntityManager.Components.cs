@@ -225,7 +225,8 @@ namespace Robust.Shared.GameObjects
 
         // TODO: Clean up this mess.
 
-        internal void AddComponentInternalOnly<T>(EntityUid uid, T component, ComponentRegistration reg, MetaDataComponent? metadata = null) where T : IComponent
+        internal void AddComponentInternalOnly<T>(EntityUid uid, T component, ComponentRegistration reg,
+            MetaDataComponent? metadata = null) where T : IComponent
         {
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
@@ -240,12 +241,12 @@ namespace Robust.Shared.GameObjects
             // TODO optimize this
             // Need multi-comp adds so we can remove this call probably.
             if (!_world.Has(uid, reg.Idx.Type))
-                _world.Add(uid, (object) component);
+                _world.Add(uid, (object)component);
             else
             {
                 // Okay so technically it may have an existing one not null but pointing to a stale component
                 // hence just set it and act casual.
-                _world.Set(uid, (object) component);
+                _world.Set(uid, (object)component);
             }
 
             // add the component to the netId grid
@@ -258,6 +259,7 @@ namespace Robust.Shared.GameObjects
             }
 
             component.Networked = reg.NetID != null;
+        }
 
         internal void AddComponentEvents<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit,
             MetaDataComponent? metadata = null) where T : IComponent

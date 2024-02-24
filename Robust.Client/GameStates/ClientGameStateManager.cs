@@ -56,14 +56,14 @@ namespace Robust.Client.GameStates
         private readonly Dictionary<ushort, (IComponent Component, IComponentState? curState, IComponentState? nextState)> _compStateWork = new();
         private readonly Dictionary<EntityUid, HashSet<Type>> _pendingReapplyNetStates = new();
         private readonly HashSet<NetEntity> _stateEnts = new();
-        private readonly Dictionary<NetEntity, Dictionary<ushort, ComponentState>> _outputData = new();
+        private readonly Dictionary<NetEntity, Dictionary<ushort, IComponentState>> _outputData = new();
         private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
 
         private readonly List<NetEntity> _created = new();
         private readonly List<NetEntity> _detached = new();
 
-        private readonly ObjectPool<Dictionary<ushort, ComponentState>> _compDataPool =
-            new DefaultObjectPool<Dictionary<ushort, ComponentState>>(new DictPolicy<ushort, ComponentState>(), 256);
+        private readonly ObjectPool<Dictionary<ushort, IComponentState>> _compDataPool =
+            new DefaultObjectPool<Dictionary<ushort, IComponentState>>(new DictPolicy<ushort, IComponentState>(), 256);
 
         private uint _metaCompNetId;
 
@@ -551,7 +551,7 @@ namespace Robust.Client.GameStates
             var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
             using var toRemove = new PooledList<IComponent>();
             using var toAdd = new PooledList<ushort>();
-            using var toAddStates = new PooledList<ComponentState>();
+            using var toAddStates = new PooledList<IComponentState>();
 
             foreach (var entity in system.DirtyEntities)
             {
@@ -1027,7 +1027,7 @@ namespace Robust.Client.GameStates
                         && !deleteClientEntities // don't add duplicates
                         && _entities.IsClientSide(child))
                     {
-                        toDelete.Add(child.Value);
+                        toDelete.Add(child);
                     }
                 }
 
@@ -1258,7 +1258,7 @@ namespace Robust.Client.GameStates
 
                     if (!curState.NetComponents.Contains(id))
                     {
-                    	toRemove.Add(comp); 
+                    	toRemove.Add(comp);
                     	compTypes.Add(comp.GetType());
                     }
                 }

@@ -232,7 +232,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private void OnGridAdd(GridInitializeEvent ev)
+        private void OnGridAdd(GridAddEvent ev)
         {
             var guid = ev.EntityUid;
 

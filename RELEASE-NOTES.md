@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add a basic default concurrent audio limit of 16 for a single filepath to avoid overflowing audio sources.
 
 ### Bugfixes
 

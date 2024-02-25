@@ -1308,7 +1308,7 @@ namespace Robust.Client.GameStates
                         comp = _compFactory.GetComponent(registration);
                         comp.Owner = uid;
                         addedComps.Add(comp);
-                        addedCompTypes.Add(comp.GetType());
+                        addedCompTypes.Add(registration.Type);
                     }
                     else if (compChange.LastModifiedTick <= lastApplied && lastApplied != GameTick.Zero)
                         continue;

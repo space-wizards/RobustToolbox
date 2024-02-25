@@ -35,6 +35,15 @@ public sealed partial class FormattedMessage
         _nodes.AddRange(ParseSafe(markup));
     }
 
+    /// <summary>
+    /// Same as <see cref="AddMarkup"/> but adds a newline too.
+    /// </summary>
+    public void PushMarkup(string markup)
+    {
+        AddMarkup(markup);
+        PushNewline();
+    }
+
     // > wtf I love parser combinators now
     //   - PJB 13 Oct 2019
     // this tbh - Julian 26 Jan 2023

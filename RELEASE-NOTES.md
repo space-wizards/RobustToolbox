@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 211.0.2
+
+### Bugfixes
+
+* Fix TextureRect scaling not handling UIScale correctly.
+
+
 ## 211.0.1
 
 ### Bugfixes

@@ -671,6 +671,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns whether the entity is alive inside of the ECS world.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal bool IsAlive(EntityUid uid)
         {
             return ((EntityReference) uid).IsAlive(_world);

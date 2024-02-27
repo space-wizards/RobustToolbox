@@ -418,6 +418,6 @@ command-description-tee =
     This essentially lets you have a branch in your code to do multiple operations on one value.
 command-description-cmd-info =
     Returns a CommandSpec for the given command.
-    On it's own, this means it'll print the command's help message.
+    On its own, this means it'll print the command's help message.
 command-description-comp-rm =
     Removes the given component from the entity.

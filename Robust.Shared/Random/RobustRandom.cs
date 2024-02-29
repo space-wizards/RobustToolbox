@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Random
@@ -53,6 +54,20 @@ namespace Robust.Shared.Random
         public void NextBytes(byte[] buffer)
         {
             _random.NextBytes(buffer);
+        }
+
+        public T? SelectRandomOrDefault<T>(List<T> list) where T : new()
+        {
+            return list.Count == 0 ? default : list[Next(list.Count)];
+        }
+
+        public T SelectRandom<T>(List<T> list) where T : new()
+        {
+            if (list.Count == 0)
+            {
+                throw new ArgumentException("Specified List does not have any elements");
+            }
+            return list[Next(list.Count)];
         }
     }
 }

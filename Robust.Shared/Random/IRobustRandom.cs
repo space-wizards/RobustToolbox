@@ -46,6 +46,22 @@ public interface IRobustRandom
     public Vector2 NextVector2(float maxMagnitude = 1) => NextVector2(0, maxMagnitude);
 
     /// <summary>
+    /// Selects a random element from the supplied list or default value if the list is empty
+    /// </summary>
+    /// <param name="list">The list we are grabbing our element from</param>
+    /// <typeparam name="T">Type of element</typeparam>
+    /// <returns>Random Element or default value if list is empty</returns>
+    public T? SelectRandomOrDefault<T>(List<T> list) where T : new();
+
+    /// <summary>
+    /// Selects a random element from the supplied list
+    /// Will throw an argument exception if the array is empty!
+    /// </summary>
+    /// <param name="list">The list we are grabbing our element from</param>
+    /// <typeparam name="T">Type of element</typeparam>
+    /// <returns>Random Element</returns>
+    public T SelectRandom<T>(List<T> list) where T : new();
+    /// <summary>
     ///     Random vector, created from a uniform distribution of x and y coordinates lying inside some box.
     /// </summary>
     public Vector2 NextVector2Box(float minX, float minY, float maxX, float maxY) => new Vector2(NextFloat(minX, maxX), NextFloat(minY, maxY));

@@ -7,6 +7,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -1049,6 +1050,30 @@ public partial class EntitySystem
         EntityManager.EnsureEntityList<T>(netEntities, callerEntity, entities);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity, Dictionary<EntityUid, TValue> entities)
+    {
+        EntityManager.EnsureEntityDictionary<TComp, TValue>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionaryNullableValue<TComp, TValue>(Dictionary<NetEntity, TValue?> netEntities, EntityUid callerEntity, Dictionary<EntityUid, TValue?> entities)
+    {
+        EntityManager.EnsureEntityDictionaryNullableValue<TComp, TValue>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity> netEntities, EntityUid callerEntity, Dictionary<TKey, EntityUid> entities) where TKey : notnull
+    {
+        EntityManager.EnsureEntityDictionary<TComp, TKey>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity, Dictionary<TKey, EntityUid?> entities) where TKey : notnull
+    {
+        EntityManager.EnsureEntityDictionary<TComp, TKey>(netEntities, callerEntity, entities);
+    }
+
     /// <summary>
     ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
@@ -1182,6 +1207,60 @@ public partial class EntitySystem
     protected EntityUid?[] GetEntityArray(NetEntity?[] netEntities)
     {
         return EntityManager.GetEntityArray(netEntities);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<NetEntity, T> GetNetEntityDictionary<T>(Dictionary<EntityUid, T> uids)
+    {
+        return EntityManager.GetNetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityUid?> uids) where T : notnull
+    {
+        return EntityManager.GetNetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<T, NetEntity> GetNetEntityDictionary<T>(Dictionary<T, EntityUid> uids) where T : notnull
+    {
+        return EntityManager.GetNetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<EntityUid, T> GetEntityDictionary<T>(Dictionary<NetEntity, T> uids)
+    {
+        return EntityManager.GetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<T, EntityUid> GetEntityDictionary<T>(Dictionary<T, NetEntity> uids) where T : notnull
+    {
+        return EntityManager.GetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<T, EntityUid?> GetEntityDictionary<T>(Dictionary<T, NetEntity?> uids) where T : notnull
+    {
+        return EntityManager.GetEntityDictionary(uids);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

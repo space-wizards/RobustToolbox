@@ -7,7 +7,6 @@ using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 

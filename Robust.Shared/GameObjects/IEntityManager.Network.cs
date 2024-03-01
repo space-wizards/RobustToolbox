@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Map;
@@ -168,6 +167,16 @@ public partial interface IEntityManager
     Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityUid?> entities) where T : notnull;
 
     /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<NetEntity, NetEntity> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid> entities);
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<NetEntity, NetEntity?> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid?> entities);
+
+    /// <summary>
     /// Returns the corresponding <see cref="NetCoordinates"/> for the specified local coordinates.
     /// </summary>
     public NetCoordinates GetNetCoordinates(EntityCoordinates coordinates, MetaDataComponent? metadata = null);
@@ -207,6 +216,27 @@ public partial interface IEntityManager
     public HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity);
 
     public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity);
+
+    void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities);
+
+    void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity,
+        Dictionary<EntityUid, TValue> entities);
+
+    void EnsureEntityDictionaryNullableValue<TComp, TValue>(Dictionary<NetEntity, TValue?> netEntities,
+        EntityUid callerEntity,
+        Dictionary<EntityUid, TValue?> entities);
+
+    void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity> netEntities, EntityUid callerEntity,
+        Dictionary<TKey, EntityUid> entities) where TKey : notnull;
+
+    void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
+        Dictionary<TKey, EntityUid?> entities) where TKey : notnull;
+
+    void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity> netEntities, EntityUid callerEntity,
+        Dictionary<EntityUid, EntityUid> entities);
+
+    void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity?> netEntities, EntityUid callerEntity,
+        Dictionary<EntityUid, EntityUid?> entities);
 
     public List<EntityCoordinates> GetEntityList(ICollection<NetCoordinates> netEntities);
 

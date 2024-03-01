@@ -193,9 +193,17 @@ namespace Robust.Shared.CompNetworkGenerator
 
                             var value = named.TypeArguments[1].ToDisplayString(FullNullableFormat);
                             var valueNullable = value.EndsWith("?");
+
                             if (key is GlobalEntityUidName or GlobalNullableEntityUidName)
                             {
                                 key = keyNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+
+                                var ensureGeneric = $"{componentName}, {value}";
+                                if (value is GlobalEntityUidName or GlobalNullableEntityUidName)
+                                {
+                                    value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+                                    ensureGeneric = componentName;
+                                }
 
                                 stateFields.Append($@"
         public Dictionary<{key}, {value}> {name} = default!;");
@@ -203,7 +211,7 @@ namespace Robust.Shared.CompNetworkGenerator
                                 getStateInit.Append($@"
                 {name} = GetNetEntityDictionary(component.{name}),");
 
-                                if (valueNullable)
+                                if (valueNullable && value is not GlobalNetEntityName and not GlobalNetEntityNullableName)
                                 {
                                     handleStateSetters.Append($@"
             EnsureEntityDictionaryNullableValue<{componentName}, {value}>(state.{name}, uid, component.{name});");
@@ -211,7 +219,7 @@ namespace Robust.Shared.CompNetworkGenerator
                                 else
                                 {
                                     handleStateSetters.Append($@"
-            EnsureEntityDictionary<{componentName}, {value}>(state.{name}, uid, component.{name});");
+            EnsureEntityDictionary<{ensureGeneric}>(state.{name}, uid, component.{name});");
                                 }
 
                                 break;

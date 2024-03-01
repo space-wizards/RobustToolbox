@@ -1073,6 +1073,18 @@ public partial class EntitySystem
         EntityManager.EnsureEntityDictionary<TComp, TKey>(netEntities, callerEntity, entities);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity> netEntities, EntityUid callerEntity, Dictionary<EntityUid, EntityUid> entities)
+    {
+        EntityManager.EnsureEntityDictionary<TComp>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity?> netEntities, EntityUid callerEntity, Dictionary<EntityUid, EntityUid?> entities)
+    {
+        EntityManager.EnsureEntityDictionary<TComp>(netEntities, callerEntity, entities);
+    }
+
     /// <summary>
     ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
@@ -1239,13 +1251,31 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<NetEntity, NetEntity> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid> uids)
+    {
+        return EntityManager.GetNetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<NetEntity, NetEntity?> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid?> uids)
+    {
+        return EntityManager.GetNetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected Dictionary<EntityUid, T> GetEntityDictionary<T>(Dictionary<NetEntity, T> uids)
     {
         return EntityManager.GetEntityDictionary(uids);
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected Dictionary<T, EntityUid> GetEntityDictionary<T>(Dictionary<T, NetEntity> uids) where T : notnull
@@ -1254,10 +1284,28 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected Dictionary<T, EntityUid?> GetEntityDictionary<T>(Dictionary<T, NetEntity?> uids) where T : notnull
+    {
+        return EntityManager.GetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<EntityUid, EntityUid> GetEntityDictionary(Dictionary<NetEntity, NetEntity> uids)
+    {
+        return EntityManager.GetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<EntityUid, EntityUid?> GetEntityDictionary(Dictionary<NetEntity, NetEntity?> uids)
     {
         return EntityManager.GetEntityDictionary(uids);
     }

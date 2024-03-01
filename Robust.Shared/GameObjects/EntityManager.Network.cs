@@ -314,6 +314,30 @@ public partial class EntityManager
         return entities;
     }
 
+    public Dictionary<EntityUid, EntityUid> GetEntityDictionary(Dictionary<NetEntity, NetEntity> netEntities)
+    {
+        var entities = new Dictionary<EntityUid, EntityUid>(netEntities.Count);
+
+        foreach (var pair in netEntities)
+        {
+            entities.Add(GetEntity(pair.Key), GetEntity(pair.Value));
+        }
+
+        return entities;
+    }
+
+    public Dictionary<EntityUid, EntityUid?> GetEntityDictionary(Dictionary<NetEntity, NetEntity?> netEntities)
+    {
+        var entities = new Dictionary<EntityUid, EntityUid?>(netEntities.Count);
+
+        foreach (var pair in netEntities)
+        {
+            entities.Add(GetEntity(pair.Key), GetEntity(pair.Value));
+        }
+
+        return entities;
+    }
+
     public HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
     {
         var entities = new HashSet<EntityUid>(netEntities.Count);
@@ -400,6 +424,28 @@ public partial class EntityManager
         foreach (var pair in netEntities)
         {
             entities.Add(pair.Key, EnsureEntity<TComp>(pair.Value, callerEntity));
+        }
+    }
+
+    public void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity> netEntities, EntityUid callerEntity,
+        Dictionary<EntityUid, EntityUid> entities)
+    {
+        entities.Clear();
+        entities.EnsureCapacity(netEntities.Count);
+        foreach (var pair in netEntities)
+        {
+            entities.Add(EnsureEntity<TComp>(pair.Key, callerEntity), EnsureEntity<TComp>(pair.Value, callerEntity));
+        }
+    }
+
+    public void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity?> netEntities, EntityUid callerEntity,
+        Dictionary<EntityUid, EntityUid?> entities)
+    {
+        entities.Clear();
+        entities.EnsureCapacity(netEntities.Count);
+        foreach (var pair in netEntities)
+        {
+            entities.Add(EnsureEntity<TComp>(pair.Key, callerEntity), EnsureEntity<TComp>(pair.Value, callerEntity));
         }
     }
 
@@ -580,6 +626,32 @@ public partial class EntityManager
         foreach (var pair in entities)
         {
             netEntities.Add(pair.Key, GetNetEntity(pair.Value));
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
+    public Dictionary<NetEntity, NetEntity> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid> entities)
+    {
+        var netEntities = new Dictionary<NetEntity, NetEntity>(entities.Count);
+
+        foreach (var pair in entities)
+        {
+            netEntities.Add(GetNetEntity(pair.Key), GetNetEntity(pair.Value));
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
+    public Dictionary<NetEntity, NetEntity?> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid?> entities)
+    {
+        var netEntities = new Dictionary<NetEntity, NetEntity?>(entities.Count);
+
+        foreach (var pair in entities)
+        {
+            netEntities.Add(GetNetEntity(pair.Key), GetNetEntity(pair.Value));
         }
 
         return netEntities;

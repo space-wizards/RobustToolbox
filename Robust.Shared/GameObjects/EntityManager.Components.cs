@@ -190,6 +190,11 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void AddComponent(EntityUid target, ComponentRegistry registry, bool removeExisting = true)
         {
+            if (registry.Count == 0)
+                return;
+
+            var metadata = MetaQuery.GetComponent(target);
+
             foreach (var (name, entry) in registry)
             {
                 var reg = _componentFactory.GetRegistration(name);
@@ -199,13 +204,13 @@ namespace Robust.Shared.GameObjects
                     if (!removeExisting)
                         continue;
 
-                    RemoveComponent(target, reg.Type);
+                    RemoveComponent(target, reg.Type, metadata);
                 }
 
                 var comp = _componentFactory.GetComponent(reg);
                 var temp = (object) comp;
                 _serManager.CopyTo(entry.Component, ref temp);
-                AddComponent(target, comp);
+                AddComponent(target, comp, metadata: metadata);
             }
         }
 

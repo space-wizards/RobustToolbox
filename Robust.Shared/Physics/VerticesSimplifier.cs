@@ -56,17 +56,17 @@ namespace Robust.Shared.Physics
             return simplified;
         }
 
-        private bool IsCollinear(in Vector2 prev, in Vector2 current, in Vector2 next, float tolerance)
+        public static bool IsCollinear(in Vector2 prev, in Vector2 current, in Vector2 next, float tolerance)
         {
             return FloatInRange(Area(in prev, in current, in next), -tolerance, tolerance);
         }
 
-        private float Area(in Vector2 a, in Vector2 b, in Vector2 c)
+        private static float Area(in Vector2 a, in Vector2 b, in Vector2 c)
         {
             return a.X * (b.Y - c.Y) + b.X * (c.Y - a.Y) + c.X * (a.Y - b.Y);
         }
 
-        private bool FloatInRange(float value, float min, float max)
+        private static bool FloatInRange(float value, float min, float max)
         {
             return (value >= min && value <= max);
         }

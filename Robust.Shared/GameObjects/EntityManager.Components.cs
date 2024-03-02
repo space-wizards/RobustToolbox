@@ -177,18 +177,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <summary>
-        /// Adds the specified components from the <see cref="EntityPrototype"/>
-        /// </summary>
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddComponent(EntityUid target, EntityPrototype prototype, bool removeExisting = true)
         {
             AddComponent(target, prototype.Components, removeExisting);
         }
 
-        /// <summary>
-        /// Adds the specified registry components to the target entity.
-        /// </summary>
+        /// <inheritdoc />
         public void AddComponent(EntityUid target, ComponentRegistry registry, bool removeExisting = true)
         {
             if (registry.Count == 0)
@@ -214,18 +210,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <summary>
-        /// Removes the specified entity prototype components from the target entity.
-        /// </summary>
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid target, EntityPrototype prototype)
         {
             RemoveComponent(target, prototype.Components);
         }
 
-        /// <summary>
-        /// Removes the specified registry components from the target entity.
-        /// </summary>
+        /// <inheritdoc />
         public void RemoveComponent(EntityUid target, ComponentRegistry registry)
         {
             if (registry.Count == 0)

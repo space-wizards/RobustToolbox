@@ -40,8 +40,6 @@ END TEMPLATE-->
 ### New features
 
 * Add an overload to DrawingHandleBase.DrawPrimitives that allows a `List<Vector2>` to be passed in.
-* `NetUserId` implements `ISelfSerialize` so can be used in data fields.
-* `ButtonGroup.IsNoneSetAllowed` to allow a button group to have no buttons pressed by default.
 
 ### Bugfixes
 
@@ -54,6 +52,54 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 211.0.2
+
+### Bugfixes
+
+* Fix TextureRect scaling not handling UIScale correctly.
+
+
+## 211.0.1
+
+### Bugfixes
+
+* Fix GridChunkEnumerator on maps.
+
+
+## 211.0.0
+
+### Breaking changes
+
+* Moved ChunkIndicesEnumerator to engine and to a re-useable namespace at Robust.Shared/Maps.
+
+### New features
+
+* Added an Enlarged method for Box2Rotated.
+
+### Internal
+
+* Significantly optimise ChunkEnumerator / FindGridsIntersecting in certain use cases by intersecting the grid's AABB with the local AABB to avoid iterating dummy chunks.
+
+
+## 210.1.1
+
+### Bugfixes
+
+* Fixed multiple recent bugs with key binding storage.
+
+### Other
+
+* Change default of `ButtonGroup.IsNoneSetAllowed` to `true`. This makes it default again to the previous (unintentional) behavior.
+
+
+## 210.1.0
+
+### New features
+
+* `NetUserId` implements `ISelfSerialize` so can be used in data fields.
+* `ButtonGroup.IsNoneSetAllowed` to allow a button group to have no buttons pressed by default.
 
 
 ## 210.0.3

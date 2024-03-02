@@ -179,13 +179,13 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AddComponent(EntityUid target, EntityPrototype prototype, bool removeExisting = true)
+        public void AddComponents(EntityUid target, EntityPrototype prototype, bool removeExisting = true)
         {
-            AddComponent(target, prototype.Components, removeExisting);
+            AddComponents(target, prototype.Components, removeExisting);
         }
 
         /// <inheritdoc />
-        public void AddComponent(EntityUid target, ComponentRegistry registry, bool removeExisting = true)
+        public void AddComponents(EntityUid target, ComponentRegistry registry, bool removeExisting = true)
         {
             if (registry.Count == 0)
                 return;
@@ -212,13 +212,13 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveComponent(EntityUid target, EntityPrototype prototype)
+        public void RemoveComponents(EntityUid target, EntityPrototype prototype)
         {
-            RemoveComponent(target, prototype.Components);
+            RemoveComponents(target, prototype.Components);
         }
 
         /// <inheritdoc />
-        public void RemoveComponent(EntityUid target, ComponentRegistry registry)
+        public void RemoveComponents(EntityUid target, ComponentRegistry registry)
         {
             if (registry.Count == 0)
                 return;

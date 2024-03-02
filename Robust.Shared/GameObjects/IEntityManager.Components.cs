@@ -42,22 +42,22 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Adds the specified components from the <see cref="EntityPrototype"/>
         /// </summary>
-        void AddComponent(EntityUid target, EntityPrototype prototype, bool removeExisting = true);
+        void AddComponents(EntityUid target, EntityPrototype prototype, bool removeExisting = true);
 
         /// <summary>
         /// Adds the specified registry components to the target entity.
         /// </summary>
-        void AddComponent(EntityUid target, ComponentRegistry registry, bool removeExisting = true);
+        void AddComponents(EntityUid target, ComponentRegistry registry, bool removeExisting = true);
 
         /// <summary>
         /// Removes the specified entity prototype components from the target entity.
         /// </summary>
-        void RemoveComponent(EntityUid target, EntityPrototype prototype);
+        void RemoveComponents(EntityUid target, EntityPrototype prototype);
 
         /// <summary>
         /// Removes the specified registry components from the target entity.
         /// </summary>
-        void RemoveComponent(EntityUid target, ComponentRegistry registry);
+        void RemoveComponents(EntityUid target, ComponentRegistry registry);
 
         /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will

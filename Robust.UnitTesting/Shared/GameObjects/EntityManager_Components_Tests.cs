@@ -44,7 +44,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(!entMan.HasComponent<PhysicsComponent>(entity));
             var proto = protoManager.Index<EntityPrototype>("DummyLoad");
 
-            entMan.AddComponent(entity, proto);
+            entMan.AddComponents(entity, proto);
             Assert.Multiple(() =>
             {
                 Assert.That(entMan.HasComponent<JointComponent>(entity));
@@ -68,7 +68,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entity = entMan.SpawnEntity("DummyLoad", DefaultCoords);
             var proto = protoManager.Index<EntityPrototype>("DummyLoad");
 
-            entMan.RemoveComponent(entity, proto);
+            entMan.RemoveComponents(entity, proto);
             Assert.Multiple(() =>
             {
                 Assert.That(!entMan.HasComponent<JointComponent>(entity));

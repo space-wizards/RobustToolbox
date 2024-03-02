@@ -67,8 +67,7 @@ public struct ValueList<T> : IEnumerable<T>
         _items = new T[count];
 
         var liSpan = CollectionsMarshal.AsSpan(list)[start..(start + count)];
-        var target = new Span<T>(_items, 0, count);
-        liSpan.CopyTo(target);
+        liSpan.CopyTo(_items);
 
         Count = count;
     }

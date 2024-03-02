@@ -180,6 +180,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Adds the specified components from the <see cref="EntityPrototype"/>
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddComponent(EntityUid target, EntityPrototype prototype, bool removeExisting = true)
         {
             AddComponent(target, prototype.Components, removeExisting);
@@ -208,8 +209,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 var comp = _componentFactory.GetComponent(reg);
-                var temp = (object) comp;
-                _serManager.CopyTo(entry.Component, ref temp);
+                _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
                 AddComponent(target, comp, metadata: metadata);
             }
         }
@@ -217,6 +217,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Removes the specified entity prototype components from the target entity.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid target, EntityPrototype prototype)
         {
             RemoveComponent(target, prototype.Components);

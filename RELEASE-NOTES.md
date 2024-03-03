@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix TextureRect alignment where the strech mode is KeepCentered.
 
 ### Other
 

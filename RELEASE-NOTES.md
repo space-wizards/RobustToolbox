@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 212.0.0
+
+### Breaking changes
+
 * Change Collapsible controls default orientations to Vertical.
 
 ### New features
@@ -49,10 +72,6 @@ END TEMPLATE-->
 * Add DrawPrimitives overload for `List<Vector2>`
 * Add more ValueList ctors that are faster.
 * Add ToMapCoordinates method for NetCoordinates.
-
-### Bugfixes
-
-*None yet*
 
 ### Other
 

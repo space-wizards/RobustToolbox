@@ -11,7 +11,7 @@ namespace Robust.Shared.Utility
         /// <summary>
         /// Ensures that the specified array has the specified length.
         /// </summary>
-        public static void EnsureLength<T>(this T[] array, int length)
+        public static void EnsureLength<T>(ref T[] array, int length)
         {
             if (array.Length > length)
                 return;

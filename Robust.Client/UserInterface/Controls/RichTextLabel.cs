@@ -21,6 +21,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             IoCManager.InjectDependencies(this);
             VerticalAlignment = VAlignment.Center;
+            RectClipContent = true;
         }
 
         public void SetMessage(FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)

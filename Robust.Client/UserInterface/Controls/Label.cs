@@ -31,6 +31,7 @@ namespace Robust.Client.UserInterface.Controls
         public Label()
         {
             VerticalAlignment = VAlignment.Center;
+            ClipText = true;
         }
 
         /// <summary>

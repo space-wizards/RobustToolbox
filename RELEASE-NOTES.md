@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add nullable methods for TryIndex / HasIndex on IPrototypeManager.
 
 ### Bugfixes
 

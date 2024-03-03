@@ -107,13 +107,12 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Exposes the label for this heading.
         /// </summary>
-        public Label Label => _title;
+        public Label Label { get; }
 
-        private Label _title = new();
         public string? Title
         {
-            get => _title.Text;
-            set => _title.Text = value;
+            get => Label.Text;
+            set => Label.Text = value;
         }
 
         public CollapsibleHeading()
@@ -122,8 +121,8 @@ namespace Robust.Client.UserInterface.Controls
             var box = new BoxContainer();
             AddChild(box);
             box.AddChild(_chevron);
-            _title = new Label();
-            box.AddChild(_title);
+            Label = new Label();
+            box.AddChild(Label);
         }
 
         public CollapsibleHeading(string title) : this()

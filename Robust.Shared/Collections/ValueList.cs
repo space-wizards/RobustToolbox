@@ -64,12 +64,10 @@ public struct ValueList<T> : IEnumerable<T>
     /// </summary>
     public ValueList(List<T> list, int start, int count)
     {
-        Array.Resize(ref _items, count);
-        Capacity = count;
+        _items = new T[count];
 
-        var liSpan = CollectionsMarshal.AsSpan(list);
-        var target = new Span<T>(_items, start, count);
-        liSpan.CopyTo(target);
+        var liSpan = CollectionsMarshal.AsSpan(list)[start..(start + count)];
+        liSpan.CopyTo(_items);
 
         Count = count;
     }
@@ -80,8 +78,7 @@ public struct ValueList<T> : IEnumerable<T>
     public ValueList(IReadOnlyCollection<T> list)
     {
         var count = list.Count;
-        Array.Resize(ref _items, count);
-        Capacity = count;
+        _items = new T[count];
 
         foreach (var entry in list)
         {
@@ -606,11 +603,8 @@ public struct ValueList<T> : IEnumerable<T>
             return;
 
         EnsureCapacity(newCount);
-
-        for (var i = Count; i < newCount; i++)
-        {
-            var size = Count;
-            AddNoResize(default!, size);
-        }
+        var region = new Span<T>(_items, Count, (newCount - Count));
+        region.Clear();
+        Count = newCount;
     }
 }

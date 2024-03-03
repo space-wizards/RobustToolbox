@@ -998,29 +998,29 @@ public abstract partial class SharedMapSystem
     internal ChunkEnumerator GetMapChunks(EntityUid uid, MapGridComponent grid, Box2 worldAABB)
     {
         var localAABB = _transform.GetInvWorldMatrix(uid).TransformBox(worldAABB);
-        var compAABB = grid.LocalAABB.Intersect(localAABB);
-
-        if (compAABB.IsEmpty())
-            return ChunkEnumerator.Empty;
-
-        return new ChunkEnumerator(grid.Chunks, compAABB, grid.ChunkSize);
+        return GetLocalMapChunks(uid, grid, localAABB);
     }
 
     internal ChunkEnumerator GetMapChunks(EntityUid uid, MapGridComponent grid, Box2Rotated worldArea)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
         var localArea = matrix.TransformBox(worldArea);
-        var compAABB = grid.LocalAABB.Intersect(localArea);
-
-        if (compAABB.IsEmpty())
-            return ChunkEnumerator.Empty;
-
-        return new ChunkEnumerator(grid.Chunks, compAABB, grid.ChunkSize);
+        return GetLocalMapChunks(uid, grid, localArea);
     }
 
     internal ChunkEnumerator GetLocalMapChunks(EntityUid uid, MapGridComponent grid, Box2 localAABB)
     {
-        var compAABB = grid.LocalAABB.Intersect(localAABB);
+        Box2 compAABB;
+
+        // The entire area intersects.
+        if (_mapQuery.HasComponent(uid))
+        {
+            compAABB = localAABB;
+        }
+        else
+        {
+            compAABB = grid.LocalAABB.Intersect(localAABB);
+        }
 
         if (compAABB.IsEmpty())
             return ChunkEnumerator.Empty;

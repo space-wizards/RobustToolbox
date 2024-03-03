@@ -54,6 +54,35 @@ END TEMPLATE-->
 * Significantly optimise ChunkEnumerator / FindGridsIntersecting in certain use cases by unionising the grid's AABB with the local AABB to avoid iterating dummy chunks.
 
 
+## 211.0.2
+
+### Bugfixes
+
+* Fix TextureRect scaling not handling UIScale correctly.
+
+
+## 211.0.1
+
+### Bugfixes
+
+* Fix GridChunkEnumerator on maps.
+
+
+## 211.0.0
+
+### Breaking changes
+
+* Moved ChunkIndicesEnumerator to engine and to a re-useable namespace at Robust.Shared/Maps.
+
+### New features
+
+* Added an Enlarged method for Box2Rotated.
+
+### Internal
+
+* Significantly optimise ChunkEnumerator / FindGridsIntersecting in certain use cases by intersecting the grid's AABB with the local AABB to avoid iterating dummy chunks.
+
+
 ## 210.1.1
 
 ### Bugfixes

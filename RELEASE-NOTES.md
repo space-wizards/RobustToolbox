@@ -35,11 +35,13 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Change Collapsible controls default orientations to Vertical.
 
 ### New features
 
-* Add an overload to DrawingHandleBase.DrawPrimitives that allows a `List<Vector2>` to be passed in.
+* Expose the Label control for Collapsible controls.
+* Add GetGridPosition that considers physics center-of-mass.
+* Add TileToVector methods to get the LocalPosition of tile-coords (taking into account tile size).
 
 ### Bugfixes
 
@@ -51,7 +53,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Bump max pool size for robust jobs.
 
 
 ## 211.0.2

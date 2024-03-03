@@ -42,6 +42,13 @@ END TEMPLATE-->
 * Expose the Label control for Collapsible controls.
 * Add GetGridPosition that considers physics center-of-mass.
 * Add TileToVector methods to get the LocalPosition of tile-coords (taking into account tile size).
+* Add some more helper methods to PVS filters around EntityUids.
+* Add support for Dictionary AutoNetworkedFields.
+* Add EnsureLength method for arrays.
+* Add PushMarkup to FormattedMessage.
+* Add DrawPrimitives overload for `List<Vector2>`
+* Add more ValueList ctors that are faster.
+* Add ToMapCoordinates method for NetCoordinates.
 
 ### Bugfixes
 
@@ -49,7 +56,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Remove ISerializationHooks obsoletion as they are useful in some rare cases.
 
 ### Internal
 

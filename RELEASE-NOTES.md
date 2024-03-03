@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 212.0.1
+
+### Bugfixes
+
+* Fix passing array by `this` instead of by `ref`.
+
+
 ## 212.0.0
 
 ### Breaking changes

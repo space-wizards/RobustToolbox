@@ -702,7 +702,7 @@ namespace Robust.Shared
         /// relative to the viewport framebuffer size.
         /// </summary>
         public static readonly CVarDef<float> LightResolutionScale =
-            CVarDef.Create("light.resolution_scale", 0.5f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("light.resolution_scale", 0.5f, CVar.SERVER | CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum amount of shadow-casting lights that can be rendered in a single viewport at once.

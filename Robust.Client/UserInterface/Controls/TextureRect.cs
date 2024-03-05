@@ -213,7 +213,7 @@ namespace Robust.Client.UserInterface.Controls
                     return UIBox2.FromDimensions(Vector2.Zero, TextureSizeTarget * UIScale);
                 case StretchMode.KeepCentered:
                 {
-                    var position = (PixelSize - TextureSizeTarget) / 2;
+                    var position = (Size - TextureSizeTarget) / 2;
                     return UIBox2.FromDimensions(position, TextureSizeTarget * UIScale);
                 }
 

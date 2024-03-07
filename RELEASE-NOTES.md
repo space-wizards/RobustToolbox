@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* Add nullable methods for TryIndex / HasIndex on IPrototypeManager.
+*None yet*
 
 ### Bugfixes
 
-* Fix TextureRect alignment where the strech mode is KeepCentered.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,17 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 212.1.0
+
+### New features
+
+* Add nullable methods for TryIndex / HasIndex on IPrototypeManager.
+
+### Bugfixes
+
+* Fix TextureRect alignment where the strech mode is KeepCentered.
 
 
 ## 212.0.1

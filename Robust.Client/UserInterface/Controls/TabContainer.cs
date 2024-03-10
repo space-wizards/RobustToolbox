@@ -69,7 +69,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public TabContainer()
         {
-            MouseFilter = MouseFilterMode.Pass;
+            MouseFilter = MouseFilterMode.Stop;
         }
 
         public string GetActualTabTitle(int tab)

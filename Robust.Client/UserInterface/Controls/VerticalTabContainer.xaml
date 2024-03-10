@@ -4,30 +4,31 @@
               xmlns:graphics="clr-namespace:Robust.Client.Graphics"
               Orientation="Horizontal"
               MouseFilter="Pass">
-    <PanelContainer Margin="5">
-        <PanelContainer.PanelOverride>
-            <graphics:StyleBoxFlat BackgroundColor="#1B1B1E" />
-        </PanelContainer.PanelOverride>
-        <ScrollContainer VerticalExpand="True"
-                         HScrollEnabled="False"
-                         HorizontalExpand="True"
-                         HorizontalAlignment="Left"
-                         ReturnMeasure="True"
-                         Margin="5">
-            <BoxContainer Name="TabContainer" Orientation="Vertical"/>
+    <ScrollContainer VerticalExpand="True"
+                     HScrollEnabled="False"
+                     ReturnMeasure="True"
+                     Margin="5 5 0 5">
+        <PanelContainer Margin="5" VerticalExpand="False"
+                        VerticalAlignment="Top">
+            <PanelContainer.PanelOverride>
+                <graphics:StyleBoxFlat BackgroundColor="#1B1B1E" />
+            </PanelContainer.PanelOverride>
+            <BoxContainer Name="TabContainer" Margin="5" Orientation="Vertical"/>
+        </PanelContainer>
         </ScrollContainer>
-    </PanelContainer>
-    <PanelContainer Margin="5" HorizontalExpand="True" HorizontalAlignment="Stretch">
-        <PanelContainer.PanelOverride>
-            <graphics:StyleBoxFlat BackgroundColor="#1B1B1E" />
-        </PanelContainer.PanelOverride>
-        <ScrollContainer VerticalExpand="True"
-                         HScrollEnabled="False"
-                         HorizontalAlignment="Stretch"
-                         ReturnMeasure="True"
-                         Margin="5">
-        <BoxContainer Orientation="Vertical"
-                      Name="ContentsContainer"/>
+    <ScrollContainer VerticalExpand="True"
+                     HScrollEnabled="False"
+                     HorizontalAlignment="Stretch"
+                     HorizontalExpand="True"
+                     ReturnMeasure="True"
+                     Margin="0 5 5 5">
+        <PanelContainer Margin="5" HorizontalExpand="True" HorizontalAlignment="Stretch">
+            <PanelContainer.PanelOverride>
+                <graphics:StyleBoxFlat BackgroundColor="#1B1B1E" />
+            </PanelContainer.PanelOverride>
+            <BoxContainer Margin="5"
+                          Orientation="Vertical"
+                          Name="ContentsContainer"/>
+        </PanelContainer>
     </ScrollContainer>
-    </PanelContainer>
 </BoxContainer>

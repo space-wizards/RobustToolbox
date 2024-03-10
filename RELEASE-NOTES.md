@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 212.2.0
+
+### New features
+
+* Add IsHardCollidable to SharedPhysicsSystem to determine if 2 entities would collide.
+
+### Other
+
+* Double the default maximum replay size.
+
+
 ## 212.1.0
 
 ### New features

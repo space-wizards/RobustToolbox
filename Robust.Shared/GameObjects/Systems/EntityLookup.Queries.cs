@@ -745,8 +745,19 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<EntityUid> GetEntitiesInRange(EntityCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
     {
+        var ents = new HashSet<EntityUid>();
+        GetEntitiesInRange(coordinates, range, flags);
+        return ents;
+    }
+
+    public void GetEntitiesInRange(EntityCoordinates coordinates, float range, HashSet<EntityUid> entities, LookupFlags flags = DefaultFlags)
+    {
         var mapPos = coordinates.ToMap(EntityManager, _transform);
-        return GetEntitiesInRange(mapPos, range, flags);
+
+        if (mapPos.MapId == MapId.Nullspace)
+            return;
+
+        GetEntitiesInRange(mapPos.MapId, mapPos.Position, range, entities, flags);
     }
 
     #endregion

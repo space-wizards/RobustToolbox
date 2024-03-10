@@ -907,6 +907,16 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
+        /// Raises an event locally on client or networked on server.
+        /// </summary>
+        public abstract void RaiseSharedEvent<T>(T message, EntityUid? user = null) where T : EntityEventArgs;
+
+        /// <summary>
+        /// Raises an event locally on client or networked on server.
+        /// </summary>
+        public abstract void RaiseSharedEvent<T>(T message, ICommonSession? user = null) where T : EntityEventArgs;
+
+        /// <summary>
         ///     Factory for generating a new EntityUid for an entity currently being created.
         /// </summary>
         internal EntityUid GenerateEntityUid()

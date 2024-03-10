@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add GetEntitiesInRange override that takes in EntityCoordinates and an EntityUid hashset.
 
 ### Bugfixes
 

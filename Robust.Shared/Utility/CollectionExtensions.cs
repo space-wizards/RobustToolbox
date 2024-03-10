@@ -3,11 +3,19 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
+using JetBrains.Annotations;
+using Robust.Shared.Collections;
 
 namespace Robust.Shared.Utility
 {
     public static class Extensions
     {
+        [Pure]
+        public static ValueList<T> ToValueList<T>(this IReadOnlyCollection<T> list)
+        {
+            return new ValueList<T>(list);
+        }
+
         /// <summary>
         /// Ensures that the specified array has the specified length.
         /// </summary>

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `ToValueList<T>` extension for `IReadOnlyCollection<T>`.
 
 ### Bugfixes
 

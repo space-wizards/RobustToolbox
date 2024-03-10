@@ -535,7 +535,7 @@ namespace Robust.Shared.Containers
         /// </summary>
         public void CleanContainer(BaseContainer container)
         {
-            foreach (var ent in container.ContainedEntities.ToArray())
+            foreach (var ent in container.ContainedEntities.ToValueList())
             {
                 if (Deleted(ent))
                     continue;

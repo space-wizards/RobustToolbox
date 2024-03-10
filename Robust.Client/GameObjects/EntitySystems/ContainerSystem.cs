@@ -91,7 +91,7 @@ namespace Robust.Client.GameObjects
                     continue;
                 }
 
-                foreach (var entity in container.ContainedEntities.ToArray())
+                foreach (var entity in container.ContainedEntities.ToValueList())
                 {
                     Remove(
                         (entity, TransformQuery.GetComponent(entity), MetaQuery.GetComponent(entity)),

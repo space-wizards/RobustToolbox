@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Robust.Shared.Collections;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -746,7 +747,7 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesInRange(EntityCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
     {
         var ents = new HashSet<EntityUid>();
-        GetEntitiesInRange(coordinates, range, flags);
+        GetEntitiesInRange(coordinates, range, ents, flags);
         return ents;
     }
 

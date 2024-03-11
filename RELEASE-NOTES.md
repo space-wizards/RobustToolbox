@@ -39,8 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Add EntityManager.RaiseSharedEvent where the event won't go to the attached client but will be predicted locally on their end.
-* Add GetEntitiesInRange override that takes in EntityCoordinates and an EntityUid hashset.
+*None yet*
 
 ### Bugfixes
 
@@ -53,6 +52,22 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 213.0.0
+
+### Breaking changes
+
+* Remove obsoleted BaseContainer methods.
+
+### New features
+
+* Add EntityManager.RaiseSharedEvent where the event won't go to the attached client but will be predicted locally on their end.
+* Add GetEntitiesInRange override that takes in EntityCoordinates and an EntityUid hashset.
+
+### Bugfixes
+
+* Check if a sprite entity is deleted before drawing in SpriteView.
 
 
 ## 212.2.0

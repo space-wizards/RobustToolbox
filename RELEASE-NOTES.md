@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix tooltips not clamping to the left side of the viewport.
 
 ### Other
 

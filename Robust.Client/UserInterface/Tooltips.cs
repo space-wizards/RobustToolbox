@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 
@@ -43,12 +44,16 @@ namespace Robust.Client.UserInterface
 
             LayoutContainer.SetPosition(tooltip, new Vector2(screenPosition.X, screenPosition.Y - combinedMinSize.Y));
 
-            var right = tooltip.Position.X + combinedMinSize.X;
+            var left = tooltip.Position.X;
+            var right = left + combinedMinSize.X;
             var top = tooltip.Position.Y;
 
             if (right > screenBounds.X)
             {
-                LayoutContainer.SetPosition(tooltip, new(screenPosition.X - combinedMinSize.X, tooltip.Position.Y));
+                // If it underflows left bounds then just place left on the edge.
+                left = MathF.Max(screenPosition.X - combinedMinSize.X, 0f);
+
+                LayoutContainer.SetPosition(tooltip, new(left, tooltip.Position.Y));
             }
 
             if (top < 0f)

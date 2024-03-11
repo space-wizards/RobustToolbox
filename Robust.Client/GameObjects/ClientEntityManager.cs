@@ -8,6 +8,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
 using Robust.Shared.Replays;
 using Robust.Shared.Utility;
 
@@ -132,6 +133,24 @@ namespace Robust.Client.GameObjects
             var eventArgs = new EntitySessionEventArgs(session!);
             EventBus.RaiseEvent(EventSource.Local, msg);
             EventBus.RaiseEvent(EventSource.Local, new EntitySessionMessage<T>(eventArgs, msg));
+        }
+
+        /// <inheritdoc />
+        public override void RaiseSharedEvent<T>(T message, EntityUid? user = null)
+        {
+            if (user == null || user != _playerManager.LocalEntity || !_gameTiming.IsFirstTimePredicted)
+                return;
+
+            EventBus.RaiseEvent(EventSource.Local, ref message);
+        }
+
+        /// <inheritdoc />
+        public override void RaiseSharedEvent<T>(T message, ICommonSession? user = null)
+        {
+            if (user == null || user != _playerManager.LocalSession || !_gameTiming.IsFirstTimePredicted)
+                return;
+
+            EventBus.RaiseEvent(EventSource.Local, ref message);
         }
 
         #region IEntityNetworkManager impl

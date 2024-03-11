@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added `AddComponents` and `RemoveComponents` methods to EntityManager that handle EntityPrototype / ComponentRegistry bulk component changes. 
+* Add EntityManager.RaiseSharedEvent where the event won't go to the attached client but will be predicted locally on their end.
 
 ### Bugfixes
 
@@ -52,6 +53,63 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 212.2.0
+
+### New features
+
+* Add IsHardCollidable to SharedPhysicsSystem to determine if 2 entities would collide.
+
+### Other
+
+* Double the default maximum replay size.
+
+
+## 212.1.0
+
+### New features
+
+* Add nullable methods for TryIndex / HasIndex on IPrototypeManager.
+
+### Bugfixes
+
+* Fix TextureRect alignment where the strech mode is KeepCentered.
+
+
+## 212.0.1
+
+### Bugfixes
+
+* Fix passing array by `this` instead of by `ref`.
+
+
+## 212.0.0
+
+### Breaking changes
+
+* Change Collapsible controls default orientations to Vertical.
+
+### New features
+
+* Expose the Label control for Collapsible controls.
+* Add GetGridPosition that considers physics center-of-mass.
+* Add TileToVector methods to get the LocalPosition of tile-coords (taking into account tile size).
+* Add some more helper methods to PVS filters around EntityUids.
+* Add support for Dictionary AutoNetworkedFields.
+* Add EnsureLength method for arrays.
+* Add PushMarkup to FormattedMessage.
+* Add DrawPrimitives overload for `List<Vector2>`
+* Add more ValueList ctors that are faster.
+* Add ToMapCoordinates method for NetCoordinates.
+
+### Other
+
+* Remove ISerializationHooks obsoletion as they are useful in some rare cases.
+
+### Internal
+
+* Bump max pool size for robust jobs.
 
 
 ## 211.0.2

@@ -42,24 +42,21 @@ namespace Robust.Client.UserInterface
             tooltip.Measure(Vector2Helpers.Infinity);
             var combinedMinSize = tooltip.DesiredSize;
 
-            LayoutContainer.SetPosition(tooltip, new Vector2(screenPosition.X, screenPosition.Y - combinedMinSize.Y));
-
             var left = tooltip.Position.X;
             var right = left + combinedMinSize.X;
             var top = tooltip.Position.Y;
+            var bottom = tooltip.Position.Y + combinedMinSize.Y;
 
-            if (right > screenBounds.X)
-            {
-                // If it underflows left bounds then just place left on the edge.
-                left = MathF.Max(screenPosition.X - combinedMinSize.X, 0f);
+            // If it overflows right bounds then just place left on the edge.
+            right = MathF.Max(screenPosition.X - combinedMinSize.X, screenBounds.X);
 
-                LayoutContainer.SetPosition(tooltip, new(left, tooltip.Position.Y));
-            }
+            // However, better to clamp the end of the tooltip instead of the start.
+            left = MathF.Max(0f, right - combinedMinSize.X);
 
-            if (top < 0f)
-            {
-                LayoutContainer.SetPosition(tooltip, new(tooltip.Position.X, 0f));
-            }
+            bottom = MathF.Max(screenPosition.Y - combinedMinSize.Y, screenBounds.Y);
+            top = MathF.Max(0f, bottom - combinedMinSize.Y);
+
+            LayoutContainer.SetPosition(tooltip, new Vector2(left, top));
         }
     }
 }

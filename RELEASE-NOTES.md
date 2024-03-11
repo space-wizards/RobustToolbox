@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* Add EntityManager.RaiseSharedEvent where the event won't go to the attached client but will be predicted locally on their end.
 * Add GetEntitiesInRange override that takes in EntityCoordinates and an EntityUid hashset.
 
 ### Bugfixes

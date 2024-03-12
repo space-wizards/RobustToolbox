@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxKind;
-using static Robust.Analyzers.Diagnostics;
+using static Robust.Roslyn.Shared.Diagnostics;
 
 namespace Robust.Analyzers;
 

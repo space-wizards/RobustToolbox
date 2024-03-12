@@ -54,6 +54,108 @@ END TEMPLATE-->
 *None yet*
 
 
+## 213.0.0
+
+### Breaking changes
+
+* Remove obsoleted BaseContainer methods.
+
+### New features
+
+* Add EntityManager.RaiseSharedEvent where the event won't go to the attached client but will be predicted locally on their end.
+* Add GetEntitiesInRange override that takes in EntityCoordinates and an EntityUid hashset.
+
+### Bugfixes
+
+* Check if a sprite entity is deleted before drawing in SpriteView.
+
+
+## 212.2.0
+
+### New features
+
+* Add IsHardCollidable to SharedPhysicsSystem to determine if 2 entities would collide.
+
+### Other
+
+* Double the default maximum replay size.
+
+
+## 212.1.0
+
+### New features
+
+* Add nullable methods for TryIndex / HasIndex on IPrototypeManager.
+
+### Bugfixes
+
+* Fix TextureRect alignment where the strech mode is KeepCentered.
+
+
+## 212.0.1
+
+### Bugfixes
+
+* Fix passing array by `this` instead of by `ref`.
+
+
+## 212.0.0
+
+### Breaking changes
+
+* Change Collapsible controls default orientations to Vertical.
+
+### New features
+
+* Expose the Label control for Collapsible controls.
+* Add GetGridPosition that considers physics center-of-mass.
+* Add TileToVector methods to get the LocalPosition of tile-coords (taking into account tile size).
+* Add some more helper methods to PVS filters around EntityUids.
+* Add support for Dictionary AutoNetworkedFields.
+* Add EnsureLength method for arrays.
+* Add PushMarkup to FormattedMessage.
+* Add DrawPrimitives overload for `List<Vector2>`
+* Add more ValueList ctors that are faster.
+* Add ToMapCoordinates method for NetCoordinates.
+
+### Other
+
+* Remove ISerializationHooks obsoletion as they are useful in some rare cases.
+
+### Internal
+
+* Bump max pool size for robust jobs.
+
+
+## 211.0.2
+
+### Bugfixes
+
+* Fix TextureRect scaling not handling UIScale correctly.
+
+
+## 211.0.1
+
+### Bugfixes
+
+* Fix GridChunkEnumerator on maps.
+
+
+## 211.0.0
+
+### Breaking changes
+
+* Moved ChunkIndicesEnumerator to engine and to a re-useable namespace at Robust.Shared/Maps.
+
+### New features
+
+* Added an Enlarged method for Box2Rotated.
+
+### Internal
+
+* Significantly optimise ChunkEnumerator / FindGridsIntersecting in certain use cases by intersecting the grid's AABB with the local AABB to avoid iterating dummy chunks.
+
+
 ## 210.1.1
 
 ### Bugfixes

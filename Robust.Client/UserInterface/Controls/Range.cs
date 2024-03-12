@@ -87,7 +87,8 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public virtual int RoundingDecimals
+        [ViewVariables]
+        public int RoundingDecimals
         {
             get => _roundingDecimals;
             set

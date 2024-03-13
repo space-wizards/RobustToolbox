@@ -126,6 +126,17 @@ namespace Robust.Client.ViewVariables
                 return new VVPropEditorString();
             }
 
+            if (type == typeof(EntProtoId) ||
+                type == typeof(EntProtoId?))
+            {
+                return new VVPropEditorEntProtoId();
+            }
+
+            if (typeof(ProtoId<>).IsAssignableFrom(type))
+            {
+                return (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorProtoId<>).MakeGenericType(type))!;
+            }
+
             if (typeof(IPrototype).IsAssignableFrom(type) || typeof(ViewVariablesBlobMembers.PrototypeReferenceToken).IsAssignableFrom(type))
             {
                 return (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorIPrototype<>).MakeGenericType(type))!;

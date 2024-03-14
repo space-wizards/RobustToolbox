@@ -1504,7 +1504,7 @@ namespace Robust.Shared
         /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
         public static readonly CVarDef<long> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size",
-            1024L * 256, CVar.ARCHIVE);
+            1024L * 512, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum uncompressed size of a replay recording (in kilobytes) before recording automatically stops.

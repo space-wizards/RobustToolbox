@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -62,6 +63,19 @@ namespace Robust.Client.Graphics
         public abstract ShaderInstance? GetShader();
 
         // ---- DrawPrimitives: Vector2 API ----
+
+        /// <summary>
+        ///     Draws arbitrary geometry primitives with a flat color.
+        /// </summary>
+        /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
+        /// <param name="vertices">The list of vertices to render.</param>
+        /// <param name="color">The color to draw with.</param>
+        public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, List<Vector2> vertices,
+            Color color)
+        {
+            var span = CollectionsMarshal.AsSpan(vertices);
+            DrawPrimitives(primitiveTopology, span, color);
+        }
 
         /// <summary>
         ///     Draws arbitrary geometry primitives with a flat color.

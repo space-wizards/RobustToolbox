@@ -103,6 +103,40 @@ namespace Robust.Server.GameObjects
             return entity;
         }
 
+        /// <inheritdoc />
+        public override void RaiseSharedEvent<T>(T message, EntityUid? user = null)
+        {
+            if (user != null)
+            {
+                var filter = Filter.Broadcast().RemoveWhereAttachedEntity(e => e == user.Value);
+                foreach (var session in filter.Recipients)
+                {
+                    EntityNetManager.SendSystemNetworkMessage(message, session.Channel);
+                }
+            }
+            else
+            {
+                EntityNetManager.SendSystemNetworkMessage(message);
+            }
+        }
+
+        /// <inheritdoc />
+        public override void RaiseSharedEvent<T>(T message, ICommonSession? user = null)
+        {
+            if (user != null)
+            {
+                var filter = Filter.Broadcast().RemovePlayer(user);
+                foreach (var session in filter.Recipients)
+                {
+                    EntityNetManager.SendSystemNetworkMessage(message, session.Channel);
+                }
+            }
+            else
+            {
+                EntityNetManager.SendSystemNetworkMessage(message);
+            }
+        }
+
         private void ClearTicks(EntityUid entity, EntityPrototype prototype)
         {
             foreach (var (netId, component) in GetNetComponents(entity))

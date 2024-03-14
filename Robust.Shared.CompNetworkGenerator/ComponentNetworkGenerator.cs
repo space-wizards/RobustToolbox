@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.SymbolDisplayFormat;
+using static Microsoft.CodeAnalysis.SymbolDisplayMiscellaneousOptions;
 
 namespace Robust.Shared.CompNetworkGenerator
 {
@@ -19,18 +17,24 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string GlobalEntityUidName = "global::Robust.Shared.GameObjects.EntityUid";
         private const string GlobalNullableEntityUidName = "global::Robust.Shared.GameObjects.EntityUid?";
 
+        private const string GlobalNetEntityName = "global::Robust.Shared.GameObjects.NetEntity";
+        private const string GlobalNetEntityNullableName = "global::Robust.Shared.GameObjects.NetEntity?";
+
         private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
         private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
 
         private const string GlobalEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.EntityUid>";
-        private const string GlobalNetEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.NetEntity>";
+        private const string GlobalNetEntityUidSetName = $"global::System.Collections.Generic.HashSet<{GlobalNetEntityName}>";
 
         private const string GlobalEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.EntityUid>";
-        private const string GlobalNetEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.NetEntity>";
+        private const string GlobalNetEntityUidListName = $"global::System.Collections.Generic.List<{GlobalNetEntityName}>";
 
         private const string GlobalDictionaryName = "global::System.Collections.Generic.Dictionary<TKey, TValue>";
         private const string GlobalHashSetName = "global::System.Collections.Generic.HashSet<T>";
         private const string GlobalListName = "global::System.Collections.Generic.List<T>";
+
+        private static readonly SymbolDisplayFormat FullNullableFormat =
+            FullyQualifiedFormat.WithMiscellaneousOptions(IncludeNullableReferenceTypeModifier);
 
         private static string? GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
         {
@@ -132,7 +136,7 @@ namespace Robust.Shared.CompNetworkGenerator
 
             foreach (var (type, name) in fields)
             {
-                var typeDisplayStr = type.ToDisplayString(FullyQualifiedFormat);
+                var typeDisplayStr = type.ToDisplayString(FullNullableFormat);
                 var nullable = type.NullableAnnotation == NullableAnnotation.Annotated;
                 var nullableAnnotation = nullable ? "?" : string.Empty;
 
@@ -181,6 +185,62 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         break;
                     default:
+                        if (type is INamedTypeSymbol { TypeArguments.Length: 2 } named &&
+                            named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat) == GlobalDictionaryName)
+                        {
+                            var key = named.TypeArguments[0].ToDisplayString(FullNullableFormat);
+                            var keyNullable = key.EndsWith("?");
+
+                            var value = named.TypeArguments[1].ToDisplayString(FullNullableFormat);
+                            var valueNullable = value.EndsWith("?");
+
+                            if (key is GlobalEntityUidName or GlobalNullableEntityUidName)
+                            {
+                                key = keyNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+
+                                var ensureGeneric = $"{componentName}, {value}";
+                                if (value is GlobalEntityUidName or GlobalNullableEntityUidName)
+                                {
+                                    value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+                                    ensureGeneric = componentName;
+                                }
+
+                                stateFields.Append($@"
+        public Dictionary<{key}, {value}> {name} = default!;");
+
+                                getStateInit.Append($@"
+                {name} = GetNetEntityDictionary(component.{name}),");
+
+                                if (valueNullable && value is not GlobalNetEntityName and not GlobalNetEntityNullableName)
+                                {
+                                    handleStateSetters.Append($@"
+            EnsureEntityDictionaryNullableValue<{componentName}, {value}>(state.{name}, uid, component.{name});");
+                                }
+                                else
+                                {
+                                    handleStateSetters.Append($@"
+            EnsureEntityDictionary<{ensureGeneric}>(state.{name}, uid, component.{name});");
+                                }
+
+                                break;
+                            }
+
+                            if (value is GlobalEntityUidName or GlobalNullableEntityUidName)
+                            {
+                                value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+
+                                stateFields.Append($@"
+        public Dictionary<{key}, {value}> {name} = default!;");
+
+                                getStateInit.Append($@"
+                {name} = GetNetEntityDictionary(component.{name}),");
+                                handleStateSetters.Append($@"
+            EnsureEntityDictionary<{componentName}, {key}>(state.{name}, uid, component.{name});");
+
+                                break;
+                            }
+                        }
+
                         stateFields.Append($@"
         public {typeDisplayStr} {name} = default!;");
 
@@ -193,7 +253,7 @@ namespace Robust.Shared.CompNetworkGenerator
 
                             handleStateSetters.Append($@"
             if (state.{name} == null)
-                component.{name} = null;
+                component.{name} = null!;
             else
                 component.{name} = new(state.{name});");
                         }
@@ -219,6 +279,7 @@ namespace Robust.Shared.CompNetworkGenerator
             }
 
             return $@"// <auto-generated />
+#nullable enable
 using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.GameObjects;

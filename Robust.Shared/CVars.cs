@@ -1031,6 +1031,12 @@ namespace Robust.Shared
          * AUDIO
          */
 
+        /// <summary>
+        /// Default limit for concurrently playing an audio file.
+        /// </summary>
+        public static readonly CVarDef<int> AudioDefaultConcurrent =
+            CVarDef.Create("audio.default_concurrent", 16, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         public static readonly CVarDef<int> AudioAttenuation =
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 

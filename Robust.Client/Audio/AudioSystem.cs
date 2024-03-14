@@ -51,6 +51,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private EntityUid? _listenerGrid;
     private UpdateAudioJob _updateAudioJob;
 
+
     private EntityQuery<PhysicsComponent> _physicsQuery;
 
     private float _maxRayLength;
@@ -108,6 +109,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
         Subs.CVar(CfgManager, CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
+        InitializeLimit();
     }
 
     private void OnAudioState(EntityUid uid, AudioComponent component, ref AfterAutoHandleStateEvent args)
@@ -169,16 +171,23 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void SetupSource(AudioComponent component, AudioResource audioResource, TimeSpan? length = null)
     {
-        var source = _audio.CreateAudioSource(audioResource);
+        var source = component.Source;
 
-        if (source == null)
+        if (TryAudioLimit(component.FileName))
         {
-            Log.Error($"Error creating audio source for {audioResource}");
-            DebugTools.Assert(false);
-            source = component.Source;
-        }
+            var newSource = _audio.CreateAudioSource(audioResource);
 
-        component.Source = source;
+            if (newSource == null)
+            {
+                Log.Error($"Error creating audio source for {audioResource}");
+                DebugTools.Assert(false);
+                source = newSource;
+            }
+            else
+            {
+                component.Source = newSource;
+            }
+        }
 
         // Need to set all initial data for first frame.
         ApplyAudioParams(component.Params, component);
@@ -202,6 +211,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         // Breaks with prediction?
         component.Source.Dispose();
+
+        RemoveAudioLimit(component.FileName);
     }
 
     private void OnAudioAttenuation(int obj)

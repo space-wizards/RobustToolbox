@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* Add a basic default concurrent audio limit of 16 for a single filepath to avoid overflowing audio sources.
 * `NetConnectingArgs.Deny()` can now pass along structured data that will be received by the client.
 
 ### Bugfixes

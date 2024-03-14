@@ -16,7 +16,7 @@ namespace Robust.Shared.Network
 {
     partial class NetManager
     {
-        private readonly static string DisconnectReasonWrongKey = NetStructuredDisconnectMessages.Encode("Token decryption failed.\nPlease reconnect to this server from the launcher.", true);
+        private static readonly string DisconnectReasonWrongKey = new NetDisconnectMessage("Token decryption failed.\nPlease reconnect to this server from the launcher.", true).Encode();
 
         private readonly byte[] _cryptoPrivateKey = new byte[CryptoBox.SecretKeyBytes];
 
@@ -214,12 +214,12 @@ namespace Robust.Shared.Network
                 if (connect.DenyReasonData is { } deny)
                 {
                     var denyMsg = $"Connect denied: {deny.Text}";
-                    var structured = NetStructuredDisconnectMessages.EncodeObject(denyMsg, true);
+                    var structured = new NetDisconnectMessage(denyMsg, true);
                     foreach (var (k, v) in deny.AdditionalProperties)
                     {
-                        structured[k] = v;
+                        structured.Values[k] = v;
                     }
-                    connection.Disconnect(NetStructuredDisconnectMessages.Encode(structured));
+                    connection.Disconnect(structured.Encode());
                     return;
                 }
 

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 
 namespace Robust.Shared.Network
 {
@@ -76,12 +74,15 @@ namespace Robust.Shared.Network
     /// Contains a reason for denying a client connection to the game server.
     /// </summary>
     /// <param name="Text">The textual reason, presented to the user.</param>
-    /// <param name="AdditionalProperties">Additional JSON properties that will be included in the <see cref="NetStructuredDisconnectMessages"/>.</param>
-    /// <seealso cref="NetStructuredDisconnectMessages"/>
+    /// <param name="AdditionalProperties">
+    /// Additional JSON properties that will be included in the <see cref="NetDisconnectMessage"/>.
+    /// Valid value types are: string, int, float, bool.
+    /// </param>
+    /// <seealso cref="NetDisconnectMessage"/>
     /// <seealso cref="NetConnectingArgs"/>
-    public record NetDenyReason(string Text, Dictionary<string, JsonNode> AdditionalProperties)
+    public record NetDenyReason(string Text, Dictionary<string, object> AdditionalProperties)
     {
-        public NetDenyReason(string Text) : this(Text, new Dictionary<string, JsonNode>())
+        public NetDenyReason(string Text) : this(Text, new Dictionary<string, object>())
         {
         }
     }
@@ -91,7 +92,7 @@ namespace Robust.Shared.Network
     /// </summary>
     public interface INetStructuredReason
     {
-        JsonObject StructuredReason { get; }
+        NetDisconnectMessage Message { get; }
         string Reason { get; }
         bool RedialFlag { get; }
     }
@@ -101,33 +102,33 @@ namespace Robust.Shared.Network
     /// </summary>
     public sealed class NetConnectFailArgs : EventArgs, INetStructuredReason
     {
-        public NetConnectFailArgs(string reason) : this(NetStructuredDisconnectMessages.Decode(reason))
+        public NetConnectFailArgs(string reason) : this(NetDisconnectMessage.Decode(reason))
         {
         }
 
-        public NetConnectFailArgs(JsonObject reason)
+        internal NetConnectFailArgs(NetDisconnectMessage reason)
         {
-            StructuredReason = reason;
+            Message = reason;
         }
 
-        public JsonObject StructuredReason { get; }
-        public string Reason => NetStructuredDisconnectMessages.ReasonOf(StructuredReason);
-        public bool RedialFlag => NetStructuredDisconnectMessages.RedialFlagOf(StructuredReason);
+        public NetDisconnectMessage Message { get; }
+        public string Reason => Message.Reason;
+        public bool RedialFlag => Message.RedialFlag;
     }
 
     public sealed class NetDisconnectedArgs : NetChannelArgs, INetStructuredReason
     {
-        public NetDisconnectedArgs(INetChannel channel, string reason) : this(channel, NetStructuredDisconnectMessages.Decode(reason))
+        public NetDisconnectedArgs(INetChannel channel, string reason) : this(channel, NetDisconnectMessage.Decode(reason))
         {
         }
 
-        public NetDisconnectedArgs(INetChannel channel, JsonObject reason) : base(channel)
+        internal NetDisconnectedArgs(INetChannel channel, NetDisconnectMessage reason) : base(channel)
         {
-            StructuredReason = reason;
+            Message = reason;
         }
 
-        public JsonObject StructuredReason { get; }
-        public string Reason => NetStructuredDisconnectMessages.ReasonOf(StructuredReason);
-        public bool RedialFlag => NetStructuredDisconnectMessages.RedialFlagOf(StructuredReason);
+        public NetDisconnectMessage Message { get; }
+        public string Reason => Message.Reason;
+        public bool RedialFlag => Message.RedialFlag;
     }
 }

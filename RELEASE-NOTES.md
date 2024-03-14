@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `NetStructuredDisconnectMessages` has received a complete overhaul and has been moved to `NetDisconnectMessage`. The API is no longer designed such that consumers must pass around JSON nodes, as they are not in sandbox (and clunky).
 
 ### New features
 

@@ -43,7 +43,8 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed cursor position bugs when an empty `TextEdit` has a multi-line place holder.
+* Fixed empty `TextEdit` throwing exception if cursor is moved left.
 
 ### Other
 

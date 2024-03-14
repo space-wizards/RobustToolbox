@@ -570,6 +570,18 @@ namespace Robust.Client.Console.Commands
             }
             return returnVal;
         }
+
+        internal static string PropertyValuesString(Control control, string key)
+        {
+            var members = GetAllMembers(control);
+            var member = members.Find(m => m.Name == key);
+            var value = member?.GetValue(control);
+            return value switch
+            {
+                ICollection<string> list => string.Join(",", list),
+                _ => value?.ToString() ?? "null"
+            };
+        }
     }
 
     internal sealed class SetClipboardCommand : LocalizedCommands

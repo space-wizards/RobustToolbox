@@ -26,4 +26,5 @@
             </SplitContainer>
         </BoxContainer>
     </PanelContainer>
+    <PopupContainer Name="PopupContainer" Access="Public" />
 </Control>

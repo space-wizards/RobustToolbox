@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 214.0.0
+
+### Breaking changes
+
 * `NetStructuredDisconnectMessages` has received a complete overhaul and has been moved to `NetDisconnectMessage`. The API is no longer designed such that consumers must pass around JSON nodes, as they are not in sandbox (and clunky).
 
 ### New features
@@ -46,14 +69,6 @@ END TEMPLATE-->
 
 * Fixed cursor position bugs when an empty `TextEdit` has a multi-line place holder.
 * Fixed empty `TextEdit` throwing exception if cursor is moved left.
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
 
 
 ## 213.0.0

@@ -6,7 +6,7 @@ using Robust.Shared.IoC;
 namespace Robust.Client.UserInterface;
 
 [GenerateTypedNameReferences]
-public sealed partial class DevWindowUIPopup : Popup
+public sealed partial class DevWindowPopup : Popup
 {
     public string? Text
     {
@@ -14,7 +14,7 @@ public sealed partial class DevWindowUIPopup : Popup
         set => TextLabel.Text = value;
     }
 
-    public DevWindowUIPopup()
+    public DevWindowPopup()
     {
         RobustXamlLoader.Load(this);
         IoCManager.InjectDependencies(this);

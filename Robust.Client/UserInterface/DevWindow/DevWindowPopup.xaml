@@ -1,4 +1,4 @@
-﻿<Popup xmlns="https://spacestation14.io"
+﻿<DevWindowPopup xmlns="https://spacestation14.io"
        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
        x:Class="Robust.Client.UserInterface.DevWindowTabUI"
        xmlns:gfx="clr-namespace:Robust.Client.Graphics">
@@ -8,4 +8,4 @@
         </PanelContainer.PanelOverride>
         <Label Name="TextLabel" />
     </PanelContainer>
-</Popup>
+</DevWindowPopup>

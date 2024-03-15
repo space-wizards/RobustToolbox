@@ -23,7 +23,7 @@ public sealed partial class DevWindowTabUI : Control
     private Dictionary<Control, DevWindowUITreeEntry> ControlMap { get; } = new();
     private Control? LastHoveredControl { get; set; }
 
-    private DevWindowUIPopup? _popup;
+    private DevWindowPopup? _popup;
 
     public event Action? SelectedControlChanged;
 
@@ -56,6 +56,8 @@ public sealed partial class DevWindowTabUI : Control
 
         ControlTreeRoot.OnKeyBindDown += ControlTreeRootOnKeyBindDown;
         RefreshPropertiesButton.OnPressed += _ => Refresh();
+
+        _popup ??= new DevWindowPopup();
     }
 
     private Control? GetControlUnderMouse()
@@ -238,7 +240,7 @@ public sealed partial class DevWindowTabUI : Control
                 };
                 button.OnPressed += _ =>
                 {
-                    _popup ??= new DevWindowUIPopup();
+                    _popup ??= new DevWindowPopup();
                     _popup.Text = GuiDumpCommand.PropertyValuesString(SelectedControl, prop);
                     if (_popup.Parent != PopupContainer)
                         PopupContainer.AddChild(_popup);

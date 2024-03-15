@@ -555,19 +555,7 @@ namespace Robust.Client.Console.Commands
                 if (type != typeof(Control))
                     cname = $"Control > {cname}";
 
-                var value = member.GetValue(control);
-                var o = value switch
-                {
-                    ICollection<Control> controls => string.Join(", ",
-                        controls.Select(ctrl => $"{ctrl.Name}({ctrl.GetType()})")),
-                    ICollection<string> list => string.Join(", ", list),
-                    null => null,
-                    _ => value.ToString()
-                };
-                // Convert to quote surrounded string or null with no quotes
-                o = o is not null ? $"\"{o}\"" : "null";
-
-                returnVal.GetOrNew(cname).Add((member.Name, o));
+                returnVal.GetOrNew(cname).Add((member.Name, GetMemberValue(member, control, ", ")));
             }
 
             foreach (var (attachedProperty, value) in control.AllAttachedProperties)
@@ -585,32 +573,24 @@ namespace Robust.Client.Console.Commands
 
         internal static string PropertyValuesString(Control control, string key)
         {
-            var members = GetAllMembers(control);
-            var member = members.Find(m => m.Name == key);
-            var value = member?.GetValue(control);
-            string? o;
-            switch (value)
-            {
-                case ICollection<Control> controls:
-                    var sb = new StringBuilder();
-                    foreach (var ctrl in controls)
-                    {
-                        sb.AppendLine($"{ctrl.Name}({ctrl.GetType()})");
-                    }
-                    o = sb.ToString();
-                    break;
-                case ICollection<string> list:
-                    o = string.Join("\n", list);
-                    break;
-                case null:
-                    o = null;
-                    break;
-                default:
-                    o = value.ToString();
-                    break;
-            }
+            var member = GetAllMembers(control).Find(m => m.Name == key);
+            return GetMemberValue(member, control, "\n", "\"{0}\"");
+        }
 
-            return o is not null ? $"\"{o}\"" : "null";
+        private static string GetMemberValue(MemberInfo? member, Control control, string separator, string
+                wrap = "{0}")
+        {
+            var value = member?.GetValue(control);
+            var o = value switch
+            {
+                ICollection<Control> controls => string.Join(separator,
+                    controls.Select(ctrl => $"{ctrl.Name}({ctrl.GetType()})")),
+                ICollection<string> list => string.Join(separator, list),
+                null => null,
+                _ => value.ToString()
+            };
+            // Convert to quote surrounded string or null with no quotes
+            return o is not null ? string.Format(wrap, o) : "null";
         }
     }
 

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added the `pvs_override_info` command for debugging PVS overrides.
 
 ### Bugfixes
 
@@ -52,6 +52,23 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 214.0.0
+
+### Breaking changes
+
+* `NetStructuredDisconnectMessages` has received a complete overhaul and has been moved to `NetDisconnectMessage`. The API is no longer designed such that consumers must pass around JSON nodes, as they are not in sandbox (and clunky).
+
+### New features
+
+* Add a basic default concurrent audio limit of 16 for a single filepath to avoid overflowing audio sources.
+* `NetConnectingArgs.Deny()` can now pass along structured data that will be received by the client.
+
+### Bugfixes
+
+* Fixed cursor position bugs when an empty `TextEdit` has a multi-line place holder.
+* Fixed empty `TextEdit` throwing exception if cursor is moved left.
 
 
 ## 213.0.0

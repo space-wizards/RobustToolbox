@@ -576,7 +576,7 @@ public sealed class TextEdit : Control
 
                 var newPos = CursorShiftedLeft();
                 // Explicit newlines work kinda funny with bias, so keep it at top there.
-                var bias = Rope.Index(TextRope, newPos) == '\n'
+                var bias = _cursorPosition.Index == TextLength || Rope.Index(TextRope, newPos) == '\n'
                     ? LineBreakBias.Top
                     : LineBreakBias.Bottom;
 
@@ -940,6 +940,13 @@ public sealed class TextEdit : Control
 
     private CursorPos GetIndexAtHorizontalPos(int line, float horizontalPos)
     {
+        // If the placeholder is visible, this function does not return correct results because it looks at TextRope,
+        // but _lineBreaks is configured for the display rope.
+        // Bail out early in this case, the function is not currently used in any situation in any location
+        // where something else is desired if the placeholder is visible.
+        if (IsPlaceholderVisible)
+            return default;
+
         var contentBox = PixelSizeBox;
         var font = GetFont();
         var uiScale = UIScale;

@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* Added the `pvs_override_info` command for debugging PVS overrides.
+*None yet*
 
 ### Bugfixes
 
-* Fix VV for prototype structs.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,18 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 214.1.0
+
+### New features
+
+* Added the `pvs_override_info` command for debugging PVS overrides.
+
+### Bugfixes
+
+* Fix VV for prototype structs.
+* Fix audio limits for clientside audio.
 
 
 ## 214.0.0

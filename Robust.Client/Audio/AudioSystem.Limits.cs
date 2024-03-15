@@ -17,7 +17,7 @@ public sealed partial class AudioSystem
 
     private void InitializeLimit()
     {
-        Subs.CVar(CfgManager, CVars.AudioDefaultConcurrent, SetConcurrentLimit);
+        Subs.CVar(CfgManager, CVars.AudioDefaultConcurrent, SetConcurrentLimit, true);
     }
 
     private void SetConcurrentLimit(int obj)
@@ -27,6 +27,9 @@ public sealed partial class AudioSystem
 
     private bool TryAudioLimit(string sound)
     {
+        if (string.IsNullOrEmpty(sound))
+            return true;
+
         ref var count = ref CollectionsMarshal.GetValueRefOrAddDefault(_playingCount, sound, out _);
 
         if (count >= _maxConcurrent)

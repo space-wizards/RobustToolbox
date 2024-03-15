@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added the `pvs_override_info` command for debugging PVS overrides.
 
 ### Bugfixes
 

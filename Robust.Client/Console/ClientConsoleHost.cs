@@ -188,7 +188,7 @@ namespace Robust.Client.Console
             }
 
             args.RemoveAt(0);
-            var shell = new ConsoleShell(this, session ?? _player.LocalPlayer?.Session, session == null);
+            var shell = new ConsoleShell(this, session ?? _player.LocalSession, session == null);
             var cmdArgs = args.ToArray();
 
             AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
@@ -200,8 +200,7 @@ namespace Robust.Client.Console
             // When not connected to a server, you can run all local commands.
             // When connected to a server, you can only run commands according to the con group controller.
 
-            return _player.LocalPlayer == null
-                   || _player.LocalPlayer.Session.Status <= SessionStatus.Connecting
+            return _player.LocalSession is not { Status: > SessionStatus.Connecting }
                    || _conGroup.CanCommand(cmdName);
         }
 

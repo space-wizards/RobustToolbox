@@ -34,6 +34,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using ServerProgram = Robust.Server.Program;
@@ -679,6 +680,7 @@ namespace Robust.UnitTesting
                 deps.BuildGraph();
                 //ServerProgram.SetupLogging();
                 ServerProgram.InitReflectionManager(deps);
+                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
@@ -757,8 +759,9 @@ namespace Robust.UnitTesting
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
+            [Obsolete("Use Session instead")]
             public LocalPlayer? Player => ((IPlayerManager) PlayerMan).LocalPlayer;
-            public ICommonSession? Session => Player?.Session;
+            public ICommonSession? Session => ((IPlayerManager) PlayerMan).LocalSession;
             public NetUserId? User => Session?.UserId;
             public EntityUid? AttachedEntity => Session?.AttachedEntity;
 
@@ -860,6 +863,7 @@ namespace Robust.UnitTesting
                 deps.BuildGraph();
 
                 GameController.RegisterReflection(deps);
+                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var client = DependencyCollection.Resolve<GameController>();
 
@@ -935,11 +939,13 @@ namespace Robust.UnitTesting
                 // use server side uids on the client and vice versa. This can sometimes accidentally work if the
                 // entities get created in the same order. For that reason we arbitrarily increment the queued Uid by
                 // some arbitrary quantity.
-                var e = (EntityManager) EntMan;
+
+                /* TODO: End my suffering and fix this because entmanager hasn't started up yet.
                 for (var i = 0; i < 10; i++)
                 {
-                    e.GenerateEntityUid();
+                    EntMan.SpawnEntity(null, MapCoordinates.Nullspace);
                 }
+                */
 
                 return client;
             }

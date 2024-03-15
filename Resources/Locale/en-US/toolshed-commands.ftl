@@ -70,9 +70,9 @@ command-description-ls-in =
 command-description-methods-get =
     Returns all methods associated with the input type.
 command-description-methods-overrides =
-    Returns all methods overriden on the input type.
+    Returns all methods overridden on the input type.
 command-description-methods-overridesfrom =
-    Returns all methods overriden from the given type on the input type.
+    Returns all methods overridden from the given type on the input type.
 command-description-cmd-moo =
     Asks the important questions.
 command-description-cmd-descloc =
@@ -418,6 +418,6 @@ command-description-tee =
     This essentially lets you have a branch in your code to do multiple operations on one value.
 command-description-cmd-info =
     Returns a CommandSpec for the given command.
-    On it's own, this means it'll print the comamnd's help message.
+    On its own, this means it'll print the command's help message.
 command-description-comp-rm =
     Removes the given component from the entity.

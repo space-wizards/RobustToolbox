@@ -193,8 +193,13 @@ highp float zFBM(highp vec2 uv) {
 // -- generative --
 
 // Function that creates a circular gradient. Screenspace shader bread n butter.
-highp float zCircleGradient(highp vec2 center, highp vec2 coord, highp float maxi, highp float radius, highp float dist, highp float power) {
-    return pow(clamp((length(center - coord) / radius) - dist, 0.0, maxi), power);
+highp float zCircleGradient(highp vec2 ps, highp vec2 coord, highp float maxi, highp float radius, highp float dist, highp float power) {
+    highp float rad = (radius * ps.y) * 0.001;
+    highp float aspectratio = ps.x / ps.y;
+    highp vec2 totaldistance = ((ps * 0.5) - coord) / (rad * ps);
+    totaldistance.x *= aspectratio;
+    highp float length = (length(totaldistance) * ps.y) - dist;
+    return pow(clamp(length, 0.0, maxi), power);
 }
 
 // -- Utilities End --

@@ -54,7 +54,6 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
         [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
-        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] private readonly CollisionWakeSystem _wakeSystem = default!;
@@ -93,9 +92,9 @@ namespace Robust.Shared.Physics.Systems
             InitializeIsland();
             InitializeContacts();
 
-            _configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
-            _configManager.OnValueChanged(CVars.NetTickrate, UpdateSubsteps, true);
-            _configManager.OnValueChanged(CVars.TargetMinimumTickrate, UpdateSubsteps, true);
+            Subs.CVar(_configManager, CVars.AutoClearForces, OnAutoClearChange);
+            Subs.CVar(_configManager, CVars.NetTickrate, UpdateSubsteps, true);
+            Subs.CVar(_configManager, CVars.TargetMinimumTickrate, UpdateSubsteps, true);
         }
 
         private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
@@ -183,14 +182,12 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         private void HandleMapChange(EntityUid uid, TransformComponent xform, PhysicsComponent? body, MapId oldMapId, MapId newMapId)
         {
-            var bodyQuery = GetEntityQuery<PhysicsComponent>();
-            var xformQuery = GetEntityQuery<TransformComponent>();
             var jointQuery = GetEntityQuery<JointComponent>();
 
             PhysMapQuery.TryGetComponent(_mapManager.GetMapEntityId(oldMapId), out var oldMap);
             PhysMapQuery.TryGetComponent(_mapManager.GetMapEntityId(newMapId), out var newMap);
 
-            RecursiveMapUpdate(uid, xform, body, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
+            RecursiveMapUpdate(uid, xform, body, newMap, oldMap, jointQuery);
         }
 
         /// <summary>
@@ -202,8 +199,6 @@ namespace Robust.Shared.Physics.Systems
             PhysicsComponent? body,
             PhysicsMapComponent? newMap,
             PhysicsMapComponent? oldMap,
-            EntityQuery<PhysicsComponent> bodyQuery,
-            EntityQuery<TransformComponent> xformQuery,
             EntityQuery<JointComponent> jointQuery)
         {
             DebugTools.Assert(!Deleted(uid));
@@ -227,10 +222,10 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var child in xform._children)
             {
-                if (xformQuery.TryGetComponent(child, out var childXform))
+                if (_xformQuery.TryGetComponent(child, out var childXform))
                 {
-                    bodyQuery.TryGetComponent(child, out var childBody);
-                    RecursiveMapUpdate(child, childXform, childBody, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
+                    PhysicsQuery.TryGetComponent(child, out var childBody);
+                    RecursiveMapUpdate(child, childXform, childBody, newMap, oldMap, jointQuery);
                 }
             }
         }
@@ -255,8 +250,6 @@ namespace Robust.Shared.Physics.Systems
             base.Shutdown();
 
             ShutdownContacts();
-            ShutdownIsland();
-            _configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         private void UpdateMapAwakeState(EntityUid uid, PhysicsComponent body)

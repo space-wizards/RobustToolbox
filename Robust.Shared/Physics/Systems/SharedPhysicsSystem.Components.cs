@@ -322,7 +322,7 @@ public partial class SharedPhysicsSystem
         body.AngularVelocity = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     /// <summary>
@@ -347,7 +347,7 @@ public partial class SharedPhysicsSystem
         body.LinearVelocity = velocity;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     public void SetAngularDamping(PhysicsComponent body, float value, bool dirty = true)
@@ -401,29 +401,14 @@ public partial class SharedPhysicsSystem
         }
         else
         {
-            // TODO C# event?
             var ev = new PhysicsSleepEvent(uid, body);
             RaiseLocalEvent(uid, ref ev, true);
-
-            // Reset the sleep timer.
-            if (ev.Cancelled && canWake)
-            {
-                body.Awake = true;
-                // TODO C# event?
-                var wakeEv = new PhysicsWakeEvent(uid, body);
-                RaiseLocalEvent(uid, ref wakeEv, true);
-
-                if (updateSleepTime)
-                    SetSleepTime(body, 0);
-
-                return;
-            }
-
             ResetDynamics(body, dirty: false);
         }
 
-        // Update wake system after we are sure that the wake/sleep event wasn't cancelled.
-        _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
+        // Update wake system last, if sleeping but still colliding.
+        if (!value && body.CanCollide)
+            _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
 
         if (updateSleepTime)
             SetSleepTime(body, 0);
@@ -643,7 +628,7 @@ public partial class SharedPhysicsSystem
 
     #endregion
 
-    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null, EntityQuery<TransformComponent>? xformQuery = null)
+    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
     {
         if (!_xformQuery.Resolve(uid, ref xform))
             return Physics.Transform.Empty;

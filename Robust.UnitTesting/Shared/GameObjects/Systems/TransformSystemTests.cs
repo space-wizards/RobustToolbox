@@ -3,7 +3,6 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects.Systems
@@ -15,6 +14,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
+                .RegisterEntitySystems(f => f.LoadExtraSystemType<AnchoredSystemTests.MoveEventTestSystem>())
                 .InitializeInstance();
 
             // Adds the map with id 1, and spawns entity 1 as the map entity.
@@ -31,22 +31,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
-            var xform = entMan.System<SharedTransformSystem>();
-
-            int calledCount = 0;
-            xform.OnGlobalMoveEvent += MoveEventHandler;
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(Vector2.Zero, new MapId(1)));
 
+            entMan.System<AnchoredSystemTests.MoveEventTestSystem>().ResetCounters();
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).LocalPosition = Vector2.One;
-
-            Assert.That(calledCount, Is.EqualTo(1));
-            xform.OnGlobalMoveEvent -= MoveEventHandler;
-            void MoveEventHandler(ref MoveEvent ev)
-            {
-                calledCount++;
-                Assert.That(ev.OldPosition, Is.EqualTo(new EntityCoordinates(new EntityUid(1), Vector2.Zero)));
-                Assert.That(ev.NewPosition, Is.EqualTo(new EntityCoordinates(new EntityUid(1), Vector2.One)));
-            }
+            entMan.System<AnchoredSystemTests.MoveEventTestSystem>().AssertMoved(false);
         }
 
         /// <summary>

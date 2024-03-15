@@ -137,14 +137,6 @@ namespace Robust.Shared.GameObjects
         void RemoveComponentDeferred(EntityUid uid, IComponent component);
 
         /// <summary>
-        ///     Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
-        ///     Throws if the given component does not belong to the entity.
-        /// </summary>
-        /// <param name="uid">Entity UID to modify.</param>
-        /// <param name="component">Component to remove.</param>
-        void RemoveComponentDeferred(EntityUid uid, Component component);
-
-        /// <summary>
         ///     Removes all components from an entity, except the required components.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
@@ -164,7 +156,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Component reference type to check for.</typeparam>
         /// <param name="uid">Entity UID to check.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
-        bool HasComponent<T>(EntityUid uid);
+        bool HasComponent<T>(EntityUid uid) where T : IComponent;
 
         /// <summary>
         ///     Checks if the entity has a component type.
@@ -172,7 +164,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Component reference type to check for.</typeparam>
         /// <param name="uid">Entity UID to check.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
-        bool HasComponent<T>(EntityUid? uid);
+        bool HasComponent<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent;
 
         /// <summary>
         ///     Checks if the entity has a component type.
@@ -188,7 +180,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
-        bool HasComponent(EntityUid? uid, Type type);
+        bool HasComponent([NotNullWhen(true)] EntityUid? uid, Type type);
 
         /// <summary>
         ///     Checks if the entity has a component with a given network ID. This does not check
@@ -206,7 +198,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="netId">Network ID to check for.</param>
         /// <returns>True if the entity has a component with the given network ID, otherwise false.</returns>
-        bool HasComponent(EntityUid? uid, ushort netId, MetaDataComponent? meta = null);
+        bool HasComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     This method will always return a component for a certain entity, adding it if it's not there already.
@@ -281,7 +273,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component);
+        bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)  where T : IComponent?;
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -290,7 +282,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component);
+        bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component) where T : IComponent?;
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -391,7 +383,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="player">The player that is going to receive this state. Null implies that this state is for a replay.</param>
         /// <param name="fromTick">The from tick, which indicates the range of data that must be included for delta-states.</param>
         /// <returns>The component state of the component.</returns>
-        ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? player, GameTick fromTick);
+        IComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? player, GameTick fromTick);
 
         /// <summary>
         ///     Checks if a certain player should get a component state.

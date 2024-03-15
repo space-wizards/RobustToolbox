@@ -37,7 +37,9 @@ public sealed class TileEdgeOverlay : GridOverlay
         var tileDimensions = new Vector2(tileSize, tileSize);
         var (_, _, worldMatrix, invMatrix) = xformSystem.GetWorldPositionRotationMatrixWithInv(Grid.Owner);
         args.WorldHandle.SetTransform(worldMatrix);
-        var localAABB = invMatrix.TransformBox(args.WorldBounds);
+        var bounds = args.WorldBounds;
+        bounds = new Box2Rotated(bounds.Box.Enlarged(1), bounds.Rotation, bounds.Origin);
+        var localAABB = invMatrix.TransformBox(bounds);
 
         var enumerator = mapSystem.GetLocalTilesEnumerator(Grid.Owner, Grid, localAABB, false);
 

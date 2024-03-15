@@ -6,7 +6,10 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {
-    internal interface IRenderHandle
+    /// <remarks>
+    ///     Unstable API. Likely to break hard during renderer rewrite if you rely on it.
+    /// </remarks>
+    public interface IRenderHandle
     {
         DrawingHandleScreen DrawingHandleScreen { get; }
         DrawingHandleWorld DrawingHandleWorld { get; }

@@ -490,7 +490,7 @@ cmd-net_entityreport-help = Usage: net_entityreport
 cmd-net_refresh-desc = Requests a full server state.
 cmd-net_refresh-help = Usage: net_refresh
 
-cmd-net_graph-desc = Toggles the net statistics pannel.
+cmd-net_graph-desc = Toggles the net statistics panel.
 cmd-net_graph-help = Usage: net_graph
 
 cmd-net_watchent-desc = Dumps all network updates for an EntityId to the console.

@@ -90,6 +90,8 @@ public sealed class TextEdit : Control
     internal bool DebugOverlay;
     private Vector2? _lastDebugMousePos;
 
+    public event Action<TextEditEventArgs>? OnTextChanged;
+
     public TextEdit()
     {
         IoCManager.InjectDependencies(this);
@@ -315,7 +317,7 @@ public sealed class TextEdit : Control
                 if (changed)
                 {
                     _selectionStart = _cursorPosition;
-                    // OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                    OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
                     // _updatePseudoClass();
                     // OnBackspace?.Invoke(new LineEditBackspaceEventArgs(oldText, _text, cursor, selectStart));
                 }
@@ -349,7 +351,7 @@ public sealed class TextEdit : Control
                 if (changed)
                 {
                     _selectionStart = _cursorPosition;
-                    // OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                    OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
                     // _updatePseudoClass();
                 }
 
@@ -382,7 +384,10 @@ public sealed class TextEdit : Control
                 }
 
                 if (changed)
+                {
                     _selectionStart = _cursorPosition;
+                    OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
+                }
 
                 InvalidateHorizontalCursorPos();
                 args.Handle();
@@ -411,7 +416,10 @@ public sealed class TextEdit : Control
                 }
 
                 if (changed)
+                {
                     _selectionStart = _cursorPosition;
+                    OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
+                }
 
                 InvalidateHorizontalCursorPos();
                 args.Handle();
@@ -568,7 +576,7 @@ public sealed class TextEdit : Control
 
                 var newPos = CursorShiftedLeft();
                 // Explicit newlines work kinda funny with bias, so keep it at top there.
-                var bias = Rope.Index(TextRope, newPos) == '\n'
+                var bias = _cursorPosition.Index == TextLength || Rope.Index(TextRope, newPos) == '\n'
                     ? LineBreakBias.Top
                     : LineBreakBias.Bottom;
 
@@ -748,6 +756,7 @@ public sealed class TextEdit : Control
 
             var startPos = _cursorPosition;
             TextRope = Rope.Insert(TextRope, startPos.Index, ev.Text);
+            OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
 
             _selectionStart = _cursorPosition = new CursorPos(startPos.Index + startChars, LineBreakBias.Top);
             _imeData = (startPos, ev.Text.Length);
@@ -844,6 +853,7 @@ public sealed class TextEdit : Control
         var upper = SelectionUpper.Index;
 
         TextRope = Rope.ReplaceSubstring(TextRope, lower, upper - lower, text);
+        OnTextChanged?.Invoke(new TextEditEventArgs(this, _textRope));
 
         _selectionStart = _cursorPosition = new CursorPos(lower + text.Length, LineBreakBias.Top);
         // OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
@@ -930,6 +940,13 @@ public sealed class TextEdit : Control
 
     private CursorPos GetIndexAtHorizontalPos(int line, float horizontalPos)
     {
+        // If the placeholder is visible, this function does not return correct results because it looks at TextRope,
+        // but _lineBreaks is configured for the display rope.
+        // Bail out early in this case, the function is not currently used in any situation in any location
+        // where something else is desired if the placeholder is visible.
+        if (IsPlaceholderVisible)
+            return default;
+
         var contentBox = PixelSizeBox;
         var font = GetFont();
         var uiScale = UIScale;
@@ -1439,6 +1456,12 @@ public sealed class TextEdit : Control
 
         _clyde.TextInputStop();
         AbortIme(delete: false);
+    }
+
+    public sealed class TextEditEventArgs(TextEdit control, Rope.Node textRope) : EventArgs
+    {
+        public TextEdit Control { get; } = control;
+        public Rope.Node TextRope { get; } = textRope;
     }
 
     /// <summary>

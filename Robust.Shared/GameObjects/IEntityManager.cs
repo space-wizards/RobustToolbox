@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
 
         IComponentFactory ComponentFactory { get; }
         IEntitySystemManager EntitySysManager { get; }
-        IEntityNetworkManager? EntityNetManager { get; }
+        IEntityNetworkManager EntityNetManager { get; }
         IEventBus EventBus { get; }
 
         #region Entity Management

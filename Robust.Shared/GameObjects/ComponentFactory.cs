@@ -1,35 +1,40 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
     [Virtual]
-    internal class ComponentFactory : IComponentFactory
+    internal class ComponentFactory(
+            IDynamicTypeFactoryInternal _typeFactory,
+            IReflectionManager _reflectionManager,
+            ILogManager logManager) : IComponentFactory
     {
-        private readonly IDynamicTypeFactoryInternal _typeFactory;
-        private readonly IReflectionManager _reflectionManager;
-        private readonly ISawmill _sawmill;
+        private readonly ISawmill _sawmill = logManager.GetSawmill("ent.componentFactory");
 
         // Bunch of dictionaries to allow lookups in all directions.
         /// <summary>
+        /// <summary>
         /// Mapping of component name to type.
         /// </summary>
-        private readonly Dictionary<string, ComponentRegistration> _names = new();
+        private FrozenDictionary<string, ComponentRegistration> _names
+            = FrozenDictionary<string, ComponentRegistration>.Empty;
 
         /// <summary>
         /// Mapping of lowercase component names to their registration.
         /// </summary>
-        private readonly Dictionary<string, string> _lowerCaseNames = new();
+        private FrozenDictionary<string, string> _lowerCaseNames
+            = FrozenDictionary<string, string>.Empty;
 
         /// <summary>
         /// Mapping of network ID to type.
@@ -39,7 +44,8 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Mapping of concrete component types to their registration.
         /// </summary>
-        private readonly Dictionary<Type, ComponentRegistration> types = new();
+        private FrozenDictionary<Type, ComponentRegistration> _types
+            = FrozenDictionary<Type, ComponentRegistration>.Empty;
 
         private ComponentRegistration[] _array = Array.Empty<ComponentRegistration>();
 
@@ -52,122 +58,113 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Set of components that should be ignored. Probably just the list of components unique to the other project.
         /// </summary>
-        private readonly HashSet<string> IgnoredComponentNames = new();
+        private FrozenSet<string> _ignored = FrozenSet<string>.Empty;
 
-        private readonly Dictionary<CompIdx, Type> _idxToType = new();
+        private FrozenDictionary<CompIdx, Type> _idxToType
+            = FrozenDictionary<CompIdx, Type>.Empty;
 
         /// <inheritdoc />
-        public event Action<ComponentRegistration>? ComponentAdded;
+        public event Action<ComponentRegistration[]>? ComponentsAdded;
 
         /// <inheritdoc />
         public event Action<string>? ComponentIgnoreAdded;
 
         /// <inheritdoc />
-        public IEnumerable<Type> AllRegisteredTypes => types.Keys;
+        public IEnumerable<Type> AllRegisteredTypes => _types.Keys;
 
         /// <inheritdoc />
         public IReadOnlyList<ComponentRegistration>? NetworkedComponents => _networkedComponents;
 
-        private IEnumerable<ComponentRegistration> AllRegistrations => types.Values;
+        private IEnumerable<ComponentRegistration> AllRegistrations => _types.Values;
 
-        public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, ILogManager logManager)
-        {
-            _typeFactory = typeFactory;
-            _reflectionManager = reflectionManager;
-            _sawmill = logManager.GetSawmill("ent.componentFactory");
-        }
-
-        private void Register(Type type, bool overwrite = false)
+        private ComponentRegistration Register(Type type,
+            Dictionary<string, ComponentRegistration> names,
+            Dictionary<string, string> lowerCaseNames,
+            Dictionary<Type, ComponentRegistration> types,
+            Dictionary<CompIdx, Type> idxToType,
+            HashSet<string> ignored,
+            bool overwrite = false)
         {
             if (_networkedComponents is not null)
                 throw new ComponentRegistrationLockException();
 
             if (types.ContainsKey(type))
-            {
                 throw new InvalidOperationException($"Type is already registered: {type}");
-            }
 
             if (!type.IsSubclassOf(typeof(Component)))
-            {
                 throw new InvalidOperationException($"Type is not derived from component: {type}");
-            }
+
+            if (!typeof(IComponent).IsAssignableFrom(type))
+                throw new InvalidOperationException($"Type {type} has RegisterComponentAttribute but does not implement IComponent.");
 
             var name = CalculateComponentName(type);
             var lowerCaseName = name.ToLowerInvariant();
 
-            if (IgnoredComponentNames.Contains(name))
+            if (ignored.Contains(name))
             {
                 if (!overwrite)
-                {
                     throw new InvalidOperationException($"{name} is already marked as ignored component");
-                }
 
-                IgnoredComponentNames.Remove(name);
+                ignored.Remove(name);
             }
 
-            if (_names.ContainsKey(name))
+            if (names.TryGetValue(name, out var prev))
             {
                 if (!overwrite)
-                {
-                    throw new InvalidOperationException($"{name} is already registered, previous: {_names[name]}");
-                }
+                    throw new InvalidOperationException($"{name} is already registered, previous: {prev}");
 
-                RemoveComponent(name);
+                types.Remove(prev.Type);
+                names.Remove(prev.Name);
+                lowerCaseNames.Remove(prev.Name);
             }
 
-            if (_lowerCaseNames.ContainsKey(lowerCaseName))
-            {
-                if (!overwrite)
-                {
-                    throw new InvalidOperationException($"{lowerCaseName} is already registered, previous: {_lowerCaseNames[lowerCaseName]}");
-                }
-            }
+            if (!overwrite && lowerCaseNames.TryGetValue(lowerCaseName, out var prevName))
+                throw new InvalidOperationException($"{lowerCaseName} is already registered, previous: {prevName}");
 
             var idx = CompIdx.Index(type);
-            _idxToType[idx] = type;
 
             var registration = new ComponentRegistration(name, type, idx);
 
-            _names[name] = registration;
-            _lowerCaseNames[lowerCaseName] = name;
+            idxToType[idx] = type;
+            names[name] = registration;
+            lowerCaseNames[lowerCaseName] = name;
             types[type] = registration;
             CompIdx.AssignArray(ref _array, idx, registration);
+            return registration;
+        }
 
-            ComponentAdded?.Invoke(registration);
+        private static string CalculateComponentName(Type type)
+        {
+            // Attributes can use any name they want, they are for bypassing the automatic names
+            // If a parent class has this attribute, a child class will use the same name, unless it also uses this attribute
+            if (Attribute.GetCustomAttribute(type, typeof(ComponentProtoNameAttribute)) is ComponentProtoNameAttribute attribute)
+                return attribute.PrototypeName;
 
-            static string CalculateComponentName(Type type)
+            const string component = "Component";
+            var typeName = type.Name;
+            if (!typeName.EndsWith(component))
             {
-                // Attributes can use any name they want, they are for bypassing the automatic names
-                // If a parent class has this attribute, a child class will use the same name, unless it also uses this attribute
-                if (Attribute.GetCustomAttribute(type, typeof(ComponentProtoNameAttribute)) is ComponentProtoNameAttribute attribute)
-                    return attribute.PrototypeName;
-
-                const string component = "Component";
-                var typeName = type.Name;
-                if (!typeName.EndsWith(component))
-                {
-                    throw new InvalidComponentNameException($"Component {type} must end with the word Component");
-                }
-
-                string name = typeName[..^component.Length];
-                const string client = "Client";
-                const string server = "Server";
-                const string shared = "Shared";
-                if (typeName.StartsWith(client, StringComparison.Ordinal))
-                {
-                    name = typeName[client.Length..^component.Length];
-                }
-                else if (typeName.StartsWith(server, StringComparison.Ordinal))
-                {
-                    name = typeName[server.Length..^component.Length];
-                }
-                else if (typeName.StartsWith(shared, StringComparison.Ordinal))
-                {
-                    name = typeName[shared.Length..^component.Length];
-                }
-                DebugTools.Assert(name != String.Empty, $"Component {type} has invalid name {type.Name}");
-                return name;
+                throw new InvalidComponentNameException($"Component {type} must end with the word Component");
             }
+
+            string name = typeName[..^component.Length];
+            const string client = "Client";
+            const string server = "Server";
+            const string shared = "Shared";
+            if (typeName.StartsWith(client, StringComparison.Ordinal))
+            {
+                name = typeName[client.Length..^component.Length];
+            }
+            else if (typeName.StartsWith(server, StringComparison.Ordinal))
+            {
+                name = typeName[server.Length..^component.Length];
+            }
+            else if (typeName.StartsWith(shared, StringComparison.Ordinal))
+            {
+                name = typeName[shared.Length..^component.Length];
+            }
+            DebugTools.Assert(name != String.Empty, $"Component {type} has invalid name {type.Name}");
+            return name;
         }
 
         public void IgnoreMissingComponents(string postfix = "")
@@ -179,37 +176,27 @@ namespace Robust.Shared.GameObjects
             _ignoreMissingComponentPostfix = postfix ?? throw new ArgumentNullException(nameof(postfix));
         }
 
-        public void RegisterIgnore(string name, bool overwrite = false)
+        public void RegisterIgnore(params string[] names)
         {
-            if (IgnoredComponentNames.Contains(name))
+            foreach (var name in names)
             {
-                throw new InvalidOperationException($"Cannot add {name} to ignored components: It is already registered as ignored");
-            }
-
-            if (_names.ContainsKey(name))
-            {
-                if (!overwrite)
-                {
+                if (_names.ContainsKey(name))
                     throw new InvalidOperationException($"Cannot add {name} to ignored components: It is already registered as a component");
-                }
-
-                RemoveComponent(name);
             }
 
-            IgnoredComponentNames.Add(name);
-            ComponentIgnoreAdded?.Invoke(name);
-        }
+            var set = _ignored.ToHashSet();
+            foreach (var name in names)
+            {
+                if (!set.Add(name))
+                    _sawmill.Warning($"Duplicate ignored component: {name}");
+            }
 
-        private void RemoveComponent(string name)
-        {
-            if (_networkedComponents is not null)
-                throw new ComponentRegistrationLockException();
+            _ignored = set.ToFrozenSet();
 
-            var registration = _names[name];
-
-            _names.Remove(registration.Name);
-            _lowerCaseNames.Remove(registration.Name.ToLowerInvariant());
-            types.Remove(registration.Type);
+            foreach (var name in names)
+            {
+                ComponentIgnoreAdded?.Invoke(name);
+            }
         }
 
         public ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false)
@@ -224,7 +211,7 @@ namespace Robust.Shared.GameObjects
                 return ComponentAvailability.Available;
             }
 
-            if (IgnoredComponentNames.Contains(componentName) ||
+            if (_ignored.Contains(componentName) ||
                 (_ignoreMissingComponentPostfix != null &&
                 componentName.EndsWith(_ignoreMissingComponentPostfix)))
             {
@@ -236,11 +223,11 @@ namespace Robust.Shared.GameObjects
 
         public IComponent GetComponent(Type componentType)
         {
-            if (!types.ContainsKey(componentType))
+            if (!_types.ContainsKey(componentType))
             {
                 throw new InvalidOperationException($"{componentType} is not a registered component.");
             }
-            return _typeFactory.CreateInstanceUnchecked<IComponent>(types[componentType].Type);
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(_types[componentType].Type);
         }
 
         public IComponent GetComponent(CompIdx componentType)
@@ -250,11 +237,11 @@ namespace Robust.Shared.GameObjects
 
         public T GetComponent<T>() where T : IComponent, new()
         {
-            if (!types.ContainsKey(typeof(T)))
+            if (!_types.ContainsKey(typeof(T)))
             {
                 throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
-            return _typeFactory.CreateInstanceUnchecked<T>(types[typeof(T)].Type);
+            return _typeFactory.CreateInstanceUnchecked<T>(_types[typeof(T)].Type);
         }
 
         public IComponent GetComponent(ComponentRegistration reg)
@@ -325,7 +312,7 @@ namespace Robust.Shared.GameObjects
         {
             try
             {
-                return types[reference];
+                return _types[reference];
             }
             catch (KeyNotFoundException)
             {
@@ -345,7 +332,7 @@ namespace Robust.Shared.GameObjects
 
         public ComponentRegistration GetRegistration(CompIdx idx) => _array[idx.Value];
 
-        public bool IsIgnored(string componentName) => IgnoredComponentNames.Contains(componentName);
+        public bool IsIgnored(string componentName) => _ignored.Contains(componentName);
 
         public bool TryGetRegistration(string componentName, [NotNullWhen(true)] out ComponentRegistration? registration, bool ignoreCase = false)
         {
@@ -366,7 +353,7 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetRegistration(Type reference, [NotNullWhen(true)] out ComponentRegistration? registration)
         {
-            if (types.TryGetValue(reference, out var tempRegistration))
+            if (_types.TryGetValue(reference, out var tempRegistration))
             {
                 registration = tempRegistration;
                 return true;
@@ -400,33 +387,61 @@ namespace Robust.Shared.GameObjects
 
         public void DoAutoRegistrations()
         {
-            foreach (var type in _reflectionManager.FindTypesWithAttribute<RegisterComponentAttribute>())
+            var types = _reflectionManager.FindTypesWithAttribute<RegisterComponentAttribute>().ToArray();
+            RegisterTypesInternal(types, false);
+        }
+
+        private void RegisterTypesInternal(Type[] types, bool overwrite)
+        {
+            var names = _names.ToDictionary();
+            var lowerCaseNames = _lowerCaseNames.ToDictionary();
+            var typesDict = _types.ToDictionary();
+            var idxToType = _idxToType.ToDictionary();
+            var ignored = _ignored.ToHashSet();
+
+            var added = new ComponentRegistration[types.Length];
+            for (int i = 0; i < types.Length; i++)
             {
-                RegisterClass(type);
+                added[i] = Register(types[i], names, lowerCaseNames, typesDict, idxToType, ignored, overwrite);
             }
+
+            var st = RStopwatch.StartNew();
+            _names = names.ToFrozenDictionary();
+            _lowerCaseNames = lowerCaseNames.ToFrozenDictionary();
+            _types = typesDict.ToFrozenDictionary();
+            _idxToType = idxToType.ToFrozenDictionary();
+            _ignored = ignored.ToFrozenSet();
+            _sawmill.Verbose($"Freezing component factory took {st.Elapsed.TotalMilliseconds:f2}ms");
+            ComponentsAdded?.Invoke(added);
         }
 
         /// <inheritdoc />
         public void RegisterClass<T>(bool overwrite = false)
             where T : IComponent, new()
         {
-            RegisterClass(typeof(T));
+            RegisterTypesInternal(new []{typeof(T)}, overwrite);
         }
 
-        private void RegisterClass(Type type)
+        /// <inheritdoc />
+        public void RegisterTypes(params Type[] types)
         {
-            if (!typeof(IComponent).IsAssignableFrom(type))
+            foreach (var type in types)
             {
-                _sawmill.Error("Type {0} has RegisterComponentAttribute but does not implement IComponent.", type);
-                return;
+                if (!type.IsAssignableTo(typeof(IComponent)) || !type.HasParameterlessConstructor())
+                    throw new InvalidOperationException($"Invalid type: {type}");
             }
 
-            Register(type);
+            RegisterTypesInternal(types, false);
         }
 
         public IEnumerable<CompIdx> GetAllRefTypes()
         {
             return AllRegistrations.Select(x => x.Idx).Distinct();
+        }
+
+        public IEnumerable<ComponentRegistration> GetAllRegistrations()
+        {
+            return _types.Values;
         }
 
         /// <inheritdoc />

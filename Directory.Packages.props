@@ -1,0 +1,64 @@
+<Project>
+  <ItemGroup>
+    <PackageVersion Include="BenchmarkDotNet" Version="0.13.12" />
+    <PackageVersion Include="DiscordRichPresence" Version="1.2.1.24" />
+    <PackageVersion Include="ILReader.Core" Version="1.0.0.4" />
+    <PackageVersion Include="JetBrains.Annotations" Version="2023.3.0" />
+    <PackageVersion Include="JetBrains.Profiler.Api" Version="1.4.0" />
+    <PackageVersion Include="Linguini.Bundle" Version="0.1.3" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzer.Testing" Version="1.1.1"/>
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.NUnit" Version="1.1.1"/>
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.8.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.8.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.8.0" />
+    <PackageVersion Include="Microsoft.CodeCoverage" Version="17.8.0" />
+    <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.DotNet.RemoteExecutor" Version="8.0.0-beta.24059.4" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.ObjectPool" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Primitives" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.ILVerification" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.0" />
+    <PackageVersion Include="Microsoft.NET.ILLink.Tasks" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageVersion Include="Moq" Version="4.20.70" />
+    <PackageVersion Include="NUnit" Version="4.0.1" />
+    <PackageVersion Include="NUnit.Analyzers" Version="3.10.0" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageVersion Include="Nett" Version="0.15.0" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.4" />
+    <PackageVersion Include="OpenTK.OpenAL" Version="4.7.7" />
+    <PackageVersion Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
+    <PackageVersion Include="Pidgin" Version="3.2.2" />
+    <PackageVersion Include="Robust.Natives" Version="0.1.1" />
+    <PackageVersion Include="Robust.Natives.Cef" Version="120.1.9" />
+    <PackageVersion Include="Robust.Shared.AuthLib" Version="0.1.2" />
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.7" />
+    <PackageVersion Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.7" />
+    <PackageVersion Include="Serilog" Version="3.1.1" />
+    <PackageVersion Include="Serilog.Sinks.Loki" Version="4.0.0-beta3" />
+    <PackageVersion Include="SharpZstd.Interop" Version="1.5.2-beta2" />
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.3" />
+    <PackageVersion Include="SpaceWizards.HttpListener" Version="0.1.0" />
+    <PackageVersion Include="SpaceWizards.NFluidsynth" Version="0.1.1" />
+    <PackageVersion Include="SpaceWizards.SharpFont" Version="1.0.2" />
+    <PackageVersion Include="SpaceWizards.Sodium" Version="0.2.1" />
+    <PackageVersion Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageVersion Include="System.Memory" Version="4.5.5" />
+    <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+    <PackageVersion Include="TerraFX.Interop.Windows" Version="10.0.22621.5" />
+    <PackageVersion Include="TerraFX.Interop.Xlib" Version="6.4.0" />
+    <PackageVersion Include="VorbisPizza" Version="1.3.0" />
+    <PackageVersion Include="YamlDotNet" Version="13.7.1" />
+    <PackageVersion Include="prometheus-net" Version="8.2.1" />
+    <PackageVersion Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
+    <PackageVersion Include="PolySharp" Version="1.14.1" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -9,6 +10,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
@@ -84,11 +86,18 @@ public sealed class TeleportToCommand : LocalizedCommands
 
         var target = args[0];
 
-        if (!TryGetTransformFromUidOrUsername(target, shell, out _, out var targetTransform))
+        if (!TryGetTransformFromUidOrUsername(target, shell, out var targetUid, out _))
             return;
 
         var transformSystem = _entities.System<SharedTransformSystem>();
-        var targetCoords = targetTransform.Coordinates;
+        var targetCoords = new EntityCoordinates(targetUid.Value, Vector2.Zero);
+
+        if (_entities.TryGetComponent(targetUid, out PhysicsComponent? targetPhysics))
+        {
+            targetCoords = targetCoords.Offset(targetPhysics.LocalCenter);
+        }
+
+        var victims = new List<(EntityUid Entity, TransformComponent Transform)>();
 
         if (args.Length == 1)
         {
@@ -100,8 +109,7 @@ public sealed class TeleportToCommand : LocalizedCommands
                 return;
             }
 
-            transformSystem.SetCoordinates(ent.Value, targetCoords);
-            playerTransform.AttachToGridOrMap();
+            victims.Add((ent.Value, playerTransform));
         }
         else
         {
@@ -111,11 +119,16 @@ public sealed class TeleportToCommand : LocalizedCommands
                     continue;
 
                 if (!TryGetTransformFromUidOrUsername(victim, shell, out var uid, out var victimTransform))
-                    return;
+                    continue;
 
-                transformSystem.SetCoordinates(uid.Value, targetCoords);
-                victimTransform.AttachToGridOrMap();
+                victims.Add((uid.Value, victimTransform));
             }
+        }
+
+        foreach (var victim in victims)
+        {
+            transformSystem.SetCoordinates(victim.Entity, targetCoords);
+            transformSystem.AttachToGridOrMap(victim.Entity, victim.Transform);
         }
     }
 
@@ -128,8 +141,7 @@ public sealed class TeleportToCommand : LocalizedCommands
         if (NetEntity.TryParse(str, out var uidNet)
             && _entities.TryGetEntity(uidNet, out var uid)
             && _entities.TryGetComponent(uid, out transform)
-            && !_entities.HasComponent<MapComponent>(uid)
-            && !_entities.HasComponent<MapGridComponent>(uid))
+            && !_entities.HasComponent<MapComponent>(uid))
         {
             victimUid = uid;
             return true;

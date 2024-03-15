@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
@@ -121,17 +123,8 @@ namespace Robust.Shared.GameObjects
             _comFac = entMan.ComponentFactory;
 
             // Dynamic handling of components is only for RobustUnitTest compatibility spaghetti.
-            _comFac.ComponentAdded += ComFacOnComponentAdded;
-
-            InitEntSubscriptionsArray();
-        }
-
-        private void InitEntSubscriptionsArray()
-        {
-            foreach (var refType in _comFac.GetAllRefTypes())
-            {
-                CompIdx.AssignArray(ref _entSubscriptions, refType, new Dictionary<Type, DirectedRegistration>());
-            }
+            _comFac.ComponentsAdded += ComFacOnComponentsAdded;
+            ComFacOnComponentsAdded(_comFac.GetAllRegistrations().ToArray());
         }
 
         /// <inheritdoc />
@@ -327,9 +320,15 @@ namespace Robust.Shared.GameObjects
             EntUnsubscribe(CompIdx.Index<TComp>(), typeof(TEvent));
         }
 
-        private void ComFacOnComponentAdded(ComponentRegistration obj)
+        private void ComFacOnComponentsAdded(ComponentRegistration[] regs)
         {
-            CompIdx.RefArray(ref _entSubscriptions, obj.Idx) ??= new Dictionary<Type, DirectedRegistration>();
+            if (_subscriptionLock)
+                throw new InvalidOperationException("Subscription locked.");
+
+            foreach (var reg in regs)
+            {
+                CompIdx.RefArray(ref _entSubscriptionsUnfrozen, reg.Idx) ??= new();
+            }
         }
 
         public void OnEntityAdded(EntityUid e)
@@ -344,9 +343,42 @@ namespace Robust.Shared.GameObjects
 
         public void OnComponentAdded(in AddedComponentEventArgs e)
         {
-            _subscriptionLock = true;
-
             EntAddComponent(e.BaseArgs.Owner, e.ComponentType.Idx);
+        }
+
+        internal void LockSubscriptions()
+        {
+            _subscriptionLock = true;
+            _eventData = _eventDataUnfrozen.ToFrozenDictionary();
+
+            _entSubscriptions = _entSubscriptionsUnfrozen
+                .Select(x => x?.ToFrozenDictionary())
+                .ToArray();
+
+            _entSubscriptionsNoCompEv = _entSubscriptionsUnfrozen.Select(FreezeWithoutComponentEvent).ToArray();
+
+            CalcOrdering();
+        }
+
+        /// <summary>
+        /// Freezes a dictionary while committing events with the <see cref="ComponentEventAttribute"/>.
+        /// This avoids unnecessarily adding one-off events to the list of subscriptions.
+        /// </summary>
+        private FrozenDictionary<Type, DirectedRegistration>? FreezeWithoutComponentEvent(
+            Dictionary<Type, DirectedRegistration>? input)
+        {
+            if (input == null)
+                return null;
+
+            return input.Where(x => !IsComponentEvent(x.Key))
+                .ToFrozenDictionary();
+        }
+
+        private bool IsComponentEvent(Type t)
+        {
+            var isCompEv = _eventData[t].ComponentEvent;
+            DebugTools.Assert(isCompEv == t.HasCustomAttribute<ComponentEventAttribute>());
+            return isCompEv;
         }
 
         public void OnComponentRemoved(in RemovedComponentEventArgs e)
@@ -363,7 +395,8 @@ namespace Robust.Shared.GameObjects
             if (_subscriptionLock)
                 throw new InvalidOperationException("Subscription locked.");
 
-            if (compType.Value >= _entSubscriptions.Length || _entSubscriptions[compType.Value] is not { } compSubs)
+            if (compType.Value >= _entSubscriptionsUnfrozen.Length
+                || _entSubscriptionsUnfrozen[compType.Value] is not { } compSubs)
             {
                 if (IgnoreUnregisteredComponents)
                     return;
@@ -372,13 +405,13 @@ namespace Robust.Shared.GameObjects
             }
 
             if (compSubs.ContainsKey(eventType))
+            {
                 throw new InvalidOperationException(
                     $"Duplicate Subscriptions for comp={compTypeObj}, event={eventType.Name}");
+            }
 
             compSubs.Add(eventType, registration);
-
-            var invSubs = _entSubscriptionsInv.GetOrNew(eventType);
-            invSubs.Add(compType);
+            _entSubscriptionsInv.GetOrNew(eventType).Add(compType);
 
             RegisterCommon(eventType, registration.Ordering, out var data);
             data.ComponentEvent = eventType.HasCustomAttribute<ComponentEventAttribute>();
@@ -405,7 +438,8 @@ namespace Robust.Shared.GameObjects
             if (_subscriptionLock)
                 throw new InvalidOperationException("Subscription locked.");
 
-            if (compType.Value >= _entSubscriptions.Length || _entSubscriptions[compType.Value] is not { } compSubs)
+            if (compType.Value >= _entSubscriptionsUnfrozen.Length
+                || _entSubscriptionsUnfrozen[compType.Value] is not { } compSubs)
             {
                 if (IgnoreUnregisteredComponents)
                     return;
@@ -432,14 +466,14 @@ namespace Robust.Shared.GameObjects
 
         private void EntAddComponent(EntityUid euid, CompIdx compType)
         {
+            DebugTools.Assert(_subscriptionLock);
+
             var eventTable = _entEventTables[euid];
-            var compSubs = _entSubscriptions[compType.Value]!;
+            var compSubs = _entSubscriptionsNoCompEv[compType.Value]!;
 
             foreach (var evType in compSubs.Keys)
             {
-                // Skip adding this to significantly reduce memory use and GC noise on entity create.
-                if (_eventData[evType].ComponentEvent)
-                    continue;
+                DebugTools.Assert(!_eventData[evType].ComponentEvent);
 
                 if (eventTable.Free < 0)
                     GrowEventTable(eventTable);
@@ -578,10 +612,8 @@ namespace Robust.Shared.GameObjects
         {
             var compSubs = _entSubscriptions[baseType.Value]!;
 
-            if (!compSubs.TryGetValue(typeof(TEvent), out var reg))
-                return;
-
-            reg.Handler(euid, component, ref args);
+            if (compSubs.TryGetValue(typeof(TEvent), out var reg))
+                reg.Handler(euid, component, ref args);
         }
 
         /// <summary>
@@ -606,17 +638,16 @@ namespace Robust.Shared.GameObjects
             return true;
         }
 
-        private void EntClear()
+        public void ClearSubscriptions()
         {
-            _entEventTables = new();
             _subscriptionLock = false;
-        }
-
-        public void ClearEventTables()
-        {
-            EntClear();
-
-            foreach (var sub in _entSubscriptions)
+            _eventDataUnfrozen.Clear();
+            _entEventTables.Clear();
+            _inverseEventSubscriptions.Clear();
+            _entSubscriptions = default!;
+            _entSubscriptionsNoCompEv = default!;
+            _eventData = FrozenDictionary<Type, EventData>.Empty;
+            foreach (var sub in _entSubscriptionsUnfrozen)
             {
                 sub?.Clear();
             }
@@ -624,13 +655,15 @@ namespace Robust.Shared.GameObjects
 
         public void Dispose()
         {
-            _comFac.ComponentAdded -= ComFacOnComponentAdded;
+            _comFac.ComponentsAdded -= ComFacOnComponentsAdded;
 
             // punishment for use-after-free
             _entMan = null!;
             _comFac = null!;
             _entEventTables = null!;
             _entSubscriptions = null!;
+            _entSubscriptionsNoCompEv = null!;
+            _entSubscriptionsUnfrozen = null!;
             _entSubscriptionsInv = null!;
         }
 
@@ -638,7 +671,7 @@ namespace Robust.Shared.GameObjects
         {
             private readonly Type _eventType;
             private readonly EntityUid _uid;
-            private readonly Dictionary<Type, DirectedRegistration>?[] _subscriptions;
+            private readonly FrozenDictionary<Type, DirectedRegistration>?[] _subscriptions;
             private readonly IEntityManager _entityManager;
             private readonly EventTableListEntry[] _list;
             private int _idx;
@@ -647,7 +680,7 @@ namespace Robust.Shared.GameObjects
                 Type eventType,
                 int startEntry,
                 EventTableListEntry[] list,
-                Dictionary<Type, DirectedRegistration>?[] subscriptions,
+                FrozenDictionary<Type, DirectedRegistration>?[] subscriptions,
                 EntityUid uid,
                 IEntityManager entityManager)
             {

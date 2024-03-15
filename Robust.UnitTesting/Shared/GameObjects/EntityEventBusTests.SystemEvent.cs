@@ -137,6 +137,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             bus.SubscribeEvent<TestEventArgs>(EventSource.Local, subscriber, ev => delFooCount++);
             bus.SubscribeEvent<TestEventTwoArgs>(EventSource.Local, subscriber, ev => delBarCount++);
+            bus.LockSubscriptions();
 
             // Act & Assert
             bus.RaiseEvent(EventSource.Local, new TestEventArgs());
@@ -184,6 +185,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             bus.SubscribeEvent<TestEventArgs>(EventSource.Local, subscriber, Handler);
             bus.UnsubscribeEvent<TestEventArgs>(EventSource.Local, subscriber);
+            bus.LockSubscriptions();
 
             // Act
             bus.UnsubscribeEvent<TestEventArgs>(EventSource.Local, subscriber);
@@ -253,6 +255,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             int delCalledCount = 0;
             bus.SubscribeEvent<TestEventTwoArgs>(EventSource.Local, subscriber, ev => delCalledCount++);
+            bus.LockSubscriptions();
 
             // Act
             bus.RaiseEvent(EventSource.Local, new TestEventArgs());
@@ -276,6 +279,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             bus.SubscribeEvent<TestEventArgs>(EventSource.Local, subscriber, Handler);
             bus.UnsubscribeEvent<TestEventArgs>(EventSource.Local, subscriber);
+            bus.LockSubscriptions();
 
             // Act
             bus.RaiseEvent(EventSource.Local, new TestEventArgs());
@@ -348,6 +352,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             bus.SubscribeEvent<TestEventArgs>(EventSource.Local, subscriber, Handler);
             bus.UnsubscribeEvents(subscriber);
+            bus.LockSubscriptions();
 
             // Act
             bus.RaiseEvent(EventSource.Local, new TestEventArgs());
@@ -425,6 +430,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             void Handler(TestEventArgs ev) => delCallCount++;
 
             bus.SubscribeEvent<TestEventArgs>(EventSource.Local, subscriber, Handler);
+            bus.LockSubscriptions();
             bus.QueueEvent(EventSource.Local, new TestEventArgs());
 
             // Act
@@ -464,6 +470,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             bus.SubscribeEvent<TestEventArgs>(EventSource.Local, new SubA(), HandlerA, typeof(SubA), before: new []{typeof(SubB), typeof(SubC)});
             bus.SubscribeEvent<TestEventArgs>(EventSource.Local, new SubB(), HandlerB, typeof(SubB), after: new []{typeof(SubC)});
             bus.SubscribeEvent<TestEventArgs>(EventSource.Local, new SubC(), HandlerC, typeof(SubC));
+            bus.LockSubscriptions();
 
             // Act
             bus.RaiseEvent(EventSource.Local, new TestEventArgs());

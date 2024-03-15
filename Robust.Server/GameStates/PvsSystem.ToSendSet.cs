@@ -24,7 +24,7 @@ internal sealed partial class PvsSystem
     }
 
     /// <summary>
-    /// A chunks that is visible to a player and add entities to the game-state.
+    /// Add all entities on a given PVS chunk to a clients game-state.
     /// </summary>
     private void AddPvsChunk(PvsChunk chunk, float distance, PvsSession session)
     {
@@ -48,44 +48,58 @@ internal sealed partial class PvsSystem
         // We add chunk-size here so that its consistent with the normal PVS range setting.
         // I.e., distance here is the Chebyshev distance to the centre of each chunk, but the normal pvs range only
         // required that the chunk be touching the box, not the centre.
-        var count = distance < (_lowLodDistance + ChunkSize) / 2
+        var limit = distance < (_lowLodDistance + ChunkSize) / 2
             ? chunk.Contents.Count
             : chunk.LodCounts[0];
 
+        // If the PVS budget is exceeded, it should still be safe to send all of the chunk's direct children, though
+        // after that we have no guarantee that an entity's parent got sent.
+        var directChildren = Math.Min(limit, chunk.LodCounts[2]);
+
         // Send entities on the chunk.
-        var span = CollectionsMarshal.AsSpan(chunk.Contents)[..count];
-        foreach (ref var ent in span)
+        var span = CollectionsMarshal.AsSpan(chunk.Contents);
+        for (var i = 0; i < limit; i++)
         {
+            var ent = span[i];
             ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
-            if ((mask & meta.VisMask) == meta.VisMask)
-                AddEntity(session, ref ent, ref meta, fromTick);
+
+            if ((mask & meta.VisMask) != meta.VisMask)
+                continue;
+
+            // TODO PVS improve this somehow
+            // Having entities "leave" pvs view just because the pvs entry budget was exceeded sucks.
+            // This probably requires changing client game state manager to support receiving entities with unknown parents.
+            // Probably needs to do something similar to pending net entity states, but for entity spawning.
+            if (!AddEntity(session, ref ent, ref meta, fromTick))
+                limit = directChildren;
         }
     }
 
     /// <summary>
     /// Attempt to add an entity to the to-send lists, while respecting pvs budgets.
     /// </summary>
+    /// <returns>Returns false if the entity would exceed the client's PVS budget.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AddEntity(PvsSession session, ref PvsChunk.ChunkEntity ent, ref PvsMetadata meta,
+    private bool AddEntity(PvsSession session, ref PvsChunk.ChunkEntity ent, ref PvsMetadata meta,
         GameTick fromTick)
     {
         DebugTools.Assert(fromTick < _gameTiming.CurTick);
         ref var data = ref session.DataMemory.GetRef(ent.Ptr.Index);
 
         if (data.LastSeen == _gameTiming.CurTick)
-            return;
+            return true;
 
         if (meta.LifeStage >= EntityLifeStage.Terminating)
         {
             Log.Error($"Attempted to send deleted entity: {ToPrettyString(ent.Uid)}");
             EntityManager.QueueDeleteEntity(ent.Uid);
-            return;
+            return true;
         }
 
         var (entered,budgetExceeded) = IsEnteringPvsRange(ref data, fromTick, ref session.Budget);
 
         if (budgetExceeded)
-            return;
+            return false;
 
         data.LastSeen = _gameTiming.CurTick;
         session.ToSend!.Add(ent.Ptr);
@@ -94,23 +108,25 @@ internal sealed partial class PvsSystem
         {
             var state = GetFullEntityState(session.Session, ent.Uid, ent.Meta);
             session.States.Add(state);
-            return;
+            return true;
         }
 
         if (entered)
         {
             var state = GetEntityState(session.Session, ent.Uid, data.EntityLastAcked, ent.Meta);
             session.States.Add(state);
-            return;
+            return true;
         }
 
         if (meta.LastModifiedTick <= fromTick)
-            return;
+            return true;
 
         var entState = GetEntityState(session.Session, ent.Uid, fromTick , ent.Meta);
 
         if (!entState.Empty)
             session.States.Add(entState);
+
+        return true;
     }
 
     /// <summary>

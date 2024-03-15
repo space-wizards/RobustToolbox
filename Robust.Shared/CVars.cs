@@ -1055,6 +1055,12 @@ namespace Robust.Shared
          * AUDIO
          */
 
+        /// <summary>
+        /// Default limit for concurrently playing an audio file.
+        /// </summary>
+        public static readonly CVarDef<int> AudioDefaultConcurrent =
+            CVarDef.Create("audio.default_concurrent", 16, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         public static readonly CVarDef<int> AudioAttenuation =
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
@@ -1263,7 +1269,7 @@ namespace Robust.Shared
         /// Enable Discord rich presence integration.
         /// </summary>
         public static readonly CVarDef<bool> DiscordEnabled =
-            CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY);
+            CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<string> DiscordRichPresenceMainIconId =
             CVarDef.Create("discord.rich_main_icon_id", "devstation", CVar.SERVER | CVar.REPLICATED);
@@ -1346,6 +1352,16 @@ namespace Robust.Shared
 
         public static readonly CVarDef<float> MidiVolume =
             CVarDef.Create("midi.volume", 0.50f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Controls amount of CPU cores and (by extension) polyphony for Fluidsynth.
+        /// </summary>
+        /// <remarks>
+        /// You probably don't want to set this to be multithreaded, the way Fluidsynth's multithreading works is
+        /// probably worse-than-nothing for Robust's usage.
+        /// </remarks>
+        public static readonly CVarDef<int> MidiParallelism =
+            CVarDef.Create("midi.parallelism", 1, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * HUB
@@ -1511,14 +1527,14 @@ namespace Robust.Shared
         /// <summary>
         /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
-        public static readonly CVarDef<int> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size",
-            1024 * 256, CVar.ARCHIVE);
+        public static readonly CVarDef<long> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size",
+            1024L * 512, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum uncompressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
-        public static readonly CVarDef<int> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
-            1024 * 1024, CVar.ARCHIVE);
+        public static readonly CVarDef<long> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
+            1024L * 1024, CVar.ARCHIVE);
 
         /// <summary>
         /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data

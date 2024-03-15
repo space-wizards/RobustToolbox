@@ -54,6 +54,404 @@ END TEMPLATE-->
 *None yet*
 
 
+## 214.0.0
+
+### Breaking changes
+
+* `NetStructuredDisconnectMessages` has received a complete overhaul and has been moved to `NetDisconnectMessage`. The API is no longer designed such that consumers must pass around JSON nodes, as they are not in sandbox (and clunky).
+
+### New features
+
+* Add a basic default concurrent audio limit of 16 for a single filepath to avoid overflowing audio sources.
+* `NetConnectingArgs.Deny()` can now pass along structured data that will be received by the client.
+
+### Bugfixes
+
+* Fixed cursor position bugs when an empty `TextEdit` has a multi-line place holder.
+* Fixed empty `TextEdit` throwing exception if cursor is moved left.
+
+
+## 213.0.0
+
+### Breaking changes
+
+* Remove obsoleted BaseContainer methods.
+
+### New features
+
+* Add EntityManager.RaiseSharedEvent where the event won't go to the attached client but will be predicted locally on their end.
+* Add GetEntitiesInRange override that takes in EntityCoordinates and an EntityUid hashset.
+
+### Bugfixes
+
+* Check if a sprite entity is deleted before drawing in SpriteView.
+
+
+## 212.2.0
+
+### New features
+
+* Add IsHardCollidable to SharedPhysicsSystem to determine if 2 entities would collide.
+
+### Other
+
+* Double the default maximum replay size.
+
+
+## 212.1.0
+
+### New features
+
+* Add nullable methods for TryIndex / HasIndex on IPrototypeManager.
+
+### Bugfixes
+
+* Fix TextureRect alignment where the strech mode is KeepCentered.
+
+
+## 212.0.1
+
+### Bugfixes
+
+* Fix passing array by `this` instead of by `ref`.
+
+
+## 212.0.0
+
+### Breaking changes
+
+* Change Collapsible controls default orientations to Vertical.
+
+### New features
+
+* Expose the Label control for Collapsible controls.
+* Add GetGridPosition that considers physics center-of-mass.
+* Add TileToVector methods to get the LocalPosition of tile-coords (taking into account tile size).
+* Add some more helper methods to PVS filters around EntityUids.
+* Add support for Dictionary AutoNetworkedFields.
+* Add EnsureLength method for arrays.
+* Add PushMarkup to FormattedMessage.
+* Add DrawPrimitives overload for `List<Vector2>`
+* Add more ValueList ctors that are faster.
+* Add ToMapCoordinates method for NetCoordinates.
+
+### Other
+
+* Remove ISerializationHooks obsoletion as they are useful in some rare cases.
+
+### Internal
+
+* Bump max pool size for robust jobs.
+
+
+## 211.0.2
+
+### Bugfixes
+
+* Fix TextureRect scaling not handling UIScale correctly.
+
+
+## 211.0.1
+
+### Bugfixes
+
+* Fix GridChunkEnumerator on maps.
+
+
+## 211.0.0
+
+### Breaking changes
+
+* Moved ChunkIndicesEnumerator to engine and to a re-useable namespace at Robust.Shared/Maps.
+
+### New features
+
+* Added an Enlarged method for Box2Rotated.
+
+### Internal
+
+* Significantly optimise ChunkEnumerator / FindGridsIntersecting in certain use cases by intersecting the grid's AABB with the local AABB to avoid iterating dummy chunks.
+
+
+## 210.1.1
+
+### Bugfixes
+
+* Fixed multiple recent bugs with key binding storage.
+
+### Other
+
+* Change default of `ButtonGroup.IsNoneSetAllowed` to `true`. This makes it default again to the previous (unintentional) behavior.
+
+
+## 210.1.0
+
+### New features
+
+* `NetUserId` implements `ISelfSerialize` so can be used in data fields.
+* `ButtonGroup.IsNoneSetAllowed` to allow a button group to have no buttons pressed by default.
+
+
+## 210.0.3
+
+
+## 210.0.2
+
+### Bugfixes
+
+* Revert changes to `TextureRect` too.
+
+
+## 210.0.1
+
+### Bugfixes
+
+* Revert changes to `TextureButton` that broke style property handling.
+
+
+## 210.0.0
+
+### New features
+
+* Controls can now hook before, after, and during rendering of their children.
+* IRenderHandle is now a public API, with the caveat that it's properties and methods are unstable.
+* ButtonGroup now exposes what buttons it contains, alongside which is currently pressed.
+* OptionButton has additional styleclasses, and has a hook for modifying it's internal buttons.
+* PanelContainer.GetStyleBox() is now protected rather than private.
+* TextureButton now uses a TextureRect instead of custom drawing code.
+* TextureRect has additional style properties exposed.
+    * A new property, TextureSizeTarget, was added, which allows specifying a size in virtual pixels that the control should attempt to draw at.
+    * Stretch mode is now a style property.
+    * Scale is now a style property.
+* Avalonia.Metadata.XmlnsDefinitionAttribute is now permitted by the sandbox.
+* Add MaxDimension property to Box2 to return the higher of the Width or Height.
+* Add GetLocalPosition to convert ScreenCoordinates to coordinates relative to the control. Ignores window.
+* Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
+* Add dotted line drawing to DrawingHandleScreen.
+* You can use `Subs.CVar()` from an entity systems to subscribe to CVar changes. This is more convenient than `IConfigurationManager.OnValueChanged` as it automatically unsubscribes on system shutdown.
+* There is now a built-in type serializer for `DateTime`, so you can put `DateTime`s in your data fields.
+* `System.Text.Unicode.UnicodeRange` and `UnicodeRanges` are now available in the sandbox.
+
+### Bugfixes
+
+* UI drawing now properly accounts for a control's draw routine potentially mangling the current matrix.
+* UI roots now properly update when the global stylesheet is changed. They previously only did so if they had a dedicated stylesheet (which is the one case where they would be unaffected by a global sheet update.
+
+
+## 209.0.1
+
+### Bugfixes
+
+* Fix missed import from 209.0.0.
+
+
+## 209.0.0
+
+### Breaking changes
+
+* `replay.max_compressed_size` and `replay.max_uncompressed_size` CVars are now `long`.
+* Remove obsolete CoordinatesExtension for ToEntityCoordinates from GridUid / Vector2i.
+
+### New features
+
+* Add GetEntitiesOnMap / GetChildEntities to EntityLookupSystem to return components on the specified map and components with the specified parent respectively.
+* Add MaxDimension property to Box2 to return the higher of the Width or Height.
+* Add GetLocalPosition to convert ScreenCoordinates to coordinates relative to the control. Ignores window.
+* Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
+* Add dotted line drawing to DrawingHandleScreen.
+* `IConfigurationManager.LoadDefaultsFromTomlStream` properly does type conversions. This fixes scenarios like loading of `long` CVars.
+* Add helper methods for TileRef / Vector2i to SharedMapSystem for ToCenterCoordinates (tile center EntityCoordinates) and ToCoordinates (tile origin to EntityCoordinates).
+* Copy some of the coordinates extensions to SharedTransformSystem.
+
+### Bugfixes
+
+* Fixed integer overflows in replay max size calculation.
+* Explicitly capped `replay.replay_tick_batchSize` internally to avoid high values causing allocation failures.
+
+### Other
+
+* Important MIDI performance improvements.
+
+
+## 208.0.0
+
+### Breaking changes
+
+* Metadata flags are no longer serialized as they get rebuilt on entity startup.
+
+### Bugfixes
+
+* Log failing to load user keybinds and handle the exception.
+
+
+## 207.1.0
+
+### New features
+
+* Add the ability to merge grids via GridFixtureSystem.
+
+
+## 207.0.0
+
+### Breaking changes
+
+* Update EntityLookup internally so non-approximate queries use the GJK solver and are much more accurate. This also means the approximate flag matters much more if you don't need narrowphase checks.
+* Add shape versions of queries for both EntityLookup and MapManager.
+
+### Bugfixes
+
+* Fix PVS full state updates not clearing session entities and causing exceptions.
+
+### Other
+
+* Integration tests now run `NetMessage`s through serialization rather than passing the objects between client and server. This causes tests that missed `[NetSerializer]` attributes on any objects that need them to fail.
+
+### Internal
+
+* Remove a lot of duplicate code internally from EntityLookup and MapManager.
+
+
+## 206.0.0
+
+### Breaking changes
+
+* tpto will teleport you to physics-center instead of transform center instead.
+* Rename local EntityLookup methods to reflect they take local AABBs and not world AABBs.
+
+### New features
+
+* Add some additional EntityLookup methods for local queries.
+* Add support to PrototypeManager for parsing specific files / directories as abstract.
+
+### Bugfixes
+
+* Fix tpto short-circuiting if one of the listed entities isn't found.
+* Fix tpto not allowing grids as targets.
+
+### Other
+
+* Reduce MIDI source update rate from 10hz to 4hz.
+
+### Internal
+
+* Remove some duplicate internal code in EntityLookupSystem.
+* Skip serialization sourcegen in GLFW and Lidgren.
+
+
+## 205.0.0
+
+### Breaking changes
+
+* The unused `Robust.Physics` project has been deleted.
+* The project now uses [Central Package Management](https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management).
+* (Almost) all the NuGet packages have been updated. This causes many problems. I am so sorry.
+* Cleaned up some unused packages as well.
+
+
+## 204.1.0
+
+### New features
+
+* New `EntitySystem` subscription helper for working with Bound User Interface events. You can find them by doing `Subs.BuiEvents<>()` in a system.
+* The `EntityManager.Subscriptions` type (for building helper extension methods) now uses
+
+### Bugfixes
+
+* Avoid loading assemblies from content `/Assemblies` if Robust ships its own copy. This avoid duplicate or weird mismatching version issues.
+
+### Other
+
+* Removed glibc version check warning.
+
+
+## 204.0.0
+
+### Breaking changes
+
+* Make EntityManager abstract and make IEntityManager.EntityNetManager not nullable.
+* Make VVAccess.ReadWrite default for all Datafields instead of VVAccess.ReadOnly
+
+### New features
+
+* `TextEdit.OnTextChanged`
+* Add Pick and PickAndTake versions for System.Random for ICollections.
+
+### Bugfixes
+
+* Fix `IClipboardManager.GetText()` returning null in some cases.
+* Fix possible NRE in server-side console command completion code.
+* Fix possible NRE on DebugConsole logs.
+* Fix exception when VVing non-networked components.
+
+### Other
+
+* Remove "Do not use from content" from IComponent.
+
+
+## 203.0.0
+
+### Breaking changes
+
+* `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
+* Event bus subscriptions are now locked after `IEntityManager` has started, instead of after the first component gets added. Any event subscriptions now need to happen before startup (but after init).
+* Event bus subscriptions must now be locked before raising any events.
+* Delete FodyWeavers.xsd as it hasn't been used for a long time.
+* Remove physics sleep cancelling as it was, in hindsight, a bad idea.
+
+### New features
+
+* `RobustUnitTest` now has a `ExtraComponents` field for automatically registering additional components.
+* `IComponentFactory.RegisterIgnore()` now accepts more than one string.
+* Added `IComponentFactory.RegisterTypes` for simultaneously registering multiple components.
+
+### Bugfixes
+
+* Clamp volume calculations for audio rather than throwing.
+
+
+## 202.1.1
+
+### Bugfixes
+
+* Reverted some map/grid initialisation changes that might've been causing broadphase/physics errors.
+* Fixed PVS sometimes sending entities without first sending their children.
+* Fixed a container state handling bug caused by containers not removing expected entities when shutting down.
+* Fixed a `EnsureEntity<T>` state handling bug caused by improper handling of entity deletions.
+* Fixed a bad NetSyncEnabled debug assert.
+
+
+## 202.1.0
+
+### New features
+
+* Add GetLocalEntitiesIntersecting overload that takes in a griduid and a Vector2i tile.
+
+
+## 202.0.0
+
+### Breaking changes
+
+* Various entity manager methods now have a new `where T : IComponent` constraint.
+* The `IComponentFactory.ComponentAdded` event has been renamed to `ComponentsAdded` and now provides an array of component registrations.
+* `IComponentFactory.RegisterIgnore()` no longer supports overwriting existing registrations, components should get ignored before they are registered.
+
+### New features
+
+* Added `IComponentFactory.GetAllRegistrations()`
+* Add IComponentState interface support for component states so structs can be used in lieu of classes.
+
+
+## 201.0.0
+
+### Breaking changes
+
+* The `zCircleGradient` shader function arguments have changed. It now requires a pixel-size to ensure that the gradient is properly entered.
+
+### Bugfixes
+
+* Fixed some PVS null reference errors.
+
+
 ## 200.0.0
 
 ### Breaking changes

@@ -103,7 +103,7 @@ internal sealed partial class PvsSystem
     /// <summary>
     ///     Process a given client's queued ack.
     /// </summary>
-    private unsafe void ProcessQueuedAck(PvsSession session)
+    private void ProcessQueuedAck(PvsSession session)
     {
         var ackedTick = session.LastReceivedAck;
         List<PvsIndex>? ackedEnts;
@@ -129,10 +129,8 @@ internal sealed partial class PvsSystem
         foreach (ref var intPtr in CollectionsMarshal.AsSpan(ackedEnts))
         {
             ref var data = ref session.DataMemory.GetRef(intPtr.Index);
-#if DEBUG
             DebugTools.AssertNotEqual(data.LastSeen, GameTick.Zero);
             DebugTools.Assert(data.LastSeen >= ackedTick); // LastSent may equal ackedTick if the packet was sent reliably.
-#endif
             data.EntityLastAcked = ackedTick;
         }
 

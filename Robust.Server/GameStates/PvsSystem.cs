@@ -357,7 +357,7 @@ internal sealed partial class PvsSystem : EntitySystem
     }
 
     [Conditional("DEBUG")]
-    private unsafe void VerifySessionData(PvsSession pvsSession)
+    private void VerifySessionData(PvsSession pvsSession)
     {
         var toSend = pvsSession.ToSend;
         var toSendSet = new HashSet<NetEntity>(toSend!.Count);

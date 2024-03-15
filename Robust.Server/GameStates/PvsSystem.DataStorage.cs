@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
-// This class handles the PvsData memory. This array stores information about when each entity was last sent to
+// This partial class handles the PvsData memory. This array stores information about when each entity was last sent to
 // each player. This is somewhat faster than using a per-player Dictionary<EntityUid, PvsData>, though it can be less
 // memory efficient.
 internal sealed partial class PvsSystem

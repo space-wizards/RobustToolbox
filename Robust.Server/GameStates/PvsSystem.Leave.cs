@@ -39,7 +39,7 @@ internal sealed partial class PvsSystem
     /// Figure out what entities are no longer visible to the client. These entities are sent reliably to the client
     /// in a separate net message. This has to be called after EntityData.LastSent is updated.
     /// </summary>
-    private unsafe void ProcessLeavePvs(PvsSession session)
+    private void ProcessLeavePvs(PvsSession session)
     {
         if (session.DisableCulling || session.Session.Status != SessionStatus.InGame)
             return;

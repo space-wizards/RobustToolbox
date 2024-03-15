@@ -132,9 +132,14 @@ namespace Robust.Client.ViewVariables
                 return new VVPropEditorEntProtoId();
             }
 
-            if (typeof(ProtoId<>).IsAssignableFrom(type))
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ProtoId<>))
             {
-                return (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorProtoId<>).MakeGenericType(type))!;
+                var editor =
+                    (VVPropEditor)Activator.CreateInstance(
+                        typeof(VVPropEditorProtoId<>).MakeGenericType(type.GenericTypeArguments[0]))!;
+
+                IoCManager.InjectDependencies(editor);
+                return editor;
             }
 
             if (typeof(IPrototype).IsAssignableFrom(type) || typeof(ViewVariablesBlobMembers.PrototypeReferenceToken).IsAssignableFrom(type))

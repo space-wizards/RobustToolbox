@@ -555,7 +555,19 @@ namespace Robust.Client.Console.Commands
                 if (type != typeof(Control))
                     cname = $"Control > {cname}";
 
-                returnVal.GetOrNew(cname).Add((member.Name, member.GetValue(control)?.ToString() ?? "null"));
+                var value = member.GetValue(control);
+                var o = value switch
+                {
+                    ICollection<Control> controls => string.Join(", ",
+                        controls.Select(ctrl => $"{ctrl.Name}({ctrl.GetType()})")),
+                    ICollection<string> list => string.Join(", ", list),
+                    null => null,
+                    _ => value.ToString()
+                };
+                // Convert to quote surrounded string or null with no quotes
+                o = o is not null ? $"\"{o}\"" : "null";
+
+                returnVal.GetOrNew(cname).Add((member.Name, o));
             }
 
             foreach (var (attachedProperty, value) in control.AllAttachedProperties)
@@ -576,11 +588,29 @@ namespace Robust.Client.Console.Commands
             var members = GetAllMembers(control);
             var member = members.Find(m => m.Name == key);
             var value = member?.GetValue(control);
-            return value switch
+            string? o;
+            switch (value)
             {
-                ICollection<string> list => string.Join(",", list),
-                _ => value?.ToString() ?? "null"
-            };
+                case ICollection<Control> controls:
+                    var sb = new StringBuilder();
+                    foreach (var ctrl in controls)
+                    {
+                        sb.AppendLine($"{ctrl.Name}({ctrl.GetType()})");
+                    }
+                    o = sb.ToString();
+                    break;
+                case ICollection<string> list:
+                    o = string.Join("\n", list);
+                    break;
+                case null:
+                    o = null;
+                    break;
+                default:
+                    o = value.ToString();
+                    break;
+            }
+
+            return o is not null ? $"\"{o}\"" : "null";
         }
     }
 

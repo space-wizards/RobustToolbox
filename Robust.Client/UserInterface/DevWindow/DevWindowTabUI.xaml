@@ -20,7 +20,7 @@
                         <BoxContainer Name="ControlTreeRoot" Orientation="Vertical" MouseFilter="Stop"  />
                     </PanelContainer>
                 </ScrollContainer>
-                <ScrollContainer HScrollEnabled="False">
+                <ScrollContainer>
                     <BoxContainer Name="ControlProperties" Orientation="Vertical" MouseFilter="Stop" />
                 </ScrollContainer>
             </SplitContainer>

@@ -244,7 +244,8 @@ public sealed partial class DevWindowTabUI : Control
                     _popup.Text = GuiDumpCommand.PropertyValuesString(SelectedControl, prop);
                     if (_popup.Parent != PopupContainer)
                         PopupContainer.AddChild(_popup);
-                    var box = UIBox2.FromDimensions(UserInterfaceManager.MousePositionScaled.Position, Vector2.One);
+                    var box = UIBox2.FromDimensions(UserInterfaceManager.MousePositionScaled.Position
+                                                    - GlobalPosition, Vector2.One);
                     _popup.Open(box);
                 };
                 ControlProperties.AddChild(button);

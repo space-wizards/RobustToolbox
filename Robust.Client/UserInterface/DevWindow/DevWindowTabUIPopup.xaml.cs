@@ -5,7 +5,7 @@ using Robust.Client.UserInterface.XAML;
 namespace Robust.Client.UserInterface;
 
 [GenerateTypedNameReferences]
-public sealed partial class DevWindowPopup : Popup
+public sealed partial class DevWindowTabUIPopup : Popup
 {
     public string? Text
     {
@@ -13,7 +13,7 @@ public sealed partial class DevWindowPopup : Popup
         set => TextLabel.Text = value;
     }
 
-    public DevWindowPopup()
+    public DevWindowTabUIPopup()
     {
         RobustXamlLoader.Load(this);
     }

@@ -420,7 +420,7 @@ namespace Robust.Client.Debugging
                 if (mapPos.MapId != args.MapId)
                     return;
 
-                var player = _playerManager.LocalPlayer?.ControlledEntity;
+                var player = _playerManager.LocalEntity;
 
                 if (!_entityManager.TryGetComponent<TransformComponent>(player, out var playerXform) ||
                     playerXform.MapID != args.MapId)

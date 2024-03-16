@@ -17,6 +17,9 @@ namespace Robust.Client.UserInterface.Controls
     {
         public const string StylePropertyTexture = "texture";
         public const string StylePropertyShader = "shader";
+        public const string StylePropertyTextureStretch = "texture-stretch";
+        public const string StylePropertyTextureScale = "texture-scale";
+        public const string StylePropertyTextureSizeTarget = "texture-size-target";
 
         private bool _canShrink;
         private Texture? _texture;
@@ -29,7 +32,18 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public Texture? Texture
         {
-            get => _texture;
+            get
+            {
+                if (_texture is null)
+                {
+                    if (TryGetStyleProperty(StylePropertyTexture, out Texture? texture))
+                    {
+                        return texture;
+                    }
+                }
+
+                return _texture;
+            }
             set
             {
                 var oldSize = _texture?.Size;
@@ -43,6 +57,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private string? _texturePath;
+        private StretchMode _stretch = StretchMode.Keep;
 
         public string TexturePath
         {
@@ -54,10 +69,27 @@ namespace Robust.Client.UserInterface.Controls
 
         }
 
+        protected override void StylePropertiesChanged()
+        {
+            base.StylePropertiesChanged();
+            InvalidateMeasure();
+        }
+
         protected override void OnThemeUpdated()
         {
             if (_texturePath != null) Texture = Theme.ResolveTexture(_texturePath);
             base.OnThemeUpdated();
+        }
+
+        public Vector2 TextureSizeTarget
+        {
+            get
+            {
+                if (!TryGetStyleProperty(StylePropertyTextureSizeTarget, out Vector2 target))
+                    target = _textureScale * Texture?.Size ?? Vector2.Zero;
+
+                return target;
+            }
         }
 
         /// <summary>
@@ -65,10 +97,17 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         /// <remarks>
         ///     This does not apply to the following stretch modes: <see cref="StretchMode.Scale"/>.
+        ///     This additionally does not apply if a size target is set.
         /// </remarks>
         public Vector2 TextureScale
         {
-            get => _textureScale;
+            get
+            {
+                if (!TryGetStyleProperty(StylePropertyTextureScale, out Vector2 scale))
+                    scale = _textureScale;
+
+                return scale;
+            }
             set
             {
                 _textureScale = value;
@@ -96,23 +135,27 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     Controls how the texture should be drawn if the control is larger than the size of the texture.
         /// </summary>
-        public StretchMode Stretch { get; set; } = StretchMode.Keep;
+        public StretchMode Stretch
+        {
+            get
+            {
+                if (!TryGetStyleProperty(StylePropertyTextureStretch, out StretchMode stretch))
+                    stretch = _stretch;
+                return stretch;
+            }
+            set => _stretch = value;
+        }
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
 
-            var texture = _texture;
-            ShaderInstance? shader = null;
+            var texture = Texture;
 
-            if (texture == null)
-            {
-                TryGetStyleProperty(StylePropertyTexture, out texture);
-                if (texture == null)
-                {
-                    return;
-                }
-            }
+            if (texture is null)
+                return;
+
+            ShaderInstance? shader = null;
 
             if (ShaderOverride != null)
             {
@@ -167,17 +210,17 @@ namespace Robust.Client.UserInterface.Controls
                 case StretchMode.Tile:
                 // TODO: Implement Tile.
                 case StretchMode.Keep:
-                    return UIBox2.FromDimensions(Vector2.Zero, texture.Size * _textureScale * UIScale);
+                    return UIBox2.FromDimensions(Vector2.Zero, TextureSizeTarget * UIScale);
                 case StretchMode.KeepCentered:
                 {
-                    var position = (PixelSize - texture.Size * _textureScale * UIScale) / 2;
-                    return UIBox2.FromDimensions(position, texture.Size * _textureScale * UIScale);
+                    var position = (Size - TextureSizeTarget) / 2;
+                    return UIBox2.FromDimensions(position, TextureSizeTarget * UIScale);
                 }
 
                 case StretchMode.KeepAspect:
                 case StretchMode.KeepAspectCentered:
                 {
-                    var (texWidth, texHeight) = texture.Size * _textureScale;
+                    var (texWidth, texHeight) = TextureSizeTarget;
                     var width = texWidth * (PixelSize.Y / texHeight);
                     var height = (float)PixelSize.Y;
                     if (width > PixelSize.X)
@@ -197,7 +240,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 case StretchMode.KeepAspectCovered:
-                    var texSize = texture.Size * _textureScale;
+                    var texSize = TextureSizeTarget;
                     // Calculate the scale necessary to fit width and height to control size.
                     var (scaleX, scaleY) = PixelSize / texSize;
                     // Use whichever scale is greater.
@@ -259,19 +302,10 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            var texture = _texture;
-
-            if (texture == null)
-            {
-                TryGetStyleProperty(StylePropertyTexture, out texture);
-            }
-
-            if (texture == null || CanShrink)
-            {
+            if (CanShrink || Texture == null)
                 return Vector2.Zero;
-            }
 
-            return texture.Size * TextureScale;
+            return TextureSizeTarget;
         }
     }
 }

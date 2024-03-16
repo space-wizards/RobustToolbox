@@ -29,10 +29,7 @@ namespace Robust.Client.GameObjects
 
             var uiKey = ev.UiKey;
             var message = ev.Message;
-            // This should probably not happen at this point, but better make extra sure!
-            if (_playerManager.LocalPlayer != null)
-                message.Session = _playerManager.LocalPlayer.Session;
-
+            message.Session = _playerManager.LocalSession!;
             message.Entity = GetNetEntity(uid);
             message.UiKey = uiKey;
 
@@ -75,8 +72,7 @@ namespace Robust.Client.GameObjects
             boundInterface.Open();
             uiComp.OpenInterfaces[uiKey] = boundInterface;
 
-            var playerSession = _playerManager.LocalPlayer?.Session;
-            if (playerSession != null)
+            if (_playerManager.LocalSession is { } playerSession)
             {
                 uiComp.Interfaces[uiKey]._subscribedSessions.Add(playerSession);
                 RaiseLocalEvent(uid, new BoundUIOpenedEvent(uiKey, uid, playerSession), true);

@@ -490,7 +490,7 @@ cmd-net_entityreport-help = Usage: net_entityreport
 cmd-net_refresh-desc = Requests a full server state.
 cmd-net_refresh-help = Usage: net_refresh
 
-cmd-net_graph-desc = Toggles the net statistics pannel.
+cmd-net_graph-desc = Toggles the net statistics panel.
 cmd-net_graph-help = Usage: net_graph
 
 cmd-net_watchent-desc = Dumps all network updates for an EntityId to the console.
@@ -566,3 +566,9 @@ cmd-reloadtiletextures-help = Usage: reloadtiletextures
 cmd-audio_length-desc = Shows the length of an audio file
 cmd-audio_length-help = Usage: audio_length { cmd-audio_length-arg-file-name }
 cmd-audio_length-arg-file-name = <file name>
+
+## PVS
+cmd-pvs-override-info-desc = Prints information about any PVS overrides associated with an entity.
+cmd-pvs-override-info-empty = Entity {$nuid} has no PVS overrides.
+cmd-pvs-override-info-global = Entity {$nuid} has a global override.
+cmd-pvs-override-info-clients = Entity {$nuid} has a session override for {$clients}.

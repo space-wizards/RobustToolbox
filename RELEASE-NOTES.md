@@ -43,7 +43,8 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix tooltips not clamping to the left side of the viewport.
+* Fix global audio property not being properly set.
 
 ### Other
 
@@ -52,6 +53,209 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 214.1.1
+
+### Bugfixes
+
+* Fixed connection denial always causing redial.
+
+
+## 214.1.0
+
+### New features
+
+* Added the `pvs_override_info` command for debugging PVS overrides.
+
+### Bugfixes
+
+* Fix VV for prototype structs.
+* Fix audio limits for clientside audio.
+
+
+## 214.0.0
+
+### Breaking changes
+
+* `NetStructuredDisconnectMessages` has received a complete overhaul and has been moved to `NetDisconnectMessage`. The API is no longer designed such that consumers must pass around JSON nodes, as they are not in sandbox (and clunky).
+
+### New features
+
+* Add a basic default concurrent audio limit of 16 for a single filepath to avoid overflowing audio sources.
+* `NetConnectingArgs.Deny()` can now pass along structured data that will be received by the client.
+
+### Bugfixes
+
+* Fixed cursor position bugs when an empty `TextEdit` has a multi-line place holder.
+* Fixed empty `TextEdit` throwing exception if cursor is moved left.
+
+
+## 213.0.0
+
+### Breaking changes
+
+* Remove obsoleted BaseContainer methods.
+
+### New features
+
+* Add EntityManager.RaiseSharedEvent where the event won't go to the attached client but will be predicted locally on their end.
+* Add GetEntitiesInRange override that takes in EntityCoordinates and an EntityUid hashset.
+
+### Bugfixes
+
+* Check if a sprite entity is deleted before drawing in SpriteView.
+
+
+## 212.2.0
+
+### New features
+
+* Add IsHardCollidable to SharedPhysicsSystem to determine if 2 entities would collide.
+
+### Other
+
+* Double the default maximum replay size.
+
+
+## 212.1.0
+
+### New features
+
+* Add nullable methods for TryIndex / HasIndex on IPrototypeManager.
+
+### Bugfixes
+
+* Fix TextureRect alignment where the strech mode is KeepCentered.
+
+
+## 212.0.1
+
+### Bugfixes
+
+* Fix passing array by `this` instead of by `ref`.
+
+
+## 212.0.0
+
+### Breaking changes
+
+* Change Collapsible controls default orientations to Vertical.
+
+### New features
+
+* Expose the Label control for Collapsible controls.
+* Add GetGridPosition that considers physics center-of-mass.
+* Add TileToVector methods to get the LocalPosition of tile-coords (taking into account tile size).
+* Add some more helper methods to PVS filters around EntityUids.
+* Add support for Dictionary AutoNetworkedFields.
+* Add EnsureLength method for arrays.
+* Add PushMarkup to FormattedMessage.
+* Add DrawPrimitives overload for `List<Vector2>`
+* Add more ValueList ctors that are faster.
+* Add ToMapCoordinates method for NetCoordinates.
+
+### Other
+
+* Remove ISerializationHooks obsoletion as they are useful in some rare cases.
+
+### Internal
+
+* Bump max pool size for robust jobs.
+
+
+## 211.0.2
+
+### Bugfixes
+
+* Fix TextureRect scaling not handling UIScale correctly.
+
+
+## 211.0.1
+
+### Bugfixes
+
+* Fix GridChunkEnumerator on maps.
+
+
+## 211.0.0
+
+### Breaking changes
+
+* Moved ChunkIndicesEnumerator to engine and to a re-useable namespace at Robust.Shared/Maps.
+
+### New features
+
+* Added an Enlarged method for Box2Rotated.
+
+### Internal
+
+* Significantly optimise ChunkEnumerator / FindGridsIntersecting in certain use cases by intersecting the grid's AABB with the local AABB to avoid iterating dummy chunks.
+
+
+## 210.1.1
+
+### Bugfixes
+
+* Fixed multiple recent bugs with key binding storage.
+
+### Other
+
+* Change default of `ButtonGroup.IsNoneSetAllowed` to `true`. This makes it default again to the previous (unintentional) behavior.
+
+
+## 210.1.0
+
+### New features
+
+* `NetUserId` implements `ISelfSerialize` so can be used in data fields.
+* `ButtonGroup.IsNoneSetAllowed` to allow a button group to have no buttons pressed by default.
+
+
+## 210.0.3
+
+
+## 210.0.2
+
+### Bugfixes
+
+* Revert changes to `TextureRect` too.
+
+
+## 210.0.1
+
+### Bugfixes
+
+* Revert changes to `TextureButton` that broke style property handling.
+
+
+## 210.0.0
+
+### New features
+
+* Controls can now hook before, after, and during rendering of their children.
+* IRenderHandle is now a public API, with the caveat that it's properties and methods are unstable.
+* ButtonGroup now exposes what buttons it contains, alongside which is currently pressed.
+* OptionButton has additional styleclasses, and has a hook for modifying it's internal buttons.
+* PanelContainer.GetStyleBox() is now protected rather than private.
+* TextureButton now uses a TextureRect instead of custom drawing code.
+* TextureRect has additional style properties exposed.
+    * A new property, TextureSizeTarget, was added, which allows specifying a size in virtual pixels that the control should attempt to draw at.
+    * Stretch mode is now a style property.
+    * Scale is now a style property.
+* Avalonia.Metadata.XmlnsDefinitionAttribute is now permitted by the sandbox.
+* Add MaxDimension property to Box2 to return the higher of the Width or Height.
+* Add GetLocalPosition to convert ScreenCoordinates to coordinates relative to the control. Ignores window.
+* Add GlobalRect and GlobalPixelRect for controls to get their UIBox2i in screen terms.
+* Add dotted line drawing to DrawingHandleScreen.
+* You can use `Subs.CVar()` from an entity systems to subscribe to CVar changes. This is more convenient than `IConfigurationManager.OnValueChanged` as it automatically unsubscribes on system shutdown.
+* There is now a built-in type serializer for `DateTime`, so you can put `DateTime`s in your data fields.
+* `System.Text.Unicode.UnicodeRange` and `UnicodeRanges` are now available in the sandbox.
+
+### Bugfixes
+
+* UI drawing now properly accounts for a control's draw routine potentially mangling the current matrix.
+* UI roots now properly update when the global stylesheet is changed. They previously only did so if they had a dedicated stylesheet (which is the one case where they would be unaffected by a global sheet update.
 
 
 ## 209.0.1

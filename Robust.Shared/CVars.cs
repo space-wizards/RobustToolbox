@@ -1031,6 +1031,12 @@ namespace Robust.Shared
          * AUDIO
          */
 
+        /// <summary>
+        /// Default limit for concurrently playing an audio file.
+        /// </summary>
+        public static readonly CVarDef<int> AudioDefaultConcurrent =
+            CVarDef.Create("audio.default_concurrent", 16, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         public static readonly CVarDef<int> AudioAttenuation =
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
@@ -1498,7 +1504,7 @@ namespace Robust.Shared
         /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
         public static readonly CVarDef<long> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size",
-            1024L * 256, CVar.ARCHIVE);
+            1024L * 512, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum uncompressed size of a replay recording (in kilobytes) before recording automatically stops.

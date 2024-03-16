@@ -1,17 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>10</LangVersion>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
-  </ItemGroup>
-
   <ItemGroup>
     <!-- Needed for NotNullableFlagAnalyzer. -->
     <Compile Include="..\Robust.Shared\Analyzers\NotNullableFlagAttribute.cs" />
@@ -27,5 +15,11 @@
     <!-- Needed for PreferGenericVariantAnalyzer. -->
     <Compile Include="..\Robust.Shared\Analyzers\PreferGenericVariantAttribute.cs" />
   </ItemGroup>
+
+  <Import Project="../Robust.Roslyn.Shared/Robust.Roslyn.Shared.props" />
+
+  <PropertyGroup>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
 
 </Project>

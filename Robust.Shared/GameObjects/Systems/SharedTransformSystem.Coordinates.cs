@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Map;
 
 namespace Robust.Shared.GameObjects;
@@ -65,6 +66,16 @@ public abstract partial class SharedTransformSystem
         var xform = XformQuery.GetComponent(coordinates.EntityId);
         var worldPos = GetWorldMatrix(xform).Transform(coordinates.Position);
         return new MapCoordinates(worldPos, xform.MapID);
+    }
+
+    /// <summary>
+    /// Converts entity-local coordinates into map terms.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public MapCoordinates ToMapCoordinates(NetCoordinates coordinates)
+    {
+        var eCoords = GetCoordinates(coordinates);
+        return ToMapCoordinates(eCoords);
     }
 
     /// <summary>

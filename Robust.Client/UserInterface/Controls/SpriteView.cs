@@ -16,7 +16,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         private SpriteSystem? _sprite;
         private SharedTransformSystem? _transform;
-        IEntityManager _entMan;
+        private readonly IEntityManager _entMan;
 
         [ViewVariables]
         public SpriteComponent? Sprite => Entity?.Comp1;
@@ -143,6 +143,8 @@ namespace Robust.Client.UserInterface.Controls
             if (netEnt == NetEnt)
                 return;
 
+            // The Entity is getting set later in the ResolveEntity method
+            // because the client may not have received it yet.
             Entity = null;
             NetEnt = netEnt;
         }
@@ -256,28 +258,19 @@ namespace Robust.Client.UserInterface.Controls
             [NotNullWhen(true)] out SpriteComponent? sprite,
             [NotNullWhen(true)] out TransformComponent? xform)
         {
+            if (NetEnt != null && Entity == null && _entMan.TryGetEntity(NetEnt, out var ent))
+                SetEntity(ent);
+
             if (Entity != null)
             {
                 (uid, sprite, xform) = Entity.Value;
-                return true;
+                return !_entMan.Deleted(uid);
             }
 
             sprite = null;
             xform = null;
             uid = default;
-
-            if (NetEnt == null)
-                return false;
-
-            if (!_entMan.TryGetEntity(NetEnt, out var ent))
-                return false;
-
-            SetEntity(ent);
-            if (Entity == null)
-                return false;
-
-            (uid, sprite, xform) = Entity.Value;
-            return true;
+            return false;
         }
     }
 }

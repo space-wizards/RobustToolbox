@@ -186,6 +186,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
             else
             {
                 component.Source = newSource;
+                source = component.Source;
             }
         }
 

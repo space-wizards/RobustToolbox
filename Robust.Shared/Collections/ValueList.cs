@@ -607,4 +607,12 @@ public struct ValueList<T> : IEnumerable<T>
         region.Clear();
         Count = newCount;
     }
+
+    public void AddRange(IEnumerable<T> select)
+    {
+        foreach (var result in select)
+        {
+            Add(result);
+        }
+    }
 }

@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.Audio;
+using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -22,6 +24,28 @@ public static class CompletionHelper
     /// </summary>
     public static IEnumerable<CompletionOption> Booleans => new[]
         { new CompletionOption(bool.FalseString), new CompletionOption(bool.TrueString) };
+
+    /// <summary>
+    /// Special-cased file handler for audio that accounts for serverside completion.
+    /// </summary>
+    public static IEnumerable<CompletionOption> AudioFilePath(string arg, IPrototypeManager protoManager,
+        IResourceManager res)
+    {
+        var results = new ValueList<CompletionOption>();
+
+        foreach (var proto in protoManager.EnumeratePrototypes<AudioMetadataPrototype>())
+        {
+            if (!proto.ID.StartsWith(arg))
+                continue;
+
+            results.Add(new CompletionOption(proto.ID));
+        }
+
+        results.AddRange(ContentFilePath(arg, res));
+        results.Sort();
+
+        return results;
+    }
 
     public static IEnumerable<CompletionOption> ContentFilePath(string arg, IResourceManager res)
     {

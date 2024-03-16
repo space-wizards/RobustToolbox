@@ -171,8 +171,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void SetupSource(AudioComponent component, AudioResource audioResource, TimeSpan? length = null)
     {
-        var source = component.Source;
-
         if (TryAudioLimit(component.FileName))
         {
             var newSource = _audio.CreateAudioSource(audioResource);
@@ -181,18 +179,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
             {
                 Log.Error($"Error creating audio source for {audioResource}");
                 DebugTools.Assert(false);
-                source = newSource;
             }
             else
             {
                 component.Source = newSource;
-                source = component.Source;
             }
         }
 
+
         // Need to set all initial data for first frame.
         ApplyAudioParams(component.Params, component);
-        source.Global = component.Global;
+        component.Source.Global = component.Global;
 
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;

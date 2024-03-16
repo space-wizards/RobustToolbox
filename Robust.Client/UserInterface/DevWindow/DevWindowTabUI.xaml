@@ -26,5 +26,8 @@
             </SplitContainer>
         </BoxContainer>
     </PanelContainer>
-    <PopupContainer Name="PopupContainer" Access="Public" />
+    <!-- TODO Remove and replace with a popup container on WindowRoot -->
+    <PopupContainer Name="PopupContainer" Access="Public">
+        <DevWindowTabUIPopup Name="UIPopup" />
+    </PopupContainer>
 </Control>

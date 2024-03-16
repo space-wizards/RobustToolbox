@@ -23,8 +23,6 @@ public sealed partial class DevWindowTabUI : Control
     private Dictionary<Control, DevWindowUITreeEntry> ControlMap { get; } = new();
     private Control? LastHoveredControl { get; set; }
 
-    private DevWindowTabUIPopup? _popup;
-
     public event Action? SelectedControlChanged;
 
     public DevWindowTabUI()
@@ -56,8 +54,6 @@ public sealed partial class DevWindowTabUI : Control
 
         ControlTreeRoot.OnKeyBindDown += ControlTreeRootOnKeyBindDown;
         RefreshPropertiesButton.OnPressed += _ => Refresh();
-
-        _popup ??= new DevWindowTabUIPopup();
     }
 
     private Control? GetControlUnderMouse()
@@ -240,31 +236,14 @@ public sealed partial class DevWindowTabUI : Control
                 };
                 button.OnPressed += _ =>
                 {
-                    _popup ??= new DevWindowTabUIPopup();
-                    _popup.Text = GuiDumpCommand.PropertyValuesString(SelectedControl, prop);
-                    if (_popup.Parent != PopupContainer)
-                        PopupContainer.AddChild(_popup);
+                    // TODO replace with parenting to popup container on WindowRoot
+                    UIPopup.Text = GuiDumpCommand.PropertyValuesString(SelectedControl, prop);
                     var box = UIBox2.FromDimensions(UserInterfaceManager.MousePositionScaled.Position
                                                     - GlobalPosition, Vector2.One);
-                    _popup.Open(box);
+                    UIPopup.Open(box);
                 };
                 ControlProperties.AddChild(button);
             }
-        }
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-
-        if (!disposing)
-            return;
-
-        if (_popup != null)
-        {
-            PopupContainer.RemoveChild(_popup);
-            _popup.Dispose();
-            _popup = null;
         }
     }
 }

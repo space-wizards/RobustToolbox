@@ -5,7 +5,7 @@ using Robust.Client.UserInterface.XAML;
 namespace Robust.Client.UserInterface;
 
 [GenerateTypedNameReferences]
-public sealed partial class DevWindowTabUIPopup : Popup
+internal sealed partial class DevWindowTabUIPopup : Popup
 {
     public string? Text
     {

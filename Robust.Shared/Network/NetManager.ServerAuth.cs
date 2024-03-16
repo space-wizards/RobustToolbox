@@ -214,7 +214,7 @@ namespace Robust.Shared.Network
                 if (connect.DenyReasonData is { } deny)
                 {
                     var denyMsg = $"Connect denied: {deny.Text}";
-                    var structured = new NetDisconnectMessage(denyMsg, true);
+                    var structured = new NetDisconnectMessage(denyMsg);
                     foreach (var (k, v) in deny.AdditionalProperties)
                     {
                         structured.Values[k] = v;

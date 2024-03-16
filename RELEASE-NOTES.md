@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add a CompletionHelper for audio filepaths that handles server packaging.
 
 ### Bugfixes
 

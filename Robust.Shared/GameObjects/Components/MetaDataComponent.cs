@@ -222,11 +222,16 @@ namespace Robust.Shared.GameObjects
         Detached = 1 << 2,
 
         /// <summary>
+        /// Indicates this entity can never be handled by the client as PVS detached.
+        /// </summary>
+        Undetachable = 1 << 3,
+
+        /// <summary>
         /// If true, then this entity is considered a "high priority" entity and will be sent to players from further
         /// away. Useful for things like light sources and occluders. Only works if the entity is directly parented to
         /// a grid or map.
         /// </summary>
-        PvsPriority = 1 << 3,
+        PvsPriority = 1 << 4,
     }
 
     /// <summary>

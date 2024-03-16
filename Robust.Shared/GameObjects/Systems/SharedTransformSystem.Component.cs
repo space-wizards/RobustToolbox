@@ -616,7 +616,7 @@ public abstract partial class SharedTransformSystem
         TransformComponent? newParent = null,
         TransformComponent? oldParent = null)
     {
-        SetCoordinates((uid, xform, MetaData(uid)), value, rotation, unanchor, newParent, oldParent);
+        SetCoordinates((uid, xform, _metaQuery.GetComponent(uid)), value, rotation, unanchor, newParent, oldParent);
     }
 
     #endregion

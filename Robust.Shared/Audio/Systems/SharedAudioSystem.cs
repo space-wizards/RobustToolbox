@@ -266,7 +266,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         return sound == null ? null : PlayGlobal(GetSound(sound), recipient, sound.Params);
     }
 
-    public abstract void LoadStream<T>(AudioComponent component, T stream);
+    public abstract void LoadStream<T>(Entity<AudioComponent> entity, T stream);
 
     /// <summary>
     /// Play an audio file globally, without position.

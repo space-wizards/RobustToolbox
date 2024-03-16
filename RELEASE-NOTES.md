@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed connection denial always causing redial.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 214.1.1
+
+### Bugfixes
+
+* Fixed connection denial always causing redial.
 
 
 ## 214.1.0

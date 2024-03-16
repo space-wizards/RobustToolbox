@@ -43,8 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix tooltips not clamping to the left side of the viewport.
-* Fix global audio property not being properly set.
+*None yet*
 
 ### Other
 
@@ -53,6 +52,22 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 214.2.0
+
+### New features
+
+* Added a `Undetachable` entity metadata flag, which stops the client from moving an entity to nullspace when it moves out of PVS range.
+
+### Bugfixes
+
+* Fix tooltips not clamping to the left side of the viewport.
+* Fix global audio property not being properly set.
+
+### Internal
+
+* The server game state / PVS code has been rewritten. It should be somewhat faster now, albeit at the cost of using more memory. The current engine version may be unstable.
 
 
 ## 214.1.1

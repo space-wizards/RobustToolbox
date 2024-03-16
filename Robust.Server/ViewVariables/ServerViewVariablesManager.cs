@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Server.Console;
 using Robust.Server.Player;
+using Robust.Shared.Audio;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -296,7 +297,18 @@ namespace Robust.Server.ViewVariables
 
                     output = prototype;
                     return true;
+                case ViewVariablesBlobMembers.SoundSpecifierReferenceToken sound:
+                    switch (sound.Variant)
+                    {
+                        case "SoundCollectionSpecifier":
+                            output = new SoundCollectionSpecifier(sound.Value);
+                            return true;
+                        case "SoundPathSpecifier":
+                            output = new SoundPathSpecifier(sound.Value);
+                            return true;
+                    }
 
+                    return false;
                 default:
                     return false;
             }

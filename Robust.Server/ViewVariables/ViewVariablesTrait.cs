@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Server.ViewVariables.Traits;
+using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
@@ -109,6 +110,21 @@ namespace Robust.Server.ViewVariables
                     {
                         Stringified = PrettyPrint.PrintUserFacing(value),
                         ID = ((IPrototype) value).ID, Variant = variant
+                    };
+                }
+
+                if (typeof(SoundSpecifier).IsAssignableFrom(valType))
+                {
+                    return new ViewVariablesBlobMembers.SoundSpecifierReferenceToken()
+                    {
+                        Stringified = PrettyPrint.PrintUserFacing(value),
+                        Variant = valType.Name,
+                        Value = value switch
+                        {
+                            SoundPathSpecifier path => path.Path.ToString(),
+                            SoundCollectionSpecifier collection => collection.Collection,
+                            _ => string.Empty
+                        },
                     };
                 }
 

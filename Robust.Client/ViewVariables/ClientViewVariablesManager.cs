@@ -8,6 +8,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Client.ViewVariables.Instances;
+using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -220,6 +221,13 @@ namespace Robust.Client.ViewVariables
             if (type == typeof(TimeSpan))
             {
                 return new VVPropEditorTimeSpan();
+            }
+
+            if (typeof(SoundSpecifier).IsAssignableFrom(type))
+            {
+                var control = new VVPropEditorSoundSpecifier();
+                IoCManager.InjectDependencies(control);
+                return control;
             }
 
             if (type == typeof(ViewVariablesBlobMembers.ServerKeyValuePairToken) ||

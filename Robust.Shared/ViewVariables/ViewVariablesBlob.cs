@@ -83,6 +83,20 @@ namespace Robust.Shared.ViewVariables
             }
         }
 
+        [Serializable, NetSerializable]
+        public sealed class SoundSpecifierReferenceToken : ReferenceToken
+        {
+            /// <summary>
+            /// Type of the underlying soundspecifier
+            /// </summary>
+            public string Variant;
+
+            /// <summary>
+            /// Value of the underlying soundspecifier
+            /// </summary>
+            public string Value;
+        }
+
         /// <summary>
         ///     Token used to indicate "this is a prototype reference, but I can't send the actual reference over".
         /// </summary>

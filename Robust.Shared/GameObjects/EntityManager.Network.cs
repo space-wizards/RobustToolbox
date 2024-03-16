@@ -32,6 +32,7 @@ public partial class EntityManager
     /// </summary>
     internal void SetNetEntity(EntityUid uid, NetEntity netEntity, MetaDataComponent component)
     {
+        DebugTools.Assert(component.NetEntity == NetEntity.Invalid || _netMan.IsClient);
         DebugTools.Assert(!NetEntityLookup.ContainsKey(netEntity));
         NetEntityLookup[netEntity] = (uid, component);
         component.NetEntity = netEntity;

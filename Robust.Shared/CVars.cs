@@ -184,6 +184,30 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// Size increments for the automatic growth of Pvs' entity data storage. 0 will increase it by factors of 2
+        /// </summary>
+        public static readonly CVarDef<int> NetPvsEntityGrowth =
+            CVarDef.Create("net.pvs_entity_growth", 1 << 16, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
+        /// Initial size of PVS' entity data storage.
+        /// </summary>
+        public static readonly CVarDef<int> NetPvsEntityInitial =
+            CVarDef.Create("net.pvs_entity_initial", 1 << 16, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
+        /// Maximum ever size of PVS' entity data storage.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Arbitrarily set to a default of 16 million entities.
+        /// Increasing this parameter does not increase real memory usage, only virtual.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<int> NetPvsEntityMax =
+            CVarDef.Create("net.pvs_entity_max", 1 << 24, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
         /// If false, this will run more parts of PVS synchronously. This will generally slow it down, can be useful
         /// for collecting tick timing metrics.
         /// </summary>

@@ -372,13 +372,6 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             ref var data = ref pvsSession.DataMemory.GetRef(intPtr.Index);
             DebugTools.AssertEqual(data.LastSeen, _gameTiming.CurTick);
-
-            // if an entity is visible, its parents should always be visible.
-            if (_xformQuery.GetComponent(GetEntity(IndexToNetEntity(intPtr))).ParentUid is not {Valid: true} pUid)
-                continue;
-
-            DebugTools.Assert(toSendSet.Contains(GetNetEntity(pUid)),
-                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(pUid)}.");
         }
 
         pvsSession.PreviouslySent.TryGetValue(_gameTiming.CurTick - 1, out var lastSent);

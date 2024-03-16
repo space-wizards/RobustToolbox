@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Implement basic VV for SoundSpecifiers.
 
 ### Bugfixes
 

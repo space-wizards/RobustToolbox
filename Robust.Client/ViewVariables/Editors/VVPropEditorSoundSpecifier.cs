@@ -2,9 +2,11 @@ using System.Numerics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Audio;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables.Editors;
@@ -12,6 +14,7 @@ namespace Robust.Client.ViewVariables.Editors;
 public sealed class VVPropEditorSoundSpecifier : VVPropEditor
 {
     [Dependency] private readonly IPrototypeManager _protoManager = default!;
+    [Dependency] private readonly IResourceManager _resManager = default!;
 
     protected override Control MakeUI(object? value)
     {
@@ -19,9 +22,10 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
         {
             Disabled = ReadOnly,
         };
+
         typeButton.AddItem(Loc.GetString("vv-sound-none"));
-        typeButton.AddItem(Loc.GetString("vv-sound-collection"));
-        typeButton.AddItem(Loc.GetString("vv-sound-path"));
+        typeButton.AddItem(Loc.GetString("vv-sound-collection"), 1);
+        typeButton.AddItem(Loc.GetString("vv-sound-path"), 2);
 
         var editBox = new LineEdit()
         {
@@ -37,33 +41,19 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
                 typeButton,
                 editBox
             },
-            SetSize = new Vector2(256f, 64f)
+            SetSize = new Vector2(384f, 64f)
         };
 
         if (value != null)
         {
             switch (value)
             {
-                case ViewVariablesBlobMembers.SoundSpecifierReferenceToken token:
-                    switch (token.Variant)
-                    {
-                        case "SoundCollectionSpecifier":
-                            typeButton.Select(1);
-                            editBox.Text = token.Value;
-                            break;
-                        case "SoundPathSpecifier":
-                            typeButton.Select(2);
-                            editBox.Text = token.Value;
-                            break;
-                    }
-
-                    break;
                 case SoundCollectionSpecifier collection:
-                    typeButton.Select(1);
+                    typeButton.SelectId(1);
                     editBox.Text = collection.Collection ?? string.Empty;
                     break;
                 case SoundPathSpecifier path:
-                    typeButton.Select(2);
+                    typeButton.SelectId(2);
                     editBox.Text = path.Path.ToString();
                     break;
             }
@@ -73,6 +63,14 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
         {
             typeButton.SelectId(args.Id);
             editBox.Text = string.Empty;
+
+            editBox.Editable = !ReadOnly && typeButton.SelectedId > 0;
+
+            if (typeButton.SelectedId == 0)
+            {
+                // Dummy value
+                ValueChanged(new SoundPathSpecifier(""));
+            }
         };
 
         editBox.OnTextEntered += args =>
@@ -83,9 +81,17 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
             switch (typeButton.SelectedId)
             {
                 case 1:
+                    if (!_protoManager.HasIndex<SoundCollectionPrototype>(args.Text))
+                        return;
+
                     ValueChanged(new SoundCollectionSpecifier(args.Text));
                     break;
                 case 2:
+                    var path = new ResPath(args.Text);
+
+                    if (!_resManager.ContentFileExists(path))
+                        return;
+
                     ValueChanged(new SoundPathSpecifier(args.Text));
                     break;
                 default:

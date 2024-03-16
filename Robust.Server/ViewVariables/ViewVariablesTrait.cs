@@ -97,6 +97,9 @@ namespace Robust.Server.ViewVariables
             if (value is EntityUid uid)
                 return IoCManager.Resolve<IEntityManager>().GetComponentOrNull<MetaDataComponent>(uid)?.NetEntity ?? NetEntity.Invalid;
 
+            if (value is SoundSpecifier)
+                return value;
+
             var valType = value.GetType();
             if (!valType.IsValueType)
             {
@@ -110,21 +113,6 @@ namespace Robust.Server.ViewVariables
                     {
                         Stringified = PrettyPrint.PrintUserFacing(value),
                         ID = ((IPrototype) value).ID, Variant = variant
-                    };
-                }
-
-                if (typeof(SoundSpecifier).IsAssignableFrom(valType))
-                {
-                    return new ViewVariablesBlobMembers.SoundSpecifierReferenceToken()
-                    {
-                        Stringified = PrettyPrint.PrintUserFacing(value),
-                        Variant = valType.Name,
-                        Value = value switch
-                        {
-                            SoundPathSpecifier path => path.Path.ToString(),
-                            SoundCollectionSpecifier collection => collection.Collection,
-                            _ => string.Empty
-                        },
                     };
                 }
 

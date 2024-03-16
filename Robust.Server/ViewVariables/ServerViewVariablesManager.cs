@@ -297,18 +297,6 @@ namespace Robust.Server.ViewVariables
 
                     output = prototype;
                     return true;
-                case ViewVariablesBlobMembers.SoundSpecifierReferenceToken sound:
-                    switch (sound.Variant)
-                    {
-                        case "SoundCollectionSpecifier":
-                            output = new SoundCollectionSpecifier(sound.Value);
-                            return true;
-                        case "SoundPathSpecifier":
-                            output = new SoundPathSpecifier(sound.Value);
-                            return true;
-                    }
-
-                    return false;
                 default:
                     return false;
             }

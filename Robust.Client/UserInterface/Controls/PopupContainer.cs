@@ -30,7 +30,6 @@ namespace Robust.Client.UserInterface.Controls
         public PopupContainer()
         {
             RectClipContent = true;
-            MouseFilter = MouseFilterMode.Ignore;
         }
 
         public static void SetPopupOrigin(Control control, Vector2 origin)

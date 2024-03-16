@@ -43,6 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+* Fix tooltips not clamping to the left side of the viewport.
 * Fix global audio property not being properly set.
 
 ### Other

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Audio;
@@ -8,11 +9,13 @@ using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Audio;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -23,6 +26,7 @@ namespace Robust.Client.ResourceManagement
     {
         [field: Dependency] public IClyde Clyde { get; } = default!;
         [field: Dependency] public IAudioInternal ClydeAudio { get; } = default!;
+        [Dependency] private readonly IParallelManager _parManager = default!;
         [Dependency] private readonly IResourceManager _manager = default!;
         [field: Dependency] public IFontManager FontManager { get; } = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
@@ -42,6 +46,37 @@ namespace Robust.Client.ResourceManagement
             PreloadRsis(sawmill);
         }
 
+        private record struct PreloadTextureJob : IRobustJob
+        {
+            private IResourceManager _manager;
+            private ISawmill _sawmill;
+
+            private TextureResource.LoadStepData _texData;
+
+            internal PreloadTextureJob(IResourceManager manager, ISawmill sawmill, TextureResource.LoadStepData texData)
+            {
+                _manager = manager;
+                _sawmill = sawmill;
+
+                _texData = texData;
+            }
+
+            public void Execute()
+            {
+                try
+                {
+                    TextureResource.LoadPreTexture(_manager, _texData);
+                }
+                catch (Exception e)
+                {
+                    // Mark failed loads as bad and skip them in the next few stages.
+                    // Avoids any silly array resizing or similar.
+                    _sawmill.Error($"Exception while loading RSI {_texData.Path}:\n{e}");
+                    _texData.Bad = true;
+                }
+            }
+        }
+
         private void PreloadTextures(ISawmill sawmill)
         {
             sawmill.Debug("Preloading textures...");
@@ -54,23 +89,22 @@ namespace Robust.Client.ResourceManagement
                 .Select(p => new TextureResource.LoadStepData {Path = p})
                 .ToArray();
 
-            Parallel.ForEach(texList, data =>
-            {
-                try
-                {
-                    TextureResource.LoadPreTexture(_manager, data);
-                }
-                catch (Exception e)
-                {
-                    // Mark failed loads as bad and skip them in the next few stages.
-                    // Avoids any silly array resizing or similar.
-                    sawmill.Error($"Exception while loading RSI {data.Path}:\n{e}");
-                    data.Bad = true;
-                }
-            });
+            // Queue the jobs up first, then wait for each one in sequence on main thread.
+            // This means main thread can run LoadTexture while other threads handle LoadPreTexture.
+            var waitHandles = new WaitHandle[texList.Length];
 
-            foreach (var data in texList)
+            for (var i = 0; i < waitHandles.Length; i++)
             {
+                var job = new PreloadTextureJob(_manager, sawmill, texList[i]);
+
+                waitHandles[i] = _parManager.Process(job);
+            }
+
+            for (var i = 0; i < texList.Length; i++)
+            {
+                waitHandles[i].WaitOne();
+                var data = texList[i];
+
                 if (data.Bad)
                     continue;
 
@@ -84,6 +118,8 @@ namespace Robust.Client.ResourceManagement
                     data.Bad = true;
                 }
             }
+
+            sawmill.Debug($"Preloaded textures in {sw.Elapsed.TotalMilliseconds}");
 
             var errors = 0;
             foreach (var data in texList)
@@ -107,6 +143,8 @@ namespace Robust.Client.ResourceManagement
                     errors += 1;
                 }
             }
+
+            sw.Stop();
 
             sawmill.Debug(
                 "Preloaded {CountLoaded} textures ({CountErrored} errored) in {LoadTime}",

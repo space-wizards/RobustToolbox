@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Robust.Shared.Collections;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -131,6 +132,147 @@ public static class RandomExtensions
         DebugTools.Assert(chance <= 1 && chance >= 0, $"Chance must be in the range 0-1. It was {chance}.");
 
         return random.NextDouble() < chance;
+    }
+
+    /// <summary>
+    /// Get set amount of random items from collection.
+    /// If <paramref name="allowDuplicates"/> is false and <paramref name="collection"/>
+    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="collection"/> clone.
+    /// If <paramref name="collection"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
+    /// </summary>
+    /// <param name="random">Instance of random to invoke upon.</param>
+    /// <param name="collection">Collection from which items should be picked.</param>
+    /// <param name="count">Count of random items to be picked.</param>
+    /// <param name="allowDuplicates">Marker, are duplicate items allowed in results.</param>
+    public static IReadOnlyCollection<T> GetItems<T>(this IRobustRandom random, IList<T> collection, int count, bool allowDuplicates = true)
+    {
+        if (collection.Count == 0 || count <= 0)
+        {
+            return Array.Empty<T>();
+        }
+
+        if (allowDuplicates == false && count >= collection.Count)
+        {
+            var arr = collection.ToArray();
+            random.Shuffle(arr);
+            return arr;
+        }
+
+        var maxCollectionIndex = collection.Count - 1;
+
+        var rolled = new T[count];
+        var selectedIndexes = new HashSet<int>();
+        for (int i = 0; i < count; i++)
+        {
+            var index = random.Next(maxCollectionIndex);
+            if (!allowDuplicates)
+            {
+                while (!selectedIndexes.Add(index))
+                {
+                    index = index == collection.Count
+                        ? 0
+                        : index + 1;
+                }
+            }
+
+            rolled[i] = collection[index];
+        }
+
+        return rolled;
+    }
+
+    /// <summary>
+    /// Get set amount of random items from collection.
+    /// If <paramref name="allowDuplicates"/> is false and <paramref name="collection"/>
+    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="collection"/> clone.
+    /// If <paramref name="collection"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
+    /// </summary>
+    /// <param name="random">Instance of random to invoke upon.</param>
+    /// <param name="collection">Collection from which items should be picked.</param>
+    /// <param name="count">Count of random items to be picked.</param>
+    /// <param name="allowDuplicates">Marker, are duplicate items allowed in results.</param>
+    public static ValueList<T> GetItems<T>(this IRobustRandom random, ValueList<T> collection, int count, bool allowDuplicates = true)
+    {
+        if (collection.Count == 0 || count <= 0)
+        {
+            return new ValueList<T>(0);
+        }
+
+        if (allowDuplicates == false && count >= collection.Count)
+        {
+            var arr = collection.ToArray();
+            random.Shuffle(arr);
+            return ValueList<T>.OwningArray(arr);
+        }
+
+        var maxCollectionIndex = collection.Count - 1;
+
+        var rolled = new T[count];
+        var selectedIndexes = new HashSet<int>();
+        for (int i = 0; i < count; i++)
+        {
+            var index = random.Next(maxCollectionIndex);
+            if (!allowDuplicates)
+            {
+                while (!selectedIndexes.Add(index))
+                {
+                    index = index == collection.Count
+                        ? 0
+                        : index + 1;
+                }
+            }
+
+            rolled[i] = collection[index];
+        }
+
+        return ValueList<T>.OwningArray(rolled);
+    }
+
+    /// <summary>
+    /// Get set amount of random items from collection.
+    /// If <paramref name="allowDuplicates"/> is false and <paramref name="collection"/>
+    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="collection"/> clone.
+    /// If <paramref name="collection"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
+    /// </summary>
+    /// <param name="random">Instance of random to invoke upon.</param>
+    /// <param name="collection">Collection from which items should be picked.</param>
+    /// <param name="count">Count of random items to be picked.</param>
+    /// <param name="allowDuplicates">Marker, are duplicate items allowed in results.</param>
+    public static Span<T> GetItems<T>(this IRobustRandom random, Span<T> collection, int count, bool allowDuplicates = true)
+    {
+        if (collection.Length == 0 || count <= 0)
+        {
+            return default;
+        }
+
+        if (allowDuplicates == false && count >= collection.Length)
+        {
+            var arr = collection.ToArray();
+            random.Shuffle(arr);
+            return arr;
+        }
+
+        var maxCollectionIndex = collection.Length - 1;
+
+        var rolled = new T[count];
+        var selectedIndexes = new HashSet<int>();
+        for (int i = 0; i < count; i++)
+        {
+            var index = random.Next(maxCollectionIndex);
+            if (!allowDuplicates)
+            {
+                while (!selectedIndexes.Add(index))
+                {
+                    index = index == collection.Length
+                        ? 0
+                        : index + 1;
+                }
+            }
+
+            rolled[i] = collection[index];
+        }
+
+        return rolled;
     }
 
     internal static void Shuffle<T>(Span<T> array, System.Random random)

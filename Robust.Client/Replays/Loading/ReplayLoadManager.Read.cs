@@ -153,7 +153,8 @@ public sealed partial class ReplayLoadManager
             duration = TimeSpan.Parse(((ValueDataNode) finalData[MetaFinalKeyDuration]).Value);
         }
 
-        var typeHash = Convert.FromHexString(((ValueDataNode) data[MetaKeyTypeHash]).Value);
+        var typeHashString = ((ValueDataNode) data[MetaKeyTypeHash]).Value;
+        var typeHash = Convert.FromHexString(typeHashString);
         var stringHash = Convert.FromHexString(((ValueDataNode) data[MetaKeyStringHash]).Value);
         var startTick = ((ValueDataNode) data[MetaKeyStartTick]).Value;
         var timeBaseTick = ((ValueDataNode) data[MetaKeyBaseTick]).Value;
@@ -161,7 +162,9 @@ public sealed partial class ReplayLoadManager
         var clientSide = bool.Parse(((ValueDataNode) data[MetaKeyIsClientRecording]).Value);
 
         if (!typeHash.SequenceEqual(_serializer.GetSerializableTypesHash()))
-            throw new Exception($"{nameof(IRobustSerializer)} hashes do not match. Loading replays using a bad replay-client version?");
+        {
+            _sawmill.Warning($"RobustSerializer hash mismatch. Replay may fail to load!!! Our hash: {_serializer.GetSerializableTypesHashString()}, replay hash: {typeHashString}");
+        }
 
         using var stringFile = fileReader.Open(FileStrings);
         var stringData = new byte[stringFile.Length];

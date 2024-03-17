@@ -195,11 +195,10 @@ public abstract class RandomExtensionsTests<T>
     public void GetItems_PickSomeItemsWithoutDuplicates_ReturnWithoutDuplicates()
     {
         // Arrange
-        Mock.Get(_underlyingRandom)
-            .SetupSequence(x => x.Next(Count))
-            .Returns(1)
-            .Returns(1)
-            .Returns(6);
+        var mock = Mock.Get(_underlyingRandom);
+        mock.Setup(x => x.Next(Count)).Returns(1);
+        mock.Setup(x => x.Next(Count - 1)).Returns(1);
+        mock.Setup(x => x.Next(Count - 2)).Returns(6);
 
         // Act
         var result = Invoke(_collection, 3, allowDuplicates: false);
@@ -212,18 +211,17 @@ public abstract class RandomExtensionsTests<T>
     public void GetItems_PickOneLessItemsThenOriginalCollectionHaveWithoutDuplicates_ReturnWithoutDuplicates()
     {
         // Arrange
-        Mock.Get(_underlyingRandom)
-            .SetupSequence(x => x.Next(Count))
-            .Returns(1)
-            .Returns(1)
-            .Returns(6)
-            .Returns(6)
-            .Returns(3)
-            .Returns(4)
-            .Returns(5)
-            .Returns(6)
-            .Returns(1)
-            .Returns(1);
+        var mock = Mock.Get(_underlyingRandom);
+        mock.Setup(x => x.Next(Count)).Returns(1);
+        mock.Setup(x => x.Next(Count - 1)).Returns(1);
+        mock.Setup(x => x.Next(Count - 2)).Returns(6);
+        mock.Setup(x => x.Next(Count - 3)).Returns(6);
+        mock.Setup(x => x.Next(Count - 4)).Returns(3);
+        mock.Setup(x => x.Next(Count - 5)).Returns(4);
+        mock.Setup(x => x.Next(Count - 6)).Returns(4);
+        mock.Setup(x => x.Next(Count - 7)).Returns(3);
+        mock.Setup(x => x.Next(Count - 8)).Returns(1);
+        mock.Setup(x => x.Next(Count - 9)).Returns(1);
 
         // Act
         var result = Invoke(_collection, 10, allowDuplicates: false);
@@ -280,6 +278,7 @@ public abstract class RandomExtensionsTests<T>
 
     /// <summary> Create concrete collection for tests. </summary>
     protected abstract T CreateCollection();
+
     /// <summary> Invoke method under test. Separate implementation types will have different overrides to be tested. </summary>
     protected abstract IReadOnlyCollection<string> Invoke(T collection, int count, bool allowDuplicates);
 }

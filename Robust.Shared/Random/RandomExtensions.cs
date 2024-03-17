@@ -161,21 +161,30 @@ public static class RandomExtensions
         var maxCollectionIndex = collection.Count;
 
         var rolled = new T[count];
-        var selectedIndexes = new HashSet<int>();
-        for (int i = 0; i < count; i++)
-        {
-            var index = random.Next(maxCollectionIndex);
-            if (!allowDuplicates)
-            {
-                while (!selectedIndexes.Add(index))
-                {
-                    index = index == collection.Count
-                        ? 0
-                        : index + 1;
-                }
-            }
 
-            rolled[i] = collection[index];
+        if (allowDuplicates)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                int virtualIndex = random.Next(maxCollectionIndex);
+                rolled[i] = collection[virtualIndex];
+            }
+        }
+        else
+        {
+            HashSet<int> selectedIndexes = new(count);
+            for (int i = 0; i < count; i++)
+            {
+                int virtualIndex = random.Next(maxCollectionIndex - i);
+                while (!selectedIndexes.Add(virtualIndex))
+                {
+                    virtualIndex = virtualIndex == collection.Count
+                        ? 0
+                        : virtualIndex + 1;
+                }
+
+                rolled[i] = collection[virtualIndex];
+            }
         }
 
         return rolled;
@@ -208,21 +217,30 @@ public static class RandomExtensions
         var maxCollectionIndex = collection.Count;
 
         var rolled = new T[count];
-        var selectedIndexes = new HashSet<int>();
-        for (int i = 0; i < count; i++)
-        {
-            var index = random.Next(maxCollectionIndex);
-            if (!allowDuplicates)
-            {
-                while (!selectedIndexes.Add(index))
-                {
-                    index = index == collection.Count
-                        ? 0
-                        : index + 1;
-                }
-            }
 
-            rolled[i] = collection[index];
+        if (allowDuplicates)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                int virtualIndex = random.Next(maxCollectionIndex);
+                rolled[i] = collection[virtualIndex];
+            }
+        }
+        else
+        {
+            HashSet<int> selectedIndexes = new(count);
+            for (int i = 0; i < count; i++)
+            {
+                int virtualIndex = random.Next(maxCollectionIndex - i);
+                while (!selectedIndexes.Add(virtualIndex))
+                {
+                    virtualIndex = virtualIndex == collection.Count
+                        ? 0
+                        : virtualIndex + 1;
+                }
+
+                rolled[i] = collection[virtualIndex];
+            }
         }
 
         return ValueList<T>.OwningArray(rolled);
@@ -255,21 +273,30 @@ public static class RandomExtensions
         var maxCollectionIndex = collection.Length;
 
         var rolled = new T[count];
-        var selectedIndexes = new HashSet<int>();
-        for (int i = 0; i < count; i++)
-        {
-            var index = random.Next(maxCollectionIndex);
-            if (!allowDuplicates)
-            {
-                while (!selectedIndexes.Add(index))
-                {
-                    index = index == collection.Length
-                        ? 0
-                        : index + 1;
-                }
-            }
 
-            rolled[i] = collection[index];
+        if (allowDuplicates)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                int virtualIndex = random.Next(maxCollectionIndex);
+                rolled[i] = collection[virtualIndex];
+            }
+        }
+        else
+        {
+            HashSet<int> selectedIndexes = new(count);
+            for (int i = 0; i < count; i++)
+            {
+                int virtualIndex = random.Next(maxCollectionIndex - i);
+                while (!selectedIndexes.Add(virtualIndex))
+                {
+                    virtualIndex = virtualIndex == collection.Length
+                        ? 0
+                        : virtualIndex + 1;
+                }
+
+                rolled[i] = collection[virtualIndex];
+            }
         }
 
         return rolled;

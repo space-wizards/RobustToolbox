@@ -158,7 +158,7 @@ public static class RandomExtensions
             return arr;
         }
 
-        var maxCollectionIndex = collection.Count - 1;
+        var maxCollectionIndex = collection.Count;
 
         var rolled = new T[count];
         var selectedIndexes = new HashSet<int>();
@@ -205,7 +205,7 @@ public static class RandomExtensions
             return ValueList<T>.OwningArray(arr);
         }
 
-        var maxCollectionIndex = collection.Count - 1;
+        var maxCollectionIndex = collection.Count;
 
         var rolled = new T[count];
         var selectedIndexes = new HashSet<int>();
@@ -252,7 +252,7 @@ public static class RandomExtensions
             return arr;
         }
 
-        var maxCollectionIndex = collection.Length - 1;
+        var maxCollectionIndex = collection.Length;
 
         var rolled = new T[count];
         var selectedIndexes = new HashSet<int>();

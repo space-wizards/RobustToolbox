@@ -76,9 +76,8 @@ public abstract class RandomExtensionsTests<T>
     public void GetItems_PickOneFromList_ReturnOfRandomizedIndex()
     {
         // Arrange
-        var maxIndexInCollection = Count - 1;
         Mock.Get(_underlyingRandom)
-            .Setup(x => x.Next(maxIndexInCollection))
+            .Setup(x => x.Next(Count))
             .Returns(8);
 
         // Act
@@ -94,9 +93,8 @@ public abstract class RandomExtensionsTests<T>
     public void GetItems_PickOneFromListWithoutDuplicates_ReturnOfRandomizedIndex()
     {
         // Arrange
-        var maxIndexInCollection = Count - 1;
         Mock.Get(_underlyingRandom)
-            .Setup(x => x.Next(maxIndexInCollection))
+            .Setup(x => x.Next(Count))
             .Returns(8);
 
         // Act
@@ -111,9 +109,8 @@ public abstract class RandomExtensionsTests<T>
     public void GetItems_PickSomeFromList_ReturnOfRandomizedIndex()
     {
         // Arrange
-        var maxIndexInCollection = Count - 1;
         Mock.Get(_underlyingRandom)
-            .SetupSequence(x => x.Next(maxIndexInCollection))
+            .SetupSequence(x => x.Next(Count))
             .Returns(8)
             .Returns(3)
             .Returns(2);
@@ -129,9 +126,8 @@ public abstract class RandomExtensionsTests<T>
     public void GetItems_PickSomeFromListWhileRollingDuplicates_ReturnWithDuplicates()
     {
         // Arrange
-        var maxIndexInCollection = Count - 1;
         Mock.Get(_underlyingRandom)
-            .SetupSequence(x => x.Next(maxIndexInCollection))
+            .SetupSequence(x => x.Next(Count))
             .Returns(8)
             .Returns(2)
             .Returns(2)
@@ -148,9 +144,8 @@ public abstract class RandomExtensionsTests<T>
     public void GetItems_PickSameAmountAsOriginalCollection_ReturnWithDuplicates()
     {
         // Arrange
-        var maxIndexInCollection = Count - 1;
         Mock.Get(_underlyingRandom)
-            .SetupSequence(x => x.Next(maxIndexInCollection))
+            .SetupSequence(x => x.Next(Count))
             .Returns(0)
             .Returns(2)
             .Returns(2)
@@ -174,9 +169,8 @@ public abstract class RandomExtensionsTests<T>
     public void GetItems_PickMoreItemsThenOriginalCollectionHave_ReturnWithDuplicates()
     {
         // Arrange
-        var maxIndexInCollection = Count - 1;
         Mock.Get(_underlyingRandom)
-            .SetupSequence(x => x.Next(maxIndexInCollection))
+            .SetupSequence(x => x.Next(Count))
             .Returns(0)
             .Returns(2)
             .Returns(2)
@@ -201,9 +195,8 @@ public abstract class RandomExtensionsTests<T>
     public void GetItems_PickSomeItemsWithoutDuplicates_ReturnWithoutDuplicates()
     {
         // Arrange
-        var maxIndexInCollection = Count - 1;
         Mock.Get(_underlyingRandom)
-            .SetupSequence(x => x.Next(maxIndexInCollection))
+            .SetupSequence(x => x.Next(Count))
             .Returns(1)
             .Returns(1)
             .Returns(6);
@@ -219,9 +212,8 @@ public abstract class RandomExtensionsTests<T>
     public void GetItems_PickOneLessItemsThenOriginalCollectionHaveWithoutDuplicates_ReturnWithoutDuplicates()
     {
         // Arrange
-        var maxIndexInCollection = Count - 1;
         Mock.Get(_underlyingRandom)
-            .SetupSequence(x => x.Next(maxIndexInCollection))
+            .SetupSequence(x => x.Next(Count))
             .Returns(1)
             .Returns(1)
             .Returns(6)

@@ -177,16 +177,14 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public bool TryContentFileRead(ResPath? path, [NotNullWhen(true)] out Stream? fileStream)
         {
-            fileStream = null;
-
             if (path == null)
             {
-                return false;
+                throw new ArgumentNullException(nameof(path));
             }
 
             if (!path.Value.IsRooted)
             {
-                return false;
+                throw new ArgumentException($"Path '{path}' must be rooted", nameof(path));
             }
 #if DEBUG
             if (!IsPathValid(path.Value))

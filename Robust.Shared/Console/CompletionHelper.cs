@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
@@ -31,23 +32,28 @@ public static class CompletionHelper
     public static IEnumerable<CompletionOption> AudioFilePath(string arg, IPrototypeManager protoManager,
         IResourceManager res)
     {
-        var results = new ValueList<CompletionOption>();
+        var resPath = GetUpdatedPath(arg);
+        var paths = new HashSet<string>();
 
-        foreach (var proto in protoManager.EnumeratePrototypes<AudioMetadataPrototype>())
+        foreach (var path in res.ContentGetDirectoryEntries(resPath))
         {
-            if (!proto.ID.StartsWith(arg))
-                continue;
-
-            results.Add(new CompletionOption(proto.ID));
+            paths.Add(path);
         }
 
-        results.AddRange(ContentFilePath(arg, res));
-        results.Sort();
+        foreach (var audioProto in protoManager.EnumeratePrototypes<AudioMetadataPrototype>())
+        {
+            var hero = new ResPath(audioProto.ID);
 
-        return results;
+            if (!hero.TryRelativeTo(resPath, out _))
+                continue;
+
+            paths.Add(hero.GetNextSegment(resPath).ToString());
+        }
+
+        return GetPaths(resPath, paths, res);
     }
 
-    public static IEnumerable<CompletionOption> ContentFilePath(string arg, IResourceManager res)
+    private static ResPath GetUpdatedPath(string arg)
     {
         var curPath = arg;
         if (!curPath.StartsWith("/"))
@@ -55,12 +61,18 @@ public static class CompletionHelper
 
         var resPath = new ResPath(curPath);
 
-        if (!curPath.EndsWith("/")){
+        if (!curPath.EndsWith("/"))
+        {
             resPath /= "..";
             resPath = resPath.Clean();
         }
 
-        var options = res.ContentGetDirectoryEntries(resPath)
+        return resPath;
+    }
+
+    private static IEnumerable<CompletionOption> GetPaths(ResPath resPath, IEnumerable<string> inputs, IResourceManager res)
+    {
+        var options = inputs
             .OrderBy(c => c)
             .Select(c =>
             {
@@ -73,6 +85,12 @@ public static class CompletionHelper
             });
 
         return options;
+    }
+
+    public static IEnumerable<CompletionOption> ContentFilePath(string arg, IResourceManager res)
+    {
+        var resPath = GetUpdatedPath(arg);
+        return GetPaths(resPath, res.ContentGetDirectoryEntries(resPath), res);
     }
 
     public static IEnumerable<CompletionOption> ContentDirPath(string arg, IResourceManager res)

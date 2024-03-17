@@ -1,58 +1,57 @@
 using System;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Random
+namespace Robust.Shared.Random;
+
+public sealed class RobustRandom : IRobustRandom
 {
-    public sealed class RobustRandom : IRobustRandom
+    private System.Random _random = new();
+
+    public System.Random GetRandom() => _random;
+
+    public void SetSeed(int seed)
     {
-        private System.Random _random = new();
+        _random = new(seed);
+    }
 
-        public System.Random GetRandom() => _random;
+    public float NextFloat()
+    {
+        return _random.NextFloat();
+    }
 
-        public void SetSeed(int seed)
-        {
-            _random = new(seed);
-        }
+    public int Next()
+    {
+        return _random.Next();
+    }
 
-        public float NextFloat()
-        {
-            return _random.NextFloat();
-        }
+    public int Next(int minValue, int maxValue)
+    {
+        return _random.Next(minValue, maxValue);
+    }
 
-        public int Next()
-        {
-            return _random.Next();
-        }
+    public TimeSpan Next(TimeSpan minTime, TimeSpan maxTime)
+    {
+        DebugTools.Assert(minTime < maxTime);
+        return minTime + (maxTime - minTime) * _random.NextDouble();
+    }
 
-        public int Next(int minValue, int maxValue)
-        {
-            return _random.Next(minValue, maxValue);
-        }
+    public TimeSpan Next(TimeSpan maxTime)
+    {
+        return Next(TimeSpan.Zero, maxTime);
+    }
 
-        public TimeSpan Next(TimeSpan minTime, TimeSpan maxTime)
-        {
-            DebugTools.Assert(minTime < maxTime);
-            return minTime + (maxTime - minTime) * _random.NextDouble();
-        }
+    public int Next(int maxValue)
+    {
+        return _random.Next(maxValue);
+    }
 
-        public TimeSpan Next(TimeSpan maxTime)
-        {
-            return Next(TimeSpan.Zero, maxTime);
-        }
+    public double NextDouble()
+    {
+        return _random.NextDouble();
+    }
 
-        public int Next(int maxValue)
-        {
-            return _random.Next(maxValue);
-        }
-
-        public double NextDouble()
-        {
-            return _random.NextDouble();
-        }
-
-        public void NextBytes(byte[] buffer)
-        {
-            _random.NextBytes(buffer);
-        }
+    public void NextBytes(byte[] buffer)
+    {
+        _random.NextBytes(buffer);
     }
 }

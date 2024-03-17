@@ -555,7 +555,7 @@ namespace Robust.Client.Console.Commands
                 if (type != typeof(Control))
                     cname = $"Control > {cname}";
 
-                returnVal.GetOrNew(cname).Add((member.Name, member.GetValue(control)?.ToString() ?? "null"));
+                returnVal.GetOrNew(cname).Add((member.Name, GetMemberValue(member, control, ", ")));
             }
 
             foreach (var (attachedProperty, value) in control.AllAttachedProperties)
@@ -569,6 +569,28 @@ namespace Robust.Client.Console.Commands
                 v.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
             }
             return returnVal;
+        }
+
+        internal static string PropertyValuesString(Control control, string key)
+        {
+            var member = GetAllMembers(control).Find(m => m.Name == key);
+            return GetMemberValue(member, control, "\n", "\"{0}\"");
+        }
+
+        private static string GetMemberValue(MemberInfo? member, Control control, string separator, string
+                wrap = "{0}")
+        {
+            var value = member?.GetValue(control);
+            var o = value switch
+            {
+                ICollection<Control> controls => string.Join(separator,
+                    controls.Select(ctrl => $"{ctrl.Name}({ctrl.GetType()})")),
+                ICollection<string> list => string.Join(separator, list),
+                null => null,
+                _ => value.ToString()
+            };
+            // Convert to quote surrounded string or null with no quotes
+            return o is not null ? string.Format(wrap, o) : "null";
         }
     }
 

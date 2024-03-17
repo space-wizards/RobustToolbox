@@ -3,6 +3,14 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Random;
 
+/// <summary>
+/// Wrapper for <see cref="Random"/>.
+/// </summary>
+/// <remarks>
+/// This should not contain any logic, not directly related to calling specific methods of <see cref="Random"/>.
+/// To write additional logic, attached to random roll, please create interface-implemented methods on <see cref="IRobustRandom"/>
+/// or add it to <see cref="RandomExtensions"/>.
+/// </remarks>
 public sealed class RobustRandom : IRobustRandom
 {
     private System.Random _random = new();

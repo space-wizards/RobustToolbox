@@ -129,7 +129,7 @@ public sealed partial class ReplayLoadManager
         return parsed.FirstOrDefault()?.Root as MappingDataNode;
     }
 
-    private (MappingDataNode YamlData, HashSet<string> CVars, TimeSpan Duration, TimeSpan StartTime, bool ClientSide)
+    private (MappingDataNode YamlData, HashSet<string> CVars, TimeSpan? Duration, TimeSpan StartTime, bool ClientSide)
         LoadMetadata(IReplayFileReader fileReader)
     {
         _sawmill.Info($"Reading replay metadata");
@@ -137,21 +137,13 @@ public sealed partial class ReplayLoadManager
         if (data == null)
             throw new Exception("Failed to load yaml metadata");
 
-        TimeSpan duration;
         var finalData = LoadYamlFinalMetadata(fileReader);
-        if (finalData == null)
-        {
-            var msg = "Failed to load final yaml metadata";
-            if (!_confMan.GetCVar(CVars.ReplayIgnoreErrors))
-                throw new Exception(msg);
+        TimeSpan? duration = finalData == null
+            ? null
+            : TimeSpan.Parse(((ValueDataNode) finalData[MetaFinalKeyDuration]).Value);
 
-            _sawmill.Error(msg);
-            duration = TimeSpan.FromDays(1);
-        }
-        else
-        {
-            duration = TimeSpan.Parse(((ValueDataNode) finalData[MetaFinalKeyDuration]).Value);
-        }
+        if (finalData == null)
+            _sawmill.Warning("Failed to load final yaml metadata. Partial/incomplete replay?");
 
         var typeHashString = ((ValueDataNode) data[MetaKeyTypeHash]).Value;
         var typeHash = Convert.FromHexString(typeHashString);
@@ -163,7 +155,10 @@ public sealed partial class ReplayLoadManager
 
         if (!typeHash.SequenceEqual(_serializer.GetSerializableTypesHash()))
         {
-            _sawmill.Warning($"RobustSerializer hash mismatch. Replay may fail to load!!! Our hash: {_serializer.GetSerializableTypesHashString()}, replay hash: {typeHashString}");
+            if (!_confMan.GetCVar(CVars.ReplayIgnoreErrors))
+                throw new Exception($"RobustSerializer hash mismatch. do not match. Client hash: {_serializer.GetSerializableTypesHashString()}, replay hash: {typeHashString}.");
+
+            _sawmill.Warning($"RobustSerializer hash mismatch. Replay may fail to load!");
         }
 
         using var stringFile = fileReader.Open(FileStrings);

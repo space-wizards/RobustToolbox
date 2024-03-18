@@ -132,7 +132,7 @@ public partial class SharedPhysicsSystem
 
         body.Force += force;
         body.Torque += Vector2Helpers.Cross(point - body._localCenter, force);
-        Dirty(body);
+        Dirty(uid, body);
     }
 
     public void ApplyForce(EntityUid uid, Vector2 force, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -143,7 +143,7 @@ public partial class SharedPhysicsSystem
         }
 
         body.Force += force;
-        Dirty(body);
+        Dirty(uid, body);
     }
 
     public void ApplyTorque(EntityUid uid, float torque, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -154,7 +154,7 @@ public partial class SharedPhysicsSystem
         }
 
         body.Torque += torque;
-        Dirty(body);
+        Dirty(uid, body);
     }
 
     public void ApplyLinearImpulse(EntityUid uid, Vector2 impulse, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -261,7 +261,7 @@ public partial class SharedPhysicsSystem
         if (((int) body.BodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
         {
             body._localCenter = Vector2.Zero;
-            Dirty(body);
+            Dirty(uid, body);
             return;
         }
 
@@ -296,7 +296,7 @@ public partial class SharedPhysicsSystem
 
         // Update center of mass velocity.
         body.LinearVelocity += Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
-        Dirty(body);
+        Dirty(uid, body);
     }
 
     public void SetAngularVelocity(EntityUid uid, float value, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -531,7 +531,7 @@ public partial class SharedPhysicsSystem
         }
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
 
         return value;
     }
@@ -546,7 +546,7 @@ public partial class SharedPhysicsSystem
         ResetMassData(uid, manager: manager, body: body);
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     public void SetFriction(PhysicsComponent body, float value, bool dirty = true)
@@ -599,7 +599,7 @@ public partial class SharedPhysicsSystem
         body.SleepingAllowed = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     public void SetSleepTime(PhysicsComponent body, float value)

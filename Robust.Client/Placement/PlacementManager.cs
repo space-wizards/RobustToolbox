@@ -79,6 +79,10 @@ namespace Robust.Client.Placement
             private set
             {
                 _isActive = value;
+
+                if (CurrentPermission?.UseEditorContext is false)
+                    return;
+
                 SwitchEditorContext(value);
             }
         }

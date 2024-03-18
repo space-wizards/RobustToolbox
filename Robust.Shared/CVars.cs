@@ -1611,7 +1611,8 @@ namespace Robust.Shared
         /// original exception rather than sending people on a wild-goose chase to find a non-existent bug.
         /// </remarks>
         public static readonly CVarDef<bool> ReplayIgnoreErrors =
-            CVarDef.Create("replay.ignore_errors", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("replay.ignore_errors", false, CVar.CLIENTONLY);
+
         /*
          * CFG
          */

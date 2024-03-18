@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* The replay system now allows loading a replay with a mismatching serializer type hash. This means replays should be more robust against future version updates (engine security patches or .NET updates).
 
 ### Internal
 

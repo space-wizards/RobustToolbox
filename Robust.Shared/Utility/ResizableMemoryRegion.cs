@@ -15,9 +15,9 @@ namespace Robust.Shared.Utility;
 /// </summary>
 internal static class ResizableMemoryRegionMetrics
 {
-    public static readonly Meter Meter = new("Robust.Shared.Utility.ResizableMemoryRegion");
+    public static readonly Meter Meter = new("Robust.ResizableMemoryRegion");
 
-    public const string GaugeName = "robust_resizable_memory_used_bytes";
+    public const string GaugeName = "used_bytes";
 }
 
 // TODO: Proper implementation on Linux that uses mmap()/madvise()/mprotect().

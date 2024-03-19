@@ -3,6 +3,7 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -200,7 +201,7 @@ namespace Robust.Shared.Map
             var gridIdOpt = GetGridUid(entityManager);
             if (gridIdOpt is { } gridId && gridId.IsValid())
             {
-                var grid = mapManager.GetGrid(gridId);
+                var grid = entityManager.GetComponent<MapGridComponent>(gridId);
                 return mapSystem.GetTileRef(gridId, grid, this).GridIndices;
             }
 

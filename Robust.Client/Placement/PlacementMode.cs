@@ -11,6 +11,7 @@ using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
@@ -193,7 +194,7 @@ namespace Robust.Client.Placement
         public TileRef GetTileRef(EntityCoordinates coordinates)
         {
             var gridUidOpt = coordinates.GetGridUid(pManager.EntityManager);
-            return gridUidOpt is EntityUid gridUid && gridUid.IsValid() ? pManager.MapManager.GetGrid(gridUid).GetTileRef(MouseCoords)
+            return gridUidOpt is EntityUid gridUid && gridUid.IsValid() ? pManager.EntityManager.GetComponent<MapGridComponent>(gridUid).GetTileRef(MouseCoords)
                 : new TileRef(gridUidOpt ?? EntityUid.Invalid,
                     MouseCoords.ToVector2i(pManager.EntityManager, pManager.MapManager), Tile.Empty);
         }

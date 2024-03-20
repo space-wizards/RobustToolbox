@@ -20,7 +20,8 @@ namespace Robust.Shared.Map
                 return mapSystem.GridTileToLocal(gridId.Value, mapGrid, mapSystem.CoordinatesToTile(gridId.Value, mapGrid, coords));
             }
 
-            var mapCoords = coords.ToMap(entityManager);
+            var transformSystem = entityManager.System<SharedTransformSystem>();
+            var mapCoords = coords.ToMap(entityManager, transformSystem);
 
             if (mapManager.TryFindGridAt(mapCoords, out var gridUid, out mapGrid))
             {

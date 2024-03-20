@@ -110,7 +110,7 @@ namespace Robust.Shared.Map
         [Obsolete("Use ToMapPos() with TransformSystem overload")]
         public Vector2 ToMapPos(IEntityManager entityManager)
         {
-            return ToMap(entityManager).Position;
+            return ToMap(entityManager, entityManager.System<SharedTransformSystem>()).Position;
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace Robust.Shared.Map
         [Obsolete("Use overload with other parameter order.")]
         public static EntityCoordinates FromMap(IEntityManager entityManager, EntityUid entityUid, MapCoordinates coordinates)
         {
-            return FromMap(entityUid, coordinates, entityManager);
+            return FromMap(entityUid, coordinates, entityManager.System<SharedTransformSystem>(), entityManager);
         }
 
         /// <summary>

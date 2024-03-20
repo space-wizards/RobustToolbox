@@ -207,7 +207,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
                     var circle = entityManager.AddComponent<PhysicsComponent>(circleUid);
                     var manager = entityManager.EnsureComponent<FixturesComponent>(circleUid);
 
-                    physSystem.SetLinearDamping(circle, 0.05f);
+                    physSystem.SetLinearDamping(circleUid, circle, 0.05f);
                     physSystem.SetBodyType(circleUid, BodyType.Dynamic, manager: manager, body: circle);
                     shape = new PhysShapeCircle(0.5f);
                     fixtureSystem.CreateFixture(circleUid, "fix1",  new Fixture(shape, 1, 1, true), manager: manager, body: circle);

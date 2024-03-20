@@ -39,7 +39,8 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Made a new `IMetricsManager` interface with an `UpdateMetrics` event that can be used to update Prometheus metrics whenever they are scraped.
+  * Also added a `metrics.update_interval` CVar to go along with this, when metrics are scraped without usage of Prometheus directly.
 
 ### Bugfixes
 

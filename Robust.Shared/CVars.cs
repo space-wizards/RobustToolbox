@@ -417,6 +417,35 @@ namespace Robust.Shared
             CVarDef.Create("metrics.port", 44880, CVar.SERVERONLY);
 
         /// <summary>
+        /// Sets a fixed interval (seconds) for internal collection of certain metrics,
+        /// when not using the Prometheus metrics server.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Most metrics are internally implemented directly via the prometheus-net library.
+        /// These metrics can only be scraped by the Prometheus metrics server (<see cref="MetricsEnabled"/>).
+        /// However, newer metrics are implemented with the <c>System.Diagnostics.Metrics</c> library in the .NET runtime.
+        /// These metrics can be scraped through more means, such as <c>dotnet counters</c>.
+        /// </para>
+        /// <para>
+        /// While many metrics are simple counters that can "just" be reported,
+        /// some metrics require more advanced internal work and need some code to be ran internally
+        /// before their values are made current. When collecting metrics via a
+        /// method other than the Prometheus metrics server, these metrics pose a problem,
+        /// as there is no way for the game to update them before collection properly.
+        /// </para>
+        /// <para>
+        /// This CVar acts as a fallback: if set to a value other than 0 (disabled),
+        /// these metrics will be internally updated at the interval provided.
+        /// </para>
+        /// <para>
+        /// This does not need to be enabled if metrics are collected exclusively via the Prometheus metrics server.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<float> MetricsUpdateInterval =
+            CVarDef.Create("metrics.update_interval", 0f, CVar.SERVERONLY);
+
+        /// <summary>
         /// Enable detailed runtime metrics. Empty to disable.
         /// </summary>
         /// <remarks>

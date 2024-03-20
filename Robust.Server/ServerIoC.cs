@@ -80,6 +80,7 @@ namespace Robust.Server
             deps.Register<IWatchdogApi, WatchdogApi>();
             deps.Register<IScriptHost, ScriptHost>();
             deps.Register<IMetricsManager, MetricsManager>();
+            deps.Register<IMetricsManagerInternal, MetricsManager>();
             deps.Register<IAuthManager, AuthManager>();
             deps.Register<HubManager, HubManager>();
             deps.Register<IRobustSerializer, ServerRobustSerializer>();

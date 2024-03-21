@@ -35,7 +35,8 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `GrammarComponent` now has access so you must use `GrammarSystem`.
+* `GrammarComponent` has been moved to `Robust.Shared.GameObjects`.
 
 ### New features
 

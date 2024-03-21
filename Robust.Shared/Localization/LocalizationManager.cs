@@ -28,6 +28,8 @@ namespace Robust.Shared.Localization
         [Dependency] private readonly IPrototypeManager _prototype = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
 
+        private GrammarSystem _grammar = default!;
+
         private ISawmill _logSawmill = default!;
         private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();
 
@@ -38,6 +40,8 @@ namespace Robust.Shared.Localization
         {
             _logSawmill = _log.GetSawmill("loc");
             _prototype.PrototypesReloaded += OnPrototypesReloaded;
+
+            _grammar = _entMan.System<GrammarSystem>();
         }
 
         public string GetString(string messageId)

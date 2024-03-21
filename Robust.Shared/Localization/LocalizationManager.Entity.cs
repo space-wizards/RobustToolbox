@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Linguini.Bundle.Errors;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Localization;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 
@@ -25,9 +24,9 @@ namespace Robust.Shared.Localization
 
         private bool TryGetEntityLocAttrib(EntityUid entity, string attribute, [NotNullWhen(true)] out string? value)
         {
-            if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) &&
-                grammar.Attributes.TryGetValue(attribute, out value))
+            if (_grammar.GetAttribute(entity, attribute) is {} valueReal)
             {
+                value = valueReal;
                 return true;
             }
 

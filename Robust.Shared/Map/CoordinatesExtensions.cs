@@ -15,7 +15,7 @@ namespace Robust.Shared.Map
             var gridId = coords.GetGridUid(entityManager);
             var mapSystem = entityManager.System<SharedMapSystem>();
 
-            if (mapManager.TryGetGrid(gridId, out var mapGrid))
+            if (entityManager.TryGetComponent<MapGridComponent>(gridId, out var mapGrid))
             {
                 return mapSystem.GridTileToLocal(gridId.Value, mapGrid, mapSystem.CoordinatesToTile(gridId.Value, mapGrid, coords));
             }

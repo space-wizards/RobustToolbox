@@ -25,8 +25,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         foreach (var prototypeData in component.InterfaceData)
         {
-            component.Interfaces[prototypeData.UiKey] = new PlayerBoundUserInterface(prototypeData, uid);
-            component.MappedInterfaceData[prototypeData.UiKey] = prototypeData;
+            AddUi((uid, component), prototypeData);
         }
     }
 
@@ -103,6 +102,19 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     protected virtual void CloseShared(PlayerBoundUserInterface bui, ICommonSession session,
         ActiveUserInterfaceComponent? activeUis = null)
     {
+    }
+
+    /// <summary>
+    /// Add a UI after an entity has been created.
+    /// It cannot be added already.
+    /// </summary>
+    public void AddUi(Entity<UserInterfaceComponent?> ent, PrototypeData data)
+    {
+        if (!Resolve(ent, ref ent.Comp))
+            return;
+
+        ent.Comp.Interfaces[data.UiKey] = new PlayerBoundUserInterface(data, ent);
+        ent.Comp.MappedInterfaceData[data.UiKey] = data;
     }
 
     public bool TryGetUi(EntityUid uid, Enum uiKey, [NotNullWhen(true)] out PlayerBoundUserInterface? bui, UserInterfaceComponent? ui = null)

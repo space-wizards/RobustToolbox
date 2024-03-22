@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using Robust.Server.Configuration;
 using Robust.Server.Console;
 using Robust.Server.DataMetrics;
@@ -81,6 +82,7 @@ namespace Robust.Server
             deps.Register<IScriptHost, ScriptHost>();
             deps.Register<IMetricsManager, MetricsManager>();
             deps.Register<IMetricsManagerInternal, MetricsManager>();
+            deps.Register<IMeterFactory, MetricsManager>();
             deps.Register<IAuthManager, AuthManager>();
             deps.Register<HubManager, HubManager>();
             deps.Register<IRobustSerializer, ServerRobustSerializer>();

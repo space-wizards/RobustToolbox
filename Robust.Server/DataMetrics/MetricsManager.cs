@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.Metrics;
 using System.Diagnostics.Tracing;
 using System.Globalization;
 using System.Linq;
@@ -26,6 +27,7 @@ namespace Robust.Server.DataMetrics;
 /// </para>
 /// <para>
 /// Metrics can be added through the types in <c>System.Diagnostics.Metrics</c> or <c>Prometheus</c>.
+/// IoC contains an implementation of <see cref="IMeterFactory"/> that can be used to instantiate meters.
 /// </para>
 /// </remarks>
 public interface IMetricsManager
@@ -101,6 +103,8 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
 
     async void IDisposable.Dispose()
     {
+        DisposeMeters();
+
         await Stop();
 
         _initialized = false;

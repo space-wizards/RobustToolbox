@@ -48,7 +48,7 @@ public sealed class CommandRun
                 break;
 
             // Prevent auto completions from dumping a list of all commands at the end of any complete command.
-            if (parserContext.Index == parserContext.MaxIndex + 1)
+            if (parserContext.Index > parserContext.MaxIndex)
                 break;
         }
 

@@ -127,7 +127,7 @@ internal sealed class ToolshedCommandImplementor
                 args = null;
 
                 // Only generate auto-completions if the parsing error happened for the last argument.
-                if (doAutocomplete && parserContext.Index == parserContext.MaxIndex + 1)
+                if (doAutocomplete && parserContext.Index > parserContext.MaxIndex)
                 {
                     parserContext.Restore(chkpoint);
                     autocomplete = _toolshedManager.TryAutocomplete(parserContext, argument.ParameterType, null);
@@ -136,7 +136,7 @@ internal sealed class ToolshedCommandImplementor
             }
             args[argument.Name!] = parsed;
 
-            if (!doAutocomplete || parserContext.Index != parserContext.MaxIndex + 1)
+            if (!doAutocomplete || parserContext.Index <= parserContext.MaxIndex)
                 continue;
 
             // This was the end of the input, so we want to get completions for the current argument, not the next argument.

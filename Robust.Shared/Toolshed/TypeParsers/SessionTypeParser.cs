@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Player;
 using Robust.Shared.Toolshed.Errors;
@@ -37,7 +38,7 @@ internal sealed class SessionTypeParser : TypeParser<ICommonSession>
             return true;
         }
 
-        error = new InvalidUsername(Loc.GetString("cmd-parse-failure-session", ("username", word)));
+        error = new InvalidUsername(Loc, word);
         error.Contextualize(parser.Input, (start, parser.Index));
         return false;
     }
@@ -49,11 +50,11 @@ internal sealed class SessionTypeParser : TypeParser<ICommonSession>
         return (CompletionResult.FromHintOptions(opts, "<player session>"), null);
     }
 
-    public record InvalidUsername(string msg) : IConError
+    public record InvalidUsername(ILocalizationManager Loc, string Username) : IConError
     {
         public FormattedMessage DescribeInner()
         {
-            return FormattedMessage.FromMarkup(msg);
+            return FormattedMessage.FromMarkup(Loc.GetString("cmd-parse-failure-session", ("username", Username)));
         }
 
         public string? Expression { get; set; }

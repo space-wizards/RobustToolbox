@@ -65,16 +65,26 @@ namespace Robust.Shared
             CVarDef.Create("net.pool_size", 512, CVar.CLIENT | CVar.SERVER);
 
         /// <summary>
-        /// Maximum UDP payload size to send.
+        /// Maximum UDP payload size to send by default, for IPv4.
         /// </summary>
         /// <seealso cref="NetMtuExpand"/>
+        /// <seealso cref="NetMtuIpv6"/>
         public static readonly CVarDef<int> NetMtu =
             CVarDef.Create("net.mtu", 900, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum UDP payload size to send by default, for IPv6.
+        /// </summary>
+        /// <seealso cref="NetMtu"/>
+        /// <seealso cref="NetMtuExpand"/>
+        public static readonly CVarDef<int> NetMtuIpv6 =
+            CVarDef.Create("net.mtu_ipv6", NetPeerConfiguration.kDefaultMTUV6, CVar.ARCHIVE);
 
         /// <summary>
         /// If set, automatically try to detect MTU above <see cref="NetMtu"/>.
         /// </summary>
         /// <seealso cref="NetMtu"/>
+        /// <seealso cref="NetMtuIpv6"/>
         /// <seealso cref="NetMtuExpandFrequency"/>
         /// <seealso cref="NetMtuExpandFailAttempts"/>
         public static readonly CVarDef<bool> NetMtuExpand =

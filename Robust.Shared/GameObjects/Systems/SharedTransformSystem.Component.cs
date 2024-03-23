@@ -1511,4 +1511,39 @@ public abstract partial class SharedTransformSystem
                 PlaceNextTo((entity, xform), targetXform.ParentUid);
         }
     }
+
+    public bool SwapPositions(Entity<TransformComponent?> entity1, Entity<TransformComponent?> entity2)
+    {
+        if (!Resolve(entity1, ref entity1.Comp) || !Resolve(entity2, ref entity2.Comp))
+            return false;
+
+        // save ourselves the hassle and just don't move anything.
+        if (entity1 == entity2)
+            return true;
+
+        var pos1 = GetMapCoordinates(entity1.Comp);
+        var pos2 = GetMapCoordinates(entity2.Comp);
+
+        if (_container.TryGetContainingContainer(entity1, out var container1))
+            _container.TryRemoveFromContainer(entity1, true);
+
+        if (_container.TryGetContainingContainer(entity2, out var container2))
+            _container.TryRemoveFromContainer(entity2, true);
+
+        // making sure we don't accidentally parent something to itself
+        if (container1?.Owner == entity2 || container2?.Owner == entity1)
+            return false;
+
+        SetParent(entity1, _mapManager.GetMapEntityId(pos2.MapId));
+        SetWorldPosition(entity1.Comp, pos2.Position);
+        if (container2 != null)
+            _container.Insert(entity1, container2, force: true);
+
+        SetParent(entity2, _mapManager.GetMapEntityId(pos1.MapId));
+        SetWorldPosition(entity2.Comp, pos1.Position);
+        if (container1 != null)
+            _container.Insert(entity2, container1, force: true);
+
+        return true;
+    }
 }

@@ -43,6 +43,7 @@ END TEMPLATE-->
   * Also added a `metrics.update_interval` CVar to go along with this, when metrics are scraped without usage of Prometheus directly.
 * IoC now contains an `IMeterFactory` implementation that you can use to instantiate metric meters.
 * `net.mtu_ipv6` CVar allows specifying a different MTU value for IPv6.
+* Allows `player:entity` to take a parameter representing the player name.
 
 ### Bugfixes
 

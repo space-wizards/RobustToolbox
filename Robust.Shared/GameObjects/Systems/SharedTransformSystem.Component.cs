@@ -1537,12 +1537,12 @@ public abstract partial class SharedTransformSystem
         SetParent(entity1, _mapManager.GetMapEntityId(pos2.MapId));
         SetWorldPosition(entity1.Comp, pos2.Position);
         if (container2 != null)
-            _container.Insert(entity1, container2, force: true);
+            _container.Insert(entity1, container2);
 
         SetParent(entity2, _mapManager.GetMapEntityId(pos1.MapId));
         SetWorldPosition(entity2.Comp, pos1.Position);
         if (container1 != null)
-            _container.Insert(entity2, container1, force: true);
+            _container.Insert(entity2, container1);
 
         return true;
     }

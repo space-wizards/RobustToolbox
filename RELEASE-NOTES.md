@@ -54,6 +54,7 @@ END TEMPLATE-->
 * `CheckBox`'s interior texture is now vertically centered.
 * Lidgren.Network has been updated to [`v0.3.0`](https://github.com/space-wizards/SpaceWizards.Lidgren.Network/blob/v0.3.0/RELEASE-NOTES.md).
 * Lowered default IPv4 MTU to 900 (from 1000).
+* Automatic MTU expansion (`net.mtu_expand`) is now enabled by default.
 
 ### Internal
 

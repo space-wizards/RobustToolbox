@@ -88,7 +88,7 @@ namespace Robust.Shared
         /// <seealso cref="NetMtuExpandFrequency"/>
         /// <seealso cref="NetMtuExpandFailAttempts"/>
         public static readonly CVarDef<bool> NetMtuExpand =
-            CVarDef.Create("net.mtu_expand", false, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu_expand", true, CVar.ARCHIVE);
 
         /// <summary>
         /// Interval between MTU expansion attempts, in seconds.

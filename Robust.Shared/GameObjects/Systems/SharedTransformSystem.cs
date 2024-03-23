@@ -80,7 +80,7 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         private void DeparentAllEntsOnTile(EntityUid gridId, Vector2i tileIndices)
         {
-            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !_mapManager.TryGetGrid(gridId, out var grid))
+            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !TryComp<MapGridComponent>(gridId, out var grid))
                 return;
 
             if (!XformQuery.TryGetComponent(gridId, out var gridXform))

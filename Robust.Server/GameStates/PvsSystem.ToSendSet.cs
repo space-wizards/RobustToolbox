@@ -48,30 +48,17 @@ internal sealed partial class PvsSystem
         // We add chunk-size here so that its consistent with the normal PVS range setting.
         // I.e., distance here is the Chebyshev distance to the centre of each chunk, but the normal pvs range only
         // required that the chunk be touching the box, not the centre.
-        var limit = distance < (_lowLodDistance + ChunkSize) / 2
+        var count = distance < (_lowLodDistance + ChunkSize) / 2
             ? chunk.Contents.Count
             : chunk.LodCounts[0];
 
-        // If the PVS budget is exceeded, it should still be safe to send all of the chunk's direct children, though
-        // after that we have no guarantee that an entity's parent got sent.
-        var directChildren = Math.Min(limit, chunk.LodCounts[2]);
-
         // Send entities on the chunk.
-        var span = CollectionsMarshal.AsSpan(chunk.Contents);
-        for (var i = 0; i < limit; i++)
+        var span = CollectionsMarshal.AsSpan(chunk.Contents)[..count];
+        foreach (ref var ent in span)
         {
-            var ent = span[i];
             ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
-
-            if ((mask & meta.VisMask) != meta.VisMask)
-                continue;
-
-            // TODO PVS improve this somehow
-            // Having entities "leave" pvs view just because the pvs entry budget was exceeded sucks.
-            // This probably requires changing client game state manager to support receiving entities with unknown parents.
-            // Probably needs to do something similar to pending net entity states, but for entity spawning.
-            if (!AddEntity(session, ref ent, ref meta, fromTick))
-                limit = directChildren;
+            if ((mask & meta.VisMask) == meta.VisMask)
+                AddEntity(session, ref ent, ref meta, fromTick);
         }
     }
 
@@ -80,26 +67,26 @@ internal sealed partial class PvsSystem
     /// </summary>
     /// <returns>Returns false if the entity would exceed the client's PVS budget.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool AddEntity(PvsSession session, ref PvsChunk.ChunkEntity ent, ref PvsMetadata meta,
+    private void AddEntity(PvsSession session, ref PvsChunk.ChunkEntity ent, ref PvsMetadata meta,
         GameTick fromTick)
     {
         DebugTools.Assert(fromTick < _gameTiming.CurTick);
         ref var data = ref session.DataMemory.GetRef(ent.Ptr.Index);
 
         if (data.LastSeen == _gameTiming.CurTick)
-            return true;
+            return;
 
         if (meta.LifeStage >= EntityLifeStage.Terminating)
         {
             Log.Error($"Attempted to send deleted entity: {ToPrettyString(ent.Uid)}");
             EntityManager.QueueDeleteEntity(ent.Uid);
-            return true;
+            return;
         }
 
         var (entered,budgetExceeded) = IsEnteringPvsRange(ref data, fromTick, ref session.Budget);
 
         if (budgetExceeded)
-            return false;
+            return;
 
         data.LastSeen = _gameTiming.CurTick;
         session.ToSend!.Add(ent.Ptr);
@@ -108,25 +95,23 @@ internal sealed partial class PvsSystem
         {
             var state = GetFullEntityState(session.Session, ent.Uid, ent.Meta);
             session.States.Add(state);
-            return true;
+            return;
         }
 
         if (entered)
         {
             var state = GetEntityState(session.Session, ent.Uid, data.EntityLastAcked, ent.Meta);
             session.States.Add(state);
-            return true;
+            return;
         }
 
         if (meta.LastModifiedTick <= fromTick)
-            return true;
+            return;
 
         var entState = GetEntityState(session.Session, ent.Uid, fromTick , ent.Meta);
 
         if (!entState.Empty)
             session.States.Add(entState);
-
-        return true;
     }
 
     /// <summary>

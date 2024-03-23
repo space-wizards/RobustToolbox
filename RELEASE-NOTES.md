@@ -51,6 +51,7 @@ END TEMPLATE-->
 
 * The replay system now allows loading a replay with a mismatching serializer type hash. This means replays should be more robust against future version updates (engine security patches or .NET updates).
 * `CheckBox`'s interior texture is now vertically centered.
+* Lidgren.Network has been updated to [`v0.3.0`](https://github.com/space-wizards/SpaceWizards.Lidgren.Network/blob/v0.3.0/RELEASE-NOTES.md).
 
 ### Internal
 

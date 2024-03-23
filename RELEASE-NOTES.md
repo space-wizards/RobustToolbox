@@ -39,11 +39,12 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `CompletionHelper.SessionNames()` has a new optional argument for filtering the returned sessions.
+* Added an `ICommonSession` parser for toolshed.
 
 ### Bugfixes
 
-*None yet*
+* Toolshed commands now only generate completions for the trailing arguments of the current command.
 
 ### Other
 

@@ -125,7 +125,9 @@ internal sealed class ToolshedCommandImplementor
                 error?.Contextualize(parserContext.Input, (start, parserContext.Index));
                 args = null;
                 autocomplete = null;
-                if (doAutocomplete)
+
+                // Only generate auto-completions if the parsing error happened for the last argument.
+                if (doAutocomplete && parserContext.Index == parserContext.MaxIndex + 1)
                 {
                     parserContext.Restore(chkpoint);
                     autocomplete = _toolshedManager.TryAutocomplete(parserContext, argument.ParameterType, null);
@@ -133,6 +135,11 @@ internal sealed class ToolshedCommandImplementor
                 return false;
             }
             args[argument.Name!] = parsed;
+
+            // If this was the end of the input, we do not want the next TryParse to generate completions for the next
+            // command.
+            if (parserContext.Index == parserContext.MaxIndex + 1)
+                doAutocomplete = false;
         }
 
         error = null;

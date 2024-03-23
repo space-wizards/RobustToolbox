@@ -46,6 +46,10 @@ public sealed class CommandRun
 
             if (parserContext.EatTerminator())
                 break;
+
+            // Prevent auto completions from dumping a list of all commands.
+            if (parserContext.Index == parserContext.MaxIndex + 1)
+                break;
         }
 
         if (error is OutOfInputError && noCommand)

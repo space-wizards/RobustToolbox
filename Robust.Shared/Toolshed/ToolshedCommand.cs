@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Reflection;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
@@ -47,6 +48,7 @@ namespace Robust.Shared.Toolshed;
 public abstract partial class ToolshedCommand
 {
     [Dependency] protected readonly ToolshedManager Toolshed = default!;
+    [Dependency] protected readonly ILocalizationManager Loc = default!;
 
     /// <summary>
     ///     The user-facing name of the command.
@@ -98,46 +100,18 @@ public abstract partial class ToolshedCommand
                 SubCommand = null
             };
 
-        var impls = GetGenericImplementations();
-        Dictionary<string, SortedDictionary<string, Type>> parameters = new();
-
-        foreach (var impl in impls)
+        foreach (var impl in GetGenericImplementations())
         {
-            var myParams = new SortedDictionary<string, Type>();
-            string? subCmd = null;
-            if (impl.GetCustomAttribute<CommandImplementationAttribute>() is {SubCommand: { } x})
-            {
-                subCmd = x;
-                HasSubCommands = true;
-                _implementors[x] =
-                    new ToolshedCommandImplementor
-                    {
-                        Owner = this,
-                        SubCommand = x
-                    };
-            }
+            if (impl.GetCustomAttribute<CommandImplementationAttribute>() is not {SubCommand: { } x})
+                continue;
 
-            foreach (var param in impl.GetParameters())
-            {
-                if (param.GetCustomAttribute<CommandArgumentAttribute>() is not null)
+            HasSubCommands = true;
+            _implementors[x] =
+                new ToolshedCommandImplementor
                 {
-                    if (parameters.ContainsKey(param.Name!))
-                        continue;
-
-                    myParams.Add(param.Name!, param.ParameterType);
-                }
-            }
-
-            if (parameters.TryGetValue(subCmd ?? "", out var existing))
-            {
-                if (!existing.SequenceEqual(existing))
-                {
-                    throw new NotImplementedException("All command implementations of a given subcommand must share the same parameters!");
-                }
-            }
-            else
-                parameters.Add(subCmd ?? "", myParams);
-
+                    Owner = this,
+                    SubCommand = x
+                };
         }
     }
 
@@ -184,14 +158,11 @@ internal sealed class CommandArgumentBundle
     public required Type[] TypeArguments;
 }
 
-internal readonly record struct CommandDiscriminator(Type? PipedType, Type[] TypeArguments) : IEquatable<CommandDiscriminator?>
+internal readonly record struct CommandDiscriminator(Type? PipedType, Type[] TypeArguments)
 {
-    public bool Equals(CommandDiscriminator? other)
+    public bool Equals(CommandDiscriminator other)
     {
-        if (other is not {} value)
-            return false;
-
-        return value.PipedType == PipedType && value.TypeArguments.SequenceEqual(TypeArguments);
+        return other.PipedType == PipedType && other.TypeArguments.SequenceEqual(TypeArguments);
     }
 
     public override int GetHashCode()

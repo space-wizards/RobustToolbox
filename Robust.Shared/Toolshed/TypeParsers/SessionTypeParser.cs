@@ -45,7 +45,7 @@ internal sealed class SessionTypeParser : TypeParser<ICommonSession>
     public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        var opts = CompletionHelper.SessionNames(true, _player, argName);
+        var opts = CompletionHelper.SessionNames(true, _player);
         return (CompletionResult.FromHintOptions(opts, "<Session>"), null);
     }
 

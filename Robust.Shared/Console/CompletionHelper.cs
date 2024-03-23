@@ -127,13 +127,11 @@ public static class CompletionHelper
     /// <summary>
     ///     Returns a list of connected session names.
     /// </summary>
-    public static IEnumerable<CompletionOption> SessionNames(bool sorted = true, ISharedPlayerManager? players = null, string? arg = null)
+    public static IEnumerable<CompletionOption> SessionNames(bool sorted = true, ISharedPlayerManager? players = null)
     {
         IoCManager.Resolve(ref players);
 
         var playerOptions = players.Sessions.Select(p => new CompletionOption(p.Name));
-        if (!string.IsNullOrEmpty(arg))
-            playerOptions = playerOptions.Where(x => x.Value.Contains(arg));
         return sorted ? playerOptions.OrderBy(o => o.Value) : playerOptions;
     }
 

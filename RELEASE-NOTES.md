@@ -39,12 +39,16 @@ END TEMPLATE-->
 
 ### New features
 
-* `CompletionHelper.SessionNames()` has a new optional argument for filtering the returned sessions.
-* Added an `ICommonSession` parser for toolshed.
+* Made a new `IMetricsManager` interface with an `UpdateMetrics` event that can be used to update Prometheus metrics whenever they are scraped.
+  * Also added a `metrics.update_interval` CVar to go along with this, when metrics are scraped without usage of Prometheus directly.
+* IoC now contains an `IMeterFactory` implementation that you can use to instantiate metric meters.
+* `net.mtu_ipv6` CVar allows specifying a different MTU value for IPv6.
+* Allows `player:entity` to take a parameter representing the player name.
+* Added an `ICommonSession` parser for toolshed commands.
 
 ### Bugfixes
 
-* Toolshed commands now only generate completions for the trailing arguments of the current command.
+* Fixed some issues where toolshed commands were generating completions for the wrong arguments
 
 ### Other
 

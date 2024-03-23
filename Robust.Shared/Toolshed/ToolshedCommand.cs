@@ -100,18 +100,45 @@ public abstract partial class ToolshedCommand
                 SubCommand = null
             };
 
-        foreach (var impl in GetGenericImplementations())
+        var impls = GetGenericImplementations();
+        Dictionary<(string, Type?), SortedDictionary<string, Type>> parameters = new();
+
+        foreach (var impl in impls)
         {
-            if (impl.GetCustomAttribute<CommandImplementationAttribute>() is not {SubCommand: { } x})
+            var myParams = new SortedDictionary<string, Type>();
+            string? subCmd = null;
+            if (impl.GetCustomAttribute<CommandImplementationAttribute>() is {SubCommand: { } x})
+            {
+                subCmd = x;
+                HasSubCommands = true;
+                _implementors[x] =
+                    new ToolshedCommandImplementor
+                    {
+                        Owner = this,
+                        SubCommand = x
+                    };
+            }
+
+            Type? pipedType = null;
+            foreach (var param in impl.GetParameters())
+            {
+                if (param.GetCustomAttribute<CommandArgumentAttribute>() is not null)
+                    myParams.TryAdd(param.Name!, param.ParameterType);
+
+                if (param.GetCustomAttribute<PipedArgumentAttribute>() is not null)
+                {
+                    if (pipedType != null)
+                        throw new NotSupportedException($"Commands cannot have more than one piped argument");
+                    pipedType = param.ParameterType;
+                }
+            }
+
+            var key = (subCmd ?? "", pipedType);
+            if (parameters.TryAdd(key, myParams))
                 continue;
 
-            HasSubCommands = true;
-            _implementors[x] =
-                new ToolshedCommandImplementor
-                {
-                    Owner = this,
-                    SubCommand = x
-                };
+            if (!parameters[key].SequenceEqual(myParams))
+                throw new NotImplementedException("All command implementations of a given subcommand with the same pipe type must share the same argument types");
         }
     }
 

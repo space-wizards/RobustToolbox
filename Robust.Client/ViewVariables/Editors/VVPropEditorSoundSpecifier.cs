@@ -13,8 +13,14 @@ namespace Robust.Client.ViewVariables.Editors;
 
 public sealed class VVPropEditorSoundSpecifier : VVPropEditor
 {
-    [Dependency] private readonly IPrototypeManager _protoManager = default!;
-    [Dependency] private readonly IResourceManager _resManager = default!;
+    private readonly IPrototypeManager _protoManager;
+    private readonly IResourceManager _resManager;
+
+    public VVPropEditorSoundSpecifier(IPrototypeManager protoManager, IResourceManager resManager)
+    {
+        _protoManager = protoManager;
+        _resManager = resManager;
+    }
 
     protected override Control MakeUI(object? value)
     {
@@ -35,13 +41,13 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
 
         var controls = new BoxContainer()
         {
-            Orientation = BoxContainer.LayoutOrientation.Vertical,
+            Orientation = BoxContainer.LayoutOrientation.Horizontal,
             Children =
             {
                 typeButton,
                 editBox
             },
-            SetSize = new Vector2(384f, 64f)
+            SetSize = new Vector2(384f, 32f)
         };
 
         if (value != null)

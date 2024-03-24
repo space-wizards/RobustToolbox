@@ -9,6 +9,7 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Client.ViewVariables.Instances;
 using Robust.Shared.Audio;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -30,6 +31,8 @@ namespace Robust.Client.ViewVariables
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IPrototypeManager _protoManager = default!;
+        [Dependency] private readonly IResourceManager _resManager = default!;
 
         private uint _nextReqId = 1;
         private readonly Vector2i _defaultWindowSize = (640, 420);
@@ -229,8 +232,7 @@ namespace Robust.Client.ViewVariables
 
             if (typeof(SoundSpecifier).IsAssignableFrom(type))
             {
-                var control = new VVPropEditorSoundSpecifier();
-                IoCManager.InjectDependencies(control);
+                var control = new VVPropEditorSoundSpecifier(_protoManager, _resManager);
                 return control;
             }
 

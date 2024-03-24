@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* Implement basic VV for SoundSpecifiers.
+*None yet*
 
 ### Bugfixes
 
-* Fix QueueDel during EndCollideEvents from throwing while removing contacts.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,17 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 215.2.0
+
+### New features
+
+* Implement basic VV for SoundSpecifiers.
+
+### Bugfixes
+
+* Fix QueueDel during EndCollideEvents from throwing while removing contacts.
 
 
 ## 215.1.0

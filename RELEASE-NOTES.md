@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix QueueDel during EndCollideEvents from throwing while removing contacts.
 
 ### Other
 

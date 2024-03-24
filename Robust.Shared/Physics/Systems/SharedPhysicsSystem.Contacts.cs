@@ -341,19 +341,18 @@ public abstract partial class SharedPhysicsSystem
         }
 
         // Remove from the world
-        DebugTools.Assert(_activeContacts.Contains(contact));
         _activeContacts.Remove(contact.MapNode);
 
         // Remove from body 1
         DebugTools.Assert(fixtureA.Contacts.ContainsKey(fixtureB));
         fixtureA.Contacts.Remove(fixtureB);
-        DebugTools.Assert(bodyA.Contacts.Contains(contact.BodyANode!.Value));
+        DebugTools.Assert(bodyA.Contacts.Contains(contact.BodyANode.Value));
         bodyA.Contacts.Remove(contact.BodyANode);
 
         // Remove from body 2
         DebugTools.Assert(fixtureB.Contacts.ContainsKey(fixtureA));
         fixtureB.Contacts.Remove(fixtureA);
-        DebugTools.Assert(bodyB.Contacts.Contains(contact.BodyBNode!.Value));
+        DebugTools.Assert(bodyB.Contacts.Contains(contact.BodyBNode.Value));
         bodyB.Contacts.Remove(contact.BodyBNode);
 
         // Insert into the pool.

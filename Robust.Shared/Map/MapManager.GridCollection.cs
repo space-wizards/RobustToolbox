@@ -113,7 +113,7 @@ internal partial class MapManager
 #endif
 
         // Possible the grid was already deleted / is invalid
-        if (!TryGetGrid(euid, out var iGrid))
+        if (!EntityManager.TryGetComponent<MapGridComponent>(euid, out var iGrid))
         {
             DebugTools.Assert($"Calling {nameof(DeleteGrid)} with unknown uid {euid}.");
             return; // Silently fail on release

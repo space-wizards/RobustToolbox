@@ -3,6 +3,7 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -110,7 +111,7 @@ namespace Robust.Shared.Map
         [Obsolete("Use ToMapPos() with TransformSystem overload")]
         public Vector2 ToMapPos(IEntityManager entityManager)
         {
-            return ToMap(entityManager).Position;
+            return ToMap(entityManager, entityManager.System<SharedTransformSystem>()).Position;
         }
 
         /// <summary>
@@ -160,7 +161,7 @@ namespace Robust.Shared.Map
         [Obsolete("Use overload with other parameter order.")]
         public static EntityCoordinates FromMap(IEntityManager entityManager, EntityUid entityUid, MapCoordinates coordinates)
         {
-            return FromMap(entityUid, coordinates, entityManager);
+            return FromMap(entityUid, coordinates, entityManager.System<SharedTransformSystem>(), entityManager);
         }
 
         /// <summary>
@@ -200,7 +201,7 @@ namespace Robust.Shared.Map
             var gridIdOpt = GetGridUid(entityManager);
             if (gridIdOpt is { } gridId && gridId.IsValid())
             {
-                var grid = mapManager.GetGrid(gridId);
+                var grid = entityManager.GetComponent<MapGridComponent>(gridId);
                 return mapSystem.GetTileRef(gridId, grid, this).GridIndices;
             }
 

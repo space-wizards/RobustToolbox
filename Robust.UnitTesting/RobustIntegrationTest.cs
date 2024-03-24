@@ -303,6 +303,12 @@ namespace Robust.UnitTesting
                 return EntMan.GetComponent<MetaDataComponent>(uid);
             }
 
+            public MetaDataComponent MetaData(NetEntity uid)
+                => MetaData(EntMan.GetEntity(uid));
+
+            public TransformComponent Transform(NetEntity uid)
+                => Transform(EntMan.GetEntity(uid));
+
             public async Task ExecuteCommand(string cmd)
             {
                 await WaitPost(() => ConsoleHost.ExecuteCommand(cmd));

@@ -89,7 +89,7 @@ namespace Robust.Server
         [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
         [Dependency] private readonly HubManager _hubManager = default!;
         [Dependency] private readonly IScriptHost _scriptHost = default!;
-        [Dependency] private readonly IMetricsManager _metricsManager = default!;
+        [Dependency] private readonly IMetricsManagerInternal _metricsManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
@@ -749,6 +749,8 @@ namespace Robust.Server
             _hubManager.Heartbeat();
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+
+            _metricsManager.FrameUpdate();
         }
 
         void IPostInjectInit.PostInject()

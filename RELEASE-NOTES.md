@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Implement basic VV for SoundSpecifiers.
 
 ### Bugfixes
 
-*None yet*
+* Fix QueueDel during EndCollideEvents from throwing while removing contacts.
 
 ### Other
 
@@ -52,6 +52,53 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 215.1.0
+
+### New features
+
+* Add a CompletionHelper for audio filepaths that handles server packaging.
+* Add Random.NextAngle(min, max) method and Pick for `ValueList<T>`.
+* Added an `ICommonSession` parser for toolshed commands.
+
+### Bugfixes
+
+
+## 215.0.0
+
+### Breaking changes
+
+* Update Lidgren to 0.3.0
+
+### New features
+
+* Made a new `IMetricsManager` interface with an `UpdateMetrics` event that can be used to update Prometheus metrics whenever they are scraped.
+  * Also added a `metrics.update_interval` CVar to go along with this, when metrics are scraped without usage of Prometheus directly.
+* IoC now contains an `IMeterFactory` implementation that you can use to instantiate metric meters.
+* `net.mtu_ipv6` CVar allows specifying a different MTU value for IPv6.
+* Allows `player:entity` to take a parameter representing the player name.
+* Add collection parsing to the dev window for UI.
+* Add a debug assert to Dirty(uid, comp) to catch mismatches being passed in.
+
+### Bugfixes
+
+* Support transform states with unknown parents.
+* Fix serialization error logging.
+* Fix naming of ResizableMemoryRegion metrics.
+* Fix uncaught overflow exception when parsing NetEntities.
+
+### Other
+
+* The replay system now allows loading a replay with a mismatching serializer type hash. This means replays should be more robust against future version updates (engine security patches or .NET updates).
+* `CheckBox`'s interior texture is now vertically centered.
+* Lidgren.Network has been updated to [`v0.3.0`](https://github.com/space-wizards/SpaceWizards.Lidgren.Network/blob/v0.3.0/RELEASE-NOTES.md).
+* Lowered default IPv4 MTU to 900 (from 1000).
+* Automatic MTU expansion (`net.mtu_expand`) is now enabled by default.
+
+### Internal
+
+* Cleanup some Dirty component calls internally.
 
 
 ## 214.2.0

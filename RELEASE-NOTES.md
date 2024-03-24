@@ -39,16 +39,47 @@ END TEMPLATE-->
 
 ### New features
 
-* Made a new `IMetricsManager` interface with an `UpdateMetrics` event that can be used to update Prometheus metrics whenever they are scraped.
-  * Also added a `metrics.update_interval` CVar to go along with this, when metrics are scraped without usage of Prometheus directly.
-* IoC now contains an `IMeterFactory` implementation that you can use to instantiate metric meters.
-* `net.mtu_ipv6` CVar allows specifying a different MTU value for IPv6.
-* Allows `player:entity` to take a parameter representing the player name.
+* Add a CompletionHelper for audio filepaths that handles server packaging.
+* Add Random.NextAngle(min, max) method and Pick for `ValueList<T>`.
 * Added an `ICommonSession` parser for toolshed commands.
 
 ### Bugfixes
 
 * Fixed some issues where toolshed commands were generating completions for the wrong arguments
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 215.0.0
+
+### Breaking changes
+
+* Update Lidgren to 0.3.0
+
+### New features
+
+* Made a new `IMetricsManager` interface with an `UpdateMetrics` event that can be used to update Prometheus metrics whenever they are scraped.
+  * Also added a `metrics.update_interval` CVar to go along with this, when metrics are scraped without usage of Prometheus directly.
+* IoC now contains an `IMeterFactory` implementation that you can use to instantiate metric meters.
+* `net.mtu_ipv6` CVar allows specifying a different MTU value for IPv6.
+* Allows `player:entity` to take a parameter representing the player name.
+* Add collection parsing to the dev window for UI.
+* Add a debug assert to Dirty(uid, comp) to catch mismatches being passed in.
+
+### Bugfixes
+
+* Support transform states with unknown parents.
+* Fix serialization error logging.
+* Fix naming of ResizableMemoryRegion metrics.
+* Fix uncaught overflow exception when parsing NetEntities.
 
 ### Other
 
@@ -60,7 +91,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Cleanup some Dirty component calls internally.
 
 
 ## 214.2.0

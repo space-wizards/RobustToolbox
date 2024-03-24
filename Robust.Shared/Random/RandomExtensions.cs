@@ -164,29 +164,29 @@ public static class RandomExtensions
 
     /// <summary>
     /// Get set amount of random items from collection.
-    /// If <paramref name="allowDuplicates"/> is false and <paramref name="collection"/>
-    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="collection"/> clone.
-    /// If <paramref name="collection"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
+    /// If <paramref name="allowDuplicates"/> is false and <paramref name="source"/>
+    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="source"/> clone.
+    /// If <paramref name="source"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
     /// </summary>
     /// <param name="random">Instance of random to invoke upon.</param>
-    /// <param name="collection">Collection from which items should be picked.</param>
+    /// <param name="source">Collection from which items should be picked.</param>
     /// <param name="count">Count of random items to be picked.</param>
     /// <param name="allowDuplicates">Marker, are duplicate items allowed in results.</param>
-    public static IReadOnlyCollection<T> GetItems<T>(this IRobustRandom random, IList<T> collection, int count, bool allowDuplicates = true)
+    public static IReadOnlyCollection<T> GetItems<T>(this IRobustRandom random, IList<T> source, int count, bool allowDuplicates = true)
     {
-        if (collection.Count == 0 || count <= 0)
+        if (source.Count == 0 || count <= 0)
         {
             return Array.Empty<T>();
         }
 
-        if (allowDuplicates == false && count >= collection.Count)
+        if (allowDuplicates == false && count >= source.Count)
         {
-            var arr = collection.ToArray();
+            var arr = source.ToArray();
             random.Shuffle(arr);
             return arr;
         }
 
-        var maxCollectionIndex = collection.Count;
+        var sourceElementsCount = source.Count;
 
         var rolled = new T[count];
 
@@ -194,24 +194,25 @@ public static class RandomExtensions
         {
             for (int i = 0; i < count; i++)
             {
-                int virtualIndex = random.Next(maxCollectionIndex);
-                rolled[i] = collection[virtualIndex];
+                int virtualIndex = random.Next(sourceElementsCount);
+                rolled[i] = source[virtualIndex];
             }
         }
         else
         {
-            HashSet<int> selectedIndexes = new(count);
+            Span<int> virtualIndexSpace = sourceElementsCount <= 1024
+                ? stackalloc int[sourceElementsCount]
+                : new int[sourceElementsCount];
+            for (int i = 0; i < sourceElementsCount; i++)
+            {
+                virtualIndexSpace[i] = i;
+            }
+
             for (int i = 0; i < count; i++)
             {
-                int virtualIndex = random.Next(maxCollectionIndex - i);
-                while (!selectedIndexes.Add(virtualIndex))
-                {
-                    virtualIndex = virtualIndex == collection.Count
-                        ? 0
-                        : virtualIndex + 1;
-                }
-
-                rolled[i] = collection[virtualIndex];
+                var j = random.Next(sourceElementsCount - i);
+                rolled[i] = source[virtualIndexSpace[j]];
+                virtualIndexSpace[j] = virtualIndexSpace[sourceElementsCount - i - 1];
             }
         }
 
@@ -220,29 +221,29 @@ public static class RandomExtensions
 
     /// <summary>
     /// Get set amount of random items from collection.
-    /// If <paramref name="allowDuplicates"/> is false and <paramref name="collection"/>
-    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="collection"/> clone.
-    /// If <paramref name="collection"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
+    /// If <paramref name="allowDuplicates"/> is false and <paramref name="source"/>
+    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="source"/> clone.
+    /// If <paramref name="source"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
     /// </summary>
     /// <param name="random">Instance of random to invoke upon.</param>
-    /// <param name="collection">Collection from which items should be picked.</param>
+    /// <param name="source">Collection from which items should be picked.</param>
     /// <param name="count">Count of random items to be picked.</param>
     /// <param name="allowDuplicates">Marker, are duplicate items allowed in results.</param>
-    public static ValueList<T> GetItems<T>(this IRobustRandom random, ValueList<T> collection, int count, bool allowDuplicates = true)
+    public static ValueList<T> GetItems<T>(this IRobustRandom random, ValueList<T> source, int count, bool allowDuplicates = true)
     {
-        if (collection.Count == 0 || count <= 0)
+        if (source.Count == 0 || count <= 0)
         {
             return new ValueList<T>(0);
         }
 
-        if (allowDuplicates == false && count >= collection.Count)
+        if (allowDuplicates == false && count >= source.Count)
         {
-            var arr = collection.ToArray();
+            var arr = source.ToArray();
             random.Shuffle(arr);
             return ValueList<T>.OwningArray(arr);
         }
 
-        var maxCollectionIndex = collection.Count;
+        var sourceElementsCount = source.Count;
 
         var rolled = new T[count];
 
@@ -250,24 +251,25 @@ public static class RandomExtensions
         {
             for (int i = 0; i < count; i++)
             {
-                int virtualIndex = random.Next(maxCollectionIndex);
-                rolled[i] = collection[virtualIndex];
+                int virtualIndex = random.Next(sourceElementsCount);
+                rolled[i] = source[virtualIndex];
             }
         }
         else
         {
-            HashSet<int> selectedIndexes = new(count);
+            Span<int> virtualIndexSpace = sourceElementsCount <= 1024
+                ? stackalloc int[sourceElementsCount]
+                : new int[sourceElementsCount];
+            for (int i = 0; i < sourceElementsCount; i++)
+            {
+                virtualIndexSpace[i] = i;
+            }
+
             for (int i = 0; i < count; i++)
             {
-                int virtualIndex = random.Next(maxCollectionIndex - i);
-                while (!selectedIndexes.Add(virtualIndex))
-                {
-                    virtualIndex = virtualIndex == collection.Count
-                        ? 0
-                        : virtualIndex + 1;
-                }
-
-                rolled[i] = collection[virtualIndex];
+                var j = random.Next(sourceElementsCount - i);
+                rolled[i] = source[virtualIndexSpace[j]];
+                virtualIndexSpace[j] = virtualIndexSpace[sourceElementsCount - i - 1];
             }
         }
 
@@ -276,29 +278,29 @@ public static class RandomExtensions
 
     /// <summary>
     /// Get set amount of random items from collection.
-    /// If <paramref name="allowDuplicates"/> is false and <paramref name="collection"/>
-    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="collection"/> clone.
-    /// If <paramref name="collection"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
+    /// If <paramref name="allowDuplicates"/> is false and <paramref name="source"/>
+    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="source"/> clone.
+    /// If <paramref name="source"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
     /// </summary>
     /// <param name="random">Instance of random to invoke upon.</param>
-    /// <param name="collection">Collection from which items should be picked.</param>
+    /// <param name="source">Collection from which items should be picked.</param>
     /// <param name="count">Count of random items to be picked.</param>
     /// <param name="allowDuplicates">Marker, are duplicate items allowed in results.</param>
-    public static Span<T> GetItems<T>(this IRobustRandom random, Span<T> collection, int count, bool allowDuplicates = true)
+    public static Span<T> GetItems<T>(this IRobustRandom random, Span<T> source, int count, bool allowDuplicates = true)
     {
-        if (collection.Length == 0 || count <= 0)
+        if (source.Length == 0 || count <= 0)
         {
             return default;
         }
 
-        if (allowDuplicates == false && count >= collection.Length)
+        if (allowDuplicates == false && count >= source.Length)
         {
-            var arr = collection.ToArray();
+            var arr = source.ToArray();
             random.Shuffle(arr);
             return arr;
         }
 
-        var maxCollectionIndex = collection.Length;
+        var sourceElementsCount = source.Length;
 
         var rolled = new T[count];
 
@@ -306,24 +308,25 @@ public static class RandomExtensions
         {
             for (int i = 0; i < count; i++)
             {
-                int virtualIndex = random.Next(maxCollectionIndex);
-                rolled[i] = collection[virtualIndex];
+                int virtualIndex = random.Next(sourceElementsCount);
+                rolled[i] = source[virtualIndex];
             }
         }
         else
         {
-            HashSet<int> selectedIndexes = new(count);
+            Span<int> virtualIndexSpace = sourceElementsCount <= 1024
+                ? stackalloc int[sourceElementsCount]
+                : new int[sourceElementsCount];
+            for (int i = 0; i < sourceElementsCount; i++)
+            {
+                virtualIndexSpace[i] = i;
+            }
+
             for (int i = 0; i < count; i++)
             {
-                int virtualIndex = random.Next(maxCollectionIndex - i);
-                while (!selectedIndexes.Add(virtualIndex))
-                {
-                    virtualIndex = virtualIndex == collection.Length
-                        ? 0
-                        : virtualIndex + 1;
-                }
-
-                rolled[i] = collection[virtualIndex];
+                var j = random.Next(sourceElementsCount - i);
+                rolled[i] = source[virtualIndexSpace[j]];
+                virtualIndexSpace[j] = virtualIndexSpace[sourceElementsCount - i - 1];
             }
         }
 

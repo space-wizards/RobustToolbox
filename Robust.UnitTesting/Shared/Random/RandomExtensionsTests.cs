@@ -204,7 +204,7 @@ public abstract class RandomExtensionsTests<T>
         var result = Invoke(_collection, 3, allowDuplicates: false);
 
         // Assert
-        Assert.That(result, Is.EqualTo(new[] { "1", "2", "6" }));
+        Assert.That(result, Is.EqualTo(new[] { "1", "10", "6" }));
     }
 
     [Test]
@@ -227,7 +227,7 @@ public abstract class RandomExtensionsTests<T>
         var result = Invoke(_collection, 10, allowDuplicates: false);
 
         // Assert
-        Assert.That(result, Is.EqualTo(new[] { "1", "2", "6", "7", "3", "4", "5", "8", "9", "10" }));
+        Assert.That(result, Is.EqualTo(new[] { "1", "10", "6", "8", "3", "4", "5", "7", "9", "2" }));
     }
 
     [Test]

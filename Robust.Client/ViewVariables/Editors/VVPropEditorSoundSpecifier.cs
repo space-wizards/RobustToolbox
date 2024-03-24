@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Numerics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -39,7 +40,7 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
             Editable = !ReadOnly,
         };
 
-        var controls = new BoxContainer()
+        var pathControls = new BoxContainer()
         {
             Orientation = BoxContainer.LayoutOrientation.Horizontal,
             Children =
@@ -102,6 +103,58 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
                     break;
                 default:
                     return;
+            }
+        };
+
+        // Audio params
+        var specifier = (SoundSpecifier?) value;
+
+        var pitchEdit = new LineEdit()
+        {
+            Text = specifier?.Params.Pitch.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            HorizontalExpand = true,
+        };
+
+        pitchEdit.OnTextEntered += args =>
+        {
+            if (!float.TryParse(args.Text, out var floatValue) || specifier == null)
+                return;
+
+            var newParams = specifier.Params.WithPitchScale(floatValue);
+
+            specifier.Params = newParams;
+            ValueChanged(specifier);
+        };
+
+        var pitchContainer = new BoxContainer()
+        {
+            Orientation = BoxContainer.LayoutOrientation.Horizontal,
+            Children =
+            {
+                new Label()
+                {
+                    Text = Loc.GetString("vv-sound-pitch"),
+                },
+                pitchEdit,
+            }
+        };
+
+        var audioParamsControls = new BoxContainer()
+        {
+            Orientation = BoxContainer.LayoutOrientation.Vertical,
+            Children =
+            {
+                pitchContainer,
+            }
+        };
+
+        var controls = new BoxContainer()
+        {
+            Orientation = BoxContainer.LayoutOrientation.Vertical,
+            Children =
+            {
+                pathControls,
+                audioParamsControls,
             }
         };
 

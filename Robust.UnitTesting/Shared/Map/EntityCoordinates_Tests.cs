@@ -254,16 +254,18 @@ namespace Robust.UnitTesting.Shared.Map
             var entityManager = IoCManager.Resolve<IEntityManager>();
             var mapManager = IoCManager.Resolve<IMapManager>();
 
+            var transformSystem = entityManager.System<SharedTransformSystem>();
+
             var mapId = mapManager.CreateMap();
             var grid = mapManager.CreateGridEntity(mapId);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid, entPos));
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.ToMap(entityManager), Is.EqualTo(new MapCoordinates(entPos, mapId)));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.ToMap(entityManager, transformSystem), Is.EqualTo(new MapCoordinates(entPos, mapId)));
 
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt).LocalPosition += gridPos;
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.ToMap(entityManager), Is.EqualTo(new MapCoordinates(entPos + gridPos, mapId)));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.ToMap(entityManager, transformSystem), Is.EqualTo(new MapCoordinates(entPos + gridPos, mapId)));
         }
 
         [Test]

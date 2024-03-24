@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -52,6 +52,15 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 215.2.0
+
+### New features
+
+* Add Random.GetItems methods for IList/ValueList/Span (similar to https://learn.microsoft.com/en-us/dotnet/api/system.random.getitems?view=net-8.0)
+
+### Bugfixes
 
 
 ## 215.1.0

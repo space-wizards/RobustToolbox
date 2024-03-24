@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Move DestroyContact handling for physics outside of the QueueDel subscriber to CollideContacts.
 
 ### Other
 

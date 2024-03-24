@@ -41,8 +41,11 @@ END TEMPLATE-->
 
 * Add a CompletionHelper for audio filepaths that handles server packaging.
 * Add Random.NextAngle(min, max) method and Pick for `ValueList<T>`.
+* Added an `ICommonSession` parser for toolshed commands.
 
 ### Bugfixes
+
+* Fixed some issues where toolshed commands were generating completions for the wrong arguments
 
 *None yet*
 

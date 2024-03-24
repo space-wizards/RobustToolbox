@@ -17,6 +17,10 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
     private readonly IPrototypeManager _protoManager;
     private readonly IResourceManager _resManager;
 
+    // Need to cache to some level just to make sure each edit doesn't reset the specifier to the default.
+
+    private SoundSpecifier? _specifier;
+
     public VVPropEditorSoundSpecifier(IPrototypeManager protoManager, IResourceManager resManager)
     {
         _protoManager = protoManager;
@@ -58,10 +62,15 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
                 case SoundCollectionSpecifier collection:
                     typeButton.SelectId(1);
                     editBox.Text = collection.Collection ?? string.Empty;
+                    _specifier = collection;
                     break;
                 case SoundPathSpecifier path:
                     typeButton.SelectId(2);
                     editBox.Text = path.Path.ToString();
+                    _specifier = path;
+                    break;
+                default:
+                    _specifier = null;
                     break;
             }
         }
@@ -91,7 +100,11 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
                     if (!_protoManager.HasIndex<SoundCollectionPrototype>(args.Text))
                         return;
 
-                    ValueChanged(new SoundCollectionSpecifier(args.Text));
+                    _specifier = new SoundCollectionSpecifier(args.Text)
+                    {
+                        Params = _specifier?.Params ?? AudioParams.Default,
+                    };
+                    ValueChanged(_specifier);
                     break;
                 case 2:
                     var path = new ResPath(args.Text);
@@ -99,7 +112,12 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
                     if (!_resManager.ContentFileExists(path))
                         return;
 
-                    ValueChanged(new SoundPathSpecifier(args.Text));
+                    _specifier = new SoundPathSpecifier(args.Text)
+                    {
+                        Params = _specifier?.Params ?? AudioParams.Default,
+                    };
+
+                    ValueChanged(_specifier);
                     break;
                 default:
                     return;
@@ -107,23 +125,54 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
         };
 
         // Audio params
-        var specifier = (SoundSpecifier?) value;
+
+        /* Volume */
+
+        var volumeEdit = new LineEdit()
+        {
+            Text = _specifier?.Params.Volume.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            HorizontalExpand = true,
+            Editable = !ReadOnly && _specifier != null,
+        };
+
+        volumeEdit.OnTextEntered += args =>
+        {
+            if (!float.TryParse(args.Text, out var floatValue) || _specifier == null)
+                return;
+
+            _specifier.Params = _specifier.Params.WithVolume(floatValue);
+            ValueChanged(_specifier);
+        };
+
+        var volumeContainer = new BoxContainer()
+        {
+            Orientation = BoxContainer.LayoutOrientation.Horizontal,
+            Children =
+            {
+                new Label()
+                {
+                    Text = Loc.GetString("vv-sound-volume"),
+                },
+                volumeEdit,
+            }
+        };
+
+        /* Pitch */
 
         var pitchEdit = new LineEdit()
         {
-            Text = specifier?.Params.Pitch.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            Text = _specifier?.Params.Pitch.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
             HorizontalExpand = true,
+            Editable = !ReadOnly && _specifier != null,
         };
 
         pitchEdit.OnTextEntered += args =>
         {
-            if (!float.TryParse(args.Text, out var floatValue) || specifier == null)
+            if (!float.TryParse(args.Text, out var floatValue) || _specifier == null)
                 return;
 
-            var newParams = specifier.Params.WithPitchScale(floatValue);
-
-            specifier.Params = newParams;
-            ValueChanged(specifier);
+            _specifier.Params = _specifier.Params.WithPitchScale(floatValue);
+            ValueChanged(_specifier);
         };
 
         var pitchContainer = new BoxContainer()
@@ -139,12 +188,193 @@ public sealed class VVPropEditorSoundSpecifier : VVPropEditor
             }
         };
 
+        /* MaxDistance */
+
+        var maxDistanceEdit = new LineEdit()
+        {
+            Text = _specifier?.Params.MaxDistance.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            HorizontalExpand = true,
+            Editable = !ReadOnly && _specifier != null,
+        };
+
+        maxDistanceEdit.OnTextEntered += args =>
+        {
+            if (!float.TryParse(args.Text, out var floatValue) || _specifier == null)
+                return;
+
+            _specifier.Params = _specifier.Params.WithMaxDistance(floatValue);
+            ValueChanged(_specifier);
+        };
+
+        var maxDistanceContainer = new BoxContainer()
+        {
+            Orientation = BoxContainer.LayoutOrientation.Horizontal,
+            Children =
+            {
+                new Label()
+                {
+                    Text = Loc.GetString("vv-sound-max-distance"),
+                },
+                maxDistanceEdit,
+            }
+        };
+
+        /* RolloffFactor */
+
+        var rolloffFactorEdit = new LineEdit()
+        {
+            Text = _specifier?.Params.RolloffFactor.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            HorizontalExpand = true,
+            Editable = !ReadOnly && _specifier != null,
+        };
+
+        rolloffFactorEdit.OnTextEntered += args =>
+        {
+            if (!float.TryParse(args.Text, out var floatValue) || _specifier == null)
+                return;
+
+            _specifier.Params = _specifier.Params.WithRolloffFactor(floatValue);
+            ValueChanged(_specifier);
+        };
+
+        var rolloffFactorContainer = new BoxContainer()
+        {
+            Orientation = BoxContainer.LayoutOrientation.Horizontal,
+            Children =
+            {
+                new Label()
+                {
+                    Text = Loc.GetString("vv-sound-rolloff-factor"),
+                },
+                rolloffFactorEdit,
+            }
+        };
+
+        /* ReferenceDistance */
+
+        var referenceDistanceEdit = new LineEdit()
+        {
+            Text = _specifier?.Params.ReferenceDistance.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            HorizontalExpand = true,
+            Editable = !ReadOnly && _specifier != null,
+        };
+
+        referenceDistanceEdit.OnTextEntered += args =>
+        {
+            if (!float.TryParse(args.Text, out var floatValue) || _specifier == null)
+                return;
+
+            _specifier.Params = _specifier.Params.WithReferenceDistance(floatValue);
+            ValueChanged(_specifier);
+        };
+
+        var referenceDistanceContainer = new BoxContainer()
+        {
+            Orientation = BoxContainer.LayoutOrientation.Horizontal,
+            Children =
+            {
+                new Label()
+                {
+                    Text = Loc.GetString("vv-sound-reference-distance"),
+                },
+                referenceDistanceEdit,
+            }
+        };
+
+        /* Loop */
+
+        var loopButton = new Button()
+        {
+            Text = Loc.GetString("vv-sound-loop"),
+            Pressed = _specifier?.Params.Loop ?? false,
+            ToggleMode = true,
+            Disabled = ReadOnly || _specifier == null,
+        };
+
+        loopButton.OnPressed += args =>
+        {
+            if (_specifier == null)
+                return;
+
+            _specifier.Params = _specifier.Params.WithLoop(args.Button.Pressed);
+            ValueChanged(_specifier);
+        };
+
+        /* PlayOffsetSeconds */
+
+        var playOffsetEdit = new LineEdit()
+        {
+            Text = _specifier?.Params.PlayOffsetSeconds.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            HorizontalExpand = true,
+            Editable = !ReadOnly && _specifier != null,
+        };
+
+        playOffsetEdit.OnTextEntered += args =>
+        {
+            if (!float.TryParse(args.Text, out var floatValue) || _specifier == null)
+                return;
+
+            _specifier.Params = _specifier.Params.WithPlayOffset(floatValue);
+            ValueChanged(_specifier);
+        };
+
+        var playOffsetContainer = new BoxContainer()
+        {
+            Orientation = BoxContainer.LayoutOrientation.Horizontal,
+            Children =
+            {
+                new Label()
+                {
+                    Text = Loc.GetString("vv-sound-play-offset"),
+                },
+                playOffsetEdit,
+            }
+        };
+
+        /* Variation */
+
+        var variationEdit = new LineEdit()
+        {
+            Text = _specifier?.Params.Variation.ToString() ?? string.Empty,
+            HorizontalExpand = true,
+            Editable = !ReadOnly && _specifier != null,
+        };
+
+        variationEdit.OnTextEntered += args =>
+        {
+            if (!float.TryParse(args.Text, out var floatValue) || _specifier == null)
+                return;
+
+            _specifier.Params = _specifier.Params.WithVariation(floatValue);
+            ValueChanged(_specifier);
+        };
+
+        var variationContainer = new BoxContainer()
+        {
+            Orientation = BoxContainer.LayoutOrientation.Horizontal,
+            Children =
+            {
+                new Label()
+                {
+                    Text = Loc.GetString("vv-sound-variation"),
+                },
+                variationEdit,
+            }
+        };
+
         var audioParamsControls = new BoxContainer()
         {
             Orientation = BoxContainer.LayoutOrientation.Vertical,
             Children =
             {
+                volumeContainer,
                 pitchContainer,
+                maxDistanceContainer,
+                rolloffFactorContainer,
+                referenceDistanceContainer,
+                loopButton,
+                playOffsetContainer,
+                variationContainer,
             }
         };
 

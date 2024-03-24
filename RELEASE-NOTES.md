@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Add Random.NextAngle(min, max) method and Shuffle for `ValueList<T>`.
+* Add Random.NextAngle(min, max) method and Pick for `ValueList<T>`.
 
 ### Bugfixes
 

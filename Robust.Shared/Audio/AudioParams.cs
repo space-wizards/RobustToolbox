@@ -38,13 +38,13 @@ namespace Robust.Shared.Audio
         /// <summary>
         ///     Scale for the audio pitch.
         /// </summary>
+        [DataField]
         public float Pitch
         {
             get => _pitch;
             set => _pitch = MathF.Max(0f, value);
         }
 
-        [DataField]
         private float _pitch = Default.Pitch;
 
         /// <summary>

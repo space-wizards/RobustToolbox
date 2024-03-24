@@ -354,7 +354,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("use override with an EntityUid")]
+        [Obsolete("use override with an EntityUid or Entity<T>")]
         public void Dirty(IComponent component, MetaDataComponent? meta = null)
         {
             Dirty(component.Owner, component, meta);
@@ -365,6 +365,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
                 $"Attempted to dirty a non-networked component: {component.GetType()}");
+            DebugTools.AssertOwner(uid, component);
 
             if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;

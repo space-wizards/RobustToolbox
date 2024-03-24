@@ -67,7 +67,7 @@ public sealed class Gravity2DController : VirtualController
 
         gravity.Gravity = value;
         WakeBodiesRecursive(uid, GetEntityQuery<TransformComponent>(), GetEntityQuery<PhysicsComponent>());
-        Dirty(gravity);
+        Dirty(uid, gravity);
     }
 
     public void SetGravity(MapId mapId, Vector2 value)
@@ -80,7 +80,7 @@ public sealed class Gravity2DController : VirtualController
 
         gravity.Gravity = value;
         WakeBodiesRecursive(mapUid, GetEntityQuery<TransformComponent>(), GetEntityQuery<PhysicsComponent>());
-        Dirty(gravity);
+        Dirty(mapUid, gravity);
     }
 
     private void WakeBodiesRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> bodyQuery)

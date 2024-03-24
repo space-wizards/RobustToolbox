@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* Add a CompletionHelper for audio filepaths that handles server packaging.
 * Add Random.NextAngle(min, max) method and Pick for `ValueList<T>`.
 
 ### Bugfixes

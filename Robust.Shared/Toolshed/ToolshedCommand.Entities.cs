@@ -111,7 +111,7 @@ public abstract partial class ToolshedCommand
     ///     A shorthand for attempting to retrieve the given component for an entity.
     /// </summary>
     [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryComp<T>(EntityUid? entity, [NotNullWhen(true)] out T? component)
+    protected bool TryComp<T>([NotNullWhen(true)] EntityUid? entity, [NotNullWhen(true)] out T? component)
         where T: IComponent
         => EntityManager.TryGetComponent(entity, out component);
 

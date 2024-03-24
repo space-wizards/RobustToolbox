@@ -127,8 +127,12 @@ namespace Robust.Client.ViewVariables
                 return new VVPropEditorString();
             }
 
-            if (type == typeof(EntProtoId) ||
-                type == typeof(EntProtoId?))
+            if (type == typeof(EntProtoId?))
+            {
+                return new VVPropEditorNullableEntProtoId();
+            }
+
+            if (type == typeof(EntProtoId))
             {
                 return new VVPropEditorEntProtoId();
             }

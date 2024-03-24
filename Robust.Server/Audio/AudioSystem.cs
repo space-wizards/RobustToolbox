@@ -250,7 +250,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
     }
 
-    public override void LoadStream<T>(AudioComponent component, T stream)
+    public override void LoadStream<T>(Entity<AudioComponent> entity, T stream)
     {
+        // TODO: Yeah remove this...
     }
 }

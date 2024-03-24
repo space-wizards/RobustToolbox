@@ -99,9 +99,9 @@ public partial class SharedPhysicsSystem
         SetLinearVelocity(uid, newState.LinearVelocity, body: component, manager: manager);
         SetAngularVelocity(uid, newState.AngularVelocity, body: component, manager: manager);
         SetBodyType(uid, newState.BodyType, manager, component);
-        SetFriction(component, newState.Friction);
-        SetLinearDamping(component, newState.LinearDamping);
-        SetAngularDamping(component, newState.AngularDamping);
+        SetFriction(uid, component, newState.Friction);
+        SetLinearDamping(uid, component, newState.LinearDamping);
+        SetAngularDamping(uid, component, newState.AngularDamping);
     }
 
     #endregion
@@ -132,7 +132,7 @@ public partial class SharedPhysicsSystem
 
         body.Force += force;
         body.Torque += Vector2Helpers.Cross(point - body._localCenter, force);
-        Dirty(body);
+        Dirty(uid, body);
     }
 
     public void ApplyForce(EntityUid uid, Vector2 force, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -143,7 +143,7 @@ public partial class SharedPhysicsSystem
         }
 
         body.Force += force;
-        Dirty(body);
+        Dirty(uid, body);
     }
 
     public void ApplyTorque(EntityUid uid, float torque, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -154,7 +154,7 @@ public partial class SharedPhysicsSystem
         }
 
         body.Torque += torque;
-        Dirty(body);
+        Dirty(uid, body);
     }
 
     public void ApplyLinearImpulse(EntityUid uid, Vector2 impulse, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -186,23 +186,31 @@ public partial class SharedPhysicsSystem
     {
         if (body.Contacts.Count == 0) return;
 
+        // This variable is only used in edge-case scenario when contact flagged Deleting raises
+        // EndCollideEvent which will QueueDelete contact's entity
+        ushort contactsFlaggedDeleting = 0;
         var node = body.Contacts.First;
 
         while (node != null)
         {
             var contact = node.Value;
             node = node.Next;
+
             // Destroy last so the linked-list doesn't get touched.
-            DestroyContact(contact);
+            if (!DestroyContact(contact))
+            {
+                contactsFlaggedDeleting++;
+            }
         }
 
-        DebugTools.Assert(body.Contacts.Count == 0);
+        // This contact will be deleted before SimulateWorld runs since it is already set to be Deleted
+        DebugTools.Assert(body.Contacts.Count == contactsFlaggedDeleting);
     }
 
     /// <summary>
     /// Completely resets a dynamic body.
     /// </summary>
-    public void ResetDynamics(PhysicsComponent body, bool dirty = true)
+    public void ResetDynamics(EntityUid uid, PhysicsComponent body, bool dirty = true)
     {
         var updated = false;
 
@@ -231,7 +239,13 @@ public partial class SharedPhysicsSystem
         }
 
         if (updated && dirty)
-            Dirty(body);
+            Dirty(uid, body);
+    }
+
+    [Obsolete("Use overload that takes EntityUid")]
+    public void ResetDynamics(PhysicsComponent body, bool dirty = true)
+    {
+        ResetDynamics(body.Owner, body, dirty);
     }
 
     public void ResetMassData(EntityUid uid, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -261,7 +275,7 @@ public partial class SharedPhysicsSystem
         if (((int) body.BodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
         {
             body._localCenter = Vector2.Zero;
-            Dirty(body);
+            Dirty(uid, body);
             return;
         }
 
@@ -296,7 +310,7 @@ public partial class SharedPhysicsSystem
 
         // Update center of mass velocity.
         body.LinearVelocity += Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
-        Dirty(body);
+        Dirty(uid, body);
     }
 
     public void SetAngularVelocity(EntityUid uid, float value, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -350,7 +364,7 @@ public partial class SharedPhysicsSystem
             Dirty(uid, body);
     }
 
-    public void SetAngularDamping(PhysicsComponent body, float value, bool dirty = true)
+    public void SetAngularDamping(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
     {
         if (MathHelper.CloseTo(body.AngularDamping, value))
             return;
@@ -358,10 +372,16 @@ public partial class SharedPhysicsSystem
         body.AngularDamping = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
-    public void SetLinearDamping(PhysicsComponent body, float value, bool dirty = true)
+    [Obsolete("Use overload that takes EntityUid")]
+    public void SetAngularDamping(PhysicsComponent body, float value, bool dirty = true)
+    {
+        SetAngularDamping(body.Owner, body, value, dirty);
+    }
+
+    public void SetLinearDamping(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
     {
         if (MathHelper.CloseTo(body.LinearDamping, value))
             return;
@@ -369,7 +389,13 @@ public partial class SharedPhysicsSystem
         body.LinearDamping = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
+    }
+
+    [Obsolete("Use overload that takes EntityUid")]
+    public void SetLinearDamping(PhysicsComponent body, float value, bool dirty = true)
+    {
+        SetLinearDamping(body.Owner, body, value, dirty);
     }
 
     [Obsolete("Use SetAwake with EntityUid<PhysicsComponent>")]
@@ -403,7 +429,7 @@ public partial class SharedPhysicsSystem
         {
             var ev = new PhysicsSleepEvent(uid, body);
             RaiseLocalEvent(uid, ref ev, true);
-            ResetDynamics(body, dirty: false);
+            ResetDynamics(ent, body, dirty: false);
         }
 
         // Update wake system last, if sleeping but still colliding.
@@ -470,7 +496,7 @@ public partial class SharedPhysicsSystem
         }
     }
 
-    public void SetBodyStatus(PhysicsComponent body, BodyStatus status, bool dirty = true)
+    public void SetBodyStatus(EntityUid uid, PhysicsComponent body, BodyStatus status, bool dirty = true)
     {
         if (body.BodyStatus == status)
             return;
@@ -478,7 +504,13 @@ public partial class SharedPhysicsSystem
         body.BodyStatus = status;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
+    }
+
+    [Obsolete("Use overload that takes EntityUid")]
+    public void SetBodyStatus(PhysicsComponent body, BodyStatus status, bool dirty = true)
+    {
+        SetBodyStatus(body.Owner, body, status, dirty);
     }
 
     /// <summary>
@@ -531,7 +563,7 @@ public partial class SharedPhysicsSystem
         }
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
 
         return value;
     }
@@ -546,10 +578,10 @@ public partial class SharedPhysicsSystem
         ResetMassData(uid, manager: manager, body: body);
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
-    public void SetFriction(PhysicsComponent body, float value, bool dirty = true)
+    public void SetFriction(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
     {
         if (MathHelper.CloseTo(body.Friction, value))
             return;
@@ -557,10 +589,16 @@ public partial class SharedPhysicsSystem
         body._friction = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
-    public void SetInertia(PhysicsComponent body, float value, bool dirty = true)
+    [Obsolete("Use overload that takes EntityUid")]
+    public void SetFriction(PhysicsComponent body, float value, bool dirty = true)
+    {
+        SetFriction(body.Owner, body, value, dirty);
+    }
+
+    public void SetInertia(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
     {
         DebugTools.Assert(!float.IsNaN(value));
 
@@ -575,8 +613,14 @@ public partial class SharedPhysicsSystem
             body.InvI = 1.0f / body._inertia;
 
             if (dirty)
-                Dirty(body);
+                Dirty(uid, body);
         }
+    }
+
+    [Obsolete("Use overload that takes EntityUid")]
+    public void SetInertia(PhysicsComponent body, float value, bool dirty = true)
+    {
+        SetInertia(body.Owner, body, value, dirty);
     }
 
     public void SetLocalCenter(EntityUid uid, PhysicsComponent body, Vector2 value)
@@ -599,7 +643,7 @@ public partial class SharedPhysicsSystem
         body.SleepingAllowed = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     public void SetSleepTime(PhysicsComponent body, float value)

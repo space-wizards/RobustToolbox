@@ -1049,7 +1049,7 @@ public abstract partial class SharedPhysicsSystem
             }
 
             // TODO: Should check if the values update.
-            Dirty(body, metaQuery.GetComponent(uid));
+            Dirty(uid, body, metaQuery.GetComponent(uid));
         }
     }
 

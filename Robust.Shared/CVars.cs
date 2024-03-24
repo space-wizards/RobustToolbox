@@ -65,20 +65,30 @@ namespace Robust.Shared
             CVarDef.Create("net.pool_size", 512, CVar.CLIENT | CVar.SERVER);
 
         /// <summary>
-        /// Maximum UDP payload size to send.
+        /// Maximum UDP payload size to send by default, for IPv4.
         /// </summary>
         /// <seealso cref="NetMtuExpand"/>
+        /// <seealso cref="NetMtuIpv6"/>
         public static readonly CVarDef<int> NetMtu =
-            CVarDef.Create("net.mtu", 1000, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu", 900, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum UDP payload size to send by default, for IPv6.
+        /// </summary>
+        /// <seealso cref="NetMtu"/>
+        /// <seealso cref="NetMtuExpand"/>
+        public static readonly CVarDef<int> NetMtuIpv6 =
+            CVarDef.Create("net.mtu_ipv6", NetPeerConfiguration.kDefaultMTUV6, CVar.ARCHIVE);
 
         /// <summary>
         /// If set, automatically try to detect MTU above <see cref="NetMtu"/>.
         /// </summary>
         /// <seealso cref="NetMtu"/>
+        /// <seealso cref="NetMtuIpv6"/>
         /// <seealso cref="NetMtuExpandFrequency"/>
         /// <seealso cref="NetMtuExpandFailAttempts"/>
         public static readonly CVarDef<bool> NetMtuExpand =
-            CVarDef.Create("net.mtu_expand", false, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu_expand", true, CVar.ARCHIVE);
 
         /// <summary>
         /// Interval between MTU expansion attempts, in seconds.
@@ -182,6 +192,30 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> NetPVS =
             CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Size increments for the automatic growth of Pvs' entity data storage. 0 will increase it by factors of 2
+        /// </summary>
+        public static readonly CVarDef<int> NetPvsEntityGrowth =
+            CVarDef.Create("net.pvs_entity_growth", 1 << 16, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
+        /// Initial size of PVS' entity data storage.
+        /// </summary>
+        public static readonly CVarDef<int> NetPvsEntityInitial =
+            CVarDef.Create("net.pvs_entity_initial", 1 << 16, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        /// <summary>
+        /// Maximum ever size of PVS' entity data storage.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Arbitrarily set to a default of 16 million entities.
+        /// Increasing this parameter does not increase real memory usage, only virtual.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<int> NetPvsEntityMax =
+            CVarDef.Create("net.pvs_entity_max", 1 << 24, CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
         /// If false, this will run more parts of PVS synchronously. This will generally slow it down, can be useful
@@ -391,6 +425,35 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> MetricsPort =
             CVarDef.Create("metrics.port", 44880, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Sets a fixed interval (seconds) for internal collection of certain metrics,
+        /// when not using the Prometheus metrics server.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Most metrics are internally implemented directly via the prometheus-net library.
+        /// These metrics can only be scraped by the Prometheus metrics server (<see cref="MetricsEnabled"/>).
+        /// However, newer metrics are implemented with the <c>System.Diagnostics.Metrics</c> library in the .NET runtime.
+        /// These metrics can be scraped through more means, such as <c>dotnet counters</c>.
+        /// </para>
+        /// <para>
+        /// While many metrics are simple counters that can "just" be reported,
+        /// some metrics require more advanced internal work and need some code to be ran internally
+        /// before their values are made current. When collecting metrics via a
+        /// method other than the Prometheus metrics server, these metrics pose a problem,
+        /// as there is no way for the game to update them before collection properly.
+        /// </para>
+        /// <para>
+        /// This CVar acts as a fallback: if set to a value other than 0 (disabled),
+        /// these metrics will be internally updated at the interval provided.
+        /// </para>
+        /// <para>
+        /// This does not need to be enabled if metrics are collected exclusively via the Prometheus metrics server.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<float> MetricsUpdateInterval =
+            CVarDef.Create("metrics.update_interval", 0f, CVar.SERVERONLY);
 
         /// <summary>
         /// Enable detailed runtime metrics. Empty to disable.
@@ -1587,7 +1650,8 @@ namespace Robust.Shared
         /// original exception rather than sending people on a wild-goose chase to find a non-existent bug.
         /// </remarks>
         public static readonly CVarDef<bool> ReplayIgnoreErrors =
-            CVarDef.Create("replay.ignore_errors", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("replay.ignore_errors", false, CVar.CLIENTONLY);
+
         /*
          * CFG
          */

@@ -32,6 +32,12 @@ namespace Robust.Shared.Random
             return ref list[index];
         }
 
+        public static ref T Pick<T>(this System.Random random, ValueList<T> list)
+        {
+            var index = random.Next(list.Count);
+            return ref list[index];
+        }
+
         /// <summary>Picks a random element from a collection.</summary>
         /// <remarks>
         ///     This is O(n).
@@ -107,6 +113,12 @@ namespace Robust.Shared.Random
         }
 
         public static Angle NextAngle(this System.Random random) => NextFloat(random) * MathF.Tau;
+
+        public static Angle NextAngle(this System.Random random, Angle minAngle, Angle maxAngle)
+        {
+            DebugTools.Assert(minAngle < maxAngle);
+            return minAngle + (maxAngle - minAngle) * random.NextDouble();
+        }
 
         public static float NextFloat(this IRobustRandom random)
         {

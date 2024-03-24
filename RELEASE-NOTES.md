@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add Random.NextAngle(min, max) method and Pick for `ValueList<T>`.
 
 ### Bugfixes
 

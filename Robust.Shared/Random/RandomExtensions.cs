@@ -200,6 +200,11 @@ public static class RandomExtensions
         }
         else
         {
+            // Create and fill array that represents indices of source array - 'virtual indices'.
+            // Roll number from 0 to last-rollable index. That number is index inside 'virtual indices', on which resides
+            // reference (index) of element in 'source' collection, that should be picked as rolled.
+            // After it is picked - we swap contents of selected 'virtual indices' cell with contents of last-rollable index,
+            // which is thus decremented.
             Span<int> virtualIndexSpace = sourceElementsCount <= 1024
                 ? stackalloc int[sourceElementsCount]
                 : new int[sourceElementsCount];
@@ -257,6 +262,11 @@ public static class RandomExtensions
         }
         else
         {
+            // Create and fill array that represents indices of source array - 'virtual indices'.
+            // Roll number from 0 to last-rollable index. That number is index inside 'virtual indices', on which resides
+            // reference (index) of element in 'source' collection, that should be picked as rolled.
+            // After it is picked - we swap contents of selected 'virtual indices' cell with contents of last-rollable index,
+            // which is thus decremented.
             Span<int> virtualIndexSpace = sourceElementsCount <= 1024
                 ? stackalloc int[sourceElementsCount]
                 : new int[sourceElementsCount];
@@ -314,6 +324,11 @@ public static class RandomExtensions
         }
         else
         {
+            // Create and fill array that represents indices of source array - 'virtual indices'.
+            // Roll number from 0 to last-rollable index. That number is index inside 'virtual indices', on which resides
+            // reference (index) of element in 'source' collection, that should be picked as rolled.
+            // After it is picked - we swap contents of selected 'virtual indices' cell with contents of last-rollable index,
+            // which is thus decremented.
             Span<int> virtualIndexSpace = sourceElementsCount <= 1024
                 ? stackalloc int[sourceElementsCount]
                 : new int[sourceElementsCount];

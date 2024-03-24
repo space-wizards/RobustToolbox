@@ -33,7 +33,7 @@ namespace Robust.Shared.Collections;
 /// </para>
 /// </remarks>
 /// <typeparam name="T">The type of item to store in the list.</typeparam>
-public struct ValueList<T> : IEnumerable<T>
+public struct ValueList<T> : IList<T>
 {
     private const int DefaultCapacity = 4;
 
@@ -141,6 +141,7 @@ public struct ValueList<T> : IEnumerable<T>
     }
 
     public int Count { get; private set; }
+    public bool IsReadOnly => false;
 
     // Sets or Gets the element at the given index.
     public readonly ref T this[int index]
@@ -152,6 +153,25 @@ public struct ValueList<T> : IEnumerable<T>
                 throw new IndexOutOfRangeException();
 
             return ref _items![index];
+        }
+    }
+
+    T IList<T>.this[int index]
+    {
+        get
+        {
+            if ((uint)index >= (uint)Count)
+                throw new IndexOutOfRangeException();
+
+            return _items![index];
+        }
+
+        set
+        {
+            if ((uint)index >= (uint)Count)
+                throw new IndexOutOfRangeException();
+
+            _items![index] = value;
         }
     }
 
@@ -277,6 +297,14 @@ public struct ValueList<T> : IEnumerable<T>
     public readonly bool Contains(T item)
     {
         return IndexOf(item) >= 0;
+    }
+
+    public void CopyTo(T[] array, int arrayIndex)
+    {
+        if (Count <= 0)
+            return;
+
+        Array.Copy(_items!, 0, array, arrayIndex, Count);
     }
 
     /// <summary>

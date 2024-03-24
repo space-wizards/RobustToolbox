@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `ValueList<T>` now implements `IList<T>`
 
 ### Bugfixes
 

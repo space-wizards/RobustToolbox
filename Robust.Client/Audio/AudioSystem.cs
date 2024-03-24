@@ -41,6 +41,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
     [Dependency] private readonly IAudioInternal _audio = default!;
+    [Dependency] private readonly MetaDataSystem _metadata = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
@@ -50,6 +51,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private readonly List<(EntityUid Entity, AudioComponent Component, TransformComponent Xform)> _streams = new();
     private EntityUid? _listenerGrid;
     private UpdateAudioJob _updateAudioJob;
+
 
     private EntityQuery<PhysicsComponent> _physicsQuery;
 
@@ -106,8 +108,9 @@ public sealed partial class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<PlayAudioEntityMessage>(OnEntityAudio);
         SubscribeNetworkEvent<PlayAudioPositionalMessage>(OnEntityCoordinates);
 
-        CfgManager.OnValueChanged(CVars.AudioAttenuation, OnAudioAttenuation, true);
-        CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
+        Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
+        Subs.CVar(CfgManager, CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
+        InitializeLimit();
     }
 
     private void OnAudioState(EntityUid uid, AudioComponent component, ref AfterAutoHandleStateEvent args)
@@ -131,13 +134,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public void SetMasterVolume(float value)
     {
         _audio.SetMasterGain(value);
-    }
-
-    public override void Shutdown()
-    {
-        CfgManager.UnsubValueChanged(CVars.AudioAttenuation, OnAudioAttenuation);
-        CfgManager.UnsubValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged);
-        base.Shutdown();
     }
 
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)
@@ -170,26 +166,37 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return;
         }
 
-        SetupSource(component, audioResource);
+        SetupSource((uid, component), audioResource);
         component.Loaded = true;
     }
 
-    private void SetupSource(AudioComponent component, AudioResource audioResource, TimeSpan? length = null)
+    private void SetupSource(Entity<AudioComponent> entity, AudioResource audioResource, TimeSpan? length = null)
     {
-        var source = _audio.CreateAudioSource(audioResource);
-
-        if (source == null)
+        var component = entity.Comp;
+    
+        if (TryAudioLimit(component.FileName))
         {
-            Log.Error($"Error creating audio source for {audioResource}");
-            DebugTools.Assert(false);
-            source = component.Source;
+            var newSource = _audio.CreateAudioSource(audioResource);
+
+            if (newSource == null)
+            {
+                Log.Error($"Error creating audio source for {audioResource}");
+                DebugTools.Assert(false);
+            }
+            else
+            {
+                component.Source = newSource;
+            }
         }
 
-        component.Source = source;
+        if ((component.Flags & AudioFlags.GridAudio) != 0x0)
+        {
+            _metadata.SetFlag(entity.Owner, MetaDataFlags.Undetachable, true);
+        }
 
         // Need to set all initial data for first frame.
         ApplyAudioParams(component.Params, component);
-        source.Global = component.Global;
+        component.Source.Global = component.Global;
 
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;
@@ -209,6 +216,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         // Breaks with prediction?
         component.Source.Dispose();
+
+        RemoveAudioLimit(component.FileName);
     }
 
     private void OnAudioAttenuation(int obj)
@@ -583,13 +592,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return PlayGlobal(filename, audioParams);
     }
 
-    public override void LoadStream<T>(AudioComponent component, T stream)
+    public override void LoadStream<T>(Entity<AudioComponent> entity, T stream)
     {
         if (stream is AudioStream audioStream)
         {
             TryGetAudio(audioStream, out var audio);
-            SetupSource(component, audio!, audioStream.Length);
-            component.Loaded = true;
+            SetupSource(entity, audio!, audioStream.Length);
+            entity.Comp.Loaded = true;
         }
     }
 
@@ -628,7 +637,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var audioP = audioParams ?? AudioParams.Default;
         var entity = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
         var comp = SetupAudio(entity, null, audioP, stream.Length);
-        LoadStream(comp, stream);
+        LoadStream((entity, comp), stream);
         EntityManager.InitializeAndStartEntity(entity);
         var source = comp.Source;
 

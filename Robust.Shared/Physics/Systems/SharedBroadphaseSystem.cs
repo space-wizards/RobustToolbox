@@ -67,14 +67,7 @@ namespace Robust.Shared.Physics.Systems
             UpdatesOutsidePrediction = true;
             UpdatesAfter.Add(typeof(SharedTransformSystem));
 
-            _cfg.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-
-            _cfg.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
+            Subs.CVar(_cfg, CVars.BroadphaseExpand, SetBroadphaseExpand, true);
         }
 
         private void SetBroadphaseExpand(float value) => _broadphaseExpand = value;

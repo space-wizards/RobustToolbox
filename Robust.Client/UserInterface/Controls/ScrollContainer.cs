@@ -20,6 +20,11 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool _suppressScrollValueChanged;
 
+        /// <summary>
+        /// If true then if we have a y-axis scroll it will convert it to an x-axis scroll.
+        /// </summary>
+        public bool FallbackDeltaScroll { get; set; } = true;
+
         public int ScrollSpeedX { get; set; } = 50;
         public int ScrollSpeedY { get; set; } = 50;
 
@@ -246,8 +251,18 @@ namespace Robust.Client.UserInterface.Controls
 
             if (_hScrollEnabled)
             {
-                _hScrollBar.ValueTarget += args.Delta.X * ScrollSpeedX;
+                var delta =
+                    args.Delta.X == 0f &&
+                    !_vScrollEnabled &&
+                    FallbackDeltaScroll ?
+                        -args.Delta.Y :
+                        args.Delta.X;
+
+                _hScrollBar.ValueTarget += delta * ScrollSpeedX;
             }
+
+            if (!_vScrollVisible && !_hScrollVisible)
+                return;
 
             args.Handle();
         }

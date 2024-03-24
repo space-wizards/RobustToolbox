@@ -84,7 +84,7 @@ sealed class RemoveGridCommand : LocalizedCommands
 
         var gridIdNet = NetEntity.Parse(args[0]);
 
-        if (!_entManager.TryGetEntity(gridIdNet, out var gridId) || !_map.GridExists(gridId))
+        if (!_entManager.TryGetEntity(gridIdNet, out var gridId) || !_entManager.HasComponent<MapGridComponent>(gridId))
         {
             shell.WriteError($"Grid {gridId} does not exist.");
             return;

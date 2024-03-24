@@ -232,9 +232,9 @@ namespace Robust.Client.GameStates
                 return default;
             }
 
-            DebugTools.AssertNotNull(_players.LocalPlayer);
+            DebugTools.Assert(_players.LocalSession != null);
 
-            var evArgs = new EntitySessionEventArgs(_players.LocalPlayer!.Session);
+            var evArgs = new EntitySessionEventArgs(_players.LocalSession);
             _pendingSystemMessages.Enqueue((_nextInputCmdSeq, _timing.CurTick, message,
                 new EntitySessionMessage<T>(evArgs, message)));
 
@@ -700,7 +700,7 @@ namespace Robust.Client.GameStates
         {
             using var _ = _timing.StartStateApplicationArea();
 
-            // TODO repays optimize this.
+            // TODO replays optimize this.
             // This currently just saves game states as they are applied.
             // However this is inefficient and may have redundant data.
             // E.g., we may record states: [10 to 15] [11 to 16] *error* [0 to 18] [18 to 19] [18 to 20] ...
@@ -1120,7 +1120,7 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                if ((meta.Flags & MetaDataFlags.Detached) != 0)
+                if ((meta.Flags & (MetaDataFlags.Detached | MetaDataFlags.Undetachable)) != 0)
                     continue;
 
                 if (lastStateApplied.HasValue)

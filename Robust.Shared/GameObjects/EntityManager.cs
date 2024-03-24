@@ -354,7 +354,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("use override with an EntityUid")]
+        [Obsolete("use override with an EntityUid or Entity<T>")]
         public void Dirty(IComponent component, MetaDataComponent? meta = null)
         {
             Dirty(component.Owner, component, meta);
@@ -365,6 +365,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
                 $"Attempted to dirty a non-networked component: {component.GetType()}");
+            DebugTools.AssertOwner(uid, component);
 
             if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;
@@ -905,6 +906,16 @@ namespace Robust.Shared.GameObjects
             // server should never be calling this.
             DebugTools.Assert("Why are you raising predictive events on the server?");
         }
+
+        /// <summary>
+        /// Raises an event locally on client or networked on server.
+        /// </summary>
+        public abstract void RaiseSharedEvent<T>(T message, EntityUid? user = null) where T : EntityEventArgs;
+
+        /// <summary>
+        /// Raises an event locally on client or networked on server.
+        /// </summary>
+        public abstract void RaiseSharedEvent<T>(T message, ICommonSession? user = null) where T : EntityEventArgs;
 
         /// <summary>
         ///     Factory for generating a new EntityUid for an entity currently being created.

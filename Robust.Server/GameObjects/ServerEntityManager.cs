@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Prometheus;
+using Robust.Server.GameStates;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -42,7 +43,7 @@ namespace Robust.Server.GameObjects
 #endif
 
         private ISawmill _netEntSawmill = default!;
-        private EntityQuery<ActorComponent> _actorQuery;
+        private PvsSystem _pvs = default!;
 
         public override void Initialize()
         {
@@ -57,7 +58,7 @@ namespace Robust.Server.GameObjects
         public override void Startup()
         {
             base.Startup();
-            _actorQuery = GetEntityQuery<ActorComponent>();
+            _pvs = System<PvsSystem>();
         }
 
         EntityUid IServerEntityManagerInternal.AllocEntity(EntityPrototype? prototype)
@@ -103,6 +104,40 @@ namespace Robust.Server.GameObjects
             return entity;
         }
 
+        /// <inheritdoc />
+        public override void RaiseSharedEvent<T>(T message, EntityUid? user = null)
+        {
+            if (user != null)
+            {
+                var filter = Filter.Broadcast().RemoveWhereAttachedEntity(e => e == user.Value);
+                foreach (var session in filter.Recipients)
+                {
+                    EntityNetManager.SendSystemNetworkMessage(message, session.Channel);
+                }
+            }
+            else
+            {
+                EntityNetManager.SendSystemNetworkMessage(message);
+            }
+        }
+
+        /// <inheritdoc />
+        public override void RaiseSharedEvent<T>(T message, ICommonSession? user = null)
+        {
+            if (user != null)
+            {
+                var filter = Filter.Broadcast().RemovePlayer(user);
+                foreach (var session in filter.Recipients)
+                {
+                    EntityNetManager.SendSystemNetworkMessage(message, session.Channel);
+                }
+            }
+            else
+            {
+                EntityNetManager.SendSystemNetworkMessage(message);
+            }
+        }
+
         private void ClearTicks(EntityUid entity, EntityPrototype prototype)
         {
             foreach (var (netId, component) in GetNetComponents(entity))
@@ -114,6 +149,12 @@ namespace Robust.Server.GameObjects
                 if (prototype.Components.ContainsKey(compName))
                     component.ClearTicks();
             }
+        }
+
+        internal override void SetLifeStage(MetaDataComponent meta, EntityLifeStage stage)
+        {
+            base.SetLifeStage(meta, stage);
+            _pvs.SyncMetadata(meta);
         }
 
         #region IEntityNetworkManager impl

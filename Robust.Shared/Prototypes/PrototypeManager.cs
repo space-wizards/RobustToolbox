@@ -645,6 +645,24 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
+        public bool HasIndex(EntProtoId? id)
+        {
+            if (id == null)
+                return false;
+
+            return HasIndex(id.Value);
+        }
+
+        /// <inheritdoc />
+        public bool HasIndex<T>(ProtoId<T>? id) where T : class, IPrototype
+        {
+            if (id == null)
+                return false;
+
+            return HasIndex(id.Value);
+        }
+
+        /// <inheritdoc />
         public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
         {
             var returned = TryIndex(typeof(T), id, out var proto);
@@ -673,6 +691,30 @@ namespace Robust.Shared.Prototypes
         public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
         {
             return TryIndex(id.Id, out prototype);
+        }
+
+        /// <inheritdoc />
+        public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype)
+        {
+            if (id == null)
+            {
+                prototype = null;
+                return false;
+            }
+
+            return TryIndex(id.Value, out prototype);
+        }
+
+        /// <inheritdoc />
+        public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
+        {
+            if (id == null)
+            {
+                prototype = null;
+                return false;
+            }
+
+            return TryIndex(id.Value, out prototype);
         }
 
         /// <inheritdoc />

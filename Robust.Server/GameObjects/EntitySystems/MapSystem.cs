@@ -28,7 +28,7 @@ namespace Robust.Server.GameObjects
             base.Initialize();
             SubscribeLocalEvent<MapGridComponent, EmptyGridEvent>(HandleGridEmpty);
 
-            _cfg.OnValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion, true);
+            Subs.CVar(_cfg, CVars.GameDeleteEmptyGrids, SetGridDeletion, true);
         }
 
         protected override void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args)
@@ -62,13 +62,6 @@ namespace Robust.Server.GameObjects
         private bool GridEmpty(MapGridComponent grid)
         {
             return !(grid.GetAllTiles().Any());
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-
-            _cfg.UnsubValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion);
         }
 
         private void HandleGridEmpty(EntityUid uid, MapGridComponent component, EmptyGridEvent args)

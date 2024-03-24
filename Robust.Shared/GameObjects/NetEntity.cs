@@ -68,7 +68,7 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
             entity = Parse(uid);
             return true;
         }
-        catch (FormatException)
+        catch (Exception ex) when (ex is FormatException or OverflowException)
         {
             entity = Invalid;
             return false;

@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Robust.Roslyn.Shared;
 
 namespace Robust.Analyzers;
 
@@ -18,7 +19,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
         Diagnostics.IdDataDefinitionPartial,
         "Type must be partial",
-        "Type {0} is a DataDefinition but is not partial.",
+        "Type {0} is a DataDefinition but is not partial",
         "Usage",
         DiagnosticSeverity.Error,
         true,
@@ -28,7 +29,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor NestedDataDefinitionPartialRule = new(
         Diagnostics.IdNestedDataDefinitionPartial,
         "Type must be partial",
-        "Type {0} contains nested data definition {1} but is not partial.",
+        "Type {0} contains nested data definition {1} but is not partial",
         "Usage",
         DiagnosticSeverity.Error,
         true,
@@ -38,7 +39,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor DataFieldWritableRule = new(
         Diagnostics.IdDataFieldWritable,
         "Data field must not be readonly",
-        "Data field {0} in data definition {1} is readonly.",
+        "Data field {0} in data definition {1} is readonly",
         "Usage",
         DiagnosticSeverity.Error,
         true,
@@ -48,7 +49,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor DataFieldPropertyWritableRule = new(
         Diagnostics.IdDataFieldPropertyWritable,
         "Data field property must have a setter",
-        "Data field property {0} in data definition {1} does not have a setter.",
+        "Data field property {0} in data definition {1} does not have a setter",
         "Usage",
         DiagnosticSeverity.Error,
         true,

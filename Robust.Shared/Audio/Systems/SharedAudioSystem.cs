@@ -50,15 +50,9 @@ public abstract partial class SharedAudioSystem : EntitySystem
         base.Initialize();
         InitializeEffect();
         ZOffset = CfgManager.GetCVar(CVars.AudioZOffset);
-        CfgManager.OnValueChanged(CVars.AudioZOffset, SetZOffset);
+        Subs.CVar(CfgManager, CVars.AudioZOffset, SetZOffset);
         SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
         SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
-    }
-
-    public override void Shutdown()
-    {
-        base.Shutdown();
-        CfgManager.UnsubValueChanged(CVars.AudioZOffset, SetZOffset);
     }
 
     protected void SetZOffset(float value)
@@ -272,7 +266,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         return sound == null ? null : PlayGlobal(GetSound(sound), recipient, sound.Params);
     }
 
-    public abstract void LoadStream<T>(AudioComponent component, T stream);
+    public abstract void LoadStream<T>(Entity<AudioComponent> entity, T stream);
 
     /// <summary>
     /// Play an audio file globally, without position.

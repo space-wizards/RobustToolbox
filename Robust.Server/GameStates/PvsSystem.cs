@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ using Robust.Server.Replays;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -75,6 +78,7 @@ internal sealed partial class PvsSystem : EntitySystem
     private PvsAckJob _ackJob;
     private PvsChunkJob _chunkJob;
     private PvsLeaveJob _leaveJob;
+    private PvsDeletionsJob _deletionJob;
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
@@ -110,6 +114,10 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         base.Initialize();
 
+        if (Marshal.SizeOf<PvsMetadata>() != Marshal.SizeOf<PvsData>())
+            throw new Exception($"Pvs struct sizes must match");
+
+        _deletionJob = new PvsDeletionsJob(this);
         _leaveJob = new PvsLeaveJob(this);
         _chunkJob = new PvsChunkJob(this);
         _ackJob = new PvsAckJob(this);
@@ -125,20 +133,23 @@ internal sealed partial class PvsSystem : EntitySystem
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         _transform.OnGlobalMoveEvent += OnEntityMove;
+        EntityManager.EntityAdded += OnEntityAdded;
+        EntityManager.EntityDeleted += OnEntityDeleted;
+        EntityManager.AfterEntityFlush += AfterEntityFlush;
 
-        _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
-        _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
-        _configManager.OnValueChanged(CVars.NetLowLodRange, OnLodChanged, true);
-        _configManager.OnValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged, true);
-        _configManager.OnValueChanged(CVars.NetPvsAsync, OnAsyncChanged, true);
+        Subs.CVar(_configManager, CVars.NetPVS, SetPvs, true);
+        Subs.CVar(_configManager, CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
+        Subs.CVar(_configManager, CVars.NetLowLodRange, OnLodChanged, true);
+        Subs.CVar(_configManager, CVars.NetForceAckThreshold, OnForceAckChanged, true);
+        Subs.CVar(_configManager, CVars.NetPvsAsync, OnAsyncChanged, true);
+        Subs.CVar(_configManager, CVars.NetPvsCompressLevel, ResetParallelism, true);
 
         _serverGameStateManager.ClientAck += OnClientAck;
         _serverGameStateManager.ClientRequestFull += OnClientRequestFull;
+        _parallelMgr.ParallelCountChanged += ResetParallelism;
 
         InitializeDirty();
-
-        _parallelMgr.ParallelCountChanged += ResetParallelism;
-        _configManager.OnValueChanged(CVars.NetPvsCompressLevel, ResetParallelism, true);
+        InitializePvsArray();
     }
 
     public override void Shutdown()
@@ -147,19 +158,22 @@ internal sealed partial class PvsSystem : EntitySystem
 
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         _transform.OnGlobalMoveEvent -= OnEntityMove;
+        EntityManager.EntityAdded -= OnEntityAdded;
+        EntityManager.EntityDeleted -= OnEntityDeleted;
+        EntityManager.AfterEntityFlush -= AfterEntityFlush;
 
-        _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
-        _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
-        _configManager.UnsubValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged);
-        _configManager.UnsubValueChanged(CVars.NetPvsCompressLevel, ResetParallelism);
         _parallelMgr.ParallelCountChanged -= ResetParallelism;
 
         _serverGameStateManager.ClientAck -= OnClientAck;
         _serverGameStateManager.ClientRequestFull -= OnClientRequestFull;
 
+        ClearPvsData();
         ShutdownDirty();
-        _leaveTask?.WaitOne();
-        _leaveTask = null;
+    }
+
+    public override void Update(float frameTime)
+    {
+        ProcessDeletions();
     }
 
     /// <summary>
@@ -257,6 +271,7 @@ internal sealed partial class PvsSystem : EntitySystem
         session.LastReceivedAck = _gameTiming.CurTick;
         session.RequestedFull = true;
         ClearSendHistory(session);
+        ClearPlayerPvsData(session);
     }
 
     private void OnViewsizeChanged(float value)
@@ -346,31 +361,25 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         var toSend = pvsSession.ToSend;
         var toSendSet = new HashSet<NetEntity>(toSend!.Count);
-        foreach (var data in toSend)
+
+        foreach (var intPtr in toSend)
         {
-            toSendSet.Add(data.NetEntity);
+            toSendSet.Add(IndexToNetEntity(intPtr));
         }
         DebugTools.AssertEqual(toSend.Count, toSendSet.Count);
 
-        foreach (var data in CollectionsMarshal.AsSpan(toSend))
+        foreach (var intPtr in CollectionsMarshal.AsSpan(toSend))
         {
+            ref var data = ref pvsSession.DataMemory.GetRef(intPtr.Index);
             DebugTools.AssertEqual(data.LastSeen, _gameTiming.CurTick);
-            DebugTools.Assert(ReferenceEquals(data, pvsSession.Entities[data.NetEntity]));
-
-            // if an entity is visible, its parents should always be visible.
-            if (_xformQuery.GetComponent(GetEntity(data.NetEntity)).ParentUid is not {Valid: true} pUid)
-                continue;
-
-            DebugTools.Assert(toSendSet.Contains(GetNetEntity(pUid)),
-                $"Attempted to send an entity without sending it's parents. Entity: {ToPrettyString(pUid)}.");
         }
 
         pvsSession.PreviouslySent.TryGetValue(_gameTiming.CurTick - 1, out var lastSent);
-        foreach (var data in CollectionsMarshal.AsSpan(lastSent))
+        foreach (var intPtr in CollectionsMarshal.AsSpan(lastSent))
         {
-            DebugTools.Assert(!pvsSession.Entities.TryGetValue(data.NetEntity, out var old) || ReferenceEquals(data, old));
+            ref var data = ref pvsSession.DataMemory.GetRef(intPtr.Index);
             DebugTools.Assert(data.LastSeen != GameTick.Zero);
-            DebugTools.AssertEqual(toSendSet.Contains(data.NetEntity), data.LastSeen == _gameTiming.CurTick);
+            DebugTools.AssertEqual(toSendSet.Contains(IndexToNetEntity(intPtr)), data.LastSeen == _gameTiming.CurTick);
             DebugTools.Assert(data.LastSeen == _gameTiming.CurTick
                               || data.LastSeen == _gameTiming.CurTick - 1);
         }
@@ -413,7 +422,10 @@ internal sealed partial class PvsSystem : EntitySystem
         foreach (var session in _disconnected)
         {
             if (PlayerData.Remove(session, out var pvsSession))
+            {
                 ClearSendHistory(pvsSession);
+                FreeSessionDataMemory(pvsSession);
+            }
         }
 
         var ackJob = ProcessQueuedAcks();

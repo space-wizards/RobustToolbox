@@ -139,4 +139,3 @@ public sealed class GridDeleteSingleTileRemoveTestTest : RobustIntegrationTest
         Assert.That(cQuery.GetComponent(cEntity.Value).ParentUid, Is.EqualTo(cMap));
     }
 }
-

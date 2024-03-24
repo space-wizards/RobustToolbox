@@ -245,13 +245,6 @@ namespace Robust.Shared.Physics.Systems
             SetBodyType(guid, BodyType.Static, manager: manager, body: body);
         }
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-
-            ShutdownContacts();
-        }
-
         private void UpdateMapAwakeState(EntityUid uid, PhysicsComponent body)
         {
             if (Transform(uid).MapUid is not {} map)

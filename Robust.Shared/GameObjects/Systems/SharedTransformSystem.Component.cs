@@ -1512,37 +1512,88 @@ public abstract partial class SharedTransformSystem
         }
     }
 
+    /// <summary>
+    /// Swaps the position of two entities, placing them inside of containers when applicable.
+    /// </summary>
+    /// <returns>Returns if the entities can have their positions swapped. Fails if the entities are parented to one another</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public bool SwapPositions(Entity<TransformComponent?> entity1, Entity<TransformComponent?> entity2)
     {
-        if (!Resolve(entity1, ref entity1.Comp) || !Resolve(entity2, ref entity2.Comp))
+        if (!XformQuery.Resolve(entity1, ref entity1.Comp) || !XformQuery.Resolve(entity2, ref entity2.Comp))
             return false;
 
         // save ourselves the hassle and just don't move anything.
         if (entity1 == entity2)
             return true;
 
-        var pos1 = GetMapCoordinates(entity1.Comp);
-        var pos2 = GetMapCoordinates(entity2.Comp);
+        // don't parent things to each other by accident
+        if (IsParentOf(entity1.Comp, entity2) || IsParentOf(entity2.Comp, entity1))
+            return false;
+
+        MapCoordinates? pos1 = null;
+        MapCoordinates? pos2 = null;
 
         if (_container.TryGetContainingContainer(entity1, out var container1))
             _container.TryRemoveFromContainer(entity1, true);
+        else
+            pos1 = GetMapCoordinates(entity1.Comp);
 
         if (_container.TryGetContainingContainer(entity2, out var container2))
             _container.TryRemoveFromContainer(entity2, true);
+        else
+            pos2 = GetMapCoordinates(entity2.Comp);
 
-        // making sure we don't accidentally parent something to itself
-        if (container1?.Owner == entity2 || container2?.Owner == entity1)
+        // making sure we don't accidentally place something inside of itself
+        if (container1 != null && container1.Owner == entity2.Owner)
+            return false;
+        if (container2 != null && container2.Owner == entity1.Owner)
             return false;
 
-        SetParent(entity1, _mapManager.GetMapEntityId(pos2.MapId));
-        SetWorldPosition(entity1.Comp, pos2.Position);
         if (container2 != null)
+        {
             _container.Insert(entity1, container2);
+        }
+        else if (pos2 != null)
+        {
+            var mapUid = _mapManager.GetMapEntityId(pos2.Value.MapId);
 
-        SetParent(entity2, _mapManager.GetMapEntityId(pos1.MapId));
-        SetWorldPosition(entity2.Comp, pos1.Position);
+            if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos2.Value.Position, out var targetGrid, out _))
+            {
+                var (_, _, invWorldMatrix) = GetWorldPositionRotationInvMatrix(targetGrid);
+                SetCoordinates(entity1, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(pos2.Value.Position)));
+            }
+            else
+            {
+                SetCoordinates(entity1, new EntityCoordinates(mapUid, pos2.Value.Position));
+            }
+        }
+        else
+        {
+            throw new InvalidOperationException();
+        }
+
         if (container1 != null)
+        {
             _container.Insert(entity2, container1);
+        }
+        else if (pos1 != null)
+        {
+            var mapUid = _mapManager.GetMapEntityId(pos1.Value.MapId);
+
+            if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos1.Value.Position, out var targetGrid, out _))
+            {
+                var (_, _, invWorldMatrix) = GetWorldPositionRotationInvMatrix(targetGrid);
+                SetCoordinates(entity2, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(pos1.Value.Position)));
+            }
+            else
+            {
+                SetCoordinates(entity2, new EntityCoordinates(mapUid, pos1.Value.Position));
+            }
+        }
+        else
+        {
+            throw new InvalidOperationException();
+        }
 
         return true;
     }

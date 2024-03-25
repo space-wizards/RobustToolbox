@@ -1176,11 +1176,12 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 foreach (var component in EntityManager.GetComponents(entityUid))
                 {
-                    if (component is MapSaveIdComponent)
+                    var compType = component.GetType();
+                    var registration = _factory.GetRegistration(compType);
+                    if (registration.Unsaved)
                         continue;
 
-                    var compType = component.GetType();
-                    var compName = _factory.GetComponentName(compType);
+                    var compName = registration.Name;
                     _context.CurrentComponent = compName;
                     MappingDataNode? compMapping;
                     MappingDataNode? protMapping = null;

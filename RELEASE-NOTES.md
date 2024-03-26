@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Log levels now work differently. When a message gets logged to a sawmill, the message will be logged if the FIRST sawmill up the chain has a passing log level set, instead of requiring all log levels up the chain to pass. This makes it possible to make specific sawmills do verbose logging, without needing to set the root too.
 
 ### New features
 

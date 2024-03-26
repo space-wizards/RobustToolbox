@@ -43,7 +43,9 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* `Texture.GetPixel()`: fixed off-by-one with Y coordinate.
+* `Texture.GetPixel()`: fix stack overflow when reading large images.
+* `Texture.GetPixel()`: use more widely compatible OpenGL calls.
 
 ### Other
 

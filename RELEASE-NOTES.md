@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Log levels now work differently. When a message gets logged to a sawmill, the message will be logged if the FIRST sawmill up the chain has a passing log level set, instead of requiring all log levels up the chain to pass. This makes it possible to make specific sawmills do verbose logging, without needing to set the root too.
+*None yet*
 
 ### New features
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 215.3.1
+
+### Bugfixes
+
+* Revert zstd update.
 
 
 ## 215.3.0

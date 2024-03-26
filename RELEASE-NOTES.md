@@ -49,7 +49,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Disabled `net.mtu_expand` again by default, as it was causing issues.
 
 ### Internal
 

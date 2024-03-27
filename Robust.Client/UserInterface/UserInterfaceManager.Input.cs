@@ -62,7 +62,9 @@ internal partial class UserInterfaceManager
             }
         }
 
-        if (control.MouseFilter != Control.MouseFilterMode.Ignore && control.HasPoint(position / control.UIScale))
+        if (control.MouseFilter != Control.MouseFilterMode.Ignore &&
+            control.MouseFilter != Control.MouseFilterMode.Pass &&
+            control.HasPoint(position / control.UIScale))
         {
             return (control, position);
         }

@@ -699,12 +699,19 @@ namespace Robust.Shared.Maths
         {
             blend = MathHelper.Clamp01(blend);
 
-            float R = MathHelper.Lerp(a.R, b.R, blend);
-            float G = MathHelper.Lerp(a.G, b.G, blend);
-            float B = MathHelper.Lerp(a.B, b.B, blend);
-            float A = MathHelper.Lerp(a.A, b.A, blend);
+            //Convert RGB to HSV
+            var aHSV = Color.ToHsv(a);
+            var bHSV = Color.ToHsv(b);
 
-            return new Color(R, G, B, A);
+            //Interpolate in HSV space
+            var X = MathHelper.Lerp(aHSV.X, bHSV.X, blend);
+            var Y = MathHelper.Lerp(aHSV.Y, bHSV.Y, blend);
+            var Z = MathHelper.Lerp(aHSV.Z, bHSV.Z, blend);
+            var W = MathHelper.Lerp(aHSV.W, bHSV.W, blend);
+
+            Vector4 lerpedHSV = new Vector4(X, Y, Z, W);
+
+            return Color.FromHsv(lerpedHSV);
         }
         
         /// <summary>

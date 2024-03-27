@@ -2,7 +2,7 @@ using System;
 
 namespace Robust.Shared.Audio.Sources;
 
-internal interface IBufferedAudioSource : IAudioSource
+public interface IBufferedAudioSource : IAudioSource
 {
     int SampleRate { get; set; }
     int GetNumberOfBuffersProcessed();

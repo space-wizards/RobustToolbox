@@ -39,7 +39,9 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* You can now specify a component to not be saved to map files with `[UnsavedComponent]`.
+* Added `ITileDefinitionManager.TryGetDefinition`.
+* The map loader now tries to preserve the `tilemap` contents of map files, which should reduce diffs when re-saving a map after the game's internal tile IDs have changed.
 
 ### Bugfixes
 

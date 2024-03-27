@@ -54,6 +54,33 @@ END TEMPLATE-->
 *None yet*
 
 
+## 215.3.1
+
+### Bugfixes
+
+* Revert zstd update.
+
+
+## 215.3.0
+
+### New features
+
+* `EntityQuery<T>` now has `HasComp` and `TryComp` methods that are shorter than its existing ones.
+* Added `PlacementInformation.UseEditorContext`.
+* Added `Vector2Helpers` functions for comparing ranges between vectors.
+
+### Bugfixes
+
+* `Texture.GetPixel()`: fixed off-by-one with Y coordinate.
+* `Texture.GetPixel()`: fix stack overflow when reading large images.
+* `Texture.GetPixel()`: use more widely compatible OpenGL calls.
+
+### Other
+
+* Disabled `net.mtu_expand` again by default, as it was causing issues.
+* Updated `SharpZstd` dependency.
+
+
 ## 215.2.0
 
 ### New features

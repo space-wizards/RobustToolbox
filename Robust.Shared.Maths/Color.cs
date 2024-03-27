@@ -699,10 +699,10 @@ namespace Robust.Shared.Maths
         {
             t = MathHelper.Clamp01(t);
 
-            float lerpedR = MathHelper.Lerp(startColor.R, endColor.R, t);
-            float lerpedG = MathHelper.Lerp(startColor.G, endColor.G, t);
-            float lerpedB = MathHelper.Lerp(startColor.B, endColor.B, t);
-            float lerpedA = MathHelper.Lerp(startColor.A, endColor.A, t);
+            float lerpedR = MathHelper.Lerp(start.R, end.R, t);
+            float lerpedG = MathHelper.Lerp(start.G, end.G, t);
+            float lerpedB = MathHelper.Lerp(start.B, end.B, t);
+            float lerpedA = MathHelper.Lerp(start.A, end.A, t);
 
             return new Color(lerpedR, lerpedG, lerpedB, lerpedA);
         }

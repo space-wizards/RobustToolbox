@@ -20,6 +20,7 @@ namespace Robust.Client.UserInterface.Controls
     public class LineEdit : Control
     {
         [Dependency] private readonly IClyde _clyde = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         private const float MouseScrollDelay = 0.001f;
 
@@ -45,6 +46,12 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool _mouseSelectingText;
         private float _lastMousePosition;
+
+        private TimeSpan? _lastClickTime;
+        private Vector2? _lastClickPosition;
+
+        private const int DoubleClickDelay = 250;
+        private const int DoubleClickRange = 10;
 
         private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
@@ -685,8 +692,27 @@ namespace Robust.Client.UserInterface.Controls
                     args.Handle();
                 }
             }
+
+            // Double-clicking. Clicks delay should be <= 250ms and the distance < 10 pixels.
+            else if (args.Function == EngineKeyFunctions.UIClick && _lastClickPosition != null && _lastClickTime != null
+                     && _timing.RealTime - _lastClickTime <= TimeSpan.FromMilliseconds(DoubleClickDelay)
+                     && (_lastClickPosition.Value - args.PointerLocation.Position).Length() < DoubleClickRange)
+            {
+                _lastClickTime = _timing.RealTime;
+                _lastClickPosition = args.PointerLocation.Position;
+
+                _lastMousePosition = args.RelativePosition.X;
+
+                _selectionStart = TextEditShared.PrevWordPosition(_text, GetIndexAtPos(args.RelativePosition.X));
+                _cursorPosition = TextEditShared.EndWordPosition(_text, GetIndexAtPos(args.RelativePosition.X));
+
+                args.Handle();
+            }
             else
             {
+                _lastClickTime = _timing.RealTime;
+                _lastClickPosition = args.PointerLocation.Position;
+
                 _mouseSelectingText = true;
                 _lastMousePosition = args.RelativePosition.X;
 

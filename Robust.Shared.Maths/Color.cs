@@ -688,6 +688,26 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        ///    Linear interpolation between two colors
+        /// </summary>
+        /// <returns>
+        ///    Returns a color that is a mixture of the two incoming colors by linear interpolation.
+        /// <param name="start">First incoming color</param>
+        /// <param name="end">Second incoming color</param>
+        /// <param name="t">a value between 0 and 1 indicating linear interpolation between the two colors.</param>
+        public static Color Lerp(Color start, Color end, float t)
+        {
+            t = MathHelper.Clamp01(t);
+
+            float lerpedR = MathHelper.Lerp(startColor.R, endColor.R, t);
+            float lerpedG = MathHelper.Lerp(startColor.G, endColor.G, t);
+            float lerpedB = MathHelper.Lerp(startColor.B, endColor.B, t);
+            float lerpedA = MathHelper.Lerp(startColor.A, endColor.A, t);
+
+            return new Color(lerpedR, lerpedG, lerpedB, lerpedA);
+        }
+        
+        /// <summary>
         ///     Converts HCY color values to RGB color values.
         /// </summary>
         /// <returns>

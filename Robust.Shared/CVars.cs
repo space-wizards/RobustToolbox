@@ -225,18 +225,24 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_async", true, CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
-        /// View size to take for PVS calculations,
-        /// as the size of the sides of a square centered on the view points of clients.
+        /// View size to take for PVS calculations, as the size of the sides of a square centered on the view points of
+        /// clients. See also <see cref="NetPvsPriorityRange"/>.
         /// </summary>
         public static readonly CVarDef<float> NetMaxUpdateRange =
             CVarDef.Create("net.pvs_range", 25f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
-        /// Chunks whose centre is further than this distance away from a player's eye will contain fewer entities.
-        /// This has no effect if it is smaller than <see cref="NetMaxUpdateRange"/>
+        /// A variant of <see cref="NetMaxUpdateRange"/> that is used to limit the view-distance of entities with the
+        /// <see cref="MetaDataFlags.PvsPriority"/> flag set. This can be used to extend the range at which certain
+        /// entities become visible.
         /// </summary>
-        public static readonly CVarDef<float> NetLowLodRange =
-            CVarDef.Create("net.low_lod_distance", 100f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+        /// <remarks>
+        /// This is useful for entities like lights and occluders to try and prevent noticeable pop-in as players
+        /// move around. Note that this has no effect if it is less than <see cref="NetMaxUpdateRange"/>, and that this
+        /// only works for entities that are directly parented to a grid or map.
+        /// </remarks>
+        public static readonly CVarDef<float> NetPvsPriorityRange =
+            CVarDef.Create("net.pvs_priority_range", 32.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Maximum allowed delay between the current tick and a client's last acknowledged tick before we send the

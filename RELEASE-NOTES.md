@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Add Random.GetItems methods for IList/ValueList/Span (similar to https://learn.microsoft.com/en-us/dotnet/api/system.random.getitems?view=net-8.0)
+* Added `IRobustRandom.GetItems` extension methods for randomly picking multiple items from a collections.
 
 ### Bugfixes
 
@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* `Shuffle<T>(Span<T>, System.Random)` has been removed, just use the builtin method.
 
 
 ## 215.3.1

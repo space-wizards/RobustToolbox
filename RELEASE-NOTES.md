@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 216.0.0
+
+### Breaking changes
+
 * The `net.low_lod_distance` cvar has been replaced with a new `net.pvs_priority_range`. Instead of limiting the range at which all entities are sent to a player, it now extends the range at which high priorities can be sent. The default value of this new cvar is 32.5, which is larger than the default `net.pvs_range` value of 25.
 
 ### New features
@@ -46,14 +69,6 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix buffered audio sources not being disposed.
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
 
 
 ## 215.3.1

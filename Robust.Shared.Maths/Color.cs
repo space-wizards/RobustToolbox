@@ -697,7 +697,7 @@ namespace Robust.Shared.Maths
         /// <param name="blend">a value between 0 and 1 indicating linear interpolation between the two colors.</param>
         public static Color Lerp(Color a, Color b, float blend)
         {
-            t = MathHelper.Clamp01(t);
+            blend = MathHelper.Clamp01(blend);
 
             float R = MathHelper.Lerp(a.R, b.R, blend);
             float G = MathHelper.Lerp(a.G, b.G, blend);

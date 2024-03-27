@@ -123,10 +123,10 @@ namespace Robust.Client.UserInterface.Controls
             if (!ReturnMeasure)
                 return Vector2.Zero;
 
-            if (_vScrollEnabled)
+            if (_vScrollEnabled && size.Y >= availableSize.Y)
                 size.X += _vScrollBar.DesiredSize.X;
 
-            if (_hScrollEnabled)
+            if (_hScrollEnabled && size.X >= availableSize.X)
                 size.Y += _hScrollBar.DesiredSize.Y;
 
             return size;

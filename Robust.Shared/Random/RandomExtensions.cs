@@ -163,21 +163,19 @@ public static class RandomExtensions
     }
 
     /// <summary>
-    /// Get set amount of random items from collection.
+    /// Get set amount of random items from a collection.
     /// If <paramref name="allowDuplicates"/> is false and <paramref name="source"/>
     /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="source"/> clone.
     /// If <paramref name="source"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
     /// </summary>
     /// <param name="random">Instance of random to invoke upon.</param>
     /// <param name="source">Collection from which items should be picked.</param>
-    /// <param name="count">Count of random items to be picked.</param>
-    /// <param name="allowDuplicates">Marker, are duplicate items allowed in results.</param>
+    /// <param name="count">Number of random items to be picked.</param>
+    /// <param name="allowDuplicates">If true, items are allowed to be picked more than once.</param>
     public static T[] GetItems<T>(this IRobustRandom random, IList<T> source, int count, bool allowDuplicates = true)
     {
         if (source.Count == 0 || count <= 0)
-        {
             return Array.Empty<T>();
-        }
 
         if (allowDuplicates == false && count >= source.Count)
         {
@@ -186,42 +184,33 @@ public static class RandomExtensions
             return arr;
         }
 
-        var sourceElementsCount = source.Count;
-
-        var rolled = new T[count];
+        var sourceCount = source.Count;
+        var result = new T[count];
 
         if (allowDuplicates)
         {
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
-                int virtualIndex = random.Next(sourceElementsCount);
-                rolled[i] = source[virtualIndex];
+                result[i] = source[random.Next(sourceCount)];
             }
+
+            return result;
         }
-        else
+
+        var indices = sourceCount <= 1024 ? stackalloc int[sourceCount] : new int[sourceCount];
+        for (var i = 0; i < sourceCount; i++)
         {
-            // Create and fill array that represents indices of source array - 'virtual indices'.
-            // Roll number from 0 to last-rollable index. That number is index inside 'virtual indices', on which resides
-            // reference (index) of element in 'source' collection, that should be picked as rolled.
-            // After it is picked - we swap contents of selected 'virtual indices' cell with contents of last-rollable index,
-            // which is thus decremented.
-            Span<int> virtualIndexSpace = sourceElementsCount <= 1024
-                ? stackalloc int[sourceElementsCount]
-                : new int[sourceElementsCount];
-            for (int i = 0; i < sourceElementsCount; i++)
-            {
-                virtualIndexSpace[i] = i;
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                var j = random.Next(sourceElementsCount - i);
-                rolled[i] = source[virtualIndexSpace[j]];
-                virtualIndexSpace[j] = virtualIndexSpace[sourceElementsCount - i - 1];
-            }
+            indices[i] = i;
         }
 
-        return rolled;
+        for (var i = 0; i < count; i++)
+        {
+            var j = random.Next(sourceCount - i);
+            result[i] = source[indices[j]];
+            indices[j] = indices[sourceCount - i - 1];
+        }
+
+        return result;
     }
 
     /// <inheritdoc cref="GetItems{T}(Robust.Shared.Random.IRobustRandom,System.Collections.Generic.IList{T},int,bool)"/>
@@ -240,9 +229,7 @@ public static class RandomExtensions
     public static T[] GetItems<T>(this IRobustRandom random, Span<T> source, int count, bool allowDuplicates = true)
     {
         if (source.Length == 0 || count <= 0)
-        {
             return Array.Empty<T>();
-        }
 
         if (allowDuplicates == false && count >= source.Length)
         {
@@ -251,42 +238,36 @@ public static class RandomExtensions
             return arr;
         }
 
-        var sourceElementsCount = source.Length;
-
-        var rolled = new T[count];
+        var sourceCount = source.Length;
+        var result = new T[count];
 
         if (allowDuplicates)
         {
-            for (int i = 0; i < count; i++)
+            // TODO RANDOM consider just using System.Random.GetItems()
+            // However, the different implementations might mean that lists & arrays shuffled using the same seed
+            // generate different results, which might be undesirable?
+            for (var i = 0; i < count; i++)
             {
-                int virtualIndex = random.Next(sourceElementsCount);
-                rolled[i] = source[virtualIndex];
+                result[i] = source[random.Next(sourceCount)];
             }
+
+            return result;
         }
-        else
+
+        var indices = sourceCount <= 1024 ? stackalloc int[sourceCount] : new int[sourceCount];
+        for (var i = 0; i < sourceCount; i++)
         {
-            // Create and fill array that represents indices of source array - 'virtual indices'.
-            // Roll number from 0 to last-rollable index. That number is index inside 'virtual indices', on which resides
-            // reference (index) of element in 'source' collection, that should be picked as rolled.
-            // After it is picked - we swap contents of selected 'virtual indices' cell with contents of last-rollable index,
-            // which is thus decremented.
-            Span<int> virtualIndexSpace = sourceElementsCount <= 1024
-                ? stackalloc int[sourceElementsCount]
-                : new int[sourceElementsCount];
-            for (int i = 0; i < sourceElementsCount; i++)
-            {
-                virtualIndexSpace[i] = i;
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                var j = random.Next(sourceElementsCount - i);
-                rolled[i] = source[virtualIndexSpace[j]];
-                virtualIndexSpace[j] = virtualIndexSpace[sourceElementsCount - i - 1];
-            }
+            indices[i] = i;
         }
 
-        return rolled;
+        for (var i = 0; i < count; i++)
+        {
+            var j = random.Next(sourceCount - i);
+            result[i] = source[indices[j]];
+            indices[j] = indices[sourceCount - i - 1];
+        }
+
+        return result;
     }
 
     internal static void Shuffle<T>(Span<T> array, System.Random random)

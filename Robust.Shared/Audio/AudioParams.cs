@@ -30,12 +30,6 @@ namespace Robust.Shared.Audio
     public partial struct AudioParams
     {
         /// <summary>
-        ///     The DistanceModel to use for this specific source.
-        /// </summary>
-        [DataField]
-        public Attenuation Attenuation { get; set; } = Attenuation.LinearDistanceClamped;
-
-        /// <summary>
         ///     Base volume to play the audio at, in dB.
         /// </summary>
         [DataField]
@@ -45,13 +39,13 @@ namespace Robust.Shared.Audio
         ///     Scale for the audio pitch.
         /// </summary>
         [DataField]
-        public float Pitch { get; set; } = Default.Pitch;
+        public float Pitch
+        {
+            get => _pitch;
+            set => _pitch = MathF.Max(0f, value);
+        }
 
-        /// <summary>
-        ///     Audio bus to play on.
-        /// </summary>
-        [DataField]
-        public string BusName { get; set; } = Default.BusName;
+        private float _pitch = Default.Pitch;
 
         /// <summary>
         ///     Only applies to positional audio.
@@ -89,7 +83,7 @@ namespace Robust.Shared.Audio
         /// <summary>
         ///     The "default" audio configuration.
         /// </summary>
-        public static readonly AudioParams Default = new(0, 1, "Master", SharedAudioSystem.DefaultSoundRange, 1, 1, false, 0f);
+        public static readonly AudioParams Default = new(0, 1, SharedAudioSystem.DefaultSoundRange, 1, 1, false, 0f);
 
         // explicit parameterless constructor required so that default values get set properly.
         public AudioParams() { }
@@ -97,21 +91,19 @@ namespace Robust.Shared.Audio
         public AudioParams(
             float volume,
             float pitch,
-            string busName,
             float maxDistance,
             float refDistance,
             bool loop,
             float playOffsetSeconds,
             float? variation = null)
-            : this(volume, pitch, busName, maxDistance, 1, refDistance, loop, playOffsetSeconds, variation)
+            : this(volume, pitch, maxDistance, 1, refDistance, loop, playOffsetSeconds, variation)
         {
         }
 
-        public AudioParams(float volume, float pitch, string busName, float maxDistance,float rolloffFactor, float refDistance, bool loop, float playOffsetSeconds, float? variation = null) : this()
+        public AudioParams(float volume, float pitch, float maxDistance,float rolloffFactor, float refDistance, bool loop, float playOffsetSeconds, float? variation = null) : this()
         {
             Volume = volume;
             Pitch = pitch;
-            BusName = busName;
             MaxDistance = maxDistance;
             RolloffFactor = rolloffFactor;
             ReferenceDistance = refDistance;
@@ -168,18 +160,6 @@ namespace Robust.Shared.Audio
         }
 
         /// <summary>
-        ///     Returns a copy of this instance with a new bus name set, for easy chaining.
-        /// </summary>
-        /// <param name="bus">The new bus name.</param>
-        [Pure]
-        public readonly AudioParams WithBusName(string bus)
-        {
-            var me = this;
-            me.BusName = bus;
-            return me;
-        }
-
-        /// <summary>
         ///     Returns a copy of this instance with a new max distance set, for easy chaining.
         /// </summary>
         /// <param name="dist">The new max distance.</param>
@@ -224,18 +204,6 @@ namespace Robust.Shared.Audio
         {
             var me = this;
             me.Loop = loop;
-            return me;
-        }
-
-        /// <summary>
-        ///     Returns a copy of this instance with attenuation set, for easy chaining.
-        /// </summary>
-        /// <param name="attenuation">The new attenuation.</param>
-        [Pure]
-        public readonly AudioParams WithAttenuation(Attenuation attenuation)
-        {
-            var me = this;
-            me.Attenuation = attenuation;
             return me;
         }
 

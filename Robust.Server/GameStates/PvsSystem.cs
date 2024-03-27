@@ -62,12 +62,14 @@ internal sealed partial class PvsSystem : EntitySystem
     public bool CullingEnabled { get; private set; }
 
     /// <summary>
-    /// Size of the side of the view bounds square.
+    /// Size of the side of the view bounds square. Related to <see cref="CVars.NetMaxUpdateRange"/>
     /// </summary>
     private float _viewSize;
 
-    // see CVars.NetLowLodDistance
-    private float _lowLodDistance;
+    /// <summary>
+    /// Size of the side of the priority view bounds square. Related to <see cref="CVars.NetPvsPriorityRange"/>
+    /// </summary>
+    private float _priorityViewSize;
 
     /// <summary>
     /// Per-tick ack data to avoid re-allocating.
@@ -139,7 +141,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         Subs.CVar(_configManager, CVars.NetPVS, SetPvs, true);
         Subs.CVar(_configManager, CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
-        Subs.CVar(_configManager, CVars.NetLowLodRange, OnLodChanged, true);
+        Subs.CVar(_configManager, CVars.NetPvsPriorityRange, OnPriorityRangeChanged, true);
         Subs.CVar(_configManager, CVars.NetForceAckThreshold, OnForceAckChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsAsync, OnAsyncChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsCompressLevel, ResetParallelism, true);
@@ -276,12 +278,13 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private void OnViewsizeChanged(float value)
     {
-        _viewSize = value;
+        _viewSize = Math.Max(ChunkSize, value);
+        OnPriorityRangeChanged(_configManager.GetCVar(CVars.NetPvsPriorityRange));
     }
 
-    private void OnLodChanged(float value)
+    private void OnPriorityRangeChanged(float value)
     {
-        _lowLodDistance = Math.Clamp(value, ChunkSize, 100f);
+        _priorityViewSize = Math.Max(_viewSize, value);
     }
 
     private void OnForceAckChanged(int value)
@@ -387,7 +390,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private (Vector2 worldPos, float range, EntityUid? map) CalcViewBounds(Entity<TransformComponent, EyeComponent?> eye)
     {
-        var size = Math.Max(eye.Comp2?.PvsSize ?? _viewSize, 1);
+        var size = Math.Max(eye.Comp2?.PvsSize ?? _priorityViewSize, 1);
         return (_transform.GetWorldPosition(eye.Comp1), size / 2f, eye.Comp1.MapUid);
     }
 

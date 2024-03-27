@@ -695,21 +695,31 @@ namespace Robust.Shared.Maths
         /// <param name="a">First incoming color</param>
         /// <param name="b">Second incoming color</param>
         /// <param name="blend">a value between 0 and 1 indicating linear interpolation between the two colors.</param>
-        public static Color Lerp(Color a, Color b, float blend)
+        public static Color LerpHSV(Color a, Color b, float blend)
         {
             blend = MathHelper.Clamp01(blend);
-
+            
             //Convert RGB to HSV
             var aHSV = Color.ToHsv(a);
             var bHSV = Color.ToHsv(b);
 
-            //Interpolate in HSV space
-            var X = MathHelper.Lerp(aHSV.X, bHSV.X, blend);
-            var Y = MathHelper.Lerp(aHSV.Y, bHSV.Y, blend);
-            var Z = MathHelper.Lerp(aHSV.Z, bHSV.Z, blend);
-            var W = MathHelper.Lerp(aHSV.W, bHSV.W, blend);
+            // Calculate shortest direction for hue interpolation
+            float d = bHSV.X - aHSV.X;
+            if (MathF.Abs(d) > 0.5f)
+            {
+                if (d > 0f)
+                    bHSV.X -= 1f;
+                else
+                    bHSV.X += 1f;
+            }
 
-            Vector4 lerpedHSV = new Vector4(X, Y, Z, W);
+            // Interpolate each component independently
+            float h = MathHelper.Lerp(aHSV.X, bHSV.X, blend); // Hue
+            float s = MathHelper.Lerp(aHSV.Y, bHSV.Y, blend); // Saturation
+            float v = MathHelper.Lerp(aHSV.Z, bHSV.Z, blend); // Value
+            float al = MathHelper.Lerp(aHSV.W, bHSV.W, blend); // Alpha
+
+            Vector4 lerpedHSV = new Vector4(h, s, v, al);
 
             return Color.FromHsv(lerpedHSV);
         }

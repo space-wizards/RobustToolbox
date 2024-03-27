@@ -22,9 +22,6 @@ public static class RandomExtensions
     }
 
     /// <summary>Picks a random element from a collection.</summary>
-    /// <remarks>
-    ///     This is O(n).
-    /// </remarks>
     public static T Pick<T>(this IRobustRandom random, IReadOnlyList<T> list)
     {
         var index = random.Next(list.Count);
@@ -32,9 +29,6 @@ public static class RandomExtensions
     }
 
     /// <summary>Picks a random element from a collection.</summary>
-    /// <remarks>
-    ///     This is O(n).
-    /// </remarks>
     public static ref T Pick<T>(this IRobustRandom random, ValueList<T> list)
     {
         var index = random.Next(list.Count);
@@ -42,9 +36,6 @@ public static class RandomExtensions
     }
 
     /// <summary>Picks a random element from a collection.</summary>
-    /// <remarks>
-    ///     This is O(n).
-    /// </remarks>
     public static ref T Pick<T>(this System.Random random, ValueList<T> list)
     {
         var index = random.Next(list.Count);
@@ -72,7 +63,7 @@ public static class RandomExtensions
 
     /// <summary>
     /// Picks a random element from a list, removes it from list and returns it.
-    /// This is O(n) as it has to iterate the collection until the target index.
+    /// This is O(n) as it preserves the order of other items in the list.
     /// </summary>
     public static T PickAndTake<T>(this IRobustRandom random, IList<T> list)
     {

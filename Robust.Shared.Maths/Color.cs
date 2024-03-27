@@ -692,19 +692,19 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <returns>
         ///    Returns a color that is a mixture of the two incoming colors by linear interpolation.
-        /// <param name="start">First incoming color</param>
-        /// <param name="end">Second incoming color</param>
-        /// <param name="t">a value between 0 and 1 indicating linear interpolation between the two colors.</param>
-        public static Color Lerp(Color start, Color end, float t)
+        /// <param name="a">First incoming color</param>
+        /// <param name="b">Second incoming color</param>
+        /// <param name="blend">a value between 0 and 1 indicating linear interpolation between the two colors.</param>
+        public static Color Lerp(Color a, Color b, float blend)
         {
             t = MathHelper.Clamp01(t);
 
-            float lerpedR = MathHelper.Lerp(start.R, end.R, t);
-            float lerpedG = MathHelper.Lerp(start.G, end.G, t);
-            float lerpedB = MathHelper.Lerp(start.B, end.B, t);
-            float lerpedA = MathHelper.Lerp(start.A, end.A, t);
+            float R = MathHelper.Lerp(a.R, b.R, t);
+            float G = MathHelper.Lerp(a.G, b.G, t);
+            float B = MathHelper.Lerp(a.B, b.B, t);
+            float A = MathHelper.Lerp(a.A, b.A, t);
 
-            return new Color(lerpedR, lerpedG, lerpedB, lerpedA);
+            return new Color(R, G, B, A);
         }
         
         /// <summary>

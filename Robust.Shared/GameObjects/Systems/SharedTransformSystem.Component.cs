@@ -1092,7 +1092,7 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        if (!_gridQuery.HasComponent(uid) && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
+        if (component.GridUid != uid && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
         {
             var (_, gridRot, invWorldMatrix) = GetWorldPositionRotationInvMatrix(targetGrid);
             var localRot = worldRot - gridRot;

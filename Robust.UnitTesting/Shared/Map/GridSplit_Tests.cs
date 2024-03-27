@@ -117,7 +117,6 @@ public sealed class GridSplit_Tests
         var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
         var mapId = mapManager.CreateMap();
         var gridEnt = mapManager.CreateGridEntity(mapId);
-        var grid = gridEnt.Comp;
 
         for (var x = 0; x < 3; x++)
         {

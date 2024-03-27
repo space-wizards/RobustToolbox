@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
@@ -25,20 +26,15 @@ internal partial class Clyde
     private readonly RefList<SpriteData> _drawingSpriteList = new();
     private const int _spriteProcessingBatchSize = 25;
 
-    private void GetSprites(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, out int[] indexList)
+    private void SortSprites(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, ref Span<int> indexList)
     {
-        ProcessSpriteEntities(map, view, eye, worldBounds, _drawingSpriteList);
-
-        // We use a separate list for indexing sprites so that the sort is faster.
-        indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
-
         // populate index list
         for (var i = 0; i < _drawingSpriteList.Count; i++)
             indexList[i] = i;
 
         // sort index list
         // TODO better sorting? parallel merge sort?
-        Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
+        indexList.Sort(new SpriteDrawingOrderComparer(_drawingSpriteList));
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -242,8 +238,8 @@ internal partial class Clyde
 
         public int Compare(int x, int y)
         {
-            var a = _drawList[x];
-            var b = _drawList[y];
+            ref var a = ref _drawList[x];
+            ref var b = ref _drawList[y];
 
             var cmp = a.Sprite.DrawDepth.CompareTo(b.Sprite.DrawDepth);
             if (cmp != 0)

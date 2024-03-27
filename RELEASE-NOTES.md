@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix buffered audio sources not being disposed.
 
 ### Other
 

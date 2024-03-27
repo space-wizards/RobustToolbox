@@ -172,7 +172,7 @@ public static class RandomExtensions
     /// <param name="source">Collection from which items should be picked.</param>
     /// <param name="count">Count of random items to be picked.</param>
     /// <param name="allowDuplicates">Marker, are duplicate items allowed in results.</param>
-    public static IReadOnlyCollection<T> GetItems<T>(this IRobustRandom random, IList<T> source, int count, bool allowDuplicates = true)
+    public static T[] GetItems<T>(this IRobustRandom random, IList<T> source, int count, bool allowDuplicates = true)
     {
         if (source.Count == 0 || count <= 0)
         {
@@ -224,83 +224,24 @@ public static class RandomExtensions
         return rolled;
     }
 
-    /// <summary>
-    /// Get set amount of random items from collection.
-    /// If <paramref name="allowDuplicates"/> is false and <paramref name="source"/>
-    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="source"/> clone.
-    /// If <paramref name="source"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
-    /// </summary>
-    /// <param name="random">Instance of random to invoke upon.</param>
-    /// <param name="source">Collection from which items should be picked.</param>
-    /// <param name="count">Count of random items to be picked.</param>
-    /// <param name="allowDuplicates">Marker, are duplicate items allowed in results.</param>
-    public static ValueList<T> GetItems<T>(this IRobustRandom random, ValueList<T> source, int count, bool allowDuplicates = true)
+    /// <inheritdoc cref="GetItems{T}(Robust.Shared.Random.IRobustRandom,System.Collections.Generic.IList{T},int,bool)"/>
+    public static T[] GetItems<T>(this IRobustRandom random, ValueList<T> source, int count, bool allowDuplicates = true)
     {
-        if (source.Count == 0 || count <= 0)
-        {
-            return new ValueList<T>(0);
-        }
-
-        if (allowDuplicates == false && count >= source.Count)
-        {
-            var arr = source.ToArray();
-            random.Shuffle(arr);
-            return ValueList<T>.OwningArray(arr);
-        }
-
-        var sourceElementsCount = source.Count;
-
-        var rolled = new T[count];
-
-        if (allowDuplicates)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                int virtualIndex = random.Next(sourceElementsCount);
-                rolled[i] = source[virtualIndex];
-            }
-        }
-        else
-        {
-            // Create and fill array that represents indices of source array - 'virtual indices'.
-            // Roll number from 0 to last-rollable index. That number is index inside 'virtual indices', on which resides
-            // reference (index) of element in 'source' collection, that should be picked as rolled.
-            // After it is picked - we swap contents of selected 'virtual indices' cell with contents of last-rollable index,
-            // which is thus decremented.
-            Span<int> virtualIndexSpace = sourceElementsCount <= 1024
-                ? stackalloc int[sourceElementsCount]
-                : new int[sourceElementsCount];
-            for (int i = 0; i < sourceElementsCount; i++)
-            {
-                virtualIndexSpace[i] = i;
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                var j = random.Next(sourceElementsCount - i);
-                rolled[i] = source[virtualIndexSpace[j]];
-                virtualIndexSpace[j] = virtualIndexSpace[sourceElementsCount - i - 1];
-            }
-        }
-
-        return ValueList<T>.OwningArray(rolled);
+        return GetItems(random, source.Span, count, allowDuplicates);
     }
 
-    /// <summary>
-    /// Get set amount of random items from collection.
-    /// If <paramref name="allowDuplicates"/> is false and <paramref name="source"/>
-    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="source"/> clone.
-    /// If <paramref name="source"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
-    /// </summary>
-    /// <param name="random">Instance of random to invoke upon.</param>
-    /// <param name="source">Collection from which items should be picked.</param>
-    /// <param name="count">Count of random items to be picked.</param>
-    /// <param name="allowDuplicates">Marker, are duplicate items allowed in results.</param>
-    public static Span<T> GetItems<T>(this IRobustRandom random, Span<T> source, int count, bool allowDuplicates = true)
+    /// <inheritdoc cref="GetItems{T}(Robust.Shared.Random.IRobustRandom,System.Collections.Generic.IList{T},int,bool)"/>
+    public static T[] GetItems<T>(this IRobustRandom random, T[] source, int count, bool allowDuplicates = true)
+    {
+        return GetItems(random, source.AsSpan(), count, allowDuplicates);
+    }
+
+    /// <inheritdoc cref="GetItems{T}(Robust.Shared.Random.IRobustRandom,System.Collections.Generic.IList{T},int,bool)"/>
+    public static T[] GetItems<T>(this IRobustRandom random, Span<T> source, int count, bool allowDuplicates = true)
     {
         if (source.Length == 0 || count <= 0)
         {
-            return default;
+            return Array.Empty<T>();
         }
 
         if (allowDuplicates == false && count >= source.Length)

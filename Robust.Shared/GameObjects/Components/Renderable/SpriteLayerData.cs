@@ -30,6 +30,7 @@ public sealed partial class PrototypeLayerData
     [DataField("renderingStrategy")] public LayerRenderingStrategy? RenderingStrategy;
 
     [DataField] public bool Cycle;
+    [DataField] public int? DrawDepth;
 }
 
 [Serializable, NetSerializable]

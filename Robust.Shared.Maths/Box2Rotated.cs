@@ -40,6 +40,18 @@ namespace Robust.Shared.Maths
         {
         }
 
+        /// <summary>
+        /// Dumb cast from <see cref="Box2"/> to <see cref="Box2Rotated"/>.
+        /// </summary>
+        /// <param name="box2"></param> <summary>
+        ///
+        /// </summary>
+        /// <param name="box2"></param>
+        public static implicit operator Box2Rotated(Box2 box2)
+        {
+            return new Box2Rotated(box2, default, default);
+        }
+
         public Box2Rotated(Box2 box)
             : this(box, 0)
         {

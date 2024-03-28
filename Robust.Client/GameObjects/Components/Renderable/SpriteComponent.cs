@@ -34,7 +34,7 @@ using Direction = Robust.Shared.Maths.Direction;
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
-    public sealed partial class SpriteComponent : Component, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
+    public sealed partial class SpriteComponent : Component, IComponentDebug, ISerializationHooks, ILayeredComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
@@ -162,6 +162,12 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables]
         public DynamicTree<ComponentTreeEntry<SpriteComponent>>? Tree { get; set; }
+
+        [ViewVariables]
+        public Dictionary<int, DynamicTree<ComponentTreeEntry<SpriteComponent>>>? Trees { get; set; }
+
+        [ViewVariables]
+        public HashSet<int> LayersUsed { get; set; } = new();
 
         public EntityUid? TreeUid { get; set; }
 
@@ -320,6 +326,7 @@ namespace Robust.Client.GameObjects
                         Visible = true,
                         RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy,
                         Cycle = false,
+                        DrawDepth = DrawDepth
                     });
                     state = null;
                     texture = null;
@@ -497,6 +504,11 @@ namespace Robust.Client.GameObjects
             var index = AddLayer(layer, newIndex);
 
             LayerSetData(index, layerDatum);
+
+            // Add the layer's draw depth to the LayersUsed set.
+            this.LayersUsed ??= new();
+            LayersUsed.Add(layer.DrawDepth ?? DrawDepth);
+
             return index;
         }
 
@@ -632,6 +644,16 @@ namespace Robust.Client.GameObjects
                 Layers.Add(layer);
                 index = Layers.Count - 1;
             }
+
+            // By default, inherit our older sibling layer's DrawDepth, or the Sprite's DrawDepth if we're the first layer.
+            if (Layers.TryGetValue(index - 1, out var olderLayer))
+                layer.DrawDepth = olderLayer.DrawDepth;
+            else
+                layer.DrawDepth = DrawDepth;
+
+            // Add the layer's draw depth to the LayersUsed set.
+            this.LayersUsed ??= new();
+            LayersUsed.Add(layer.DrawDepth ?? DrawDepth);
 
             RebuildBounds();
             QueueUpdateIsInert();
@@ -802,6 +824,7 @@ namespace Robust.Client.GameObjects
             layer._offset = layerDatum.Offset ?? layer._offset;
             layer._scale = layerDatum.Scale ?? layer._scale;
             layer.UpdateLocalMatrix();
+            layer.DrawDepth = layerDatum.DrawDepth ?? layer.DrawDepth;
 
             // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
             layer.Visible = layerDatum.Visible ?? layer.Visible;
@@ -1239,7 +1262,7 @@ namespace Robust.Client.GameObjects
         // Lobby SpriteView rendering path
         public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null)
         {
-            RenderInternal(drawingHandle, eyeRotation, worldRotation, Vector2.Zero, overrideDirection);
+            RenderInternal(drawingHandle, eyeRotation, worldRotation, Vector2.Zero, overrideDirection, layerIndex: null);
         }
 
         [DataField("noRot")] private bool _screenLock = false;
@@ -1276,7 +1299,7 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public bool NoRotation { get => _screenLock; set => _screenLock = value; }
 
-        internal void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
+        internal void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection, int? layerIndex)
         {
             var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
             angle = angle.Reduced().FlipPositive();  // Reduce the angles to fix math shenanigans
@@ -1308,7 +1331,11 @@ namespace Robust.Client.GameObjects
                 Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformNoRot);
 
 
-                foreach (var layer in Layers) {
+                foreach (var layer in Layers)
+                {
+                    if (layerIndex.HasValue && layer.DrawDepth != layerIndex)
+                        continue;
+
                     switch (layer.RenderingStrategy)
                     {
                         case LayerRenderingStrategy.NoRotation:
@@ -1334,6 +1361,9 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var layer in Layers)
                 {
+
+                    if (layerIndex.HasValue && layer.DrawDepth != layerIndex)
+                        continue;
                     layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
                 }
             }
@@ -1484,6 +1514,12 @@ namespace Robust.Client.GameObjects
             [ViewVariables] public string? ShaderPrototype;
             [ViewVariables] public ShaderInstance? Shader;
             [ViewVariables] public Texture? Texture;
+
+            /// <summary>
+            /// DrawDepth for this layer. If not set, you should use the previous Layer's depth or the Sprite's depth.
+            /// </summary>
+            [ViewVariables(VVAccess.ReadWrite)] public int? DrawDepth = null;
+
 
             private RSI? _rsi;
             [ViewVariables] public RSI? RSI
@@ -1665,6 +1701,7 @@ namespace Robust.Client.GameObjects
                 DirOffset = toClone.DirOffset;
                 _autoAnimated = toClone._autoAnimated;
                 RenderingStrategy = toClone.RenderingStrategy;
+                DrawDepth = toClone.DrawDepth;
             }
 
             void ISerializationHooks.AfterDeserialization()

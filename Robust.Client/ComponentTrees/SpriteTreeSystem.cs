@@ -7,7 +7,7 @@ using Robust.Shared.Physics;
 
 namespace Robust.Client.ComponentTrees;
 
-public sealed class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, SpriteComponent>
+public sealed class SpriteTreeSystem : LayeredComponentTreeSystem<SpriteTreeComponent, SpriteComponent>
 {
     public override void Initialize()
     {
@@ -16,7 +16,10 @@ public sealed class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, 
     }
 
     private void OnQueueUpdate(EntityUid uid, SpriteComponent component, ref QueueSpriteTreeUpdateEvent args)
-        => QueueTreeUpdate(uid, component, args.Xform);
+    {
+        QueueTreeUpdate(uid, component, args.Xform);
+        component.TreeUpdateQueued = true;
+    }
 
     // TODO remove this when finally ECSing sprite components
     [ByRefEvent]

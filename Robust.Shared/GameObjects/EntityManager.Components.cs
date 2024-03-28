@@ -1425,6 +1425,8 @@ namespace Robust.Shared.GameObjects
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
 
+
+        // TODO: This should not force a nullable out. If we want a nullable, we should specify that when implementing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)

@@ -344,6 +344,9 @@ namespace Robust.Shared.Network
                 // Disabled for now since we aren't doing anything with the connection approval stuff.
                 // config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
+                // Enable discovery so that the server hub can detect if the udp port is open.
+                config.EnableMessageType(NetIncomingMessageType.DiscoveryRequest);
+
                 if (address.AddressFamily == AddressFamily.InterNetworkV6 && dualStack)
                 {
                     foundIpv6 = true;
@@ -494,6 +497,15 @@ namespace Robust.Shared.Network
 
                         case NetIncomingMessageType.StatusChanged:
                             HandleStatusChanged(peer, msg);
+                            break;
+
+                        case NetIncomingMessageType.DiscoveryRequest:
+                            // Create a response and write the server name to it
+                            NetOutgoingMessage response = peer.Peer.CreateMessage();
+                            response.Write(_config.GetCVar(CVars.GameHostName));
+
+                            // Send the response to the sender of the request
+                            peer.Peer.SendDiscoveryResponse(response, msg.SenderEndPoint!);
                             break;
 
                         default:

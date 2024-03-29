@@ -48,7 +48,7 @@ internal sealed partial class PvsSystem
         // We add chunk-size here so that its consistent with the normal PVS range setting.
         // I.e., distance here is the Chebyshev distance to the centre of each chunk, but the normal pvs range only
         // required that the chunk be touching the box, not the centre.
-        var count = distance < (_lowLodDistance + ChunkSize) / 2
+        var count = distance <=  (_viewSize + ChunkSize) / 2
             ? chunk.Contents.Count
             : chunk.LodCounts[0];
 

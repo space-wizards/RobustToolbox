@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* Implement basic VV for SoundSpecifiers.
+*None yet*
 
 ### Bugfixes
 
-* Fix QueueDel during EndCollideEvents from throwing while removing contacts.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,61 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 216.0.0
+
+### Breaking changes
+
+* The `net.low_lod_distance` cvar has been replaced with a new `net.pvs_priority_range`. Instead of limiting the range at which all entities are sent to a player, it now extends the range at which high priorities can be sent. The default value of this new cvar is 32.5, which is larger than the default `net.pvs_range` value of 25.
+
+### New features
+
+* You can now specify a component to not be saved to map files with `[UnsavedComponent]`.
+* Added `ITileDefinitionManager.TryGetDefinition`.
+* The map loader now tries to preserve the `tilemap` contents of map files, which should reduce diffs when re-saving a map after the game's internal tile IDs have changed.
+
+### Bugfixes
+
+* Fix buffered audio sources not being disposed.
+
+
+## 215.3.1
+
+### Bugfixes
+
+* Revert zstd update.
+
+
+## 215.3.0
+
+### New features
+
+* `EntityQuery<T>` now has `HasComp` and `TryComp` methods that are shorter than its existing ones.
+* Added `PlacementInformation.UseEditorContext`.
+* Added `Vector2Helpers` functions for comparing ranges between vectors.
+
+### Bugfixes
+
+* `Texture.GetPixel()`: fixed off-by-one with Y coordinate.
+* `Texture.GetPixel()`: fix stack overflow when reading large images.
+* `Texture.GetPixel()`: use more widely compatible OpenGL calls.
+
+### Other
+
+* Disabled `net.mtu_expand` again by default, as it was causing issues.
+* Updated `SharpZstd` dependency.
+
+
+## 215.2.0
+
+### New features
+
+* Implement basic VV for SoundSpecifiers.
+
+### Bugfixes
+
+* Fix QueueDel during EndCollideEvents from throwing while removing contacts.
 
 
 ## 215.1.0

@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `IRobustRandom.GetItems` extension methods for randomly picking multiple items from a collections.
 
 ### Bugfixes
 
@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* `Shuffle<T>(Span<T>, System.Random)` has been removed, just use the builtin method.
 
 
 ## 217.0.0

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix `MapComponent.LightingEnabled` not leaving FOV rendering in a broken state.
 
 ### Other
 

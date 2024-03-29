@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* TransformSystem.SetWorldPosition and SetWorldPositionRotation will now also perform parent updates as necessary. Previously it would just set the entity's LocalPosition which may break if they were inside of a container. Now they will be removed from their container and TryFindGridAt will run to correctly parent them to the new position. If the old functionality is desired then you can use GetInvWorldMatrix to update the LocalPosition (bearing in mind containers may prevent this).
+*None yet*
 
 ### New features
 
@@ -52,6 +52,22 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 217.0.0
+
+### Breaking changes
+
+* TransformSystem.SetWorldPosition and SetWorldPositionRotation will now also perform parent updates as necessary. Previously it would just set the entity's LocalPosition which may break if they were inside of a container. Now they will be removed from their container and TryFindGridAt will run to correctly parent them to the new position. If the old functionality is desired then you can use GetInvWorldMatrix to update the LocalPosition (bearing in mind containers may prevent this).
+
+### New features
+
+* Implement VV for AudioParams on SoundSpecifiers.
+* Add AddUi to the shared UI system.
+
+### Bugfixes
+
+* Fix the first measure of ScrollContainer bars.
 
 
 ## 216.0.0

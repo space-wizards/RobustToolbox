@@ -13,6 +13,7 @@ using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Threading;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -60,6 +61,10 @@ namespace Robust.Shared.Physics.Systems
 
         private int _substeps;
 
+        /// <summary>
+        /// A variation of <see cref="IGameTiming.CurTime"/> that takes into account the current physics sub-step.
+        /// Useful for some entities that need to interpolate their positions during sub-steps.
+        /// </summary>
         public TimeSpan? EffectiveCurTime;
 
         public bool MetricsEnabled { get; protected set; }

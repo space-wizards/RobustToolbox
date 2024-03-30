@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `SharedPhysicsSystem.EffectiveCurTime`. This is effectively a variation of `IGameTiming.CurTime` that takes into account the current physics sub-step.
 
 ### Bugfixes
 

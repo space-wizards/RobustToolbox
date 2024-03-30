@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -39,11 +39,12 @@ END TEMPLATE-->
 
 ### New features
 
+* Added `IRobustRandom.GetItems` extension methods for randomly picking multiple items from a collections.
 * Added `SharedPhysicsSystem.EffectiveCurTime`. This is effectively a variation of `IGameTiming.CurTime` that takes into account the current physics sub-step.
 
 ### Bugfixes
 
-*None yet*
+* Fix `MapComponent.LightingEnabled` not leaving FOV rendering in a broken state.
 
 ### Other
 
@@ -51,7 +52,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* `Shuffle<T>(Span<T>, System.Random)` has been removed, just use the builtin method.
 
 
 ## 217.0.0

@@ -60,6 +60,8 @@ namespace Robust.Shared.Physics.Systems
 
         private int _substeps;
 
+        public TimeSpan? EffectiveCurTime;
+
         public bool MetricsEnabled { get; protected set; }
 
         private EntityQuery<FixturesComponent> _fixturesQuery;
@@ -284,6 +286,7 @@ namespace Robust.Shared.Physics.Systems
         {
             var frameTime = deltaTime / _substeps;
 
+            EffectiveCurTime = _gameTiming.CurTime;
             for (int i = 0; i < _substeps; i++)
             {
                 var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
@@ -323,7 +326,11 @@ namespace Robust.Shared.Physics.Systems
                         FinalStep(comp);
                     }
                 }
+
+                EffectiveCurTime += TimeSpan.FromSeconds(frameTime);
             }
+
+            EffectiveCurTime = null;
         }
 
         protected virtual void FinalStep(PhysicsMapComponent component)

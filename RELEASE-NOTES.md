@@ -39,16 +39,31 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 217.1.0
+
+### New features
+
 * Added `IRobustRandom.GetItems` extension methods for randomly picking multiple items from a collections.
 * Added `SharedPhysicsSystem.EffectiveCurTime`. This is effectively a variation of `IGameTiming.CurTime` that takes into account the current physics sub-step.
 
 ### Bugfixes
 
 * Fix `MapComponent.LightingEnabled` not leaving FOV rendering in a broken state.
-
-### Other
-
-*None yet*
 
 ### Internal
 

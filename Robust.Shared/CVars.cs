@@ -887,6 +887,22 @@ namespace Robust.Shared
             CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /*
+         *  CONTROLS
+         */
+
+        /// <summary>
+        /// Milliseconds to wait to consider double-click delays.
+        /// </summary>
+        public static readonly CVarDef<int> DoubleClickDelay =
+            CVarDef.Create("controls.double_click_delay", 250, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Range in pixels for double-clicks
+        /// </summary>
+        public static readonly CVarDef<int> DoubleClickRange =
+            CVarDef.Create("controls.double_click_range", 10, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /*
          * DISPLAY
          */
 

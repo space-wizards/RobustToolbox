@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using Robust.Shared.Analyzers;
 using Robust.Shared.Collections;
-using Robust.Shared.GameObjects;
 
 namespace Robust.Benchmarks.Collections;
 
@@ -13,13 +12,9 @@ public class ValueListEnumerationBenchmarks
     [Params(4, 16, 64)]
     public int N { get; set; }
 
-    private sealed class Data : EntityEventBus.OrderedRegistration
+    private sealed class Data(int i)
     {
-        public readonly int I;
-        public Data(int i) : base(null)
-        {
-            I = i;
-        }
+        public readonly int I = i;
     }
 
     private ValueList<Data> _valueList;

@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects
             EventData sub,
             ref ValueList<OrderedEventDispatch> found)
         {
-            foreach (var handler in sub.BroadcastRegistrations)
+            foreach (var handler in sub.BroadcastRegistrations.Span)
             {
                 if ((handler.Mask & source) != 0)
                     found.Add(new OrderedEventDispatch(handler.Handler, handler.Order));
@@ -44,7 +44,7 @@ namespace Robust.Shared.GameObjects
         {
             found.Sort(OrderedEventDispatchComparer.Instance);
 
-            foreach (var (handler, _) in found)
+            foreach (var (handler, _) in found.Span)
             {
                 handler(ref eventArgs);
             }

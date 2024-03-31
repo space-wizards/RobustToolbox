@@ -347,7 +347,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 }
 
                 var containerEnt = container.Owner;
-                Assert.NotNull(container.Comp);
+                Assert.That(container.Comp, Is.Not.Null);
 
                 Assert.That(sEntManager.GetComponent<MetaDataComponent>(containerEnt).EntityName, Is.EqualTo("ContainerEnt"));
 

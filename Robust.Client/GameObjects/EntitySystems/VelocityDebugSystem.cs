@@ -35,7 +35,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var player = _playerManager.LocalPlayer?.ControlledEntity;
+            var player = _playerManager.LocalEntity;
 
             if (player == null || !EntityManager.TryGetComponent(player.Value, out PhysicsComponent? body))
             {

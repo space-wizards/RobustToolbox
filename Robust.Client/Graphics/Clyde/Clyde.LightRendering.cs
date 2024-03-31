@@ -1201,7 +1201,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LightResolutionScaleChanged(float newValue)
         {
-            _lightResolutionScale = newValue;
+            _lightResolutionScale = newValue > 0.05f ? newValue : 0.05f;
             RegenAllLightRts();
         }
 

@@ -72,7 +72,10 @@ internal sealed partial class PvsSystem
     private PvsSession GetOrNewPvsSession(ICommonSession session)
     {
         if (!PlayerData.TryGetValue(session, out var pvsSession))
-            PlayerData[session] = pvsSession = new(session);
+        {
+            var memoryRegion = CreateSessionDataMemory();
+            PlayerData[session] = pvsSession = new(session, memoryRegion);
+        }
 
         return pvsSession;
     }

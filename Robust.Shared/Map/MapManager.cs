@@ -4,7 +4,10 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -16,19 +19,29 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 {
     [field: Dependency] public IGameTiming GameTiming { get; } = default!;
     [field: Dependency] public IEntityManager EntityManager { get; } = default!;
+    [Dependency] private readonly IManifoldManager _manifolds = default!;
 
     [Dependency] private readonly IConsoleHost _conhost = default!;
 
     private ISawmill _sawmill = default!;
 
+    private FixtureSystem _fixtureSystem = default!;
     private SharedMapSystem _mapSystem = default!;
+    private SharedPhysicsSystem _physics = default!;
     private SharedTransformSystem _transformSystem = default!;
+
+    private EntityQuery<FixturesComponent> _fixturesQuery;
+    private EntityQuery<GridTreeComponent> _gridTreeQuery;
+    private EntityQuery<MapGridComponent> _gridQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
     /// <inheritdoc />
     public void Initialize()
     {
+        _fixturesQuery = EntityManager.GetEntityQuery<FixturesComponent>();
+        _gridTreeQuery = EntityManager.GetEntityQuery<GridTreeComponent>();
+        _gridQuery = EntityManager.GetEntityQuery<MapGridComponent>();
         _physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
         _xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
@@ -45,6 +58,8 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     /// <inheritdoc />
     public void Startup()
     {
+        _fixtureSystem = EntityManager.System<FixtureSystem>();
+        _physics = EntityManager.System<SharedPhysicsSystem>();
         _transformSystem = EntityManager.System<SharedTransformSystem>();
         _mapSystem = EntityManager.System<SharedMapSystem>();
 

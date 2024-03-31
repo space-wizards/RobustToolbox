@@ -57,6 +57,8 @@ internal sealed class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
 public readonly record struct Prototype<T>(T Value) : IAsType<string>
     where T : class, IPrototype
 {
+    public ProtoId<T> Id => Value.ID;
+
     public string AsType()
     {
         return Value.ID;

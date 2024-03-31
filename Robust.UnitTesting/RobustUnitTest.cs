@@ -166,6 +166,12 @@ namespace Robust.UnitTesting
             if (ExtraComponents != null)
                 compFactory.RegisterTypes(ExtraComponents);
 
+            if (Project == UnitTestProject.Server)
+            {
+                compFactory.RegisterClass<MapSaveTileMapComponent>();
+                compFactory.RegisterClass<MapSaveIdComponent>();
+            }
+
             deps.Resolve<IParallelManagerInternal>().Initialize();
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.

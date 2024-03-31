@@ -1,11 +1,14 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -14,6 +17,64 @@ namespace Robust.UnitTesting.Shared.GameObjects
     public sealed partial class EntityManager_Components_Tests
     {
         private static readonly EntityCoordinates DefaultCoords = new(EntityUid.FirstUid, Vector2.Zero);
+
+        private const string DummyLoad = @"
+        - type: entity
+          id: DummyLoad
+          name: weh
+          components:
+          - type: Joint
+          - type: Physics
+";
+
+        [Test]
+        public void AddRegistryComponentTest()
+        {
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .RegisterPrototypes(fac => fac.LoadString(DummyLoad))
+                .InitializeInstance();
+
+            sim.AddMap(1);
+
+            var entMan = sim.Resolve<IEntityManager>();
+            var protoManager = sim.Resolve<IPrototypeManager>();
+
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            Assert.That(!entMan.HasComponent<PhysicsComponent>(entity));
+            var proto = protoManager.Index<EntityPrototype>("DummyLoad");
+
+            entMan.AddComponents(entity, proto);
+            Assert.Multiple(() =>
+            {
+                Assert.That(entMan.HasComponent<JointComponent>(entity));
+                Assert.That(entMan.HasComponent<PhysicsComponent>(entity));
+            });
+        }
+
+        [Test]
+        public void RemoveRegistryComponentTest()
+        {
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .RegisterPrototypes(fac => fac.LoadString(DummyLoad))
+                .InitializeInstance();
+
+            sim.AddMap(1);
+
+            var entMan = sim.Resolve<IEntityManager>();
+            var protoManager = sim.Resolve<IPrototypeManager>();
+
+            var entity = entMan.SpawnEntity("DummyLoad", DefaultCoords);
+            var proto = protoManager.Index<EntityPrototype>("DummyLoad");
+
+            entMan.RemoveComponents(entity, proto);
+            Assert.Multiple(() =>
+            {
+                Assert.That(!entMan.HasComponent<JointComponent>(entity));
+                Assert.That(!entMan.HasComponent<PhysicsComponent>(entity));
+            });
+        }
 
         [Test]
         public void AddComponentTest()
@@ -214,7 +275,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entMan.RemoveComponentDeferred(entity, component);
             Assert.That(component.LifeStage, Is.EqualTo(ComponentLifeStage.Stopped));
 
-            Assert.False(entMan.EnsureComponent<DummyComponent>(entity, out var comp2));
+            Assert.That(entMan.EnsureComponent<DummyComponent>(entity, out var comp2), Is.False);
             Assert.That(comp2.LifeStage, Is.LessThanOrEqualTo(ComponentLifeStage.Running));
             Assert.That(component.LifeStage, Is.EqualTo(ComponentLifeStage.Deleted));
         }

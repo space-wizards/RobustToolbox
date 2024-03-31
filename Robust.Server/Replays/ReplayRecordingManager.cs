@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.Replays;
 
@@ -13,7 +14,7 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, ISe
     [Dependency] private readonly IEntitySystemManager _sysMan = default!;
 
     private PvsSystem _pvs = default!;
-    private PvsSession _pvsSession = new(default!) { DisableCulling = true };
+    private PvsSession _pvsSession = new(default!, new ResizableMemoryRegion<PvsData>(1)) { DisableCulling = true };
 
     public override void Initialize()
     {

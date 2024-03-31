@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -37,6 +38,26 @@ namespace Robust.Shared.GameObjects
         /// Gets the number of a specific component.
         /// </summary>
         int Count(Type component);
+
+        /// <summary>
+        /// Adds the specified components from the <see cref="EntityPrototype"/>
+        /// </summary>
+        void AddComponents(EntityUid target, EntityPrototype prototype, bool removeExisting = true);
+
+        /// <summary>
+        /// Adds the specified registry components to the target entity.
+        /// </summary>
+        void AddComponents(EntityUid target, ComponentRegistry registry, bool removeExisting = true);
+
+        /// <summary>
+        /// Removes the specified entity prototype components from the target entity.
+        /// </summary>
+        void RemoveComponents(EntityUid target, EntityPrototype prototype);
+
+        /// <summary>
+        /// Removes the specified registry components from the target entity.
+        /// </summary>
+        void RemoveComponents(EntityUid target, ComponentRegistry registry);
 
         /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
@@ -164,7 +185,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Component reference type to check for.</typeparam>
         /// <param name="uid">Entity UID to check.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
-        bool HasComponent<T>(EntityUid? uid) where T : IComponent;
+        bool HasComponent<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent;
 
         /// <summary>
         ///     Checks if the entity has a component type.
@@ -180,7 +201,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
-        bool HasComponent(EntityUid? uid, Type type);
+        bool HasComponent([NotNullWhen(true)] EntityUid? uid, Type type);
 
         /// <summary>
         ///     Checks if the entity has a component with a given network ID. This does not check
@@ -198,7 +219,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="netId">Network ID to check for.</param>
         /// <returns>True if the entity has a component with the given network ID, otherwise false.</returns>
-        bool HasComponent(EntityUid? uid, ushort netId, MetaDataComponent? meta = null);
+        bool HasComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     This method will always return a component for a certain entity, adding it if it's not there already.

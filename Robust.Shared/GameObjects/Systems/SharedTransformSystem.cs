@@ -80,7 +80,7 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         private void DeparentAllEntsOnTile(EntityUid gridId, Vector2i tileIndices)
         {
-            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !_mapManager.TryGetGrid(gridId, out var grid))
+            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !TryComp<MapGridComponent>(gridId, out var grid))
                 return;
 
             if (!XformQuery.TryGetComponent(gridId, out var gridXform))
@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects
 
             var aabb = _lookup.GetLocalBounds(tileIndices, grid.TileSize);
 
-            foreach (var entity in _lookup.GetEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
+            foreach (var entity in _lookup.GetLocalEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
             {
                 if (!XformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
                     continue;

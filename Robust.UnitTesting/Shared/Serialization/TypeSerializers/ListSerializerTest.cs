@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -41,8 +41,8 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             var result = Serialization.Read<List<string>, SequenceDataNode, ListSerializers<string>>(node, notNullableOverride: true);
             var list = (List<string>?) result;
 
-            Assert.NotNull(list);
-            Assert.IsNotEmpty(list!);
+            Assert.That(list, Is.Not.Null);
+            Assert.That(list!, Is.Not.Empty);
             Assert.That(list, Has.Count.EqualTo(2));
             Assert.That(list, Does.Contain("A"));
             Assert.That(list, Does.Contain("E"));
@@ -66,15 +66,15 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             var source = new List<string> {"A", "E"};
             var target = new List<string>();
 
-            Assert.IsNotEmpty(source);
-            Assert.IsEmpty(target);
+            Assert.That(source, Is.Not.Empty);
+            Assert.That(target, Is.Empty);
 
             Serialization.CopyTo<List<string>, ListSerializers<string>>(source, ref target, notNullableOverride: true);
 
-            Assert.NotNull(source);
+            Assert.That(source, Is.Not.Null);
 
-            Assert.IsNotEmpty(source);
-            Assert.IsNotEmpty(target!);
+            Assert.That(source, Is.Not.Empty);
+            Assert.That(target!, Is.Not.Empty);
 
             Assert.That(source, Is.EqualTo(target));
 

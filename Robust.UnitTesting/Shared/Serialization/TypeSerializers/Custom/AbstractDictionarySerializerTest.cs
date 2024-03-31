@@ -46,7 +46,7 @@ SealedTestTypeB:
             MappingDataNode,
             AbstractDictionarySerializer<AbstractTestData>>
             (node, notNullableOverride:true);
-        Assert.NotNull(data);
+        Assert.That(data, Is.Not.Null);
         Assert.That(data.Count, Is.EqualTo(2));
         Assert.That(data.ContainsKey(typeof(SealedTestTypeA)));
         Assert.That(data.ContainsKey(typeof(SealedTestTypeB)));
@@ -54,8 +54,8 @@ SealedTestTypeB:
         var a = data[typeof(SealedTestTypeA)] as SealedTestTypeA;
         var b = data[typeof(SealedTestTypeB)] as SealedTestTypeB;
 
-        Assert.NotNull(a);
-        Assert.NotNull(b);
+        Assert.That(a, Is.Not.Null);
+        Assert.That(b, Is.Not.Null);
 
         Assert.That(a!.X, Is.EqualTo(1));
         Assert.That(a.Y, Is.EqualTo(2));
@@ -66,7 +66,7 @@ SealedTestTypeB:
                 AbstractDictionarySerializer<AbstractTestData>>
             (data, notNullableOverride:true);
 
-        Assert.Null(node.Except(newNode));
+        Assert.That(node.Except(newNode), Is.Null);
         validation = seri.ValidateNode<Dictionary<Type, AbstractTestData>,
             MappingDataNode,
             AbstractDictionarySerializer<AbstractTestData>>

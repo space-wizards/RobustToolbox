@@ -14,6 +14,16 @@ namespace Robust.Shared.Prototypes;
 
 public partial class PrototypeManager
 {
+    /// <summary>
+    ///     Which files to force all prototypes within to be abstract.
+    /// </summary>
+    private readonly List<ResPath> _abstractFiles = new();
+
+    /// <summary>
+    ///     Which directories to force all prototypes recursively within to be abstract.
+    /// </summary>
+    private readonly List<ResPath> _abstractDirectories = new();
+
     public event Action<DataNodeDocument>? LoadedData;
 
     /// <inheritdoc />
@@ -26,7 +36,7 @@ public partial class PrototypeManager
             .ToArray();
 
         // Shuffle to avoid input data patterns causing uneven thread workloads.
-        RandomExtensions.Shuffle(streams.AsSpan(), new System.Random());
+        (new System.Random()).Shuffle(streams.AsSpan());
 
         var sawmill = _logManager.GetSawmill("eng");
 
@@ -35,6 +45,7 @@ public partial class PrototypeManager
             {
                 try
                 {
+                    var ignored = IsFileAbstract(file);
                     using var reader = ReadFile(file, !overwrite);
 
                     if (reader == null)
@@ -50,7 +61,12 @@ public partial class PrototypeManager
                         {
                             var data = ExtractMapping((MappingDataNode)mapping);
                             if (data != null)
+                            {
+                                if (ignored)
+                                    AbstractPrototype(data.Data);
+
                                 extractedList.Add(data);
+                            }
                         }
                     }
 
@@ -114,6 +130,7 @@ public partial class PrototypeManager
     {
         try
         {
+            var ignored = IsFileAbstract(file);
             using var reader = ReadFile(file, !overwrite);
 
             if (reader == null)
@@ -132,6 +149,9 @@ public partial class PrototypeManager
                         var extracted = ExtractMapping((MappingDataNode) mapping);
                         if (extracted == null)
                             continue;
+
+                        if (ignored)
+                            AbstractPrototype(extracted.Data);
 
                         MergeMapping(extracted, overwrite, changed);
                     }
@@ -280,6 +300,57 @@ public partial class PrototypeManager
         }
 
         Freeze(modified);
+    }
+
+    public void AbstractFile(ResPath path)
+    {
+        _abstractFiles.Add(path);
+    }
+
+    public void AbstractDirectory(ResPath path)
+    {
+        _abstractDirectories.Add(path);
+    }
+
+    private bool IsFileAbstract(ResPath file)
+    {
+        if (_abstractFiles.Count > 0)
+        {
+            foreach (var abstractFile in _abstractFiles)
+            {
+                if (file.TryRelativeTo(abstractFile, out _))
+                    return true;
+            }
+        }
+
+        if (_abstractDirectories.Count > 0)
+        {
+            foreach (var abstractDirectory in _abstractDirectories)
+            {
+                if (file.TryRelativeTo(abstractDirectory, out _))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void AbstractPrototype(MappingDataNode mapping)
+    {
+        if (mapping.TryGet(AbstractDataFieldAttribute.Name, out var abstractNode))
+        {
+            if (abstractNode is not ValueDataNode abstractValueNode)
+            {
+                mapping.Remove(abstractNode);
+                mapping.Add("abstract", "true");
+                return;
+            }
+
+            abstractValueNode.Value = "true";
+            return;
+        }
+
+        mapping.Add("abstract", "true");
     }
 
     // All these fields can be null in case the

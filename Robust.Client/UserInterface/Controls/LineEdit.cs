@@ -695,7 +695,7 @@ namespace Robust.Client.UserInterface.Controls
             // Double-clicking. Clicks delay should be <= 250ms and the distance < 10 pixels.
             else if (args.Function == EngineKeyFunctions.UIClick && _lastClickPosition != null && _lastClickTime != null
                      && _timing.RealTime - _lastClickTime <= TimeSpan.FromMilliseconds(_cfgManager.GetCVar(CVars.DoubleClickDelay))
-                     && (_lastClickPosition.Value - args.PointerLocation.Position).Length() < _cfgManager.GetCVar(CVars.DoubleClickRange))
+                     && (_lastClickPosition.Value - args.PointerLocation.Position).IsShorterThan(_cfgManager.GetCVar(CVars.DoubleClickRange)))
             {
                 _lastClickTime = _timing.RealTime;
                 _lastClickPosition = args.PointerLocation.Position;

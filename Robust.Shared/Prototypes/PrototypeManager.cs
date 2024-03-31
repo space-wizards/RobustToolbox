@@ -432,7 +432,7 @@ namespace Robust.Shared.Prototypes
                 }).ToArray();
 
                 // Randomize to remove any patterns that could cause uneven load.
-                RandomExtensions.Shuffle(allResults.AsSpan(), rand);
+                rand.Shuffle(allResults.AsSpan());
 
                 // Create channel that all AfterDeserialization hooks in this group will be sent into.
                 var hooksChannelOptions = new UnboundedChannelOptions

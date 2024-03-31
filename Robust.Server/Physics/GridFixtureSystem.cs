@@ -236,7 +236,7 @@ namespace Robust.Server.Physics
                 grids.Add(foundSplits);
             }
 
-            var oldGrid = _mapManager.GetGrid(uid);
+            var oldGrid = Comp<MapGridComponent>(uid);
             var oldGridUid = uid;
 
             // Split time
@@ -605,7 +605,7 @@ namespace Robust.Server.Physics
 
             DebugTools.Assert(chunk.FilledTiles > 0);
 
-            var grid = _mapManager.GetGrid(gridEuid);
+            var grid = Comp<MapGridComponent>(gridEuid);
             var group = CreateNodes(gridEuid, grid, chunk);
             _nodes[gridEuid][chunk.Indices] = group;
 

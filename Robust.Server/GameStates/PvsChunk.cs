@@ -42,7 +42,7 @@ internal sealed class PvsChunk
     /// <remarks>
     /// This already includes <see cref="Map"/>, <see cref="Root"/>, and <see cref="Children"/>
     /// </remarks>
-    public readonly List<Entity<MetaDataComponent>> Contents = new();
+    public readonly List<ChunkEntity> Contents = new();
 
     /// <summary>
     /// The unique location identifier for this chunk.
@@ -68,8 +68,8 @@ internal sealed class PvsChunk
     // the same chunk can be repopulated more than once.
     private List<HashSet<EntityUid>> _childSets = new();
     private List<HashSet<EntityUid>> _nextChildSets = new();
-    private List<Entity<MetaDataComponent>> _lowPriorityChildren = new();
-    private List<Entity<MetaDataComponent>> _anchoredChildren = new();
+    private List<ChunkEntity> _lowPriorityChildren = new();
+    private List<ChunkEntity> _anchoredChildren = new();
 
     /// <summary>
     /// Effective "counts" of <see cref="Contents"/> that should be used to limit the number of entities in a chunk that
@@ -151,11 +151,11 @@ internal sealed class PvsChunk
             childMeta.LastPvsLocation = Location;
 
             if ((childMeta.Flags & MetaDataFlags.PvsPriority) == MetaDataFlags.PvsPriority)
-                Contents.Add((child, childMeta));
+                Contents.Add(new ChunkEntity(child, childMeta));
             else if (childXform.Anchored)
-                _anchoredChildren.Add((child, childMeta));
+                _anchoredChildren.Add(new(child, childMeta));
             else
-                _lowPriorityChildren.Add((child, childMeta));
+                _lowPriorityChildren.Add(new(child, childMeta));
 
             var subCount = childXform._children.Count;
             if (subCount == 0)
@@ -196,7 +196,7 @@ internal sealed class PvsChunk
                     }
 
                     childMeta.LastPvsLocation = Location;
-                    Contents.Add((child, childMeta));
+                    Contents.Add(new(child, childMeta));
 
                     var subCount = childXform._children.Count;
                     if (subCount == 0)
@@ -241,10 +241,10 @@ internal sealed class PvsChunk
         set.Add(Map.Owner);
         foreach (var child in Contents)
         {
-            var parent = query.GetComponent(child).ParentUid;
+            var parent = query.GetComponent(child.Uid).ParentUid;
             DebugTools.Assert(set.Contains(parent),
                 "A child's parent is not in the chunk, or is not listed first.");
-            DebugTools.Assert(set.Add(child), "Child appears more than once in the chunk.");
+            DebugTools.Assert(set.Add(child.Uid), "Child appears more than once in the chunk.");
         }
     }
 
@@ -273,5 +273,12 @@ internal sealed class PvsChunk
         return Map.Owner == Root.Owner
             ? $"map-{Root.Owner}-{Location.Indices}"
             : $"grid-{Root.Owner}-{Location.Indices}";
+    }
+
+    public readonly struct ChunkEntity(EntityUid uid, MetaDataComponent meta)
+    {
+        public readonly EntityUid Uid = uid;
+        public readonly PvsIndex Ptr = meta.PvsData;
+        public readonly MetaDataComponent Meta = meta;
     }
 }

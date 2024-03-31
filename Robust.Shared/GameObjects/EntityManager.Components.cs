@@ -1509,6 +1509,24 @@ namespace Robust.Shared.GameObjects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
+        public bool TryComp(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
+            => TryGetComponent(uid, out component);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public bool TryComp(EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
+            => TryGetComponent(uid, out component);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public bool HasComp(EntityUid uid) => HasComponent(uid);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public bool HasComp(EntityUid? uid) => HasComponent(uid);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public bool HasComponent(EntityUid uid)
         {
             return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;

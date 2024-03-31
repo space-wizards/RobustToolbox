@@ -616,7 +616,7 @@ public abstract partial class SharedTransformSystem
         TransformComponent? newParent = null,
         TransformComponent? oldParent = null)
     {
-        SetCoordinates((uid, xform, MetaData(uid)), value, rotation, unanchor, newParent, oldParent);
+        SetCoordinates((uid, xform, _metaQuery.GetComponent(uid)), value, rotation, unanchor, newParent, oldParent);
     }
 
     #endregion
@@ -722,10 +722,7 @@ public abstract partial class SharedTransformSystem
     {
         if (args.Current is TransformComponentState newState)
         {
-            var parent = GetEntity(newState.ParentID);
-            if (!parent.IsValid() && newState.ParentID.IsValid())
-                Log.Error($"Received transform component state with an unknown parent Id. Entity: {ToPrettyString(uid)}. Net parent: {newState.ParentID}");
-
+            var parent = EnsureEntity<TransformComponent>(newState.ParentID, uid);
             var oldAnchored = xform.Anchored;
 
             // update actual position data, if required
@@ -978,36 +975,25 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(EntityUid uid, Vector2 worldPos)
     {
-        var xform = Transform(uid);
+        var xform = XformQuery.GetComponent(uid);
         SetWorldPosition(xform, worldPos);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPosition(EntityUid uid, Vector2 worldPos, EntityQuery<TransformComponent> xformQuery)
-    {
-        var component = xformQuery.GetComponent(uid);
-        SetWorldPosition(component, worldPos, xformQuery);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(TransformComponent component, Vector2 worldPos)
     {
-        SetWorldPosition(component, worldPos, XformQuery);
+        SetWorldPosition((component.Owner, component), worldPos);
     }
 
+    /// <summary>
+    /// Sets the position of the entity in world-terms to the specified position.
+    /// May also de-parent the entity.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPosition(TransformComponent component, Vector2 worldPos, EntityQuery<TransformComponent> xformQuery)
+    public void SetWorldPosition(Entity<TransformComponent> entity, Vector2 worldPos)
     {
-        if (!component._parent.IsValid())
-        {
-            DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
-            return;
-        }
-
-        var (curWorldPos, curWorldRot) = GetWorldPositionRotation(component, xformQuery);
-        var negativeParentWorldRot = component._localRotation - curWorldRot;
-        var newLocalPos = component._localPosition + negativeParentWorldRot.RotateVec(worldPos - curWorldPos);
-        SetLocalPosition(component, newLocalPos);
+        SetWorldPositionRotation(entity.Owner, worldPos, entity.Comp.LocalRotation, entity.Comp);
     }
 
     #endregion
@@ -1097,20 +1083,24 @@ public abstract partial class SharedTransformSystem
         if (!XformQuery.Resolve(uid, ref component))
             return;
 
-        if (!component._parent.IsValid())
+        if (!component._parent.IsValid() || component.MapUid == null)
         {
             DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
             return;
         }
 
-        var (curWorldPos, curWorldRot) = GetWorldPositionRotation(component);
-
-        var negativeParentWorldRot = component.LocalRotation - curWorldRot;
-
-        var newLocalPos = component.LocalPosition + negativeParentWorldRot.RotateVec(worldPos - curWorldPos);
-        var newLocalRot = component.LocalRotation + worldRot - curWorldRot;
-
-        SetLocalPositionRotation(uid, newLocalPos, newLocalRot, component);
+        if (component.GridUid != uid && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
+        {
+            var targetGridXform = XformQuery.GetComponent(targetGrid);
+            var invLocalMatrix = targetGridXform.InvLocalMatrix;
+            var gridRot = targetGridXform.LocalRotation;
+            var localRot = worldRot - gridRot;
+            SetCoordinates(uid, component, new EntityCoordinates(targetGrid, invLocalMatrix.Transform(worldPos)), rotation: localRot);
+        }
+        else
+        {
+            SetCoordinates(uid, component, new EntityCoordinates(component.MapUid.Value, worldPos), rotation: worldRot);
+        }
     }
 
     [Obsolete("Use override with EntityUid")]

@@ -44,6 +44,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var entMan = sim.Resolve<IEntityManager>();
 
             var mapID = new MapId(11);
             mapMan.CreateMap(mapID);
@@ -51,7 +52,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             mapMan.Restart();
 
-            Assert.That(mapMan.GridExists(grid), Is.False);
+            Assert.That(entMan.HasComponent<MapGridComponent>(grid), Is.False);
         }
 
         /// <summary>

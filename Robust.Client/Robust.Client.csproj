@@ -23,7 +23,7 @@
     <PackageReference Include="Robust.Natives" />
     <PackageReference Include="System.Numerics.Vectors"  />
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
-    <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" PrivateAssets="compile" />
+    <PackageReference Condition="'$(RobustToolsBuild)' == 'True'" Include="JetBrains.Profiler.Api" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
     <PackageReference Include="TerraFX.Interop.Xlib" />

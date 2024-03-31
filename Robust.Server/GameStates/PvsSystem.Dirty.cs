@@ -49,6 +49,12 @@ namespace Robust.Server.GameStates
 
         private void OnEntityDirty(Entity<MetaDataComponent> uid)
         {
+            if (uid.Comp.PvsData != default)
+            {
+                ref var meta = ref _metadataMemory.GetRef(uid.Comp.PvsData.Index);
+                meta.LastModifiedTick = uid.Comp.EntityLastModifiedTick;
+            }
+
             if (!_addEntities[_currentIndex].Contains(uid))
                 _dirtyEntities[_currentIndex].Add(uid);
         }

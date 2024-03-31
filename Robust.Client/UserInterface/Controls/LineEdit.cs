@@ -4,6 +4,8 @@ using System.Numerics;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -20,6 +22,8 @@ namespace Robust.Client.UserInterface.Controls
     public class LineEdit : Control
     {
         [Dependency] private readonly IClyde _clyde = default!;
+        [Dependency] private readonly IConfigurationManager _cfgManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         private const float MouseScrollDelay = 0.001f;
 
@@ -45,6 +49,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool _mouseSelectingText;
         private float _lastMousePosition;
+
+        private TimeSpan? _lastClickTime;
+        private Vector2? _lastClickPosition;
 
         private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
@@ -685,8 +692,26 @@ namespace Robust.Client.UserInterface.Controls
                     args.Handle();
                 }
             }
+            // Double-clicking. Clicks delay should be <= 250ms and the distance < 10 pixels.
+            else if (args.Function == EngineKeyFunctions.UIClick && _lastClickPosition != null && _lastClickTime != null
+                     && _timing.RealTime - _lastClickTime <= TimeSpan.FromMilliseconds(_cfgManager.GetCVar(CVars.DoubleClickDelay))
+                     && (_lastClickPosition.Value - args.PointerLocation.Position).IsShorterThan(_cfgManager.GetCVar(CVars.DoubleClickRange)))
+            {
+                _lastClickTime = _timing.RealTime;
+                _lastClickPosition = args.PointerLocation.Position;
+
+                _lastMousePosition = args.RelativePosition.X;
+
+                _selectionStart = TextEditShared.PrevWordPosition(_text, GetIndexAtPos(args.RelativePosition.X));
+                _cursorPosition = TextEditShared.EndWordPosition(_text, GetIndexAtPos(args.RelativePosition.X));
+
+                args.Handle();
+            }
             else
             {
+                _lastClickTime = _timing.RealTime;
+                _lastClickPosition = args.PointerLocation.Position;
+
                 _mouseSelectingText = true;
                 _lastMousePosition = args.RelativePosition.X;
 

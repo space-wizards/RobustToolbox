@@ -737,7 +737,7 @@ public partial class SharedPhysicsSystem
 
     public (int Layer, int Mask) GetHardCollision(EntityUid uid, FixturesComponent? manager = null)
     {
-        if (!Resolve(uid, ref manager))
+        if (!_fixturesQuery.Resolve(uid, ref manager, false))
         {
             return (0, 0);
         }

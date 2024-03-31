@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added `IRobustRandom.GetItems` extension methods for randomly picking multiple items from a collections.
+* Added `SharedPhysicsSystem.EffectiveCurTime`. This is effectively a variation of `IGameTiming.CurTime` that takes into account the current physics sub-step.
 
 ### Bugfixes
 

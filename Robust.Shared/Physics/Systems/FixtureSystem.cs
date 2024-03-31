@@ -289,7 +289,7 @@ namespace Robust.Shared.Physics.Systems
 
             // TODO add a DestroyFixture() override that takes in a list.
             // reduced broadphase lookups
-            foreach (var (id, fixture) in toRemoveFixtures)
+            foreach (var (id, fixture) in toRemoveFixtures.Span)
             {
                 computeProperties = true;
                 DestroyFixture(uid, id, fixture, false, physics, component);
@@ -298,7 +298,7 @@ namespace Robust.Shared.Physics.Systems
             // TODO: We also still need event listeners for shapes (Probably need C# events)
             // Or we could just make it so shapes can only be updated via fixturesystem which handles it
             // automagically (friends or something?)
-            foreach (var (id, fixture) in toAddFixtures)
+            foreach (var (id, fixture) in toAddFixtures.Span)
             {
                 computeProperties = true;
                 CreateFixture(uid, id, fixture, false, component, physics, xform);

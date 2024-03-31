@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 217.2.1
+
+### Bugfixes
+
+* Fix LineEdit tests on engine.
+
+### Internal
+
+* Make various ValueList enumerators access the span directly for performance.
+
+
 ## 217.2.0
 
 ### New features

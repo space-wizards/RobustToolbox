@@ -11,6 +11,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 #if EXCEPTION_TOLERANCE
@@ -173,6 +174,60 @@ namespace Robust.Shared.GameObjects
             {
                 if (comp is { LifeStage: ComponentLifeStage.Initialized })
                     LifeStartup(comp);
+            }
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddComponents(EntityUid target, EntityPrototype prototype, bool removeExisting = true)
+        {
+            AddComponents(target, prototype.Components, removeExisting);
+        }
+
+        /// <inheritdoc />
+        public void AddComponents(EntityUid target, ComponentRegistry registry, bool removeExisting = true)
+        {
+            if (registry.Count == 0)
+                return;
+
+            var metadata = MetaQuery.GetComponent(target);
+
+            foreach (var (name, entry) in registry)
+            {
+                var reg = _componentFactory.GetRegistration(name);
+
+                if (HasComponent(target, reg.Type))
+                {
+                    if (!removeExisting)
+                        continue;
+
+                    RemoveComponent(target, reg.Type, metadata);
+                }
+
+                var comp = _componentFactory.GetComponent(reg);
+                _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                AddComponent(target, comp, metadata: metadata);
+            }
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RemoveComponents(EntityUid target, EntityPrototype prototype)
+        {
+            RemoveComponents(target, prototype.Components);
+        }
+
+        /// <inheritdoc />
+        public void RemoveComponents(EntityUid target, ComponentRegistry registry)
+        {
+            if (registry.Count == 0)
+                return;
+
+            var metadata = MetaQuery.GetComponent(target);
+
+            foreach (var entry in registry.Values)
+            {
+                RemoveComponent(target, entry.Component.GetType(), metadata);
             }
         }
 

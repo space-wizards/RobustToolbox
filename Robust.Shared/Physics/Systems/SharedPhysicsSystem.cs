@@ -332,7 +332,7 @@ namespace Robust.Shared.Physics.Systems
                     }
                 }
 
-                EffectiveCurTime += TimeSpan.FromSeconds(frameTime);
+                EffectiveCurTime = EffectiveCurTime.Value + TimeSpan.FromSeconds(frameTime);
             }
 
             EffectiveCurTime = null;

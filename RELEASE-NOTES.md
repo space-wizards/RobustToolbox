@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `AddComponents` and `RemoveComponents` methods to EntityManager that handle EntityPrototype / ComponentRegistry bulk component changes. 
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,19 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 217.2.0
+
+### New features
+
+* Added `AddComponents` and `RemoveComponents` methods to EntityManager that handle EntityPrototype / ComponentRegistry bulk component changes. 
+* Add double-clicking to LineEdit.
+
+### Bugfixes
+
+* Properly ignore non-hard fixtures for IntersectRayWithPredicate.
+* Fix nullable TimeSpan addition on some platforms.
 
 
 ## 217.1.0

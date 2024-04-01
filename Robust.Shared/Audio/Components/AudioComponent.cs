@@ -6,6 +6,7 @@ using Robust.Shared.Audio.Sources;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.ViewVariables;
@@ -94,6 +95,15 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     /// <inheritdoc />
     public void Restart() => Source.Restart();
+
+    [DataField, AutoNetworkedField]
+    public AudioState State = AudioState.Playing;
+
+    /// <summary>
+    /// Time when the audio was paused so we can offset it later if relevant.
+    /// </summary>
+    [DataField]
+    public TimeSpan? PauseTime;
 
     /// <summary>
     /// <see cref="IAudioSource.Playing"/>
@@ -208,6 +218,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <see cref="IAudioSource.PlaybackPosition"/>
     /// </summary>
     [ViewVariables]
+    [Access(Other = AccessPermissions.ReadWriteExecute)]
     public float PlaybackPosition
     {
         get => Source.PlaybackPosition;
@@ -238,6 +249,14 @@ public sealed partial class AudioComponent : Component, IAudioSource
     {
         Source.Dispose();
     }
+}
+
+[Serializable, NetSerializable]
+public enum AudioState : byte
+{
+    Stopped,
+    Playing,
+    Paused,
 }
 
 [Flags]

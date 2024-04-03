@@ -2,10 +2,12 @@
 /*layout (location = 0)*/ attribute vec2 aPos;
 // Texture coordinates.
 /*layout (location = 1)*/ attribute vec2 tCoord;
+/*layout (location = 2)*/ attribute vec2 tCoord2;
 // Colour modulation.
-/*layout (location = 2)*/ attribute vec4 modulate;
+/*layout (location = 3)*/ attribute vec4 modulate;
 
 varying vec2 UV;
+varying vec2 UV2;
 varying vec2 Pos;
 varying vec4 VtxModulate;
 
@@ -36,5 +38,6 @@ void main()
     gl_Position = vec4(VERTEX, 0.0, 1.0);
     Pos = (VERTEX + 1.0) / 2.0;
     UV = mix(modifyUV.xy, modifyUV.zw, tCoord);
+    UV2 = tCoord2;
     VtxModulate = zFromSrgb(modulate);
 }

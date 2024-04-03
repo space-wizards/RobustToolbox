@@ -121,9 +121,11 @@ namespace Robust.Shared.GameObjects
             if (!overwrite && lowerCaseNames.TryGetValue(lowerCaseName, out var prevName))
                 throw new InvalidOperationException($"{lowerCaseName} is already registered, previous: {prevName}");
 
+            var unsaved = type.HasCustomAttribute<UnsavedComponentAttribute>();
+
             var idx = CompIdx.Index(type);
 
-            var registration = new ComponentRegistration(name, type, idx);
+            var registration = new ComponentRegistration(name, type, idx, unsaved);
 
             idxToType[idx] = type;
             names[name] = registration;

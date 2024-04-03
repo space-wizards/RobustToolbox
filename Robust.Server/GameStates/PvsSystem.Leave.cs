@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
@@ -47,12 +48,14 @@ internal sealed partial class PvsSystem
             return;
 
         var (toTick, lastSent) = session.LastSent.Value;
-        foreach (var data in CollectionsMarshal.AsSpan(lastSent))
+
+        foreach (var intPtr in CollectionsMarshal.AsSpan(lastSent))
         {
+            ref var data = ref session.DataMemory.GetRef(intPtr.Index);
             if (data.LastSeen == toTick)
                 continue;
 
-            session.LeftView.Add(data.NetEntity);
+            session.LeftView.Add(IndexToNetEntity(intPtr));
             data.LastLeftView = toTick;
         }
 

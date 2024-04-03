@@ -13,6 +13,7 @@ using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Threading;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -60,6 +61,12 @@ namespace Robust.Shared.Physics.Systems
 
         private int _substeps;
 
+        /// <summary>
+        /// A variation of <see cref="IGameTiming.CurTime"/> that takes into account the current physics sub-step.
+        /// Useful for some entities that need to interpolate their positions during sub-steps.
+        /// </summary>
+        public TimeSpan? EffectiveCurTime;
+
         public bool MetricsEnabled { get; protected set; }
 
         private EntityQuery<FixturesComponent> _fixturesQuery;
@@ -92,9 +99,9 @@ namespace Robust.Shared.Physics.Systems
             InitializeIsland();
             InitializeContacts();
 
-            _configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
-            _configManager.OnValueChanged(CVars.NetTickrate, UpdateSubsteps, true);
-            _configManager.OnValueChanged(CVars.TargetMinimumTickrate, UpdateSubsteps, true);
+            Subs.CVar(_configManager, CVars.AutoClearForces, OnAutoClearChange);
+            Subs.CVar(_configManager, CVars.NetTickrate, UpdateSubsteps, true);
+            Subs.CVar(_configManager, CVars.TargetMinimumTickrate, UpdateSubsteps, true);
         }
 
         private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
@@ -250,8 +257,6 @@ namespace Robust.Shared.Physics.Systems
             base.Shutdown();
 
             ShutdownContacts();
-            ShutdownIsland();
-            _configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         private void UpdateMapAwakeState(EntityUid uid, PhysicsComponent body)
@@ -286,6 +291,7 @@ namespace Robust.Shared.Physics.Systems
         {
             var frameTime = deltaTime / _substeps;
 
+            EffectiveCurTime = _gameTiming.CurTime;
             for (int i = 0; i < _substeps; i++)
             {
                 var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
@@ -325,7 +331,11 @@ namespace Robust.Shared.Physics.Systems
                         FinalStep(comp);
                     }
                 }
+
+                EffectiveCurTime = EffectiveCurTime.Value + TimeSpan.FromSeconds(frameTime);
             }
+
+            EffectiveCurTime = null;
         }
 
         protected virtual void FinalStep(PhysicsMapComponent component)

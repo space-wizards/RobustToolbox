@@ -20,10 +20,14 @@
                         <BoxContainer Name="ControlTreeRoot" Orientation="Vertical" MouseFilter="Stop"  />
                     </PanelContainer>
                 </ScrollContainer>
-                <ScrollContainer HScrollEnabled="False">
+                <ScrollContainer>
                     <BoxContainer Name="ControlProperties" Orientation="Vertical" MouseFilter="Stop" />
                 </ScrollContainer>
             </SplitContainer>
         </BoxContainer>
     </PanelContainer>
+    <!-- TODO Remove and replace with a popup container on WindowRoot -->
+    <PopupContainer Name="PopupContainer" Access="Public">
+        <DevWindowTabUIPopup Name="UIPopup" />
+    </PopupContainer>
 </Control>

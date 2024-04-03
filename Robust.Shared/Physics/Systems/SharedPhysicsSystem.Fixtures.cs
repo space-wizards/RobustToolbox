@@ -73,6 +73,74 @@ public abstract partial class SharedPhysicsSystem
 
     #region Collision Masks & Layers
 
+    /// <summary>
+    /// Similar to IsHardCollidable but also checks whether both entities are set to CanCollide
+    /// </summary>
+    public bool IsCurrentlyHardCollidable(Entity<FixturesComponent?, PhysicsComponent?> bodyA, Entity<FixturesComponent?, PhysicsComponent?> bodyB)
+    {
+        if (!_fixturesQuery.Resolve(bodyA, ref bodyA.Comp1, false) ||
+            !_fixturesQuery.Resolve(bodyB, ref bodyB.Comp1, false) ||
+            !PhysicsQuery.Resolve(bodyA, ref bodyA.Comp2, false) ||
+            !PhysicsQuery.Resolve(bodyA, ref bodyB.Comp2, false))
+        {
+            return false;
+        }
+
+        if (!bodyA.Comp2.CanCollide ||
+            !bodyB.Comp2.CanCollide)
+        {
+            return false;
+        }
+
+        return IsHardCollidable(bodyA, bodyB);
+    }
+
+    /// <summary>
+    /// Returns true if both entities are hard-collidable with each other.
+    /// </summary>
+    public bool IsHardCollidable(Entity<FixturesComponent?, PhysicsComponent?> bodyA, Entity<FixturesComponent?, PhysicsComponent?> bodyB)
+    {
+        if (!_fixturesQuery.Resolve(bodyA, ref bodyA.Comp1, false) ||
+            !_fixturesQuery.Resolve(bodyB, ref bodyB.Comp1, false) ||
+            !PhysicsQuery.Resolve(bodyA, ref bodyA.Comp2, false) ||
+            !PhysicsQuery.Resolve(bodyA, ref bodyB.Comp2, false))
+        {
+            return false;
+        }
+
+        // Fast check
+        if (!bodyA.Comp2.Hard ||
+            !bodyB.Comp2.Hard ||
+            ((bodyA.Comp2.CollisionLayer & bodyB.Comp2.CollisionMask) == 0x0 &&
+            (bodyA.Comp2.CollisionMask & bodyB.Comp2.CollisionLayer) == 0x0))
+        {
+            return false;
+        }
+
+        // Slow check
+        foreach (var fix in bodyA.Comp1.Fixtures.Values)
+        {
+            if (!fix.Hard)
+                continue;
+
+            foreach (var other in bodyB.Comp1.Fixtures.Values)
+            {
+                if (!other.Hard)
+                    continue;
+
+                if ((fix.CollisionLayer & other.CollisionMask) == 0x0 &&
+                    (fix.CollisionMask & other.CollisionLayer) == 0x0)
+                {
+                    continue;
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void AddCollisionMask(EntityUid uid, string fixtureId, Fixture fixture, int mask, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if ((fixture.CollisionMask & mask) == mask) return;

@@ -71,46 +71,6 @@ namespace Robust.Shared.Containers
         [DataField("showEnts")]
         public bool ShowContents { get; set; }
 
-        [Obsolete("Use container system method")]
-        public bool Insert(
-            EntityUid toinsert,
-            IEntityManager? entMan = null,
-            TransformComponent? transform = null,
-            TransformComponent? ownerTransform = null,
-            MetaDataComponent? meta = null,
-            PhysicsComponent? physics = null,
-            bool force = false)
-        {
-            IoCManager.Resolve(ref entMan);
-            return entMan.System<SharedContainerSystem>().Insert((toinsert, transform, meta, physics), this, ownerTransform, force);
-        }
-
-        /// <summary>
-        /// Whether the given entity can be inserted into this container.
-        /// </summary>
-        /// <param name="assumeEmpty">Whether to assume that the container is currently empty.</param>
-        protected internal virtual bool CanInsert(EntityUid toInsert, bool assumeEmpty, IEntityManager entMan) => true;
-
-        [Obsolete("Use container system method")]
-        public bool Remove(
-            EntityUid toRemove,
-            IEntityManager? entMan = null,
-            TransformComponent? xform = null,
-            MetaDataComponent? meta = null,
-            bool reparent = true,
-            bool force = false,
-            EntityCoordinates? destination = null,
-            Angle? localRotation = null
-        )
-        {
-            IoCManager.Resolve(ref entMan);
-            return entMan.System<SharedContainerSystem>().Remove((toRemove, xform, meta), this, reparent, force, destination, localRotation);
-        }
-
-        [Obsolete("Use container system method")]
-        public void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, MetaDataComponent? meta = null)
-            => Remove(toRemove, entMan, meta: meta, reparent: false, force: true);
-
         /// <summary>
         /// Checks if the entity is contained in this container.
         /// This is not recursive, so containers of children are not checked.
@@ -120,18 +80,10 @@ namespace Robust.Shared.Containers
         public abstract bool Contains(EntityUid contained);
 
         /// <summary>
-        /// Clears the container and marks it as deleted.
+        /// Whether the given entity can be inserted into this container.
         /// </summary>
-        [Obsolete("use system method")]
-        public void Shutdown(IEntityManager? entMan = null, INetManager? _ = null)
-        {
-            IoCManager.Resolve(ref entMan);
-            entMan.System<SharedContainerSystem>().ShutdownContainer(this);
-        }
-
-        /// <inheritdoc />
-        [Access(typeof(SharedContainerSystem))]
-        protected internal abstract void InternalShutdown(IEntityManager entMan, SharedContainerSystem system, bool isClient);
+        /// <param name="assumeEmpty">Whether to assume that the container is currently empty.</param>
+        protected internal virtual bool CanInsert(EntityUid toInsert, bool assumeEmpty, IEntityManager entMan) => true;
 
         /// <summary>
         /// Implement to store the reference in whatever form you want
@@ -148,5 +100,14 @@ namespace Robust.Shared.Containers
         /// <param name="entMan"></param>
         [Access(typeof(SharedContainerSystem))]
         protected internal abstract void InternalRemove(EntityUid toRemove, IEntityManager entMan);
+
+        /// <summary>
+        /// Implement to clear the container and mark it as deleted.
+        /// </summary>
+        /// <param name="entMan"></param>
+        /// <param name="system"></param>
+        /// <param name=isClient"></param>
+        [Access(typeof(SharedContainerSystem))]
+        protected internal abstract void InternalShutdown(IEntityManager entMan, SharedContainerSystem system, bool isClient);
     }
 }

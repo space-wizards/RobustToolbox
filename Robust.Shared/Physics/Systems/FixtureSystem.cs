@@ -114,7 +114,7 @@ namespace Robust.Shared.Physics.Systems
                 // Don't need to dirty here as we'll just manually call it after (we 100% need to call it).
                 FixtureUpdate(uid, false, manager: manager, body: body);
                 // Don't need to ResetMassData as FixtureUpdate already does it.
-                Dirty(manager);
+                Dirty(uid, manager);
             }
             // TODO: Set newcontacts to true.
         }
@@ -289,7 +289,7 @@ namespace Robust.Shared.Physics.Systems
 
             // TODO add a DestroyFixture() override that takes in a list.
             // reduced broadphase lookups
-            foreach (var (id, fixture) in toRemoveFixtures)
+            foreach (var (id, fixture) in toRemoveFixtures.Span)
             {
                 computeProperties = true;
                 DestroyFixture(uid, id, fixture, false, physics, component);
@@ -298,7 +298,7 @@ namespace Robust.Shared.Physics.Systems
             // TODO: We also still need event listeners for shapes (Probably need C# events)
             // Or we could just make it so shapes can only be updated via fixturesystem which handles it
             // automagically (friends or something?)
-            foreach (var (id, fixture) in toAddFixtures)
+            foreach (var (id, fixture) in toAddFixtures.Span)
             {
                 computeProperties = true;
                 CreateFixture(uid, id, fixture, false, component, physics, xform);
@@ -361,7 +361,7 @@ namespace Robust.Shared.Physics.Systems
             }
 
             if (dirty)
-                Dirty(manager);
+                Dirty(uid, manager);
         }
 
         public int GetFixtureCount(EntityUid uid, FixturesComponent? manager = null)

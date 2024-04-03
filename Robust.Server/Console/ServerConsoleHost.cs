@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Robust.Server.Player;
 using Robust.Shared.Console;
@@ -283,25 +284,25 @@ namespace Robust.Server.Console
         /// Get completions. Non-null results imply that the command was handled. If it is empty, it implies that
         /// there are no completions for this command.
         /// </summary>
-        private ValueTask<CompletionResult?> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
+        private async ValueTask<CompletionResult?> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
         {
             // Logger.Debug(string.Join(", ", args));
 
             if (args.Length <= 1)
             {
                 // Typing out command name, handle this ourselves.
-                return ValueTask.FromResult<CompletionResult?>(CompletionResult.FromOptions(
-                    AvailableCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description))));
+                return CompletionResult.FromOptions(
+                    AvailableCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description)));
             }
 
             var cmdName = args[0];
             if (!RegisteredCommands.TryGetValue(cmdName, out var cmd))
-                return ValueTask.FromResult<CompletionResult?>(null);
+                return null;
 
             if (!ShellCanExecute(shell, cmdName))
-                return ValueTask.FromResult<CompletionResult?>(CompletionResult.Empty);
+                return CompletionResult.Empty;
 
-            return ValueTask.FromResult<CompletionResult?>(cmd.GetCompletion(shell, args[1..]));
+            return await cmd.GetCompletionAsync(shell, args[1..], argStr, CancellationToken.None);
         }
 
         private sealed class SudoShell : IConsoleShell

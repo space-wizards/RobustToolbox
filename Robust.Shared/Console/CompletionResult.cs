@@ -38,7 +38,7 @@ public sealed record CompletionResult(CompletionOption[] Options, string? Hint)
 /// <summary>
 /// Possible option to tab-complete in a <see cref="CompletionResult"/>.
 /// </summary>
-public record struct CompletionOption(string Value, string? Hint = null, CompletionOptionFlags Flags = default)
+public record struct CompletionOption(string Value, string? Hint = null, CompletionOptionFlags Flags = default) : IComparable<CompletionOption>
 {
     /// <summary>
     /// The value that will be filled in if completed.
@@ -54,6 +54,12 @@ public record struct CompletionOption(string Value, string? Hint = null, Complet
     /// Flags that control how this completion is used.
     /// </summary>
     public CompletionOptionFlags Flags { get; set; } = Flags;
+
+    public int CompareTo(CompletionOption other)
+    {
+        var valueComparison = string.Compare(Value, other.Value, StringComparison.CurrentCultureIgnoreCase);
+        return valueComparison;
+    }
 }
 
 /// <summary>

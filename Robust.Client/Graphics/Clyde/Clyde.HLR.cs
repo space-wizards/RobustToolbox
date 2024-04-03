@@ -11,6 +11,7 @@ using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Utility;
@@ -514,7 +515,9 @@ namespace Robust.Client.Graphics.Clyde
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawLight && eye.DrawFov)
                     {
-                        ApplyFovToBuffer(viewport, eye);
+                        var mapUid = _mapManager.GetMapEntityId(eye.Position.MapId);
+                        if (_entityManager.GetComponent<MapComponent>(mapUid).LightingEnabled)
+                            ApplyFovToBuffer(viewport, eye);
                     }
                 }
 

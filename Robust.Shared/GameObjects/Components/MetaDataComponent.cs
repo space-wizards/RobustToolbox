@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
@@ -199,6 +200,11 @@ namespace Robust.Shared.GameObjects
             // (Creation can still be cleared though)
             ClearCreationTick();
         }
+
+        /// <summary>
+        /// Offset into internal PVS data.
+        /// </summary>
+        internal PvsIndex PvsData;
     }
 
     [Flags]
@@ -222,15 +228,31 @@ namespace Robust.Shared.GameObjects
         Detached = 1 << 2,
 
         /// <summary>
+        /// Indicates this entity can never be handled by the client as PVS detached.
+        /// </summary>
+        Undetachable = 1 << 3,
+
+        /// <summary>
         /// If true, then this entity is considered a "high priority" entity and will be sent to players from further
         /// away. Useful for things like light sources and occluders. Only works if the entity is directly parented to
         /// a grid or map.
         /// </summary>
-        PvsPriority = 1 << 3,
+        PvsPriority = 1 << 4,
     }
 
     /// <summary>
     /// Key struct for uniquely identifying a PVS chunk.
     /// </summary>
     internal readonly record struct PvsChunkLocation(EntityUid Uid, Vector2i Indices);
+
+    /// <summary>
+    /// An opaque index into the PVS data arrays on the server.
+    /// </summary>
+    internal readonly record struct PvsIndex(int Index)
+    {
+        /// <summary>
+        /// An invalid index. This is also used as a marker value in the free list.
+        /// </summary>
+        public static readonly PvsIndex Invalid = new PvsIndex(-1);
+    }
 }

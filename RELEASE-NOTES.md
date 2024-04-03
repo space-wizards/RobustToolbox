@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* RSIs can now specify load parameters, mimicking the ones from `.png.yml`. Currently only disabling sRGB is supported.
 
 ### Bugfixes
 
@@ -69,7 +69,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `AddComponents` and `RemoveComponents` methods to EntityManager that handle EntityPrototype / ComponentRegistry bulk component changes. 
+* Added `AddComponents` and `RemoveComponents` methods to EntityManager that handle EntityPrototype / ComponentRegistry bulk component changes.
 * Add double-clicking to LineEdit.
 
 ### Bugfixes

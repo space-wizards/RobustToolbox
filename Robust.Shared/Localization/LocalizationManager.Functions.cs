@@ -173,7 +173,7 @@ namespace Robust.Shared.Localization
             {
                 EntityUid entity = (EntityUid)entity0.Value;
 
-                if (_grammar.GetGender(entity) is {} g)
+                if (_entMan.System<GrammarSystem>().GetGender(entity) is {} g)
                 {
                     return new LocValueString(g.ToString().ToLowerInvariant());
                 }
@@ -306,7 +306,7 @@ namespace Robust.Shared.Localization
             {
                 EntityUid entity = (EntityUid)entity0.Value;
 
-                if (_grammar.GetProperNoun(entity) is {} p)
+                if (_entMan.System<GrammarSystem>().GetProperNoun(entity) is {} p)
                 {
                     return new LocValueString(p.ToString().ToLowerInvariant());
                 }

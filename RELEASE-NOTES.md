@@ -41,6 +41,7 @@ END TEMPLATE-->
 
 * RSIs can now specify load parameters, mimicking the ones from `.png.yml`. Currently only disabling sRGB is supported.
 * Added a second UV channel to Clyde's vertex format. On regular batched sprite draws, this goes 0 -> 1 across the sprite quad.
+* Added a new `CopyToShaderParameters` system for `SpriteComponent` layers.
 
 ### Bugfixes
 

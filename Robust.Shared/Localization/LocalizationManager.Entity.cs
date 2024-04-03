@@ -24,7 +24,7 @@ namespace Robust.Shared.Localization
 
         private bool TryGetEntityLocAttrib(EntityUid entity, string attribute, [NotNullWhen(true)] out string? value)
         {
-            if (_grammar.GetAttribute(entity, attribute) is {} valueReal)
+            if (_entMan.System<GrammarSystem>().GetAttribute(entity, attribute) is {} valueReal)
             {
                 value = valueReal;
                 return true;

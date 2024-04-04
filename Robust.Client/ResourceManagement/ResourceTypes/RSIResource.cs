@@ -88,14 +88,20 @@ namespace Robust.Client.ResourceManagement
                 var stateObject = metadata.States[index];
                 // Load image from disk.
                 var texPath = data.Path / (stateObject.StateId + ".png");
+                var normPath = data.Path / (stateObject.NormalId + ".png");
                 using (var stream = manager.ContentFileRead(texPath))
                 {
-                    reg.Src = Image.Load<Rgba32>(stream);
+                    using (var normalStream = manager.ContentFileRead(normPath))
+                    {
+                        reg.Src = (Image.Load<Rgba32>(stream), Image.Load<Rgba32>(normalStream));
+                    }
                 }
 
-                if (reg.Src.Width % frameSize.X != 0 || reg.Src.Height % frameSize.Y != 0)
+                DebugTools.Assert(reg.Src.Item1.Size == reg.Src.Item2.Size, "Texture and normal sizes are unequal.");
+
+                if (reg.Src.Item1.Width % frameSize.X != 0 || reg.Src.Item1.Height % frameSize.Y != 0)
                 {
-                    var regDims = $"{reg.Src.Width}x{reg.Src.Height}";
+                    var regDims = $"{reg.Src.Item1.Width}x{reg.Src.Item1.Height}";
                     var iconDims = $"{frameSize.X}x{frameSize.Y}";
                     throw new RSILoadException($"State '{stateObject.StateId}' image size ({regDims}) is not a multiple of the icon size ({iconDims}).");
                 }
@@ -149,7 +155,7 @@ namespace Robust.Client.ResourceManagement
                 // Blit all the frames over.
                 for (var i = 0; i < reg.TotalFrameCount; i++)
                 {
-                    var srcWidth = (reg.Src.Width / frameSize.X);
+                    var srcWidth = (reg.Src.Item1.Width / frameSize.X);
                     var srcColumn = i % srcWidth;
                     var srcRow = i / srcWidth;
                     var srcPos = (srcColumn * frameSize.X, srcRow * frameSize.Y);
@@ -160,7 +166,8 @@ namespace Robust.Client.ResourceManagement
 
                     var srcBox = UIBox2i.FromDimensions(srcPos, frameSize);
 
-                    reg.Src.Blit(srcBox, sheet, sheetPos);
+                    reg.Src.Item1.Blit(srcBox, sheet, sheetPos);
+                    reg.Src.Item2.Blit(srcBox, sheet, sheetPos);
                 }
 
                 sheetIndex += reg.TotalFrameCount;
@@ -169,7 +176,8 @@ namespace Robust.Client.ResourceManagement
             for (var i = 0; i < toAtlas.Length; i++)
             {
                 ref var reg = ref toAtlas[i];
-                reg.Src.Dispose();
+                reg.Src.Item1.Dispose();
+                reg.Src.Item2.Dispose();
             }
 
             data.Rsi = rsi;
@@ -384,7 +392,7 @@ namespace Robust.Client.ResourceManagement
 
         internal struct StateReg
         {
-            public Image<Rgba32> Src;
+            public (Image<Rgba32>, Image<Rgba32>) Src;
             public Texture[][] Output;
             public int[][] Indices;
             public Vector2i[][] Offsets;

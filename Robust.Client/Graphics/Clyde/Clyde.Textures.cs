@@ -4,9 +4,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
+using OpenToolkit.Mathematics;
 using Robust.Client.Utility;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
@@ -14,12 +16,15 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using TerraFX.Interop.WinRT;
 using Color = Robust.Shared.Maths.Color;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 using PIF = OpenToolkit.Graphics.OpenGL4.PixelInternalFormat;
 using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
 using PT = OpenToolkit.Graphics.OpenGL4.PixelType;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
+using Vector2i = Robust.Shared.Maths.Vector2i;
+using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -649,15 +654,17 @@ namespace Robust.Client.Graphics.Clyde
                 return $"ClydeTexture: ({TextureId})";
             }
 
-            public override unsafe Color GetPixel(int x, int y)
+            // This is not what healthy people write.
+            public override unsafe (Color, Vector3) GetPixel(int x, int y)
             {
                 if (!_clyde._loadedTextures.TryGetValue(TextureId, out var loaded))
                 {
                     throw new DataException("Texture not found");
                 }
 
+                var blockSize = sizeof(Color);
                 var curTexture2D = GL.GetInteger(GetPName.TextureBinding2D);
-                var bufSize = 4 * loaded.Size.X * loaded.Size.Y;
+                var bufSize = blockSize * loaded.Size.X * loaded.Size.Y;
                 var buffer = ArrayPool<byte>.Shared.Rent(bufSize);
 
                 GL.BindTexture(TextureTarget.Texture2D, loaded.OpenGLObject.Handle);
@@ -669,10 +676,10 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.BindTexture(TextureTarget.Texture2D, curTexture2D);
 
-                var pixelPos = (loaded.Size.X * (loaded.Size.Y - y - 1) + x) * 4;
+                var pixelPos = (loaded.Size.X * (loaded.Size.Y - y - 1) + x) * blockSize;
                 var color = new Color(buffer[pixelPos+0], buffer[pixelPos+1], buffer[pixelPos+2], buffer[pixelPos+3]);
                 ArrayPool<byte>.Shared.Return(buffer);
-                return color;
+                return (color, Vector3.UnitZ); // You don't deserve normals.
             }
         }
 

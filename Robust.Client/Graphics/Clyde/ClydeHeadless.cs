@@ -308,9 +308,9 @@ namespace Robust.Client.Graphics.Clyde
                 // Just do nothing on mutate.
             }
 
-            public override Color GetPixel(int x, int y)
+            public override (Color, Vector3) GetPixel(int x, int y)
             {
-                return Color.Black;
+                return (Color.Black, Vector3.UnitZ);
             }
         }
 

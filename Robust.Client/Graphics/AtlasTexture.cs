@@ -1,7 +1,9 @@
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Client.Graphics
 {
@@ -33,7 +35,7 @@ namespace Robust.Client.Graphics
         /// </summary>
         public UIBox2 SubRegion { get; }
 
-        public override Color GetPixel(int x, int y)
+        public override (Color, Vector3) GetPixel(int x, int y)
         {
             DebugTools.Assert(x < SubRegion.Right);
             DebugTools.Assert(y < SubRegion.Top);

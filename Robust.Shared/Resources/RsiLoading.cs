@@ -40,7 +40,7 @@ internal static class RsiLoading
         {
             var stateObject = manifestJson.States[stateI];
             var stateName = stateObject.Name;
-            var normalName = stateObject.NormalName;
+            var normalName = stateObject.Normal;
             int dirValue;
 
             if (stateObject.Directions is { } dirVal)
@@ -140,7 +140,7 @@ internal static class RsiLoading
     private sealed record RsiJsonMetadata(Vector2i Size, StateJsonMetadata[] States);
 
     [UsedImplicitly]
-    private sealed record StateJsonMetadata(string Name, string NormalName, int? Directions, float[][]? Delays);
+    private sealed record StateJsonMetadata(string Name, string Normal, int? Directions, float[][]? Delays);
 }
 
 [Serializable]

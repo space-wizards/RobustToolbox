@@ -12,6 +12,7 @@ using Robust.Shared.Resources;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using TerraFX.Interop.WinRT;
 
 namespace Robust.Client.ResourceManagement
 {
@@ -91,13 +92,29 @@ namespace Robust.Client.ResourceManagement
                 var normPath = data.Path / (stateObject.NormalId + ".png");
                 using (var stream = manager.ContentFileRead(texPath))
                 {
-                    using (var normalStream = manager.ContentFileRead(normPath))
+                    var texture = Image.Load<Rgba32>(stream);
+                    if (stateObject.NormalId is not null)
                     {
-                        reg.Src = (Image.Load<Rgba32>(stream), Image.Load<Rgba32>(normalStream));
+                        using (var normalStream = manager.ContentFileRead(normPath))
+                        {
+                            reg.Src = (texture, Image.Load<Rgba32>(normalStream));
+                        }
+                    }
+                    else
+                    {
+                        var normalImage = new Image<Rgba32>(texture.Width, texture.Height);
+                        for (int nX = 0; nX < texture.Width; nX++)
+                        {
+                            for (int nY = 0; nY < texture.Height; nY++)
+                            {
+                                normalImage[nX, nY] = new Rgba32(0.5f, 0.5f, 1f);
+                            }
+                        }
+                        reg.Src = (texture, normalImage);
                     }
                 }
 
-                DebugTools.Assert(reg.Src.Item1.Size == reg.Src.Item2.Size, "Texture and normal sizes are unequal.");
+                DebugTools.Assert(reg.Src.Item1.Size == reg.Src.Item2.Size, $"Texture and normal sizes of image '{texPath}' are unequal.");
 
                 if (reg.Src.Item1.Width % frameSize.X != 0 || reg.Src.Item1.Height % frameSize.Y != 0)
                 {

@@ -119,7 +119,7 @@ internal static class RsiLoading
     internal sealed class StateMetadata
     {
         public readonly string StateId;
-        public readonly string NormalId;
+        public readonly string? NormalId;
         public readonly int DirCount;
         public readonly float[][] Delays;
 

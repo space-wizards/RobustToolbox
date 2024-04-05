@@ -158,7 +158,8 @@ namespace Robust.Server.ServerStatus
             {
                 // Passing null as content works so...
                 _sawmill.Debug("Sending ping to watchdog...");
-                await _httpClient.PostAsync(new Uri(_baseUri, $"server_api/{_watchdogKey}/ping"), null!);
+                using var resp = await _httpClient.PostAsync(new Uri(_baseUri, $"server_api/{_watchdogKey}/ping"), null!);
+                resp.EnsureSuccessStatusCode();
                 _sawmill.Debug("Succeeded in sending ping to watchdog");
             }
             catch (HttpRequestException e)

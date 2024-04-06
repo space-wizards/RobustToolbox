@@ -227,7 +227,7 @@ namespace Robust.Shared.GameObjects
             ShuttingDown = false;
             Started = false;
 
-            _compressionCtx.Dispose();
+            _compressionCtx?.Dispose();
             _compressionCtx = default!;
             _cfgMan.UnsubValueChanged(CVars.NetEventCompressThreshold, OnCompressThresholdChanged);
         }

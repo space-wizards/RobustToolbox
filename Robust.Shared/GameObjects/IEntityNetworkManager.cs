@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Shared.Network;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -26,9 +27,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="message">Message that should be sent.</param>
         /// <param name="recordReplay">Whether or not this message should be saved to replays.</param>
-        void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true);
+        void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true, ZStdCompressionContext? ctx = null);
 
-        void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)
+        void SendSystemNetworkMessage(EntityEventArgs message, uint sequence, ZStdCompressionContext? ctx = null)
         {
             throw new NotSupportedException();
         }
@@ -42,6 +43,6 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="NotSupportedException">
         ///    Thrown if called on the client.
         /// </exception>
-        void SendSystemNetworkMessage(EntityEventArgs message, INetChannel channel);
+        void SendSystemNetworkMessage(EntityEventArgs message, INetChannel channel, ZStdCompressionContext? ctx = null);
     }
 }

@@ -203,9 +203,9 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true)
+        public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true, ZStdCompressionContext? ctx = null)
         {
-            var newMsg = new MsgEntity(message, default, _gameTiming.CurTick, CompressionThreshold, CompressionCtx);
+            var newMsg = new MsgEntity(message, default, _gameTiming.CurTick, CompressionThreshold, ctx ?? CompressionCtx);
 
             if (recordReplay)
                 _replay.RecordServerMessage(message);
@@ -215,9 +215,9 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel targetConnection)
+        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel targetConnection, ZStdCompressionContext? ctx = null)
         {
-            var newMsg = new MsgEntity(message, default, _gameTiming.CurTick, CompressionThreshold, CompressionCtx);
+            var newMsg = new MsgEntity(message, default, _gameTiming.CurTick, CompressionThreshold, ctx ?? CompressionCtx);
             _networkManager.ServerSendMessage(newMsg, targetConnection);
         }
 

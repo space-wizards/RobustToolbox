@@ -185,19 +185,19 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true)
+        public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true, ZStdCompressionContext? ctx = null)
         {
-            SendSystemNetworkMessage(message, default(uint));
+            SendSystemNetworkMessage(message, default(uint), ctx);
         }
 
-        public void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)
+        public void SendSystemNetworkMessage(EntityEventArgs message, uint sequence, ZStdCompressionContext? ctx = null)
         {
-            var msg = new MsgEntity(message, sequence, _gameTiming.CurTick, CompressionThreshold, CompressionCtx);
+            var msg = new MsgEntity(message, sequence, _gameTiming.CurTick, CompressionThreshold, ctx ?? CompressionCtx);
             _networkManager.ClientSendMessage(msg);
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel? channel)
+        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel? channel, ZStdCompressionContext? ctx = null)
         {
             throw new NotSupportedException();
         }

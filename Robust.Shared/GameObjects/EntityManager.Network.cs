@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
+using SharpZstd.Interop;
 
 namespace Robust.Shared.GameObjects;
 
@@ -812,6 +814,36 @@ public partial class EntityManager
         }
 
         return netEntities;
+    }
+
+    #endregion
+
+    #region Networked entioty messages
+
+    /// <summary>
+    /// Minimum size (in bytes) for ECS events to get compressed.
+    /// </summary>
+    protected int CompressionThreshold;
+
+    private ThreadLocal<ZStdCompressionContext?> _compressionCtx = default!;
+
+    private void OnCompressThresholdChanged(int value)
+    {
+        CompressionThreshold = value;
+    }
+
+    protected ZStdCompressionContext CompressionCtx
+    {
+        get
+        {
+            if (_compressionCtx.IsValueCreated)
+                return _compressionCtx.Value!;
+
+            var ctx = new ZStdCompressionContext();
+            ctx.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, _cfgMan.GetCVar(CVars.NetPvsCompressLevel));
+            _compressionCtx.Value = ctx;
+            return ctx;
+        }
     }
 
     #endregion

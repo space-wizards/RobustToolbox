@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Prometheus;
+using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -38,6 +39,7 @@ namespace Robust.Shared.GameObjects
         [IoC.Dependency] private readonly ISerializationManager _serManager = default!;
         [IoC.Dependency] private readonly ProfManager _prof = default!;
         [IoC.Dependency] private readonly INetManager _netMan = default!;
+        [IoC.Dependency] private readonly IConfigurationManager _cfgMan = default!;
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
@@ -131,6 +133,9 @@ namespace Robust.Shared.GameObjects
             _sawmill = LogManager.GetSawmill("entity");
             _resolveSawmill = LogManager.GetSawmill("resolve");
 
+            _compressionCtx = new();
+            _cfgMan.OnValueChanged(CVars.NetEventCompressThreshold, OnCompressThresholdChanged, true);
+
             Initialized = true;
         }
 
@@ -221,6 +226,10 @@ namespace Robust.Shared.GameObjects
             ClearComponents();
             ShuttingDown = false;
             Started = false;
+
+            _compressionCtx.Dispose();
+            _compressionCtx = default!;
+            _cfgMan.UnsubValueChanged(CVars.NetEventCompressThreshold, OnCompressThresholdChanged);
         }
 
         public virtual void Cleanup()
@@ -929,11 +938,5 @@ namespace Robust.Shared.GameObjects
         /// Generates a unique network id and increments <see cref="NextNetworkId"/>
         /// </summary>
         protected virtual NetEntity GenerateNetEntity() => new(NextNetworkId++);
-    }
-
-    public enum EntityMessageType : byte
-    {
-        Error = 0,
-        SystemMessage
     }
 }

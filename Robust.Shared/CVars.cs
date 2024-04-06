@@ -274,10 +274,16 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_exit_budget", 75, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
-        /// ZSTD compression level to use when compressing game states. Used by both networking and replays.
+        /// ZSTD compression level to use when compressing game states, networked messages, and replays.
         /// </summary>
         public static readonly CVarDef<int> NetPvsCompressLevel =
             CVarDef.Create("net.pvs_compress_level", 3, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Minimum size (in bytes) for networked system events to get compressed.
+        /// </summary>
+        public static readonly CVarDef<int> NetEventCompressThreshold =
+            CVarDef.Create("net.event_compress_threshold", 1024, CVar.ARCHIVE);
 
         /// <summary>
         /// Log late input messages from clients.

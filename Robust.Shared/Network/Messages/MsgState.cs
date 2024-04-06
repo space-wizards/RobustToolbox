@@ -1,8 +1,4 @@
-using System;
-using System.Buffers;
-using System.IO;
 using Lidgren.Network;
-using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -11,7 +7,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
-    public sealed class MsgState : NetMessage
+    public sealed class MsgState : CompressedNetMessage
     {
         // Lidgren does not currently support unreliable messages above MTU.
         // Ideally we would peg this to the actual configured MTU instead of the default constant, but oh well...
@@ -25,72 +21,19 @@ namespace Robust.Shared.Network.Messages
         public GameState State;
         public ZStdCompressionContext CompressionContext;
 
-        internal bool _hasWritten;
+        internal bool HasWritten;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             MsgSize = buffer.LengthBytes;
-            var uncompressedLength = buffer.ReadVariableInt32();
-            var compressedLength = buffer.ReadVariableInt32();
-            MemoryStream finalStream;
-
-            // State is compressed.
-            if (compressedLength > 0)
-            {
-                var stream = RobustMemoryManager.GetMemoryStream(compressedLength);
-                buffer.ReadAlignedMemory(stream, compressedLength);
-
-                using var decompressStream = new ZStdDecompressStream(stream);
-                finalStream = RobustMemoryManager.GetMemoryStream(uncompressedLength);
-                finalStream.SetLength(uncompressedLength);
-                decompressStream.CopyTo(finalStream, uncompressedLength);
-                finalStream.Position = 0;
-            }
-            // State is uncompressed.
-            else
-            {
-                finalStream = RobustMemoryManager.GetMemoryStream(uncompressedLength);
-                buffer.ReadAlignedMemory(finalStream, uncompressedLength);
-            }
-
-            serializer.DeserializeDirect(finalStream, out State);
-            State.PayloadSize = uncompressedLength;
-            finalStream.Dispose();
+            var size = ReadCompressed(buffer, serializer, out State, true);
+            State.PayloadSize = size;
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
-            using var stateStream = RobustMemoryManager.GetMemoryStream();
-            serializer.SerializeDirect(stateStream, State);
-            buffer.WriteVariableInt32((int)stateStream.Length);
-
-            // We compress the state.
-            if (stateStream.Length > CompressionThreshold)
-            {
-                // var sw = Stopwatch.StartNew();
-                stateStream.Position = 0;
-                var buf = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound((int)stateStream.Length));
-                var length = CompressionContext.Compress2(buf, stateStream.AsSpan());
-
-                buffer.WriteVariableInt32(length);
-
-                buffer.Write(buf.AsSpan(0, length));
-
-                // var elapsed = sw.Elapsed;
-                // System.Console.WriteLine(
-                //    $"From: {State.FromSequence} To: {State.ToSequence} Size: {length} B Before: {stateStream.Length} B time: {elapsed}");
-
-                ArrayPool<byte>.Shared.Return(buf);
-            }
-            // The state is sent as is.
-            else
-            {
-                // 0 means that the state isn't compressed.
-                buffer.WriteVariableInt32(0);
-                buffer.Write(stateStream.AsSpan());
-            }
-
-            _hasWritten = true;
+            WriteCompressed(buffer, serializer, State, CompressionThreshold, CompressionContext, true);
+            HasWritten = true;
             MsgSize = buffer.LengthBytes;
         }
 
@@ -98,24 +41,13 @@ namespace Robust.Shared.Network.Messages
         ///     Whether this state message is large enough to warrant being sent reliably.
         ///     This is only valid after
         /// </summary>
-        /// <returns></returns>
         public bool ShouldSendReliably()
         {
-            DebugTools.Assert(_hasWritten, "Attempted to determine sending method before determining packet size.");
+            DebugTools.Assert(HasWritten, "Attempted to determine sending method before determining packet size.");
             return State.ForceSendReliably || MsgSize > ReliableThreshold;
         }
 
         public override NetDeliveryMethod DeliveryMethod
-        {
-            get
-            {
-                if (ShouldSendReliably())
-                {
-                    return NetDeliveryMethod.ReliableUnordered;
-                }
-
-                return base.DeliveryMethod;
-            }
-        }
+            => ShouldSendReliably() ? NetDeliveryMethod.ReliableUnordered : base.DeliveryMethod;
     }
 }

@@ -192,12 +192,7 @@ namespace Robust.Client.GameObjects
 
         public void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)
         {
-            var msg = new MsgEntity();
-            msg.Type = EntityMessageType.SystemMessage;
-            msg.SystemMessage = message;
-            msg.SourceTick = _gameTiming.CurTick;
-            msg.Sequence = sequence;
-
+            var msg = new MsgEntity(message, sequence, _gameTiming.CurTick, CompressionThreshold, CompressionCtx);
             _networkManager.ClientSendMessage(msg);
         }
 
@@ -223,18 +218,11 @@ namespace Robust.Client.GameObjects
 
         private void DispatchReceivedNetworkMsg(MsgEntity message)
         {
-            switch (message.Type)
-            {
-                case EntityMessageType.SystemMessage:
-
-                    // TODO REPLAYS handle late messages.
-                    // If a message was received late, it will be recorded late here.
-                    // Maybe process the replay to prevent late messages when playing back?
-                    _replayRecording.RecordReplayMessage(message.SystemMessage);
-
-                    DispatchReceivedNetworkMsg(message.SystemMessage);
-                    return;
-            }
+            // TODO REPLAYS handle late messages.
+            // If a message was received late, it will be recorded late here.
+            // Maybe process the replay to prevent late messages when playing back?
+            _replayRecording.RecordReplayMessage(message.Event);
+            DispatchReceivedNetworkMsg(message.Event);
         }
 
         public void DispatchReceivedNetworkMsg(EntityEventArgs msg)

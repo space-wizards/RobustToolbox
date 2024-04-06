@@ -1,80 +1,58 @@
-using System;
-using System.IO;
 using Lidgren.Network;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-#nullable disable
+namespace Robust.Shared.Network.Messages;
 
-namespace Robust.Shared.Network.Messages
+/// <summary>
+/// NetMessage for sending networked ECS events (<see cref="EntityEventArgs"/>).
+/// </summary>
+public sealed class MsgEntity : CompressedNetMessage
 {
-    public sealed class MsgEntity : NetMessage
+    public override MsgGroups MsgGroup => MsgGroups.EntityEvent;
+
+    public EntityEventArgs Event;
+    public uint Sequence;
+    public GameTick SourceTick;
+    private readonly int _threshold;
+    private readonly ZStdCompressionContext? _ctx;
+
+    public MsgEntity(
+        EntityEventArgs ev,
+        uint seq,
+        GameTick sourceTick,
+        int threshold,
+        ZStdCompressionContext? ctx)
     {
-        public override MsgGroups MsgGroup => MsgGroups.EntityEvent;
+        Event = ev;
+        Sequence = seq;
+        SourceTick = sourceTick;
+        _threshold = threshold;
+        _ctx = ctx;
+    }
 
-        public EntityMessageType Type { get; set; }
+    public MsgEntity() : this(default!, default, default, int.MaxValue, default!)
+    {
+    }
 
-        public EntityEventArgs SystemMessage { get; set; }
-        public EntityUid EntityUid { get; set; }
-        public uint NetId { get; set; }
-        public uint Sequence { get; set; }
-        public GameTick SourceTick { get; set; }
+    public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
+    {
+        SourceTick = buffer.ReadGameTick();
+        Sequence = buffer.ReadUInt32();
+        ReadCompressed(buffer, serializer, out Event, false);
+    }
 
-        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
-        {
-            Type = (EntityMessageType)buffer.ReadByte();
-            SourceTick = buffer.ReadGameTick();
-            Sequence = buffer.ReadUInt32();
+    public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
+    {
+        buffer.Write(SourceTick);
+        buffer.Write(Sequence);
+        WriteCompressed(buffer, serializer, Event, _threshold, _ctx, false);
+    }
 
-            switch (Type)
-            {
-                case EntityMessageType.SystemMessage:
-                {
-                    var length = buffer.ReadVariableInt32();
-                    using var stream = RobustMemoryManager.GetMemoryStream(length);
-                    buffer.ReadAlignedMemory(stream, length);
-                    SystemMessage = serializer.Deserialize<EntityEventArgs>(stream);
-                }
-                    break;
-            }
-        }
-
-        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
-        {
-            buffer.Write((byte)Type);
-            buffer.Write(SourceTick);
-            buffer.Write(Sequence);
-
-            switch (Type)
-            {
-                case EntityMessageType.SystemMessage:
-                {
-                    var stream = new MemoryStream();
-
-                    serializer.Serialize(stream, SystemMessage);
-
-                    buffer.WriteVariableInt32((int)stream.Length);
-                    buffer.Write(stream.AsSpan());
-                }
-                    break;
-            }
-        }
-
-        public override string ToString()
-        {
-            var timingData = $"T: {SourceTick} S: {Sequence}";
-            switch (Type)
-            {
-                case EntityMessageType.Error:
-                    return "MsgEntity Error";
-                case EntityMessageType.SystemMessage:
-                    return $"MsgEntity Comp, {timingData}, {SystemMessage}";
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+    public override string ToString()
+    {
+        return $"MsgEntity Comp, T: {SourceTick} S: {Sequence}, {Event}";
     }
 }

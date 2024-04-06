@@ -226,10 +226,6 @@ namespace Robust.Shared.GameObjects
             ClearComponents();
             ShuttingDown = false;
             Started = false;
-
-            _compressionCtx?.Dispose();
-            _compressionCtx = default!;
-            _cfgMan.UnsubValueChanged(CVars.NetEventCompressThreshold, OnCompressThresholdChanged);
         }
 
         public virtual void Cleanup()
@@ -241,6 +237,10 @@ namespace Robust.Shared.GameObjects
             _eventBus.Dispose();
             _eventBus = null!;
             ClearComponents();
+
+            _compressionCtx?.Dispose();
+            _compressionCtx = default!;
+            _cfgMan.UnsubValueChanged(CVars.NetEventCompressThreshold, OnCompressThresholdChanged);
 
             ShuttingDown = false;
             Initialized = false;

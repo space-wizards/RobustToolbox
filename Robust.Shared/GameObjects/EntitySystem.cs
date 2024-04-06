@@ -11,6 +11,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -114,19 +115,19 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.QueueEvent(EventSource.Local, message);
         }
 
-        protected void RaiseNetworkEvent(EntityEventArgs message)
+        protected void RaiseNetworkEvent(EntityEventArgs message, bool recordReplay = true, ZStdCompressionContext? ctx = null)
         {
-            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, recordReplay, ctx);
         }
 
-        protected void RaiseNetworkEvent(EntityEventArgs message, INetChannel channel)
+        protected void RaiseNetworkEvent(EntityEventArgs message, INetChannel channel, ZStdCompressionContext? ctx = null)
         {
-            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, channel);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, channel, ctx);
         }
 
-        protected void RaiseNetworkEvent(EntityEventArgs message, ICommonSession session)
+        protected void RaiseNetworkEvent(EntityEventArgs message, ICommonSession session, ZStdCompressionContext? ctx = null)
         {
-            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.Channel);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.Channel, ctx);
         }
 
         /// <summary>

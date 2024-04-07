@@ -168,9 +168,18 @@ namespace Robust.Shared.Containers
             return containerManager.Containers.TryGetValue(id, out container);
         }
 
-        public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null, bool skipExistCheck = false)
+        [Obsolete("Use variant without skipExistCheck argument")]
+        public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid,
+            // ReSharper disable once MethodOverloadWithOptionalParameter
+            [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null, bool skipExistCheck = false)
         {
-            if (!Resolve(uid, ref containerManager, false) || !(skipExistCheck || Exists(containedUid)))
+            return TryGetContainingContainer(uid, containedUid, out container, containerManager);
+        }
+
+        public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null)
+        {
+            DebugTools.Assert(Exists(uid));
+            if (!Resolve(uid, ref containerManager, false))
             {
                 container = null;
                 return false;
@@ -191,7 +200,8 @@ namespace Robust.Shared.Containers
 
         public bool ContainsEntity(EntityUid uid, EntityUid containedUid, ContainerManagerComponent? containerManager = null)
         {
-            if (!Resolve(uid, ref containerManager, false) || !Exists(containedUid))
+            DebugTools.Assert(Exists(uid));
+            if (!Resolve(uid, ref containerManager, false))
                 return false;
 
             foreach (var container in containerManager.Containers.Values)
@@ -251,7 +261,7 @@ namespace Robust.Shared.Containers
             if (!Resolve(uid, ref transform, false))
                 return false;
 
-            return TryGetContainingContainer(transform.ParentUid, uid, out container, skipExistCheck: true);
+            return TryGetContainingContainer(transform.ParentUid, uid, out container);
         }
 
         /// <summary>

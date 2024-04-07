@@ -1453,8 +1453,7 @@ public abstract partial class SharedTransformSystem
         while (targetXform.ParentUid.IsValid())
         {
             if (_container.IsEntityInContainer(targetUid)
-                && _container.TryGetContainingContainer(targetXform.ParentUid, targetUid, out var container,
-                    skipExistCheck: true)
+                && _container.TryGetContainingContainer(targetXform.ParentUid, targetUid, out var container)
                 && _container.Insert((entity, xform, null, null), container))
             {
                 return;

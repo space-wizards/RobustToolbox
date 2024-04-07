@@ -178,7 +178,7 @@ namespace Robust.Shared.Containers
 
         public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null)
         {
-            DebugTools.Assert(Exists(uid));
+            DebugTools.Assert(Exists(containedUid));
             if (!Resolve(uid, ref containerManager, false))
             {
                 container = null;
@@ -200,7 +200,7 @@ namespace Robust.Shared.Containers
 
         public bool ContainsEntity(EntityUid uid, EntityUid containedUid, ContainerManagerComponent? containerManager = null)
         {
-            DebugTools.Assert(Exists(uid));
+            DebugTools.Assert(Exists(containedUid));
             if (!Resolve(uid, ref containerManager, false))
                 return false;
 

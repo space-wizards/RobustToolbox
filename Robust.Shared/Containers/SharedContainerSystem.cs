@@ -169,11 +169,9 @@ namespace Robust.Shared.Containers
         }
 
         [Obsolete("Use variant without skipExistCheck argument")]
-        public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid,
-            // ReSharper disable once MethodOverloadWithOptionalParameter
-            [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null, bool skipExistCheck = false)
+        public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out BaseContainer? container, bool skipExistCheck)
         {
-            return TryGetContainingContainer(uid, containedUid, out container, containerManager);
+            return TryGetContainingContainer(uid, containedUid, out container);
         }
 
         public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null)

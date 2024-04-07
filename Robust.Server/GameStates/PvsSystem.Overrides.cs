@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Timing;
 
@@ -8,21 +10,23 @@ namespace Robust.Server.GameStates;
 // range/chunk restrictions.
 internal sealed partial class PvsSystem
 {
-    private readonly List<Entity<MetaDataComponent>> _cachedForceOverride = new();
-    private readonly List<Entity<MetaDataComponent>> _cachedGlobalOverride = new();
+    private readonly List<PvsChunk.ChunkEntity> _cachedForceOverride = new();
+    private readonly List<PvsChunk.ChunkEntity> _cachedGlobalOverride = new();
 
     private readonly HashSet<EntityUid> _forceOverrideSet = new();
     private readonly HashSet<EntityUid> _globalOverrideSet = new();
 
     private void AddAllOverrides(PvsSession session)
     {
+        var mask = session.VisMask;
         var fromTick = session.FromTick;
         RaiseExpandEvent(session, fromTick);
 
-        foreach (var entity in _cachedGlobalOverride)
+        foreach (ref var ent in CollectionsMarshal.AsSpan(_cachedGlobalOverride))
         {
-            if (!AddEntity(session, entity, fromTick))
-                break;
+            ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
+            if ((mask & meta.VisMask) == meta.VisMask)
+                AddEntity(session, ref ent, ref meta, fromTick);
         }
 
         if (!_pvsOverride.SessionOverrides.TryGetValue(session.Session, out var sessionOverrides))
@@ -42,10 +46,13 @@ internal sealed partial class PvsSystem
         // Ignore PVS budgets
         session.Budget = new() {NewLimit = int.MaxValue, EnterLimit = int.MaxValue};
 
+        var mask = session.VisMask;
         var fromTick = session.FromTick;
-        foreach (var entity in _cachedForceOverride)
+        foreach (ref var ent in CollectionsMarshal.AsSpan(_cachedForceOverride))
         {
-            AddEntity(session, entity, fromTick);
+            ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
+            if ((mask & meta.VisMask) == meta.VisMask)
+                AddEntity(session, ref ent, ref meta, fromTick);
         }
 
         foreach (var uid in session.Viewers)
@@ -156,7 +163,7 @@ internal sealed partial class PvsSystem
 
     private bool CacheOverrideParents(
         EntityUid uid,
-        List<Entity<MetaDataComponent>> list,
+        List<PvsChunk.ChunkEntity> list,
         HashSet<EntityUid> set,
         out TransformComponent xform)
     {
@@ -175,11 +182,11 @@ internal sealed partial class PvsSystem
             return false;
         }
 
-        list.Add((uid, meta));
+        list.Add(new(uid, meta));
         return true;
     }
 
-    private void CacheOverrideChildren(TransformComponent xform, List<Entity<MetaDataComponent>> list, HashSet<EntityUid> set)
+    private void CacheOverrideChildren(TransformComponent xform, List<PvsChunk.ChunkEntity> list, HashSet<EntityUid> set)
     {
         foreach (var child in xform._children)
         {
@@ -190,7 +197,7 @@ internal sealed partial class PvsSystem
             }
 
             if (set.Add(child))
-                list.Add((child, _metaQuery.GetComponent(child)));
+                list.Add(new(child, _metaQuery.GetComponent(child)));
 
             CacheOverrideChildren(childXform, list, set);
         }

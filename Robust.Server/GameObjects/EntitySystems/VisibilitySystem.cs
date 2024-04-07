@@ -1,4 +1,5 @@
 using System;
+using Robust.Server.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.ViewVariables;
@@ -7,6 +8,7 @@ namespace Robust.Server.GameObjects
 {
     public sealed class VisibilitySystem : EntitySystem
     {
+        [Dependency] private readonly PvsSystem _pvs = default!;
         [Dependency] private readonly IViewVariablesManager _vvManager = default!;
 
         private EntityQuery<TransformComponent> _xformQuery;
@@ -133,6 +135,7 @@ namespace Robust.Server.GameObjects
 
             var xform = _xformQuery.GetComponent(uid);
             meta.VisibilityMask = mask;
+            _pvs.SyncMetadata(meta);
 
             foreach (var child in xform._children)
             {

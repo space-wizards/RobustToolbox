@@ -77,6 +77,10 @@ namespace Robust.Shared.Log
                     return;
 
                 var msg = new LogEvent(DateTimeOffset.Now, level.ToSerilog(), exception, parsedTemplate, properties);
+
+                if (level < GetPracticalLevel())
+                    return;
+
                 LogInternal(Name, msg);
             }
 
@@ -99,11 +103,6 @@ namespace Robust.Shared.Log
 
             private void LogInternal(string sourceSawmill, LogEvent message)
             {
-                if (message.Level.ToRobust() < GetPracticalLevel())
-                {
-                    return;
-                }
-
                 _handlerLock.EnterReadLock();
                 try
                 {

@@ -280,6 +280,9 @@ public sealed class MapLoaderSystem : EntitySystem
         // Load the prototype data onto entities, e.g. transform parents, etc.
         LoadEntities(data);
 
+        // Assign MapSaveTileMapComponent to all read grids.
+        SaveGridTileMap(data);
+
         // Build the scene graph / transform hierarchy to know the order to startup entities.
         // This also allows us to swap out the root node up front if necessary.
         BuildEntityHierarchy(data);
@@ -574,6 +577,19 @@ public sealed class MapLoaderSystem : EntitySystem
         _serverEntityManager.FinishEntityLoad(uid, meta.EntityPrototype, _context);
         if (_context.CurrentlyIgnoredComponents.Count > 0)
             meta.LastComponentRemoved = _timing.CurTick;
+    }
+
+    private void SaveGridTileMap(MapData mapData)
+    {
+        DebugTools.Assert(_context.TileMap != null);
+
+        foreach (var entity in mapData.EntitiesToDeserialize.Keys)
+        {
+            if (HasComp<MapGridComponent>(entity))
+            {
+                EnsureComp<MapSaveTileMapComponent>(entity).TileMap = _context.TileMap;
+            }
+        }
     }
 
     private void BuildEntityHierarchy(MapData mapData)
@@ -981,28 +997,74 @@ public sealed class MapLoaderSystem : EntitySystem
         var gridQuery = GetEntityQuery<MapGridComponent>();
         var tileDefs = new HashSet<int>();
 
+        Dictionary<int, string>? origTileMap = null;
         foreach (var ent in entities)
         {
             if (!gridQuery.TryGetComponent(ent, out var grid))
                 continue;
 
-            var tileEnumerator = grid.GetAllTilesEnumerator(false);
-
+            var tileEnumerator = _mapSystem.GetAllTilesEnumerator(ent, grid, ignoreEmpty: false);
             while (tileEnumerator.MoveNext(out var tileRef))
             {
                 tileDefs.Add(tileRef.Value.Tile.TypeId);
             }
+
+            if (TryComp(ent, out MapSaveTileMapComponent? saveTileMap))
+                origTileMap ??= saveTileMap.TileMap;
         }
+
+        Dictionary<int, int> tileIdMap;
+        if (origTileMap != null)
+        {
+            tileIdMap = new Dictionary<int, int>();
+
+            // We are re-saving a map, so we have an original tile map we can preserve.
+            foreach (var (origId, prototypeId) in origTileMap)
+            {
+                // Skip removed tile definitions.
+                if (!_tileDefManager.TryGetDefinition(prototypeId, out var definition))
+                    continue;
+
+                tileIdMap.Add(definition.TileId, origId);
+            }
+
+            // Assign new IDs for all new tile types.
+            var nextId = 0;
+            foreach (var tileId in tileDefs)
+            {
+                if (tileIdMap.ContainsKey(tileId))
+                    continue;
+
+                // New tile, assign new ID that isn't taken by original tile map.
+                while (origTileMap.ContainsKey(nextId))
+                {
+                    nextId += 1;
+                }
+
+                tileIdMap.Add(tileId, nextId);
+                nextId += 1;
+            }
+        }
+        else
+        {
+            // Make no-op tile ID map.
+            tileIdMap = tileDefs.ToDictionary(x => x, x => x);
+        }
+
+        DebugTools.Assert(
+            tileIdMap.Count == tileIdMap.Values.Distinct().Count(),
+            "Tile ID map has double mapped values??");
+
+        _context.TileWriteMap = tileIdMap;
 
         var tileMap = new MappingDataNode();
         rootNode.Add("tilemap", tileMap);
-        var ordered = new List<int>(tileDefs);
-        ordered.Sort();
 
-        foreach (var tyleId in ordered)
+        foreach (var (nativeId, mapId) in tileIdMap.OrderBy(x => x.Key))
         {
-            var tileDef = _tileDefManager[tyleId];
-            tileMap.Add(tyleId.ToString(CultureInfo.InvariantCulture), tileDef.ID);
+            tileMap.Add(
+                mapId.ToString(CultureInfo.InvariantCulture),
+                _tileDefManager[nativeId].ID);
         }
     }
 
@@ -1176,11 +1238,12 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 foreach (var component in EntityManager.GetComponents(entityUid))
                 {
-                    if (component is MapSaveIdComponent)
+                    var compType = component.GetType();
+                    var registration = _factory.GetRegistration(compType);
+                    if (registration.Unsaved)
                         continue;
 
-                    var compType = component.GetType();
-                    var compName = _factory.GetComponentName(compType);
+                    var compName = registration.Name;
                     _context.CurrentComponent = compName;
                     MappingDataNode? compMapping;
                     MappingDataNode? protMapping = null;

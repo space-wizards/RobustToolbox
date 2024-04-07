@@ -329,7 +329,7 @@ namespace Robust.Shared.GameObjects
             ref Unit unitRef,
             EventData subs)
         {
-            foreach (var handler in subs.BroadcastRegistrations)
+            foreach (var handler in subs.BroadcastRegistrations.Span)
             {
                 if ((handler.Mask & source) != 0)
                     handler.Handler(ref unitRef);

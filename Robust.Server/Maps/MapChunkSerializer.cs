@@ -104,12 +104,16 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
 
         root.Add("version", new ValueDataNode("6"));
 
-        gridNode.Value = SerializeTiles(value);
+        Dictionary<int, int>? tileWriteMap = null;
+        if (context is MapSerializationContext mapContext)
+            tileWriteMap = mapContext.TileWriteMap;
+
+        gridNode.Value = SerializeTiles(value, tileWriteMap);
 
         return root;
     }
 
-    private static string SerializeTiles(MapChunk chunk)
+    private static string SerializeTiles(MapChunk chunk, Dictionary<int, int>? tileWriteMap)
     {
         // number of bytes written per tile, because sizeof(Tile) is useless.
         const int structSize = 6;
@@ -125,7 +129,11 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
                 for (ushort x = 0; x < chunk.ChunkSize; x++)
                 {
                     var tile = chunk.GetTile(x, y);
-                    writer.Write(tile.TypeId);
+                    var typeId = tile.TypeId;
+                    if (tileWriteMap != null)
+                        typeId = tileWriteMap[typeId];
+
+                    writer.Write(typeId);
                     writer.Write((byte)tile.Flags);
                     writer.Write(tile.Variant);
                 }

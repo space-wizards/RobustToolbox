@@ -136,6 +136,25 @@ public abstract partial class SharedContainerSystem
     }
 
     /// <summary>
+    /// Attempts to insert an entity into a container. If it fails, it will instead drop the entity next to the
+    /// container entity.
+    /// </summary>
+    /// <returns>Whether or not the entity was successfully inserted</returns>
+    public bool InsertOrDrop(Entity<TransformComponent?, MetaDataComponent?, PhysicsComponent?> toInsert,
+        BaseContainer container,
+        TransformComponent? containerXform = null)
+    {
+        if (!Resolve(toInsert.Owner, ref toInsert.Comp1) || !Resolve(container.Owner, ref containerXform))
+            return false;
+
+        if (Insert(toInsert, container, containerXform))
+            return true;
+
+        _transform.DropNextTo(toInsert, (container.Owner, containerXform));
+        return false;
+    }
+
+    /// <summary>
     /// Checks if the entity can be inserted into the given container.
     /// </summary>
     /// <param name="assumeEmpty">If true, this will check whether the entity could be inserted if the container were

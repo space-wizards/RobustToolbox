@@ -35,12 +35,13 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+* `Robust.Shared.Configuration.EnvironmentVariables` is now internal and no longer usable by content.
 * `GrammarComponent` now has access so you must use `GrammarSystem`.
 * `GrammarComponent` has been moved to `Robust.Shared.GameObjects`.
 
 ### New features
 
-*None yet*
+* You can now specify CVar overrides via environment variable with the `ROBUST_CVAR_*` prefix. For example `ROBUST_CVAR_game__hostname=foobar` would set the appropriate CVar. Double underscores in the environment variable name are replaced with ".".
 
 ### Bugfixes
 
@@ -70,7 +71,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `AddComponents` and `RemoveComponents` methods to EntityManager that handle EntityPrototype / ComponentRegistry bulk component changes. 
+* Added `AddComponents` and `RemoveComponents` methods to EntityManager that handle EntityPrototype / ComponentRegistry bulk component changes.
 * Add double-clicking to LineEdit.
 
 ### Bugfixes

@@ -127,7 +127,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
             component.Source.SetAuxiliary(null);
         }
 
-        SetState((uid, component), component.State, force: true);
+        SetState(uid, component.State, force: true, component: component);
 
         // If playback position changed then update it.
         if (!string.IsNullOrEmpty(component.FileName))

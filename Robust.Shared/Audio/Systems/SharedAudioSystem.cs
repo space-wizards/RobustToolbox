@@ -58,10 +58,13 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <summary>
     /// Sets the playback position of audio to the specified spot.
     /// </summary>
-    /// <param name="entity"></param>
-    /// <param name="position"></param>
-    public void SetPlaybackPosition(Entity<AudioComponent?> entity, float position)
+    public void SetPlaybackPosition(Entity<AudioComponent?>? nullEntity, float position)
     {
+        if (nullEntity == null)
+            return;
+
+        var entity = nullEntity.Value;
+
         if (!Resolve(entity.Owner, ref entity.Comp))
             return;
 
@@ -97,40 +100,41 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <summary>
     /// Sets the shared state for an audio entity.
     /// </summary>
-    public void SetState(Entity<AudioComponent?> entity, AudioState state, bool force = false)
+    public void SetState(EntityUid? entity, AudioState state, bool force = false, AudioComponent? component = null)
     {
-        if (!Resolve(entity.Owner, ref entity.Comp))
+        if (entity == null || !Resolve(entity.Value, ref component))
             return;
 
-        if (entity.Comp.State == state && !force)
+        if (component.State == state && !force)
             return;
 
         // Unpause it
-        if (entity.Comp.State == AudioState.Paused && state == AudioState.Playing)
+        if (component.State == AudioState.Paused && state == AudioState.Playing)
         {
-            var pauseOffset = Timing.CurTime - entity.Comp.PauseTime;
-            entity.Comp.AudioStart += pauseOffset ?? TimeSpan.Zero;
-            entity.Comp.PlaybackPosition += (float) (pauseOffset?.TotalSeconds ?? 0);
+            var pauseOffset = Timing.CurTime - component.PauseTime;
+            component.AudioStart += pauseOffset ?? TimeSpan.Zero;
+            component.PlaybackPosition += (float) (pauseOffset?.TotalSeconds ?? 0);
         }
 
         switch (state)
         {
             case AudioState.Stopped:
-                entity.Comp.PauseTime = null;
-                entity.Comp.StopPlaying();
+                component.PauseTime = null;
+                component.StopPlaying();
                 break;
             case AudioState.Paused:
                 // Set it to current time so we can easily unpause it later.
-                entity.Comp.PauseTime = Timing.CurTime;
-                entity.Comp.Pause();
+                component.PauseTime = Timing.CurTime;
+                component.Pause();
                 break;
             case AudioState.Playing:
-                entity.Comp.PauseTime = null;
-                entity.Comp.StartPlaying();
+                component.PauseTime = null;
+                component.StartPlaying();
                 break;
         }
 
-        Dirty(entity);
+        component.State = state;
+        Dirty(entity.Value, component);
     }
 
     protected void SetZOffset(float value)
@@ -582,5 +586,13 @@ public abstract partial class SharedAudioSystem : EntitySystem
     protected sealed class PlayAudioEntityMessage : AudioMessage
     {
         public NetEntity NetEntity;
+    }
+
+    public bool IsPlaying(EntityUid? stream, AudioComponent? component = null)
+    {
+        if (stream == null || !Resolve(stream.Value, ref component))
+            return false;
+
+        return component.State == AudioState.Playing;
     }
 }

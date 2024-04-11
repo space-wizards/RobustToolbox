@@ -70,7 +70,17 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
         var audioLength = GetAudioLength(entity.Comp.FileName);
 
-        if (audioLength.TotalSeconds < position || position < 0f)
+        if (audioLength.TotalSeconds < position)
+        {
+            // Just stop it and return
+            if (!_netManager.IsClient)
+                QueueDel(nullEntity.Value);
+
+            entity.Comp.StopPlaying();
+            return;
+        }
+
+        if (position < 0f)
         {
             Log.Error($"Tried to set playback position for {ToPrettyString(entity.Owner)} / {entity.Comp.FileName} outside of bounds");
             return;
@@ -126,7 +136,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// </summary>
     public void SetState(EntityUid? entity, AudioState state, bool force = false, AudioComponent? component = null)
     {
-        if (entity == null || !Resolve(entity.Value, ref component))
+        if (entity == null || !Resolve(entity.Value, ref component, false))
             return;
 
         if (component.State == state && !force)

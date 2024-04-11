@@ -44,7 +44,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Request headers in `IStatusHandlerContext` are now case-insensitive.
 
 ### Other
 

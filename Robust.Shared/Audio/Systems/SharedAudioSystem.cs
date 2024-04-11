@@ -65,7 +65,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
         var entity = nullEntity.Value;
 
-        if (!Resolve(entity.Owner, ref entity.Comp))
+        if (!Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         var audioLength = GetAudioLength(entity.Comp.FileName);
@@ -102,7 +102,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
             // need to ensure it doesn't despawn too early.
             if (TryComp(entity.Owner, out TimedDespawnComponent? despawn))
             {
-                despawn.Lifetime += (float) timeOffset.TotalSeconds;
+                despawn.Lifetime -= (float) timeOffset.TotalSeconds;
             }
         }
 
@@ -166,11 +166,12 @@ public abstract partial class SharedAudioSystem : EntitySystem
                 component.StartPlaying();
 
                 // Reset TimedDespawn so the audio still gets cleaned up.
-                if (EnsureComp<TimedDespawnComponent>(entity.Value, out var timed) && !component.Looping)
+
+                if (!component.Looping)
                 {
+                    var timed = EnsureComp<TimedDespawnComponent>(entity.Value);
                     var audioLength = GetAudioLength(component.FileName);
-                    var remaining = audioLength - component.AudioStart;
-                    timed.Lifetime = (float) remaining.TotalSeconds + 0.01f;
+                    timed.Lifetime = (float) audioLength.TotalSeconds + 0.01f;
                 }
                 break;
         }

@@ -127,17 +127,30 @@ public sealed partial class AudioSystem : SharedAudioSystem
             component.Source.SetAuxiliary(null);
         }
 
-        SetState(uid, component.State, force: true, component: component);
+        switch (component.State)
+        {
+            case AudioState.Playing:
+                component.StartPlaying();
+                break;
+            case AudioState.Paused:
+                component.Pause();
+                break;
+            case AudioState.Stopped:
+                component.StopPlaying();
+                component.PlaybackPosition = 0f;
+                break;
+        }
 
         // If playback position changed then update it.
         if (!string.IsNullOrEmpty(component.FileName))
         {
-            var position = (float) (Timing.CurTime - component.AudioStart).TotalSeconds;
+            var position = (float) ((component.PauseTime ?? Timing.CurTime) - component.AudioStart).TotalSeconds;
             var currentPosition = component.Source.PlaybackPosition;
+            var diff = Math.Abs(position - currentPosition);
 
-            if (Math.Abs(position - currentPosition) > 0.1f)
+            if (diff > 0.1f)
             {
-                component.Source.PlaybackPosition = position;
+                component.PlaybackPosition = position;
             }
         }
     }

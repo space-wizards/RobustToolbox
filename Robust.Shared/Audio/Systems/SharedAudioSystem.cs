@@ -70,31 +70,55 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
         var audioLength = GetAudioLength(entity.Comp.FileName);
 
-        if (audioLength.TotalSeconds >= position || position < 0f)
+        if (audioLength.TotalSeconds < position || position < 0f)
         {
             Log.Error($"Tried to set playback position for {ToPrettyString(entity.Owner)} / {entity.Comp.FileName} outside of bounds");
             return;
         }
 
-        var currentPosition = (Timing.CurTime - entity.Comp.AudioStart).TotalSeconds;
-        var timeOffset = TimeSpan.FromSeconds(currentPosition - position);
+        // If we're paused then the current position is <pause time - start time>, else it's <cur time - start time>
+        var currentPos = (entity.Comp.PauseTime ?? Timing.CurTime) - entity.Comp.AudioStart;
+        var timeOffset = TimeSpan.FromSeconds(position - currentPos.TotalSeconds);
+
+        DebugTools.Assert(currentPos > TimeSpan.Zero);
 
         // Rounding.
-        if (timeOffset.TotalSeconds <= 0.01)
+        if (Math.Abs(timeOffset.TotalSeconds) <= 0.01)
         {
             return;
         }
 
-        entity.Comp.AudioStart += TimeSpan.FromSeconds(currentPosition - position);
-
         if (entity.Comp.PauseTime != null)
         {
             entity.Comp.PauseTime = entity.Comp.PauseTime.Value + timeOffset;
+
+            // Paused audio doesn't have TimedDespawn so.
+        }
+        else
+        {
+            // Bump it back so the actual playback positions moves forward
+            entity.Comp.AudioStart -= timeOffset;
+
+            // need to ensure it doesn't despawn too early.
+            if (TryComp(entity.Owner, out TimedDespawnComponent? despawn))
+            {
+                despawn.Lifetime += (float) timeOffset.TotalSeconds;
+            }
         }
 
         entity.Comp.PlaybackPosition = position;
         // Network the new playback position.
         Dirty(entity);
+    }
+
+    /// <summary>
+    /// Calculates playback position considering length paused.
+    /// </summary>
+    /// <param name="component"></param>
+    /// <returns></returns>
+    private float GetPlaybackPosition(AudioComponent component)
+    {
+        return (float) (Timing.CurTime - (component.PauseTime ?? TimeSpan.Zero) - component.AudioStart).TotalSeconds;
     }
 
     /// <summary>
@@ -113,23 +137,41 @@ public abstract partial class SharedAudioSystem : EntitySystem
         {
             var pauseOffset = Timing.CurTime - component.PauseTime;
             component.AudioStart += pauseOffset ?? TimeSpan.Zero;
-            component.PlaybackPosition += (float) (pauseOffset?.TotalSeconds ?? 0);
+            component.PlaybackPosition = (float) (Timing.CurTime - component.AudioStart).TotalSeconds;
+        }
+
+        // If we were stopped then played then restart audiostart to now.
+        if (component.State == AudioState.Stopped && state == AudioState.Playing)
+        {
+            component.AudioStart = Timing.CurTime;
+            component.PauseTime = null;
         }
 
         switch (state)
         {
             case AudioState.Stopped:
+                component.AudioStart = Timing.CurTime;
                 component.PauseTime = null;
                 component.StopPlaying();
+                RemComp<TimedDespawnComponent>(entity.Value);
                 break;
             case AudioState.Paused:
                 // Set it to current time so we can easily unpause it later.
                 component.PauseTime = Timing.CurTime;
                 component.Pause();
+                RemComp<TimedDespawnComponent>(entity.Value);
                 break;
             case AudioState.Playing:
                 component.PauseTime = null;
                 component.StartPlaying();
+
+                // Reset TimedDespawn so the audio still gets cleaned up.
+                if (EnsureComp<TimedDespawnComponent>(entity.Value, out var timed) && !component.Looping)
+                {
+                    var audioLength = GetAudioLength(component.FileName);
+                    var remaining = audioLength - component.AudioStart;
+                    timed.Lifetime = (float) remaining.TotalSeconds + 0.01f;
+                }
                 break;
         }
 
@@ -590,7 +632,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     public bool IsPlaying(EntityUid? stream, AudioComponent? component = null)
     {
-        if (stream == null || !Resolve(stream.Value, ref component))
+        if (stream == null || !Resolve(stream.Value, ref component, false))
             return false;
 
         return component.State == AudioState.Playing;

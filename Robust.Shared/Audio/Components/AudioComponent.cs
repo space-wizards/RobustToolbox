@@ -91,7 +91,11 @@ public sealed partial class AudioComponent : Component, IAudioSource
     public void StartPlaying() => Source.StartPlaying();
 
     /// <inheritdoc />
-    public void StopPlaying() => Source.StopPlaying();
+    public void StopPlaying()
+    {
+        PlaybackPosition = 0f;
+        Source.StopPlaying();
+    }
 
     /// <inheritdoc />
     public void Restart() => Source.Restart();
@@ -102,7 +106,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <summary>
     /// Time when the audio was paused so we can offset it later if relevant.
     /// </summary>
-    [DataField]
+    [DataField, AutoNetworkedField]
     public TimeSpan? PauseTime;
 
     /// <summary>

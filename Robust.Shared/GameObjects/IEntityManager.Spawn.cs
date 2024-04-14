@@ -27,7 +27,7 @@ public partial interface IEntityManager
     /// <summary>
     /// Spawns an entity in nullspace.
     /// </summary>
-    EntityUid Spawn(string? protoName = null, ComponentRegistry? overrides = null);
+    EntityUid Spawn(string? protoName = null, ComponentRegistry? overrides = null, bool doMapInit = true);
 
     /// <summary>
     /// Spawns an entity at a specific world position. The entity will either be parented to the map or a grid.

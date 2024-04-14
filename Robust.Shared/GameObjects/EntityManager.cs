@@ -304,7 +304,6 @@ namespace Robust.Shared.GameObjects
 
             if (coordinates.MapId == MapId.Nullspace)
             {
-                DebugTools.Assert(_mapManager.GetMapEntityId(coordinates.MapId) == EntityUid.Invalid);
                 transform._parent = EntityUid.Invalid;
                 transform.Anchored = false;
                 return newEntity;
@@ -821,15 +820,22 @@ namespace Robust.Shared.GameObjects
 
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)
         {
+            var doMapInit = _mapManager.IsMapInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
+            InitializeAndStartEntity(entity, doMapInit);
+        }
+
+        public void InitializeAndStartEntity(Entity<MetaDataComponent?> entity, bool doMapInit)
+        {
+            if (!MetaQuery.Resolve(entity.Owner, ref entity.Comp))
+                return;
+
             try
             {
-                var meta = MetaQuery.GetComponent(entity);
-                InitializeEntity(entity, meta);
-                StartEntity(entity);
+                InitializeEntity(entity.Owner, entity.Comp);
+                StartEntity(entity.Owner);
 
-                // If the map we're initializing the entity on is initialized, run map init on it.
-                if (_mapManager.IsMapInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID))
-                    RunMapInit(entity, meta);
+                if (doMapInit)
+                    RunMapInit(entity.Owner, entity.Comp);
             }
             catch (Exception e)
             {
@@ -859,7 +865,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized, $"Expected entity {ToPrettyString(entity)} to be initialized, was {meta.EntityLifeStage}");
             SetLifeStage(meta, EntityLifeStage.MapInitialized);
 
-            EventBus.RaiseLocalEvent(entity, MapInitEventInstance, false);
+            EventBus.RaiseLocalEvent(entity, MapInitEventInstance);
         }
 
         /// <inheritdoc />

@@ -124,7 +124,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             foreach (var (grid, chunks) in _mapChunkData)
             {
-                var gridComp = _mapManager.GetGridComp(grid);
+                var gridComp = _entityManager.GetComponent<MapGridComponent>(grid);
                 foreach (var (index, chunk) in chunks)
                 {
                     if (!chunk.Dirty || gridComp.Chunks.ContainsKey(index))

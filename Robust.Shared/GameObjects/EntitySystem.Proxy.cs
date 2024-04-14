@@ -713,8 +713,8 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.Spawn(string?, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid Spawn(string? prototype = null)
-        => EntityManager.Spawn(prototype);
+    protected EntityUid Spawn(string? prototype = null, ComponentRegistry? overrides = null, bool doMapInit = true)
+        => EntityManager.Spawn(prototype, overrides, doMapInit);
 
     /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

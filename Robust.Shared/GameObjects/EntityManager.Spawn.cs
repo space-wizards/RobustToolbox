@@ -83,8 +83,12 @@ public partial class EntityManager
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public EntityUid Spawn(string? protoName = null, ComponentRegistry? overrides = null)
-        => Spawn(protoName, MapCoordinates.Nullspace, overrides);
+    public EntityUid Spawn(string? protoName = null, ComponentRegistry? overrides = null, bool doMapInit = true)
+    {
+        var entity = CreateEntityUninitialized(protoName, MapCoordinates.Nullspace, overrides);
+        InitializeAndStartEntity(entity, doMapInit);
+        return entity;
+    }
 
     public virtual EntityUid Spawn(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
     {
@@ -117,7 +121,8 @@ public partial class EntityManager
             return true;
         }
 
-        uid = Spawn(protoName, overrides);
+        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
+        uid = Spawn(protoName, overrides, doMapInit);
         if (_containers.Insert(uid.Value, container))
             return true;
 
@@ -141,7 +146,8 @@ public partial class EntityManager
         if (!containerComp.Containers.TryGetValue(containerId, out var container))
             return false;
 
-        uid = Spawn(protoName, overrides);
+        var doMapInit = _mapSystem.IsInitialized(TransformQuery.GetComponent(containerUid).MapUid);
+        uid = Spawn(protoName, overrides, doMapInit);
 
         if (_containers.Insert(uid.Value, container))
             return true;
@@ -157,7 +163,8 @@ public partial class EntityManager
         if (!xform.ParentUid.IsValid())
             return Spawn(protoName);
 
-        var uid = Spawn(protoName, overrides);
+        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
+        var uid = Spawn(protoName, overrides, doMapInit);
         _xforms.DropNextTo(uid, target);
         return uid;
     }
@@ -182,16 +189,16 @@ public partial class EntityManager
         ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null)
     {
-        var uid = Spawn(protoName, overrides);
         inserted = true;
+        xform ??= TransformQuery.GetComponent(containerUid);
+        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
+        var uid = Spawn(protoName, overrides, doMapInit);
 
         if ((containerComp == null && !TryGetComponent(containerUid, out containerComp))
              || !containerComp.Containers.TryGetValue(containerId, out var container)
              || !_containers.Insert(uid, container))
         {
-
             inserted = false;
-            xform ??= TransformQuery.GetComponent(containerUid);
             if (xform.ParentUid.IsValid())
                 _xforms.DropNextTo(uid, (containerUid, xform));
         }

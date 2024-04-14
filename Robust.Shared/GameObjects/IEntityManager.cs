@@ -80,6 +80,8 @@ namespace Robust.Shared.GameObjects
 
         void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null);
 
+        void InitializeAndStartEntity(Entity<MetaDataComponent?> entity, bool doMapInit);
+
         void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null);
 
         void StartEntity(EntityUid entity);

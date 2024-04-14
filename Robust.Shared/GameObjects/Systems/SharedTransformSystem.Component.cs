@@ -993,7 +993,7 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(Entity<TransformComponent> entity, Vector2 worldPos)
     {
-        SetWorldPositionRotation(entity.Owner, worldPos, entity.Comp.LocalRotation, entity.Comp);
+        SetWorldPositionRotationInternal(entity.Owner, worldPos, null, entity.Comp);
     }
 
     #endregion
@@ -1080,8 +1080,15 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPositionRotation(EntityUid uid, Vector2 worldPos, Angle worldRot, TransformComponent? component = null)
     {
+        SetWorldPositionRotationInternal(uid, worldPos, worldRot, component);
+    }
+
+    private void SetWorldPositionRotationInternal(EntityUid uid, Vector2 worldPos, Angle? worldRot = null, TransformComponent? component = null)
+    {
         if (!XformQuery.Resolve(uid, ref component))
             return;
+
+        // If no worldRot supplied then default the new rotation to 0.
 
         if (!component._parent.IsValid() || component.MapUid == null)
         {
@@ -1095,11 +1102,11 @@ public abstract partial class SharedTransformSystem
             var invLocalMatrix = targetGridXform.InvLocalMatrix;
             var gridRot = targetGridXform.LocalRotation;
             var localRot = worldRot - gridRot;
-            SetCoordinates(uid, component, new EntityCoordinates(targetGrid, invLocalMatrix.Transform(worldPos)), rotation: localRot);
+            SetCoordinates(uid, component, new EntityCoordinates(targetGrid, invLocalMatrix.Transform(worldPos)), rotation: localRot ?? Angle.Zero);
         }
         else
         {
-            SetCoordinates(uid, component, new EntityCoordinates(component.MapUid.Value, worldPos), rotation: worldRot);
+            SetCoordinates(uid, component, new EntityCoordinates(component.MapUid.Value, worldPos), rotation: worldRot ?? Angle.Zero);
         }
     }
 

@@ -43,6 +43,7 @@ END TEMPLATE-->
 * Added non-generic variant of `GetCVar` to `IConfigurationManager`.
 * Control layout properties such as `Margin` can now be set via style sheets.
 * Distance between lines of a `RichTextLabel` can now be modified with `LineHeightScale`.
+* UI theme prototypes are now updated when reloaded.
 
 ### Bugfixes
 

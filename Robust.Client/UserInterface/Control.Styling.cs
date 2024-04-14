@@ -239,7 +239,6 @@ namespace Robust.Client.UserInterface
 
         protected virtual void StylePropertiesChanged()
         {
-            UpdateLayoutStyleProperties();
             InvalidateMeasure();
         }
 

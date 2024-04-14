@@ -35,15 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `Robust.Shared.Configuration.EnvironmentVariables` is now internal and no longer usable by content.
+*None yet*
 
 ### New features
 
-* Add TryGetRandom to EntityManager to get a random entity with the specified component and TryGetRandom to IPrototypeManager to return a random prototype of the specified type.
+*None yet*
 
 ### Bugfixes
 
-* Request headers in `IStatusHandlerContext` are now case-insensitive.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,39 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 218.0.0
+
+### Breaking changes
+
+* `Robust.Shared.Configuration.EnvironmentVariables` is now internal and no longer usable by content.
+
+### New features
+
+* Add TryGetRandom to EntityManager to get a random entity with the specified component and TryGetRandom to IPrototypeManager to return a random prototype of the specified type.
+* Add CopyData to AppearanceSystem.
+* Update UI themes on prototype reloads.
+* Allow scaling the line height of a RichTextLabel.
+* You can now specify CVar overrides via environment variable with the `ROBUST_CVAR_*` prefix. For example `ROBUST_CVAR_game__hostname=foobar` would set the appropriate CVar. Double underscores in the environment variable name are replaced with ".".
+* Added non-generic variant of `GetCVar` to `IConfigurationManager`.
+* Add type tracking to FieldNotFoundErrorNode for serialization.
+
+### Bugfixes
+
+* Request headers in `IStatusHandlerContext` are now case-insensitive.
+* SetWorldPosition rotation now more closely aligns with prior behavior.
+* Fix exception when inspecting elements in some cases.
+* Fix HTTP errors on watchdog ping not being reported.
+
+### Other
+
+* Add an analyzer for redundantly assigning to dependency fields.
+
+### Internal
+
+* Remove redundant Exists checks in ContainerSystem.
+* Improve logging on watchdog pings.
 
 
 ## 217.2.1

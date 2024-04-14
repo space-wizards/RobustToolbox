@@ -1102,11 +1102,11 @@ public abstract partial class SharedTransformSystem
             var invLocalMatrix = targetGridXform.InvLocalMatrix;
             var gridRot = targetGridXform.LocalRotation;
             var localRot = worldRot - gridRot;
-            SetCoordinates(uid, component, new EntityCoordinates(targetGrid, invLocalMatrix.Transform(worldPos)), rotation: localRot ?? Angle.Zero);
+            SetCoordinates(uid, component, new EntityCoordinates(targetGrid, invLocalMatrix.Transform(worldPos)), rotation: localRot);
         }
         else
         {
-            SetCoordinates(uid, component, new EntityCoordinates(component.MapUid.Value, worldPos), rotation: worldRot ?? Angle.Zero);
+            SetCoordinates(uid, component, new EntityCoordinates(component.MapUid.Value, worldPos), rotation: worldRot);
         }
     }
 

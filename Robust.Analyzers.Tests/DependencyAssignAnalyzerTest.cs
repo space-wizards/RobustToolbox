@@ -12,27 +12,20 @@ namespace Robust.Analyzers.Tests;
 [TestFixture]
 public sealed class DependencyAssignAnalyzerTest
 {
-    private const string BaseCode = """
-        using System;
-
-        namespace Robust.Shared.IoC;
-
-        [AttributeUsage(AttributeTargets.Field)]
-        public sealed class DependencyAttribute : Attribute
-        {
-        }
-        """;
-
     private static Task Verifier(string code, params DiagnosticResult[] expected)
     {
         var test = new CSharpAnalyzerTest<DependencyAssignAnalyzer, NUnitVerifier>()
         {
             TestState =
             {
-                AdditionalReferences = { typeof(DependencyAssignAnalyzer).Assembly },
-                Sources = { code, BaseCode }
+                Sources = { code }
             },
         };
+
+        TestHelper.AddEmbeddedSources(
+            test.TestState,
+            "Robust.Shared.IoC.DependencyAttribute.cs"
+        );
 
         // ExpectedDiagnostics cannot be set, so we need to AddRange here...
         test.TestState.ExpectedDiagnostics.AddRange(expected);

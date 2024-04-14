@@ -51,6 +51,8 @@ namespace Robust.Shared.Network
             // Only used on server, contains the encryption to use for this channel.
             public NetEncryption? Encryption { get; set; }
 
+            [ViewVariables] public int CurrentMtu => _connection.CurrentMTU;
+
             /// <summary>
             ///     Creates a new instance of a NetChannel.
             /// </summary>

@@ -376,6 +376,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         Grid = 1 << 3,
 
+        /// <summary>
+        /// Set right before the contact is deleted
+        /// </summary>
         Deleting = 1 << 4,
     }
 }

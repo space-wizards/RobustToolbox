@@ -303,6 +303,12 @@ namespace Robust.UnitTesting
                 return EntMan.GetComponent<MetaDataComponent>(uid);
             }
 
+            public MetaDataComponent MetaData(NetEntity uid)
+                => MetaData(EntMan.GetEntity(uid));
+
+            public TransformComponent Transform(NetEntity uid)
+                => Transform(EntMan.GetEntity(uid));
+
             public async Task ExecuteCommand(string cmd)
             {
                 await WaitPost(() => ConsoleHost.ExecuteCommand(cmd));
@@ -759,8 +765,9 @@ namespace Robust.UnitTesting
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
+            [Obsolete("Use Session instead")]
             public LocalPlayer? Player => ((IPlayerManager) PlayerMan).LocalPlayer;
-            public ICommonSession? Session => Player?.Session;
+            public ICommonSession? Session => ((IPlayerManager) PlayerMan).LocalSession;
             public NetUserId? User => Session?.UserId;
             public EntityUid? AttachedEntity => Session?.AttachedEntity;
 

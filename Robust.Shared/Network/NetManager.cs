@@ -619,6 +619,7 @@ namespace Robust.Shared.Network
 
             // MTU stuff.
             netConfig.MaximumTransmissionUnit = _config.GetCVar(CVars.NetMtu);
+            netConfig.MaximumTransmissionUnitV6 = _config.GetCVar(CVars.NetMtuIpv6);
             netConfig.AutoExpandMTU = _config.GetCVar(CVars.NetMtuExpand);
             netConfig.ExpandMTUFrequency = _config.GetCVar(CVars.NetMtuExpandFrequency);
             netConfig.ExpandMTUFailAttempts = _config.GetCVar(CVars.NetMtuExpandFailAttempts);

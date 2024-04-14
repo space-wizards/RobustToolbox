@@ -109,6 +109,12 @@ public interface IPrototypeManager
     /// <inheritdoc cref="HasIndex{T}(string)"/>
     bool HasIndex<T>(ProtoId<T> id) where T : class, IPrototype;
 
+    /// <inheritdoc cref="HasIndex{T}(string)"/>
+    bool HasIndex(EntProtoId? id);
+
+    /// <inheritdoc cref="HasIndex{T}(string)"/>
+    bool HasIndex<T>(ProtoId<T>? id) where T : class, IPrototype;
+
     bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
     bool TryIndex(Type kind, string id, [NotNullWhen(true)] out IPrototype? prototype);
 
@@ -130,6 +136,12 @@ public interface IPrototypeManager
 
     /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
     bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+
+    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
+    bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
+
+    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
+    bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
 
     bool HasMapping<T>(string id);
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);

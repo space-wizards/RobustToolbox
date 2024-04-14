@@ -31,15 +31,14 @@ public sealed class TrySpawnNextToTest : EntitySpawnHelpersTest
             Assert.That(EntMan.EntityExists(uid), Is.False);
         });
 
-        // Spawning next to an entity that is not in a container will simply spawn it in the same position
+        // Spawning next to an entity that is not in a container will drop it
         await Server.WaitPost(() =>
         {
             Assert.That(EntMan.TrySpawnNextTo(null, GrandChildB, out var uid));
             Assert.That(EntMan.EntityExists(uid));
-            Assert.That(Xforms.GetParentUid(uid!.Value), Is.EqualTo(ChildB));
-            Assert.That(Container.IsEntityInContainer(uid.Value), Is.False);
+            Assert.That(Xforms.GetParentUid(uid!.Value), Is.EqualTo(Parent));
+            Assert.That(Container.IsEntityInContainer(uid.Value));
             Assert.That(Container.IsEntityOrParentInContainer(uid.Value));
-            Assert.That(EntMan.GetComponent<TransformComponent>(uid.Value).Coordinates, Is.EqualTo(GrandChildBPos));
         });
 
         // Spawning "next to" a nullspace entity will fail.

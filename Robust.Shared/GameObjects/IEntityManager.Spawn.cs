@@ -46,7 +46,7 @@ public partial interface IEntityManager
     EntityUid SpawnAtPosition(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
 
     /// <summary>
-    /// Attempts to spawn an entity inside of a container.
+    /// Attempt to spawn an entity and insert it into a container. If the insertion fails, the entity gets deleted.
     /// </summary>
     bool TrySpawnInContainer(
         string? protoName,
@@ -58,9 +58,9 @@ public partial interface IEntityManager
 
     /// <summary>
     /// Attempts to spawn an entity inside of a container. If it fails to insert into the container, it will
-    /// instead attempt to spawn the entity next to the target.
+    /// instead drop the entity next to the target (see <see cref="SpawnNextToOrDrop"/>).
     /// </summary>
-    public EntityUid SpawnInContainerOrDrop(
+    EntityUid SpawnInContainerOrDrop(
         string? protoName,
         EntityUid containerUid,
         string containerId,
@@ -68,9 +68,20 @@ public partial interface IEntityManager
         ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null);
 
+    /// <inheritdoc cref="SpawnInContainerOrDrop(string?,Robust.Shared.GameObjects.EntityUid,string,Robust.Shared.GameObjects.TransformComponent?,Robust.Shared.Containers.ContainerManagerComponent?,Robust.Shared.Prototypes.ComponentRegistry?)"/>
+    EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null);
+
     /// <summary>
-    /// Attempts to spawn an entity adjacent to some other entity. If the other entity is in a container, this will
-    /// attempt to insert the new entity into the same container.
+    /// Attempts to spawn an entity adjacent to some other target entity. If the target entity is in
+    /// a container, this will attempt to insert the spawned entity into the same container. If the insertion fails,
+    /// the entity is deleted. If the entity is not in a container, this behaves like <see cref="SpawnNextToOrDrop"/>.
     /// </summary>
     bool TrySpawnNextTo(
         string? protoName,

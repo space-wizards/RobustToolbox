@@ -58,7 +58,7 @@ public sealed partial class EntityLookupSystem
             }
         }
 
-        foreach (var uid in toAdd)
+        foreach (var uid in toAdd.Span)
         {
             intersecting.Add(uid);
         }
@@ -703,16 +703,75 @@ public sealed partial class EntityLookupSystem
         GetEntitiesIntersecting(mapId, shape, transform, entities, flags);
     }
 
+    /// <summary>
+    /// Gets entities with the specified component with the specified map.
+    /// </summary>
+    public void GetEntitiesOnMap<TComp1>(MapId mapId, HashSet<Entity<TComp1>> entities) where TComp1 : IComponent
+    {
+        var query = AllEntityQuery<TComp1, TransformComponent>();
+
+        while (query.MoveNext(out var uid, out var comp, out var xform))
+        {
+            if (xform.MapID != mapId)
+                continue;
+
+            entities.Add((uid, comp));
+        }
+    }
+
+    /// <summary>
+    /// Gets entities with the specified component with the specified parent.
+    /// </summary>
+    public void GetEntitiesOnMap<TComp1, TComp2>(MapId mapId, HashSet<Entity<TComp1, TComp2>> entities)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+    {
+        var query = AllEntityQuery<TComp1, TComp2, TransformComponent>();
+
+        while (query.MoveNext(out var uid, out var comp, out var comp2, out var xform))
+        {
+            if (xform.MapID != mapId)
+                continue;
+
+            entities.Add((uid, comp, comp2));
+        }
+    }
+
     #endregion
 
-    private readonly record struct GridQueryCompState<T>(
-        HashSet<Entity<IComponent>> Intersecting,
-        IPhysShape Shape,
-        Transform Transform,
-        EntityLookupSystem Lookup,
-        LookupFlags Flags,
-        EntityQuery<T> Query
-    ) where T : IComponent;
+    /// <summary>
+    /// Gets entities with the specified component with the specified parent.
+    /// </summary>
+    public void GetChildEntities<TComp1>(EntityUid parentUid, HashSet<Entity<TComp1>> entities) where TComp1 : IComponent
+    {
+        var query = AllEntityQuery<TComp1, TransformComponent>();
+
+        while (query.MoveNext(out var uid, out var comp, out var xform))
+        {
+            if (xform.ParentUid != parentUid)
+                continue;
+
+            entities.Add((uid, comp));
+        }
+    }
+
+    /// <summary>
+    /// Gets entities with the specified component with the specified parent.
+    /// </summary>
+    public void GetChildEntities<TComp1, TComp2>(EntityUid parentUid, HashSet<Entity<TComp1, TComp2>> entities)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+    {
+        var query = AllEntityQuery<TComp1, TComp2, TransformComponent>();
+
+        while (query.MoveNext(out var uid, out var comp, out var comp2, out var xform))
+        {
+            if (xform.ParentUid != parentUid)
+                continue;
+
+            entities.Add((uid, comp, comp2));
+        }
+    }
 
     private readonly record struct GridQueryState<T>(
         HashSet<Entity<T>> Intersecting,

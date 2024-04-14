@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map.Components;
@@ -10,16 +8,6 @@ namespace Robust.Shared.Map
 {
     public static class CoordinatesExtensions
     {
-        public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, EntityUid gridId, IMapManager? mapManager = null)
-        {
-            IoCManager.Resolve(ref mapManager);
-
-            var grid = mapManager.GetGrid(gridId);
-            var tile = grid.TileSize;
-
-            return new EntityCoordinates(gridId, new Vector2(vector.X * tile, vector.Y * tile));
-        }
-
         public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
         {
             IoCManager.Resolve(ref entityManager, ref mapManager);
@@ -27,12 +15,13 @@ namespace Robust.Shared.Map
             var gridId = coords.GetGridUid(entityManager);
             var mapSystem = entityManager.System<SharedMapSystem>();
 
-            if (mapManager.TryGetGrid(gridId, out var mapGrid))
+            if (entityManager.TryGetComponent<MapGridComponent>(gridId, out var mapGrid))
             {
                 return mapSystem.GridTileToLocal(gridId.Value, mapGrid, mapSystem.CoordinatesToTile(gridId.Value, mapGrid, coords));
             }
 
-            var mapCoords = coords.ToMap(entityManager);
+            var transformSystem = entityManager.System<SharedTransformSystem>();
+            var mapCoords = coords.ToMap(entityManager, transformSystem);
 
             if (mapManager.TryFindGridAt(mapCoords, out var gridUid, out mapGrid))
             {

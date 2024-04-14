@@ -13,6 +13,7 @@ namespace Robust.Client.UserInterface.Controls
         private float _value;
         private float _page;
         private bool _rounded;
+        private int _roundingDecimals = 0;
 
         public event Action<Range>? OnValueChanged;
 
@@ -86,6 +87,17 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        [ViewVariables]
+        public int RoundingDecimals
+        {
+            get => _roundingDecimals;
+            set
+            {
+                _roundingDecimals = value;
+                _ensureValueClamped();
+            }
+        }
+
         public virtual void SetValueWithoutEvent(float newValue)
         {
             newValue = ClampValue(newValue);
@@ -107,7 +119,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (_rounded)
             {
-                value = MathF.Round(value);
+                value = MathF.Round(value, _roundingDecimals);
             }
             return MathHelper.Clamp(value, _minValue, _maxValue-_page);
         }

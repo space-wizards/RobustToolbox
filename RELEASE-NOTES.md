@@ -41,10 +41,6 @@ END TEMPLATE-->
 
 * You can now specify CVar overrides via environment variable with the `ROBUST_CVAR_*` prefix. For example `ROBUST_CVAR_game__hostname=foobar` would set the appropriate CVar. Double underscores in the environment variable name are replaced with ".".
 * Added non-generic variant of `GetCVar` to `IConfigurationManager`.
-* Control layout properties such as `Margin` can now be set via style sheets.
-* Distance between lines of a `RichTextLabel` can now be modified with `LineHeightScale`.
-* UI theme prototypes are now updated when reloaded.
-* New `RA0025` analyzer diagnostic warns for manual assignment to `[Dependency]` fields.
 
 ### Bugfixes
 

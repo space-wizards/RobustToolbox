@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface
     {
         private const float DefaultStretchRatio = 1;
         private const float DefaultSetSize = float.NaN;
-        private const float DefaultMaxSize = float.NaN;
+        private const float DefaultMaxSize = float.PositiveInfinity;
         private const HAlignment DefaultHAlignment = HAlignment.Stretch;
         private const VAlignment DefaultVAlignment = VAlignment.Stretch;
 

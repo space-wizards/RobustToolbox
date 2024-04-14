@@ -38,12 +38,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, true));
 
         // Set up map.
-        EntityUid map = default;
-        await server.WaitPost(() =>
-        {
-            var mapId = server.MapMan.CreateMap();
-            map = server.MapMan.GetMapEntityId(mapId);
-        });
+        var map = server.System<SharedMapSystem>().CreateMap();
 
         await RunTicks();
 
@@ -162,12 +157,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, true));
 
         // Set up map.
-        EntityUid map = default;
-        await server.WaitPost(() =>
-        {
-            var mapId = server.MapMan.CreateMap();
-            map = server.MapMan.GetMapEntityId(mapId);
-        });
+        var map = server.System<SharedMapSystem>().CreateMap();
 
         await RunTicks();
 

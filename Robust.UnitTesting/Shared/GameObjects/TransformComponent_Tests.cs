@@ -20,9 +20,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var server = RobustServerSimulation.NewSimulation().InitializeInstance();
 
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
-
-            var mapId = mapManager.CreateMap();
+            entManager.System<SharedMapSystem>().CreateMap(out var mapId);
 
             var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
             var ent2 = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(100f, 0f), mapId));
@@ -56,7 +54,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entManager = server.Resolve<IEntityManager>();
             var mapManager = server.Resolve<IMapManager>();
 
-            var mapId = mapManager.CreateMap();
+            entManager.System<SharedMapSystem>().CreateMap(out var mapId);
             var grid = mapManager.CreateGridEntity(mapId);
             grid.Comp.SetTile(new Vector2i(0, 0), new Tile(1));
             var gridXform = entManager.GetComponent<TransformComponent>(grid);

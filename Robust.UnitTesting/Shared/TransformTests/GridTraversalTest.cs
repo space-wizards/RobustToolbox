@@ -28,9 +28,7 @@ public sealed class GridTraversalTest : RobustIntegrationTest
         Vector2 gridMapPos = default;
         await server.WaitPost(() =>
         {
-            mapId = mapMan.CreateMap();
-            map = mapMan.GetMapEntityId(mapId);
-
+            map = sEntMan.System<SharedMapSystem>().CreateMap(out mapId);
             var gridComp = mapMan.CreateGridEntity(mapId);
             grid = gridComp.Owner;
             mapSys.SetTile(grid, gridComp, Vector2i.Zero, new Tile(1));

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Utility;
@@ -10,6 +9,7 @@ namespace Robust.Client.UserInterface;
 internal partial class UserInterfaceManager
 {
     private readonly Dictionary<Type, Queue<BaseWindow>> _windowsByType = new();
+    private readonly Dictionary<Type, Queue<BaseFullscreen>> _fullscreensByType = new();
     private readonly Dictionary<Type, Queue<Popup>> _popupsByType = new();
 
     public T CreatePopup<T>() where T : Popup, new()
@@ -79,6 +79,13 @@ internal partial class UserInterfaceManager
         //public classes that inherit from BaseWindow.
         var newWindow = _typeFactory.CreateInstanceUnchecked<T>();
         _windowsByType.GetOrNew(typeof(T)).Enqueue(newWindow);
+        return newWindow;
+    }
+
+    public T CreateFullscreen<T>() where T : BaseFullscreen, new()
+    {
+        var newWindow = _typeFactory.CreateInstanceUnchecked<T>();
+        _fullscreensByType.GetOrNew(typeof(T)).Enqueue(newWindow);
         return newWindow;
     }
 

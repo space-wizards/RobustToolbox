@@ -1,0 +1,3 @@
+﻿<DefaultFullscreen xmlns="https://spacestation14.io">
+    <Control Name="ContentsContainer" Margin="10" RectClipContent="True" VerticalExpand="true" />
+</DefaultFullscreen>

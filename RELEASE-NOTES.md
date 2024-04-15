@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Default hub address (`hub.hub_urls`) has been changed to `https://hub.spacestation14.com/`.
 
 ### Internal
 

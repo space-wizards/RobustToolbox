@@ -592,7 +592,11 @@ namespace Robust.Shared.Maths
             if (c != 0)
             {
                 if (max == rgb.R)
+                {
                     h = (rgb.G - rgb.B) / c % 6.0f;
+                    if (h < 0f)
+                        h += 6.0f;
+                }
                 else if (max == rgb.G)
                     h = (rgb.B - rgb.R) / c + 2.0f;
                 else if (max == rgb.B)
@@ -774,7 +778,11 @@ namespace Robust.Shared.Maths
 
             var h = 0.0f;
             if (max == rgb.R)
+            {
                 h = (rgb.G - rgb.B) / c % 6.0f;
+                if (h < 0f)
+                    h += 6.0f;
+            }
             else if (max == rgb.G)
                 h = (rgb.B - rgb.R) / c + 2.0f;
             else if (max == rgb.B)

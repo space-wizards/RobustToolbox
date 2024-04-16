@@ -35,7 +35,7 @@ public sealed partial class VerticalTabContainer : BoxContainer
         var index = ChildCount - 1;
         button.OnPressed += args =>
         {
-            SetTab(control);
+            SelectTab(control);
         };
 
         _controls.Add(control);
@@ -49,7 +49,7 @@ public sealed partial class VerticalTabContainer : BoxContainer
         // First tab
         else
         {
-            SetTab(control);
+            SelectTab(control);
         }
 
         return index;
@@ -57,7 +57,6 @@ public sealed partial class VerticalTabContainer : BoxContainer
 
     protected override void ChildRemoved(Control child)
     {
-        _controls.Remove(child);
         if (_tabs.Remove(child, out var button))
         {
             button.Dispose();
@@ -66,12 +65,12 @@ public sealed partial class VerticalTabContainer : BoxContainer
         // Set the current tab to a different control
         if (_currentControl == child)
         {
-            var previous = _controls.IndexOf(child);
+            var previous = _controls.IndexOf(child) - 1;
 
             if (previous > -1)
             {
                 var setControl = _controls[previous];
-                SetTab(setControl);
+                SelectTab(setControl);
             }
             else
             {
@@ -79,10 +78,11 @@ public sealed partial class VerticalTabContainer : BoxContainer
             }
         }
 
+        _controls.Remove(child);
         base.ChildRemoved(child);
     }
 
-    private void SetTab(Control control)
+    private void SelectTab(Control control)
     {
         if (_currentControl != null)
         {

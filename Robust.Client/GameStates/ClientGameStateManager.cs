@@ -1138,7 +1138,7 @@ namespace Robust.Client.GameStates
                     if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
                         metas.TryGetComponent(xform.ParentUid, out var containerMeta) &&
                         (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
-                        containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container, null, true))
+                        containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container))
                     {
                         containerSys.Remove((ent.Value, xform, meta), container, false, true);
                     }
@@ -1414,7 +1414,7 @@ namespace Robust.Client.GameStates
                     _entities.TryGetComponent(xform.ParentUid, out MetaDataComponent? containerMeta) &&
                     (containerMeta.Flags & MetaDataFlags.Detached) == 0)
                 {
-                    containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container, null, true);
+                    containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container);
                 }
 
                 _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(uid, xform);

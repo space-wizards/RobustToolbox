@@ -6,6 +6,13 @@
   <Import Project="..\MSBuild\Robust.Properties.targets"/>
   <Import Project="..\MSBuild\Robust.Engine.props"/>
 
+  <!-- Engine source files needed to make the tests work -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\Robust.Shared\Analyzers\AccessAttribute.cs" LogicalName="Robust.Shared.Analyzers.AccessAttribute.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Analyzers\AccessPermissions.cs" LogicalName="Robust.Shared.Analyzers.AccessPermissions.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\IoC\DependencyAttribute.cs" LogicalName="Robust.Shared.IoC.DependencyAttribute.cs" LinkBase="Implementations" />
+  </ItemGroup>
+
   <PropertyGroup>
     <IsPackable>false</IsPackable>
   </PropertyGroup>

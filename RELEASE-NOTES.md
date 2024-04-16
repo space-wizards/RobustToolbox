@@ -47,11 +47,28 @@ END TEMPLATE-->
 
 ### Other
 
-* Default hub address (`hub.hub_urls`) has been changed to `https://hub.spacestation14.com/`.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 218.1.0
+
+### New features
+
+* Add IEquatable.Equals to the sandbox.
+* Enable roslyn extensions tests in CI.
+* Add a VerticalTabContainer control to match the horizontal one.
+
+### Bugfixes
+
+* Fix divison remainder issue for Colors, fixing purples.
+
+### Other
+
+* Default hub address (`hub.hub_urls`) has been changed to `https://hub.spacestation14.com/`.
 
 
 ## 218.0.0

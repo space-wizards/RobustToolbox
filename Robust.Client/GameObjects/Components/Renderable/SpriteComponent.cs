@@ -8,7 +8,6 @@ using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
-using Robust.Shared;
 using Robust.Shared.Animations;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
@@ -1236,9 +1235,9 @@ namespace Robust.Client.GameObjects
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
 
         // Lobby SpriteView rendering path
-        public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null, Vector2? worldPosition = null)
+        public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null, Vector2 position = default)
         {
-            RenderInternal(drawingHandle, eyeRotation, worldRotation, worldPosition ?? Vector2.Zero, overrideDirection);
+            RenderInternal(drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
         }
 
         [DataField("noRot")] private bool _screenLock = false;

@@ -117,11 +117,24 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         ent.Comp.MappedInterfaceData[data.UiKey] = data;
     }
 
+    /// <summary>
+    /// Tries to get the BUI if it's on the entity at all.
+    /// </summary>
     public bool TryGetUi(EntityUid uid, Enum uiKey, [NotNullWhen(true)] out PlayerBoundUserInterface? bui, UserInterfaceComponent? ui = null)
     {
         bui = null;
 
         return Resolve(uid, ref ui, false) && ui.Interfaces.TryGetValue(uiKey, out bui);
+    }
+
+    /// <summary>
+    /// Tries to get the BUI if it is currently open.
+    /// </summary>
+    public bool TryGetOpenUi(EntityUid uid, Enum uiKey, [NotNullWhen(true)] out BoundUserInterface? bui, UserInterfaceComponent? ui = null)
+    {
+        bui = null;
+
+        return Resolve(uid, ref ui, false) && ui.OpenInterfaces.TryGetValue(uiKey, out bui);
     }
 
     /// <summary>

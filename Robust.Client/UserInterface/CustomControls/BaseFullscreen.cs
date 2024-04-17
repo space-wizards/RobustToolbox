@@ -5,7 +5,7 @@ namespace Robust.Client.UserInterface.CustomControls
     /// <summary>
     ///     Provides some basic functionality for fullscreen UIs.
     /// </summary>
-    public abstract class BaseFullscreen : Control
+    public abstract class BaseFullscreen : ContentCollection<Control>
     {
         public bool IsOpen => Parent != null;
 

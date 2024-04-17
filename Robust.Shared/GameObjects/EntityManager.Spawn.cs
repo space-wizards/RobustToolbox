@@ -111,32 +111,18 @@ public partial class EntityManager
         if (!xform.ParentUid.IsValid())
             return false;
 
-        if (!MetaQuery.TryGetComponent(target, out var meta))
-            return false;
-
-        if ((meta.Flags & MetaDataFlags.InContainer) == 0)
+        if (!_containers.TryGetContainingContainer(target, out var container))
         {
-            uid = SpawnAttachedTo(protoName, xform.Coordinates, overrides);
+            uid = SpawnNextToOrDrop(protoName, target, xform, overrides);
             return true;
         }
 
-        if (!TryGetComponent(xform.ParentUid, out ContainerManagerComponent? containerComp))
-            return false;
+        uid = Spawn(protoName, overrides);
+        if (_containers.Insert(uid.Value, container))
+            return true;
 
-        foreach (var container in containerComp.Containers.Values)
-        {
-            if (!container.Contains(target))
-                continue;
-
-            uid = Spawn(protoName, overrides);
-            if (_containers.Insert(uid.Value, container))
-                return true;
-
-            DeleteEntity(uid.Value);
-            uid = null;
-            return false;
-        }
-
+        DeleteEntity(uid.Value);
+        uid = null;
         return false;
     }
 
@@ -184,13 +170,27 @@ public partial class EntityManager
         ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null)
     {
+        return SpawnInContainerOrDrop(protoName, containerUid, containerId, out _, xform, containerComp, overrides);
+    }
+
+    public EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
         var uid = Spawn(protoName, overrides);
+        inserted = true;
 
         if ((containerComp == null && !TryGetComponent(containerUid, out containerComp))
              || !containerComp.Containers.TryGetValue(containerId, out var container)
              || !_containers.Insert(uid, container))
         {
 
+            inserted = false;
             xform ??= TransformQuery.GetComponent(containerUid);
             if (xform.ParentUid.IsValid())
                 _xforms.DropNextTo(uid, (containerUid, xform));

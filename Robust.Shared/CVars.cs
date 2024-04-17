@@ -1445,7 +1445,7 @@ namespace Robust.Shared
         /// Comma-separated list of URLs of hub servers to advertise to.
         /// </summary>
         public static readonly CVarDef<string> HubUrls =
-            CVarDef.Create("hub.hub_urls", "https://central.spacestation14.io/hub/", CVar.SERVERONLY);
+            CVarDef.Create("hub.hub_urls", "https://hub.spacestation14.com/", CVar.SERVERONLY);
 
         /// <summary>
         /// URL of this server to advertise.

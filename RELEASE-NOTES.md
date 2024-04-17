@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Control layout properties such as `Margin` can now be set via style sheets.
 
 ### Bugfixes
 
@@ -52,6 +52,59 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 218.1.0
+
+### New features
+
+* Add IEquatable.Equals to the sandbox.
+* Enable roslyn extensions tests in CI.
+* Add a VerticalTabContainer control to match the horizontal one.
+
+### Bugfixes
+
+* Fix divison remainder issue for Colors, fixing purples.
+
+### Other
+
+* Default hub address (`hub.hub_urls`) has been changed to `https://hub.spacestation14.com/`.
+
+
+## 218.0.0
+
+### Breaking changes
+
+* `Robust.Shared.Configuration.EnvironmentVariables` is now internal and no longer usable by content.
+
+### New features
+
+* Add TryGetRandom to EntityManager to get a random entity with the specified component and TryGetRandom to IPrototypeManager to return a random prototype of the specified type.
+* Add CopyData to AppearanceSystem.
+* Update UI themes on prototype reloads.
+* Allow scaling the line height of a RichTextLabel.
+* You can now specify CVar overrides via environment variable with the `ROBUST_CVAR_*` prefix. For example `ROBUST_CVAR_game__hostname=foobar` would set the appropriate CVar. Double underscores in the environment variable name are replaced with ".".
+* Added non-generic variant of `GetCVar` to `IConfigurationManager`.
+* Add type tracking to FieldNotFoundErrorNode for serialization.
+* Distance between lines of a `RichTextLabel` can now be modified with `LineHeightScale`.
+* UI theme prototypes are now updated when reloaded.
+* New `RA0025` analyzer diagnostic warns for manual assignment to `[Dependency]` fields.
+
+### Bugfixes
+
+* Request headers in `IStatusHandlerContext` are now case-insensitive.
+* SetWorldPosition rotation now more closely aligns with prior behavior.
+* Fix exception when inspecting elements in some cases.
+* Fix HTTP errors on watchdog ping not being reported.
+
+### Other
+
+* Add an analyzer for redundantly assigning to dependency fields.
+
+### Internal
+
+* Remove redundant Exists checks in ContainerSystem.
+* Improve logging on watchdog pings.
 
 
 ## 217.2.1
@@ -69,7 +122,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `AddComponents` and `RemoveComponents` methods to EntityManager that handle EntityPrototype / ComponentRegistry bulk component changes. 
+* Added `AddComponents` and `RemoveComponents` methods to EntityManager that handle EntityPrototype / ComponentRegistry bulk component changes.
 * Add double-clicking to LineEdit.
 
 ### Bugfixes

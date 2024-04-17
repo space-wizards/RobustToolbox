@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Client.Audio;
-using Robust.Client.ResourceManagement;
-using Robust.Shared.ContentPack;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Input;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls

@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls;
@@ -9,7 +8,6 @@ public abstract class ContentCollection<T> : Control where T : Control
 {
     public ContentCollection()
     {
-        RobustXamlLoader.Load(this);
         MouseFilter = MouseFilterMode.Stop;
 
         Contents = this;

@@ -36,7 +36,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Whether the slider can be adjusted.
         /// </summary>
-        public bool Locked { get; set; }
+        public bool Disabled { get; set; }
 
         public StyleBox? ForegroundStyleBoxOverride
         {
@@ -138,7 +138,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (args.Function != EngineKeyFunctions.UIClick || Locked)
+            if (args.Function != EngineKeyFunctions.UIClick || Disabled)
             {
                 return;
             }

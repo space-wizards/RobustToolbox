@@ -1534,12 +1534,12 @@ public abstract partial class SharedTransformSystem
         MapCoordinates? pos2 = null;
 
         if (_container.TryGetContainingContainer(entity1, out var container1))
-            _container.TryRemoveFromContainer(entity1, true);
+            _container.Remove(entity1, container1, force: true);
         else
             pos1 = GetMapCoordinates(entity1.Comp);
 
         if (_container.TryGetContainingContainer(entity2, out var container2))
-            _container.TryRemoveFromContainer(entity2, true);
+            _container.Remove(entity2, container2, force: true);
         else
             pos2 = GetMapCoordinates(entity2.Comp);
 
@@ -1559,7 +1559,7 @@ public abstract partial class SharedTransformSystem
 
             if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos2.Value.Position, out var targetGrid, out _))
             {
-                var (_, _, invWorldMatrix) = GetWorldPositionRotationInvMatrix(targetGrid);
+                var invWorldMatrix = GetInvWorldMatrix(targetGrid);
                 SetCoordinates(entity1, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(pos2.Value.Position)));
             }
             else
@@ -1582,7 +1582,7 @@ public abstract partial class SharedTransformSystem
 
             if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos1.Value.Position, out var targetGrid, out _))
             {
-                var (_, _, invWorldMatrix) = GetWorldPositionRotationInvMatrix(targetGrid);
+                var invWorldMatrix = GetInvWorldMatrix(targetGrid);
                 SetCoordinates(entity2, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(pos1.Value.Position)));
             }
             else

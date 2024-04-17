@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Control layout properties such as `Margin` can now be set via style sheets.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,16 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 218.2.0
+
+### New features
+
+* Control layout properties such as `Margin` can now be set via style sheets.
+* Expose worldposition in SpriteComponent.Render
+* Network audio entity Play/Pause/Stop states and playback position.
+* Add `Disabled` functionality to `Slider` control.
 
 
 ## 218.1.0

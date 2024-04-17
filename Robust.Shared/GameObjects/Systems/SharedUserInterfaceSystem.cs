@@ -11,9 +11,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 {
     protected readonly Dictionary<ICommonSession, List<PlayerBoundUserInterface>> OpenInterfaces = new();
 
+    private EntityQuery<UserInterfaceComponent> _uiQuery;
+
     public override void Initialize()
     {
         base.Initialize();
+
+        _uiQuery = GetEntityQuery<UserInterfaceComponent>();
+
         SubscribeAllEvent<PredictedBoundUIWrapMessage>(OnMessageReceived);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentInit>(OnUserInterfaceInit);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
@@ -47,7 +52,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         var uid = GetEntity(msg.Entity);
 
-        if (!TryComp(uid, out UserInterfaceComponent? uiComp) || args.SenderSession is not { } session)
+        if (!_uiQuery.TryGetComponent(uid, out var uiComp) || args.SenderSession is not { } session)
             return;
 
         if (!uiComp.Interfaces.TryGetValue(msg.UiKey, out var ui))
@@ -124,7 +129,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         bui = null;
 
-        return Resolve(uid, ref ui, false) && ui.Interfaces.TryGetValue(uiKey, out bui);
+        return _uiQuery.Resolve(uid, ref ui, false) && ui.Interfaces.TryGetValue(uiKey, out bui);
     }
 
     /// <summary>
@@ -132,7 +137,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public IEnumerable<T> GetUis<T>(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
     {
-        if (!Resolve(uid, ref ui, false))
+        if (!_uiQuery.Resolve(uid, ref ui, false))
             yield break;
 
         foreach (var bui in ui.Interfaces.Values)
@@ -151,7 +156,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         bui = null;
 
-        return Resolve(uid, ref ui, false) && ui.OpenInterfaces.TryGetValue(uiKey, out bui);
+        return _uiQuery.Resolve(uid, ref ui, false) && ui.OpenInterfaces.TryGetValue(uiKey, out bui);
     }
 
     /// <summary>
@@ -159,7 +164,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public IEnumerable<T> GetOpenUis<T>(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
     {
-        if (!Resolve(uid, ref ui, false))
+        if (!_uiQuery.Resolve(uid, ref ui, false))
             yield break;
 
         foreach (var bui in ui.OpenInterfaces.Values)

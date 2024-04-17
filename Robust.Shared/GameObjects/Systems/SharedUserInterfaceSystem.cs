@@ -128,6 +128,23 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     }
 
     /// <summary>
+    /// Tries to get the BUIs if it's castable to the specified type.
+    /// </summary>
+    public IEnumerable<T> GetUis<T>(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
+    {
+        if (!Resolve(uid, ref ui, false))
+            yield break;
+
+        foreach (var bui in ui.Interfaces.Values)
+        {
+            if (bui is not T cast)
+                continue;
+
+            yield return cast;
+        }
+    }
+
+    /// <summary>
     /// Tries to get the BUI if it is currently open.
     /// </summary>
     public bool TryGetOpenUi(EntityUid uid, Enum uiKey, [NotNullWhen(true)] out BoundUserInterface? bui, UserInterfaceComponent? ui = null)
@@ -135,6 +152,23 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         bui = null;
 
         return Resolve(uid, ref ui, false) && ui.OpenInterfaces.TryGetValue(uiKey, out bui);
+    }
+
+    /// <summary>
+    /// Tries to get the open BUIs if it's castable to the specified type.
+    /// </summary>
+    public IEnumerable<T> GetOpenUis<T>(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
+    {
+        if (!Resolve(uid, ref ui, false))
+            yield break;
+
+        foreach (var bui in ui.OpenInterfaces.Values)
+        {
+            if (bui is not T cast)
+                continue;
+
+            yield return cast;
+        }
     }
 
     /// <summary>

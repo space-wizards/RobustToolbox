@@ -388,7 +388,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var distance = delta.Length();
 
         // Out of range so just clip it for us.
-        if (distance > component.MaxDistance)
+        if (GetAudioDistance(distance) > component.MaxDistance)
         {
             // Still keeps the source playing, just with no volume.
             component.Gain = 0f;

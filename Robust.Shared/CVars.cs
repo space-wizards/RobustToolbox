@@ -851,7 +851,7 @@ namespace Robust.Shared
         /// See the documentation of the <see cref="Network.AuthMode"/> enum for values.
         /// </summary>
         public static readonly CVarDef<int> AuthMode =
-            CVarDef.Create("auth.mode", (int) Network.AuthMode.Optional, CVar.SERVERONLY);
+            CVarDef.Create("auth.mode", (int) Network.AuthMode.Required, CVar.SERVERONLY);
 
         /// <summary>
         /// Allow unauthenticated localhost connections, even if the auth mode is set to required.

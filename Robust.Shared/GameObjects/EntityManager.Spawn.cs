@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Containers;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects;
 
@@ -86,9 +87,9 @@ public partial class EntityManager
     public EntityUid Spawn(string? protoName = null, ComponentRegistry? overrides = null)
         => Spawn(protoName, MapCoordinates.Nullspace, overrides);
 
-    public virtual EntityUid Spawn(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
+    public virtual EntityUid Spawn(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = new())
     {
-        var entity = CreateEntityUninitialized(protoName, coordinates, overrides);
+        var entity = CreateEntityUninitialized(protoName, coordinates, overrides, rotation);
         InitializeAndStartEntity(entity, coordinates.MapId);
         return entity;
     }

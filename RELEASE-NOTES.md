@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 219.0.0
+
+### Breaking changes
+
+* Move most IMapManager functionality to SharedMapSystem.
+
+
 ## 218.2.0
 
 ### New features

@@ -298,7 +298,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = new())
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!)
         {
             var newEntity = CreateEntity(prototypeName, out _, overrides);
             var transform = TransformQuery.GetComponent(newEntity);
@@ -324,8 +324,7 @@ namespace Robust.Shared.GameObjects
             else
             {
                 coords = new EntityCoordinates(mapEnt, coordinates.Position);
-                _xforms.SetCoordinates(newEntity, transform, coords, null, newParent: mapXform);
-                _xforms.SetWorldRotation(newEntity, rotation);
+                _xforms.SetCoordinates(newEntity, transform, coords, rotation, newParent: mapXform);
             }
 
             return newEntity;

@@ -77,7 +77,7 @@ namespace Robust.Shared.GameObjects
 
         EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = new());
+        EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!);
 
         void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null);
 

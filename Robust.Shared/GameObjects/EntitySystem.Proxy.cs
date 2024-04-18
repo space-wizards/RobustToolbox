@@ -710,7 +710,7 @@ public partial class EntitySystem
     /// <inheritdoc cref="IEntityManager.Spawn(string?, MapCoordinates, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? prototype, MapCoordinates coordinates, Angle rotation = new())
-        => EntityManager.Spawn(prototype, coordinates);
+        => EntityManager.Spawn(prototype, coordinates, rotation: rotation);
 
     /// <inheritdoc cref="IEntityManager.Spawn(string?, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

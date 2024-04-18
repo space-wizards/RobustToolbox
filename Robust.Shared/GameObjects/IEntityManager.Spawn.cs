@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects;
@@ -32,7 +33,7 @@ public partial interface IEntityManager
     /// <summary>
     /// Spawns an entity at a specific world position. The entity will either be parented to the map or a grid.
     /// </summary>
-    EntityUid Spawn(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
+    EntityUid Spawn(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!);
 
     /// <summary>
     /// Spawns an entity and then parents it to the entity that the given entity coordinates are relative to.

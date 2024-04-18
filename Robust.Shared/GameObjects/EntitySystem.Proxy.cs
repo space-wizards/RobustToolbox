@@ -5,8 +5,10 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -708,8 +710,8 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.Spawn(string?, MapCoordinates, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid Spawn(string? prototype, MapCoordinates coordinates)
-        => EntityManager.Spawn(prototype, coordinates);
+    protected EntityUid Spawn(string? prototype, MapCoordinates coordinates, Angle rotation = default!)
+        => EntityManager.Spawn(prototype, coordinates, rotation: rotation);
 
     /// <inheritdoc cref="IEntityManager.Spawn(string?, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

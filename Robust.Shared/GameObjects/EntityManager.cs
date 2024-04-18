@@ -9,6 +9,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
@@ -297,7 +298,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!)
         {
             var newEntity = CreateEntity(prototypeName, out _, overrides);
             var transform = TransformQuery.GetComponent(newEntity);
@@ -322,7 +323,7 @@ namespace Robust.Shared.GameObjects
             else
             {
                 coords = new EntityCoordinates(mapEnt, coordinates.Position);
-                _xforms.SetCoordinates(newEntity, transform, coords, null, newParent: mapXform);
+                _xforms.SetCoordinates(newEntity, transform, coords, rotation, newParent: mapXform);
             }
 
             return newEntity;

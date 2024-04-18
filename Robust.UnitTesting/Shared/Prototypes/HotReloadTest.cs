@@ -55,7 +55,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         [Test]
         public void TestHotReload()
         {
-            var id = IoCManager.Resolve<IMapManager>().CreateMap();
+            IoCManager.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var id);
             var entity = _entities.SpawnEntity(DummyId, new MapCoordinates(default, id));
             var entityComponent = IoCManager.Resolve<IEntityManager>().GetComponent<HotReloadTestOneComponent>(entity);
 

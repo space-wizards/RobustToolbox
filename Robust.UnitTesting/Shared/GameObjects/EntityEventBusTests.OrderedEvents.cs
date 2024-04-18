@@ -30,8 +30,7 @@ public sealed partial class EntityEventBusTests
             .RegisterComponents(factory => factory.RegisterClass<FooComponent>())
             .InitializeInstance();
 
-        var map = new MapId(1);
-        simulation.AddMap(map);
+        var map = simulation.CreateMap().MapId;
 
         var entity = simulation.SpawnEntity(null, new MapCoordinates(0, 0, map));
         simulation.Resolve<IEntityManager>().AddComponent<FooComponent>(entity);

@@ -43,7 +43,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapManager.CreateMap();
+                entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
                 var grid = mapManager.CreateGridEntity(mapId);
                 var grid2 = mapManager.CreateGridEntity(mapId);
                 var gridUidA = grid.Owner;
@@ -115,7 +115,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapManager.CreateMap();
+                entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
                 var grid = mapManager.CreateGridEntity(mapId);
                 var gridUid = grid.Owner;
 

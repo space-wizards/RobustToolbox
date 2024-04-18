@@ -37,8 +37,6 @@ namespace Robust.UnitTesting.Server.GameObjects
                 .RegisterEntitySystems(f => f.LoadExtraSystemType<DebugExceptionSystem>())
                 .RegisterPrototypes(protoMan => protoMan.LoadString(PROTOTYPES))
                 .InitializeInstance();
-
-            _sim.AddMap(1);
         }
 
         [TestCase("throwInAdd")]
@@ -47,8 +45,9 @@ namespace Robust.UnitTesting.Server.GameObjects
         public void Test(string prototypeName)
         {
             var entMan = _sim.Resolve<IEntityManager>();
+            _sim.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var map);
 
-            Assert.That(() => entMan.SpawnEntity(prototypeName, new MapCoordinates(0, 0, new MapId(1))),
+            Assert.That(() => entMan.SpawnEntity(prototypeName, new MapCoordinates(0, 0, map)),
                 Throws.TypeOf<EntityCreationException>());
 
             Assert.That(entMan.GetEntities().Where(p => entMan.GetComponent<MetaDataComponent>(p).EntityPrototype?.ID == prototypeName), Is.Empty);

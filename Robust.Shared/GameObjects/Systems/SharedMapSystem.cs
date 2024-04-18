@@ -20,10 +20,15 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly FixtureSystem _fixtures = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly IComponentFactory _factory = default!;
+        [Dependency] private readonly MetaDataSystem _meta = default!;
 
         private EntityQuery<MapComponent> _mapQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
+        private EntityQuery<MetaDataComponent> _metaQuery;
         private EntityQuery<TransformComponent> _xformQuery;
+
+        internal Dictionary<MapId, EntityUid> Maps { get; } = new();
 
         public override void Initialize()
         {
@@ -31,6 +36,7 @@ namespace Robust.Shared.GameObjects
 
             _mapQuery = GetEntityQuery<MapComponent>();
             _gridQuery = GetEntityQuery<MapGridComponent>();
+            _metaQuery = GetEntityQuery<MetaDataComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
 
             InitializeMap();

@@ -37,12 +37,7 @@ public sealed partial class NoSharedReferencesTest : RobustIntegrationTest
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
 
         // Set up map.
-        EntityUid map = default;
-        await server.WaitPost(() =>
-        {
-            var mapId = server.MapMan.CreateMap();
-            map = server.MapMan.GetMapEntityId(mapId);
-        });
+        var map = server.System<SharedMapSystem>().CreateMap();
 
         await RunTicks();
 

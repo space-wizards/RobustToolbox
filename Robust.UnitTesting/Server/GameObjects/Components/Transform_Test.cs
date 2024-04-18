@@ -49,7 +49,6 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             EntityManager = IoCManager.Resolve<IServerEntityManagerInternal>();
             MapManager = IoCManager.Resolve<IMapManager>();
-            MapManager.CreateMap();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
@@ -57,11 +56,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             manager.LoadFromStream(new StringReader(Prototypes));
             manager.ResolveResults();
 
+            var mapSys = EntityManager.System<SharedMapSystem>();
             // build the net dream
-            MapA = MapManager.CreateMap();
-            GridA = MapManager.CreateGridEntity(MapA);
+            mapSys.CreateMap(out MapA);
+            mapSys.CreateMap(out MapB);
 
-            MapB = MapManager.CreateMap();
+            GridA = MapManager.CreateGridEntity(MapA);
             GridB = MapManager.CreateGridEntity(MapB);
 
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the test

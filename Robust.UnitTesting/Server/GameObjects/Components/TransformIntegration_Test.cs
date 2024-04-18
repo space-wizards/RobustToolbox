@@ -20,12 +20,9 @@ public sealed class TransformIntegration_Test
         var sim = factory.InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var containerSystem = entManager.System<SharedContainerSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
-
-        var map1Id = mapManager.CreateMap();
-        var map1 = mapManager.GetMapEntityId(map1Id);
+        var map1 = sim.CreateMap().Uid;
 
         var ent1 = entManager.SpawnEntity(null, new EntityCoordinates(map1, Vector2.Zero));
         var ent2 = entManager.SpawnEntity(null, new EntityCoordinates(map1, Vector2.Zero));

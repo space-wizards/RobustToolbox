@@ -71,15 +71,13 @@ public sealed class MissingParentTest : RobustIntegrationTest
         }
 
         // Set up map and spawn player
-        EntityUid map = default;
         NetEntity player = default;
         NetEntity entity = default;
         EntityCoordinates coords = default;
         NetCoordinates nCoords = default;
         await server.WaitPost(() =>
         {
-            var mapId = mapMan.CreateMap();
-            map = mapMan.GetMapEntityId(mapId);
+            var map = server.System<SharedMapSystem>().CreateMap();
             coords = new(map, default);
 
             var playerUid = sEntMan.SpawnEntity(null, coords);

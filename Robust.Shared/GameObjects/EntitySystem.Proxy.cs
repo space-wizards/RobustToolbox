@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
@@ -708,7 +709,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.Spawn(string?, MapCoordinates, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid Spawn(string? prototype, MapCoordinates coordinates)
+    protected EntityUid Spawn(string? prototype, MapCoordinates coordinates, Angle rotation = new())
         => EntityManager.Spawn(prototype, coordinates);
 
     /// <inheritdoc cref="IEntityManager.Spawn(string?, ComponentRegistry?)" />

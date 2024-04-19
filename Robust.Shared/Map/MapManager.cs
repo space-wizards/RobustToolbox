@@ -19,7 +19,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
     [Dependency] private readonly IConsoleHost _conhost = default!;
 
-    private ISawmill _sawmill = default!;
+    private ISawmill _sawmill => _mapSystem.Log;
 
     private SharedMapSystem _mapSystem = default!;
     private SharedPhysicsSystem _physics = default!;
@@ -33,9 +33,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     {
         _gridTreeQuery = EntityManager.GetEntityQuery<GridTreeComponent>();
         _gridQuery = EntityManager.GetEntityQuery<MapGridComponent>();
-
-        _sawmill = Logger.GetSawmill("map");
-
         InitializeMapPausing();
     }
 

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixes map initialisation not always initialising all entities on a map.
 
 ### Other
 

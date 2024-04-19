@@ -8,8 +8,6 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedMapSystem
 {
-    private List<EntityUid> _toInitialize = new();
-
     public bool IsInitialized(MapId mapId)
     {
         if (mapId == MapId.Nullspace)
@@ -67,23 +65,19 @@ public abstract partial class SharedMapSystem
 
     private void RecursiveMapInit(EntityUid entity)
     {
-        _toInitialize.Clear();
-        _toInitialize.Add(entity);
-
-        for (var i = 0; i < _toInitialize.Count; i++)
+        var toInitialize = new List<EntityUid> {entity};
+        for (var i = 0; i < toInitialize.Count; i++)
         {
-            var uid = _toInitialize[i];
-            // _toInitialize might contain deleted entities.
+            var uid = toInitialize[i];
+            // toInitialize might contain deleted entities.
             if(!_metaQuery.TryComp(uid, out var meta))
                 continue;
 
             if (meta.EntityLifeStage == EntityLifeStage.MapInitialized)
                 continue;
 
-            _toInitialize.AddRange(Transform(uid)._children);
+            toInitialize.AddRange(Transform(uid)._children);
             EntityManager.RunMapInit(uid, meta);
         }
-
-        _toInitialize.Clear();
     }
 }

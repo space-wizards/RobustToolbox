@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Enums;
 using Robust.Shared.Player;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract class SharedUserInterfaceSystem : EntitySystem
 {
-    protected readonly Dictionary<ICommonSession, List<PlayerBoundUserInterface>> OpenInterfaces = new();
-
     private EntityQuery<UserInterfaceComponent> _uiQuery;
 
     public override void Initialize()
@@ -22,15 +19,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         SubscribeAllEvent<PredictedBoundUIWrapMessage>(OnMessageReceived);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentInit>(OnUserInterfaceInit);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
+        SubscribeLocalEvent<UserInterfaceComponent, AfterAutoHandleStateEvent>(OnUserInterfaceState);
     }
 
     private void OnUserInterfaceInit(EntityUid uid, UserInterfaceComponent component, ComponentInit args)
     {
-        component.Interfaces.Clear();
-
-        foreach (var prototypeData in component.InterfaceData)
+        foreach (var prototypeData in component.Interfaces)
         {
-            AddUi((uid, component), prototypeData);
+            // TODO: Open UI up that's saved.
+            throw new NotImplementedException();
         }
     }
 
@@ -39,10 +36,20 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!TryComp(uid, out ActiveUserInterfaceComponent? activeUis))
             return;
 
-        foreach (var bui in activeUis.Interfaces)
+        foreach (var bui in component.ClientOpenInterfaces.Values)
         {
-            DeactivateInterface(uid, bui, activeUis);
+            bui.Close();
         }
+
+        component.ClientOpenInterfaces.Clear();
+    }
+
+    private void OnUserInterfaceState(Entity<UserInterfaceComponent> ent, ref AfterAutoHandleStateEvent args)
+    {
+        // TODO: Needs to Open UIs that aren't currently open.
+        // Needs to close UIs that aren't networked anymore.
+
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -52,8 +59,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         var uid = GetEntity(msg.Entity);
 
-        if (!_uiQuery.TryComp(uid, out var uiComp) || args.SenderSession is not { } session)
+        if (!_uiQuery.TryComp(uid, out var uiComp) ||
+            args.SenderSession is not { } session ||
+            session.AttachedEntity is not { } attachedEntity)
+        {
             return;
+        }
 
         if (!uiComp.Interfaces.TryGetValue(msg.UiKey, out var ui))
         {
@@ -61,7 +72,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return;
         }
 
-        if (!ui.SubscribedSessions.Contains(session))
+        if (!ui.Actors.Contains(attachedEntity))
         {
             Log.Debug($"UI {msg.UiKey} got BoundInterfaceMessageWrapMessage from a client who was not subscribed: {session}");
             return;
@@ -70,7 +81,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // if they want to close the UI, we can go home early.
         if (msg.Message is CloseBoundInterfaceMessage)
         {
-            CloseShared(ui, session);
+            Close(uid, msg.UiKey, attachedEntity);
             return;
         }
 
@@ -91,35 +102,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         // Raise as object so the correct type is used.
         RaiseLocalEvent(uid, (object)message, true);
-    }
-
-    protected void DeactivateInterface(EntityUid entityUid, PlayerBoundUserInterface ui,
-        ActiveUserInterfaceComponent? activeUis = null)
-    {
-        if (!Resolve(entityUid, ref activeUis, false))
-            return;
-
-        activeUis.Interfaces.Remove(ui);
-        if (activeUis.Interfaces.Count == 0)
-            RemCompDeferred(entityUid, activeUis);
-    }
-
-    protected virtual void CloseShared(PlayerBoundUserInterface bui, ICommonSession session,
-        ActiveUserInterfaceComponent? activeUis = null)
-    {
-    }
-
-    /// <summary>
-    /// Add a UI after an entity has been created.
-    /// It cannot be added already.
-    /// </summary>
-    public void AddUi(Entity<UserInterfaceComponent?> ent, PrototypeData data)
-    {
-        if (!Resolve(ent, ref ent.Comp))
-            return;
-
-        ent.Comp.Interfaces[data.UiKey] = new PlayerBoundUserInterface(data, ent);
-        ent.Comp.MappedInterfaceData[data.UiKey] = data;
     }
 
     /// <summary>
@@ -156,7 +138,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         bui = null;
 
-        return _uiQuery.Resolve(uid, ref ui, false) && ui.OpenInterfaces.TryGetValue(uiKey, out bui);
+        return _uiQuery.Resolve(uid, ref ui, false) && ui.ClientOpenInterfaces.TryGetValue(uiKey, out bui);
     }
 
     /// <summary>
@@ -167,7 +149,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!_uiQuery.Resolve(uid, ref ui, false))
             yield break;
 
-        foreach (var bui in ui.OpenInterfaces.Values)
+        foreach (var bui in ui.ClientOpenInterfaces.Values)
         {
             if (bui is not T cast)
                 continue;
@@ -238,23 +220,18 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         return true;
     }
 
-    private void ActivateInterface(PlayerBoundUserInterface ui)
-    {
-        EnsureComp<ActiveUserInterfaceComponent>(ui.Owner).Interfaces.Add(ui);
-    }
-
-    internal bool TryCloseUi(ICommonSession? session, EntityUid uid, Enum uiKey, bool remoteCall = false, UserInterfaceComponent? uiComp = null)
+    internal bool Close(EntityUid actor, EntityUid uid, Enum uiKey, bool remoteCall = false, UserInterfaceComponent? uiComp = null)
     {
         if (!Resolve(uid, ref uiComp))
             return false;
 
-        if (!uiComp.OpenInterfaces.TryGetValue(uiKey, out var boundUserInterface))
+        if (!uiComp.ClientOpenInterfaces.TryGetValue(uiKey, out var boundUserInterface))
             return false;
 
         if (!remoteCall)
             SendUiMessage(boundUserInterface, new CloseBoundInterfaceMessage());
 
-        uiComp.OpenInterfaces.Remove(uiKey);
+        uiComp.ClientOpenInterfaces.Remove(uiKey);
         boundUserInterface.Dispose();
 
         if (session != null)
@@ -284,6 +261,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         return true;
     }
 
+    /*
+     * TODO:
+     * Need the external call methods that raise the event as a predicted event(?)
+     * Need to handle closing via event
+     * Opening gets handled directly
+     * Need to be able to call open in a shared context.
+     * When changing mob need to close old UIs and open new ones (internally, don't call the event?)
+     */
+
     /// <summary>
     /// Raised by client-side UIs to send to server.
     /// </summary>
@@ -291,7 +277,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), msg, bui.UiKey));
     }
-
 
     /// <summary>
     /// Raised by client-side UIs to send predicted messages to server.

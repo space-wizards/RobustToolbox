@@ -43,11 +43,11 @@ namespace Robust.Client.GameObjects
                     break;
 
                 case CloseBoundInterfaceMessage _:
-                    TryCloseUi(message.Session, uid, uiKey, remoteCall: true, uiComp: cmp);
+                    Close(message.Session, uid, uiKey, remoteCall: true, uiComp: cmp);
                     break;
 
                 default:
-                    if (cmp.OpenInterfaces.TryGetValue(uiKey, out var bui))
+                    if (cmp.ClientOpenInterfaces.TryGetValue(uiKey, out var bui))
                         bui.InternalReceiveMessage(message);
 
                     break;
@@ -59,7 +59,7 @@ namespace Robust.Client.GameObjects
             if (!Resolve(uid, ref uiComp))
                 return false;
 
-            if (uiComp.OpenInterfaces.ContainsKey(uiKey))
+            if (uiComp.ClientOpenInterfaces.ContainsKey(uiKey))
                 return false;
 
             var data = uiComp.MappedInterfaceData[uiKey];
@@ -70,7 +70,7 @@ namespace Robust.Client.GameObjects
                 (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new object[] {uid, uiKey});
 
             boundInterface.Open();
-            uiComp.OpenInterfaces[uiKey] = boundInterface;
+            uiComp.ClientOpenInterfaces[uiKey] = boundInterface;
 
             if (_playerManager.LocalSession is { } playerSession)
             {

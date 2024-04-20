@@ -13,7 +13,6 @@ namespace Robust.Server.GameObjects
 {
     public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
     {
-        [Dependency] private readonly IPlayerManager _playerMan = default!;
         [Dependency] private readonly TransformSystem _xformSys = default!;
 
         private EntityQuery<IgnoreUIRangeComponent> _ignoreUIRangeQuery;
@@ -26,30 +25,8 @@ namespace Robust.Server.GameObjects
             base.Initialize();
 
             SubscribeNetworkEvent<BoundUIWrapMessage>(OnMessageReceived);
-            _playerMan.PlayerStatusChanged += OnPlayerStatusChanged;
 
             _ignoreUIRangeQuery = GetEntityQuery<IgnoreUIRangeComponent>();
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-
-            _playerMan.PlayerStatusChanged -= OnPlayerStatusChanged;
-        }
-
-        private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
-        {
-            if (args.NewStatus != SessionStatus.Disconnected)
-                return;
-
-            if (!OpenInterfaces.TryGetValue(args.Session, out var buis))
-                return;
-
-            foreach (var bui in buis.ToArray())
-            {
-                CloseShared(bui, args.Session);
-            }
         }
 
         /// <inheritdoc />

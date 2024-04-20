@@ -8,36 +8,46 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [RegisterComponent, NetworkedComponent]
+    [RegisterComponent, NetworkedComponent, Access(typeof(SharedUserInterfaceSystem)), AutoGenerateComponentState]
     public sealed partial class UserInterfaceComponent : Component
     {
-        // TODO: Obviously clean this shit up, I just moved it into shared.
-
-        [ViewVariables] public readonly Dictionary<Enum, BoundUserInterface> OpenInterfaces = new();
-
-        [ViewVariables] public readonly Dictionary<Enum, PlayerBoundUserInterface> Interfaces = new();
-
-        public Dictionary<Enum, PrototypeData> MappedInterfaceData = new();
+        /// <summary>
+        /// The currently open interfaces. Used clientside to store the UI.
+        /// </summary>
+        [ViewVariables]
+        public readonly Dictionary<Enum, BoundUserInterface> ClientOpenInterfaces = new();
 
         /// <summary>
-        /// Loaded on Init from serialized data.
+        /// Hashset of open interfaces used in shared.
         /// </summary>
-        [DataField("interfaces")] internal List<PrototypeData> InterfaceData = new();
+        public readonly HashSet<Enum> OpenInterfaces = new();
+
+        [DataField]
+        internal Dictionary<Enum, InterfaceData> Interfaces = new();
+
+        /// <summary>
+        /// Actors that currently have interfaces open.
+        /// </summary>
+        [DataField, AutoNetworkedField]
+        public Dictionary<Enum, List<EntityUid>> Actors = new();
+
+        /// <summary>
+        /// Legacy data, new BUIs should be using comp states.
+        /// </summary>
+        [AutoNetworkedField]
+        public Dictionary<Enum, BoundUserInterfaceState> States = new();
     }
 
     [DataDefinition]
-    public sealed partial class PrototypeData
+    public sealed partial class InterfaceData
     {
-        [DataField("key", required: true)]
-        public Enum UiKey { get; private set; } = default!;
-
         [DataField("type", required: true)]
         public string ClientType { get; private set; } = default!;
 
         /// <summary>
         ///     Maximum range before a BUI auto-closes. A non-positive number means there is no limit.
         /// </summary>
-        [DataField("range")]
+        [DataField]
         public float InteractionRange = 2f;
 
         // TODO BUI move to content?
@@ -48,7 +58,7 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         ///     Avoids requiring each system to individually validate client inputs. However, perhaps some BUIs are supposed to be bypass accessibility checks
         /// </remarks>
-        [DataField("requireInputValidation")]
+        [DataField]
         public bool RequireInputValidation = true;
     }
 

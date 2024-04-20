@@ -8,7 +8,7 @@ namespace Robust.Shared.Prototypes;
 /// Tile alias prototypes, unlike tile prototypes, are implemented here, as they're really just fed to TileDefinitionManager.
 /// </summary>
 [Prototype("tileAlias")]
-public sealed class TileAliasPrototype : IPrototype
+public sealed partial class TileAliasPrototype : IPrototype
 {
     /// <summary>
     /// The target tile ID to alias to.

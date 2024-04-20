@@ -6,7 +6,7 @@ namespace Robust.Shared.Prototypes;
 /// Prototype that represents game entities.
 /// </summary>
 [Prototype("entityCategory")]
-public sealed class EntityCategoryPrototype : IPrototype
+public sealed partial class EntityCategoryPrototype : IPrototype
 {
     [IdDataField]
     public string ID { get; private set; } = default!;

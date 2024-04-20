@@ -33,7 +33,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitPost(() =>
             {
-                mapId = mapManager.CreateMap();
+                entManager.System<SharedMapSystem>().CreateMap(out mapId);
                 gridId1 = mapManager.CreateGridEntity(mapId);
                 gridId2 = mapManager.CreateGridEntity(mapId);
                 gridEnt1 = gridId1.Value.Owner;

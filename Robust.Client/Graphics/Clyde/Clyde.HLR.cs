@@ -251,10 +251,8 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawEntities(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
         {
             var mapId = eye.Position.MapId;
-            if (mapId == MapId.Nullspace || !_mapManager.HasMapEntity(mapId))
-            {
+            if (mapId == MapId.Nullspace)
                 return;
-            }
 
             RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB, worldBounds);
             var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);

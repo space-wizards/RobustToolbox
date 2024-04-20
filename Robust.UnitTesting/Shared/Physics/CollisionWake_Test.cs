@@ -51,7 +51,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             await server.WaitPost(() =>
             {
-                mapId = mapManager.CreateMap();
+                entManager.System<SharedMapSystem>().CreateMap(out mapId);
                 grid = mapManager.CreateGridEntity(mapId);
                 grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
 

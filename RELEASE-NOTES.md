@@ -54,6 +54,28 @@ END TEMPLATE-->
 *None yet*
 
 
+## 219.1.0
+
+### New features
+
+* Added a new optional arguments to various entity spawning methods, including a new argument to set the entity's rotation.
+
+### Bugfixes
+
+* Fixes map initialisation not always initialising all entities on a map.
+
+### Other
+
+* The default value of the `auth.mode` cvar has changed
+
+
+## 219.0.0
+
+### Breaking changes
+
+* Move most IMapManager functionality to SharedMapSystem.
+
+
 ## 218.2.0
 
 ### New features

@@ -142,7 +142,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         }
 
         [Prototype("circle")]
-        private sealed class CircleTestPrototype : IPrototype, IInheritingPrototype
+        private sealed partial class CircleTestPrototype : IPrototype, IInheritingPrototype
         {
             [IdDataField()]
             public string ID { get; private set; } = default!;

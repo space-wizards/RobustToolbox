@@ -17,7 +17,7 @@ using Vector4 = Robust.Shared.Maths.Vector4;
 namespace Robust.Client.Graphics
 {
     [Prototype("shader")]
-    public sealed class ShaderPrototype : IPrototype, ISerializationHooks
+    public sealed partial class ShaderPrototype : IPrototype, ISerializationHooks
     {
         [ViewVariables]
         [IdDataField]

@@ -199,47 +199,34 @@ public abstract partial class SharedTransformSystem
 
     #region Component Lifetime
 
+    private (EntityUid?, MapId) InitializeMapUid(EntityUid uid, TransformComponent xform)
+    {
+        if (xform._mapIdInitialized)
+            return (xform.MapUid, xform.MapID);
+
+        if (xform.ParentUid.IsValid())
+        {
+            (xform.MapUid, xform.MapID) = InitializeMapUid(xform.ParentUid, Transform(xform.ParentUid));
+        }
+        else if (_mapQuery.TryComp(uid, out var mapComp))
+        {
+            DebugTools.AssertNotEqual(mapComp.MapId, MapId.Nullspace);
+            xform.MapUid = uid;
+            xform.MapID = mapComp.MapId;
+        }
+        else
+        {
+            xform.MapUid = null;
+            xform.MapID = MapId.Nullspace;
+        }
+
+        xform._mapIdInitialized = true;
+        return (xform.MapUid, xform.MapID);
+    }
+
     private void OnCompInit(EntityUid uid, TransformComponent component, ComponentInit args)
     {
-        // Children MAY be initialized here before their parents are.
-        // We do this whole dance to handle this recursively,
-        // setting _mapIdInitialized along the way to avoid going to the MapComponent every iteration.
-        static MapId FindMapIdAndSet(EntityUid uid, TransformComponent xform, IEntityManager entMan, EntityQuery<TransformComponent> xformQuery, IMapManager mapManager)
-        {
-            if (xform._mapIdInitialized)
-                return xform.MapID;
-
-            MapId value;
-
-            if (xform.ParentUid.IsValid())
-            {
-                value = FindMapIdAndSet(xform.ParentUid, xformQuery.GetComponent(xform.ParentUid), entMan, xformQuery, mapManager);
-            }
-            else
-            {
-                // second level node, terminates recursion up the branch of the tree
-                if (entMan.TryGetComponent(uid, out MapComponent? mapComp))
-                {
-                    value = mapComp.MapId;
-                }
-                else
-                {
-                    // We allow entities to be spawned directly into null-space.
-                    value = MapId.Nullspace;
-                }
-            }
-
-            xform.MapUid = value == MapId.Nullspace ? null : mapManager.GetMapEntityId(value);
-            xform.MapID = value;
-            xform._mapIdInitialized = true;
-            return value;
-        }
-
-        if (!component._mapIdInitialized)
-        {
-            FindMapIdAndSet(uid, component, EntityManager, XformQuery, _mapManager);
-            component._mapIdInitialized = true;
-        }
+        InitializeMapUid(uid, component);
 
         // Has to be done if _parent is set from ExposeData.
         if (component.ParentUid.IsValid())
@@ -521,6 +508,8 @@ public abstract partial class SharedTransformSystem
                         QueueDel(uid);
                     throw new InvalidOperationException($"Attempted to re-parent to a terminating object. Entity: {ToPrettyString(uid)}, new parent: {ToPrettyString(value.EntityId)}");
                 }
+
+                InitializeMapUid(value.EntityId, newParent);
 
                 // Check for recursive/circular transform hierarchies.
                 if (xform.MapUid == newParent.MapUid)

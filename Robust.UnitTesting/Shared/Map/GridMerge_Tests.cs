@@ -45,7 +45,7 @@ public sealed class GridMerge_Tests
         var mapSystem = entMan.System<SharedMapSystem>();
         var gridFixtures = entMan.System<GridFixtureSystem>();
 
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
         var grid1 = mapManager.CreateGridEntity(mapId);
         var grid2 = mapManager.CreateGridEntity(mapId);
         var tiles = new List<(Vector2i, Tile)>();

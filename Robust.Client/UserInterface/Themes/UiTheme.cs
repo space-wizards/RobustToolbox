@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Frozen;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -18,7 +16,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.UserInterface.Themes;
 
 [Prototype("uiTheme")]
-public sealed class UITheme : IPrototype
+public sealed partial class UITheme : IPrototype
 {
     private IResourceCache? _cache;
     private IUserInterfaceManager? _uiMan;

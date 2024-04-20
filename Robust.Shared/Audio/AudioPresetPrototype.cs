@@ -9,7 +9,7 @@ namespace Robust.Shared.Audio;
 /// This can be used by <see cref="Content.Shared.Audio.SharedContentAudioSystem"/> to apply an audio preset.
 /// </summary>
 [Prototype("audioPreset")]
-public sealed class AudioPresetPrototype : IPrototype
+public sealed partial class AudioPresetPrototype : IPrototype
 {
     [IdDataField]
     public string ID { get; } = default!;

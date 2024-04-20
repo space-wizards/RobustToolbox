@@ -52,7 +52,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         var uid = GetEntity(msg.Entity);
 
-        if (!_uiQuery.TryGetComponent(uid, out var uiComp) || args.SenderSession is not { } session)
+        if (!_uiQuery.TryComp(uid, out var uiComp) || args.SenderSession is not { } session)
             return;
 
         if (!uiComp.Interfaces.TryGetValue(msg.UiKey, out var ui))
@@ -135,7 +135,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Tries to get the BUIs if it's castable to the specified type.
     /// </summary>
-    public IEnumerable<T> GetUis<T>(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
+    public IEnumerable<T> GetUis<T>(EntityUid uid, UserInterfaceComponent? ui = null)
     {
         if (!_uiQuery.Resolve(uid, ref ui, false))
             yield break;
@@ -162,7 +162,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Tries to get the open BUIs if it's castable to the specified type.
     /// </summary>
-    public IEnumerable<T> GetOpenUis<T>(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
+    public IEnumerable<T> GetOpenUis<T>(EntityUid uid, UserInterfaceComponent? ui = null)
     {
         if (!_uiQuery.Resolve(uid, ref ui, false))
             yield break;

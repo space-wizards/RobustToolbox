@@ -99,14 +99,14 @@ internal abstract partial class SharedPlayerManager
         return new CommonSession(user, name, data);
     }
 
-    public ICommonSession CreateAndAddSession(INetChannel channel)
+    internal ICommonSession CreateAndAddSessionInternal(INetChannel channel)
     {
-        var session = CreateAndAddSession(channel.UserId, channel.UserName);
+        var session = CreateAndAddSessionInternal(channel.UserId, channel.UserName);
         session.Channel = channel;
         return session;
     }
 
-    public ICommonSession CreateAndAddSession(NetUserId user, string name)
+    internal ICommonSession CreateAndAddSessionInternal(NetUserId user, string name)
     {
         Lock.EnterWriteLock();
         CommonSession session;
@@ -129,10 +129,10 @@ internal abstract partial class SharedPlayerManager
         return session;
     }
 
-    public void RemoveSession(ICommonSession session, bool removeData = false)
+    internal void RemoveSession(ICommonSession session, bool removeData = false)
         => RemoveSession(session.UserId, removeData);
 
-    public void RemoveSession(NetUserId user, bool removeData = false)
+    internal void RemoveSession(NetUserId user, bool removeData = false)
     {
         Lock.EnterWriteLock();
         try

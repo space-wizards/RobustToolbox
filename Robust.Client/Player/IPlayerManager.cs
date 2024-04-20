@@ -33,6 +33,10 @@ public interface IPlayerManager : ISharedPlayerManager
 
     void ApplyPlayerStates(IReadOnlyCollection<SessionState> list);
 
+    ICommonSession CreateAndAddSession(INetChannel channel);
+
+    ICommonSession CreateAndAddSession(NetUserId user, string name);
+
     /// <summary>
     /// Sets up a single player game. This creates a dummy <see cref="ISharedPlayerManager.LocalSession"/>  without an
     /// <see cref="INetChannel"/>.

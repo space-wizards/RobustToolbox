@@ -79,6 +79,7 @@ namespace Robust.Client.Graphics
             var topRight = ScreenToMap(new Vector2(vpSize.X, 0)).Position;
             var bottomLeft = ScreenToMap(new Vector2(0, vpSize.Y)).Position;
 
+            // This assumes the main viewports eye and the main eye are the same.
             var rotation = new Angle(CurrentEye.Rotation);
             var center = (bottomLeft + topRight) / 2;
 

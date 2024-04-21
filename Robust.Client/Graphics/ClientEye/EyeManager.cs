@@ -64,25 +64,17 @@ namespace Robust.Client.Graphics
         /// <inheritdoc />
         public Box2 GetWorldViewport()
         {
-            var vpSize = _displayManager.ScreenSize;
-
-            var topLeft = ScreenToMap(Vector2.Zero);
-            var topRight = ScreenToMap(new Vector2(vpSize.X, 0));
-            var bottomRight = ScreenToMap(vpSize);
-            var bottomLeft = ScreenToMap(new Vector2(0, vpSize.Y));
-
-            var left = MathHelper.Min(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
-            var bottom = MathHelper.Min(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
-            var right = MathHelper.Max(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
-            var top = MathHelper.Max(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
-
-            return new Box2(left, bottom, right, top);
+            return GetWorldViewbounds().CalcBoundingBox();
         }
 
         /// <inheritdoc />
         public Box2Rotated GetWorldViewbounds()
         {
-            var vpSize = _displayManager.ScreenSize;
+            // This is an inefficient and roundabout way of geting the viewport.
+            // But its a method that shouldn't get used much.
+
+            var vp = MainViewport as Control;
+            var vpSize = vp?.PixelSize ?? _displayManager.ScreenSize;
 
             var topRight = ScreenToMap(new Vector2(vpSize.X, 0)).Position;
             var bottomLeft = ScreenToMap(new Vector2(0, vpSize.Y)).Position;

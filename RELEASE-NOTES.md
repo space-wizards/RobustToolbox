@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 219.1.1
+
+### Bugfixes
+
+* Fix map-loader not map-initialising maps when overwriting a post-init map.
+
+
 ## 219.1.0
 
 ### New features

@@ -101,7 +101,14 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public IEnumerable<T> EnumerateParents<T>(string kind, bool includeSelf = false)
+        public IEnumerable<T> EnumerateParents<T>(T proto, bool includeSelf = false)
+            where T : class, IPrototype, IInheritingPrototype
+        {
+            return EnumerateParents<T>(proto.ID, includeSelf);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)
             where T : class, IPrototype, IInheritingPrototype
         {
             if (!_hasEverBeenReloaded)
@@ -109,18 +116,24 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            if (!TryIndex<T>(kind, out var prototype))
+            if (!TryIndex<T>(id, out var prototype))
                 yield break;
-            if (includeSelf) yield return prototype;
-            if (prototype.Parents == null) yield break;
+
+            if (includeSelf)
+                yield return prototype;
+
+            if (prototype.Parents == null)
+                yield break;
 
             var queue = new Queue<string>(prototype.Parents);
             while (queue.TryDequeue(out var prototypeId))
             {
                 if (!TryIndex<T>(prototypeId, out var parent))
-                    yield break;
+                    continue; // Abstract parent?
+
                 yield return parent;
-                if (parent.Parents == null) continue;
+                if (parent.Parents == null)
+                    continue;
 
                 foreach (var parentId in parent.Parents)
                 {
@@ -144,6 +157,7 @@ namespace Robust.Shared.Prototypes
 
             if (!TryIndex(kind, id, out var prototype))
                 yield break;
+
             if (includeSelf)
                 yield return prototype;
 
@@ -155,7 +169,7 @@ namespace Robust.Shared.Prototypes
             while (queue.TryDequeue(out var prototypeId))
             {
                 if (!TryIndex(kind, prototypeId, out var parent))
-                    continue;
+                    continue; // Abstract parent?
 
                 yield return parent;
                 iPrototype = (IInheritingPrototype)parent;
@@ -163,6 +177,55 @@ namespace Robust.Shared.Prototypes
                     continue;
 
                 foreach (var parentId in iPrototype.Parents)
+                {
+                    queue.Enqueue(parentId);
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<(string id, T?)> EnumerateAllParents<T>(string id, bool includeSelf = false)
+            where T : class, IPrototype, IInheritingPrototype
+        {
+            if (!_hasEverBeenReloaded)
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+
+            if (!_kinds.TryGetValue(typeof(T), out var kindData))
+                throw new UnknownPrototypeException(id, typeof(T));
+
+            if (!kindData.Results.ContainsKey(id))
+                yield break;
+
+            IPrototype? uncast;
+            T? instance;
+
+            if (includeSelf)
+            {
+                kindData.Instances.TryGetValue(id, out uncast);
+                instance = uncast as T;
+                yield return (id, instance);
+            }
+
+            if (!kindData.Inheritance!.TryGetParents(id, out var parents))
+                yield break;
+
+            var queue = new Queue<string>(parents);
+            while (queue.TryDequeue(out var prototypeId))
+            {
+                if (!_kinds.TryGetValue(typeof(T), out kindData) || !kindData.Results.ContainsKey(prototypeId))
+                {
+                    Sawmill.Error($"Encountered invalid prototype while enumerating parents. Kind: {typeof(T).Name}. Child: {id}. Invalid: {prototypeId}");
+                    continue;
+                }
+
+                kindData.Instances.TryGetValue(prototypeId, out uncast);
+                instance = uncast as T;
+                yield return (prototypeId, instance);
+
+                if (!kindData.Inheritance!.TryGetParents(prototypeId, out parents))
+                    continue;
+
+                foreach (var parentId in parents)
                 {
                     queue.Enqueue(parentId);
                 }
@@ -352,6 +415,8 @@ namespace Robust.Shared.Prototypes
             }
 
             Freeze(modifiedKinds);
+            if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
+                UpdateCategories();
 #endif
 
             //todo paul i hate it but i am not opening that can of worms in this refactor
@@ -469,14 +534,19 @@ namespace Robust.Shared.Prototypes
                         });
 
                         var modifiedKinds = new HashSet<KindData>();
+                        bool reloadCategories = false;
                         while (protoChannel.Reader.TryRead(out var item))
                         {
                             var kind = item.KindData;
                             kind.UnfrozenInstances ??= kind.Instances.ToDictionary();
                             kind.UnfrozenInstances[item.Id] = item.Prototype;
                             modifiedKinds.Add(kind);
+                            if (kind.Type == typeof(EntityPrototype) || kind.Type == typeof(EntityCategoryPrototype))
+                                reloadCategories = true;
                         }
                         Freeze(modifiedKinds);
+                        if (reloadCategories)
+                            UpdateCategories();
                     }
                     finally
                     {

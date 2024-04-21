@@ -52,7 +52,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
-            manager.RegisterKind(typeof(EntityPrototype));
+            manager.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             manager.LoadFromStream(new StringReader(Prototypes));
             manager.ResolveResults();
 

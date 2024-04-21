@@ -321,7 +321,7 @@ namespace Robust.UnitTesting.Server
 
             var protoMan = container.Resolve<IPrototypeManager>();
             protoMan.Initialize();
-            protoMan.RegisterKind(typeof(EntityPrototype));
+            protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             _protoDelegate?.Invoke(protoMan);
             protoMan.ResolveResults();
 

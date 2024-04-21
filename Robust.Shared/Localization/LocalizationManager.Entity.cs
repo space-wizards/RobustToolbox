@@ -125,6 +125,15 @@ namespace Robust.Shared.Localization
                 }
             }
 
+            // Attempt to infer suffix from entity categories
+            if (suffix == null)
+            {
+                var suffixes = _prototype.Index<EntityPrototype>(prototypeId).Categories
+                    .Where(x => x.Suffix != null)
+                    .Select(x => GetString(x.Suffix!));
+                suffix = string.Join(", ", suffixes);
+            }
+            
             return new EntityLocData(
                 name ?? "",
                 desc ?? "",

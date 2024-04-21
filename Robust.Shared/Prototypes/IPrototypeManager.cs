@@ -63,13 +63,24 @@ public interface IPrototypeManager
     /// <summary>
     /// Returns an <see cref="IEnumerable{T}"/> of all parents of a prototype of a certain kind.
     /// </summary>
-    IEnumerable<T> EnumerateParents<T>(string kind, bool includeSelf = false)
+    /// <remarks>
+    /// Note that this will skip abstract parents, even if the abstract parent may have concrete grand-parents.
+    /// </remarks>
+    IEnumerable<T> EnumerateParents<T>(T proto, bool includeSelf = false)
         where T : class, IPrototype, IInheritingPrototype;
 
-    /// <summary>
-    /// Returns an <see cref="IEnumerable{T}"/> of parents of a prototype of a certain kind.
-    /// </summary>
+    /// <inheritdoc cref="EnumerateParents{T}(T,bool)"/>
+    IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)
+        where T : class, IPrototype, IInheritingPrototype;
+
+    /// <inheritdoc cref="EnumerateParents{T}(T,bool)"/>
     IEnumerable<IPrototype> EnumerateParents(Type kind, string id, bool includeSelf = false);
+
+    /// <summary>
+    /// Variant of <see cref="EnumerateParents{T}(T,bool)"/> that includes abstract parents.
+    /// </summary>
+    IEnumerable<(string id, T?)> EnumerateAllParents<T>(string id, bool includeSelf = false)
+        where T : class, IPrototype, IInheritingPrototype;
 
     /// <summary>
     /// Returns all of the registered prototype kinds.
@@ -392,6 +403,11 @@ public interface IPrototypeManager
     /// Tries to get a random prototype.
     /// </summary>
     bool TryGetRandom<T>(IRobustRandom random, [NotNullWhen(true)] out IPrototype? prototype) where T : class, IPrototype;
+
+    /// <summary>
+    /// Entity prototypes grouped by their categories.
+    /// </summary>
+    FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; }
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

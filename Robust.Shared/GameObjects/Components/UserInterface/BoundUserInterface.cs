@@ -48,7 +48,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Invoked when the server sends an arbitrary message.
         /// </summary>
-        protected virtual void ReceiveMessage(BoundUserInterfaceMessage message)
+        protected internal virtual void ReceiveMessage(BoundUserInterfaceMessage message)
         {
         }
 
@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void SendMessage(BoundUserInterfaceMessage message)
         {
-            UiSystem.ServerSendUiMessage(Owner, UiKey, message);
+            UiSystem.ClientSendUiMessage(Owner, UiKey, message);
         }
 
         public void SendPredictedMessage(BoundUserInterfaceMessage message)

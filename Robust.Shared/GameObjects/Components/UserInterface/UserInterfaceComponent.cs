@@ -71,18 +71,12 @@ namespace Robust.Shared.GameObjects
     ///     Raised whenever the server receives a BUI message from a client relating to a UI that requires input
     ///     validation.
     /// </summary>
-    public sealed class BoundUserInterfaceMessageAttempt : CancellableEntityEventArgs
+    public sealed class BoundUserInterfaceMessageAttempt(EntityUid actor, EntityUid target, Enum uiKey)
+        : CancellableEntityEventArgs
     {
-        public readonly ICommonSession Sender;
-        public readonly EntityUid Target;
-        public readonly Enum UiKey;
-
-        public BoundUserInterfaceMessageAttempt(ICommonSession sender, EntityUid target, Enum uiKey)
-        {
-            Sender = sender;
-            Target = target;
-            UiKey = uiKey;
-        }
+        public readonly EntityUid Actor = actor;
+        public readonly EntityUid Target = target;
+        public readonly Enum UiKey = uiKey;
     }
 
     [NetSerializable, Serializable]
@@ -119,7 +113,7 @@ namespace Robust.Shared.GameObjects
         ///     Only set when the message is raised as a directed event.
         /// </summary>
         [NonSerialized]
-        public ICommonSession Session = default!;
+        public EntityUid Actor = default!;
     }
 
     /// <summary>
@@ -146,59 +140,45 @@ namespace Robust.Shared.GameObjects
     }
 
     [Serializable, NetSerializable]
-    internal abstract class BaseBoundUIWrapMessage : EntityEventArgs
+    internal abstract class BaseBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
+        : EntityEventArgs
     {
-        public readonly NetEntity Entity;
-        public readonly BoundUserInterfaceMessage Message;
-        public readonly Enum UiKey;
-
-        public BaseBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
-        {
-            Message = message;
-            UiKey = uiKey;
-            Entity = entity;
-        }
+        public readonly NetEntity Entity = entity;
+        public readonly BoundUserInterfaceMessage Message = message;
+        public readonly Enum UiKey = uiKey;
     }
 
     /// <summary>
     /// Helper message raised from client to server.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class BoundUIWrapMessage : BaseBoundUIWrapMessage
-    {
-        public BoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey) : base(entity, message, uiKey)
-        {
-        }
-    }
+    internal sealed class BoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
+        : BaseBoundUIWrapMessage(entity, message, uiKey);
 
     /// <summary>
     /// Helper message raised from client to server.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class PredictedBoundUIWrapMessage : BaseBoundUIWrapMessage
-    {
-        public PredictedBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey) : base(entity, message, uiKey)
-        {
-        }
-    }
+    internal sealed class PredictedBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
+        : BaseBoundUIWrapMessage(entity, message, uiKey);
 
     public sealed class BoundUIOpenedEvent : BaseLocalBoundUserInterfaceEvent
     {
-        public BoundUIOpenedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
+        public BoundUIOpenedEvent(Enum uiKey, EntityUid uid, EntityUid actor)
         {
             UiKey = uiKey;
             Entity = uid;
-            Session = session;
+            Actor = actor;
         }
     }
 
     public sealed class BoundUIClosedEvent : BaseLocalBoundUserInterfaceEvent
     {
-        public BoundUIClosedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
+        public BoundUIClosedEvent(Enum uiKey, EntityUid uid, EntityUid actor)
         {
             UiKey = uiKey;
             Entity = uid;
-            Session = session;
+            Actor = actor;
         }
     }
 }

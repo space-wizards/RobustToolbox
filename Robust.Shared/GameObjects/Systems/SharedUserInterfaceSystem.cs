@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Shared.Collections;
-using Robust.Shared.Enums;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
@@ -21,6 +17,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     [Dependency] private readonly IDynamicTypeFactory _factory = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ISharedPlayerManager _player = default!;
+    [Dependency] private readonly SharedTransformSystem _transforms = default!;
 
     /*
      * TODO:
@@ -33,6 +30,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
      * Server messages only get sent to relevant client.
      */
 
+    private EntityQuery<IgnoreUIRangeComponent> _ignoreUIRangeQuery;
     private EntityQuery<TransformComponent> _xformQuery;
     private EntityQuery<UserInterfaceComponent> _uiQuery;
 
@@ -40,6 +38,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         base.Initialize();
 
+        _ignoreUIRangeQuery = GetEntityQuery<IgnoreUIRangeComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
         _uiQuery = GetEntityQuery<UserInterfaceComponent>();
 
@@ -50,6 +49,19 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<UserInterfaceComponent, ComponentInit>(OnUserInterfaceInit);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
         SubscribeLocalEvent<UserInterfaceComponent, AfterAutoHandleStateEvent>(OnUserInterfaceState);
+
+        SubscribeLocalEvent<PlayerAttachedEvent>(OnPlayerAttached);
+        SubscribeLocalEvent<PlayerDetachedEvent>(OnPlayerDetached);
+    }
+
+    private void OnPlayerAttached(ref PlayerAttachedEvent ev)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void OnPlayerDetached(ref PlayerDetachedEvent ev)
+    {
+        throw new NotImplementedException();
     }
 
     private void OnUserInterfaceClosed(Entity<UserInterfaceComponent> ent, ref CloseBoundInterfaceMessage args)
@@ -124,6 +136,17 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
 
         // TODO: Handle states
+        throw new NotImplementedException();
+    }
+
+    public void CloseActorUis(Entity<ActorComponent?> entity)
+    {
+        // TODO:
+        throw new NotImplementedException();
+    }
+
+    public IEnumerable<(EntityUid Entity, Enum Key)> GetActorUis(Entity<ActorComponent?> entity)
+    {
         throw new NotImplementedException();
     }
 
@@ -389,21 +412,24 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         {
             foreach (var (key, actors) in uiComp.Actors)
             {
-
                 DebugTools.Assert(actors.Count > 0);
                 var data = uiComp.Interfaces[key];
 
                 // Short-circuit
-                if (data.InteractionRange <= 0f)
+                if (data.InteractionRange <= 0f || actors.Count == 0)
                     continue;
 
-                var coordinates = _xformQuery.GetComponent(uid).Coordinates;
+                // Okay so somehow UISystem is high up on the server profile
+                // If that's actually still a problem turn this into an IParallelRobustJob and slam all the UIs in parallel.
+                var xform = _xformQuery.GetComponent(uid);
+                var coordinates = xform.Coordinates;
+                var mapId = xform.MapID;
 
                 for (var i = actors.Count - 1; i >= 0; i--)
                 {
                     var actor = actors[i];
 
-                    if (CheckRange(uid, activeUis, data, actor, coordinates))
+                    if (CheckRange(uid, key, data, actor, coordinates, mapId))
                         continue;
 
                     CloseUi((uid, uiComp), key, actor);
@@ -415,41 +441,36 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     ///     Verify that the subscribed clients are still in range of the interface.
     /// </summary>
-    private bool CheckRange(EntityUid uid, ActiveUserInterfaceComponent activeUis, InterfaceData ui, EntityUid actor, EntityCoordinates uiCoordinates)
+    private bool CheckRange(
+        EntityUid uid,
+        Enum key,
+        InterfaceData data,
+        EntityUid actor,
+        EntityCoordinates uiCoordinates,
+        MapId uiMap)
     {
-        foreach (var session in _sessionCache)
-        {
-            // The component manages the set of sessions, so this invalid session should be removed soon.
-            if (!query.TryGetComponent(session.AttachedEntity, out var xform))
-                continue;
+        if (_ignoreUIRangeQuery.HasComponent(actor))
+            return true;
 
-            if (_ignoreUIRangeQuery.HasComponent(session.AttachedEntity))
-                continue;
+        if (!_xformQuery.TryGetComponent(actor, out var actorXform))
+            return false;
 
-            // Handle pluggable BoundUserInterfaceCheckRangeEvent
-            var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, ui, session);
-            RaiseLocalEvent(uid, ref checkRangeEvent, broadcast: true);
-            if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
-                continue;
+        // Handle pluggable BoundUserInterfaceCheckRangeEvent
+        var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, key, actor);
+        RaiseLocalEvent(uid, ref checkRangeEvent, broadcast: true);
 
-            if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Fail)
-            {
-                CloseUi(ui, session, activeUis);
-                continue;
-            }
+        if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
+            return true;
 
-            DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
+        if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Fail)
+            return false;
 
-            if (uiMap != xform.MapID)
-            {
-                CloseUi(ui, session, activeUis);
-                continue;
-            }
+        DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
 
-            var distanceSquared = (uiPos - _xformSys.GetWorldPosition(xform, query)).LengthSquared();
-            if (distanceSquared > ui.InteractionRangeSqrd)
-                CloseUi(ui, session, activeUis);
-        }
+        if (uiMap != actorXform.MapID)
+            return false;
+
+        return uiCoordinates.InRange(EntityManager, _transforms, actorXform.Coordinates, data.InteractionRange);
     }
 
     #region Get BUI
@@ -462,32 +483,23 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         return ui.Interfaces.ContainsKey(uiKey);
     }
 
-    /// <summary>
-    ///     Return UIs a session has open.
-    ///     Null if empty.
-    /// </summary>
-    public List<PlayerBoundUserInterface>? GetAllUIsForSession(ICommonSession session)
-    {
-        OpenInterfaces.TryGetValue(session, out var value);
-        return value;
-    }
-
     #endregion
 
-    public bool IsUiOpen(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
+    public bool IsUiOpen(Entity<UserInterfaceComponent?> entity, Enum uiKey)
     {
-        if (!TryGetUi(uid, uiKey, out var bui, ui))
+        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return false;
 
-        return bui.SubscribedSessions.Count > 0;
+        if (!entity.Comp.Actors.TryGetValue(uiKey, out var actors))
+            return false;
+
+        DebugTools.Assert(actors.Count > 0);
+        return actors.Count > 0;
     }
 
-    public bool SessionHasOpenUi(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
+    public bool HasOpenUi(Entity<UserInterfaceComponent?> entity, Enum uiKey, EntityUid actor)
     {
-        if (!TryGetUi(uid, uiKey, out var bui, ui))
-            return false;
-
-        return bui.SubscribedSessions.Contains(session);
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -511,7 +523,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         /// <summary>
         /// The player for which the UI is being checked.
         /// </summary>
-        public readonly ICommonSession Player;
+        public readonly EntityUid Actor;
 
         /// <summary>
         /// The result of the range check.
@@ -521,17 +533,17 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         public BoundUserInterfaceCheckRangeEvent(
             EntityUid target,
             Enum uiKey,
-            ICommonSession player)
+            EntityUid actor)
         {
             Target = target;
             UiKey = uiKey;
-            Player = player;
+            Actor = actor;
         }
     }
 }
 
 /// <summary>
-/// Possible results for a <see cref="BoundUserInterfaceCheckRangeEvent"/>.
+/// Possible results for a <see cref="SharedUserInterfaceSystem.BoundUserInterfaceCheckRangeEvent"/>.
 /// </summary>
 public enum BoundUserInterfaceRangeResult : byte
 {

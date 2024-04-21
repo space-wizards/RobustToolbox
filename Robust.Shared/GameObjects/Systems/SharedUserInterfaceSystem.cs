@@ -173,10 +173,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             cBui.Close();
             cBui.Dispose();
         }
+
+        if (ent.Comp.Actors.Count == 0)
+            RemCompDeferred<ActiveUserInterfaceComponent>(ent.Owner);
     }
 
     private void OnUserInterfaceOpen(Entity<UserInterfaceComponent> ent, ref OpenBoundInterfaceMessage args)
     {
+        EnsureComp<ActiveUserInterfaceComponent>(ent.Owner);
+
         var actor = args.Actor;
         var actorComp = EnsureComp<UserInterfaceUserComponent>(actor);
 

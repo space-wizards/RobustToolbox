@@ -57,7 +57,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void Close()
         {
-            UiSystem.CloseUi(Owner, UiKey, _playerManager.LocalEntity);
+            UiSystem.CloseUi(Owner, UiKey, _playerManager.LocalEntity, predicted: true);
         }
 
         /// <summary>

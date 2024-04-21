@@ -137,6 +137,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                     continue;
 
                 cBui.Close();
+                cBui.Dispose();
                 uiComp.ClientOpenInterfaces.Remove(key);
             }
         }
@@ -170,6 +171,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (ent.Comp.ClientOpenInterfaces.Remove(args.UiKey, out var cBui))
         {
             cBui.Close();
+            cBui.Dispose();
         }
     }
 
@@ -193,6 +195,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         foreach (var bui in component.ClientOpenInterfaces.Values)
         {
             bui.Close();
+            bui.Dispose();
         }
 
         component.ClientOpenInterfaces.Clear();
@@ -288,6 +291,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 continue;
 
             bui.Close();
+            bui.Dispose();
             toRemove.Add(key);
         }
 

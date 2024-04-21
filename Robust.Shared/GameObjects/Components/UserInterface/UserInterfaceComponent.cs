@@ -17,11 +17,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public readonly Dictionary<Enum, BoundUserInterface> ClientOpenInterfaces = new();
 
-        /// <summary>
-        /// Hashset of open interfaces used in shared.
-        /// </summary>
-        public readonly HashSet<Enum> OpenInterfaces = new();
-
         [DataField]
         internal Dictionary<Enum, InterfaceData> Interfaces = new();
 

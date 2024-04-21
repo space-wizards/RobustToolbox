@@ -4,15 +4,22 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
+using Robust.Shared.Collections;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Player;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract class SharedUserInterfaceSystem : EntitySystem
 {
+    [Dependency] private readonly IDynamicTypeFactory _factory = default!;
+    [Dependency] private readonly IReflectionManager _reflection = default!;
+    [Dependency] private readonly ISharedPlayerManager _player = default!;
+
     /*
      * TODO:
      * Need the external call methods that raise the event as a predicted event(?)
@@ -62,10 +69,40 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void OnUserInterfaceState(Entity<UserInterfaceComponent> ent, ref AfterAutoHandleStateEvent args)
     {
-        // TODO: Needs to Open UIs that aren't currently open.
-        // Needs to close UIs that aren't networked anymore.
+        var toRemove = new ValueList<Enum>();
 
-        throw new NotImplementedException();
+        // Check if the UI is still open, otherwise call close.
+        foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
+        {
+            if (ent.Comp.Actors.ContainsKey(key))
+                continue;
+
+            bui.Close();
+            toRemove.Add(key);
+        }
+
+        foreach (var key in toRemove)
+        {
+            ent.Comp.ClientOpenInterfaces.Remove(key);
+        }
+
+        // If UI not open then open it
+        var attachedEnt = _player.LocalEntity;
+
+        if (attachedEnt != null)
+        {
+            foreach (var (key, value) in ent.Comp.Interfaces)
+            {
+                if (ent.Comp.ClientOpenInterfaces.ContainsKey(key))
+                    continue;
+
+                var type = _reflection.LooseGetType(value.ClientType);
+                var boundInterface =
+                    (BoundUserInterface) _factory.CreateInstance(type, new object[] {ent.Owner, key});
+
+                ent.Comp.ClientOpenInterfaces[key] = boundInterface;
+            }
+        }
     }
 
     /// <summary>
@@ -76,8 +113,10 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
-        // TODO: Need an event raised
-        foreach ()
+        if (!entity.Comp.Actors.Remove(key))
+            return;
+
+        Dirty(entity);
     }
 
     /// <summary>
@@ -87,6 +126,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
+
+        if (!entity.Comp.Actors.TryGetValue(key, out var actors))
+            return;
+
+        if (!actors.Remove(actor))
+            return;
+
+        Dirty(entity);
     }
 
     /// <summary>
@@ -104,7 +151,19 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid actor)
     {
+        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return;
 
+        if (!entity.Comp.Actors.TryGetValue(key, out var actors) || actors.Contains(actor))
+            return;
+
+        // TODO: RaisePredictiveEvent on open / close and a uhh relay it in the wrapper message.
+        RaiseLocalEvent(entity.Owner, new BoundUIOpenedEvent(key, entity.Owner, actor));
+
+        RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new OpenBoundInterfaceMessage(), bui.UiKey), session.Channel);
+
+        actors.Add(actor);
+        Dirty(entity);
     }
 
     public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, ICommonSession actor)
@@ -125,12 +184,25 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!entity.Comp.Interfaces.ContainsKey(key))
             return;
 
-        ref var stateRef = ref CollectionsMarshal.GetValueRefOrAddDefault(entity.Comp.States, key, out var exists);
+        // Null state
+        if (state == null)
+        {
+            if (!entity.Comp.States.Remove(key))
+                return;
 
-        if (exists && state?.Equals(stateRef) == true)
-            return;
+            Dirty(entity);
+        }
+        // Non-null state, check if it matches existing.
+        else
+        {
+            ref var stateRef = ref CollectionsMarshal.GetValueRefOrAddDefault(entity.Comp.States, key, out var exists);
 
-        stateRef = state;
+            if (exists && stateRef?.Equals(state) == true)
+                return;
+
+            stateRef = state;
+        }
+
         Dirty(entity);
     }
 
@@ -176,14 +248,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
-        entity.Comp.Interfaces.Clear();
+        entity.Comp.Actors.Clear();
+        entity.Comp.States.Clear();
         Dirty(entity);
     }
 
     /// <summary>
     ///     Validates the received message, and then pass it onto systems/components
     /// </summary>
-    internal void OnMessageReceived(BaseBoundUIWrapMessage msg, EntitySessionEventArgs args)
+    protected void OnMessageReceived(BaseBoundUIWrapMessage msg, EntitySessionEventArgs args)
     {
         var uid = GetEntity(msg.Entity);
 
@@ -194,13 +267,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return;
         }
 
-        if (!uiComp.Interfaces.TryGetValue(msg.UiKey, out var ui))
+        if (!uiComp.Interfaces.TryGetValue(msg.UiKey, out var ui) ||
+            !uiComp.Actors.TryGetValue(msg.UiKey, out var actors))
         {
             Log.Debug($"Got BoundInterfaceMessageWrapMessage for unknown UI key: {msg.UiKey}");
             return;
         }
 
-        if (!ui.Actors.Contains(attachedEntity))
+        if (!actors.Contains(attachedEntity))
         {
             Log.Debug($"UI {msg.UiKey} got BoundInterfaceMessageWrapMessage from a client who was not subscribed: {session}");
             return;
@@ -209,7 +283,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // if they want to close the UI, we can go home early.
         if (msg.Message is CloseBoundInterfaceMessage)
         {
-            Close(uid, msg.UiKey, attachedEntity);
+            CloseUi(uid, msg.UiKey, attachedEntity);
             return;
         }
 
@@ -233,16 +307,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     }
 
     /// <summary>
-    /// Tries to get the BUI if it's on the entity at all.
-    /// </summary>
-    public bool TryGetUi(EntityUid uid, Enum uiKey, [NotNullWhen(true)] out PlayerBoundUserInterface? bui, UserInterfaceComponent? ui = null)
-    {
-        bui = null;
-
-        return _uiQuery.Resolve(uid, ref ui, false) && ui.Interfaces.TryGetValue(uiKey, out bui);
-    }
-
-    /// <summary>
     /// Tries to get the BUI if it is currently open.
     /// </summary>
     public bool TryGetOpenUi(EntityUid uid, Enum uiKey, [NotNullWhen(true)] out BoundUserInterface? bui, UserInterfaceComponent? ui = null)
@@ -252,35 +316,35 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         return _uiQuery.Resolve(uid, ref ui, false) && ui.ClientOpenInterfaces.TryGetValue(uiKey, out bui);
     }
 
-    /// <summary>
-    ///     Switches between closed and open for a specific client.
-    /// </summary>
-    public virtual bool TryToggleUi(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
+    public bool TryToggleUi(Entity<UserInterfaceComponent?> entity, Enum uiKey, ICommonSession actor)
     {
-        if (!TryGetUi(uid, uiKey, out var bui, ui))
+        if (actor.AttachedEntity is not { } attachedEntity)
             return false;
 
-        ToggleUi(bui, session);
-        return true;
+        return TryToggleUi(entity, uiKey, attachedEntity);
     }
 
     /// <summary>
     ///     Switches between closed and open for a specific client.
     /// </summary>
-    public void ToggleUi(PlayerBoundUserInterface bui, ICommonSession session)
+    public bool TryToggleUi(Entity<UserInterfaceComponent?> entity, Enum uiKey, EntityUid actor)
     {
-        if (bui._subscribedSessions.Contains(session))
-            CloseUi(bui, session);
+        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false) ||
+            !entity.Comp.Interfaces.ContainsKey(uiKey))
+        {
+            return false;
+        }
+
+        if (entity.Comp.Actors.TryGetValue(uiKey, out var actors) && actors.Contains(actor))
+        {
+            CloseUi(entity, uiKey, actor);
+        }
         else
-            OpenUi(bui, session);
-    }
+        {
+            OpenUi(entity, uiKey, actor);
+        }
 
-    public bool TryOpen(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
-    {
-        if (!TryGetUi(uid, uiKey, out var bui, ui))
-            return false;
-
-        return OpenUi(bui, session);
+        return true;
     }
 
     /// <summary>
@@ -364,191 +428,140 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     }
 
     /// <inheritdoc />
-        public override void Update(float frameTime)
+    public override void Update(float frameTime)
+    {
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var query = AllEntityQuery<ActiveUserInterfaceComponent, TransformComponent>();
+
+        while (query.MoveNext(out var uid, out var activeUis, out var xform))
         {
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var query = AllEntityQuery<ActiveUserInterfaceComponent, TransformComponent>();
-
-            while (query.MoveNext(out var uid, out var activeUis, out var xform))
+            foreach (var ui in activeUis.Interfaces)
             {
-                foreach (var ui in activeUis.Interfaces)
+                CheckRange(uid, activeUis, ui, xform, xformQuery);
+
+                if (!ui.StateDirty)
+                    continue;
+
+                ui.StateDirty = false;
+
+                foreach (var (player, state) in ui.PlayerStateOverrides)
                 {
-                    CheckRange(uid, activeUis, ui, xform, xformQuery);
+                    RaiseNetworkEvent(state, player.Channel);
+                }
 
-                    if (!ui.StateDirty)
-                        continue;
+                if (ui.LastStateMsg == null)
+                    continue;
 
-                    ui.StateDirty = false;
-
-                    foreach (var (player, state) in ui.PlayerStateOverrides)
-                    {
-                        RaiseNetworkEvent(state, player.Channel);
-                    }
-
-                    if (ui.LastStateMsg == null)
-                        continue;
-
-                    foreach (var session in ui.SubscribedSessions)
-                    {
-                        if (!ui.PlayerStateOverrides.ContainsKey(session))
-                            RaiseNetworkEvent(ui.LastStateMsg, session.Channel);
-                    }
+                foreach (var session in ui.SubscribedSessions)
+                {
+                    if (!ui.PlayerStateOverrides.ContainsKey(session))
+                        RaiseNetworkEvent(ui.LastStateMsg, session.Channel);
                 }
             }
         }
+    }
 
-        /// <summary>
-        ///     Verify that the subscribed clients are still in range of the interface.
-        /// </summary>
-        private void CheckRange(EntityUid uid, ActiveUserInterfaceComponent activeUis, PlayerBoundUserInterface ui, TransformComponent transform, EntityQuery<TransformComponent> query)
+    /// <summary>
+    ///     Verify that the subscribed clients are still in range of the interface.
+    /// </summary>
+    private void CheckRange(EntityUid uid, ActiveUserInterfaceComponent activeUis, PlayerBoundUserInterface ui, TransformComponent transform, EntityQuery<TransformComponent> query)
+    {
+        if (ui.InteractionRange <= 0)
+            return;
+
+        // We have to cache the set of sessions because Unsubscribe modifies the original.
+        _sessionCache.Clear();
+        _sessionCache.AddRange(ui.SubscribedSessions);
+
+        var uiPos = _xformSys.GetWorldPosition(transform, query);
+        var uiMap = transform.MapID;
+
+        foreach (var session in _sessionCache)
         {
-            if (ui.InteractionRange <= 0)
-                return;
+            // The component manages the set of sessions, so this invalid session should be removed soon.
+            if (!query.TryGetComponent(session.AttachedEntity, out var xform))
+                continue;
 
-            // We have to cache the set of sessions because Unsubscribe modifies the original.
-            _sessionCache.Clear();
-            _sessionCache.AddRange(ui.SubscribedSessions);
+            if (_ignoreUIRangeQuery.HasComponent(session.AttachedEntity))
+                continue;
 
-            var uiPos = _xformSys.GetWorldPosition(transform, query);
-            var uiMap = transform.MapID;
+            // Handle pluggable BoundUserInterfaceCheckRangeEvent
+            var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, ui, session);
+            RaiseLocalEvent(uid, ref checkRangeEvent, broadcast: true);
+            if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
+                continue;
 
-            foreach (var session in _sessionCache)
+            if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Fail)
             {
-                // The component manages the set of sessions, so this invalid session should be removed soon.
-                if (!query.TryGetComponent(session.AttachedEntity, out var xform))
-                    continue;
-
-                if (_ignoreUIRangeQuery.HasComponent(session.AttachedEntity))
-                    continue;
-
-                // Handle pluggable BoundUserInterfaceCheckRangeEvent
-                var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, ui, session);
-                RaiseLocalEvent(uid, ref checkRangeEvent, broadcast: true);
-                if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
-                    continue;
-
-                if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Fail)
-                {
-                    CloseUi(ui, session, activeUis);
-                    continue;
-                }
-
-                DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
-
-                if (uiMap != xform.MapID)
-                {
-                    CloseUi(ui, session, activeUis);
-                    continue;
-                }
-
-                var distanceSquared = (uiPos - _xformSys.GetWorldPosition(xform, query)).LengthSquared();
-                if (distanceSquared > ui.InteractionRangeSqrd)
-                    CloseUi(ui, session, activeUis);
+                CloseUi(ui, session, activeUis);
+                continue;
             }
-        }
 
-        #region Get BUI
+            DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
 
-        public bool HasUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
-        {
-            if (!Resolve(uid, ref ui))
-                return false;
-
-            return ui.Interfaces.ContainsKey(uiKey);
-        }
-
-        public PlayerBoundUserInterface GetUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
-        {
-            if (!Resolve(uid, ref ui))
-                throw new InvalidOperationException($"Cannot get {typeof(PlayerBoundUserInterface)} from an entity without {typeof(UserInterfaceComponent)}!");
-
-            return ui.Interfaces[uiKey];
-        }
-
-        public PlayerBoundUserInterface? GetUiOrNull(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
-        {
-            return TryGetUi(uid, uiKey, out var bui, ui)
-                ? bui
-                : null;
-        }
-
-        /// <summary>
-        ///     Return UIs a session has open.
-        ///     Null if empty.
-        /// </summary>
-        public List<PlayerBoundUserInterface>? GetAllUIsForSession(ICommonSession session)
-        {
-            OpenInterfaces.TryGetValue(session, out var value);
-            return value;
-        }
-        #endregion
-
-        public bool IsUiOpen(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
-        {
-            if (!TryGetUi(uid, uiKey, out var bui, ui))
-                return false;
-
-            return bui.SubscribedSessions.Count > 0;
-        }
-
-        public bool SessionHasOpenUi(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
-        {
-            if (!TryGetUi(uid, uiKey, out var bui, ui))
-                return false;
-
-            return bui.SubscribedSessions.Contains(session);
-        }
-
-        #region SendMessage
-
-        /// <summary>
-        ///     Send a BUI message to all connected player sessions.
-        /// </summary>
-        public bool TrySendUiMessage(EntityUid uid, Enum uiKey, BoundUserInterfaceMessage message, UserInterfaceComponent? ui = null)
-        {
-            if (!TryGetUi(uid, uiKey, out var bui, ui))
-                return false;
-
-            SendUiMessage(bui, message);
-            return true;
-        }
-
-        /// <summary>
-        ///     Send a BUI message to all connected player sessions.
-        /// </summary>
-        public void SendUiMessage(PlayerBoundUserInterface bui, BoundUserInterfaceMessage message)
-        {
-            var msg = new BoundUIWrapMessage(GetNetEntity(bui.Owner), message, bui.UiKey);
-            foreach (var session in bui.SubscribedSessions)
+            if (uiMap != xform.MapID)
             {
-                RaiseNetworkEvent(msg, session.Channel);
+                CloseUi(ui, session, activeUis);
+                continue;
             }
+
+            var distanceSquared = (uiPos - _xformSys.GetWorldPosition(xform, query)).LengthSquared();
+            if (distanceSquared > ui.InteractionRangeSqrd)
+                CloseUi(ui, session, activeUis);
         }
+    }
 
-        /// <summary>
-        ///     Send a BUI message to a specific player session.
-        /// </summary>
-        public bool TrySendUiMessage(EntityUid uid, Enum uiKey, BoundUserInterfaceMessage message, ICommonSession session, UserInterfaceComponent? ui = null)
-        {
-            if (!TryGetUi(uid, uiKey, out var bui, ui))
-                return false;
+    #region Get BUI
 
-            return TrySendUiMessage(bui, message, session);
-        }
+    public bool HasUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
+    {
+        if (!Resolve(uid, ref ui))
+            return false;
 
-        /// <summary>
-        ///     Send a BUI message to a specific player session.
-        /// </summary>
-        public bool TrySendUiMessage(PlayerBoundUserInterface bui, BoundUserInterfaceMessage message, ICommonSession session)
-        {
-            if (!bui.SubscribedSessions.Contains(session))
-                return false;
+        return ui.Interfaces.ContainsKey(uiKey);
+    }
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), message, bui.UiKey), session.Channel);
-            return true;
-        }
+    public PlayerBoundUserInterface GetUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
+    {
+        if (!Resolve(uid, ref ui))
+            throw new InvalidOperationException($"Cannot get {typeof(PlayerBoundUserInterface)} from an entity without {typeof(UserInterfaceComponent)}!");
 
-        #endregion
+        return ui.Interfaces[uiKey];
+    }
+
+    public PlayerBoundUserInterface? GetUiOrNull(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
+    {
+        return TryGetUi(uid, uiKey, out var bui, ui)
+            ? bui
+            : null;
+    }
+
+    /// <summary>
+    ///     Return UIs a session has open.
+    ///     Null if empty.
+    /// </summary>
+    public List<PlayerBoundUserInterface>? GetAllUIsForSession(ICommonSession session)
+    {
+        OpenInterfaces.TryGetValue(session, out var value);
+        return value;
+    }
+
+    #endregion
+
+    public bool IsUiOpen(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
+    {
+        if (!TryGetUi(uid, uiKey, out var bui, ui))
+            return false;
+
+        return bui.SubscribedSessions.Count > 0;
+    }
+
+    public bool SessionHasOpenUi(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
+    {
+        if (!TryGetUi(uid, uiKey, out var bui, ui))
+            return false;
+
+        return bui.SubscribedSessions.Contains(session);
     }
 
     /// <summary>

@@ -663,6 +663,7 @@ public sealed class MapLoaderSystem : EntitySystem
             // If map exists swap out
             if (_mapSystem.TryGetMap(data.TargetMap, out var existing))
             {
+                data.Options.DoMapInit |= _mapSystem.IsInitialized(data.TargetMap);
                 data.MapIsPaused = _mapSystem.IsPaused(existing.Value);
                 // Map exists but we also have a map file with stuff on it soooo swap out the old map.
                 if (data.Options.LoadMap)
@@ -887,8 +888,7 @@ public sealed class MapLoaderSystem : EntitySystem
         {
             EntityManager.SetLifeStage(metadata, EntityLifeStage.MapInitialized);
         }
-        // TODO MAP LOAD cache this
-        else if (_mapManager.IsMapInitialized(data.TargetMap))
+        else if (data.Options.DoMapInit)
         {
             _serverEntityManager.RunMapInit(uid, metadata);
         }

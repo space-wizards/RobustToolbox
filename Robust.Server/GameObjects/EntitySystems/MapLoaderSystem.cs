@@ -722,6 +722,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 mapNode = _mapSystem.CreateMap(data.TargetMap, false);
             }
 
+            data.Options.DoMapInit |= _mapSystem.IsInitialized(data.TargetMap);
             data.MapIsPaused = _mapSystem.IsPaused(mapNode.Value);
 
             // If anything has an invalid parent (e.g. it's some form of root node) then parent it to the map.

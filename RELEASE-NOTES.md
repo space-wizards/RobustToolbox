@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 219.1.2
+
+### Bugfixes
+
+* Fix map-loader not map-initialising grids when loading into a post-init map.
+
+
 ## 219.1.1
 
 ### Bugfixes

@@ -64,7 +64,6 @@ namespace Robust.Client.GameObjects
 
             var data = uiComp.MappedInterfaceData[uiKey];
 
-            // TODO: This type should be cached, but I'm too lazy.
             var type = _reflectionManager.LooseGetType(data.ClientType);
             var boundInterface =
                 (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new object[] {uid, uiKey});

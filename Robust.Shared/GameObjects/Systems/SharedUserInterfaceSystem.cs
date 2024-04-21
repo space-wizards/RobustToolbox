@@ -24,8 +24,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /*
      * TODO:
      * Need the external call methods that raise the event as a predicted event(?)
-     * Need to handle closing via event
-     * Opening gets handled directly
      * Need to be able to call open in a shared context.
      * When changing mob need to close old UIs and open new ones (internally, don't call the event?)
      * All events get raised shared maybe? Like uhh open UI or close UI or interact with it
@@ -74,7 +72,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 if (!uiComp.Interfaces.TryGetValue(key, out var data))
                     continue;
 
-                EnsureClientBui((uid, uiComp), key, data);
+                var bui = EnsureClientBui((uid, uiComp), key, data);
+
+                if (uiComp.States.TryGetValue(key, out var state))
+                {
+                    bui.UpdateState(state);
+                }
             }
         }
     }
@@ -127,6 +130,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return;
         }
 
+        // Let state handling open the UI clientside.
         actorComp.OpenInterfaces.GetOrNew(ent.Owner).Add(args.UiKey);
         ent.Comp.Actors.GetOrNew(args.UiKey).Add(actor);
         Dirty(ent);
@@ -194,16 +198,19 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
     }
 
-    private void EnsureClientBui(Entity<UserInterfaceComponent> entity, Enum key, InterfaceData data)
+    private BoundUserInterface EnsureClientBui(Entity<UserInterfaceComponent> entity, Enum key, InterfaceData data)
     {
-        if (entity.Comp.ClientOpenInterfaces.ContainsKey(key))
-            return;
+        DebugTools.Assert(_netManager.IsClient);
 
-        var type = _reflection.LooseGetType(data.ClientType);
-        var boundInterface =
-            (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
+        if (!entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
+        {
+            var type = _reflection.LooseGetType(data.ClientType);
+            cBui = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
 
-        entity.Comp.ClientOpenInterfaces[key] = boundInterface;
+            entity.Comp.ClientOpenInterfaces[key] = cBui;
+        }
+
+        return cBui;
     }
 
     public void CloseActorUis(Entity<ActorComponent?> entity)

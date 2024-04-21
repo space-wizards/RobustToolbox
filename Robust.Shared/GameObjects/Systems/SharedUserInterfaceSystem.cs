@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Shared.Collections;
@@ -57,7 +58,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<PlayerDetachedEvent>(OnPlayerDetached);
     }
 
-    private void OnPlayerAttached(ref PlayerAttachedEvent ev)
+    private void OnPlayerAttached(PlayerAttachedEvent ev)
     {
         if (!_actorQuery.TryGetComponent(ev.Entity, out var actor))
             return;
@@ -78,7 +79,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
     }
 
-    private void OnPlayerDetached(ref PlayerDetachedEvent ev)
+    private void OnPlayerDetached(PlayerDetachedEvent ev)
     {
         if (!_actorQuery.TryGetComponent(ev.Entity, out var actor))
             return;
@@ -285,6 +286,17 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         throw new NotImplementedException();
     }
 
+    public IEnumerable<EntityUid> GetActors(Entity<UserInterfaceComponent?> entity, Enum key)
+    {
+        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false) || !entity.Comp.Actors.TryGetValue(key, out var actors))
+            yield break;
+
+        foreach (var actorUid in actors)
+        {
+            yield return actorUid;
+        }
+    }
+
     /// <summary>
     /// Closes the attached UI for all entities.
     /// </summary>
@@ -302,7 +314,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Closes the attached UI only for the specified actor.
     /// </summary>
-    public void CloseUi(Entity<UserInterfaceComponent?> entity, Enum key, ICommonSession? actor, bool predicted = true)
+    public void CloseUi(Entity<UserInterfaceComponent?> entity, Enum key, ICommonSession? actor, bool predicted = false)
     {
         var actorEnt = actor?.AttachedEntity;
 
@@ -315,12 +327,16 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Closes the attached UI only for the specified actor.
     /// </summary>
-    public void CloseUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid? actor, bool predicted = true)
+    public void CloseUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid? actor, bool predicted = false)
     {
         if (actor == null)
             return;
 
         if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return;
+
+        // Short-circuit if no UI.
+        if (!entity.Comp.Interfaces.ContainsKey(key))
             return;
 
         if (!entity.Comp.Actors.TryGetValue(key, out var actors))
@@ -341,7 +357,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
     }
 
-    public bool TryOpenUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid actor, bool predicted = true)
+    public bool TryOpenUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid actor, bool predicted = false)
     {
         OpenUi(entity, key, actor, predicted);
 
@@ -356,9 +372,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         return true;
     }
 
-    public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid actor, bool predicted = true)
+    public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid actor, bool predicted = false)
     {
         if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return;
+
+        // No implementation for that UI key on this ent so short-circuit.
+        if (!entity.Comp.Interfaces.ContainsKey(key))
             return;
 
         if (!entity.Comp.Actors.TryGetValue(key, out var actors) || actors.Contains(actor))
@@ -376,7 +396,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
     }
 
-    public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, ICommonSession actor, bool predicted = true)
+    public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, ICommonSession actor, bool predicted = false)
     {
         var actorEnt = actor.AttachedEntity;
 
@@ -519,6 +539,31 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         entity.Comp.Actors.Clear();
         entity.Comp.States.Clear();
         Dirty(entity);
+    }
+
+    /// <summary>
+    /// Closes all UIs for the entity.
+    /// </summary>
+    public void CloseUis(Entity<UserInterfaceComponent?> entity, EntityUid actor)
+    {
+        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return;
+
+        foreach (var key in entity.Comp.Interfaces.Keys)
+        {
+            CloseUi(entity, key, actor);
+        }
+    }
+
+    /// <summary>
+    /// Closes all UIs for the entity.
+    /// </summary>
+    public void CloseUis(Entity<UserInterfaceComponent?> entity, ICommonSession actor)
+    {
+        if (actor.AttachedEntity is not { } attachedEnt || !_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return;
+
+        CloseUis(entity, attachedEnt);
     }
 
     /// <summary>

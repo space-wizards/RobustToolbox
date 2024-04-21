@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// The currently open interfaces. Used clientside to store the UI.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables, Access(Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadWriteExecute)]
         public readonly Dictionary<Enum, BoundUserInterface> ClientOpenInterfaces = new();
 
         [DataField]

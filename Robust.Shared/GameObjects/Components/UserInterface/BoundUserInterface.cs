@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void SendMessage(BoundUserInterfaceMessage message)
         {
-            UiSystem.SendUiMessage(Owner, UiKey, message);
+            UiSystem.ServerSendUiMessage(Owner, UiKey, message);
         }
 
         public void SendPredictedMessage(BoundUserInterfaceMessage message)

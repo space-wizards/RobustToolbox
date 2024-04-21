@@ -8,7 +8,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [RegisterComponent, NetworkedComponent, Access(typeof(SharedUserInterfaceSystem)), AutoGenerateComponentState]
+    [RegisterComponent, NetworkedComponent, Access(typeof(SharedUserInterfaceSystem))]
     public sealed partial class UserInterfaceComponent : Component
     {
         /// <summary>
@@ -23,14 +23,24 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Actors that currently have interfaces open.
         /// </summary>
-        [DataField, AutoNetworkedField]
+        [DataField]
         public Dictionary<Enum, List<EntityUid>> Actors = new();
 
         /// <summary>
         /// Legacy data, new BUIs should be using comp states.
         /// </summary>
-        [AutoNetworkedField]
         public Dictionary<Enum, BoundUserInterfaceState> States = new();
+
+        [Serializable, NetSerializable]
+        internal sealed class UserInterfaceComponentState(
+            Dictionary<Enum, List<NetEntity>> actors,
+            Dictionary<Enum, BoundUserInterfaceState> states)
+            : IComponentState
+        {
+            public Dictionary<Enum, List<NetEntity>> Actors = actors;
+
+            public Dictionary<Enum, BoundUserInterfaceState> States = states;
+        }
     }
 
     [DataDefinition]

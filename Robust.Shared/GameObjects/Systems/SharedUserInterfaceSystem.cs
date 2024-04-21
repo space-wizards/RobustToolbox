@@ -686,7 +686,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return false;
 
         // Handle pluggable BoundUserInterfaceCheckRangeEvent
-        var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, key, actor);
+        var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, key, data, actor);
         RaiseLocalEvent(uid, ref checkRangeEvent, broadcast: true);
 
         if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
@@ -722,6 +722,8 @@ public struct BoundUserInterfaceCheckRangeEvent
     /// <returns></returns>
     public readonly Enum UiKey;
 
+    public readonly InterfaceData Data;
+
     /// <summary>
     /// The player for which the UI is being checked.
     /// </summary>
@@ -735,10 +737,12 @@ public struct BoundUserInterfaceCheckRangeEvent
     public BoundUserInterfaceCheckRangeEvent(
         EntityUid target,
         Enum uiKey,
+        InterfaceData data,
         EntityUid actor)
     {
         Target = target;
         UiKey = uiKey;
+        Data = data;
         Actor = actor;
     }
 }

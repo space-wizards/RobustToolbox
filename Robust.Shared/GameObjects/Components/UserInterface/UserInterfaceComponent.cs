@@ -126,17 +126,6 @@ namespace Robust.Shared.GameObjects
     }
 
     [NetSerializable, Serializable]
-    internal sealed class UpdateBoundStateMessage : BoundUserInterfaceMessage
-    {
-        public readonly BoundUserInterfaceState State;
-
-        public UpdateBoundStateMessage(BoundUserInterfaceState state)
-        {
-            State = state;
-        }
-    }
-
-    [NetSerializable, Serializable]
     internal sealed class OpenBoundInterfaceMessage : BoundUserInterfaceMessage
     {
     }

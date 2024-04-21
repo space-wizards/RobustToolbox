@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Shared.Collections;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
@@ -15,6 +16,7 @@ namespace Robust.Shared.GameObjects;
 public abstract class SharedUserInterfaceSystem : EntitySystem
 {
     [Dependency] private readonly IDynamicTypeFactory _factory = default!;
+    [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ISharedPlayerManager _player = default!;
     [Dependency] private readonly SharedTransformSystem _transforms = default!;
@@ -30,6 +32,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
      * Server messages only get sent to relevant client.
      */
 
+    private EntityQuery<ActorComponent> _actorQuery;
     private EntityQuery<IgnoreUIRangeComponent> _ignoreUIRangeQuery;
     private EntityQuery<TransformComponent> _xformQuery;
     private EntityQuery<UserInterfaceComponent> _uiQuery;
@@ -38,6 +41,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         base.Initialize();
 
+        _actorQuery = GetEntityQuery<ActorComponent>();
         _ignoreUIRangeQuery = GetEntityQuery<IgnoreUIRangeComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
         _uiQuery = GetEntityQuery<UserInterfaceComponent>();
@@ -56,23 +60,75 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void OnPlayerAttached(ref PlayerAttachedEvent ev)
     {
-        throw new NotImplementedException();
+        if (!_actorQuery.TryGetComponent(ev.Entity, out var actor))
+            return;
+
+        // Open BUIs upon attachment
+        foreach (var (uid, keys) in actor.OpenInterfaces)
+        {
+            if (!_uiQuery.TryGetComponent(uid, out var uiComp))
+                continue;
+
+            foreach (var key in keys)
+            {
+                if (!uiComp.Interfaces.TryGetValue(key, out var data))
+                    continue;
+
+                EnsureClientBui((uid, uiComp), key, data);
+            }
+        }
     }
 
     private void OnPlayerDetached(ref PlayerDetachedEvent ev)
     {
-        throw new NotImplementedException();
+        if (!_actorQuery.TryGetComponent(ev.Entity, out var actor))
+            return;
+
+        // Close BUIs open detachment.
+        foreach (var (uid, keys) in actor.OpenInterfaces)
+        {
+            if (!_uiQuery.TryGetComponent(uid, out var uiComp))
+                continue;
+
+            foreach (var key in keys)
+            {
+                if (!uiComp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
+                    continue;
+
+                cBui.Close();
+                uiComp.ClientOpenInterfaces.Remove(key);
+            }
+        }
     }
 
     private void OnUserInterfaceClosed(Entity<UserInterfaceComponent> ent, ref CloseBoundInterfaceMessage args)
     {
         ent.Comp.Actors[args.UiKey].Remove(GetEntity(args.Entity));
         Dirty(ent);
+
+        var actor = GetEntity(args.Entity);
+
+        if (_actorQuery.TryGetComponent(actor, out var actorComp) &&
+            actorComp.OpenInterfaces.TryGetValue(ent.Owner, out var keys))
+        {
+            keys.Remove(args.UiKey);
+
+            if (keys.Count == 0)
+                actorComp.OpenInterfaces.Remove(ent.Owner);
+        }
     }
 
     private void OnUserInterfaceOpen(Entity<UserInterfaceComponent> ent, ref OpenBoundInterfaceMessage args)
     {
-        ent.Comp.Actors.GetOrNew(args.UiKey).Add(GetEntity(args.Entity));
+        var actor = GetEntity(args.Entity);
+
+        if (!_actorQuery.TryGetComponent(actor, out var actorComp))
+        {
+            return;
+        }
+
+        actorComp.OpenInterfaces.GetOrNew(ent.Owner).Add(args.UiKey);
+        ent.Comp.Actors.GetOrNew(args.UiKey).Add(actor);
         Dirty(ent);
     }
 
@@ -124,19 +180,30 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         {
             foreach (var (key, value) in ent.Comp.Interfaces)
             {
-                if (ent.Comp.ClientOpenInterfaces.ContainsKey(key))
-                    continue;
-
-                var type = _reflection.LooseGetType(value.ClientType);
-                var boundInterface =
-                    (BoundUserInterface) _factory.CreateInstance(type, [ent.Owner, key]);
-
-                ent.Comp.ClientOpenInterfaces[key] = boundInterface;
+                EnsureClientBui(ent, key, value);
             }
         }
 
-        // TODO: Handle states
-        throw new NotImplementedException();
+        // Handle states
+        foreach (var (key, state) in ent.Comp.States)
+        {
+            if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
+                continue;
+
+            cBui.UpdateState(state);
+        }
+    }
+
+    private void EnsureClientBui(Entity<UserInterfaceComponent> entity, Enum key, InterfaceData data)
+    {
+        if (entity.Comp.ClientOpenInterfaces.ContainsKey(key))
+            return;
+
+        var type = _reflection.LooseGetType(data.ClientType);
+        var boundInterface =
+            (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
+
+        entity.Comp.ClientOpenInterfaces[key] = boundInterface;
     }
 
     public void CloseActorUis(Entity<ActorComponent?> entity)
@@ -167,35 +234,46 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Closes the attached UI only for the specified actor.
     /// </summary>
-    public void CloseUi(Entity<UserInterfaceComponent?> entity, Enum key, ICommonSession actor)
+    public void CloseUi(Entity<UserInterfaceComponent?> entity, Enum key, ICommonSession? actor, bool predicted = true)
     {
-        var actorEnt = actor.AttachedEntity;
+        var actorEnt = actor?.AttachedEntity;
 
         if (actorEnt == null)
             return;
 
-        CloseUi(entity, key, actorEnt.Value);
+        CloseUi(entity, key, actorEnt.Value, predicted);
     }
 
     /// <summary>
     /// Closes the attached UI only for the specified actor.
     /// </summary>
-    public void CloseUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid actor)
+    public void CloseUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid? actor, bool predicted = true)
     {
+        if (actor == null)
+            return;
+
         if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         if (!entity.Comp.Actors.TryGetValue(key, out var actors))
             return;
 
-        if (!actors.Contains(actor))
+        if (!actors.Contains(actor.Value))
             return;
 
-        // Use an event in case client calls this code
-        EntityManager.RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new CloseBoundInterfaceMessage(), key));
+        if (predicted)
+        {
+            // Not guaranteed to open so rely upon the event handling it.
+            // Also lets client request it to be opened remotely too.
+            EntityManager.RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new CloseBoundInterfaceMessage(), key));
+        }
+        else if (!_netManager.IsClient)
+        {
+            RaiseLocalEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new CloseBoundInterfaceMessage(), key));
+        }
     }
 
-    public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid actor)
+    public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid actor, bool predicted = true)
     {
         if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
@@ -203,19 +281,26 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!entity.Comp.Actors.TryGetValue(key, out var actors) || actors.Contains(actor))
             return;
 
-        // Not guaranteed to open so rely upon the event handling it.
-        // Also lets client request it to be opened remotely too.
-        EntityManager.RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new OpenBoundInterfaceMessage(), key));
+        if (predicted)
+        {
+            // Not guaranteed to open so rely upon the event handling it.
+            // Also lets client request it to be opened remotely too.
+            EntityManager.RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new OpenBoundInterfaceMessage(), key));
+        }
+        else if (!_netManager.IsClient)
+        {
+            RaiseLocalEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new OpenBoundInterfaceMessage(), key));
+        }
     }
 
-    public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, ICommonSession actor)
+    public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, ICommonSession actor, bool predicted = true)
     {
         var actorEnt = actor.AttachedEntity;
 
         if (actorEnt == null)
             return;
 
-        OpenUi(entity, key, actorEnt.Value);
+        OpenUi(entity, key, actorEnt.Value, predicted);
     }
 
     public void SetUiState(Entity<UserInterfaceComponent?> entity, Enum key, BoundUserInterfaceState? state)
@@ -246,6 +331,37 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
 
         Dirty(entity);
+    }
+
+    public bool HasUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
+    {
+        if (!Resolve(uid, ref ui))
+            return false;
+
+        return ui.Interfaces.ContainsKey(uiKey);
+    }
+
+    public bool IsUiOpen(Entity<UserInterfaceComponent?> entity, Enum uiKey)
+    {
+        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return false;
+
+        if (!entity.Comp.Actors.TryGetValue(uiKey, out var actors))
+            return false;
+
+        DebugTools.Assert(actors.Count > 0);
+        return actors.Count > 0;
+    }
+
+    public bool HasOpenUi(Entity<UserInterfaceComponent?> entity, Enum uiKey, EntityUid actor)
+    {
+        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return false;
+
+        if (!entity.Comp.Actors.TryGetValue(uiKey, out var actors))
+            return false;
+
+        return actors.Contains(actor);
     }
 
     public void SendUiMessage(Entity<UserInterfaceComponent?> entity, Enum key, BoundUserInterfaceMessage message)
@@ -471,35 +587,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return false;
 
         return uiCoordinates.InRange(EntityManager, _transforms, actorXform.Coordinates, data.InteractionRange);
-    }
-
-    #region Get BUI
-
-    public bool HasUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
-    {
-        if (!Resolve(uid, ref ui))
-            return false;
-
-        return ui.Interfaces.ContainsKey(uiKey);
-    }
-
-    #endregion
-
-    public bool IsUiOpen(Entity<UserInterfaceComponent?> entity, Enum uiKey)
-    {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
-            return false;
-
-        if (!entity.Comp.Actors.TryGetValue(uiKey, out var actors))
-            return false;
-
-        DebugTools.Assert(actors.Count > 0);
-        return actors.Count > 0;
-    }
-
-    public bool HasOpenUi(Entity<UserInterfaceComponent?> entity, Enum uiKey, EntityUid actor)
-    {
-        throw new NotImplementedException();
     }
 
     /// <summary>

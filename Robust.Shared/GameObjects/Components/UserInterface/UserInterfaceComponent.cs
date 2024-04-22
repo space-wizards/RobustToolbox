@@ -155,13 +155,6 @@ namespace Robust.Shared.GameObjects
     internal sealed class BoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
         : BaseBoundUIWrapMessage(entity, message, uiKey);
 
-    /// <summary>
-    /// Helper message raised from client to server.
-    /// </summary>
-    [Serializable, NetSerializable]
-    internal sealed class PredictedBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
-        : BaseBoundUIWrapMessage(entity, message, uiKey);
-
     public sealed class BoundUIOpenedEvent : BaseLocalBoundUserInterfaceEvent
     {
         public BoundUIOpenedEvent(Enum uiKey, EntityUid uid, EntityUid actor)

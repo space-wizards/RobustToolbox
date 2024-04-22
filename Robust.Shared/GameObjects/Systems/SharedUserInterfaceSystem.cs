@@ -157,16 +157,19 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         Dirty(ent);
 
-        var actorComp = EnsureComp<UserInterfaceUserComponent>(actor);
-
-        if (actorComp.OpenInterfaces.TryGetValue(ent.Owner, out var keys))
+        if (!TerminatingOrDeleted(actor))
         {
-            keys.Remove(args.UiKey);
+            var actorComp = EnsureComp<UserInterfaceUserComponent>(actor);
 
-            if (keys.Count == 0)
-                actorComp.OpenInterfaces.Remove(ent.Owner);
+            if (actorComp.OpenInterfaces.TryGetValue(ent.Owner, out var keys))
+            {
+                keys.Remove(args.UiKey);
 
-            Dirty(actor, actorComp);
+                if (keys.Count == 0)
+                    actorComp.OpenInterfaces.Remove(ent.Owner);
+
+                Dirty(actor, actorComp);
+            }
         }
 
         // If we're client we want this handled immediately.
@@ -525,7 +528,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     public bool HasUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
     {
-        if (!Resolve(uid, ref ui))
+        if (!Resolve(uid, ref ui, false))
             return false;
 
         return ui.Interfaces.ContainsKey(uiKey);

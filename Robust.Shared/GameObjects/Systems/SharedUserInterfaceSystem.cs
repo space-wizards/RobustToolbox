@@ -192,7 +192,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 if (!uiComp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
                     continue;
 
-                cBui.Close();
                 cBui.Dispose();
                 uiComp.ClientOpenInterfaces.Remove(key);
             }
@@ -234,7 +233,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // If we're client we want this handled immediately.
         if (ent.Comp.ClientOpenInterfaces.Remove(args.UiKey, out var cBui))
         {
-            cBui.Close();
             cBui.Dispose();
         }
 
@@ -270,7 +268,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         foreach (var bui in component.ClientOpenInterfaces.Values)
         {
-            bui.Close();
             bui.Dispose();
         }
 
@@ -349,7 +346,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             if (ent.Comp.Actors.ContainsKey(key))
                 continue;
 
-            bui.Close();
             bui.Dispose();
             toRemove.Add(key);
         }

@@ -212,7 +212,7 @@ namespace Robust.Shared.Prototypes
             var queue = new Queue<string>(parents);
             while (queue.TryDequeue(out var prototypeId))
             {
-                if (!_kinds.TryGetValue(typeof(T), out kindData) || !kindData.Results.ContainsKey(prototypeId))
+                if (!kindData.Results.ContainsKey(prototypeId))
                 {
                     Sawmill.Error($"Encountered invalid prototype while enumerating parents. Kind: {typeof(T).Name}. Child: {id}. Invalid: {prototypeId}");
                     continue;
@@ -222,7 +222,7 @@ namespace Robust.Shared.Prototypes
                 instance = uncast as T;
                 yield return (prototypeId, instance);
 
-                if (!kindData.Inheritance!.TryGetParents(prototypeId, out parents))
+                if (!kindData.Inheritance.TryGetParents(prototypeId, out parents))
                     continue;
 
                 foreach (var parentId in parents)

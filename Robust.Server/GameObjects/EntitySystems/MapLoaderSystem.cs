@@ -706,6 +706,7 @@ public sealed class MapLoaderSystem : EntitySystem
             }
             else
             {
+                data.MapIsPaused = !data.MapIsPostInit;
                 mapComp.MapId = data.TargetMap;
                 DebugTools.Assert(mapComp.LifeStage < ComponentLifeStage.Initializing);
                 EnsureComp<LoadedMapComponent>(rootNode);

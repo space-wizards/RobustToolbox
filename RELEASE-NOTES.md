@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix map-loader not pausing pre-init maps when not actively overwriting an existing map.
 
 ### Other
 

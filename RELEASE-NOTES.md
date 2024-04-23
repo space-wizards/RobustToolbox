@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix map-loader not pausing pre-init maps when not actively overwriting an existing map.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 219.1.3
+
+### Bugfixes
+
+* Fix map-loader not pausing pre-init maps when not actively overwriting an existing map.
 
 
 ## 219.1.2

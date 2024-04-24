@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -181,9 +182,6 @@ namespace Robust.Shared.Physics.Dynamics
         {
             if (other == null) return false;
 
-            // Owner field shouldn't be required, fixtures on other entities shouldn't be getting compared to each other.
-            // This is mainly here because it might've intruded some physics bugs, so this is here just in case.
-            DebugTools.Assert(Owner == other.Owner);
             return Equivalent(other) && Owner == other.Owner;
         }
     }

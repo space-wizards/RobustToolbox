@@ -877,7 +877,6 @@ public abstract partial class SharedTransformSystem
         SetMapCoordinates((entity, xform), coordinates);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetMapCoordinates(Entity<TransformComponent> entity, MapCoordinates coordinates)
     {
         var mapUid = _map.GetMap(coordinates.MapId);

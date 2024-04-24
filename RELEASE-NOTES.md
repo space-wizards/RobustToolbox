@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 219.2.0
+
+### New features
+
+* Add SetMapCoordinates to TransformSystem.
+* Improve YAML Linter and validation of static fields.
+
+### Bugfixes
+
+* Fix DebugCoordsPanel freezing when hovering a control.
+
+### Other
+
+* Optimise physics networking to not dirty every tick of movement.
+
+
 ## 219.1.3
 
 ### Bugfixes

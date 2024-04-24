@@ -53,5 +53,7 @@ namespace Robust.Shared.Map
         {
             return Value.ToString();
         }
+
+        public bool IsClientSide => Value < 0;
     }
 }

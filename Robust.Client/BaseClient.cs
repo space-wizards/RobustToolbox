@@ -229,7 +229,7 @@ namespace Robust.Client
 
             // Don't invoke PlayerLeaveServer if PlayerJoinedServer & GameStartedSetup hasn't been called yet.
             if (RunLevel > ClientRunLevel.Connecting)
-                PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
+                PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalSession));
 
             LastDisconnectReason = args.Reason;
             GameStoppedReset();
@@ -285,6 +285,7 @@ namespace Robust.Client
     /// <summary>
     ///     Enumeration of the run levels of the BaseClient.
     /// </summary>
+    /// <seealso cref="ClientRunLevelExt"/>
     public enum ClientRunLevel : byte
     {
         Error = 0,
@@ -313,6 +314,21 @@ namespace Robust.Client
         ///     The client is now in singleplayer mode, in-game.
         /// </summary>
         SinglePlayerGame,
+    }
+
+    /// <summary>
+    /// Helper functions for working with <see cref="ClientRunLevel"/>.
+    /// </summary>
+    public static class ClientRunLevelExt
+    {
+        /// <summary>
+        /// Check if a <see cref="ClientRunLevel"/> is <see cref="ClientRunLevel.InGame"/>
+        /// or <see cref="ClientRunLevel.SinglePlayerGame"/>.
+        /// </summary>
+        public static bool IsInGameLike(this ClientRunLevel runLevel)
+        {
+            return runLevel is ClientRunLevel.InGame or ClientRunLevel.SinglePlayerGame;
+        }
     }
 
     /// <summary>

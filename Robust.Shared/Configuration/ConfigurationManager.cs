@@ -558,15 +558,19 @@ namespace Robust.Shared.Configuration
             OverrideDefault(def.Name, value);
         }
 
-        /// <inheritdoc />
-        public T GetCVar<T>(string name)
+        public object GetCVar(string name)
         {
             using var _ = Lock.ReadGuard();
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
-                //TODO: Make flags work, required non-derpy net system.
-                return (T)(GetConfigVarValue(cVar))!;
+                return GetConfigVarValue(cVar);
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
+        }
+
+        /// <inheritdoc />
+        public T GetCVar<T>(string name)
+        {
+            return (T)GetCVar(name);
         }
 
         public T GetCVar<T>(CVarDef<T> def) where T : notnull

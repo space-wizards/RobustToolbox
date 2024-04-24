@@ -199,38 +199,20 @@ public abstract partial class SharedPhysicsSystem
 
     private void InitializeIsland()
     {
-        _configManager.OnValueChanged(CVars.NetTickrate, SetTickRate, true);
-        _configManager.OnValueChanged(CVars.WarmStarting, SetWarmStarting, true);
-        _configManager.OnValueChanged(CVars.MaxLinearCorrection, SetMaxLinearCorrection, true);
-        _configManager.OnValueChanged(CVars.MaxAngularCorrection, SetMaxAngularCorrection, true);
-        _configManager.OnValueChanged(CVars.VelocityIterations, SetVelocityIterations, true);
-        _configManager.OnValueChanged(CVars.PositionIterations, SetPositionIterations, true);
-        _configManager.OnValueChanged(CVars.MaxLinVelocity, SetMaxLinearVelocity, true);
-        _configManager.OnValueChanged(CVars.MaxAngVelocity, SetMaxAngularVelocity, true);
-        _configManager.OnValueChanged(CVars.SleepAllowed, SetSleepAllowed, true);
-        _configManager.OnValueChanged(CVars.AngularSleepTolerance, SetAngularToleranceSqr, true);
-        _configManager.OnValueChanged(CVars.LinearSleepTolerance, SetLinearToleranceSqr, true);
-        _configManager.OnValueChanged(CVars.TimeToSleep, SetTimeToSleep, true);
-        _configManager.OnValueChanged(CVars.VelocityThreshold, SetVelocityThreshold, true);
-        _configManager.OnValueChanged(CVars.Baumgarte, SetBaumgarte, true);
-    }
-
-    private void ShutdownIsland()
-    {
-        _configManager.UnsubValueChanged(CVars.NetTickrate, SetTickRate);
-        _configManager.UnsubValueChanged(CVars.WarmStarting, SetWarmStarting);
-        _configManager.UnsubValueChanged(CVars.MaxLinearCorrection, SetMaxLinearCorrection);
-        _configManager.UnsubValueChanged(CVars.MaxAngularCorrection, SetMaxAngularCorrection);
-        _configManager.UnsubValueChanged(CVars.VelocityIterations, SetVelocityIterations);
-        _configManager.UnsubValueChanged(CVars.PositionIterations, SetPositionIterations);
-        _configManager.UnsubValueChanged(CVars.MaxLinVelocity, SetMaxLinearVelocity);
-        _configManager.UnsubValueChanged(CVars.MaxAngVelocity, SetMaxAngularVelocity);
-        _configManager.UnsubValueChanged(CVars.SleepAllowed, SetSleepAllowed);
-        _configManager.UnsubValueChanged(CVars.AngularSleepTolerance, SetAngularToleranceSqr);
-        _configManager.UnsubValueChanged(CVars.LinearSleepTolerance, SetLinearToleranceSqr);
-        _configManager.UnsubValueChanged(CVars.TimeToSleep, SetTimeToSleep);
-        _configManager.UnsubValueChanged(CVars.VelocityThreshold, SetVelocityThreshold);
-        _configManager.UnsubValueChanged(CVars.Baumgarte, SetBaumgarte);
+        Subs.CVar(_configManager, CVars.NetTickrate, SetTickRate, true);
+        Subs.CVar(_configManager, CVars.WarmStarting, SetWarmStarting, true);
+        Subs.CVar(_configManager, CVars.MaxLinearCorrection, SetMaxLinearCorrection, true);
+        Subs.CVar(_configManager, CVars.MaxAngularCorrection, SetMaxAngularCorrection, true);
+        Subs.CVar(_configManager, CVars.VelocityIterations, SetVelocityIterations, true);
+        Subs.CVar(_configManager, CVars.PositionIterations, SetPositionIterations, true);
+        Subs.CVar(_configManager, CVars.MaxLinVelocity, SetMaxLinearVelocity, true);
+        Subs.CVar(_configManager, CVars.MaxAngVelocity, SetMaxAngularVelocity, true);
+        Subs.CVar(_configManager, CVars.SleepAllowed, SetSleepAllowed, true);
+        Subs.CVar(_configManager, CVars.AngularSleepTolerance, SetAngularToleranceSqr, true);
+        Subs.CVar(_configManager, CVars.LinearSleepTolerance, SetLinearToleranceSqr, true);
+        Subs.CVar(_configManager, CVars.TimeToSleep, SetTimeToSleep, true);
+        Subs.CVar(_configManager, CVars.VelocityThreshold, SetVelocityThreshold, true);
+        Subs.CVar(_configManager, CVars.Baumgarte, SetBaumgarte, true);
     }
 
     private void SetWarmStarting(bool value) => _warmStarting = value;
@@ -678,13 +660,11 @@ public abstract partial class SharedPhysicsSystem
         });
 
         // Update data sequentially
-        var metaQuery = GetEntityQuery<MetaDataComponent>();
-
         for (var i = 0; i < actualIslands.Length; i++)
         {
             var island = actualIslands[i];
 
-            UpdateBodies(in island, solvedPositions, solvedAngles, linearVelocities, angularVelocities, xformQuery, metaQuery);
+            UpdateBodies(in island, solvedPositions, solvedAngles, linearVelocities, angularVelocities, xformQuery);
             SleepBodies(in island, sleepStatus);
         }
 
@@ -1019,8 +999,7 @@ public abstract partial class SharedPhysicsSystem
         float[] angles,
         Vector2[] linearVelocities,
         float[] angularVelocities,
-        EntityQuery<TransformComponent> xformQuery,
-        EntityQuery<MetaDataComponent> metaQuery)
+        EntityQuery<TransformComponent> xformQuery)
     {
         foreach (var (joint, error) in island.BrokenJoints)
         {
@@ -1053,21 +1032,22 @@ public abstract partial class SharedPhysicsSystem
             }
 
             var linVelocity = linearVelocities[offset + i];
+            var physicsDirtied = false;
 
             if (!float.IsNaN(linVelocity.X) && !float.IsNaN(linVelocity.Y))
             {
-                SetLinearVelocity(uid, linVelocity, false, body: body);
+                physicsDirtied |= SetLinearVelocity(uid, linVelocity, false, body: body);
             }
 
             var angVelocity = angularVelocities[offset + i];
 
             if (!float.IsNaN(angVelocity))
             {
-                SetAngularVelocity(uid, angVelocity, false, body: body);
+                physicsDirtied |= SetAngularVelocity(uid, angVelocity, false, body: body);
             }
 
-            // TODO: Should check if the values update.
-            Dirty(body, metaQuery.GetComponent(uid));
+            if (physicsDirtied)
+                Dirty(uid, body);
         }
     }
 

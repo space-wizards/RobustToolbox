@@ -27,7 +27,7 @@ public sealed class Joints_Test
         var mapManager = sim.Resolve<IMapManager>();
         var jointSystem = entManager.System<SharedJointSystem>();
 
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
 
         var uidA = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
         var uidB = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
@@ -71,7 +71,7 @@ public sealed class Joints_Test
         var broadphaseSystem = entManager.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>();
         var physicsSystem = server.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
 
-        var mapId = mapManager.CreateMap();
+        var mapId = server.CreateMap().MapId;
 
         var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));

@@ -121,6 +121,13 @@ namespace Robust.Shared.Configuration
         /// <summary>
         /// Get the value of a CVar.
         /// </summary>
+        /// <param name="name">The name of the CVar.</param>
+        /// <returns></returns>
+        object GetCVar(string name);
+
+        /// <summary>
+        /// Get the value of a CVar.
+        /// </summary>
         /// <typeparam name="T">The Type of the CVar value.</typeparam>
         /// <param name="name">The name of the CVar.</param>
         /// <returns></returns>

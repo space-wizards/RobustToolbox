@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Physics
 {
-    internal static class PhysicsConstants
+    public static class PhysicsConstants
     {
         /// <summary>
         /// The radius of the polygon/edge shape skin. This should not be modified. Making

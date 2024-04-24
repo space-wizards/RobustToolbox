@@ -16,8 +16,7 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var controlled = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
-            if (controlled == EntityUid.Invalid)
+            if (_playerManager.LocalEntity is not { } controlled)
             {
                 shell.WriteLine("You don't have an attached entity.");
                 return;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -63,7 +64,7 @@ namespace Robust.Shared.Player
         public Filter AddPlayersByPvs(EntityCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entityMan = null, ISharedPlayerManager? playerMan = null)
         {
             IoCManager.Resolve(ref entityMan, ref playerMan);
-            return AddPlayersByPvs(origin.ToMap(entityMan), rangeMultiplier, entityMan, playerMan);
+            return AddPlayersByPvs(origin.ToMap(entityMan, entityMan.System<SharedTransformSystem>()), rangeMultiplier, entityMan, playerMan);
         }
 
         /// <summary>
@@ -196,6 +197,42 @@ namespace Robust.Shared.Player
             _recipients.Remove(player);
             return this;
         }
+
+        /// <summary>
+        ///    Removes players from the filter.
+        /// </summary>
+        public Filter RemovePlayers(IEnumerable<ICommonSession> players)
+        {
+            foreach (var player in players)
+                _recipients.Remove(player);
+            return this;
+        }
+
+        /// <summary>
+        ///    Removes players from the filter.
+        /// </summary>
+        public Filter RemovePlayers(params ICommonSession[] players) => RemovePlayers(players);
+
+        /// <summary>
+        ///     Removes a single player from the filter, specified by the entity to which they are attached.
+        /// </summary>
+        public Filter RemovePlayerByAttachedEntity(EntityUid uid)
+        {
+            return RemoveWhereAttachedEntity(e => e == uid);
+        }
+
+        /// <summary>
+        ///     Removes players from the filter, specified by the entities to which they are attached.
+        /// </summary>
+        public Filter RemovePlayersByAttachedEntity(IEnumerable<EntityUid> uids)
+        {
+            return RemoveWhereAttachedEntity(e => uids.Contains(e));
+        }
+
+        /// <summary>
+        ///     Removes players from the filter, specified by the entities to which they are attached.
+        /// </summary>
+        public Filter RemovePlayersByAttachedEntity(params EntityUid[] uids) => RemovePlayersByAttachedEntity(uids);
 
         /// <summary>
         ///     Removes all players from the filter that match a predicate.

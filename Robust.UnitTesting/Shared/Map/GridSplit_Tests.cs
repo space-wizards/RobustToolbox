@@ -34,7 +34,7 @@ public sealed class GridSplit_Tests
         var mapManager = sim.Resolve<IMapManager>();
         var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
 
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
         var gridEnt = mapManager.CreateGridEntity(mapId);
         var grid = gridEnt.Comp;
         grid.CanSplit = false;
@@ -62,7 +62,7 @@ public sealed class GridSplit_Tests
         var sim = GetSim();
         var mapManager = sim.Resolve<IMapManager>();
         var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
         var gridEnt = mapManager.CreateGridEntity(mapId);
 
         for (var x = 0; x < 3; x++)
@@ -84,7 +84,7 @@ public sealed class GridSplit_Tests
         var sim = GetSim();
         var mapManager = sim.Resolve<IMapManager>();
         var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
         var gridEnt = mapManager.CreateGridEntity(mapId);
 
         for (var x = 0; x < 3; x++)
@@ -115,9 +115,8 @@ public sealed class GridSplit_Tests
         var sim = GetSim();
         var mapManager = sim.Resolve<IMapManager>();
         var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
         var gridEnt = mapManager.CreateGridEntity(mapId);
-        var grid = gridEnt.Comp;
 
         for (var x = 0; x < 3; x++)
         {
@@ -144,7 +143,7 @@ public sealed class GridSplit_Tests
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
         var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
         var gridEnt = mapManager.CreateGridEntity(mapId);
         var grid = gridEnt.Comp;
 

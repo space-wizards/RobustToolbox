@@ -545,6 +545,36 @@ namespace Robust.Client.UserInterface
             Draw(renderHandle.DrawingHandleScreen);
         }
 
+        protected internal virtual void PreRenderChildren(ref ControlRenderArguments args)
+        {
+
+        }
+
+        protected internal virtual void PostRenderChildren(ref ControlRenderArguments args)
+        {
+
+        }
+
+        protected internal virtual void RenderChildOverride(ref ControlRenderArguments args, int childIndex, Vector2i position)
+        {
+            RenderControl(ref args, childIndex, position);
+        }
+
+        public ref struct ControlRenderArguments
+        {
+            public IRenderHandle Handle;
+            public ref int Total;
+            public Vector2i Position;
+            public Color Modulate;
+            public UIBox2i? ScissorBox;
+            public ref Matrix3 CoordinateTransform;
+        }
+
+        protected void RenderControl(ref ControlRenderArguments args, int childIndex, Vector2i position)
+        {
+            UserInterfaceManagerInternal.RenderControl(args.Handle, ref args.Total, GetChild(childIndex), position, args.Modulate, args.ScissorBox, args.CoordinateTransform);
+        }
+
         public void UpdateDraw()
         {
         }
@@ -611,7 +641,11 @@ namespace Robust.Client.UserInterface
 
             foreach (var child in Children.ToArray())
             {
-                RemoveChild(child);
+                // This checks fails in some obscure cases like using the element inspector in the dev window.
+                // Why? Well I could probably spend 15 minutes in a debugger to find out,
+                // but I'd probably still end up with this fix.
+                if (child.Parent == this)
+                    RemoveChild(child);
             }
         }
 

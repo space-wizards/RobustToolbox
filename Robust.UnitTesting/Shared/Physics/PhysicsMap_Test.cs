@@ -29,8 +29,8 @@ public sealed class PhysicsMap_Test
         var fixtureSystem = system.GetEntitySystem<FixtureSystem>();
         var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
 
-        var mapId = mapManager.CreateMap();
-        var mapId2 = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
+        var mapId2 = sim.CreateMap().MapId;
         var mapUid = mapManager.GetMapEntityId(mapId);
         var mapUid2 = mapManager.GetMapEntityId(mapId2);
 

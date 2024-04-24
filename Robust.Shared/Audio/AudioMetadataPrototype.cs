@@ -10,7 +10,7 @@ namespace Robust.Shared.Audio;
 /// to allow the server to know audio lengths without shipping the large audio files themselves.
 /// </summary>
 [Prototype(ProtoName)]
-public sealed class AudioMetadataPrototype : IPrototype
+public sealed partial class AudioMetadataPrototype : IPrototype
 {
     public const string ProtoName = "audioMetadata";
 

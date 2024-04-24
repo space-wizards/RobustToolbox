@@ -27,7 +27,7 @@ public sealed partial class ComponentMapInitTest
         var sim = simFactory.InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
-        var mapId = mapManager.CreateMap();
+        sim.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var mapId);
 
         var ent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         Assert.That(entManager.GetComponent<MetaDataComponent>(ent).EntityLifeStage, Is.EqualTo(EntityLifeStage.MapInitialized));

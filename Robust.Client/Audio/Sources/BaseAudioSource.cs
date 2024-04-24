@@ -314,6 +314,8 @@ public abstract class BaseAudioSource : IAudioSource
         set
         {
             _checkDisposed();
+
+            value = MathF.Max(value, 0f);
             AL.Source(SourceHandle, ALSourcef.SecOffset, value);
             Master._checkAlError($"Tried to set invalid playback position of {value:0.00}");
         }

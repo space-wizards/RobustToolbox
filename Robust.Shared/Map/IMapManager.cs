@@ -23,9 +23,6 @@ namespace Robust.Shared.Map
         public const bool Approximate = false;
         public const bool IncludeMap = true;
 
-        [Obsolete("Use EntityQuery<MapGridComponent>")]
-        IEnumerable<MapGridComponent> GetAllGrids();
-
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
         ///     so that you don't spam an event for each of the million station tiles.
@@ -42,16 +39,7 @@ namespace Robust.Shared.Map
 
         void Restart();
 
-        /// <summary>
-        ///     Creates a new map.
-        /// </summary>
-        /// <param name="mapId">
-        ///     If provided, the new map will use this ID. If not provided, a new ID will be selected automatically.
-        /// </param>
-        /// <returns>The new map.</returns>
-        /// <exception cref="InvalidOperationException">
-        ///     Throw if an explicit ID for the map or default grid is passed and a map or grid with the specified ID already exists, respectively.
-        /// </exception>
+        [Obsolete("Use MapSystem")]
         MapId CreateMap(MapId? mapId = null);
 
         /// <summary>
@@ -59,24 +47,12 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="mapId">The map ID to check existence of.</param>
         /// <returns>True if the map exists, false otherwise.</returns>
-        bool MapExists(MapId mapId);
+        bool MapExists([NotNullWhen(true)] MapId? mapId);
 
         /// <summary>
-        /// Creates a new entity, then sets it as the map entity.
+        /// Returns the map entity ID for a given map, or an invalid entity Id if the map does not exist.
         /// </summary>
-        /// <returns>Newly created entity.</returns>
-        EntityUid CreateNewMapEntity(MapId mapId);
-
-        /// <summary>
-        /// Sets the MapEntity(root node) for a given map. If an entity is already set, it will be deleted
-        /// before the new one is set.
-        /// </summary>
-        /// <param name="updateChildren">Should we re-parent children from the old map to the new one, or delete them.</param>
-        void SetMapEntity(MapId mapId, EntityUid newMapEntityId, bool updateChildren = true);
-
-        /// <summary>
-        /// Returns the map entity ID for a given map.
-        /// </summary>
+        [Obsolete("Use TryGetMap")]
         EntityUid GetMapEntityId(MapId mapId);
 
         /// <summary>
@@ -93,6 +69,7 @@ namespace Robust.Shared.Map
         MapGridComponent CreateGrid(MapId currentMapId, in GridCreateOptions options);
         MapGridComponent CreateGrid(MapId currentMapId);
         Entity<MapGridComponent> CreateGridEntity(MapId currentMapId, GridCreateOptions? options = null);
+        Entity<MapGridComponent> CreateGridEntity(EntityUid map, GridCreateOptions? options = null);
 
         [Obsolete("Use GetComponent<MapGridComponent>(uid)")]
         MapGridComponent GetGrid(EntityUid gridId);
@@ -233,16 +210,12 @@ namespace Robust.Shared.Map
 
         #endregion
 
-        void DeleteGrid(EntityUid euid);
 
-        bool HasMapEntity(MapId mapId);
+        [Obsolete("Just delete the grid entity")]
+        void DeleteGrid(EntityUid euid);
 
         bool IsGrid(EntityUid uid);
         bool IsMap(EntityUid uid);
-
-        [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
-        MapId NextMapId();
-        MapGridComponent GetGridComp(EntityUid euid);
 
         //
         // Pausing functions
@@ -252,14 +225,15 @@ namespace Robust.Shared.Map
 
         void DoMapInitialize(MapId mapId);
 
-        // TODO rename this to actually be descriptive or just remove it.
+        [Obsolete("Use CreateMap's runMapInit argument")]
         void AddUninitializedMap(MapId mapId);
 
-        [Pure]
+        [Obsolete("Use MapSystem")]
         bool IsMapPaused(MapId mapId);
 
-        [Pure]
+        [Obsolete("Use MapSystem")]
         bool IsMapInitialized(MapId mapId);
+
     }
 
     public struct GridCreateOptions

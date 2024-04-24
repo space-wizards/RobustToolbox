@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -19,7 +20,7 @@ namespace Robust.Client.Placement.Modes
 
             var gridId = MouseCoords.GetGridUid(pManager.EntityManager);
 
-            if (!pManager.MapManager.TryGetGrid(gridId, out var mapGrid))
+            if (!pManager.EntityManager.TryGetComponent<MapGridComponent>(gridId, out var mapGrid))
                 return;
 
             CurrentTile = mapGrid.GetTileRef(MouseCoords);

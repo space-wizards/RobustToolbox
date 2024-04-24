@@ -36,7 +36,7 @@ public partial class PrototypeManager
             .ToArray();
 
         // Shuffle to avoid input data patterns causing uneven thread workloads.
-        RandomExtensions.Shuffle(streams.AsSpan(), new System.Random());
+        (new System.Random()).Shuffle(streams.AsSpan());
 
         var sawmill = _logManager.GetSawmill("eng");
 

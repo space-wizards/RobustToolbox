@@ -21,7 +21,7 @@ namespace Robust.UnitTesting.Shared
             var entManager = server.Resolve<IEntityManager>();
             var mapManager = server.Resolve<IMapManager>();
 
-            var mapId = mapManager.CreateMap();
+            var mapId = server.CreateMap().MapId;
 
             var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);
 
@@ -43,7 +43,7 @@ namespace Robust.UnitTesting.Shared
             var entManager = server.Resolve<IEntityManager>();
             var mapManager = server.Resolve<IMapManager>();
 
-            var mapId = mapManager.CreateMap();
+            var mapId = server.CreateMap().MapId;
             var grid = mapManager.CreateGridEntity(mapId);
 
             var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);

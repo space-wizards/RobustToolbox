@@ -107,6 +107,20 @@ public sealed class SpawnNextToOrDropTest : EntitySpawnHelpersTest
             Assert.That(xform.GridUid, Is.Null);
         });
 
+        // Spawning next to an entity on a pre-init map does not initialize the entity.
+        // Previously the intermediate step of spawning the entity into nullspace would cause it to get initialized.
+        await Server.WaitPost(() =>
+        {
+            var preInitMap = EntMan.System<SharedMapSystem>().CreateMap(out var mapId, runMapInit: false);
+            var ent = EntMan.Spawn(null, new MapCoordinates(default, mapId));
+
+            Assert.That(EntMan.GetComponent<MetaDataComponent>(preInitMap).EntityLifeStage, Is.LessThan(EntityLifeStage.MapInitialized));
+            Assert.That(EntMan.GetComponent<MetaDataComponent>(ent).EntityLifeStage, Is.LessThan(EntityLifeStage.MapInitialized));
+
+            var uid = EntMan.SpawnNextToOrDrop(null, ent);
+            Assert.That(EntMan.GetComponent<MetaDataComponent>(uid).EntityLifeStage, Is.LessThan(EntityLifeStage.MapInitialized));
+        });
+
         await Server.WaitPost(() =>MapMan.DeleteMap(MapId));
         Server.Dispose();
     }

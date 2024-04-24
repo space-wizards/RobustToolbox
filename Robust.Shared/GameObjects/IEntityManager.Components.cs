@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -37,6 +38,26 @@ namespace Robust.Shared.GameObjects
         /// Gets the number of a specific component.
         /// </summary>
         int Count(Type component);
+
+        /// <summary>
+        /// Adds the specified components from the <see cref="EntityPrototype"/>
+        /// </summary>
+        void AddComponents(EntityUid target, EntityPrototype prototype, bool removeExisting = true);
+
+        /// <summary>
+        /// Adds the specified registry components to the target entity.
+        /// </summary>
+        void AddComponents(EntityUid target, ComponentRegistry registry, bool removeExisting = true);
+
+        /// <summary>
+        /// Removes the specified entity prototype components from the target entity.
+        /// </summary>
+        void RemoveComponents(EntityUid target, EntityPrototype prototype);
+
+        /// <summary>
+        /// Removes the specified registry components from the target entity.
+        /// </summary>
+        void RemoveComponents(EntityUid target, ComponentRegistry registry);
 
         /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will

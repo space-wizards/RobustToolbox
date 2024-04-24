@@ -3,6 +3,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Robust.Shared.Random;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -108,6 +109,12 @@ public interface IPrototypeManager
     /// <inheritdoc cref="HasIndex{T}(string)"/>
     bool HasIndex<T>(ProtoId<T> id) where T : class, IPrototype;
 
+    /// <inheritdoc cref="HasIndex{T}(string)"/>
+    bool HasIndex(EntProtoId? id);
+
+    /// <inheritdoc cref="HasIndex{T}(string)"/>
+    bool HasIndex<T>(ProtoId<T>? id) where T : class, IPrototype;
+
     bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
     bool TryIndex(Type kind, string id, [NotNullWhen(true)] out IPrototype? prototype);
 
@@ -129,6 +136,12 @@ public interface IPrototypeManager
 
     /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
     bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+
+    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
+    bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
+
+    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
+    bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
 
     bool HasMapping<T>(string id);
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
@@ -374,6 +387,11 @@ public interface IPrototypeManager
     ///     For example: /Prototypes/Guidebook
     /// </param>
     void AbstractDirectory(ResPath path);
+
+    /// <summary>
+    /// Tries to get a random prototype.
+    /// </summary>
+    bool TryGetRandom<T>(IRobustRandom random, [NotNullWhen(true)] out IPrototype? prototype) where T : class, IPrototype;
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

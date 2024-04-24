@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
@@ -76,9 +77,11 @@ namespace Robust.Shared.GameObjects
 
         EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
+        EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!);
 
         void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null);
+
+        void InitializeAndStartEntity(Entity<MetaDataComponent?> entity, bool doMapInit);
 
         void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null);
 

@@ -29,7 +29,7 @@
     <PackageReference Include="Microsoft.Extensions.ObjectPool" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
     <PackageReference Include="SharpZstd.Interop" PrivateAssets="compile" />
-    <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" />
+    <PackageReference Condition="'$(RobustToolsBuild)' == 'True'" Include="JetBrains.Profiler.Api" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
   </ItemGroup>
   <ItemGroup>

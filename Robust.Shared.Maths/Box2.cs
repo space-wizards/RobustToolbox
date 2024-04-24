@@ -186,10 +186,10 @@ namespace Robust.Shared.Maths
         [Pure]
         public readonly Box2 Intersect(in Box2 other)
         {
-            var ourLeftBottom = new Vector2(Left, Bottom);
-            var ourRightTop = new Vector2(Right, Top);
-            var otherLeftBottom = new Vector2(other.Left, other.Bottom);
-            var otherRightTop = new Vector2(other.Right, other.Top);
+            var ourLeftBottom = BottomLeft;
+            var ourRightTop = TopRight;
+            var otherLeftBottom = other.BottomLeft;
+            var otherRightTop = other.TopRight;
 
             var max = Vector2.Max(ourLeftBottom, otherLeftBottom);
             var min = Vector2.Min(ourRightTop, otherRightTop);
@@ -219,10 +219,10 @@ namespace Robust.Shared.Maths
         [Pure]
         public readonly Box2 Union(in Box2 other)
         {
-            var ourLeftBottom = new Vector2(Left, Bottom);
-            var otherLeftBottom = new Vector2(other.Left, other.Bottom);
-            var ourRightTop = new Vector2(Right, Top);
-            var otherRightTop = new Vector2(other.Right, other.Top);
+            var ourLeftBottom = BottomLeft;
+            var otherLeftBottom = other.BottomLeft;
+            var ourRightTop = TopRight;
+            var otherRightTop = other.TopRight;
 
             var leftBottom = Vector2.Min(ourLeftBottom, otherLeftBottom);
             var rightTop = Vector2.Max(ourRightTop, otherRightTop);

@@ -20,10 +20,15 @@ public sealed class AccessAnalyzer_Test
         {
             TestState =
             {
-                AdditionalReferences = { typeof(AccessAnalyzer).Assembly },
                 Sources = { code }
             },
         };
+
+        TestHelper.AddEmbeddedSources(
+            test.TestState,
+            "Robust.Shared.Analyzers.AccessAttribute.cs",
+            "Robust.Shared.Analyzers.AccessPermissions.cs"
+        );
 
         // ExpectedDiagnostics cannot be set, so we need to AddRange here...
         test.TestState.ExpectedDiagnostics.AddRange(expected);

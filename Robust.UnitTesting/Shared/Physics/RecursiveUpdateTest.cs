@@ -27,7 +27,7 @@ public sealed class RecursiveUpdateTest
         var xforms = entManager.System<SharedTransformSystem>();
         var containers = entManager.System<ContainerSystem>();
 
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
         var grid = mapManager.CreateGridEntity(mapId);
         var guid = grid.Owner;
         grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
@@ -166,7 +166,7 @@ public sealed class RecursiveUpdateTest
         var transforms = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
         var lookup = entManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
 
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
         var map = mapManager.GetMapEntityId(mapId);
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(map);
 

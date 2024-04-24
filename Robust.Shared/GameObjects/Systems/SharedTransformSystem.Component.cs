@@ -880,14 +880,6 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetMapCoordinates(Entity<TransformComponent> entity, MapCoordinates coordinates)
     {
-        var xform = entity.Comp;
-
-        if (!xform._parent.IsValid() || xform.MapUid == null)
-        {
-            DebugTools.Assert("Parent is invalid while attempting to set MapCoordinates - did you try to move root node?");
-            return;
-        }
-
         var mapUid = _map.GetMap(coordinates.MapId);
         if (!_gridQuery.HasComponent(entity) &&
             _mapManager.TryFindGridAt(mapUid, coordinates.Position, out var targetGrid, out _))

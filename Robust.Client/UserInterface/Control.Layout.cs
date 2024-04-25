@@ -52,6 +52,9 @@ namespace Robust.Client.UserInterface
         [ViewVariables] public bool IsMeasureValid { get; private set; }
         [ViewVariables] public bool IsArrangeValid { get; private set; }
 
+        /// <summary>
+        /// "All" or "Horizontal, Vertical" or "Left, Top, Right, Bottom"
+        /// </summary>
         [ViewVariables]
         public Thickness Margin
         {

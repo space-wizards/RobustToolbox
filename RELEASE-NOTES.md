@@ -58,6 +58,43 @@ END TEMPLATE-->
 *None yet*
 
 
+## 219.2.0
+
+### New features
+
+* Add SetMapCoordinates to TransformSystem.
+* Improve YAML Linter and validation of static fields.
+
+### Bugfixes
+
+* Fix DebugCoordsPanel freezing when hovering a control.
+
+### Other
+
+* Optimise physics networking to not dirty every tick of movement.
+
+
+## 219.1.3
+
+### Bugfixes
+
+* Fix map-loader not pausing pre-init maps when not actively overwriting an existing map.
+
+
+## 219.1.2
+
+### Bugfixes
+
+* Fix map-loader not map-initialising grids when loading into a post-init map.
+
+
+## 219.1.1
+
+### Bugfixes
+
+* Fix map-loader not map-initialising maps when overwriting a post-init map.
+
+
 ## 219.1.0
 
 ### New features

@@ -49,7 +49,6 @@ public sealed class MapLoaderSystem : EntitySystem
     private ISawmill _logLoader = default!;
     private ISawmill _logWriter = default!;
 
-    private static readonly MapLoadOptions DefaultLoadOptions = new();
     private const int MapFormatVersion = 6;
     private const int BackwardsVersion = 2;
 
@@ -132,7 +131,7 @@ public sealed class MapLoaderSystem : EntitySystem
     public bool TryLoad(MapId mapId, string path, [NotNullWhen(true)] out IReadOnlyList<EntityUid>? rootUids,
         MapLoadOptions? options = null)
     {
-        options ??= DefaultLoadOptions;
+        options ??= new();
 
         var resPath = new ResPath(path).ToRootedPath();
 
@@ -663,6 +662,7 @@ public sealed class MapLoaderSystem : EntitySystem
             // If map exists swap out
             if (_mapSystem.TryGetMap(data.TargetMap, out var existing))
             {
+                data.Options.DoMapInit |= _mapSystem.IsInitialized(data.TargetMap);
                 data.MapIsPaused = _mapSystem.IsPaused(existing.Value);
                 // Map exists but we also have a map file with stuff on it soooo swap out the old map.
                 if (data.Options.LoadMap)
@@ -706,6 +706,7 @@ public sealed class MapLoaderSystem : EntitySystem
             }
             else
             {
+                data.MapIsPaused = !data.MapIsPostInit;
                 mapComp.MapId = data.TargetMap;
                 DebugTools.Assert(mapComp.LifeStage < ComponentLifeStage.Initializing);
                 EnsureComp<LoadedMapComponent>(rootNode);
@@ -722,6 +723,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 mapNode = _mapSystem.CreateMap(data.TargetMap, false);
             }
 
+            data.Options.DoMapInit |= _mapSystem.IsInitialized(data.TargetMap);
             data.MapIsPaused = _mapSystem.IsPaused(mapNode.Value);
 
             // If anything has an invalid parent (e.g. it's some form of root node) then parent it to the map.
@@ -887,8 +889,7 @@ public sealed class MapLoaderSystem : EntitySystem
         {
             EntityManager.SetLifeStage(metadata, EntityLifeStage.MapInitialized);
         }
-        // TODO MAP LOAD cache this
-        else if (_mapManager.IsMapInitialized(data.TargetMap))
+        else if (data.Options.DoMapInit)
         {
             _serverEntityManager.RunMapInit(uid, metadata);
         }
@@ -1090,17 +1091,17 @@ public sealed class MapLoaderSystem : EntitySystem
         }
     }
 
-    private bool IsSaveable(EntityUid uid, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> transformQuery)
+    private bool IsSaveable(EntityUid uid)
     {
         // Don't serialize things parented to un savable things.
         // For example clothes inside a person.
         while (uid.IsValid())
         {
-            var meta = metaQuery.GetComponent(uid);
+            var meta = MetaData(uid);
 
             if (meta.EntityDeleted || meta.EntityPrototype?.MapSavable == false) break;
 
-            uid = transformQuery.GetComponent(uid).ParentUid;
+            uid = Transform(uid).ParentUid;
         }
 
         // If we manage to get up to the map (root node) then it's saveable.
@@ -1115,7 +1116,7 @@ public sealed class MapLoaderSystem : EntitySystem
         EntityQuery<TransformComponent> transformQuery,
         EntityQuery<MapSaveIdComponent> saveCompQuery)
     {
-        if (!IsSaveable(uid, metaQuery, transformQuery))
+        if (!IsSaveable(uid))
             return;
 
         entities.Add(uid);

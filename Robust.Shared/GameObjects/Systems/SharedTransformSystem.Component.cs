@@ -870,6 +870,28 @@ public abstract partial class SharedTransformSystem
         return GetMapCoordinates(entity.Comp);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetMapCoordinates(EntityUid entity, MapCoordinates coordinates)
+    {
+        var xform = XformQuery.GetComponent(entity);
+        SetMapCoordinates((entity, xform), coordinates);
+    }
+
+    public void SetMapCoordinates(Entity<TransformComponent> entity, MapCoordinates coordinates)
+    {
+        var mapUid = _map.GetMap(coordinates.MapId);
+        if (!_gridQuery.HasComponent(entity) &&
+            _mapManager.TryFindGridAt(mapUid, coordinates.Position, out var targetGrid, out _))
+        {
+            var invWorldMatrix = GetInvWorldMatrix(targetGrid);
+            SetCoordinates(entity, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(coordinates.Position)));
+        }
+        else
+        {
+            SetCoordinates(entity, new EntityCoordinates(mapUid, coordinates.Position));
+        }
+    }
+
     [Pure]
     public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(EntityUid uid)
     {

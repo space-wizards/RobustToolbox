@@ -88,7 +88,6 @@ public sealed partial class ReplayLoadManager
         if (initMessages != null)
             UpdateMessages(initMessages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
         UpdateMessages(messages[0], uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
-        ProcessQueue(GameTick.MaxValue, detachQueue, detached);
 
         var entSpan = state0.EntityStates.Value;
         Dictionary<NetEntity, EntityState> entStates = new(entSpan.Count);
@@ -97,6 +96,8 @@ public sealed partial class ReplayLoadManager
             var modifiedState = AddImplicitData(entState);
             entStates.Add(entState.NetEntity, modifiedState);
         }
+
+        ProcessQueue(GameTick.MaxValue, detachQueue, detached, entStates);
 
         await callback(0, states.Count, LoadingState.ProcessingFiles, true);
         var playerSpan = state0.PlayerStates.Value;
@@ -144,7 +145,7 @@ public sealed partial class ReplayLoadManager
             UpdatePlayerStates(curState.PlayerStates.Span, playerStates);
             UpdateEntityStates(curState.EntityStates.Span, entStates, ref spawnedTracker, ref stateTracker, detached);
             UpdateMessages(messages[i], uploadedFiles, prototypes, cvars, detachQueue, ref timeBase);
-            ProcessQueue(curState.ToSequence, detachQueue, detached);
+            ProcessQueue(curState.ToSequence, detachQueue, detached, entStates);
             UpdateDeletions(curState.EntityDeletions, entStates, detached);
             serverTime[i] = GetTime(curState.ToSequence) - initialTime;
             ticksSinceLastCheckpoint++;
@@ -176,14 +177,28 @@ public sealed partial class ReplayLoadManager
     private void ProcessQueue(
         GameTick curTick,
         Dictionary<GameTick, List<NetEntity>> detachQueue,
-        HashSet<NetEntity> detached)
+        HashSet<NetEntity> detached,
+        Dictionary<NetEntity, EntityState> entStates)
     {
         foreach (var (tick, ents) in detachQueue)
         {
             if (tick > curTick)
                 continue;
             detachQueue.Remove(tick);
-            detached.UnionWith(ents);
+
+            foreach (var e in ents)
+            {
+                if (entStates.ContainsKey(e))
+                    detached.Add(e);
+                else
+                {
+                    // AFAIK this should only happen if the client skipped over some ticks, probably due to packet loss
+                    // I.e., entity was created on tick n, then leaves PVS range on the tick n+1
+                    // If the n-th tick gets dropped, the client only ever receives the pvs-leave message.
+                    // In that case we should just ignore it.
+                    _sawmill.Debug($"Received a PVS detach msg for entity {e} before it was received?");
+                }
+            }
         }
     }
 

@@ -313,55 +313,60 @@ public partial class SharedPhysicsSystem
         Dirty(uid, body);
     }
 
-    public void SetAngularVelocity(EntityUid uid, float value, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    public bool SetAngularVelocity(EntityUid uid, float value, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if (!Resolve(uid, ref body))
-            return;
+            return false;
 
         if (body.BodyType == BodyType.Static)
-            return;
+            return false;
 
         if (value * value > 0.0f)
         {
             if (!WakeBody(uid, manager: manager, body: body))
-                return;
+                return false;
         }
 
         // CloseToPercent tolerance needs to be small enough such that an angular velocity just above
         // sleep-tolerance can damp down to sleeping.
 
         if (MathHelper.CloseToPercent(body.AngularVelocity, value, 0.00001f))
-            return;
+            return false;
 
         body.AngularVelocity = value;
 
         if (dirty)
             Dirty(uid, body);
+
+        return true;
     }
 
     /// <summary>
     /// Attempts to set the body to collidable, wake it, then move it.
     /// </summary>
-    public void SetLinearVelocity(EntityUid uid, Vector2 velocity, bool dirty = true, bool wakeBody = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    public bool SetLinearVelocity(EntityUid uid, Vector2 velocity, bool dirty = true, bool wakeBody = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if (!Resolve(uid, ref body))
-            return;
+            return false;
 
-        if (body.BodyType == BodyType.Static) return;
+        if (body.BodyType == BodyType.Static)
+            return false;
 
         if (wakeBody && Vector2.Dot(velocity, velocity) > 0.0f)
         {
             if (!WakeBody(uid, manager: manager, body: body))
-                return;
+                return false;
         }
 
         if (body.LinearVelocity.EqualsApprox(velocity, 0.0000001f))
-            return;
+            return false;
 
         body.LinearVelocity = velocity;
 
         if (dirty)
             Dirty(uid, body);
+
+        return true;
     }
 
     public void SetAngularDamping(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)

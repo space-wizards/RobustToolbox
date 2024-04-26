@@ -74,6 +74,28 @@ public abstract class SharedAppearanceSystem : EntitySystem
 
         return component.AppearanceData.TryGetValue(key, out value);
     }
+
+    /// <summary>
+    /// Copies appearance data from <c>src</c> to <c>dest</c>.
+    /// If <c>src</c> has no <see cref="AppearanceComponent"/> nothing is done.
+    /// If <c>dest</c> has no <c>AppearanceComponent</c> then it is created.
+    /// </summary>
+    public void CopyData(Entity<AppearanceComponent?> src, Entity<AppearanceComponent?> dest)
+    {
+        if (!Resolve(src, ref src.Comp, false))
+            return;
+
+        dest.Comp ??= EnsureComp<AppearanceComponent>(dest);
+        dest.Comp.AppearanceData.Clear();
+
+        foreach (var (key, value) in src.Comp.AppearanceData)
+        {
+            dest.Comp.AppearanceData[key] = value;
+        }
+
+        Dirty(dest, dest.Comp);
+        QueueUpdate(dest, dest.Comp);
+    }
 }
 
 [Serializable, NetSerializable]

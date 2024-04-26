@@ -256,7 +256,7 @@ namespace Robust.Server.ServerStatus
                 _context = context;
                 RequestMethod = new HttpMethod(context.Request.HttpMethod!);
 
-                var headers = new Dictionary<string, StringValues>();
+                var headers = new Dictionary<string, StringValues>(StringComparer.OrdinalIgnoreCase);
                 foreach (string? key in context.Request.Headers.Keys)
                 {
                     if (key == null)

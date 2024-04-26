@@ -5,8 +5,10 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -699,32 +701,32 @@ public partial class EntitySystem
 
     #region Entity Spawning
 
-    // This method will be obsoleted soon.
+    // This method will be obsoleted soon(TM).
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? prototype, EntityCoordinates coordinates)
     {
         return ((IEntityManager)EntityManager).SpawnEntity(prototype, coordinates);
     }
 
-    /// <inheritdoc cref="IEntityManager.Spawn(string?, MapCoordinates, ComponentRegistry?)" />
+    /// <inheritdoc cref="IEntityManager.Spawn(string?, MapCoordinates, ComponentRegistry?, Angle)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid Spawn(string? prototype, MapCoordinates coordinates)
-        => EntityManager.Spawn(prototype, coordinates);
+    protected EntityUid Spawn(string? prototype, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
+        => EntityManager.Spawn(prototype, coordinates, overrides, rotation);
 
-    /// <inheritdoc cref="IEntityManager.Spawn(string?, ComponentRegistry?)" />
+    /// <inheritdoc cref="IEntityManager.Spawn(string?, ComponentRegistry?, bool)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid Spawn(string? prototype = null)
-        => EntityManager.Spawn(prototype);
+    protected EntityUid Spawn(string? prototype = null, ComponentRegistry? overrides = null, bool doMapInit = true)
+        => EntityManager.Spawn(prototype, overrides, doMapInit);
 
     /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates)
-        => EntityManager.SpawnAttachedTo(prototype, coordinates);
+    protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+        => EntityManager.SpawnAttachedTo(prototype, coordinates, overrides);
 
     /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid SpawnAtPosition(string? prototype, EntityCoordinates coordinates)
-        => EntityManager.SpawnAtPosition(prototype, coordinates);
+    protected EntityUid SpawnAtPosition(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+        => EntityManager.SpawnAtPosition(prototype, coordinates, overrides);
 
     /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

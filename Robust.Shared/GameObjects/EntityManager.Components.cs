@@ -1013,6 +1013,11 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <summary>
+        /// Internal variant of <see cref="GetComponents"/> that directly returns the actual component set.
+        /// </summary>
+        internal IReadOnlyCollection<IComponent> GetComponentsInternal(EntityUid uid) => _entCompIndex[uid];
+
         /// <inheritdoc />
         public int ComponentCount(EntityUid uid)
         {

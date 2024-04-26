@@ -1138,7 +1138,7 @@ namespace Robust.Client.GameStates
                     if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
                         metas.TryGetComponent(xform.ParentUid, out var containerMeta) &&
                         (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
-                        containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container, null, true))
+                        containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container))
                     {
                         containerSys.Remove((ent.Value, xform, meta), container, false, true);
                     }
@@ -1329,23 +1329,8 @@ namespace Robust.Client.GameStates
 
             foreach (var (comp, cur, next) in _compStateWork.Values)
             {
-                try
-                {
-                    var handleState = new ComponentHandleState(cur, next);
-                    bus.RaiseComponentEvent(comp, ref handleState);
-                }
-#pragma warning disable CS0168 // Variable is declared but never used
-                catch (Exception e)
-#pragma warning restore CS0168 // Variable is declared but never used
-                {
-#if EXCEPTION_TOLERANCE
-                    _sawmill.Error($"Failed to apply comp state: entity={_entities.ToPrettyString(uid)}, comp={comp.GetType()}");
-                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(HandleEntityState)}");
-#else
-                    _sawmill.Error($"Failed to apply comp state: entity={_entities.ToPrettyString(uid)}, comp={comp.GetType()}");
-                    throw;
-#endif
-                }
+                var handleState = new ComponentHandleState(cur, next);
+                bus.RaiseComponentEvent(comp, ref handleState);
             }
         }
 
@@ -1414,7 +1399,7 @@ namespace Robust.Client.GameStates
                     _entities.TryGetComponent(xform.ParentUid, out MetaDataComponent? containerMeta) &&
                     (containerMeta.Flags & MetaDataFlags.Detached) == 0)
                 {
-                    containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container, null, true);
+                    containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container);
                 }
 
                 _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(uid, xform);

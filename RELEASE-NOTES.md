@@ -54,6 +54,128 @@ END TEMPLATE-->
 *None yet*
 
 
+## 219.2.0
+
+### New features
+
+* Add SetMapCoordinates to TransformSystem.
+* Improve YAML Linter and validation of static fields.
+
+### Bugfixes
+
+* Fix DebugCoordsPanel freezing when hovering a control.
+
+### Other
+
+* Optimise physics networking to not dirty every tick of movement.
+
+
+## 219.1.3
+
+### Bugfixes
+
+* Fix map-loader not pausing pre-init maps when not actively overwriting an existing map.
+
+
+## 219.1.2
+
+### Bugfixes
+
+* Fix map-loader not map-initialising grids when loading into a post-init map.
+
+
+## 219.1.1
+
+### Bugfixes
+
+* Fix map-loader not map-initialising maps when overwriting a post-init map.
+
+
+## 219.1.0
+
+### New features
+
+* Added a new optional arguments to various entity spawning methods, including a new argument to set the entity's rotation.
+
+### Bugfixes
+
+* Fixes map initialisation not always initialising all entities on a map.
+
+### Other
+
+* The default value of the `auth.mode` cvar has changed
+
+
+## 219.0.0
+
+### Breaking changes
+
+* Move most IMapManager functionality to SharedMapSystem.
+
+
+## 218.2.0
+
+### New features
+
+* Control layout properties such as `Margin` can now be set via style sheets.
+* Expose worldposition in SpriteComponent.Render
+* Network audio entity Play/Pause/Stop states and playback position.
+* Add `Disabled` functionality to `Slider` control.
+
+
+## 218.1.0
+
+### New features
+
+* Add IEquatable.Equals to the sandbox.
+* Enable roslyn extensions tests in CI.
+* Add a VerticalTabContainer control to match the horizontal one.
+
+### Bugfixes
+
+* Fix divison remainder issue for Colors, fixing purples.
+
+### Other
+
+* Default hub address (`hub.hub_urls`) has been changed to `https://hub.spacestation14.com/`.
+
+
+## 218.0.0
+
+### Breaking changes
+
+* `Robust.Shared.Configuration.EnvironmentVariables` is now internal and no longer usable by content.
+
+### New features
+
+* Add TryGetRandom to EntityManager to get a random entity with the specified component and TryGetRandom to IPrototypeManager to return a random prototype of the specified type.
+* Add CopyData to AppearanceSystem.
+* Update UI themes on prototype reloads.
+* Allow scaling the line height of a RichTextLabel.
+* You can now specify CVar overrides via environment variable with the `ROBUST_CVAR_*` prefix. For example `ROBUST_CVAR_game__hostname=foobar` would set the appropriate CVar. Double underscores in the environment variable name are replaced with ".".
+* Added non-generic variant of `GetCVar` to `IConfigurationManager`.
+* Add type tracking to FieldNotFoundErrorNode for serialization.
+* Distance between lines of a `RichTextLabel` can now be modified with `LineHeightScale`.
+* UI theme prototypes are now updated when reloaded.
+* New `RA0025` analyzer diagnostic warns for manual assignment to `[Dependency]` fields.
+
+### Bugfixes
+
+* Request headers in `IStatusHandlerContext` are now case-insensitive.
+* SetWorldPosition rotation now more closely aligns with prior behavior.
+* Fix exception when inspecting elements in some cases.
+* Fix HTTP errors on watchdog ping not being reported.
+
+### Other
+
+* Add an analyzer for redundantly assigning to dependency fields.
+
+### Internal
+
+* Remove redundant Exists checks in ContainerSystem.
+* Improve logging on watchdog pings.
+
+
 ## 217.2.1
 
 ### Bugfixes
@@ -69,7 +191,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `AddComponents` and `RemoveComponents` methods to EntityManager that handle EntityPrototype / ComponentRegistry bulk component changes. 
+* Added `AddComponents` and `RemoveComponents` methods to EntityManager that handle EntityPrototype / ComponentRegistry bulk component changes.
 * Add double-clicking to LineEdit.
 
 ### Bugfixes

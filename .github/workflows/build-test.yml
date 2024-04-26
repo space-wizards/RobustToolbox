@@ -27,7 +27,8 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore /p:WarningsAsErrors=nullable
-    - name: Test Engine
+    - name: Robust.UnitTesting
       run: dotnet test --no-build Robust.UnitTesting/Robust.UnitTesting.csproj -- NUnit.ConsoleOut=0
-
+    - name: Robust.Analyzers.Tests
+      run: dotnet test --no-build Robust.Analyzers.Tests/Robust.Analyzers.Tests.csproj -- NUnit.ConsoleOut=0
 

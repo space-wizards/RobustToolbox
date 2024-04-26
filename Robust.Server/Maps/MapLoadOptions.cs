@@ -53,5 +53,7 @@ namespace Robust.Server.Maps
         /// This should be set to false if you want to load a map file onto an existing map and do not wish to overwrite the existing entity.
         /// </remarks>
         public bool LoadMap { get; set; } = true;
+
+        public bool DoMapInit = false;
     }
 }

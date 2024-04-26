@@ -5,7 +5,6 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.Controllers;
 
-// Notices your UIController, *UwU Whats this?*
 /// <summary>
 ///     Each <see cref="UIController"/> is instantiated as a singleton by <see cref="UserInterfaceManager"/>
 ///     <see cref="UIController"/> can use <see cref="DependencyAttribute"/> for regular IoC dependencies

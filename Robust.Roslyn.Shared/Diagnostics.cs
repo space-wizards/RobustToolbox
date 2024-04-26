@@ -28,6 +28,7 @@ public static class Diagnostics
     public const string IdComponentPauseNoFields = "RA0022";
     public const string IdComponentPauseNoParentAttribute = "RA0023";
     public const string IdComponentPauseWrongTypeAttribute = "RA0024";
+    public const string IdDependencyFieldAssigned = "RA0025";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

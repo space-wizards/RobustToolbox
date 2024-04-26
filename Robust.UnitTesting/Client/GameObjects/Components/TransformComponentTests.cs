@@ -13,22 +13,18 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
     [TestOf(typeof(TransformComponent))]
     public sealed class TransformComponentTests
     {
-        private static readonly MapId TestMapId = new(1);
-
         private static (ISimulation, EntityUid gridA, EntityUid gridB)  SimulationFactory()
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
                 .InitializeInstance();
 
+            var mapId = sim.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap();
             var mapManager = sim.Resolve<IMapManager>();
 
-            // Adds the map with id 1, and spawns entity 1 as the map entity.
-            mapManager.CreateMap(TestMapId);
-
             // Adds two grids to use in tests.
-            var gridA = mapManager.CreateGridEntity(TestMapId);
-            var gridB = mapManager.CreateGridEntity(TestMapId);
+            var gridA = mapManager.CreateGridEntity(mapId);
+            var gridB = mapManager.CreateGridEntity(mapId);
 
             return (sim, gridA, gridB);
         }

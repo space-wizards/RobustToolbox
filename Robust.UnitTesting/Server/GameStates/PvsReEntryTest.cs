@@ -74,8 +74,7 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
         EntityCoordinates coords = default;
         await server.WaitPost(() =>
         {
-            var mapId = mapMan.CreateMap();
-            map = mapMan.GetMapEntityId(mapId);
+            map = server.System<SharedMapSystem>().CreateMap();
             coords = new(map, default);
 
             var playerUid = sEntMan.SpawnEntity(null, coords);

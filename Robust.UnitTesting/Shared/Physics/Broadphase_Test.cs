@@ -26,8 +26,7 @@ public sealed class Broadphase_Test
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
 
-        var mapId = mapManager.CreateMap();
-        var mapEnt = mapManager.GetMapEntityId(mapId);
+        var (mapEnt, mapId) = sim.CreateMap();
         var grid = mapManager.CreateGridEntity(mapId);
 
         grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
@@ -61,8 +60,7 @@ public sealed class Broadphase_Test
         var fixturesSystem = entManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = entManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
 
-        var mapId = mapManager.CreateMap();
-        var mapEnt = mapManager.GetMapEntityId(mapId);
+        var (mapEnt, mapId) = sim.CreateMap();
         var grid = mapManager.CreateGridEntity(mapId);
         var gridUid = grid.Owner;
 
@@ -110,8 +108,8 @@ public sealed class Broadphase_Test
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
 
-        var mapId1 = mapManager.CreateMap();
-        var mapId2 = mapManager.CreateMap();
+        var mapId1 = sim.CreateMap().MapId;
+        var mapId2 = sim.CreateMap().MapId;
         var grid = mapManager.CreateGridEntity(mapId1);
         var xform = entManager.GetComponent<TransformComponent>(grid);
 
@@ -143,7 +141,7 @@ public sealed class Broadphase_Test
         var physicsSystem = system.GetEntitySystem<SharedPhysicsSystem>();
         var lookup = system.GetEntitySystem<EntityLookupSystem>();
 
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
         var grid = mapManager.CreateGridEntity(mapId);
 
         grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
@@ -195,10 +193,8 @@ public sealed class Broadphase_Test
         var fixtures = system.GetEntitySystem<FixtureSystem>();
 
         // setup maps
-        var mapAId = mapManager.CreateMap();
-        var mapA = mapManager.GetMapEntityId(mapAId);
-        var mapBId = mapManager.CreateMap();
-        var mapB = mapManager.GetMapEntityId(mapBId);
+        var (mapA, mapAId) = sim.CreateMap();
+        var (mapB, mapBId) = sim.CreateMap();
 
         // setup grids
         var gridAComp = mapManager.CreateGridEntity(mapAId);
@@ -323,10 +319,8 @@ public sealed class Broadphase_Test
         var physSystem = system.GetEntitySystem<SharedPhysicsSystem>();
         var lookup = system.GetEntitySystem<EntityLookupSystem>();
         var fixtures = system.GetEntitySystem<FixtureSystem>();
-        var mapManager = sim.Resolve<IMapManager>();
+        var (mapUid, mapId) = sim.CreateMap();
 
-        var mapId = mapManager.CreateMap();
-        var mapUid = mapManager.GetMapEntityId(mapId);
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(mapUid);
 
         Assert.That(entManager.EntityQuery<BroadphaseComponent>(true).Count(), Is.EqualTo(1));

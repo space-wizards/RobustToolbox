@@ -58,11 +58,10 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         EntityUid grid2 = default;
         NetEntity grid1Net = default;
         NetEntity grid2Net = default;
+        server.System<SharedMapSystem>().CreateMap(out var mapId);
 
         await server.WaitPost(() =>
         {
-            var mapId = mapMan.CreateMap();
-            mapMan.GetMapEntityId(mapId);
             var gridComp = mapMan.CreateGridEntity(mapId);
             gridComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
             grid1 = gridComp.Owner;

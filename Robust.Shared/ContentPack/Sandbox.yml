@@ -951,7 +951,9 @@ Types:
     IComparable: { All: True }
     IComparable`1: { All: True }
     IDisposable: { All: True }
-    IEquatable`1: { }
+    IEquatable`1:
+      Methods:
+      - "bool Equals(!0)"
     IFormatProvider: { All: True }
     IFormattable: { All: True }
     Index: { All: True }

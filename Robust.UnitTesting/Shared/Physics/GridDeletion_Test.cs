@@ -36,7 +36,7 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
 
         await server.WaitAssertion(() =>
         {
-            mapId = mapManager.CreateMap();
+            entManager.System<SharedMapSystem>().CreateMap(out mapId);
             grid = mapManager.CreateGridEntity(mapId);
 
             physics = entManager.GetComponent<PhysicsComponent>(grid);

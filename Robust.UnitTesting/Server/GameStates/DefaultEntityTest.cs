@@ -75,8 +75,7 @@ public sealed class DefaultEntityTest : RobustIntegrationTest
         EntityCoordinates coords = default!;
         await server.WaitPost(() =>
         {
-            var mapId = mapMan.CreateMap();
-            var map = mapMan.GetMapEntityId(mapId);
+            var map = server.System<SharedMapSystem>().CreateMap();
             coords = new(map, default);
             var playerUid = sEntMan.SpawnEntity(null, coords);
             player = sEntMan.GetNetEntity(playerUid);

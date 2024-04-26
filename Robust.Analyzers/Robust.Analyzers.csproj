@@ -2,24 +2,29 @@
 
   <ItemGroup>
     <!-- Needed for NotNullableFlagAnalyzer. -->
-    <Compile Include="..\Robust.Shared\Analyzers\NotNullableFlagAttribute.cs" />
+    <Compile Include="..\Robust.Shared\Analyzers\NotNullableFlagAttribute.cs" LinkBase="Implementations" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Needed for FriendAnalyzer. -->
-    <Compile Include="..\Robust.Shared\Analyzers\AccessAttribute.cs" />
-    <Compile Include="..\Robust.Shared\Analyzers\AccessPermissions.cs" />
+    <Compile Include="..\Robust.Shared\Analyzers\AccessAttribute.cs" LinkBase="Implementations" />
+    <Compile Include="..\Robust.Shared\Analyzers\AccessPermissions.cs" LinkBase="Implementations" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Needed for PreferGenericVariantAnalyzer. -->
-    <Compile Include="..\Robust.Shared\Analyzers\PreferGenericVariantAttribute.cs" />
+    <Compile Include="..\Robust.Shared\Analyzers\PreferGenericVariantAttribute.cs" LinkBase="Implementations" />
   </ItemGroup>
 
   <Import Project="../Robust.Roslyn.Shared/Robust.Roslyn.Shared.props" />
 
   <PropertyGroup>
     <Nullable>disable</Nullable>
+    <!--
+    Rider seems to get really confused with hot reload if we directly compile in the above-linked classes.
+    As such, they have an #if to change their namespace in this project.
+    -->
+    <DefineConstants>$(DefineConstants);ROBUST_ANALYZERS_IMPL</DefineConstants>
   </PropertyGroup>
 
 </Project>

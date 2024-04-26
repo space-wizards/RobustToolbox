@@ -9,6 +9,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
@@ -297,14 +298,13 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!)
         {
             var newEntity = CreateEntity(prototypeName, out _, overrides);
             var transform = TransformQuery.GetComponent(newEntity);
 
             if (coordinates.MapId == MapId.Nullspace)
             {
-                DebugTools.Assert(_mapManager.GetMapEntityId(coordinates.MapId) == EntityUid.Invalid);
                 transform._parent = EntityUid.Invalid;
                 transform.Anchored = false;
                 return newEntity;
@@ -323,7 +323,7 @@ namespace Robust.Shared.GameObjects
             else
             {
                 coords = new EntityCoordinates(mapEnt, coordinates.Position);
-                _xforms.SetCoordinates(newEntity, transform, coords, null, newParent: mapXform);
+                _xforms.SetCoordinates(newEntity, transform, coords, rotation, newParent: mapXform);
             }
 
             return newEntity;
@@ -821,15 +821,22 @@ namespace Robust.Shared.GameObjects
 
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)
         {
+            var doMapInit = _mapManager.IsMapInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
+            InitializeAndStartEntity(entity, doMapInit);
+        }
+
+        public void InitializeAndStartEntity(Entity<MetaDataComponent?> entity, bool doMapInit)
+        {
+            if (!MetaQuery.Resolve(entity.Owner, ref entity.Comp))
+                return;
+
             try
             {
-                var meta = MetaQuery.GetComponent(entity);
-                InitializeEntity(entity, meta);
-                StartEntity(entity);
+                InitializeEntity(entity.Owner, entity.Comp);
+                StartEntity(entity.Owner);
 
-                // If the map we're initializing the entity on is initialized, run map init on it.
-                if (_mapManager.IsMapInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID))
-                    RunMapInit(entity, meta);
+                if (doMapInit)
+                    RunMapInit(entity.Owner, entity.Comp);
             }
             catch (Exception e)
             {
@@ -859,7 +866,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized, $"Expected entity {ToPrettyString(entity)} to be initialized, was {meta.EntityLifeStage}");
             SetLifeStage(meta, EntityLifeStage.MapInitialized);
 
-            EventBus.RaiseLocalEvent(entity, MapInitEventInstance, false);
+            EventBus.RaiseLocalEvent(entity, MapInitEventInstance);
         }
 
         /// <inheritdoc />

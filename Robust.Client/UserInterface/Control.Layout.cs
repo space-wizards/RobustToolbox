@@ -53,8 +53,9 @@ namespace Robust.Client.UserInterface
         [ViewVariables] public bool IsArrangeValid { get; private set; }
 
         /// <summary>
-        /// "All" or "Horizontal, Vertical" or "Left, Top, Right, Bottom"
+        /// Controls the amount of empty space in virtual pixels around the control.
         /// </summary>
+        /// <remarks>Values can be provided as "All" or "Horizontal, Vertical" or "Left, Top, Right, Bottom"</remarks>
         [ViewVariables]
         public Thickness Margin
         {

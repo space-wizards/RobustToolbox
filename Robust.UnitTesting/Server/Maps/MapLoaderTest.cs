@@ -12,6 +12,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
+using IgnoreUIRangeComponent = Robust.Shared.GameObjects.IgnoreUIRangeComponent;
 
 namespace Robust.UnitTesting.Server.Maps
 {

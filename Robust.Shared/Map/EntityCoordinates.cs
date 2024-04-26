@@ -344,6 +344,9 @@ namespace Robust.Shared.Map
             var mapCoordinates = ToMap(entityManager, transformSystem);
             var otherMapCoordinates = otherCoordinates.ToMap(entityManager, transformSystem);
 
+            if (mapCoordinates.MapId != otherMapCoordinates.MapId)
+                return false;
+
             return mapCoordinates.InRange(otherMapCoordinates, range);
         }
 

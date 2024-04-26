@@ -143,7 +143,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             nodeVariable),
                         call,
                         dfa.Required
-                            ? ExpressionUtils.ThrowExpression<RequiredFieldNotMappedException>(fieldDefinition.FieldType, tagConst)
+                            ? ExpressionUtils.ThrowExpression<RequiredFieldNotMappedException>(fieldDefinition.FieldType, tagConst, typeof(T))
                             : AssignIfNotDefaultExpression(i, targetParam, Expression.Constant(DefaultValues[i], fieldDefinition.FieldType))
                     )));
                 }

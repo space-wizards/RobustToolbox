@@ -20,6 +20,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IClyde _displayManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IBaseClient _baseClient = default!;
 
         private readonly StringBuilder _textBuilder = new();
         private readonly char[] _textBuffer = new char[1024];
@@ -58,30 +59,36 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 
             _textBuilder.Clear();
 
+            var isInGame = _baseClient.RunLevel.IsInGameLike();
             var mouseScreenPos = _inputManager.MouseScreenPosition;
             var screenSize = _displayManager.ScreenSize;
             var screenScale = _displayManager.MainWindow.ContentScale;
 
-            EntityCoordinates mouseGridPos;
-            TileRef tile;
+            EntityCoordinates mouseGridPos = default;
+            TileRef tile = default;
+            MapCoordinates mouseWorldMap = default;
 
-            var mouseWorldMap = _eyeManager.PixelToMap(mouseScreenPos);
-            if (mouseWorldMap == MapCoordinates.Nullspace)
-                return;
-
-            var mapSystem = _entityManager.System<SharedMapSystem>();
-            var xformSystem = _entityManager.System<SharedTransformSystem>();
-
-            if (_mapManager.TryFindGridAt(mouseWorldMap, out var mouseGridUid, out var mouseGrid))
+            if (isInGame)
             {
-                mouseGridPos = mapSystem.MapToGrid(mouseGridUid, mouseWorldMap);
-                tile = mapSystem.GetTileRef(mouseGridUid, mouseGrid, mouseGridPos);
-            }
-            else
-            {
-                mouseGridPos = new EntityCoordinates(_mapManager.GetMapEntityId(mouseWorldMap.MapId),
-                    mouseWorldMap.Position);
-                tile = new TileRef(EntityUid.Invalid, mouseGridPos.ToVector2i(_entityManager, _mapManager, xformSystem), Tile.Empty);
+                mouseWorldMap = _eyeManager.PixelToMap(mouseScreenPos);
+                if (mouseWorldMap != MapCoordinates.Nullspace)
+                {
+                    var mapSystem = _entityManager.System<SharedMapSystem>();
+                    var xformSystem = _entityManager.System<SharedTransformSystem>();
+
+                    if (_mapManager.TryFindGridAt(mouseWorldMap, out var mouseGridUid, out var mouseGrid))
+                    {
+                        mouseGridPos = mapSystem.MapToGrid(mouseGridUid, mouseWorldMap);
+                        tile = mapSystem.GetTileRef(mouseGridUid, mouseGrid, mouseGridPos);
+                    }
+                    else
+                    {
+                        mouseGridPos = new EntityCoordinates(_mapManager.GetMapEntityId(mouseWorldMap.MapId),
+                            mouseWorldMap.Position);
+                        tile = new TileRef(EntityUid.Invalid,
+                            mouseGridPos.ToVector2i(_entityManager, _mapManager, xformSystem), Tile.Empty);
+                    }
+                }
             }
 
             var controlHovered = UserInterfaceManager.CurrentlyHovered;
@@ -95,32 +102,37 @@ Mouse Pos:
     {tile}
     GUI: {controlHovered}");
 
-            _textBuilder.AppendLine("\nAttached NetEntity:");
-            var controlledEntity = _playerManager.LocalSession?.AttachedEntity ?? EntityUid.Invalid;
-
-            if (controlledEntity == EntityUid.Invalid)
+            if (isInGame)
             {
-                _textBuilder.AppendLine("No attached netentity.");
-            }
-            else
-            {
-                var entityTransform = _entityManager.GetComponent<TransformComponent>(controlledEntity);
-                var playerWorldOffset = xformSystem.GetMapCoordinates(entityTransform);
-                var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
+                var xformSystem = _entityManager.System<SharedTransformSystem>();
 
-                var playerCoordinates = entityTransform.Coordinates;
-                var playerRotation = xformSystem.GetWorldRotation(entityTransform);
-                var gridRotation = entityTransform.GridUid != null
-                    ? xformSystem.GetWorldRotation(entityTransform.GridUid.Value)
-                    : Angle.Zero;
+                _textBuilder.AppendLine("\nAttached NetEntity:");
+                var controlledEntity = _playerManager.LocalSession?.AttachedEntity ?? EntityUid.Invalid;
 
-                _textBuilder.Append($@"    Screen: {playerScreen}
+                if (controlledEntity == EntityUid.Invalid)
+                {
+                    _textBuilder.AppendLine("No attached netentity.");
+                }
+                else
+                {
+                    var entityTransform = _entityManager.GetComponent<TransformComponent>(controlledEntity);
+                    var playerWorldOffset = xformSystem.GetMapCoordinates(entityTransform);
+                    var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
+
+                    var playerCoordinates = entityTransform.Coordinates;
+                    var playerRotation = xformSystem.GetWorldRotation(entityTransform);
+                    var gridRotation = entityTransform.GridUid != null
+                        ? xformSystem.GetWorldRotation(entityTransform.GridUid.Value)
+                        : Angle.Zero;
+
+                    _textBuilder.Append($@"    Screen: {playerScreen}
     {playerWorldOffset}
     {_entityManager.GetNetCoordinates(playerCoordinates)}
     Rotation: {playerRotation.Degrees:F2}°
     NEntId: {_entityManager.GetNetEntity(controlledEntity)}
     Grid NEntId: {_entityManager.GetNetEntity(entityTransform.GridUid)}
     Grid Rotation: {gridRotation.Degrees:F2}°");
+                }
             }
 
             _contents.TextMemory = FormatHelpers.BuilderToMemory(_textBuilder, _textBuffer);

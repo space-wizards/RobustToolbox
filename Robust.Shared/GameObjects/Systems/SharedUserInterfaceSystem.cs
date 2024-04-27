@@ -49,6 +49,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         SubscribeLocalEvent<UserInterfaceComponent, OpenBoundInterfaceMessage>(OnUserInterfaceOpen);
         SubscribeLocalEvent<UserInterfaceComponent, CloseBoundInterfaceMessage>(OnUserInterfaceClosed);
+        SubscribeLocalEvent<UserInterfaceComponent, ComponentStartup>(OnUserInterfaceStartup);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentGetState>(OnUserInterfaceGetState);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentHandleState>(OnUserInterfaceHandleState);
@@ -264,6 +265,19 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         EnsureClientBui(ent, args.UiKey, ent.Comp.Interfaces[args.UiKey]);
     }
 
+    private void OnUserInterfaceStartup(Entity<UserInterfaceComponent> ent, ref ComponentStartup args)
+    {
+        foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
+        {
+            bui.Open();
+
+            if (ent.Comp.States.TryGetValue(key, out var state))
+            {
+                bui.UpdateState(state);
+            }
+        }
+    }
+
     private void OnUserInterfaceShutdown(EntityUid uid, UserInterfaceComponent component, ComponentShutdown args)
     {
         foreach (var bui in component.ClientOpenInterfaces.Values)
@@ -375,11 +389,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // If UI not open then open it
         var attachedEnt = _player.LocalEntity;
 
+        // If we get the first state for an ent coming in then don't open BUIs yet, just defer it until later.
+        var open = ent.Comp.LifeStage > ComponentLifeStage.Added;
+
         if (attachedEnt != null)
         {
             foreach (var (key, value) in ent.Comp.Interfaces)
             {
-                EnsureClientBui(ent, key, value);
+                EnsureClientBui(ent, key, value, open);
             }
         }
     }
@@ -387,7 +404,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Opens a client's BUI if not already open and applies the state to it.
     /// </summary>
-    private void EnsureClientBui(Entity<UserInterfaceComponent> entity, Enum key, InterfaceData data)
+    private void EnsureClientBui(Entity<UserInterfaceComponent> entity, Enum key, InterfaceData data, bool open = true)
     {
         // If it's out BUI open it up and apply the state, otherwise do nothing.
         var player = _player.LocalEntity;
@@ -410,6 +427,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
 
         entity.Comp.ClientOpenInterfaces[key] = boundUserInterface;
+
+        // This is just so we don't open while applying UI states.
+        if (!open)
+            return;
+
         boundUserInterface.Open();
 
         if (entity.Comp.States.TryGetValue(key, out var buiState))

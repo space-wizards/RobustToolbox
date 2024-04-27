@@ -54,6 +54,38 @@ END TEMPLATE-->
 *None yet*
 
 
+## 220.2.0
+
+### New features
+
+* RSIs can now specify load parameters, mimicking the ones from `.png.yml`. Currently only disabling sRGB is supported.
+* Added a second UV channel to Clyde's vertex format. On regular batched sprite draws, this goes 0 -> 1 across the sprite quad.
+* Added a new `CopyToShaderParameters` system for `SpriteComponent` layers.
+
+
+## 220.1.0
+
+### Bugfixes
+
+* Fix client-side replay exceptions due to dropped states when recording.
+
+### Other
+
+* Remove IP + HWId from ViewVariables.
+* Close BUIs upon disconnect.
+
+
+## 220.0.0
+
+### Breaking changes
+
+* Refactor UserInterfaceSystem. 
+  - The API has been significantly cleaned up and standardised, most noticeably callers don't need to worry about TryGetUi and can rely on either HasUi, SetUiState, CloseUi, or OpenUi to handle their code as appropriate.
+  - Interface data is now stored via key rather than as a flat list which is a breaking change for YAML.
+  - BoundUserInterfaces can now be completely handled via Shared code. Existing Server-side callers will behave similarly to before.
+  - BoundUserInterfaces now properly close in many more situations, additionally they are now attached to the entity so reconnecting can re-open them and they can be serialized properly.
+
+
 ## 219.2.0
 
 ### New features

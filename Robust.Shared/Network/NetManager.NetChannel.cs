@@ -35,7 +35,6 @@ namespace Robust.Shared.Network
             public bool IsConnected => _connection.Status == NetConnectionStatus.Connected;
 
             /// <inheritdoc />
-            [ViewVariables]
             public IPEndPoint RemoteEndPoint => _connection.RemoteEndPoint;
 
             /// <summary>
@@ -100,7 +99,7 @@ namespace Robust.Shared.Network
 
             public override string ToString()
             {
-                return $"{RemoteEndPoint}/{UserId}";
+                return $"{ConnectionId}/{UserId}";
             }
         }
     }

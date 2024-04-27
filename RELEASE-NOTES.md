@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 220.0.0
+
+### Breaking changes
+
+* Refactor UserInterfaceSystem. 
+  - The API has been significantly cleaned up and standardised, most noticeably callers don't need to worry about TryGetUi and can rely on either HasUi, SetUiState, CloseUi, or OpenUi to handle their code as appropriate.
+  - Interface data is now stored via key rather than as a flat list which is a breaking change for YAML.
+  - BoundUserInterfaces can now be completely handled via Shared code. Existing Server-side callers will behave similarly to before.
+  - BoundUserInterfaces now properly close in many more situations, additionally they are now attached to the entity so reconnecting can re-open them and they can be serialized properly.
+
+
 ## 219.2.0
 
 ### New features

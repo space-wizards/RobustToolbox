@@ -601,7 +601,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class ClydeTexture : OwnedTexture
+        internal sealed class ClydeTexture : OwnedTexture
         {
             private readonly Clyde _clyde;
             public readonly bool IsSrgb;

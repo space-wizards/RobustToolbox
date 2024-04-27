@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 220.1.0
+
+### Bugfixes
+
+* Fix client-side replay exceptions due to dropped states when recording.
+
+### Other
+
+* Remove IP + HWId from ViewVariables.
+* Close BUIs upon disconnect.
+
+
 ## 220.0.0
 
 ### Breaking changes

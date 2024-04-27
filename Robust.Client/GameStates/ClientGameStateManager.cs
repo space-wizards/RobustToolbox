@@ -125,6 +125,8 @@ namespace Robust.Client.GameStates
 #endif
 
         private bool _resettingPredictedEntities;
+        private readonly List<EntityUid> _brokenEnts = new();
+        private readonly List<(EntityUid, NetEntity)> _toStart = new();
 
         /// <inheritdoc />
         public void Initialize()
@@ -667,7 +669,16 @@ namespace Robust.Client.GameStates
 
             foreach (var netEntity in createdEntities)
             {
+#if EXCEPTION_TOLERANCE
+                if (!_entityManager.TryGetEntityData(netEntity, out _, out var meta))
+                {
+                    _sawmill.Error($"Encountered deleted entity while merging implicit data! NetEntity: {netEntity}");
+                    continue;
+                }
+#else
                 var (_, meta) = _entityManager.GetEntityData(netEntity);
+#endif
+
                 var compData = _compDataPool.Get();
                 _outputData.Add(netEntity, compData);
 
@@ -1157,63 +1168,58 @@ namespace Robust.Client.GameStates
 
         private void InitializeAndStart(Dictionary<NetEntity, EntityState> toCreate)
         {
-            var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
+            _toStart.Clear();
 
-#if EXCEPTION_TOLERANCE
-            var brokenEnts = new List<EntityUid>();
-#endif
             using (_prof.Group("Initialize Entity"))
             {
+                EntityUid entity = default;
                 foreach (var netEntity in toCreate.Keys)
                 {
-                    var entity = _entityManager.GetEntity(netEntity);
-#if EXCEPTION_TOLERANCE
                     try
                     {
-#endif
-                    _entities.InitializeEntity(entity, metaQuery.GetComponent(entity));
-#if EXCEPTION_TOLERANCE
+                        (entity, var meta) = _entityManager.GetEntityData(netEntity);
+                        _entities.InitializeEntity(entity, meta);
+                        _toStart.Add((entity, netEntity));
                     }
                     catch (Exception e)
                     {
-                        _sawmill.Error($"Server entity threw in Init: ent={_entities.ToPrettyString(entity)}");
+                        _sawmill.Error($"Server entity threw in Init: nent={netEntity}, ent={_entities.ToPrettyString(entity)}");
                         _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
-                        brokenEnts.Add(entity);
-                        toCreate.Remove(netEntity);
-                    }
+                        _toCreate.Remove(netEntity);
+                        _brokenEnts.Add(entity);
+#if !EXCEPTION_TOLERANCE
+                        throw;
 #endif
+                    }
                 }
             }
 
             using (_prof.Group("Start Entity"))
             {
-                foreach (var netEntity in toCreate.Keys)
+                foreach (var (entity, netEntity) in _toStart)
                 {
-                    var entity = _entityManager.GetEntity(netEntity);
-#if EXCEPTION_TOLERANCE
                     try
                     {
-#endif
-                    _entities.StartEntity(entity);
-#if EXCEPTION_TOLERANCE
+                        _entities.StartEntity(entity);
                     }
                     catch (Exception e)
                     {
-                        _sawmill.Error($"Server entity threw in Start: ent={_entityManager.ToPrettyString(entity)}");
+                        _sawmill.Error($"Server entity threw in Start:  nent={netEntity}, ent={_entityManager.ToPrettyString(entity)}");
                         _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
-                        brokenEnts.Add(entity);
-                        toCreate.Remove(netEntity);
-                    }
+                        _toCreate.Remove(netEntity);
+                        _brokenEnts.Add(entity);
+#if !EXCEPTION_TOLERANCE
+                        throw;
 #endif
+                    }
                 }
             }
 
-#if EXCEPTION_TOLERANCE
-            foreach (var entity in brokenEnts)
+            foreach (var entity in _brokenEnts)
             {
                 _entityManager.DeleteEntity(entity);
             }
-#endif
+            _brokenEnts.Clear();
         }
 
         private void HandleEntityState(EntityUid uid, NetEntity netEntity, MetaDataComponent meta, IEventBus bus, EntityState? curState,

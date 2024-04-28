@@ -21,6 +21,7 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.Log;
 using Direction = Robust.Shared.Maths.Direction;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Client.Placement
 {
@@ -79,6 +80,10 @@ namespace Robust.Client.Placement
             private set
             {
                 _isActive = value;
+
+                if (CurrentPermission?.UseEditorContext is false)
+                    return;
+
                 SwitchEditorContext(value);
             }
         }
@@ -332,7 +337,7 @@ namespace Robust.Client.Placement
 
         private void HandleTileChanged(ref TileChangedEvent args)
         {
-            var coords = MapManager.GetGrid(args.NewTile.GridUid).GridTileToLocal(args.NewTile.GridIndices);
+            var coords = EntityManager.GetComponent<MapGridComponent>(args.NewTile.GridUid).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 
@@ -753,7 +758,7 @@ namespace Robust.Client.Placement
                 // If we have actually placed something on a valid grid...
                 if (gridIdOpt is EntityUid gridId && gridId.IsValid())
                 {
-                    var grid = MapManager.GetGrid(gridId);
+                    var grid = EntityManager.GetComponent<MapGridComponent>(gridId);
 
                     // no point changing the tile to the same thing.
                     if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)

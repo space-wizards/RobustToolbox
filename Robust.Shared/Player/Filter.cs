@@ -64,7 +64,7 @@ namespace Robust.Shared.Player
         public Filter AddPlayersByPvs(EntityCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entityMan = null, ISharedPlayerManager? playerMan = null)
         {
             IoCManager.Resolve(ref entityMan, ref playerMan);
-            return AddPlayersByPvs(origin.ToMap(entityMan), rangeMultiplier, entityMan, playerMan);
+            return AddPlayersByPvs(origin.ToMap(entityMan, entityMan.System<SharedTransformSystem>()), rangeMultiplier, entityMan, playerMan);
         }
 
         /// <summary>

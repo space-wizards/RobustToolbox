@@ -49,8 +49,7 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
         // Set up map and spawn several nested containers
         await Server.WaitPost(() =>
         {
-            MapId = MapMan.CreateMap();
-            Map = MapMan.GetMapEntityId(MapId);
+            Map = Server.System<SharedMapSystem>().CreateMap(out MapId);
             Parent = EntMan.SpawnEntity(null, new EntityCoordinates(Map, new(1,2)));
             ChildA = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
             ChildB = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));

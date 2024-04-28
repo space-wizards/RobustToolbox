@@ -33,6 +33,9 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     private Dictionary<int, EntityUid> _uidEntityMap = new();
     private Dictionary<EntityUid, int> _entityUidMap = new();
 
+    // Native tile ID -> map tile ID map for writing maps.
+    public Dictionary<int, int> TileWriteMap = [];
+
     /// <summary>
     /// Are we currently iterating prototypes or entities for writing.
     /// </summary>

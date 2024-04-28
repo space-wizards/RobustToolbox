@@ -3,6 +3,8 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Robust.Shared.Random;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -271,7 +273,8 @@ public interface IPrototypeManager
         out Dictionary<Type, HashSet<string>> prototypes);
 
     /// <summary>
-    /// This method uses reflection to validate that prototype id fields correspond to valid prototypes.
+    /// This method uses reflection to validate that all static prototype id fields correspond to valid prototypes.
+    /// This will validate all known to <see cref="IReflectionManager"/>
     /// </summary>
     /// <remarks>
     /// This will validate any field that has either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
@@ -279,7 +282,12 @@ public interface IPrototypeManager
     /// </remarks>
     /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection
     /// will be considered invalid.</param>
-    List<string> ValidateFields(Dictionary<Type, HashSet<string>> prototypes);
+    List<string> ValidateStaticFields(Dictionary<Type, HashSet<string>> prototypes);
+
+    /// <summary>
+    /// This is a variant of <see cref="ValidateStaticFields(System.Collections.Generic.Dictionary{System.Type,System.Collections.Generic.HashSet{string}})"/> that only validates a single type.
+    /// </summary>
+    List<string> ValidateStaticFields(Type type, Dictionary<Type, HashSet<string>> prototypes);
 
     /// <summary>
     /// This method will serialize all loaded prototypes into yaml and then validate them. This can be used to ensure
@@ -386,6 +394,11 @@ public interface IPrototypeManager
     ///     For example: /Prototypes/Guidebook
     /// </param>
     void AbstractDirectory(ResPath path);
+
+    /// <summary>
+    /// Tries to get a random prototype.
+    /// </summary>
+    bool TryGetRandom<T>(IRobustRandom random, [NotNullWhen(true)] out IPrototype? prototype) where T : class, IPrototype;
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

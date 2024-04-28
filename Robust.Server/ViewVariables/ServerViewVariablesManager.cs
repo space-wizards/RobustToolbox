@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Server.Console;
 using Robust.Server.Player;
+using Robust.Shared.Audio;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -296,7 +297,6 @@ namespace Robust.Server.ViewVariables
 
                     output = prototype;
                     return true;
-
                 default:
                     return false;
             }

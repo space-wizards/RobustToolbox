@@ -70,6 +70,11 @@ namespace Robust.Server.Console.Commands
             }
 
             var mapId = new MapId(mapInt);
+            if (!_map.MapExists(mapId))
+            {
+                shell.WriteError($"map {args[0]} does not exist");
+                return;
+            }
 
             if (shell.Player == null)
             {
@@ -110,13 +115,6 @@ namespace Robust.Server.Console.Commands
 
         private void SetupPlayer(MapId mapId, IConsoleShell shell)
         {
-            if (mapId == MapId.Nullspace) return;
-
-            if (!_map.MapExists(mapId))
-            {
-                _map.CreateMap(mapId);
-            }
-
             _map.SetMapPaused(mapId, false);
             var mapUid = _map.GetMapEntityIdOrThrow(mapId);
             _ent.System<Gravity2DController>().SetGravity(mapUid, new Vector2(0, -9.8f));

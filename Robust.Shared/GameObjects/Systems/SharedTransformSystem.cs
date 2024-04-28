@@ -26,6 +26,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
 
+        private EntityQuery<MapComponent> _mapQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
         protected EntityQuery<TransformComponent> XformQuery;
@@ -50,6 +51,7 @@ namespace Robust.Shared.GameObjects
 
             UpdatesOutsidePrediction = true;
 
+            _mapQuery = GetEntityQuery<MapComponent>();
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
             XformQuery = GetEntityQuery<TransformComponent>();
@@ -80,7 +82,7 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         private void DeparentAllEntsOnTile(EntityUid gridId, Vector2i tileIndices)
         {
-            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !_mapManager.TryGetGrid(gridId, out var grid))
+            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !TryComp<MapGridComponent>(gridId, out var grid))
                 return;
 
             if (!XformQuery.TryGetComponent(gridId, out var gridXform))

@@ -125,6 +125,8 @@ namespace Robust.Client.GameStates
 #endif
 
         private bool _resettingPredictedEntities;
+        private readonly List<EntityUid> _brokenEnts = new();
+        private readonly List<(EntityUid, NetEntity)> _toStart = new();
 
         /// <inheritdoc />
         public void Initialize()
@@ -667,7 +669,16 @@ namespace Robust.Client.GameStates
 
             foreach (var netEntity in createdEntities)
             {
+#if EXCEPTION_TOLERANCE
+                if (!_entityManager.TryGetEntityData(netEntity, out _, out var meta))
+                {
+                    _sawmill.Error($"Encountered deleted entity while merging implicit data! NetEntity: {netEntity}");
+                    continue;
+                }
+#else
                 var (_, meta) = _entityManager.GetEntityData(netEntity);
+#endif
+
                 var compData = _compDataPool.Get();
                 _outputData.Add(netEntity, compData);
 
@@ -700,7 +711,7 @@ namespace Robust.Client.GameStates
         {
             using var _ = _timing.StartStateApplicationArea();
 
-            // TODO repays optimize this.
+            // TODO replays optimize this.
             // This currently just saves game states as they are applied.
             // However this is inefficient and may have redundant data.
             // E.g., we may record states: [10 to 15] [11 to 16] *error* [0 to 18] [18 to 19] [18 to 20] ...
@@ -1138,7 +1149,7 @@ namespace Robust.Client.GameStates
                     if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
                         metas.TryGetComponent(xform.ParentUid, out var containerMeta) &&
                         (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
-                        containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container, null, true))
+                        containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container))
                     {
                         containerSys.Remove((ent.Value, xform, meta), container, false, true);
                     }
@@ -1157,63 +1168,58 @@ namespace Robust.Client.GameStates
 
         private void InitializeAndStart(Dictionary<NetEntity, EntityState> toCreate)
         {
-            var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
+            _toStart.Clear();
 
-#if EXCEPTION_TOLERANCE
-            var brokenEnts = new List<EntityUid>();
-#endif
             using (_prof.Group("Initialize Entity"))
             {
+                EntityUid entity = default;
                 foreach (var netEntity in toCreate.Keys)
                 {
-                    var entity = _entityManager.GetEntity(netEntity);
-#if EXCEPTION_TOLERANCE
                     try
                     {
-#endif
-                    _entities.InitializeEntity(entity, metaQuery.GetComponent(entity));
-#if EXCEPTION_TOLERANCE
+                        (entity, var meta) = _entityManager.GetEntityData(netEntity);
+                        _entities.InitializeEntity(entity, meta);
+                        _toStart.Add((entity, netEntity));
                     }
                     catch (Exception e)
                     {
-                        _sawmill.Error($"Server entity threw in Init: ent={_entities.ToPrettyString(entity)}");
+                        _sawmill.Error($"Server entity threw in Init: nent={netEntity}, ent={_entities.ToPrettyString(entity)}");
                         _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
-                        brokenEnts.Add(entity);
-                        toCreate.Remove(netEntity);
-                    }
+                        _toCreate.Remove(netEntity);
+                        _brokenEnts.Add(entity);
+#if !EXCEPTION_TOLERANCE
+                        throw;
 #endif
+                    }
                 }
             }
 
             using (_prof.Group("Start Entity"))
             {
-                foreach (var netEntity in toCreate.Keys)
+                foreach (var (entity, netEntity) in _toStart)
                 {
-                    var entity = _entityManager.GetEntity(netEntity);
-#if EXCEPTION_TOLERANCE
                     try
                     {
-#endif
-                    _entities.StartEntity(entity);
-#if EXCEPTION_TOLERANCE
+                        _entities.StartEntity(entity);
                     }
                     catch (Exception e)
                     {
-                        _sawmill.Error($"Server entity threw in Start: ent={_entityManager.ToPrettyString(entity)}");
+                        _sawmill.Error($"Server entity threw in Start:  nent={netEntity}, ent={_entityManager.ToPrettyString(entity)}");
                         _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
-                        brokenEnts.Add(entity);
-                        toCreate.Remove(netEntity);
-                    }
+                        _toCreate.Remove(netEntity);
+                        _brokenEnts.Add(entity);
+#if !EXCEPTION_TOLERANCE
+                        throw;
 #endif
+                    }
                 }
             }
 
-#if EXCEPTION_TOLERANCE
-            foreach (var entity in brokenEnts)
+            foreach (var entity in _brokenEnts)
             {
                 _entityManager.DeleteEntity(entity);
             }
-#endif
+            _brokenEnts.Clear();
         }
 
         private void HandleEntityState(EntityUid uid, NetEntity netEntity, MetaDataComponent meta, IEventBus bus, EntityState? curState,
@@ -1329,23 +1335,8 @@ namespace Robust.Client.GameStates
 
             foreach (var (comp, cur, next) in _compStateWork.Values)
             {
-                try
-                {
-                    var handleState = new ComponentHandleState(cur, next);
-                    bus.RaiseComponentEvent(comp, ref handleState);
-                }
-#pragma warning disable CS0168 // Variable is declared but never used
-                catch (Exception e)
-#pragma warning restore CS0168 // Variable is declared but never used
-                {
-#if EXCEPTION_TOLERANCE
-                    _sawmill.Error($"Failed to apply comp state: entity={_entities.ToPrettyString(uid)}, comp={comp.GetType()}");
-                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(HandleEntityState)}");
-#else
-                    _sawmill.Error($"Failed to apply comp state: entity={_entities.ToPrettyString(uid)}, comp={comp.GetType()}");
-                    throw;
-#endif
-                }
+                var handleState = new ComponentHandleState(cur, next);
+                bus.RaiseComponentEvent(comp, ref handleState);
             }
         }
 
@@ -1414,7 +1405,7 @@ namespace Robust.Client.GameStates
                     _entities.TryGetComponent(xform.ParentUid, out MetaDataComponent? containerMeta) &&
                     (containerMeta.Flags & MetaDataFlags.Detached) == 0)
                 {
-                    containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container, null, true);
+                    containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container);
                 }
 
                 _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(uid, xform);

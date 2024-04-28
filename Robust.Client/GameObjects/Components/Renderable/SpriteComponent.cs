@@ -6,13 +6,12 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using Robust.Client.Graphics;
+using Robust.Client.Graphics.Clyde;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
-using Robust.Shared;
 using Robust.Shared.Animations;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -30,6 +29,7 @@ using static Robust.Client.ComponentTrees.SpriteTreeSystem;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 using Direction = Robust.Shared.Maths.Direction;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.GameObjects
 {
@@ -772,15 +772,7 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var keyString in layerDatum.MapKeys)
                 {
-                    object key;
-                    if (reflection.TryParseEnumReference(keyString, out var @enum))
-                    {
-                        key = @enum;
-                    }
-                    else
-                    {
-                        key = keyString;
-                    }
+                    var key = ParseKey(keyString);
 
                     if (LayerMap.TryGetValue(key, out var mappedIndex))
                     {
@@ -806,7 +798,28 @@ namespace Robust.Client.GameObjects
             // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
             layer.Visible = layerDatum.Visible ?? layer.Visible;
 
+            if (layerDatum.CopyToShaderParameters is { } copyParameters)
+            {
+                layer.CopyToShaderParameters = new CopyToShaderParameters(ParseKey(copyParameters.LayerKey))
+                {
+                    ParameterTexture = copyParameters.ParameterTexture,
+                    ParameterUV = copyParameters.ParameterUV
+                };
+            }
+            else
+            {
+                layer.CopyToShaderParameters = null;
+            }
+
             RebuildBounds();
+        }
+
+        private object ParseKey(string keyString)
+        {
+            if (reflection.TryParseEnumReference(keyString, out var @enum))
+                return @enum;
+
+            return keyString;
         }
 
         public void LayerSetData(object layerKey, PrototypeLayerData data)
@@ -1237,9 +1250,9 @@ namespace Robust.Client.GameObjects
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
 
         // Lobby SpriteView rendering path
-        public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null)
+        public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null, Vector2 position = default)
         {
-            RenderInternal(drawingHandle, eyeRotation, worldRotation, Vector2.Zero, overrideDirection);
+            RenderInternal(drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
         }
 
         [DataField("noRot")] private bool _screenLock = false;
@@ -1637,6 +1650,9 @@ namespace Robust.Client.GameObjects
             [ViewVariables]
             public LayerRenderingStrategy RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy;
 
+            [ViewVariables(VVAccess.ReadWrite)]
+            public CopyToShaderParameters? CopyToShaderParameters;
+
             public Layer(SpriteComponent parent)
             {
                 _parent = parent;
@@ -2009,8 +2025,6 @@ namespace Robust.Client.GameObjects
 
                 // Set the drawing transform for this layer
                 GetLayerDrawMatrix(dir, out var layerMatrix);
-                Matrix3.Multiply(in layerMatrix, in spriteMatrix, out var transformMatrix);
-                drawingHandle.SetTransform(in transformMatrix);
 
                 // The direction used to draw the sprite can differ from the one that the angle would naively suggest,
                 // due to direction overrides or offsets.
@@ -2020,7 +2034,41 @@ namespace Robust.Client.GameObjects
 
                 // Get the correct directional texture from the state, and draw it!
                 var texture = GetRenderTexture(_actualState, dir);
-                RenderTexture(drawingHandle, texture);
+
+                if (CopyToShaderParameters == null)
+                {
+                    // Set the drawing transform for this layer
+                    Matrix3.Multiply(in layerMatrix, in spriteMatrix, out var transformMatrix);
+                    drawingHandle.SetTransform(in transformMatrix);
+
+                    RenderTexture(drawingHandle, texture);
+                }
+                else
+                {
+                    // Multiple atrocities to god being committed right here.
+                    var otherLayerIdx = _parent.LayerMap[CopyToShaderParameters.LayerKey!];
+                    var otherLayer = _parent.Layers[otherLayerIdx];
+                    if (otherLayer.Shader is not { } shader)
+                    {
+                        // No shader set apparently..?
+                        return;
+                    }
+
+                    if (!shader.Mutable)
+                        otherLayer.Shader = shader = shader.Duplicate();
+
+                    var clydeTexture = Clyde.RenderHandle.ExtractTexture(texture, null, out var csr);
+                    var sr = Clyde.RenderHandle.WorldTextureBoundsToUV(clydeTexture, csr);
+
+                    if (CopyToShaderParameters.ParameterTexture is { } paramTexture)
+                        shader.SetParameter(paramTexture, clydeTexture);
+
+                    if (CopyToShaderParameters.ParameterUV is { } paramUV)
+                    {
+                        var uv = new Vector4(sr.Left, sr.Bottom, sr.Right, sr.Top);
+                        shader.SetParameter(paramUV, uv);
+                    }
+                }
             }
 
             private void RenderTexture(DrawingHandleWorld drawingHandle, Texture texture)
@@ -2096,6 +2144,17 @@ namespace Robust.Client.GameObjects
                     AnimationTimeLeft += state.GetDelay(AnimationFrame);
                 }
             }
+        }
+
+        /// <summary>
+        /// Instantiated version of <see cref="PrototypeCopyToShaderParameters"/>.
+        /// Has <see cref="LayerKey"/> actually resolved to a a real key.
+        /// </summary>
+        public sealed class CopyToShaderParameters(object layerKey)
+        {
+            public object LayerKey = layerKey;
+            public string? ParameterTexture;
+            public string? ParameterUV;
         }
 
         void IAnimationProperties.SetAnimatableProperty(string name, object value)

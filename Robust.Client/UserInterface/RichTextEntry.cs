@@ -71,7 +71,8 @@ namespace Robust.Client.UserInterface
         /// <param name="defaultFont">The font being used for display.</param>
         /// <param name="maxSizeX">The maximum horizontal size of the container of this entry.</param>
         /// <param name="uiScale"></param>
-        public void Update(Font defaultFont, float maxSizeX, float uiScale)
+        /// <param name="lineHeightScale"></param>
+        public void Update(Font defaultFont, float maxSizeX, float uiScale, float lineHeightScale = 1)
         {
             // This method is gonna suck due to complexity.
             // Bear with me here.
@@ -159,7 +160,7 @@ namespace Robust.Client.UserInterface
                     if (!context.Font.TryPeek(out var font))
                         font = defaultFont;
 
-                    src.Height += font.GetLineHeight(uiScale);
+                    src.Height += GetLineHeight(font, uiScale, lineHeightScale);
                 }
             }
         }
@@ -170,7 +171,8 @@ namespace Robust.Client.UserInterface
             UIBox2 drawBox,
             float verticalOffset,
             MarkupDrawingContext context,
-            float uiScale)
+            float uiScale,
+            float lineHeightScale = 1)
         {
             context.Clear();
             context.Color.Push(_defaultColor);
@@ -197,7 +199,7 @@ namespace Robust.Client.UserInterface
                     if (lineBreakIndex < LineBreaks.Count &&
                         LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
-                        baseLine = new Vector2(drawBox.Left, baseLine.Y + font.GetLineHeight(uiScale) + controlYAdvance);
+                        baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(font, uiScale, lineHeightScale) + controlYAdvance);
                         controlYAdvance = 0;
                         lineBreakIndex += 1;
                     }
@@ -216,7 +218,7 @@ namespace Robust.Client.UserInterface
                 control.Position = new Vector2(baseLine.X * invertedScale, (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale);
                 control.Measure(new Vector2(Width, Height));
                 var advanceX = control.DesiredPixelSize.X;
-                controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - font.GetLineHeight(uiScale)) * invertedScale);
+                controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(font, uiScale, lineHeightScale)) * invertedScale);
                 baseLine += new Vector2(advanceX, 0);
             }
         }
@@ -241,6 +243,12 @@ namespace Robust.Client.UserInterface
             context.Tags.Remove(tag);
             tag.PopDrawContext(node, context);
             return tag.TextAfter(node);
+        }
+
+        private static int GetLineHeight(Font font, float uiScale, float lineHeightScale)
+        {
+            var height = font.GetLineHeight(uiScale);
+            return (int)(height * lineHeightScale);
         }
     }
 }

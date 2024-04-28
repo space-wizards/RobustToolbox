@@ -641,7 +641,11 @@ namespace Robust.Client.UserInterface
 
             foreach (var child in Children.ToArray())
             {
-                RemoveChild(child);
+                // This checks fails in some obscure cases like using the element inspector in the dev window.
+                // Why? Well I could probably spend 15 minutes in a debugger to find out,
+                // but I'd probably still end up with this fix.
+                if (child.Parent == this)
+                    RemoveChild(child);
             }
         }
 

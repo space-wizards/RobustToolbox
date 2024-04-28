@@ -26,6 +26,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IConsoleHost _conHost = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         private ISawmill _sawmillInputContext = default!;
 
@@ -151,7 +152,7 @@ namespace Robust.Client.GameObjects
 
             var pxform = Transform(pent);
             var wPos = pxform.WorldPosition + new Vector2(float.Parse(args[2]), float.Parse(args[3]));
-            var coords = EntityCoordinates.FromMap(EntityManager, pent, new MapCoordinates(wPos, pxform.MapID));
+            var coords = EntityCoordinates.FromMap(pent, new MapCoordinates(wPos, pxform.MapID), _transform, EntityManager);
 
             var funcId = _inputManager.NetworkBindMap.KeyFunctionID(keyFunction);
 

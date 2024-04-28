@@ -29,6 +29,7 @@ namespace Robust.Client.UserInterface.Controls
             TextureRect = new TextureRect
             {
                 StyleClasses = { StyleClassCheckBox },
+                VerticalAlignment = VAlignment.Center,
             };
             hBox.AddChild(TextureRect);
 

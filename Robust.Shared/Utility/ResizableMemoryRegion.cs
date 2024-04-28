@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Robust.Shared.Maths;
 using static TerraFX.Interop.Windows.Windows;
 using static TerraFX.Interop.Windows.MEM;
@@ -15,9 +16,9 @@ namespace Robust.Shared.Utility;
 /// </summary>
 internal static class ResizableMemoryRegionMetrics
 {
-    public static readonly Meter Meter = new("Robust.Shared.Utility.ResizableMemoryRegion");
+    public static readonly Meter Meter = new("Robust.ResizableMemoryRegion");
 
-    public const string GaugeName = "robust_resizable_memory_used_bytes";
+    public const string GaugeName = "used_bytes";
 }
 
 // TODO: Proper implementation on Linux that uses mmap()/madvise()/mprotect().
@@ -41,12 +42,20 @@ internal static class ResizableMemoryRegionMetrics
 /// <typeparam name="T">The type of elements stored in the memory region.</typeparam>
 internal sealed unsafe class ResizableMemoryRegion<T> : IDisposable where T : unmanaged
 {
-    private static readonly UpDownCounter<long> MemoryUsageGauge =
-        ResizableMemoryRegionMetrics.Meter.CreateUpDownCounter<long>(
+    private static readonly KeyValuePair<string, object?>[] MetricTags =
+        [new KeyValuePair<string, object?>("type", typeof(T).FullName)];
+
+    // ReSharper disable once StaticMemberInGenericType
+    private static long _memoryUsed;
+
+    static ResizableMemoryRegion()
+    {
+        ResizableMemoryRegionMetrics.Meter.CreateObservableUpDownCounter(
             ResizableMemoryRegionMetrics.GaugeName,
+            () => new Measurement<long>(_memoryUsed, MetricTags),
             "bytes",
-            "The amount of committed memory used by ResizableMemoryRegion<T> instances.",
-            new[] { new KeyValuePair<string, object?>("type", typeof(T).FullName) });
+            "The amount of committed memory used by ResizableMemoryRegion<T> instances.");
+    }
 
     /// <summary>
     /// The pointer to the start of the allocated memory region. Use with care!
@@ -158,7 +167,7 @@ internal sealed unsafe class ResizableMemoryRegion<T> : IDisposable where T : un
 
         CurrentSize = newElementSize;
 
-        MemoryUsageGauge.Add((newElementSize - previousSize) * sizeof(T));
+        Interlocked.Add(ref _memoryUsed, (newElementSize - previousSize) * sizeof(T));
     }
 
     /// <summary>
@@ -188,7 +197,7 @@ internal sealed unsafe class ResizableMemoryRegion<T> : IDisposable where T : un
         var newByteSize = (nuint)sizeof(T) * (nuint)newElementSize;
 
         // If the new max size cuts a page in the middle we can't free it so round up to the next page.
-        var newPageSize = MathHelper.CeilMultipleOfPowerOfTwo(newByteSize, (nuint) Environment.SystemPageSize);
+        var newPageSize = MathHelper.CeilMultipleOfPowerOfTwo(newByteSize, (nuint)Environment.SystemPageSize);
         if (OperatingSystem.IsWindows())
         {
             var freeBaseAddress = (byte*)BaseAddress + newPageSize;
@@ -203,6 +212,8 @@ internal sealed unsafe class ResizableMemoryRegion<T> : IDisposable where T : un
         }
 
         CurrentSize = newElementSize;
+
+        Interlocked.Add(ref _memoryUsed, (long)(newByteSize - currentByteSize));
     }
 
     /// <summary>
@@ -312,7 +323,7 @@ internal sealed unsafe class ResizableMemoryRegion<T> : IDisposable where T : un
             NativeMemory.Free(BaseAddress);
         }
 
-        MemoryUsageGauge.Add(-CurrentSize * sizeof(T));
+        Interlocked.Add(ref _memoryUsed, -CurrentSize * sizeof(T));
 
         BaseAddress = null;
         CurrentSize = 0;

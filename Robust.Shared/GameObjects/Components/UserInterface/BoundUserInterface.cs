@@ -36,6 +36,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected internal virtual void Open()
         {
+            Refresh();
         }
 
         /// <summary>
@@ -58,6 +59,14 @@ namespace Robust.Shared.GameObjects
         public void Close()
         {
             UiSystem.CloseUi(Owner, UiKey, _playerManager.LocalEntity, predicted: true);
+        }
+
+        /// <summary>
+        /// Indicates a state update has occurred and this BUI should be refreshed.
+        /// </summary>
+        public virtual void Refresh()
+        {
+
         }
 
         /// <summary>

@@ -502,6 +502,24 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     }
 
     /// <summary>
+    /// Refreshes the specified BUI on the entity.
+    /// </summary>
+    public void RefreshBui(Entity<UserInterfaceComponent?> entity, Enum key)
+    {
+        // Server it's a NOOP.
+        if (!_netManager.IsClient)
+            return;
+
+        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return;
+
+        if (!entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var bui))
+            return;
+
+        bui.Refresh();
+    }
+
+    /// <summary>
     /// Closes the attached Ui only for the specified actor.
     /// </summary>
     public void CloseUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid? actor, bool predicted = false)

@@ -242,7 +242,7 @@ public abstract partial class SharedPhysicsSystem
 
         do
         {
-            if (PhysicsQuery.TryGetComponent(oldParent, out var body))
+            if (PhysicsQuery.TryGetComponent(parent, out var body))
             {
                 oldAngular += body.AngularVelocity;
 

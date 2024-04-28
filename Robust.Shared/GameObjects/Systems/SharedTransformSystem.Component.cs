@@ -575,12 +575,12 @@ public abstract partial class SharedTransformSystem
         if (!xform.Initialized)
             return;
 
-#if !DEBUG
+#if DEBUG
         // If an entity is parented to the map, its grid uid should be null (unless it is itself a grid or we have a map-grid)
         if (xform.ParentUid == xform.MapUid)
             DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid || xform.GridUid == xform.MapUid);
 #endif
-        RaiseMoveEvent((uid, xform, meta), oldParentUid, oldPosition, oldRotation, oldMap);
+        RaiseMoveEvent(entity, oldParentUid, oldPosition, oldRotation, oldMap);
     }
 
     public void SetCoordinates(
@@ -655,7 +655,7 @@ public abstract partial class SharedTransformSystem
 
     public void SetParent(EntityUid uid, TransformComponent xform, EntityUid parent, EntityQuery<TransformComponent> xformQuery, TransformComponent? parentXform = null)
     {
-        DebugTools.Assert(uid == xform.Owner);
+        DebugTools.AssertOwner(uid, xform);
         if (xform.ParentUid == parent)
             return;
 

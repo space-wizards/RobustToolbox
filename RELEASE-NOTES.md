@@ -35,7 +35,9 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `EntParentChangedMessage.OldMapId` is now an `EntityUid` instead of `MapId`
+* `TransformSystem.DetachParentToNull()` is being renamed to `DetachEntity`
+* The order in which `MoveEvent` handlers are invoked has been changed to prioritise engine subscriptions 
 
 ### New features
 

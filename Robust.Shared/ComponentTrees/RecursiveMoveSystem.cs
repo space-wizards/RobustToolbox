@@ -33,7 +33,7 @@ internal sealed class RecursiveMoveSystem : EntitySystem
     public override void Shutdown()
     {
         if (_subscribed)
-            _transform.OnGlobalMoveEvent -= AnythingMoved;
+            _transform.OnBeforeMoveEvent -= AnythingMoved;
 
         _subscribed = false;
     }
@@ -44,7 +44,7 @@ internal sealed class RecursiveMoveSystem : EntitySystem
             return;
 
         _subscribed = true;
-        _transform.OnGlobalMoveEvent += AnythingMoved;
+        _transform.OnBeforeMoveEvent += AnythingMoved;
     }
 
     private void AnythingMoved(ref MoveEvent args)

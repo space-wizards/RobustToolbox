@@ -554,17 +554,7 @@ namespace Robust.Shared.GameObjects
 
             // Detach the base entity to null before iterating over children
             // This also ensures that the entity-lookup updates don't have to be re-run for every child (which recurses up the transform hierarchy).
-            if (transform.ParentUid != EntityUid.Invalid)
-            {
-                try
-                {
-                    _xforms.DetachParentToNull((uid, transform, metadata), parentXform, true);
-                }
-                catch (Exception e)
-                {
-                    _sawmill.Error($"Caught exception while trying to detach parent of entity '{ToPrettyString(uid, metadata)}' to null.\n{e}");
-                }
-            }
+            _xforms.DetachEntity(uid, transform, metadata, parentXform, true);
 
             foreach (var child in transform._children)
             {

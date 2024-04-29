@@ -77,15 +77,12 @@ internal sealed partial class UserInterfaceManager
 
             ReleaseKeyboardFocus(control);
             RemoveModal(control);
-            if (control == CurrentlyHovered)
-            {
-                control.MouseExited();
-                CurrentlyHovered = null;
-                _clearTooltip();
-            }
 
-            if (control != ControlFocused) return;
-            ControlFocused = null;
+            if (control == ControlFocused)
+                ControlFocused = null;
+
+            if (control == CurrentlyHovered)
+                UpdateHovered();
         }
 
         public void PushModal(Control modal)

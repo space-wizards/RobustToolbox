@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `UpdateHovered()` and `SetHovered()` to `IUserInterfaceManager`, for updating or modifying the currently hovered control.
 
 ### Bugfixes
 
@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* If the currently hovered control is disposed, `UserInterfaceManager` will now look for a new control, rather than just setting the hovered control to null.
 
 ### Internal
 

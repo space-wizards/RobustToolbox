@@ -35,13 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `EntParentChangedMessage.OldMapId` is now an `EntityUid` instead of `MapId`
-* `TransformSystem.DetachParentToNull()` is being renamed to `DetachEntity`
-* The order in which `MoveEvent` handlers are invoked has been changed to prioritise engine subscriptions 
+*None yet*
 
 ### New features
 
-* Added `UpdateHovered()` and `SetHovered()` to `IUserInterfaceManager`, for updating or modifying the currently hovered control.
+*None yet*
 
 ### Bugfixes
 
@@ -49,11 +47,37 @@ END TEMPLATE-->
 
 ### Other
 
-* If the currently hovered control is disposed, `UserInterfaceManager` will now look for a new control, rather than just setting the hovered control to null.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 221.0.0
+
+### Breaking changes
+
+* `EntParentChangedMessage.OldMapId` is now an `EntityUid` instead of `MapId`
+* `TransformSystem.DetachParentToNull()` is being renamed to `DetachEntity`
+* The order in which `MoveEvent` handlers are invoked has been changed to prioritise engine subscriptions 
+
+### New features
+
+* Added `UpdateHovered()` and `SetHovered()` to `IUserInterfaceManager`, for updating or modifying the currently hovered control.
+* Add SwapPositions to TransformSystem to swap two entity's transforms.
+
+### Bugfixes
+
+* Improve client gamestate exception tolerance.
+
+### Other
+
+* If the currently hovered control is disposed, `UserInterfaceManager` will now look for a new control, rather than just setting the hovered control to null.
+
+### Internal
+
+* Use more `EntityQuery<T>` internally in EntityManager and PhysicsSystem.
 
 
 ## 220.2.0

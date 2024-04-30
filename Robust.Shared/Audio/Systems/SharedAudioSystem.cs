@@ -8,6 +8,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
@@ -140,10 +141,21 @@ public abstract partial class SharedAudioSystem : EntitySystem
             return;
 
         entity.Value.Comp.Flags |= AudioFlags.GridAudio;
+        var gridUid = Transform(entity.Value).GridUid;
 
-        if (TryComp(Transform(entity.Value).GridUid, out PhysicsComponent? gridPhysics))
+        if (TryComp(gridUid, out PhysicsComponent? gridPhysics))
         {
             XformSystem.SetLocalPosition(entity.Value.Owner, gridPhysics.LocalCenter);
+        }
+
+        if (TryComp(gridUid, out MapGridComponent? mapGrid))
+        {
+            var extents = mapGrid.LocalAABB.Extents;
+            var minDistance = MathF.Max(extents.X, extents.Y);
+
+            entity.Value.Comp.Params = entity.Value.Comp.Params
+                .WithMaxDistance(minDistance + DefaultSoundRange)
+                .WithReferenceDistance(minDistance);
         }
 
         Dirty(entity.Value);
@@ -602,7 +614,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, Components.AudioComponent Component)? PlayStatic(SoundSpecifier? sound, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayStatic(GetSound(sound), playerFilter, coordinates, recordReplay);
+        return sound == null ? null : PlayStatic(GetSound(sound), playerFilter, coordinates, recordReplay, audioParams);
     }
 
     /// <summary>

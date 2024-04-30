@@ -1523,7 +1523,7 @@ namespace Robust.Shared.GameObjects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool TryComp(EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
+        public bool TryComp([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
             => TryGetComponent(uid, out component);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -971,13 +971,22 @@ public abstract partial class SharedTransformSystem
         return pos;
     }
 
+    public void SetWorldPositionNoLerp(Entity<TransformComponent?> entity, Vector2 worldPos)
+    {
+        if (!XformQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        var current = GetWorldPosition(entity.Comp);
+        var diff = worldPos - current;
+        SetLocalPositionNoLerp(entity.Owner, entity.Comp.LocalPosition + diff, entity.Comp);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(EntityUid uid, Vector2 worldPos)
     {
         var xform = XformQuery.GetComponent(uid);
         SetWorldPosition(xform, worldPos);
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(TransformComponent component, Vector2 worldPos)

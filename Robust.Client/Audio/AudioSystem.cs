@@ -331,21 +331,22 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         Vector2 worldPos;
-        var gridUid = xform.ParentUid;
         component.Volume = component.Params.Volume;
+        Vector2 delta;
 
-        // Handle grid audio differently by using nearest-edge instead of entity centre.
+        // Handle grid audio differently by using grid position.
         if ((component.Flags & AudioFlags.GridAudio) != 0x0)
         {
-            component.Occlusion = 0f;
-            component.Position = _maps.GetGridPosition(gridUid);
-            return;
+            var parentUid = xform.ParentUid;
+            worldPos = _maps.GetGridPosition(parentUid);
+        }
+        else
+        {
+            worldPos = _xformSys.GetWorldPosition(entity);
         }
 
-        worldPos = _xformSys.GetWorldPosition(entity);
-
         // Max distance check
-        var delta = worldPos - listener.Position;
+        delta = worldPos - listener.Position;
         var distance = delta.Length();
 
         // Out of range so just clip it for us.
@@ -364,8 +365,15 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         // Update audio occlusion
-        var occlusion = GetOcclusion(listener, delta, distance, entity);
-        component.Occlusion = occlusion;
+        if ((component.Flags & AudioFlags.NoOcclusion) == AudioFlags.NoOcclusion)
+        {
+            component.Occlusion = 0f;
+        }
+        else
+        {
+            var occlusion = GetOcclusion(listener, delta, distance, entity);
+            component.Occlusion = occlusion;
+        }
 
         // Update audio positions.
         component.Position = worldPos;

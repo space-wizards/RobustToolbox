@@ -158,6 +158,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
                 .WithReferenceDistance(minDistance);
         }
 
+        entity.Value.Comp.Flags |= AudioFlags.NoOcclusion;
         Dirty(entity.Value);
     }
 

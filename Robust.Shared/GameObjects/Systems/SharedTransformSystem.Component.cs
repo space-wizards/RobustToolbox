@@ -5,6 +5,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map.Components;
@@ -1033,6 +1034,16 @@ public abstract partial class SharedTransformSystem
         }
 
         return rotation;
+    }
+
+    public void SetWorldRotationNoLerp(Entity<TransformComponent?> entity, Angle angle)
+    {
+        if (!XformQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        var current = GetWorldRotation(entity.Comp);
+        var diff = angle - current;
+        SetLocalRotationNoLerp(entity, entity.Comp.LocalRotation + diff);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -63,7 +63,7 @@ namespace Robust.Client.UserInterface
         Color GetMainClearColor();
 
         void RenderControl(IRenderHandle renderHandle, ref int total, Control control, Vector2i position, Color modulate,
-            UIBox2i? scissorBox, Matrix3 coordinateTransform);
+            UIBox2i? scissorBox, Matrix3x2 coordinateTransform);
     }
 }
 

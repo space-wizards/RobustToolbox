@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -83,7 +84,7 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
 
         var mapPos = xform.ParentUid == xform.MapUid
             ? xform.LocalPosition
-            : Transform(xform.ParentUid).LocalMatrix.Transform(xform.LocalPosition);
+            : Vector2.Transform(xform.LocalPosition, Transform(xform.ParentUid).LocalMatrix);
 
         // Change parent if necessary
         if (_mapManager.TryFindGridAt(map, mapPos, out var gridUid, out _))

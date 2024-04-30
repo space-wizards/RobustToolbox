@@ -51,7 +51,7 @@ public abstract partial class SharedTransformSystem
             return new EntityCoordinates(entity, Vector2.Zero);
         }
 
-        var localPos = GetInvWorldMatrix(xform).Transform(mapPos.Position);
+        var localPos = Vector2.Transform(mapPos.Position, GetInvWorldMatrix(xform));
         return new EntityCoordinates(entity, localPos);
     }
 
@@ -64,7 +64,7 @@ public abstract partial class SharedTransformSystem
             return MapCoordinates.Nullspace;
 
         var xform = XformQuery.GetComponent(coordinates.EntityId);
-        var worldPos = GetWorldMatrix(xform).Transform(coordinates.Position);
+        var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(xform));
         return new MapCoordinates(worldPos, xform.MapID);
     }
 
@@ -89,7 +89,7 @@ public abstract partial class SharedTransformSystem
         if (xform.MapID != coordinates.MapId)
             throw new InvalidOperationException("Entity is not on the same map!");
 
-        var localPos = GetInvWorldMatrix(xform).Transform(coordinates.Position);
+        var localPos = Vector2.Transform(coordinates.Position, GetInvWorldMatrix(xform));
         return new EntityCoordinates(entity, localPos);
     }
 }

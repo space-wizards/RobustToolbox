@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
@@ -40,7 +40,7 @@ namespace Robust.Client.Graphics
         /// to UI screen space.
         /// </summary>
         /// <param name="projMatrix"></param>
-        void GetScreenProjectionMatrix(out Matrix3 projMatrix);
+        void GetScreenProjectionMatrix(out Matrix3x2 projMatrix);
 
         /// <summary>
         /// Projects a point from world space to UI screen space using the current camera.

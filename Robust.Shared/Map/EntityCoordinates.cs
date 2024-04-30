@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
@@ -99,7 +99,7 @@ namespace Robust.Shared.Map
                 return MapCoordinates.Nullspace;
 
             var transform = entityManager.GetComponent<TransformComponent>(EntityId);
-            var worldPos = transformSystem.GetWorldMatrix(transform).Transform(Position);
+            var worldPos = Vector2.Transform(Position, transformSystem.GetWorldMatrix(transform));
             return new MapCoordinates(worldPos, transform.MapID);
         }
 
@@ -146,7 +146,7 @@ namespace Robust.Shared.Map
             if(transform.MapID != coordinates.MapId)
                 throw new InvalidOperationException("Entity is not on the same map!");
 
-            var localPos = transformSystem.GetInvWorldMatrix(transform).Transform(coordinates.Position);
+            var localPos = Vector2.Transform(coordinates.Position, transformSystem.GetInvWorldMatrix(transform));
             return new EntityCoordinates(entity, localPos);
         }
 
@@ -262,7 +262,7 @@ namespace Robust.Shared.Map
             if(!IsValid(entMan) || entMan.GetComponent<TransformComponent>(entity).MapID != mapPos.MapId)
                 return new EntityCoordinates(entity, Vector2.Zero);
 
-            var localPos = transformSystem.GetInvWorldMatrix(entity).Transform(mapPos.Position);
+            var localPos = Vector2.Transform(mapPos.Position, transformSystem.GetInvWorldMatrix(entity));
             return new EntityCoordinates(entity, localPos);
         }
 

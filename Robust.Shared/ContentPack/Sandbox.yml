@@ -443,6 +443,7 @@ Types:
   System.Numerics:
     BitOperations: { All: True }
     Vector2: { All: True }
+    Matrix3x2: { All: True }
   System.Reflection:
     Assembly:
       Methods:

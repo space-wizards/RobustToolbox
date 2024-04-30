@@ -671,7 +671,7 @@ public abstract partial class SharedTransformSystem
 
         var (_, parRot, parInvMatrix) = GetWorldPositionRotationInvMatrix(parentXform, xformQuery);
         var (pos, rot) = GetWorldPositionRotation(xform, xformQuery);
-        var newPos = parInvMatrix.Transform(pos);
+        var newPos = Vector2.Transform(pos, parInvMatrix);
         var newRot = rot - parRot;
 
         SetCoordinates(uid, xform, new EntityCoordinates(parent, newPos), newRot, newParent: parentXform);
@@ -769,7 +769,7 @@ public abstract partial class SharedTransformSystem
     #region World Matrix
 
     [Pure]
-    public Matrix3 GetWorldMatrix(EntityUid uid)
+    public Matrix3x2 GetWorldMatrix(EntityUid uid)
     {
         return GetWorldMatrix(XformQuery.GetComponent(uid), XformQuery);
     }
@@ -777,24 +777,24 @@ public abstract partial class SharedTransformSystem
     // Temporary until it's moved here
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Matrix3 GetWorldMatrix(TransformComponent component)
+    public Matrix3x2 GetWorldMatrix(TransformComponent component)
     {
         return GetWorldMatrix(component, XformQuery);
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Matrix3 GetWorldMatrix(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
+    public Matrix3x2 GetWorldMatrix(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
     {
         return GetWorldMatrix(xformQuery.GetComponent(uid), xformQuery);
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Matrix3 GetWorldMatrix(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
+    public Matrix3x2 GetWorldMatrix(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
         var (pos, rot) = GetWorldPositionRotation(component, xformQuery);
-        return Matrix3.CreateTransform(pos, rot);
+        return Matrix3Helpers.CreateTransform(pos, rot);
     }
 
     #endregion
@@ -872,7 +872,7 @@ public abstract partial class SharedTransformSystem
             _mapManager.TryFindGridAt(mapUid, coordinates.Position, out var targetGrid, out _))
         {
             var invWorldMatrix = GetInvWorldMatrix(targetGrid);
-            SetCoordinates(entity, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(coordinates.Position)));
+            SetCoordinates(entity, new EntityCoordinates(targetGrid, Vector2.Transform(coordinates.Position, invWorldMatrix)));
         }
         else
         {
@@ -933,7 +933,7 @@ public abstract partial class SharedTransformSystem
             // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
             Log.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
             var relXform = query.GetComponent(relative);
-            pos = relXform.InvWorldMatrix.Transform(pos);
+            pos = Vector2.Transform(pos, relXform.InvWorldMatrix);
             rot = rot - GetWorldRotation(relXform, query);
             break;
         }
@@ -964,7 +964,7 @@ public abstract partial class SharedTransformSystem
             // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
             Log.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
             var relXform = query.GetComponent(relative);
-            pos = GetInvWorldMatrix(relXform).Transform(pos);
+            pos = Vector2.Transform(pos, GetInvWorldMatrix(relXform));
             break;
         }
 
@@ -1110,7 +1110,7 @@ public abstract partial class SharedTransformSystem
             var invLocalMatrix = targetGridXform.InvLocalMatrix;
             var gridRot = targetGridXform.LocalRotation;
             var localRot = worldRot - gridRot;
-            SetCoordinates(uid, component, new EntityCoordinates(targetGrid, invLocalMatrix.Transform(worldPos)), rotation: localRot);
+            SetCoordinates(uid, component, new EntityCoordinates(targetGrid, Vector2.Transform(worldPos, invLocalMatrix)), rotation: localRot);
         }
         else
         {
@@ -1167,91 +1167,91 @@ public abstract partial class SharedTransformSystem
     #region Inverse World Matrix
 
     [Pure]
-    public Matrix3 GetInvWorldMatrix(EntityUid uid)
+    public Matrix3x2 GetInvWorldMatrix(EntityUid uid)
     {
         return GetInvWorldMatrix(XformQuery.GetComponent(uid), XformQuery);
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Matrix3 GetInvWorldMatrix(TransformComponent component)
+    public Matrix3x2 GetInvWorldMatrix(TransformComponent component)
     {
         return GetInvWorldMatrix(component, XformQuery);
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Matrix3 GetInvWorldMatrix(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
+    public Matrix3x2 GetInvWorldMatrix(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
     {
         return GetInvWorldMatrix(xformQuery.GetComponent(uid), xformQuery);
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Matrix3 GetInvWorldMatrix(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
+    public Matrix3x2 GetInvWorldMatrix(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
         var (pos, rot) = GetWorldPositionRotation(component, xformQuery);
-        return Matrix3.CreateInverseTransform(pos, rot);
+        return Matrix3Helpers.CreateInverseTransform(pos, rot);
     }
 
     #endregion
 
     #region GetWorldPositionRotationMatrix
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix)
         GetWorldPositionRotationMatrix(EntityUid uid)
     {
         return GetWorldPositionRotationMatrix(XformQuery.GetComponent(uid), XformQuery);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix)
         GetWorldPositionRotationMatrix(TransformComponent xform)
     {
         return GetWorldPositionRotationMatrix(xform, XformQuery);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix)
         GetWorldPositionRotationMatrix(EntityUid uid, EntityQuery<TransformComponent> xforms)
     {
         return GetWorldPositionRotationMatrix(xforms.GetComponent(uid), xforms);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix)
         GetWorldPositionRotationMatrix(TransformComponent component, EntityQuery<TransformComponent> xforms)
     {
         var (pos, rot) = GetWorldPositionRotation(component, xforms);
-        return (pos, rot, Matrix3.CreateTransform(pos, rot));
+        return (pos, rot, Matrix3Helpers.CreateTransform(pos, rot));
     }
     #endregion
 
     #region GetWorldPositionRotationInvMatrix
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityUid uid)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityUid uid)
     {
         return GetWorldPositionRotationInvMatrix(XformQuery.GetComponent(uid));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(TransformComponent xform)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationInvMatrix(TransformComponent xform)
     {
         return GetWorldPositionRotationInvMatrix(xform, XformQuery);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityUid uid, EntityQuery<TransformComponent> xforms)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityUid uid, EntityQuery<TransformComponent> xforms)
     {
         return GetWorldPositionRotationInvMatrix(xforms.GetComponent(uid), xforms);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(TransformComponent component, EntityQuery<TransformComponent> xforms)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationInvMatrix(TransformComponent component, EntityQuery<TransformComponent> xforms)
     {
         var (pos, rot) = GetWorldPositionRotation(component, xforms);
-        return (pos, rot, Matrix3.CreateInverseTransform(pos, rot));
+        return (pos, rot, Matrix3Helpers.CreateInverseTransform(pos, rot));
     }
 
     #endregion
@@ -1259,32 +1259,32 @@ public abstract partial class SharedTransformSystem
     #region GetWorldPositionRotationMatrixWithInv
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix)
         GetWorldPositionRotationMatrixWithInv(EntityUid uid)
     {
         return GetWorldPositionRotationMatrixWithInv(XformQuery.GetComponent(uid), XformQuery);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix)
         GetWorldPositionRotationMatrixWithInv(TransformComponent xform)
     {
         return GetWorldPositionRotationMatrixWithInv(xform, XformQuery);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix)
         GetWorldPositionRotationMatrixWithInv(EntityUid uid, EntityQuery<TransformComponent> xforms)
     {
         return GetWorldPositionRotationMatrixWithInv(xforms.GetComponent(uid), xforms);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix)
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix)
         GetWorldPositionRotationMatrixWithInv(TransformComponent component, EntityQuery<TransformComponent> xforms)
     {
         var (pos, rot) = GetWorldPositionRotation(component, xforms);
-        return (pos, rot, Matrix3.CreateTransform(pos, rot), Matrix3.CreateInverseTransform(pos, rot));
+        return (pos, rot, Matrix3Helpers.CreateTransform(pos, rot), Matrix3Helpers.CreateInverseTransform(pos, rot));
     }
 
     #endregion
@@ -1329,7 +1329,7 @@ public abstract partial class SharedTransformSystem
         if (newParent == xform.ParentUid || newParent == uid)
             return;
 
-        var newPos = GetInvWorldMatrix(newParent).Transform(oldPos);
+        var newPos = Vector2.Transform(oldPos, GetInvWorldMatrix(newParent));
         SetCoordinates(uid, xform, new(newParent, newPos));
     }
 
@@ -1351,7 +1351,7 @@ public abstract partial class SharedTransformSystem
         if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _))
             newParent = gridUid;
 
-        coordinates = new(newParent, GetInvWorldMatrix(newParent).Transform(oldPos));
+        coordinates = new(newParent, Vector2.Transform(oldPos, GetInvWorldMatrix(newParent)));
         return true;
     }
     #endregion
@@ -1591,7 +1591,7 @@ public abstract partial class SharedTransformSystem
             if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos2.Value.Position, out var targetGrid, out _))
             {
                 var invWorldMatrix = GetInvWorldMatrix(targetGrid);
-                SetCoordinates(entity1, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(pos2.Value.Position)));
+                SetCoordinates(entity1, new EntityCoordinates(targetGrid, Vector2.Transform(pos2.Value.Position, invWorldMatrix)));
             }
             else
             {
@@ -1614,7 +1614,7 @@ public abstract partial class SharedTransformSystem
             if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos1.Value.Position, out var targetGrid, out _))
             {
                 var invWorldMatrix = GetInvWorldMatrix(targetGrid);
-                SetCoordinates(entity2, new EntityCoordinates(targetGrid, invWorldMatrix.Transform(pos1.Value.Position)));
+                SetCoordinates(entity2, new EntityCoordinates(targetGrid, Vector2.Transform(pos1.Value.Position, invWorldMatrix)));
             }
             else
             {

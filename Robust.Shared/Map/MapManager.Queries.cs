@@ -307,7 +307,7 @@ internal partial class MapManager
 
             // Doesn't use WorldBounds because it's just an AABB.
             var matrix = tuple.xformSystem.GetInvWorldMatrix(iUid);
-            var localPos = matrix.Transform(tuple.worldPos);
+            var localPos = Vector2.Transform(tuple.worldPos, matrix);
 
             // NOTE:
             // If you change this to use fixtures instead (i.e. if you want half-tiles) then you need to make sure

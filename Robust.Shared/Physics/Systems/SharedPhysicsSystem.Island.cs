@@ -983,7 +983,7 @@ public abstract partial class SharedPhysicsSystem
             var q = new Quaternion2D(angle);
             var adjustedPosition = positions[i] - Physics.Transform.Mul(q, body.LocalCenter);
 
-            var solvedPosition = parentInvMatrix.Transform(adjustedPosition);
+            var solvedPosition = Vector2.Transform(adjustedPosition, parentInvMatrix);
             solvedPositions[offset + i] = solvedPosition - xform.LocalPosition;
             solvedAngles[offset + i] = angles[i] - worldRot;
         }

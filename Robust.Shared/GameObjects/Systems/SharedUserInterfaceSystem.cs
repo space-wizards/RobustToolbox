@@ -911,6 +911,19 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     }
 
     /// <summary>
+    /// Add a UI after an entity has been created.
+    /// It cannot be added already.
+    /// </summary>
+    public void AddUi(Entity<UserInterfaceComponent?> ent, Enum key, InterfaceData data)
+    {
+        if (!Resolve(ent, ref ent.Comp))
+            return;
+
+        ent.Comp.Interfaces[key] = data;
+        Dirty(ent, ent.Comp);
+    }
+
+    /// <summary>
     ///     Verify that the subscribed clients are still in range of the interface.
     /// </summary>
     private bool CheckRange(

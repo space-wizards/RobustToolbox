@@ -294,15 +294,15 @@ namespace Robust.Shared.GameObjects
             // Finally, handle grid traversal. This is handled separately to avoid out-of-order move events.
             // I.e., if the traversal raises its own move event, this ensures that all the old move event handlers
             // have finished running first. Ideally this shouldn't be required, but this is here just in case
-            _traversal.CheckTraverse(ent.Owner, ent.Comp1);
+            _traversal.CheckTraverse(ent);
         }
     }
 
     [ByRefEvent]
-    public readonly struct TransformStartupEvent(Entity<TransformComponent> entity)
+    public readonly struct TransformStartupEvent(Entity<TransformComponent, MetaDataComponent> entity)
     {
-        public readonly Entity<TransformComponent> Entity = entity;
-        public TransformComponent Component => Entity.Comp;
+        public readonly Entity<TransformComponent, MetaDataComponent> Entity = entity;
+        public TransformComponent Component => Entity.Comp1;
     }
 
     /// <summary>

@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -32,6 +33,8 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [Dependency] private   readonly INetManager _netManager = default!;
     [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
+    [Dependency] protected readonly MetaDataSystem MetaDataSystem = default!;
+    [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
 
     /// <summary>
     /// Default max range at which the sound can be heard.
@@ -90,7 +93,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         var currentPos = (entity.Comp.PauseTime ?? Timing.CurTime) - entity.Comp.AudioStart;
         var timeOffset = TimeSpan.FromSeconds(position - currentPos.TotalSeconds);
 
-        DebugTools.Assert(currentPos > TimeSpan.Zero);
+        DebugTools.Assert(currentPos >= TimeSpan.Zero);
 
         // Rounding.
         if (Math.Abs(timeOffset.TotalSeconds) <= 0.01)
@@ -129,6 +132,21 @@ public abstract partial class SharedAudioSystem : EntitySystem
     private float GetPlaybackPosition(AudioComponent component)
     {
         return (float) (Timing.CurTime - (component.PauseTime ?? TimeSpan.Zero) - component.AudioStart).TotalSeconds;
+    }
+
+    public virtual void SetGridAudio(Entity<AudioComponent>? entity)
+    {
+        if (entity == null)
+            return;
+
+        entity.Value.Comp.Flags |= AudioFlags.GridAudio;
+
+        if (TryComp(Transform(entity.Value).GridUid, out PhysicsComponent? gridPhysics))
+        {
+            XformSystem.SetLocalPosition(entity.Value.Owner, gridPhysics.LocalCenter);
+        }
+
+        Dirty(entity.Value);
     }
 
     /// <summary>
@@ -254,13 +272,14 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     protected AudioComponent SetupAudio(EntityUid uid, string? fileName, AudioParams? audioParams, TimeSpan? length = null)
     {
-        DebugTools.Assert((!string.IsNullOrEmpty(fileName) || length is not null));
+        DebugTools.Assert(
+            (!string.IsNullOrEmpty(fileName) || length is not null));
         audioParams ??= AudioParams.Default;
         var comp = AddComp<AudioComponent>(uid);
         comp.FileName = fileName ?? string.Empty;
         comp.Params = audioParams.Value;
         comp.AudioStart = Timing.CurTime;
-
+        MetaDataSystem.AddFlag(uid, MetaDataFlags.NoGridTraverse);
 
         if (!audioParams.Value.Loop)
         {

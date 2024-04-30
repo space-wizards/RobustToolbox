@@ -42,6 +42,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Source = new DummyAudioSource();
     }
 
+    public override void SetGridAudio(Entity<AudioComponent>? entity)
+    {
+        if (entity == null)
+            return;
+
+        base.SetGridAudio(entity);
+
+        // Need to global override so everyone can hear it.
+        _pvs.AddGlobalOverride(entity.Value.Owner);
+    }
+
     private void AddAudioFilter(EntityUid uid, AudioComponent component, Filter filter)
     {
         var count = filter.Count;
@@ -89,8 +100,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return null;
         }
 
-        var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
+        var entity = Spawn("Audio", MapCoordinates.Nullspace);
         var audio = SetupAudio(entity, filename, audioParams);
+        // Move it after setting it up
+        XformSystem.SetCoordinates(entity, new EntityCoordinates(uid, Vector2.Zero));
         AddAudioFilter(entity, audio, playerFilter);
 
         return (entity, audio);
@@ -108,8 +121,9 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return null;
         }
 
-        var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
+        var entity = Spawn("Audio", MapCoordinates.Nullspace);
         var audio = SetupAudio(entity, filename, audioParams);
+        XformSystem.SetCoordinates(entity, new EntityCoordinates(uid, Vector2.Zero));
 
         return (entity, audio);
     }
@@ -129,8 +143,9 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (!coordinates.IsValid(EntityManager))
             return null;
 
-        var entity = Spawn("Audio", coordinates);
+        var entity = Spawn("Audio", MapCoordinates.Nullspace);
         var audio = SetupAudio(entity, filename, audioParams);
+        XformSystem.SetCoordinates(entity, coordinates);
         AddAudioFilter(entity, audio, playerFilter);
 
         return (entity, audio);
@@ -154,6 +169,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         var entity = Spawn("Audio", coordinates);
         var audio = SetupAudio(entity, filename, audioParams);
+        XformSystem.SetCoordinates(entity, coordinates);
 
         return (entity, audio);
     }

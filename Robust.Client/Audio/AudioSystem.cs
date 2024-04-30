@@ -216,11 +216,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
             }
         }
 
-        if ((component.Flags & AudioFlags.GridAudio) != 0x0)
-        {
-            _metadata.SetFlag(entity.Owner, MetaDataFlags.Undetachable, true);
-        }
-
         // Need to set all initial data for first frame.
         ApplyAudioParams(component.Params, component);
         component.Source.Global = component.Global;

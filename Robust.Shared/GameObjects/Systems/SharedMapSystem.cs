@@ -146,6 +146,11 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
+        /// Was the tile previously empty or is it now empty.
+        /// </summary>
+        public bool EmptyChanged => OldTile.IsEmpty != NewTile.Tile.IsEmpty;
+
+        /// <summary>
         ///     EntityUid of the grid with the tile-change. TileRef stores the GridId.
         /// </summary>
         public readonly EntityUid Entity;

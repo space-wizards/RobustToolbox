@@ -36,7 +36,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <summary>
     /// Default max range at which the sound can be heard.
     /// </summary>
-    public const float DefaultSoundRange = 20;
+    public const float DefaultSoundRange = 15;
 
     /// <summary>
     /// Used in the PAS to designate the physics collision mask of occluders.

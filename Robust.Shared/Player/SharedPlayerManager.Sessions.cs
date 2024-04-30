@@ -200,12 +200,13 @@ internal abstract partial class SharedPlayerManager
         if (EntManager.EnsureComponent<ActorComponent>(uid, out var actor))
         {
             // component already existed.
-            DebugTools.AssertNotNull(actor.PlayerSession);
             if (!force)
                 return false;
 
             kicked = actor.PlayerSession;
-            Detach(kicked);
+
+            if (kicked != null)
+                Detach(kicked);
         }
 
         if (_netMan.IsServer)

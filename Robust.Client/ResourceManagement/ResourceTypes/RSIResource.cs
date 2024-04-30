@@ -40,15 +40,19 @@ namespace Robust.Client.ResourceManagement
             var loadStepData = new LoadStepData {Path = path};
             var manager = dependencies.Resolve<IResourceManager>();
             LoadPreTexture(manager, loadStepData);
-
-            loadStepData.AtlasTexture = dependencies.Resolve<IClyde>().LoadTextureFromImage(
-                loadStepData.AtlasSheet,
-                loadStepData.Path.ToString());
-
+            LoadTexture(dependencies.Resolve<IClyde>(), loadStepData);
             LoadPostTexture(loadStepData);
             LoadFinish(dependencies.Resolve<IResourceCacheInternal>(), loadStepData);
 
             loadStepData.AtlasSheet.Dispose();
+        }
+
+        internal static void LoadTexture(IClyde clyde, LoadStepData loadStepData)
+        {
+            loadStepData.AtlasTexture = clyde.LoadTextureFromImage(
+                loadStepData.AtlasSheet,
+                loadStepData.Path.ToString(),
+                loadStepData.LoadParameters);
         }
 
         internal static void LoadPreTexture(IResourceManager manager, LoadStepData data)
@@ -178,6 +182,7 @@ namespace Robust.Client.ResourceManagement
             data.FrameSize = frameSize;
             data.DimX = dimensionX;
             data.CallbackOffsets = callbackOffsets;
+            data.LoadParameters = metadata.LoadParameters;
         }
 
         internal static void LoadPostTexture(LoadStepData data)
@@ -380,6 +385,7 @@ namespace Robust.Client.ResourceManagement
             public Texture AtlasTexture = default!;
             public Vector2i AtlasOffset;
             public RSI Rsi = default!;
+            public TextureLoadParameters LoadParameters;
         }
 
         internal struct StateReg

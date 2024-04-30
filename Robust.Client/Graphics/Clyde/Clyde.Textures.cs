@@ -601,7 +601,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class ClydeTexture : OwnedTexture
+        internal sealed class ClydeTexture : OwnedTexture
         {
             private readonly Clyde _clyde;
             public readonly bool IsSrgb;
@@ -649,24 +649,30 @@ namespace Robust.Client.Graphics.Clyde
                 return $"ClydeTexture: ({TextureId})";
             }
 
-            public override Color GetPixel(int x, int y)
+            public override unsafe Color GetPixel(int x, int y)
             {
                 if (!_clyde._loadedTextures.TryGetValue(TextureId, out var loaded))
                 {
                     throw new DataException("Texture not found");
                 }
 
-                Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
-                unsafe
-                {
-                    fixed (byte* p = rgba)
-                    {
+                var curTexture2D = GL.GetInteger(GetPName.TextureBinding2D);
+                var bufSize = 4 * loaded.Size.X * loaded.Size.Y;
+                var buffer = ArrayPool<byte>.Shared.Rent(bufSize);
 
-                        GL.GetTextureImage(loaded.OpenGLObject.Handle, 0, PF.Rgba, PT.UnsignedByte, 4*this.Size.X*this.Size.Y, (IntPtr) p);
-                    }
+                GL.BindTexture(TextureTarget.Texture2D, loaded.OpenGLObject.Handle);
+
+                fixed (byte* p = buffer)
+                {
+                    GL.GetnTexImage(TextureTarget.Texture2D, 0, PF.Rgba, PT.UnsignedByte, bufSize, (IntPtr) p);
                 }
-                int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
-                return new Color(rgba[pixelPos+0], rgba[pixelPos+1], rgba[pixelPos+2], rgba[pixelPos+3]);
+
+                GL.BindTexture(TextureTarget.Texture2D, curTexture2D);
+
+                var pixelPos = (loaded.Size.X * (loaded.Size.Y - y - 1) + x) * 4;
+                var color = new Color(buffer[pixelPos+0], buffer[pixelPos+1], buffer[pixelPos+2], buffer[pixelPos+3]);
+                ArrayPool<byte>.Shared.Return(buffer);
+                return color;
             }
         }
 

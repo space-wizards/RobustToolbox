@@ -21,7 +21,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
     /// <summary>
     /// Checks that a string corresponds to a valid prototype id. Note that any data fields using this serializer will
-    /// also be validated by <see cref="IPrototypeManager.ValidateFields"/>
+    /// also be validated by <see cref="IPrototypeManager.ValidateStaticFields"/>
     /// </summary>
     [Virtual]
     public class PrototypeIdSerializer<TPrototype> : ITypeValidator<string, ValueDataNode> where TPrototype : class, IPrototype

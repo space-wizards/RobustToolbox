@@ -180,7 +180,7 @@ namespace Robust.Shared.GameObjects
                 toRemove.Add((oldId, oldFixture));
             }
 
-            foreach (var (id, fixture) in toRemove)
+            foreach (var (id, fixture) in toRemove.Span)
             {
                 // TODO add a DestroyFixture() override that takes in a list.
                 // reduced broadphase lookups
@@ -194,7 +194,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Anything remaining is a new fixture (or at least, may have not serialized onto the chunk yet).
-            foreach (var (id, fixture) in newFixtures)
+            foreach (var (id, fixture) in newFixtures.Span)
             {
                 var existingFixture = _fixtures.GetFixtureOrNull(uid, id, manager: manager);
                 // Check if it's the same (otherwise remove anyway).

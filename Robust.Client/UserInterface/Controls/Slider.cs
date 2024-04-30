@@ -2,6 +2,7 @@
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.LayoutContainer;
 
@@ -31,6 +32,11 @@ namespace Robust.Client.UserInterface.Controls
         private StyleBox? _grabberStyleBoxOverride;
 
         public bool Grabbed => _grabbed;
+
+        /// <summary>
+        /// Whether the slider can be adjusted.
+        /// </summary>
+        public bool Disabled { get; set; }
 
         public StyleBox? ForegroundStyleBoxOverride
         {
@@ -132,7 +138,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (args.Function != EngineKeyFunctions.UIClick)
+            if (args.Function != EngineKeyFunctions.UIClick || Disabled)
             {
                 return;
             }
@@ -146,7 +152,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
-            if (args.Function != EngineKeyFunctions.UIClick) return;
+            if (args.Function != EngineKeyFunctions.UIClick || !_grabbed) return;
 
             _grabbed = false;
             OnReleased?.Invoke(this);

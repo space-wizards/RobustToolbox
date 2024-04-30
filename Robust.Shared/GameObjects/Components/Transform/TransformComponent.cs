@@ -101,7 +101,6 @@ namespace Robust.Shared.GameObjects
         internal bool _mapIdInitialized;
         internal bool _gridInitialized;
 
-        // TODO: Cache this.
         /// <summary>
         ///     The EntityUid of the map which this object is on, if any.
         /// </summary>
@@ -158,9 +157,7 @@ namespace Robust.Shared.GameObjects
                 if (!Initialized)
                     return;
 
-                var moveEvent = new MoveEvent((Owner, this, meta), Coordinates, Coordinates, oldRotation, _localRotation, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
-                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
+                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), _parent, _localPosition, oldRotation, MapUid);
             }
         }
 
@@ -335,7 +332,9 @@ namespace Robust.Shared.GameObjects
                 if (_localPosition.EqualsApprox(value))
                     return;
 
-                var oldGridPos = Coordinates;
+                var oldParent = _parent;
+                var oldPos = _localPosition;
+
                 _localPosition = value;
                 var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
                 _entMan.Dirty(Owner, this, meta);
@@ -344,9 +343,7 @@ namespace Robust.Shared.GameObjects
                 if (!Initialized)
                     return;
 
-                var moveEvent = new MoveEvent((Owner, this, meta), oldGridPos, Coordinates, _localRotation, _localRotation, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
-                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
+                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), oldParent, oldPos, _localRotation, MapUid);
             }
         }
 
@@ -603,8 +600,12 @@ namespace Robust.Shared.GameObjects
     /// move events, subscribe to the <see cref="SharedTransformSystem.OnGlobalMoveEvent"/>.
     /// </summary>
     [ByRefEvent]
-    public readonly struct MoveEvent(Entity<TransformComponent, MetaDataComponent> entity, EntityCoordinates oldPos,
-        EntityCoordinates newPos, Angle oldRotation, Angle newRotation, bool stateHandling = false)
+    public readonly struct MoveEvent(
+        Entity<TransformComponent, MetaDataComponent> entity,
+        EntityCoordinates oldPos,
+        EntityCoordinates newPos,
+        Angle oldRotation,
+        Angle newRotation)
     {
         public readonly Entity<TransformComponent, MetaDataComponent> Entity = entity;
         public readonly EntityCoordinates OldPosition = oldPos;
@@ -616,15 +617,6 @@ namespace Robust.Shared.GameObjects
         public TransformComponent Component => Entity.Comp1;
 
         public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
-
-        [Obsolete("Check IGameTiming.ApplyingState")]
-        public readonly bool FromStateHandling = stateHandling;
-
-        [Obsolete]
-        public MoveEvent(EntityUid uid, EntityCoordinates oldPos, EntityCoordinates newPos, Angle oldRot, Angle newRot, TransformComponent xform, bool state)
-            : this((uid, xform, default!), oldPos, newPos, oldRot, newRot)
-        {
-        }
     }
 
     public struct TransformChildrenEnumerator : IDisposable

@@ -1,7 +1,6 @@
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -9,18 +8,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
     [TestFixture, Parallelizable]
     sealed class EntityManagerTests
     {
-        private static readonly MapId TestMapId = new(1);
-
         private static ISimulation SimulationFactory()
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
                 .InitializeInstance();
-
-            var mapManager = sim.Resolve<IMapManager>();
-
-            // Adds the map with id 1, and spawns entity 1 as the map entity.
-            mapManager.CreateMap(TestMapId);
 
             return sim;
         }
@@ -32,9 +24,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void SpawnEntity_PrototypeTransform_Works()
         {
             var sim = SimulationFactory();
+            var map = sim.CreateMap().MapId;
 
             var entMan = sim.Resolve<IEntityManager>();
-            var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, TestMapId));
+            var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, map));
             Assert.That(newEnt, Is.Not.EqualTo(EntityUid.Invalid));
         }
 
@@ -48,7 +41,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(0));
 
-            var mapId = mapManager.CreateMap();
+            var mapId = sim.CreateMap().MapId;
             Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(1));
             mapManager.DeleteMap(mapId);
             Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(0));

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
@@ -15,8 +16,8 @@ internal sealed partial class PvsSystem
     /// </summary>
     private const int MaxVisPoolSize = 1024;
 
-    private readonly ObjectPool<List<PvsData>> _entDataListPool
-        = new DefaultObjectPool<List<PvsData>>(new ListPolicy<PvsData>(), MaxVisPoolSize);
+    private readonly ObjectPool<List<PvsIndex>> _entDataListPool
+        = new DefaultObjectPool<List<PvsIndex>>(new ListPolicy<PvsIndex>(), MaxVisPoolSize);
 
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);

@@ -210,11 +210,11 @@ namespace Robust.Client.UserInterface.Controls
                 case StretchMode.Tile:
                 // TODO: Implement Tile.
                 case StretchMode.Keep:
-                    return UIBox2.FromDimensions(Vector2.Zero, TextureSizeTarget).Scale(UIScale);
+                    return UIBox2.FromDimensions(Vector2.Zero, TextureSizeTarget * UIScale);
                 case StretchMode.KeepCentered:
                 {
-                    var position = (PixelSize - TextureSizeTarget) / 2;
-                    return UIBox2.FromDimensions(position, TextureSizeTarget).Scale(UIScale);
+                    var position = (Size - TextureSizeTarget) / 2;
+                    return UIBox2.FromDimensions(position, TextureSizeTarget * UIScale);
                 }
 
                 case StretchMode.KeepAspect:
@@ -236,7 +236,7 @@ namespace Robust.Client.UserInterface.Controls
                         position = (PixelSize - size) / 2;
                     }
 
-                    return UIBox2.FromDimensions(position, size).Scale(UIScale);
+                    return UIBox2.FromDimensions(position, size);
                 }
 
                 case StretchMode.KeepAspectCovered:

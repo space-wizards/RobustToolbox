@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Server.ViewVariables.Traits;
+using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
@@ -95,6 +96,9 @@ namespace Robust.Server.ViewVariables
 
             if (value is EntityUid uid)
                 return IoCManager.Resolve<IEntityManager>().GetComponentOrNull<MetaDataComponent>(uid)?.NetEntity ?? NetEntity.Invalid;
+
+            if (value is SoundSpecifier)
+                return value;
 
             var valType = value.GetType();
             if (!valType.IsValueType)

@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapMan.CreateMap();
+                entMan.System<SharedMapSystem>().CreateMap(out var mapId);
                 var grid = mapMan.CreateGridEntity(mapId);
                 var gridEnt = grid.Owner;
                 var coordinates = new EntityCoordinates(gridEnt, new Vector2(10, 0));
@@ -67,7 +67,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapMan.CreateMap();
+                entMan.System<SharedMapSystem>().CreateMap(out var mapId);
                 var grid = mapMan.CreateGridEntity(mapId);
                 var gridEnt = grid.Owner;
 

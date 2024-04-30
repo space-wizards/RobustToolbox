@@ -31,7 +31,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
-            var mapId = mapMan.CreateMap();
+            var mapId = sim.CreateMap().MapId;
             var grid = mapMan.CreateGrid(mapId, 8);
 
             grid.SetTile(new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
@@ -52,7 +52,7 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
-            var mapId = mapMan.CreateMap();
+            var mapId = sim.CreateMap().MapId;
             var grid = mapMan.CreateGrid(mapId, 8);
             var gridXform = entMan.GetComponent<TransformComponent>(grid.Owner);
             gridXform.WorldPosition = new Vector2(3, 5);
@@ -78,7 +78,7 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
-            var mapId = mapMan.CreateMap();
+            var mapId = sim.CreateMap().MapId;
             var grid = mapMan.CreateGrid(mapId, 8);
             var gridXform = entMan.GetComponent<TransformComponent>(grid.Owner);
 
@@ -103,7 +103,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
-            var mapId = mapMan.CreateMap();
+            var mapId = sim.CreateMap().MapId;
             var grid = mapMan.CreateGrid(mapId, 8);
 
             var result = grid.GridTileToChunkIndices(new Vector2i(-9, -1));
@@ -119,7 +119,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
-            var mapId = mapMan.CreateMap();
+            var mapId = sim.CreateMap().MapId;
             var grid = mapMan.CreateGrid(mapId, 8);
 
             var result = grid.GridTileToLocal(new Vector2i(0, 0)).Position;
@@ -133,7 +133,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
-            var mapId = mapMan.CreateMap();
+            var mapId = sim.CreateMap().MapId;
             var grid = mapMan.CreateGrid(mapId, 8);
 
             var foundTile = grid.TryGetTileRef(new Vector2i(-9, -1), out var tileRef);
@@ -148,7 +148,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
-            var mapId = mapMan.CreateMap();
+            var mapId = sim.CreateMap().MapId;
             var grid = mapMan.CreateGrid(mapId, 8);
 
             grid.SetTile(new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
@@ -166,7 +166,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
-            var mapId = mapMan.CreateMap();
+            var mapId = sim.CreateMap().MapId;
             var grid = mapMan.CreateGrid(mapId, 8);
 
             grid.SetTile(new Vector2i(19, 23), new Tile(1));
@@ -181,7 +181,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
-            var mapId = mapMan.CreateMap();
+            var mapId = sim.CreateMap().MapId;
             var grid = mapMan.CreateGrid(mapId, 8);
 
             grid.SetTile(new Vector2i(19, 23), new Tile(1));

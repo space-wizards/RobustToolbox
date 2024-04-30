@@ -69,14 +69,11 @@ public sealed class PvsChunkTest : RobustIntegrationTest
         EntityCoordinates mapCoords = default;
         await server.WaitPost(() =>
         {
-            var mapId = mapMan.CreateMap();
-            map1 = mapMan.GetMapEntityId(mapId);
+            map1 = server.System<SharedMapSystem>().CreateMap();
             mapCoords = new(map1, default);
 
-            var map2Id = mapMan.CreateMap();
-            map2 = mapMan.GetMapEntityId(map2Id);
-
-            var gridComp = mapMan.CreateGridEntity(map2Id);
+            map2 = server.System<SharedMapSystem>().CreateMap();
+            var gridComp = mapMan.CreateGridEntity(map2);
             grid = gridComp.Owner;
             mapSys.SetTile(grid, gridComp, Vector2i.Zero, new Tile(1));
             var gridCoords = new EntityCoordinates(grid, .5f, .5f);

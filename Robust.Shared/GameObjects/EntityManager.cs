@@ -9,7 +9,9 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
@@ -46,6 +48,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<MetaDataComponent> MetaQuery;
         public EntityQuery<TransformComponent> TransformQuery;
+        private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<ActorComponent> _actorQuery;
 
         #endregion Dependencies
@@ -209,6 +212,7 @@ namespace Robust.Shared.GameObjects
             _containers = System<SharedContainerSystem>();
             MetaQuery = GetEntityQuery<MetaDataComponent>();
             TransformQuery = GetEntityQuery<TransformComponent>();
+            _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _actorQuery = GetEntityQuery<ActorComponent>();
         }
 
@@ -297,14 +301,13 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!)
         {
             var newEntity = CreateEntity(prototypeName, out _, overrides);
             var transform = TransformQuery.GetComponent(newEntity);
 
             if (coordinates.MapId == MapId.Nullspace)
             {
-                DebugTools.Assert(_mapManager.GetMapEntityId(coordinates.MapId) == EntityUid.Invalid);
                 transform._parent = EntityUid.Invalid;
                 transform.Anchored = false;
                 return newEntity;
@@ -323,7 +326,7 @@ namespace Robust.Shared.GameObjects
             else
             {
                 coords = new EntityCoordinates(mapEnt, coordinates.Position);
-                _xforms.SetCoordinates(newEntity, transform, coords, null, newParent: mapXform);
+                _xforms.SetCoordinates(newEntity, transform, coords, rotation, newParent: mapXform);
             }
 
             return newEntity;
@@ -354,7 +357,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("use override with an EntityUid")]
+        [Obsolete("use override with an EntityUid or Entity<T>")]
         public void Dirty(IComponent component, MetaDataComponent? meta = null)
         {
             Dirty(component.Owner, component, meta);
@@ -365,6 +368,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
                 $"Attempted to dirty a non-networked component: {component.GetType()}");
+            DebugTools.AssertOwner(uid, component);
 
             if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;
@@ -550,17 +554,7 @@ namespace Robust.Shared.GameObjects
 
             // Detach the base entity to null before iterating over children
             // This also ensures that the entity-lookup updates don't have to be re-run for every child (which recurses up the transform hierarchy).
-            if (transform.ParentUid != EntityUid.Invalid)
-            {
-                try
-                {
-                    _xforms.DetachParentToNull((uid, transform, metadata), parentXform, true);
-                }
-                catch (Exception e)
-                {
-                    _sawmill.Error($"Caught exception while trying to detach parent of entity '{ToPrettyString(uid, metadata)}' to null.\n{e}");
-                }
-            }
+            _xforms.DetachEntity(uid, transform, metadata, parentXform, true);
 
             foreach (var child in transform._children)
             {
@@ -775,7 +769,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
+        internal virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
                 return AllocEntity(out metadata);
@@ -820,15 +814,22 @@ namespace Robust.Shared.GameObjects
 
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)
         {
+            var doMapInit = _mapManager.IsMapInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
+            InitializeAndStartEntity(entity, doMapInit);
+        }
+
+        public void InitializeAndStartEntity(Entity<MetaDataComponent?> entity, bool doMapInit)
+        {
+            if (!MetaQuery.Resolve(entity.Owner, ref entity.Comp))
+                return;
+
             try
             {
-                var meta = MetaQuery.GetComponent(entity);
-                InitializeEntity(entity, meta);
-                StartEntity(entity);
+                InitializeEntity(entity.Owner, entity.Comp);
+                StartEntity(entity.Owner);
 
-                // If the map we're initializing the entity on is initialized, run map init on it.
-                if (_mapManager.IsMapInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID))
-                    RunMapInit(entity, meta);
+                if (doMapInit)
+                    RunMapInit(entity.Owner, entity.Comp);
             }
             catch (Exception e)
             {
@@ -858,7 +859,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized, $"Expected entity {ToPrettyString(entity)} to be initialized, was {meta.EntityLifeStage}");
             SetLifeStage(meta, EntityLifeStage.MapInitialized);
 
-            EventBus.RaiseLocalEvent(entity, MapInitEventInstance, false);
+            EventBus.RaiseLocalEvent(entity, MapInitEventInstance);
         }
 
         /// <inheritdoc />
@@ -905,6 +906,16 @@ namespace Robust.Shared.GameObjects
             // server should never be calling this.
             DebugTools.Assert("Why are you raising predictive events on the server?");
         }
+
+        /// <summary>
+        /// Raises an event locally on client or networked on server.
+        /// </summary>
+        public abstract void RaiseSharedEvent<T>(T message, EntityUid? user = null) where T : EntityEventArgs;
+
+        /// <summary>
+        /// Raises an event locally on client or networked on server.
+        /// </summary>
+        public abstract void RaiseSharedEvent<T>(T message, ICommonSession? user = null) where T : EntityEventArgs;
 
         /// <summary>
         ///     Factory for generating a new EntityUid for an entity currently being created.

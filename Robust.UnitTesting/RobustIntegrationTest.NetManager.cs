@@ -440,6 +440,7 @@ namespace Robust.UnitTesting
                 public NetUserData UserData { get; }
                 // integration tests don't simulate serializer handshake so this is always true.
                 public bool IsHandshakeComplete => true;
+                public int CurrentMtu => 1000; // Arbitrary.
 
                 // TODO: Should this port value make sense?
                 public IPEndPoint RemoteEndPoint { get; } = new(IPAddress.Loopback, 1212);

@@ -74,6 +74,8 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         }
         else
         {
+            // TODO EXCEPTION TOLERANCE
+            // Ensure lookup trees update before content code handles move events.
             SubscribeLocalEvent<TComp, MoveEvent>(HandleMove);
         }
 

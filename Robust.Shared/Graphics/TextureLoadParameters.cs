@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -8,7 +9,7 @@ namespace Robust.Shared.Graphics;
 ///     Flags for loading of textures.
 /// </summary>
 [PublicAPI]
-public struct TextureLoadParameters
+public struct TextureLoadParameters : IEquatable<TextureLoadParameters>
 {
     /// <summary>
     ///     The default sampling parameters for the texture.
@@ -41,4 +42,29 @@ public struct TextureLoadParameters
         SampleParameters = TextureSampleParameters.Default,
         Srgb = true
     };
+
+    public bool Equals(TextureLoadParameters other)
+    {
+        return SampleParameters.Equals(other.SampleParameters) && Srgb == other.Srgb;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is TextureLoadParameters other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(SampleParameters, Srgb);
+    }
+
+    public static bool operator ==(TextureLoadParameters left, TextureLoadParameters right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(TextureLoadParameters left, TextureLoadParameters right)
+    {
+        return !left.Equals(right);
+    }
 }

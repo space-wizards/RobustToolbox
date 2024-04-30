@@ -294,7 +294,6 @@ namespace Robust.Client.Console.Commands
     internal sealed class SnapGridGetCell : LocalizedCommands
     {
         [Dependency] private readonly IEntityManager _entManager = default!;
-        [Dependency] private readonly IMapManager _map = default!;
 
         public override string Command => "sggcell";
 
@@ -320,7 +319,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (_map.TryGetGrid(_entManager.GetEntity(gridNet), out var grid))
+            if (_entManager.TryGetComponent<MapGridComponent>(_entManager.GetEntity(gridNet), out var grid))
             {
                 foreach (var entity in grid.GetAnchoredEntities(new Vector2i(
                              int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
@@ -429,7 +428,6 @@ namespace Robust.Client.Console.Commands
     internal sealed class GridTileCount : LocalizedCommands
     {
         [Dependency] private readonly IEntityManager _entManager = default!;
-        [Dependency] private readonly IMapManager _map = default!;
 
         public override string Command => "gridtc";
 
@@ -448,7 +446,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (_map.TryGetGrid(gridUid, out var grid))
+            if (_entManager.TryGetComponent<MapGridComponent>(gridUid, out var grid))
             {
                 shell.WriteLine(grid.GetAllTiles().Count().ToString());
             }
@@ -555,7 +553,7 @@ namespace Robust.Client.Console.Commands
                 if (type != typeof(Control))
                     cname = $"Control > {cname}";
 
-                returnVal.GetOrNew(cname).Add((member.Name, member.GetValue(control)?.ToString() ?? "null"));
+                returnVal.GetOrNew(cname).Add((member.Name, GetMemberValue(member, control, ", ")));
             }
 
             foreach (var (attachedProperty, value) in control.AllAttachedProperties)
@@ -569,6 +567,28 @@ namespace Robust.Client.Console.Commands
                 v.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
             }
             return returnVal;
+        }
+
+        internal static string PropertyValuesString(Control control, string key)
+        {
+            var member = GetAllMembers(control).Find(m => m.Name == key);
+            return GetMemberValue(member, control, "\n", "\"{0}\"");
+        }
+
+        private static string GetMemberValue(MemberInfo? member, Control control, string separator, string
+                wrap = "{0}")
+        {
+            var value = member?.GetValue(control);
+            var o = value switch
+            {
+                ICollection<Control> controls => string.Join(separator,
+                    controls.Select(ctrl => $"{ctrl.Name}({ctrl.GetType()})")),
+                ICollection<string> list => string.Join(separator, list),
+                null => null,
+                _ => value.ToString()
+            };
+            // Convert to quote surrounded string or null with no quotes
+            return o is not null ? string.Format(wrap, o) : "null";
         }
     }
 

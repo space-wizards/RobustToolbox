@@ -129,7 +129,7 @@ public sealed partial class ReplayLoadManager
         return parsed.FirstOrDefault()?.Root as MappingDataNode;
     }
 
-    private (MappingDataNode YamlData, HashSet<string> CVars, TimeSpan Duration, TimeSpan StartTime, bool ClientSide)
+    private (MappingDataNode YamlData, HashSet<string> CVars, TimeSpan? Duration, TimeSpan StartTime, bool ClientSide)
         LoadMetadata(IReplayFileReader fileReader)
     {
         _sawmill.Info($"Reading replay metadata");
@@ -137,23 +137,16 @@ public sealed partial class ReplayLoadManager
         if (data == null)
             throw new Exception("Failed to load yaml metadata");
 
-        TimeSpan duration;
         var finalData = LoadYamlFinalMetadata(fileReader);
+        TimeSpan? duration = finalData == null
+            ? null
+            : TimeSpan.Parse(((ValueDataNode) finalData[MetaFinalKeyDuration]).Value);
+
         if (finalData == null)
-        {
-            var msg = "Failed to load final yaml metadata";
-            if (!_confMan.GetCVar(CVars.ReplayIgnoreErrors))
-                throw new Exception(msg);
+            _sawmill.Warning("Failed to load final yaml metadata. Partial/incomplete replay?");
 
-            _sawmill.Error(msg);
-            duration = TimeSpan.FromDays(1);
-        }
-        else
-        {
-            duration = TimeSpan.Parse(((ValueDataNode) finalData[MetaFinalKeyDuration]).Value);
-        }
-
-        var typeHash = Convert.FromHexString(((ValueDataNode) data[MetaKeyTypeHash]).Value);
+        var typeHashString = ((ValueDataNode) data[MetaKeyTypeHash]).Value;
+        var typeHash = Convert.FromHexString(typeHashString);
         var stringHash = Convert.FromHexString(((ValueDataNode) data[MetaKeyStringHash]).Value);
         var startTick = ((ValueDataNode) data[MetaKeyStartTick]).Value;
         var timeBaseTick = ((ValueDataNode) data[MetaKeyBaseTick]).Value;
@@ -161,7 +154,12 @@ public sealed partial class ReplayLoadManager
         var clientSide = bool.Parse(((ValueDataNode) data[MetaKeyIsClientRecording]).Value);
 
         if (!typeHash.SequenceEqual(_serializer.GetSerializableTypesHash()))
-            throw new Exception($"{nameof(IRobustSerializer)} hashes do not match. Loading replays using a bad replay-client version?");
+        {
+            if (!_confMan.GetCVar(CVars.ReplayIgnoreErrors))
+                throw new Exception($"RobustSerializer hash mismatch. do not match. Client hash: {_serializer.GetSerializableTypesHashString()}, replay hash: {typeHashString}.");
+
+            _sawmill.Warning($"RobustSerializer hash mismatch. Replay may fail to load!");
+        }
 
         using var stringFile = fileReader.Open(FileStrings);
         var stringData = new byte[stringFile.Length];

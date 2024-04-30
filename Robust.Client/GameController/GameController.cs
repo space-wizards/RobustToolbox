@@ -612,6 +612,8 @@ namespace Robust.Client
             {
                 _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
             }
+
+            _audio.FlushALDisposeQueues();
         }
 
         internal static void SetupLogging(

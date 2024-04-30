@@ -58,7 +58,7 @@ public sealed partial class EntityLookupSystem
             }
         }
 
-        foreach (var uid in toAdd)
+        foreach (var uid in toAdd.Span)
         {
             intersecting.Add(uid);
         }

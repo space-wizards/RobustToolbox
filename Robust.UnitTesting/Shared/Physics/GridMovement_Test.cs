@@ -31,7 +31,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
 
         await server.WaitAssertion(() =>
         {
-            var mapId = mapManager.CreateMap();
+            entManager.System<SharedMapSystem>().CreateMap(out var mapId);
             var grid = mapManager.CreateGridEntity(mapId);
 
             // Setup 1 body on grid, 1 body off grid, and assert that it's all gucci.

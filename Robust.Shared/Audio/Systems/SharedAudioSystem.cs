@@ -8,6 +8,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -32,6 +33,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [Dependency] private   readonly INetManager _netManager = default!;
     [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
+    [Dependency] protected readonly MetaDataSystem MetadataSys = default!;
 
     /// <summary>
     /// Default max range at which the sound can be heard.
@@ -129,6 +131,18 @@ public abstract partial class SharedAudioSystem : EntitySystem
     private float GetPlaybackPosition(AudioComponent component)
     {
         return (float) (Timing.CurTime - (component.PauseTime ?? TimeSpan.Zero) - component.AudioStart).TotalSeconds;
+    }
+
+    /// <summary>
+    /// Marks this audio as being map-based.
+    /// </summary>
+    public virtual void SetMapAudio(Entity<AudioComponent>? audio)
+    {
+        if (audio == null)
+            return;
+
+        audio.Value.Comp.Global = true;
+        MetadataSys.AddFlag(audio.Value.Owner, MetaDataFlags.Undetachable);
     }
 
     /// <summary>

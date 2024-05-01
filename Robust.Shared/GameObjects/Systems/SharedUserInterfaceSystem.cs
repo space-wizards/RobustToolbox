@@ -911,13 +911,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     }
 
     /// <summary>
-    /// Add a UI after an entity has been created.
-    /// It cannot be added already.
+    /// Set a UI after an entity has been created.
     /// </summary>
-    public void AddUi(Entity<UserInterfaceComponent?> ent, Enum key, InterfaceData data)
+    public void SetUi(Entity<UserInterfaceComponent?> ent, Enum key, InterfaceData data)
     {
-        if (!Resolve(ent, ref ent.Comp))
-            return;
+        if (!Resolve(ent, ref ent.Comp, false))
+            ent.Comp = AddComp<UserInterfaceComponent>(ent);
 
         ent.Comp.Interfaces[key] = data;
         Dirty(ent, ent.Comp);

@@ -964,21 +964,11 @@ public abstract partial class SharedTransformSystem
             // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
             Log.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
             var relXform = query.GetComponent(relative);
-            pos = relXform.InvWorldMatrix.Transform(pos);
+            pos = GetInvWorldMatrix(relXform).Transform(pos);
             break;
         }
 
         return pos;
-    }
-
-    public void SetWorldPositionNoLerp(Entity<TransformComponent?> entity, Vector2 worldPos)
-    {
-        if (!XformQuery.Resolve(entity.Owner, ref entity.Comp))
-            return;
-
-        var current = GetWorldPosition(entity.Comp);
-        var diff = worldPos - current;
-        SetLocalPositionNoLerp(entity.Owner, entity.Comp.LocalPosition + diff, entity.Comp);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

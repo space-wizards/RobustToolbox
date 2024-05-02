@@ -5,6 +5,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map.Components;
@@ -963,7 +964,7 @@ public abstract partial class SharedTransformSystem
             // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
             Log.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
             var relXform = query.GetComponent(relative);
-            pos = relXform.InvWorldMatrix.Transform(pos);
+            pos = GetInvWorldMatrix(relXform).Transform(pos);
             break;
         }
 
@@ -976,7 +977,6 @@ public abstract partial class SharedTransformSystem
         var xform = XformQuery.GetComponent(uid);
         SetWorldPosition(xform, worldPos);
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(TransformComponent component, Vector2 worldPos)
@@ -1033,6 +1033,16 @@ public abstract partial class SharedTransformSystem
         }
 
         return rotation;
+    }
+
+    public void SetWorldRotationNoLerp(Entity<TransformComponent?> entity, Angle angle)
+    {
+        if (!XformQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        var current = GetWorldRotation(entity.Comp);
+        var diff = angle - current;
+        SetLocalRotationNoLerp(entity, entity.Comp.LocalRotation + diff);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

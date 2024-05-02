@@ -114,8 +114,10 @@ internal partial class UserInterfaceManager
             args.Handle();
         }
 
-        // Attempt to ensure that keybind-up events only get raised after a single keybind-down.
-        DebugTools.Assert(!_focusedControls.ContainsKey(args.Function));
+        // Attempt to ensure that keybind-up events get raised after a keybind-down.
+        DebugTools.Assert(!_focusedControls.TryGetValue(args.Function, out var existing)
+                          || existing.Disposed
+                          || args.IsRepeat && existing == control);
         _focusedControls[args.Function] = control;
 
         OnKeyBindDown?.Invoke(control);

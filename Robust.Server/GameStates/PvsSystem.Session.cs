@@ -137,15 +137,19 @@ internal sealed partial class PvsSystem
         if (!CullingEnabled || session.DisableCulling)
             return;
 
+        var chunkSet = session.ChunkSet;
         var chunks = session.Chunks;
         var distances = session.ChunkDistanceSq;
+
+        DebugTools.AssertEqual(chunks.Count, 0);
+
         distances.Clear();
-        distances.EnsureCapacity(chunks.Count);
+        distances.EnsureCapacity(chunkSet.Count);
+        chunks.EnsureCapacity(chunkSet.Count);
 
         // Assemble list of chunks and their distances to the nearest eye.
-        foreach (ref var tuple in CollectionsMarshal.AsSpan(chunks))
+        foreach(var chunk in chunkSet)
         {
-            var chunk = tuple.Chunk;
             var dist = float.MaxValue;
             var chebDist = float.MaxValue;
 
@@ -165,7 +169,7 @@ internal sealed partial class PvsSystem
             }
 
             distances.Add(dist);
-            tuple.ChebyshevDistance = chebDist;
+            chunks.Add((chunk, chebDist));
         }
 
         // Sort chunks based on distances

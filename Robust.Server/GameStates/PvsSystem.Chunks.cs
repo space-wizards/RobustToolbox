@@ -90,15 +90,13 @@ internal sealed partial class PvsSystem
         foreach (var session in _sessions)
         {
             session.Chunks.Clear();
+            session.ChunkSet.Clear();
             GetSessionViewers(session);
 
             foreach (var eye in session.Viewers)
             {
-                GetVisibleChunks(eye, session.Chunks);
+                GetVisibleChunks(eye, session.ChunkSet);
             }
-
-            // The list of visible chunks should be unique.
-            DebugTools.Assert(session.Chunks.Select(x => x.Chunk).ToHashSet().Count == session.Chunks.Count);
         }
         DebugTools.Assert(_dirtyChunks.ToHashSet().Count == _dirtyChunks.Count);
         DebugTools.Assert(_cleanChunks.ToHashSet().Count == _cleanChunks.Count);
@@ -108,7 +106,7 @@ internal sealed partial class PvsSystem
     /// Get the chunks visible to a single entity and add them to a player's set of visible chunks.
     /// </summary>
     private void GetVisibleChunks(Entity<TransformComponent, EyeComponent?> eye,
-        List<(PvsChunk Chunk, float ChebyshevDistance)> playerChunks)
+        HashSet<PvsChunk> chunks)
     {
         var (viewPos, range, mapUid) = CalcViewBounds(eye);
         if (mapUid is not {} map)
@@ -121,7 +119,7 @@ internal sealed partial class PvsSystem
             if (!_chunks.TryGetValue(loc, out var chunk))
                 continue;
 
-            playerChunks.Add((chunk, default));
+            chunks.Add(chunk);
             if (chunk.UpdateQueued)
                 continue;
 
@@ -147,7 +145,7 @@ internal sealed partial class PvsSystem
                 if (!_chunks.TryGetValue(loc, out var chunk))
                     continue;
 
-                playerChunks.Add((chunk, default));
+                chunks.Add(chunk);
                 if (chunk.UpdateQueued)
                     continue;
 

@@ -54,13 +54,28 @@ END TEMPLATE-->
 *None yet*
 
 
+## 221.2.0
+
+### New features
+
+* Add SetMapAudio helper to SharedAudioSystem to setup map-wide audio entities.
+* Add SetWorldRotNoLerp method to SharedTransformSystem to avoid client lerping.
+
+### Bugfixes
+
+* `SpriteComponent.CopyFrom` now copies `CopyToShaderParameters` configuration.
+
+
+## 221.1.0
+
+
 ## 221.0.0
 
 ### Breaking changes
 
 * `EntParentChangedMessage.OldMapId` is now an `EntityUid` instead of `MapId`
 * `TransformSystem.DetachParentToNull()` is being renamed to `DetachEntity`
-* The order in which `MoveEvent` handlers are invoked has been changed to prioritise engine subscriptions 
+* The order in which `MoveEvent` handlers are invoked has been changed to prioritise engine subscriptions
 
 ### New features
 
@@ -105,7 +120,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Refactor UserInterfaceSystem. 
+* Refactor UserInterfaceSystem.
   - The API has been significantly cleaned up and standardised, most noticeably callers don't need to worry about TryGetUi and can rely on either HasUi, SetUiState, CloseUi, or OpenUi to handle their code as appropriate.
   - Interface data is now stored via key rather than as a flat list which is a breaking change for YAML.
   - BoundUserInterfaces can now be completely handled via Shared code. Existing Server-side callers will behave similarly to before.

@@ -304,7 +304,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         comp.FileName = fileName ?? string.Empty;
         comp.Params = audioParams.Value;
         comp.AudioStart = Timing.CurTime;
-        MetaDataSystem.AddFlag(uid, MetaDataFlags.NoGridTraverse);
+        MetadataSys.AddFlag(uid, MetaDataFlags.NoGridTraverse);
 
         if (!audioParams.Value.Loop)
         {

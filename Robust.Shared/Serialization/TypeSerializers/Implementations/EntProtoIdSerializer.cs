@@ -54,10 +54,10 @@ public sealed class EntProtoIdSerializer<T> : ITypeSerializer<EntProtoId<T>, Val
     {
         var prototypes = dependencies.Resolve<IPrototypeManager>();
         if (!prototypes.TryGetMapping(typeof(EntityPrototype), node.Value, out var mapping))
-            return new ErrorNode(node, $"No {nameof(EntityPrototype)} found with id {node.Value} that has a {typeof(T)}");
+            return new ErrorNode(node, $"No {nameof(EntityPrototype)} found with id {node.Value} that has a {typeof(T).Name}");
 
         if (!mapping.TryGet("components", out SequenceDataNode? components))
-            return new ErrorNode(node, $"{nameof(EntityPrototype)} {node.Value} doesn't have a {typeof(T)}.");
+            return new ErrorNode(node, $"{nameof(EntityPrototype)} {node.Value} doesn't have a {typeof(T).Name}.");
 
         var compFactory = dependencies.Resolve<IComponentFactory>();
         var registration = compFactory.GetRegistration<T>();
@@ -71,7 +71,7 @@ public sealed class EntProtoIdSerializer<T> : ITypeSerializer<EntProtoId<T>, Val
             }
         }
 
-        return new ErrorNode(node, $"{nameof(EntityPrototype)} {node.Value} doesn't have a {typeof(T)}.");
+        return new ErrorNode(node, $"{nameof(EntityPrototype)} {node.Value} doesn't have a {typeof(T).Name}.");
     }
 
     public EntProtoId<T> Read(ISerializationManager serialization, ValueDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, InstantiationDelegate<EntProtoId<T>>? instanceProvider = null)

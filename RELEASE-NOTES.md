@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* `SpriteComponent.CopyFrom` now copies `CopyToShaderParameters` configuration.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,18 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 221.2.0
+
+### New features
+
+* Add SetMapAudio helper to SharedAudioSystem to setup map-wide audio entities.
+* Add SetWorldRotNoLerp method to SharedTransformSystem to avoid client lerping.
+
+### Bugfixes
+
+* `SpriteComponent.CopyFrom` now copies `CopyToShaderParameters` configuration.
 
 
 ## 221.1.0

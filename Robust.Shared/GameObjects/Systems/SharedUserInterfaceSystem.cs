@@ -48,6 +48,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         SubscribeLocalEvent<UserInterfaceComponent, OpenBoundInterfaceMessage>(OnUserInterfaceOpen);
         SubscribeLocalEvent<UserInterfaceComponent, CloseBoundInterfaceMessage>(OnUserInterfaceClosed);
+        SubscribeLocalEvent<UserInterfaceComponent, ComponentStartup>(OnUserInterfaceStartup);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentGetState>(OnUserInterfaceGetState);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentHandleState>(OnUserInterfaceHandleState);
@@ -55,28 +56,10 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<PlayerAttachedEvent>(OnPlayerAttached);
         SubscribeLocalEvent<PlayerDetachedEvent>(OnPlayerDetached);
 
+        SubscribeLocalEvent<UserInterfaceUserComponent, ComponentShutdown>(OnActorShutdown);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentGetStateAttemptEvent>(OnGetStateAttempt);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentGetState>(OnActorGetState);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentHandleState>(OnActorHandleState);
-
-        _player.PlayerStatusChanged += OnStatusChange;
-    }
-
-    private void OnStatusChange(object? sender, SessionStatusEventArgs e)
-    {
-        var attachedEnt = e.Session.AttachedEntity;
-
-        if (attachedEnt == null)
-            return;
-
-        // Content can't handle it yet sadly :(
-        CloseUserUis(attachedEnt.Value);
-    }
-
-    public override void Shutdown()
-    {
-        base.Shutdown();
-        _player.PlayerStatusChanged -= OnStatusChange;
     }
 
     /// <summary>
@@ -134,6 +117,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     }
 
     #region User
+
+    private void OnActorShutdown(Entity<UserInterfaceUserComponent> ent, ref ComponentShutdown args)
+    {
+        CloseUserUis((ent.Owner, ent.Comp));
+    }
 
     private void OnGetStateAttempt(Entity<UserInterfaceUserComponent> ent, ref ComponentGetStateAttemptEvent args)
     {
@@ -233,10 +221,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         Dirty(ent);
 
         // If the actor is also deleting then don't worry about updating what they have open.
-        if (!TerminatingOrDeleted(actor))
+        if (!TerminatingOrDeleted(actor) && _userQuery.TryComp(actor, out var actorComp))
         {
-            var actorComp = EnsureComp<UserInterfaceUserComponent>(actor);
-
             if (actorComp.OpenInterfaces.TryGetValue(ent.Owner, out var keys))
             {
                 keys.Remove(args.UiKey);
@@ -280,6 +266,20 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         // If we're client we want this handled immediately.
         EnsureClientBui(ent, args.UiKey, ent.Comp.Interfaces[args.UiKey]);
+    }
+
+    private void OnUserInterfaceStartup(Entity<UserInterfaceComponent> ent, ref ComponentStartup args)
+    {
+        // PlayerAttachedEvent will catch some of these.
+        foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
+        {
+            bui.Open();
+
+            if (ent.Comp.States.TryGetValue(key, out var state))
+            {
+                bui.UpdateState(state);
+            }
+        }
     }
 
     private void OnUserInterfaceShutdown(EntityUid uid, UserInterfaceComponent component, ComponentShutdown args)
@@ -393,11 +393,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // If UI not open then open it
         var attachedEnt = _player.LocalEntity;
 
+        // If we get the first state for an ent coming in then don't open BUIs yet, just defer it until later.
+        var open = ent.Comp.LifeStage > ComponentLifeStage.Added;
+
         if (attachedEnt != null)
         {
             foreach (var (key, value) in ent.Comp.Interfaces)
             {
-                EnsureClientBui(ent, key, value);
+                EnsureClientBui(ent, key, value, open);
             }
         }
     }
@@ -405,7 +408,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Opens a client's BUI if not already open and applies the state to it.
     /// </summary>
-    private void EnsureClientBui(Entity<UserInterfaceComponent> entity, Enum key, InterfaceData data)
+    private void EnsureClientBui(Entity<UserInterfaceComponent> entity, Enum key, InterfaceData data, bool open = true)
     {
         // If it's out BUI open it up and apply the state, otherwise do nothing.
         var player = _player.LocalEntity;
@@ -428,6 +431,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
 
         entity.Comp.ClientOpenInterfaces[key] = boundUserInterface;
+
+        // This is just so we don't open while applying UI states.
+        if (!open)
+            return;
+
         boundUserInterface.Open();
 
         if (entity.Comp.States.TryGetValue(key, out var buiState))

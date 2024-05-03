@@ -82,7 +82,7 @@ public readonly record struct EntProtoId<T>(string Id) : IEquatable<string>, ICo
 
     public override string ToString() => Id ?? string.Empty;
 
-    public T Get(IPrototypeManager? prototypes = null, IComponentFactory? compFactory = null)
+    public T Get(IPrototypeManager? prototypes, IComponentFactory? compFactory)
     {
         prototypes ??= IoCManager.Resolve<IPrototypeManager>();
         var proto = prototypes.Index(this);
@@ -94,7 +94,7 @@ public readonly record struct EntProtoId<T>(string Id) : IEquatable<string>, ICo
         return comp;
     }
 
-    public bool TryGet([NotNullWhen(true)] out T? comp, IPrototypeManager? prototypes = null, IComponentFactory? compFactory = null)
+    public bool TryGet([NotNullWhen(true)] out T? comp, IPrototypeManager? prototypes, IComponentFactory? compFactory)
     {
         prototypes ??= IoCManager.Resolve<IPrototypeManager>();
         var proto = prototypes.Index(this);

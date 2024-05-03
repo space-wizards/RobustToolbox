@@ -48,7 +48,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         SubscribeLocalEvent<UserInterfaceComponent, OpenBoundInterfaceMessage>(OnUserInterfaceOpen);
         SubscribeLocalEvent<UserInterfaceComponent, CloseBoundInterfaceMessage>(OnUserInterfaceClosed);
-        SubscribeLocalEvent<UserInterfaceComponent, ComponentStartup>(OnUserInterfaceStartup);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentGetState>(OnUserInterfaceGetState);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentHandleState>(OnUserInterfaceHandleState);
@@ -56,28 +55,10 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<PlayerAttachedEvent>(OnPlayerAttached);
         SubscribeLocalEvent<PlayerDetachedEvent>(OnPlayerDetached);
 
+        SubscribeLocalEvent<UserInterfaceUserComponent, ComponentShutdown>(OnActorShutdown);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentGetStateAttemptEvent>(OnGetStateAttempt);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentGetState>(OnActorGetState);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentHandleState>(OnActorHandleState);
-
-        _player.PlayerStatusChanged += OnStatusChange;
-    }
-
-    private void OnStatusChange(object? sender, SessionStatusEventArgs e)
-    {
-        var attachedEnt = e.Session.AttachedEntity;
-
-        if (attachedEnt == null)
-            return;
-
-        // Content can't handle it yet sadly :(
-        CloseUserUis(attachedEnt.Value);
-    }
-
-    public override void Shutdown()
-    {
-        base.Shutdown();
-        _player.PlayerStatusChanged -= OnStatusChange;
     }
 
     /// <summary>
@@ -135,6 +116,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     }
 
     #region User
+
+    private void OnActorShutdown(Entity<UserInterfaceUserComponent> ent, ref ComponentShutdown args)
+    {
+        CloseUserUis((ent.Owner, ent.Comp));
+    }
 
     private void OnGetStateAttempt(Entity<UserInterfaceUserComponent> ent, ref ComponentGetStateAttemptEvent args)
     {
@@ -234,10 +220,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         Dirty(ent);
 
         // If the actor is also deleting then don't worry about updating what they have open.
-        if (!TerminatingOrDeleted(actor))
+        if (!TerminatingOrDeleted(actor) && _userQuery.TryComp(actor, out var actorComp))
         {
-            var actorComp = EnsureComp<UserInterfaceUserComponent>(actor);
-
             if (actorComp.OpenInterfaces.TryGetValue(ent.Owner, out var keys))
             {
                 keys.Remove(args.UiKey);
@@ -281,19 +265,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         // If we're client we want this handled immediately.
         EnsureClientBui(ent, args.UiKey, ent.Comp.Interfaces[args.UiKey]);
-    }
-
-    private void OnUserInterfaceStartup(Entity<UserInterfaceComponent> ent, ref ComponentStartup args)
-    {
-        foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
-        {
-            bui.Open();
-
-            if (ent.Comp.States.TryGetValue(key, out var state))
-            {
-                bui.UpdateState(state);
-            }
-        }
     }
 
     private void OnUserInterfaceShutdown(EntityUid uid, UserInterfaceComponent component, ComponentShutdown args)

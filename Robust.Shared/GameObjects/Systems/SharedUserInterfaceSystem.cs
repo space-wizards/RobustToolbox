@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Shared.Collections;
@@ -60,6 +59,25 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentGetStateAttemptEvent>(OnGetStateAttempt);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentGetState>(OnActorGetState);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentHandleState>(OnActorHandleState);
+
+        _player.PlayerStatusChanged += OnStatusChange;
+    }
+
+    private void OnStatusChange(object? sender, SessionStatusEventArgs e)
+    {
+        var attachedEnt = e.Session.AttachedEntity;
+
+        if (attachedEnt == null)
+            return;
+
+        // Content can't handle it yet sadly :(
+        CloseUserUis(attachedEnt.Value);
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+        _player.PlayerStatusChanged -= OnStatusChange;
     }
 
     /// <summary>
@@ -747,6 +765,32 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
 
         RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), message, key));
+    }
+
+    /// <summary>
+    /// Closes all Uis for the actor.
+    /// </summary>
+    public void CloseUserUis(Entity<UserInterfaceUserComponent?> actor)
+    {
+        if (!_userQuery.Resolve(actor.Owner, ref actor.Comp, false))
+            return;
+
+        if (actor.Comp.OpenInterfaces.Count == 0)
+            return;
+
+        var copied = new Dictionary<EntityUid, List<Enum>>(actor.Comp.OpenInterfaces);
+        var enumCopy = new ValueList<Enum>();
+
+        foreach (var (uid, enums) in copied)
+        {
+            enumCopy.Clear();
+            enumCopy.AddRange(enums);
+
+            foreach (var key in enumCopy)
+            {
+                CloseUi(uid, key, actor.Owner);
+            }
+        }
     }
 
     /// <summary>

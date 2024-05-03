@@ -770,7 +770,7 @@ Types:
     Array:
       Methods:
       - "!!0 Find<>(!!0[], System.Predicate`1<!!0>)"
-      - "!!0 Resize<>(!!0[], int)"
+      - "void Resize<>(ref !!0[], int)"
       - "!!1 ConvertAll<,>(!!0[], System.Converter`2<!!0, !!1>)"
       - "!!0[] Empty<>()"
       - "!!0[] FindAll<>(!!0[], System.Predicate`1<!!0>)"

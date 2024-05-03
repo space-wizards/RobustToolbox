@@ -54,11 +54,73 @@ END TEMPLATE-->
 *None yet*
 
 
+## 221.2.0
+
+### New features
+
+* Add SetMapAudio helper to SharedAudioSystem to setup map-wide audio entities.
+* Add SetWorldRotNoLerp method to SharedTransformSystem to avoid client lerping.
+
+### Bugfixes
+
+* `SpriteComponent.CopyFrom` now copies `CopyToShaderParameters` configuration.
+
+
+## 221.1.0
+
+
+## 221.0.0
+
+### Breaking changes
+
+* `EntParentChangedMessage.OldMapId` is now an `EntityUid` instead of `MapId`
+* `TransformSystem.DetachParentToNull()` is being renamed to `DetachEntity`
+* The order in which `MoveEvent` handlers are invoked has been changed to prioritise engine subscriptions
+
+### New features
+
+* Added `UpdateHovered()` and `SetHovered()` to `IUserInterfaceManager`, for updating or modifying the currently hovered control.
+* Add SwapPositions to TransformSystem to swap two entity's transforms.
+
+### Bugfixes
+
+* Improve client gamestate exception tolerance.
+
+### Other
+
+* If the currently hovered control is disposed, `UserInterfaceManager` will now look for a new control, rather than just setting the hovered control to null.
+
+### Internal
+
+* Use more `EntityQuery<T>` internally in EntityManager and PhysicsSystem.
+
+
+## 220.2.0
+
+### New features
+
+* RSIs can now specify load parameters, mimicking the ones from `.png.yml`. Currently only disabling sRGB is supported.
+* Added a second UV channel to Clyde's vertex format. On regular batched sprite draws, this goes 0 -> 1 across the sprite quad.
+* Added a new `CopyToShaderParameters` system for `SpriteComponent` layers.
+
+
+## 220.1.0
+
+### Bugfixes
+
+* Fix client-side replay exceptions due to dropped states when recording.
+
+### Other
+
+* Remove IP + HWId from ViewVariables.
+* Close BUIs upon disconnect.
+
+
 ## 220.0.0
 
 ### Breaking changes
 
-* Refactor UserInterfaceSystem. 
+* Refactor UserInterfaceSystem.
   - The API has been significantly cleaned up and standardised, most noticeably callers don't need to worry about TryGetUi and can rely on either HasUi, SetUiState, CloseUi, or OpenUi to handle their code as appropriate.
   - Interface data is now stored via key rather than as a flat list which is a breaking change for YAML.
   - BoundUserInterfaces can now be completely handled via Shared code. Existing Server-side callers will behave similarly to before.

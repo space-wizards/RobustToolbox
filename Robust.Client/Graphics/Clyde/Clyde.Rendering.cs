@@ -578,10 +578,10 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, modulate);
-            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, modulate);
-            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, modulate);
-            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, modulate);
+            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, new Vector2(0, 0), modulate);
+            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, new Vector2(1, 0), modulate);
+            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, new Vector2(1, 1), modulate);
+            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, new Vector2(0, 1), modulate);
             BatchVertexIndex += 4;
             QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
 

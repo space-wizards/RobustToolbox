@@ -51,9 +51,14 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     public (GameTick ToTick, List<PvsIndex> PreviouslySent)? LastSent;
 
     /// <summary>
-    /// Visible chunks, sorted by proximity to the clients's viewers;
+    /// Visible chunks, sorted by proximity to the client's viewers.
     /// </summary>
     public readonly List<(PvsChunk Chunk, float ChebyshevDistance)> Chunks = new();
+
+    /// <summary>
+    /// Unsorted set of visible chunks. Used to construct the <see cref="Chunks"/> list.
+    /// </summary>
+    public readonly HashSet<PvsChunk> ChunkSet = new();
 
     /// <summary>
     /// Squared distance ta all of the visible chunks.
@@ -117,6 +122,7 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     {
         PlayerStates.Clear();
         Chunks.Clear();
+        ChunkSet.Clear();
         States.Clear();
         State = null;
     }

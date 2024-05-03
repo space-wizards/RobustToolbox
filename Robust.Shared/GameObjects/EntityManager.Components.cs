@@ -114,7 +114,7 @@ namespace Robust.Shared.GameObjects
         public void InitializeComponents(EntityUid uid, MetaDataComponent? metadata = null)
         {
             DebugTools.AssertOwner(uid, metadata);
-            metadata ??= GetComponent<MetaDataComponent>(uid);
+            metadata ??= MetaQuery.GetComponent(uid);
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
             SetLifeStage(metadata, EntityLifeStage.Initializing);
 
@@ -158,13 +158,12 @@ namespace Robust.Shared.GameObjects
             // TODO: please for the love of god remove these initialization order hacks.
 
             // Init transform first, we always have it.
-            var transform = GetComponent<TransformComponent>(uid);
+            var transform = TransformQuery.GetComponent(uid);
             if (transform.LifeStage == ComponentLifeStage.Initialized)
                 LifeStartup(transform);
 
             // Init physics second if it exists.
-            if (TryGetComponent<PhysicsComponent>(uid, out var phys)
-                && phys.LifeStage == ComponentLifeStage.Initialized)
+            if (_physicsQuery.TryComp(uid, out var phys) && phys.LifeStage == ComponentLifeStage.Initialized)
             {
                 LifeStartup(phys);
             }
@@ -294,7 +293,7 @@ namespace Robust.Shared.GameObjects
             if (!uid.IsValid() || !EntityExists(uid))
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
-            AddComponentInternal(uid, newComponent, false, true);
+            AddComponentInternal(uid, newComponent, false, true, null);
 
             return new CompInitializeHandle<T>(this, uid, newComponent, reg.Idx);
         }
@@ -302,10 +301,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : IComponent
         {
-            if (!uid.IsValid() || !EntityExists(uid))
+            if (!MetaQuery.Resolve(uid, ref metadata, false))
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
-            if (component == null) throw new ArgumentNullException(nameof(component));
+            if (component == null)
+                throw new ArgumentNullException(nameof(component));
 
 #pragma warning disable CS0618 // Type or member is obsolete
             if (component.Owner == default)
@@ -321,14 +321,17 @@ namespace Robust.Shared.GameObjects
             AddComponentInternal(uid, component, overwrite, false, metadata);
         }
 
-        private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit, MetaDataComponent? metadata = null) where T : IComponent
+        private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit, MetaDataComponent? metadata) where T : IComponent
         {
+            if (!MetaQuery.ResolveInternal(uid, ref metadata, false))
+                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
+
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
             AddComponentInternal(uid, component, reg, overwrite, skipInit, metadata);
         }
 
-        private void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool overwrite, bool skipInit, MetaDataComponent? metadata = null) where T : IComponent
+        private void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool overwrite, bool skipInit, MetaDataComponent metadata) where T : IComponent
         {
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
@@ -642,13 +645,14 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
-                DeleteComponent(uid, component, false);
+                var meta = MetaQuery.GetComponent(uid);
+                DeleteComponent(uid, component, false, meta);
             }
 
             _deleteSet.Clear();
         }
 
-        private void DeleteComponent(EntityUid entityUid, IComponent component, bool terminating, MetaDataComponent? metadata = null)
+        private void DeleteComponent(EntityUid entityUid, IComponent component, bool terminating, MetaDataComponent? metadata)
         {
             if (!MetaQuery.ResolveInternal(entityUid, ref metadata))
                 return;
@@ -1519,7 +1523,7 @@ namespace Robust.Shared.GameObjects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool TryComp(EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
+        public bool TryComp([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
             => TryGetComponent(uid, out component);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

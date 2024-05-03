@@ -11,6 +11,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
@@ -47,6 +48,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<MetaDataComponent> MetaQuery;
         public EntityQuery<TransformComponent> TransformQuery;
+        private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<ActorComponent> _actorQuery;
 
         #endregion Dependencies
@@ -210,6 +212,7 @@ namespace Robust.Shared.GameObjects
             _containers = System<SharedContainerSystem>();
             MetaQuery = GetEntityQuery<MetaDataComponent>();
             TransformQuery = GetEntityQuery<TransformComponent>();
+            _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _actorQuery = GetEntityQuery<ActorComponent>();
         }
 
@@ -551,17 +554,7 @@ namespace Robust.Shared.GameObjects
 
             // Detach the base entity to null before iterating over children
             // This also ensures that the entity-lookup updates don't have to be re-run for every child (which recurses up the transform hierarchy).
-            if (transform.ParentUid != EntityUid.Invalid)
-            {
-                try
-                {
-                    _xforms.DetachParentToNull((uid, transform, metadata), parentXform, true);
-                }
-                catch (Exception e)
-                {
-                    _sawmill.Error($"Caught exception while trying to detach parent of entity '{ToPrettyString(uid, metadata)}' to null.\n{e}");
-                }
-            }
+            _xforms.DetachEntity(uid, transform, metadata, parentXform, true);
 
             foreach (var child in transform._children)
             {
@@ -776,7 +769,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
+        internal virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
                 return AllocEntity(out metadata);

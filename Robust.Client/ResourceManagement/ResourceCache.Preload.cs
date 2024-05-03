@@ -10,6 +10,7 @@ using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -142,6 +143,26 @@ namespace Robust.Client.ResourceManagement
                 }
             });
 
+            // Do not meta-atlas RSIs with custom load parameters.
+            var atlasList = rsiList.Where(x => x.LoadParameters == TextureLoadParameters.Default).ToArray();
+            var nonAtlasList = rsiList.Where(x => x.LoadParameters != TextureLoadParameters.Default).ToArray();
+
+            foreach (var data in nonAtlasList)
+            {
+                if (data.Bad)
+                    continue;
+
+                try
+                {
+                    RSIResource.LoadTexture(Clyde, data);
+                }
+                catch (Exception e)
+                {
+                    sawmill.Error($"Exception while loading RSI {data.Path}:\n{e}");
+                    data.Bad = true;
+                }
+            }
+
             // This combines individual RSI atlases into larger atlases to reduce draw batches. currently this is a VERY
             // lazy bundling and is not at all compact, its basically an atlas of RSI atlases. Really what this should
             // try to do is to have each RSI write directly to the atlas, rather than having each RSI write to its own
@@ -155,7 +176,7 @@ namespace Robust.Client.ResourceManagement
             // TODO allow RSIs to opt out (useful for very big & rare RSIs)
             // TODO combine with (non-rsi) texture atlas?
 
-            Array.Sort(rsiList, (b, a) => (b.AtlasSheet?.Height ?? 0).CompareTo(a.AtlasSheet?.Height ?? 0));
+            Array.Sort(atlasList, (b, a) => (b.AtlasSheet?.Height ?? 0).CompareTo(a.AtlasSheet?.Height ?? 0));
 
             // Each RSI sub atlas has a different size.
             // Even if we iterate through them once to estimate total area, I have NFI how to sanely estimate an optimal square-texture size.
@@ -167,9 +188,9 @@ namespace Robust.Client.ResourceManagement
             Vector2i offset = default;
             int finalized = -1;
             int atlasCount = 0;
-            for (int i = 0; i < rsiList.Length; i++)
+            for (int i = 0; i < atlasList.Length; i++)
             {
-                var rsi = rsiList[i];
+                var rsi = atlasList[i];
                 if (rsi.Bad)
                     continue;
 
@@ -200,14 +221,14 @@ namespace Robust.Client.ResourceManagement
             var height = offset.Y + deltaY;
             var croppedSheet = new Image<Rgba32>(maxSize, height);
             sheet.Blit(new UIBox2i(0, 0, maxSize, height), croppedSheet, default);
-            FinalizeMetaAtlas(rsiList.Length - 1, croppedSheet);
+            FinalizeMetaAtlas(atlasList.Length - 1, croppedSheet);
 
             void FinalizeMetaAtlas(int toIndex, Image<Rgba32> sheet)
             {
                 var atlas = Clyde.LoadTextureFromImage(sheet);
                 for (int i = finalized + 1; i <= toIndex; i++)
                 {
-                    var rsi = rsiList[i];
+                    var rsi = atlasList[i];
                     rsi.AtlasTexture = atlas;
                 }
 
@@ -255,9 +276,10 @@ namespace Robust.Client.ResourceManagement
             }
 
             sawmill.Debug(
-                "Preloaded {CountLoaded} RSIs into {CountAtlas} Atlas(es?) ({CountErrored} errored) in {LoadTime}",
+                "Preloaded {CountLoaded} RSIs into {CountAtlas} Atlas(es?) ({CountNotAtlas} not atlassed, {CountErrored} errored) in {LoadTime}",
                 rsiList.Length,
                 atlasCount,
+                nonAtlasList.Length,
                 errors,
                 sw.Elapsed);
 

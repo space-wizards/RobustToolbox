@@ -48,6 +48,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         SubscribeLocalEvent<UserInterfaceComponent, OpenBoundInterfaceMessage>(OnUserInterfaceOpen);
         SubscribeLocalEvent<UserInterfaceComponent, CloseBoundInterfaceMessage>(OnUserInterfaceClosed);
+        SubscribeLocalEvent<UserInterfaceComponent, ComponentStartup>(OnUserInterfaceStartup);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentGetState>(OnUserInterfaceGetState);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentHandleState>(OnUserInterfaceHandleState);
@@ -265,6 +266,20 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         // If we're client we want this handled immediately.
         EnsureClientBui(ent, args.UiKey, ent.Comp.Interfaces[args.UiKey]);
+    }
+
+    private void OnUserInterfaceStartup(Entity<UserInterfaceComponent> ent, ref ComponentStartup args)
+    {
+        // PlayerAttachedEvent will catch some of these.
+        foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
+        {
+            bui.Open();
+
+            if (ent.Comp.States.TryGetValue(key, out var state))
+            {
+                bui.UpdateState(state);
+            }
+        }
     }
 
     private void OnUserInterfaceShutdown(EntityUid uid, UserInterfaceComponent component, ComponentShutdown args)

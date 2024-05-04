@@ -59,6 +59,6 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Allows you to hide tiles from the tile spawn menu.
         /// </summary>
-        bool Hidden { get; }
+        bool EditorHidden { get; }
     }
 }

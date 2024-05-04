@@ -146,7 +146,7 @@ public sealed class TileSpawningUIController : UIController
 
         foreach (var entry in _shownTiles)
         {
-            if (entry.Hidden) continue;
+            if (entry.EditorHidden) continue;
 
             Texture? texture = null;
             var path = entry.Sprite?.ToString();

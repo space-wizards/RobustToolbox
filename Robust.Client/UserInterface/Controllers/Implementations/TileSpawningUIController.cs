@@ -135,8 +135,8 @@ public sealed class TileSpawningUIController : UIController
         if (!string.IsNullOrEmpty(searchStr))
         {
             tileDefs = tileDefs.Where(s =>
-                Loc.GetString(s.Name).Contains(searchStr, StringComparison.CurrentCultureIgnoreCase) ||
-                s.ID.Contains(searchStr, StringComparison.OrdinalIgnoreCase));
+                (Loc.GetString(s.Name).Contains(searchStr, StringComparison.CurrentCultureIgnoreCase) ||
+                s.ID.Contains(searchStr, StringComparison.OrdinalIgnoreCase)) && !s.EditorHidden);
         }
 
         tileDefs = tileDefs.OrderBy(d => Loc.GetString(d.Name));
@@ -146,8 +146,6 @@ public sealed class TileSpawningUIController : UIController
 
         foreach (var entry in _shownTiles)
         {
-            if (entry.EditorHidden) continue;
-
             Texture? texture = null;
             var path = entry.Sprite?.ToString();
 

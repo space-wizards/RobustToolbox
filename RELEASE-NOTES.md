@@ -54,6 +54,25 @@ END TEMPLATE-->
 *None yet*
 
 
+## 222.0.0
+
+### Breaking changes
+
+* Mark IComponentFactory argument in EntityPrototype as mandatory.
+
+### New features
+
+* Add `EntProtoId<T>` to check for components on the attached entity as well.
+
+### Bugfixes
+
+* Fix PVS iterating duplicate chunks for multiple viewsubscriptions.
+
+### Other
+
+* Defer clientside BUI opens if it's the first state that comes in.
+
+
 ## 221.2.0
 
 ### New features

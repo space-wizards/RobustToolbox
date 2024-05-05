@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added `BoundKeyEventArgs.IsRepeat`.
+* Added `net.lidgren_log_warning` and `net.lidgren_log_error` CVars.
 
 ### Bugfixes
 

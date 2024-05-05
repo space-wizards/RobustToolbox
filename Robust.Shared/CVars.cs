@@ -1705,7 +1705,7 @@ namespace Robust.Shared
         /// Set to zero or a negative value to disable limit.
         /// </summary>
         public static readonly CVarDef<float> ResourceUploadingLimitMb =
-            CVarDef.Create("netres.limit", 3f, CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("netres.limit", 15f, CVar.REPLICATED | CVar.SERVER);
 
         /*
          * LAUNCH

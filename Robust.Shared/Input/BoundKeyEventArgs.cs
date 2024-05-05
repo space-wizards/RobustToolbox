@@ -44,12 +44,28 @@ namespace Robust.Shared.Input
         /// <param name="function">Bound key that that is changing.</param>
         /// <param name="state">New state of the function.</param>
         /// <param name="pointerLocation">Current Pointer location in screen coordinates.</param>
-        public BoundKeyEventArgs(BoundKeyFunction function, BoundKeyState state, ScreenCoordinates pointerLocation, bool canFocus, bool isRepeat = false)
+        public BoundKeyEventArgs(BoundKeyFunction function, BoundKeyState state, ScreenCoordinates pointerLocation, bool canFocus)
         {
             Function = function;
             State = state;
             PointerLocation = pointerLocation;
             CanFocus = canFocus;
+        }
+
+        /// <summary>
+        ///     Constructs a new instance of <see cref="BoundKeyEventArgs"/>.
+        /// </summary>
+        /// <param name="function">Bound key that that is changing.</param>
+        /// <param name="state">New state of the function.</param>
+        /// <param name="pointerLocation">Current Pointer location in screen coordinates.</param>
+        /// <param name="isRepeat"></param>
+        public BoundKeyEventArgs(
+            BoundKeyFunction function,
+            BoundKeyState state,
+            ScreenCoordinates pointerLocation,
+            bool canFocus,
+            bool isRepeat = false) : this(function, state, pointerLocation, canFocus)
+        {
             IsRepeat = isRepeat;
         }
 

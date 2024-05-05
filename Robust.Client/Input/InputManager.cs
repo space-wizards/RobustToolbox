@@ -346,7 +346,7 @@ namespace Robust.Client.Input
                 {
                     if (binding.CanRepeat)
                     {
-                        return SetBindState(binding, BoundKeyState.Down, uiOnly);
+                        return SetBindState(binding, BoundKeyState.Down, uiOnly, isRepeat);
                     }
 
                     return true;
@@ -375,7 +375,7 @@ namespace Robust.Client.Input
             SetBindState(binding, BoundKeyState.Up);
         }
 
-        private bool SetBindState(KeyBinding binding, BoundKeyState state, bool uiOnly = false)
+        private bool SetBindState(KeyBinding binding, BoundKeyState state, bool uiOnly = false, bool isRepeat = false)
         {
             if (binding.BindingType == KeyBindingType.Command && state == BoundKeyState.Down)
             {
@@ -387,6 +387,7 @@ namespace Robust.Client.Input
             // I honestly have no idea what the best solution here is.
             // note from the future: context switches won't cause re-entrancy anymore because InputContextContainer defers context switches
             DebugTools.Assert(!_currentlyFindingViewport, "Re-entrant key events??");
+            DebugTools.Assert(!isRepeat || binding.CanRepeat);
 
             try
             {
@@ -399,7 +400,7 @@ namespace Robust.Client.Input
                 binding.State = state;
 
                 var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State,
-                    MouseScreenPosition, binding.CanFocus);
+                    MouseScreenPosition, binding.CanFocus, isRepeat);
 
                 // UI returns true here into blockPass if it wants to prevent us from giving input events
                 // to the viewport, but doesn't want it hard-handled so we keep processing possible key actions.

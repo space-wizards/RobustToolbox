@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `BoundKeyEventArgs.IsRepeat`.
 
 ### Bugfixes
 
-*None yet*
+* Fix assert trip when holding repeatable keybinds.
 
 ### Other
 

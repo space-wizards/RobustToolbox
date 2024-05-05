@@ -48,7 +48,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Updated Lidgren to v0.3.1. This should provide performance improvements if warning/error logs are disabled.
 
 ### Internal
 

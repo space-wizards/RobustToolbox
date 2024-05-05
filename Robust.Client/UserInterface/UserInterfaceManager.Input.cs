@@ -116,7 +116,7 @@ internal partial class UserInterfaceManager
 
         // Attempt to ensure that keybind-up events get raised after a keybind-down.
         DebugTools.Assert(!_focusedControls.TryGetValue(args.Function, out var existing)
-                          || existing.Disposed
+                          || !existing.VisibleInTree
                           || args.IsRepeat && existing == control);
         _focusedControls[args.Function] = control;
 
@@ -126,7 +126,7 @@ internal partial class UserInterfaceManager
     public void KeyBindUp(BoundKeyEventArgs args)
     {
         // Only raise keybind-up for the control on which we previously raised keybind-down
-        if (!_focusedControls.Remove(args.Function, out var control) || control.Disposed)
+        if (!_focusedControls.Remove(args.Function, out var control) || !control.VisibleInTree)
             return;
 
         var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,

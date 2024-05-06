@@ -415,7 +415,10 @@ namespace Robust.Shared.Localization
 
             }
 
-            WriteLocErrors(resErrors);
+            if (resErrors.Count > 0)
+            {
+                WriteLocErrors(resErrors);
+            }
         }
 
         private static ParallelQuery<(ResPath path, Resource resource, string contents)> ReadLocaleFolder(

@@ -14,7 +14,7 @@ public sealed class LocTest : ToolshedTest
     [Test]
     public async Task AllCommandsHaveDescriptions()
     {
-        await Server.WaitAssertion(()  =>
+        await Server.WaitAssertion(() =>
         {
             IoCManager.Resolve<ILocalizationManager>().LoadCulture(new CultureInfo("en-US"));
 

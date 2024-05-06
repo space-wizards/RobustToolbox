@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Linguini.Bundle;
 using Linguini.Bundle.Builder;
 using Linguini.Bundle.Errors;
@@ -466,10 +467,12 @@ namespace Robust.Shared.Localization
         private void WriteLocErrors(IList<LocError>? errs)
         {
             if (errs == null) return;
+            var sbErr = new StringBuilder();
             foreach (var err in errs)
             {
-                _logSawmill.Error(err.ToString());
+                sbErr.Append(err).AppendLine();
             }
+            _logSawmill.Error(sbErr.ToString());
         }
     }
 }

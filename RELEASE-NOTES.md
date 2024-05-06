@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 222.1.0
+
+### New features
+
 * Added `BoundKeyEventArgs.IsRepeat`.
 * Added `net.lidgren_log_warning` and `net.lidgren_log_error` CVars.
 
@@ -49,10 +68,6 @@ END TEMPLATE-->
 ### Other
 
 * Updated Lidgren to v0.3.1. This should provide performance improvements if warning/error logs are disabled.
-
-### Internal
-
-*None yet*
 
 
 ## 222.0.0

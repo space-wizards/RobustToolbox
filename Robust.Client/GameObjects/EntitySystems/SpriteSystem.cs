@@ -46,6 +46,9 @@ namespace Robust.Client.GameObjects
 
         internal void Render(EntityUid uid, SpriteComponent sprite, DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
         {
+            if (TryComp(uid, out NoRenderInWorldComponent? noRender) && noRender.Enabled)
+                return;
+
             if (!sprite.IsInert)
                 _queuedFrameUpdate.Add(uid);
 

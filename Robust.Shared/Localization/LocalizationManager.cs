@@ -402,16 +402,19 @@ namespace Robust.Shared.Localization
         {
             var resources = ReadLocaleFolder(resourceManager, culture);
 
+            var resErrors = new List<LocError>();
             foreach (var (path, resource, data) in resources)
             {
                 var errors = resource.Errors;
                 WriteWarningForErrs(path, errors, data);
-                if (context.InsertResourcesAndReport(resource, path, out var errs))
+                if (!context.InsertResourcesAndReport(resource, path, out var errs))
                 {
-                    continue;
+                    resErrors.AddRange(errs);
                 }
-                WriteLocErrors(errs);
+
             }
+
+            WriteLocErrors(resErrors);
         }
 
         private static ParallelQuery<(ResPath path, Resource resource, string contents)> ReadLocaleFolder(

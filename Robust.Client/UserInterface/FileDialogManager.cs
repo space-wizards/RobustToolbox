@@ -61,7 +61,7 @@ namespace Robust.Client.UserInterface
 
             try
             {
-                return (File.Open(name, truncate ? FileMode.Truncate : FileMode.Append), true);
+                return (File.Open(name, truncate ? FileMode.Truncate : FileMode.Open), true);
             }
             catch (FileNotFoundException)
             {

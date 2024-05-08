@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 222.1.1
+
+### Bugfixes
+
+* Fixed never setting BoundUserInterface.State.
+
+### Other
+
+* Add truncate for filesaving.
+* Add method for getting the type of a data field by name from ISerializationManager.
+
+
 ## 222.1.0
 
 ### New features

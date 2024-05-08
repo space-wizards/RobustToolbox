@@ -39,7 +39,7 @@ public sealed class PhysicsDeltaState : IComponentState, IComponentDeltaState
     public Vector2 LinearVelocity;
     public float AngularVelocity;
 
-    public bool FullState => true;
+    public bool FullState => false;
 
     public void ApplyToFullState(IComponentState fullState)
     {

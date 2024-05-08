@@ -19,7 +19,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The last received state object sent from the server.
         /// </summary>
-        protected internal BoundUserInterfaceState? State { get; set; }
+        protected internal BoundUserInterfaceState? State { get; internal set; }
 
         protected BoundUserInterface(EntityUid owner, Enum uiKey)
         {

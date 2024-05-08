@@ -387,6 +387,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
                 continue;
 
+            cBui.State = buiState;
             cBui.UpdateState(buiState);
         }
 
@@ -432,6 +433,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         if (entity.Comp.States.TryGetValue(key, out var buiState))
         {
+            boundUserInterface.State = buiState;
             boundUserInterface.UpdateState(buiState);
         }
     }

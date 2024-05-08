@@ -195,11 +195,10 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
             foreach (var key in keys)
             {
-                if (!uiComp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
+                if (!uiComp.ClientOpenInterfaces.Remove(key, out var cBui))
                     continue;
 
                 cBui.Dispose();
-                uiComp.ClientOpenInterfaces.Remove(key);
             }
         }
     }

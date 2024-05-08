@@ -294,6 +294,9 @@ public struct ValueList<T> : IEnumerable<T>
         if (Capacity < capacity)
             Grow(capacity);
 
+        if (capacity == 0)
+            return capacity;
+
         return _items!.Length;
     }
 

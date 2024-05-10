@@ -1333,7 +1333,14 @@ public abstract partial class SharedTransformSystem
         SetCoordinates(uid, xform, new(newParent, newPos));
     }
 
-    public bool TryGetMapOrGridCoordinates(EntityUid uid, [NotNullWhen(true)] out EntityCoordinates? coordinates, TransformComponent? xform = null)
+    /// <summary>
+    /// Attempts to get the current coordinates on the parent grid or map of the provided entity.
+    /// </summary>
+    /// <param name="uid">The entity to get the coordinates of.</param>
+    /// <param name="coordinates">The returned coordinates on the grid or map.</param>
+    /// <param name="xform">The transform component of the <paramref name="uid"/>.</param>
+    /// <returns>Whether the grid or map coordinates were found and <paramref name="coordinates"/> was set.</returns>
+    public bool TryGetGridOrMapCoordinates(EntityUid uid, [NotNullWhen(true)] out EntityCoordinates? coordinates, TransformComponent? xform = null)
     {
         coordinates = null;
 

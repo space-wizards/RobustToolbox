@@ -1344,18 +1344,21 @@ public abstract partial class SharedTransformSystem
     {
         coordinates = null;
 
+        if (TerminatingOrDeleted(uid))
+            return false;
+
         if (!XformQuery.Resolve(uid, ref xform))
             return false;
 
         if (!xform.ParentUid.IsValid())
             return false;
 
-        if (xform.MapUid is not { } map)
+        if (xform.MapUid is not { } map || TerminatingOrDeleted(map))
             return false;
 
         var newParent = map;
         var oldPos = GetWorldPosition(xform);
-        if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _))
+        if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _) && !TerminatingOrDeleted(gridUid))
             newParent = gridUid;
 
         coordinates = new(newParent, GetInvWorldMatrix(newParent).Transform(oldPos));

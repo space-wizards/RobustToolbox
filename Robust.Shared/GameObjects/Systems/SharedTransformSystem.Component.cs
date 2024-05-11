@@ -1296,14 +1296,10 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     public void AttachToGridOrMap(EntityUid uid, TransformComponent? xform = null)
     {
-        // TODO May be unnecessary due to the XFormQuery.Resolve
-        if (TerminatingOrDeleted(uid))
+        if (!GetAndValidateTransform(uid, ref xform))
             return;
 
-        if (!XformQuery.Resolve(uid, ref xform))
-            return;
-
-        if (!xform.ParentUid.IsValid() || xform.ParentUid == xform.GridUid)
+        if (xform.ParentUid == xform.GridUid)
             return;
 
         if (xform.MapUid is not { } map || TerminatingOrDeleted(map))
@@ -1340,14 +1336,7 @@ public abstract partial class SharedTransformSystem
     {
         coordinates = null;
 
-        // TODO May be unnecessary due to the XFormQuery.Resolve
-        if (TerminatingOrDeleted(uid))
-            return false;
-
-        if (!XformQuery.Resolve(uid, ref xform))
-            return false;
-
-        if (!xform.ParentUid.IsValid())
+        if (!GetAndValidateTransform(uid, ref xform))
             return false;
 
         if (xform.MapUid is not { } map || TerminatingOrDeleted(map))
@@ -1359,6 +1348,20 @@ public abstract partial class SharedTransformSystem
             newParent = gridUid;
 
         coordinates = new(newParent, GetInvWorldMatrix(newParent).Transform(oldPos));
+        return true;
+    }
+
+    private bool GetAndValidateTransform(EntityUid uid, [NotNullWhen(true)] ref TransformComponent? xform)
+    {
+        if (TerminatingOrDeleted(uid))
+            return false;
+
+        if (!XformQuery.Resolve(uid, ref xform))
+            return false;
+
+        if (!xform.ParentUid.IsValid())
+            return false;
+
         return true;
     }
     #endregion

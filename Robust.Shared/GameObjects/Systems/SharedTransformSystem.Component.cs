@@ -1306,25 +1306,20 @@ public abstract partial class SharedTransformSystem
         if (!xform.ParentUid.IsValid() || xform.ParentUid == xform.GridUid)
             return;
 
-        EntityUid newParent;
-        var oldPos = GetWorldPosition(xform);
-        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, out var gridUid, out _)
-            && !TerminatingOrDeleted(gridUid))
-        {
-            newParent = gridUid;
-        }
-        else if (_mapManager.GetMapEntityId(xform.MapID) is { Valid: true } mapEnt
-            && !TerminatingOrDeleted(mapEnt))
-        {
-            newParent = mapEnt;
-        }
-        else
+        if (xform.MapUid is not { } map || TerminatingOrDeleted(map))
         {
             if (!_mapManager.IsMap(uid))
                 Log.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
 
             DetachEntity(uid, xform);
             return;
+        }
+
+        var newParent = map;
+        var oldPos = GetWorldPosition(xform);
+        if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _) && !TerminatingOrDeleted(gridUid))
+        {
+            newParent = gridUid;
         }
 
         if (newParent == xform.ParentUid || newParent == uid)

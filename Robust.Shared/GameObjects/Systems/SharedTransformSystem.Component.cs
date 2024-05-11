@@ -1296,6 +1296,7 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     public void AttachToGridOrMap(EntityUid uid, TransformComponent? xform = null)
     {
+        // TODO May be unnecessary due to the XFormQuery.Resolve
         if (TerminatingOrDeleted(uid))
             return;
 
@@ -1344,6 +1345,7 @@ public abstract partial class SharedTransformSystem
     {
         coordinates = null;
 
+        // TODO May be unnecessary due to the XFormQuery.Resolve
         if (TerminatingOrDeleted(uid))
             return false;
 

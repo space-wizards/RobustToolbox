@@ -1339,7 +1339,7 @@ public abstract partial class SharedTransformSystem
         if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _) && !TerminatingOrDeleted(gridUid))
             newParent = gridUid;
 
-        coordinates = new(newParent, GetInvWorldMatrix(newParent).Transform(oldPos));
+        coordinates = new EntityCoordinates(newParent, GetInvWorldMatrix(newParent).Transform(oldPos));
         return true;
     }
 

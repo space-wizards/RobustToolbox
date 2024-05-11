@@ -1302,7 +1302,7 @@ public abstract partial class SharedTransformSystem
         if (xform.ParentUid == xform.GridUid)
             return;
 
-        if (xform.MapUid is not { } map || TerminatingOrDeleted(map))
+        if (!TryGetGridOrMapCoordinates(uid, out var coordinates, xform))
         {
             if (!_mapManager.IsMap(uid))
                 Log.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
@@ -1311,18 +1311,10 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        var newParent = map;
-        var oldPos = GetWorldPosition(xform);
-        if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _) && !TerminatingOrDeleted(gridUid))
-        {
-            newParent = gridUid;
-        }
-
-        if (newParent == xform.ParentUid || newParent == uid)
+        if (coordinates.Value.EntityId == xform.ParentUid || coordinates.Value.EntityId == uid)
             return;
 
-        var newPos = GetInvWorldMatrix(newParent).Transform(oldPos);
-        SetCoordinates(uid, xform, new(newParent, newPos));
+        SetCoordinates(uid, xform, coordinates.Value);
     }
 
     /// <summary>

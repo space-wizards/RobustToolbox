@@ -1324,7 +1324,10 @@ public abstract partial class SharedTransformSystem
     /// <param name="coordinates">The returned coordinates on the grid or map.</param>
     /// <param name="xform">The transform component of the <paramref name="uid"/>.</param>
     /// <returns>Whether the grid or map coordinates were found and <paramref name="coordinates"/> was set.</returns>
-    public bool TryGetGridOrMapCoordinates(EntityUid uid, [NotNullWhen(true)] out EntityCoordinates? coordinates, TransformComponent? xform = null)
+    public bool TryGetGridOrMapCoordinates(
+        EntityUid uid,
+        [NotNullWhen(true)] out EntityCoordinates? coordinates,
+        TransformComponent? xform = null)
     {
         coordinates = null;
 

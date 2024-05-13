@@ -45,6 +45,11 @@ public sealed class MarkupNode : IComparable<MarkupNode>
         return $"[{(Closing ? "/" : "")}{Name}{Value.ToString().ReplaceLineEndings("\\n") ?? ""}{attributesString}]";
     }
 
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Name, Value, Closing);
+    }
+
     public override bool Equals(object? obj)
     {
         return obj is MarkupNode node && Equals(node);

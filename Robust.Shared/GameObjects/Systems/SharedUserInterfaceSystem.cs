@@ -10,6 +10,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -20,6 +21,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     [Dependency] private readonly IDynamicTypeFactory _factory = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private readonly IParallelManager _parallel = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ISharedPlayerManager _player = default!;
     [Dependency] private readonly SharedTransformSystem _transforms = default!;
@@ -29,6 +31,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     private EntityQuery<UserInterfaceComponent> _uiQuery;
     private EntityQuery<UserInterfaceUserComponent> _userQuery;
 
+    private ActorRangeCheckJob _rangeJob;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -37,6 +41,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         _xformQuery = GetEntityQuery<TransformComponent>();
         _uiQuery = GetEntityQuery<UserInterfaceComponent>();
         _userQuery = GetEntityQuery<UserInterfaceUserComponent>();
+
+        _rangeJob = new()
+        {
+            System = this,
+            XformQuery = _xformQuery,
+        };
 
         SubscribeAllEvent<BoundUIWrapMessage>((msg, args) =>
         {
@@ -886,6 +896,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     public override void Update(float frameTime)
     {
         var query = AllEntityQuery<ActiveUserInterfaceComponent, UserInterfaceComponent>();
+        // Run these in parallel because it's expensive.
+        _rangeJob.ActorRanges.Clear();
 
         // Handles closing the BUI if actors move out of range of them.
         while (query.MoveNext(out var uid, out _, out var uiComp))
@@ -899,23 +911,25 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 if (data.InteractionRange <= 0f || actors.Count == 0)
                     continue;
 
-                // Okay so somehow UISystem is high up on the server profile
-                // If that's actually still a problem turn this into an IParallelRobustJob and slam all the UIs in parallel.
-                var xform = _xformQuery.GetComponent(uid);
-                var coordinates = xform.Coordinates;
-                var mapId = xform.MapID;
-
-                for (var i = actors.Count - 1; i >= 0; i--)
+                foreach (var actor in actors)
                 {
-                    var actor = actors[i];
-
-                    if (CheckRange(uid, key, data, actor, coordinates, mapId))
-                        continue;
-
-                    // Using the non-predicted one here seems fine?
-                    CloseUi((uid, uiComp), key, actor);
+                    _rangeJob.ActorRanges.Add((uid, key, data, actor, false));
                 }
             }
+        }
+
+        _parallel.ProcessNow(_rangeJob, _rangeJob.ActorRanges.Count);
+
+        foreach (var data in _rangeJob.ActorRanges)
+        {
+            var uid = data.Ui;
+            var actor = data.Actor;
+            var key = data.Key;
+
+            if (data.Result || Deleted(uid) || Deleted(actor) || !_uiQuery.TryComp(uid, out var uiComp))
+                continue;
+
+            CloseUi((uid, uiComp), key, actor);
         }
     }
 
@@ -952,6 +966,32 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return false;
 
         return uiCoordinates.InRange(EntityManager, _transforms, actorXform.Coordinates, data.InteractionRange);
+    }
+
+    /// <summary>
+    /// Used for running UI raycast checks in parallel.
+    /// </summary>
+    private record struct ActorRangeCheckJob() : IParallelRobustJob
+    {
+        public EntityQuery<TransformComponent> XformQuery;
+        public SharedUserInterfaceSystem System;
+        public readonly List<(EntityUid Ui, Enum Key, InterfaceData Data, EntityUid Actor, bool Result)> ActorRanges = new();
+
+        public void Execute(int index)
+        {
+            var data = ActorRanges[index];
+
+            if (!XformQuery.TryComp(data.Ui, out var uiXform))
+            {
+                data.Result = false;
+            }
+            else
+            {
+                data.Result = System.CheckRange(data.Ui, data.Key, data.Data, data.Actor, uiXform.Coordinates, uiXform.MapID);
+            }
+
+            ActorRanges[index] = data;
+        }
     }
 }
 

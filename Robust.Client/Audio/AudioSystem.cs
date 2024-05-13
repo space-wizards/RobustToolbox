@@ -671,7 +671,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(AudioParams? audioParams, AudioStream stream)
     {
         var audioP = audioParams ?? AudioParams.Default;
-        var entity = EntityManager.CreateEntityUninitialized($"Audio {stream.Name}", MapCoordinates.Nullspace);
+        var entity = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
         var comp = SetupAudio(entity, null, audioP, stream.Length);
         LoadStream((entity, comp), stream);
         EntityManager.InitializeAndStartEntity(entity);

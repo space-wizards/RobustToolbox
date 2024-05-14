@@ -37,8 +37,7 @@ internal sealed partial class EntityEventBus : IEventBus
     internal FrozenDictionary<Type, DirectedRegistration>[] _eventSubs = default!;
 
     /// <summary>
-    /// Array of component event handlers for events with the <see cref="ComponentEventAttribute"/>. The array is
-    /// indexed by a component's <see cref="CompIdx.Value"/>, while the dictionary is indexed by the event type.
+    /// Variant of <see cref="_eventSubs"/> that also includes events with the <see cref="ComponentEventAttribute"/>
     /// </summary>
     internal FrozenDictionary<Type, DirectedRegistration>[] _compEventSubs = default!;
 

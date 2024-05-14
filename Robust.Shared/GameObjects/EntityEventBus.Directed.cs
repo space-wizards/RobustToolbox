@@ -359,10 +359,10 @@ namespace Robust.Shared.GameObjects
                 if (entry != null)
                     last = i;
             }
-            
+
             _compEventSubs = _eventSubsUnfrozen
                 .Take(last+1)
-                .Select(dict => dict?.Where(x => IsComponentEvent(x.Key)).ToFrozenDictionary()!)
+                .Select(dict => dict?.ToFrozenDictionary()!)
                 .ToArray();
 
             _eventSubs = _eventSubsUnfrozen

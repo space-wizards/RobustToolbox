@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 222.2.0
+
+### New features
+
+* Added `EntityQuery.Comp()` (abbreviation of `GetComponent()`)
+
+### Bugfixes
+
+* Fix `SerializationManager.TryGetVariableType` checking the wrong property.
+* Fixed GrammarSystem mispredicting a character's gender
+
+### Other
+
+* User interface system now performs range checks in parallel
+
+
 ## 222.1.1
 
 ### Bugfixes

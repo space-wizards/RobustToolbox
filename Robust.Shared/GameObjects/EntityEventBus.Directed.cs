@@ -360,6 +360,11 @@ namespace Robust.Shared.GameObjects
                     last = i;
             }
 
+            // TODO PERFORMANCE
+            // make this only contain events that actually use comp-events
+            // Assuming it makes the frozen dictionaries more specialized and thus faster.
+            // AFAIK currently only MapInit is both a comp-event and a general event.
+            // It should probably be changed to just be a comp event.
             _compEventSubs = _eventSubsUnfrozen
                 .Take(last+1)
                 .Select(dict => dict?.ToFrozenDictionary()!)

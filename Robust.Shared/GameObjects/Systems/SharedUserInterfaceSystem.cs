@@ -961,9 +961,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         EntityCoordinates uiCoordinates,
         MapId uiMap)
     {
-        if (!_xformQuery.TryGetComponent(actor, out var actorXform))
-            return false;
-
         // Handle pluggable BoundUserInterfaceCheckRangeEvent
         var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, key, data, actor);
         RaiseLocalEvent(uid, ref checkRangeEvent);
@@ -980,6 +977,9 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return false;
 
         DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
+
+        if (!_xformQuery.TryGetComponent(actor, out var actorXform))
+            return false;
 
         if (uiMap != actorXform.MapID)
             return false;

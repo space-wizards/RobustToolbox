@@ -105,7 +105,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // If it's a close message something else might try to cancel it but we want to force it.
         if (msg.Message is not CloseBoundInterfaceMessage && ui.RequireInputValidation)
         {
-            var attempt = new BoundUserInterfaceMessageAttempt(sender, uid, msg.UiKey);
+            var attempt = new BoundUserInterfaceMessageAttempt(sender, uid, msg.UiKey, msg.Message);
             RaiseLocalEvent(attempt);
             if (attempt.Cancelled)
                 return;
@@ -892,6 +892,20 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), msg, bui.UiKey));
     }
 
+    public bool TryGetInterfaceData(Entity<UserInterfaceComponent?> entity,
+        Enum key,
+        [NotNullWhen(true)] out InterfaceData? data)
+    {
+        data = null;
+        return Resolve(entity, ref entity.Comp, false) && entity.Comp.Interfaces.TryGetValue(key, out data);
+    }
+
+    public float GetUiRange(Entity<UserInterfaceComponent?> entity, Enum key)
+    {
+        TryGetInterfaceData(entity, key, out var data);
+        return data?.InteractionRange ?? 0;
+    }
+
     /// <inheritdoc />
     public override void Update(float frameTime)
     {
@@ -900,6 +914,9 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         _rangeJob.ActorRanges.Clear();
 
         // Handles closing the BUI if actors move out of range of them.
+        // TODO iterate over BUI users, not BUI entities.
+        // I.e., a user may have more than one BUI open, but its rare for a bui to be open by more than one user.
+        // This means we won't have to fetch the user's transform as frequently.
         while (query.MoveNext(out var uid, out _, out var uiComp))
         {
             foreach (var (key, actors) in uiComp.Actors)
@@ -908,7 +925,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 var data = uiComp.Interfaces[key];
 
                 // Short-circuit
-                if (data.InteractionRange <= 0f || actors.Count == 0)
+                if (data.InteractionRange <= 0f)
                     continue;
 
                 foreach (var actor in actors)
@@ -944,9 +961,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         EntityCoordinates uiCoordinates,
         MapId uiMap)
     {
-        if (_ignoreUIRangeQuery.HasComponent(actor))
-            return true;
-
         if (!_xformQuery.TryGetComponent(actor, out var actorXform))
             return false;
 
@@ -955,6 +969,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         RaiseLocalEvent(uid, ref checkRangeEvent, broadcast: true);
 
         if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
+            return true;
+
+        // We only check for th component if the did not pass, as the majority of the time users do not have this
+        // component.
+        if (_ignoreUIRangeQuery.HasComponent(actor))
             return true;
 
         if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Fail)

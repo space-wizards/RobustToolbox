@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Shared.Collections;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
@@ -13,6 +14,7 @@ internal sealed partial class EntityEventBus : IEventBus
 {
     private IEntityManager _entMan;
     private IComponentFactory _comFac;
+    private IReflectionManager _reflection;
 
     // Data on individual events. Used to check ordering info and fire broadcast events.
     private FrozenDictionary<Type, EventData> _eventData = FrozenDictionary<Type, EventData>.Empty;
@@ -48,6 +50,8 @@ internal sealed partial class EntityEventBus : IEventBus
     private bool _subscriptionLock;
 
     public bool IgnoreUnregisteredComponents;
+
+    private readonly List<Type> _subscriptionTypesTemp = [];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ref Unit ExtractUnitRef(ref object obj, Type objType)

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -117,10 +118,12 @@ namespace Robust.Shared.GameObjects
         /// Constructs a new instance of <see cref="EntityEventBus"/>.
         /// </summary>
         /// <param name="entMan">The entity manager to watch for entity/component events.</param>
-        public EntityEventBus(IEntityManager entMan)
+        /// <param name="reflection">The reflection manager to use when finding derived types.</param>
+        public EntityEventBus(IEntityManager entMan, IReflectionManager reflection)
         {
             _entMan = entMan;
             _comFac = entMan.ComponentFactory;
+            _reflection = reflection;
 
             // Dynamic handling of components is only for RobustUnitTest compatibility spaghetti.
             _comFac.ComponentsAdded += ComFacOnComponentsAdded;
@@ -299,6 +302,30 @@ namespace Robust.Shared.GameObjects
         {
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(new Entity<TComp>(uid, (TComp) comp), ref args);
+
+            void ExpandOrdering(ref Type[]? original)
+            {
+                if (original == null || original.Length == 0)
+                    return;
+
+                _subscriptionTypesTemp.Clear();
+                foreach (var beforeType in original)
+                {
+                    foreach (var child in _reflection.GetAllChildren(beforeType))
+                    {
+                        _subscriptionTypesTemp.Add(child);
+                    }
+                }
+
+                if (_subscriptionTypesTemp.Count > 0)
+                {
+                    Array.Resize(ref original, original.Length + _subscriptionTypesTemp.Count);
+                    _subscriptionTypesTemp.CopyTo(original, original.Length - _subscriptionTypesTemp.Count);
+                }
+            }
+
+            ExpandOrdering(ref before);
+            ExpandOrdering(ref after);
 
             var orderData = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
 
@@ -660,6 +687,7 @@ namespace Robust.Shared.GameObjects
             // punishment for use-after-free
             _entMan = null!;
             _comFac = null!;
+            _reflection = null!;
             _entEventTables = null!;
             _entSubscriptions = null!;
             _entSubscriptionsNoCompEv = null!;

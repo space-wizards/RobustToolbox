@@ -1,10 +1,10 @@
-using System;
 using System.Collections.Generic;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Reflection;
 using Robust.UnitTesting.Shared.Reflection;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -21,6 +21,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var compInstance = new MetaDataComponent();
 
             var entManMock = new Mock<IEntityManager>();
+            var reflectMock = new Mock<IReflectionManager>();
 
             compFactory.RegisterClass<MetaDataComponent>();
             entManMock.Setup(m => m.ComponentFactory).Returns(compFactory);
@@ -35,7 +36,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManMock.Setup(m => m.GetComponentInternal(entUid, CompIdx.Index<MetaDataComponent>()))
                 .Returns(compInstance);
 
-            var bus = new EntityEventBus(entManMock.Object);
+            var bus = new EntityEventBus(entManMock.Object, reflectMock.Object);
             bus.OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
 
             // Subscribe
@@ -80,6 +81,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 CompIdx.Index<MetaDataComponent>());
 
             var compFacMock = new Mock<IComponentFactory>();
+            var reflectMock = new Mock<IReflectionManager>();
 
             compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<MetaDataComponent>())).Returns(compRegistration);
             compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { compRegistration });
@@ -92,7 +94,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
                 .Returns(compInstance);
 
-            var bus = new EntityEventBus(entManMock.Object);
+            var bus = new EntityEventBus(entManMock.Object, reflectMock.Object);
             bus.OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
 
             // Subscribe
@@ -137,6 +139,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 CompIdx.Index<MetaDataComponent>());
 
             var compFacMock = new Mock<IComponentFactory>();
+            var reflectMock = new Mock<IReflectionManager>();
 
             compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<MetaDataComponent>())).Returns(compRegistration);
             compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { compRegistration });
@@ -149,7 +152,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
                 .Returns(compInstance);
 
-            var bus = new EntityEventBus(entManMock.Object);
+            var bus = new EntityEventBus(entManMock.Object, reflectMock.Object);
             bus.OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
 
             // Subscribe
@@ -184,6 +187,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var entManMock = new Mock<IEntityManager>();
             var compFacMock = new Mock<IComponentFactory>();
+            var reflectMock = new Mock<IReflectionManager>();
 
             List<ComponentRegistration> allRefTypes = new();
             void Setup<T>(out T instance) where T : IComponent, new()
@@ -208,7 +212,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             compFacMock.Setup(m => m.GetAllRegistrations()).Returns(allRefTypes.ToArray());
 
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
-            var bus = new EntityEventBus(entManMock.Object);
+            var bus = new EntityEventBus(entManMock.Object, reflectMock.Object);
             bus.OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
 
             // Subscribe

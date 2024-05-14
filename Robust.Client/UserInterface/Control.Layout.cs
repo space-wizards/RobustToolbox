@@ -780,6 +780,10 @@ namespace Robust.Client.UserInterface
             /// <summary>
             /// The control should take up minimal (<see cref="Control.DesiredSize"/>) space and align to the right of its given space.
             /// </summary>
+            /// <remarks>
+            /// Usually linked with <see cref="Control.HorizontalExpand"/> set to True to right align in a
+            /// <see cref="BoxContainer"/>.
+            /// </remarks>
             Right
         }
 

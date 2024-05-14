@@ -246,20 +246,31 @@ namespace Robust.Shared.Containers
 
         #region Container Helpers
 
-        public bool TryGetContainingContainer(EntityUid uid, [NotNullWhen(true)] out BaseContainer? container, MetaDataComponent? meta = null, TransformComponent? transform = null)
+        public bool TryGetContainingContainer(
+            EntityUid uid,
+            [NotNullWhen(true)] out BaseContainer? container,
+            MetaDataComponent? meta = null,
+            TransformComponent? transform = null)
+        {
+            return TryGetContainingContainer((uid, transform, meta), out container);
+        }
+
+        public bool TryGetContainingContainer(
+            Entity<TransformComponent?, MetaDataComponent?> ent,
+            [NotNullWhen(true)] out BaseContainer? container)
         {
             container = null;
 
-            if (!Resolve(uid, ref meta, false))
+            if (!Resolve(ent, ref ent.Comp2, false))
                 return false;
 
-            if ((meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.None)
+            if ((ent.Comp2.Flags & MetaDataFlags.InContainer) == MetaDataFlags.None)
                 return false;
 
-            if (!Resolve(uid, ref transform, false))
+            if (!Resolve(ent, ref ent.Comp1, false))
                 return false;
 
-            return TryGetContainingContainer(transform.ParentUid, uid, out container);
+            return TryGetContainingContainer(ent.Comp1.ParentUid, ent, out container);
         }
 
         /// <summary>
@@ -359,7 +370,7 @@ namespace Robust.Shared.Containers
         /// <summary>
         ///     Returns true if the two entities are not contained, or are contained in the same container.
         /// </summary>
-        public bool IsInSameOrNoContainer(EntityUid user, EntityUid other)
+        public bool IsInSameOrNoContainer(Entity<TransformComponent?, MetaDataComponent?> user, Entity<TransformComponent?, MetaDataComponent?> other)
         {
             var isUserContained = TryGetContainingContainer(user, out var userContainer);
             var isOtherContained = TryGetContainingContainer(other, out var otherContainer);
@@ -378,10 +389,20 @@ namespace Robust.Shared.Containers
         ///     Returns true if the two entities are not contained, or are contained in the same container, or if one
         ///     entity contains the other (i.e., is the parent).
         /// </summary>
-        public bool IsInSameOrParentContainer(EntityUid user, EntityUid other)
+        public bool IsInSameOrParentContainer(Entity<TransformComponent?> user, Entity<TransformComponent?> other)
         {
-            var isUserContained = TryGetContainingContainer(user, out var userContainer);
-            var isOtherContained = TryGetContainingContainer(other, out var otherContainer);
+            return IsInSameOrParentContainer(user, other, out _, out _);
+        }
+
+        /// <inheritdoc cref="IsInSameOrParentContainer(Robust.Shared.GameObjects.Entity{Robust.Shared.GameObjects.TransformComponent?},Robust.Shared.GameObjects.Entity{Robust.Shared.GameObjects.TransformComponent?})"/>
+        public bool IsInSameOrParentContainer(
+            Entity<TransformComponent?> user,
+            Entity<TransformComponent?> other,
+            out BaseContainer? userContainer,
+            out BaseContainer? otherContainer)
+        {
+            var isUserContained = TryGetContainingContainer(user, out userContainer);
+            var isOtherContained = TryGetContainingContainer(other, out otherContainer);
 
             // Both entities are not in a container
             if (!isUserContained && !isOtherContained) return true;

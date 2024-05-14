@@ -966,13 +966,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         // Handle pluggable BoundUserInterfaceCheckRangeEvent
         var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, key, data, actor);
-        RaiseLocalEvent(uid, ref checkRangeEvent, broadcast: true);
+        RaiseLocalEvent(uid, ref checkRangeEvent);
 
         if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
             return true;
 
-        // We only check for th component if the did not pass, as the majority of the time users do not have this
-        // component.
+        // We only check if the range check should be ignored if it did not pass.
+        // The majority of the time the check will be passing and users generally do not have this component.
         if (_ignoreUIRangeQuery.HasComponent(actor))
             return true;
 
@@ -1016,45 +1016,38 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
 /// <summary>
 /// Raised by <see cref="UserInterfaceSystem"/> to check whether an interface is still accessible by its user.
+/// The event is raised directed at the entity that owns the interface.
 /// </summary>
 [ByRefEvent]
 [PublicAPI]
-public struct BoundUserInterfaceCheckRangeEvent
+public struct BoundUserInterfaceCheckRangeEvent(
+    EntityUid target,
+    Enum uiKey,
+    InterfaceData data,
+    EntityUid actor)
 {
     /// <summary>
     /// The entity owning the UI being checked for.
     /// </summary>
-    public readonly EntityUid Target;
+    public readonly EntityUid Target = target;
 
     /// <summary>
     /// The UI itself.
     /// </summary>
     /// <returns></returns>
-    public readonly Enum UiKey;
+    public readonly Enum UiKey = uiKey;
 
-    public readonly InterfaceData Data;
+    public readonly InterfaceData Data = data;
 
     /// <summary>
     /// The player for which the UI is being checked.
     /// </summary>
-    public readonly EntityUid Actor;
+    public readonly EntityUid Actor = actor;
 
     /// <summary>
     /// The result of the range check.
     /// </summary>
     public BoundUserInterfaceRangeResult Result;
-
-    public BoundUserInterfaceCheckRangeEvent(
-        EntityUid target,
-        Enum uiKey,
-        InterfaceData data,
-        EntityUid actor)
-    {
-        Target = target;
-        UiKey = uiKey;
-        Data = data;
-        Actor = actor;
-    }
 }
 
 /// <summary>

@@ -200,5 +200,26 @@ namespace Robust.Shared.GameObjects
                 }
             }
         }
+
+        private void ExpandOrdering(ref Type[]? original)
+        {
+            if (original == null || original.Length == 0)
+                return;
+
+            _subscriptionTypesTemp.Clear();
+            foreach (var beforeType in original)
+            {
+                foreach (var child in _reflection.GetAllChildren(beforeType))
+                {
+                    _subscriptionTypesTemp.Add(child);
+                }
+            }
+
+            if (_subscriptionTypesTemp.Count > 0)
+            {
+                Array.Resize(ref original, original.Length + _subscriptionTypesTemp.Count);
+                _subscriptionTypesTemp.CopyTo(original, original.Length - _subscriptionTypesTemp.Count);
+            }
+        }
     }
 }

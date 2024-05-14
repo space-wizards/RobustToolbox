@@ -251,6 +251,9 @@ namespace Robust.Shared.GameObjects
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, args);
 
+            ExpandOrdering(ref before);
+            ExpandOrdering(ref after);
+
             var orderData = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
 
             EntSubscribe<TEvent>(
@@ -284,6 +287,9 @@ namespace Robust.Shared.GameObjects
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, ref args);
 
+            ExpandOrdering(ref before);
+            ExpandOrdering(ref after);
+
             var orderData = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
 
             EntSubscribe<TEvent>(
@@ -302,27 +308,6 @@ namespace Robust.Shared.GameObjects
         {
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(new Entity<TComp>(uid, (TComp) comp), ref args);
-
-            void ExpandOrdering(ref Type[]? original)
-            {
-                if (original == null || original.Length == 0)
-                    return;
-
-                _subscriptionTypesTemp.Clear();
-                foreach (var beforeType in original)
-                {
-                    foreach (var child in _reflection.GetAllChildren(beforeType))
-                    {
-                        _subscriptionTypesTemp.Add(child);
-                    }
-                }
-
-                if (_subscriptionTypesTemp.Count > 0)
-                {
-                    Array.Resize(ref original, original.Length + _subscriptionTypesTemp.Count);
-                    _subscriptionTypesTemp.CopyTo(original, original.Length - _subscriptionTypesTemp.Count);
-                }
-            }
 
             ExpandOrdering(ref before);
             ExpandOrdering(ref after);

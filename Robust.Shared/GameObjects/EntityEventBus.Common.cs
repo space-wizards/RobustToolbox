@@ -51,7 +51,7 @@ internal sealed partial class EntityEventBus : IEventBus
 
     public bool IgnoreUnregisteredComponents;
 
-    private readonly List<Type> _subscriptionTypesTemp = [];
+    private readonly List<Type> _childrenTypesTemp = [];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ref Unit ExtractUnitRef(ref object obj, Type objType)

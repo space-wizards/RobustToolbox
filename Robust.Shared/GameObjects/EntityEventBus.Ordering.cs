@@ -201,24 +201,31 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void ExpandOrdering(ref Type[]? original)
+        private OrderingData CreateOrderingData(Type orderType, Type[]? before, Type[]? after)
+        {
+            AddChildrenTypes(ref before);
+            AddChildrenTypes(ref after);
+            return new OrderingData(orderType, before ?? [], after ?? []);
+        }
+
+        private void AddChildrenTypes(ref Type[]? original)
         {
             if (original == null || original.Length == 0)
                 return;
 
-            _subscriptionTypesTemp.Clear();
+            _childrenTypesTemp.Clear();
             foreach (var beforeType in original)
             {
                 foreach (var child in _reflection.GetAllChildren(beforeType))
                 {
-                    _subscriptionTypesTemp.Add(child);
+                    _childrenTypesTemp.Add(child);
                 }
             }
 
-            if (_subscriptionTypesTemp.Count > 0)
+            if (_childrenTypesTemp.Count > 0)
             {
-                Array.Resize(ref original, original.Length + _subscriptionTypesTemp.Count);
-                _subscriptionTypesTemp.CopyTo(original, original.Length - _subscriptionTypesTemp.Count);
+                Array.Resize(ref original, original.Length + _childrenTypesTemp.Count);
+                _childrenTypesTemp.CopyTo(original, original.Length - _childrenTypesTemp.Count);
             }
         }
     }

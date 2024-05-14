@@ -251,10 +251,7 @@ namespace Robust.Shared.GameObjects
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, args);
 
-            ExpandOrdering(ref before);
-            ExpandOrdering(ref after);
-
-            var orderData = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
+            var orderData = CreateOrderingData(orderType, before, after);
 
             EntSubscribe<TEvent>(
                 CompIdx.Index<TComp>(),
@@ -287,10 +284,7 @@ namespace Robust.Shared.GameObjects
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, ref args);
 
-            ExpandOrdering(ref before);
-            ExpandOrdering(ref after);
-
-            var orderData = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
+            var orderData = CreateOrderingData(orderType, before, after);
 
             EntSubscribe<TEvent>(
                 CompIdx.Index<TComp>(),
@@ -309,10 +303,7 @@ namespace Robust.Shared.GameObjects
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(new Entity<TComp>(uid, (TComp) comp), ref args);
 
-            ExpandOrdering(ref before);
-            ExpandOrdering(ref after);
-
-            var orderData = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
+            var orderData = CreateOrderingData(orderType, before, after);
 
             EntSubscribe<TEvent>(
                 CompIdx.Index<TComp>(),

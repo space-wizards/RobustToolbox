@@ -351,30 +351,13 @@ namespace Robust.Shared.GameObjects
             _subscriptionLock = true;
             _eventData = _eventDataUnfrozen.ToFrozenDictionary();
 
-            // null entries in _entSubscriptionsUnfrozen should all appear all together at the end.
-            // if not, something probably went wrong while adding component subscriptions or assigning CompIdx values.
-#if DEBUG
-            var firstNull = false;
-            foreach (var entry in _eventSubsUnfrozen)
-            {
-                if (entry == null)
-                {
-                    firstNull = true;
-                    continue;
-                }
-
-                DebugTools.Assert(!firstNull);
-            }
-#endif
-
             _compEventSubs = _eventSubsUnfrozen
-                .Where(dict => dict != null)
-                .Select(dict => dict!.Where(x => IsComponentEvent(x.Key)).ToFrozenDictionary())
+                .Select(dict => dict?.Where(x => IsComponentEvent(x.Key)).ToFrozenDictionary()!)
                 .ToArray();
 
             _eventSubs = _eventSubsUnfrozen
                 .Where(dict => dict != null)
-                .Select(dict => dict!.Where(x => !IsComponentEvent(x.Key)).ToFrozenDictionary())
+                .Select(dict => dict?.Where(x => !IsComponentEvent(x.Key)).ToFrozenDictionary()!)
                 .ToArray();
 
             CalcOrdering();

@@ -351,12 +351,22 @@ namespace Robust.Shared.GameObjects
             _subscriptionLock = true;
             _eventData = _eventDataUnfrozen.ToFrozenDictionary();
 
+            // Find last non-null entry.
+            var last = 0;
+            for (var i = 0; i < _eventSubsUnfrozen.Length; i++)
+            {
+                var entry = _eventSubsUnfrozen[i];
+                if (entry != null)
+                    last = i;
+            }
+            
             _compEventSubs = _eventSubsUnfrozen
+                .Take(last+1)
                 .Select(dict => dict?.Where(x => IsComponentEvent(x.Key)).ToFrozenDictionary()!)
                 .ToArray();
 
             _eventSubs = _eventSubsUnfrozen
-                .Where(dict => dict != null)
+                .Take(last+1)
                 .Select(dict => dict?.Where(x => !IsComponentEvent(x.Key)).ToFrozenDictionary()!)
                 .ToArray();
 

@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 222.3.0
+
+### New features
+
 * `ITileDefinition.EditorHidden` allows hiding a tile from the tile spawn panel.
 * Ordered event subscriptions now take child types into account, so ordering based on a shared type will work.
 
@@ -51,10 +70,6 @@ END TEMPLATE-->
 
 * Fixed build compatibility with .NET 8.0.300 SDK, due to changes in how Central Package Management behaves.
 * Physics component has delta states to reduce network usage.
-
-### Internal
-
-*None yet*
 
 
 ## 222.2.0

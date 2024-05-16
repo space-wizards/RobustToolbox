@@ -59,6 +59,19 @@ namespace Robust.UnitTesting.Shared.Utility
         }
 
         [Test]
+        public static void TestEquality()
+        {
+            var a = new MarkupNode("A");
+            var b = new MarkupNode("A");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(a.GetHashCode(), NUnit.Framework.Is.EqualTo(b.GetHashCode()));
+                Assert.That(a, NUnit.Framework.Is.EqualTo(b));
+            });
+        }
+
+        [Test]
         [TestCase("foo[color=#aabbcc bar")]
         public static void TestParsePermissiveMarkup(string text)
         {

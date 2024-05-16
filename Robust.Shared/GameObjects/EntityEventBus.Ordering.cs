@@ -59,10 +59,10 @@ namespace Robust.Shared.GameObjects
 
             // Collect all subscriptions, broadcast and ordered.
             IEnumerable<OrderedRegistration> regs = sub.BroadcastRegistrations;
-            if (_entSubscriptionsInv.TryGetValue(eventType, out var comps))
+            if (_eventSubsInv.TryGetValue(eventType, out var comps))
             {
                 regs = regs.Concat(comps
-                    .Select(c => _entSubscriptions[c.Value])
+                    .Select(c => _eventSubs[c.Value])
                     .Where(c => c != null)
                     .Select(c => c![eventType]));
             }

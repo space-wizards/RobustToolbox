@@ -130,13 +130,13 @@ public sealed class TileSpawningUIController : UIController
 
         _window.TileList.Clear();
 
-        IEnumerable<ITileDefinition> tileDefs = _tiles;
+        IEnumerable<ITileDefinition> tileDefs = _tiles.Where(def => !def.EditorHidden);
 
         if (!string.IsNullOrEmpty(searchStr))
         {
             tileDefs = tileDefs.Where(s =>
-                (Loc.GetString(s.Name).Contains(searchStr, StringComparison.CurrentCultureIgnoreCase) ||
-                s.ID.Contains(searchStr, StringComparison.OrdinalIgnoreCase)) && !s.EditorHidden);
+                Loc.GetString(s.Name).Contains(searchStr, StringComparison.CurrentCultureIgnoreCase) ||
+                s.ID.Contains(searchStr, StringComparison.OrdinalIgnoreCase));
         }
 
         tileDefs = tileDefs.OrderBy(d => Loc.GetString(d.Name));

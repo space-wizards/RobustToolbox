@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `ITileDefinition.EditorHidden` allows hiding a tile from the tile spawn panel.
 
 ### Bugfixes
 

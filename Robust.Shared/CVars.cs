@@ -899,7 +899,7 @@ namespace Robust.Shared
             CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         public static readonly CVarDef<string> RenderFOVColor =
-            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.REPLICATED | CVar.SERVER);
 
         /*
          *  CONTROLS

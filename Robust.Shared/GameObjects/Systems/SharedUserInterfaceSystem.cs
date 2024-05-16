@@ -944,11 +944,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         EntityCoordinates uiCoordinates,
         MapId uiMap)
     {
+        if (!_xformQuery.TryGetComponent(actor, out var actorXform) || actorXform.MapID != uiMap)
+            return false;
+
         if (_ignoreUIRangeQuery.HasComponent(actor))
             return true;
-
-        if (!_xformQuery.TryGetComponent(actor, out var actorXform))
-            return false;
 
         // Handle pluggable BoundUserInterfaceCheckRangeEvent
         var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, key, data, actor);

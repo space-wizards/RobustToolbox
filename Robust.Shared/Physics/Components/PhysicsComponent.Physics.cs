@@ -30,7 +30,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Components;
@@ -38,11 +37,6 @@ namespace Robust.Shared.Physics.Components;
 [RegisterComponent, NetworkedComponent]
 public sealed partial class PhysicsComponent : Component
 {
-    /// <summary>
-    /// Last time the physics component requires a full dirty
-    /// </summary>
-    public GameTick FullUpdate = GameTick.Zero;
-
     /// <summary>
     ///     Has this body been added to an island previously in this tick.
     /// </summary>

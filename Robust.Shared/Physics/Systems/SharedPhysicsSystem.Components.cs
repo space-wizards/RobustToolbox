@@ -69,38 +69,21 @@ public partial class SharedPhysicsSystem
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
     {
-        if (args.FromTick <= component.FullUpdate)
-        {
-            args.State = new PhysicsComponentState(
-                component.CanCollide,
-                component.SleepingAllowed,
-                component.FixedRotation,
-                component.BodyStatus,
-                component.LinearVelocity,
-                component.AngularVelocity,
-                component.BodyType,
-                component._friction,
-                component.LinearDamping,
-                component.AngularDamping);
-            return;
-        }
-
-        args.State = new PhysicsDeltaState()
-        {
-            LinearVelocity = component.LinearVelocity,
-            AngularVelocity = component.AngularVelocity,
-        };
+        args.State = new PhysicsComponentState(
+            component.CanCollide,
+            component.SleepingAllowed,
+            component.FixedRotation,
+            component.BodyStatus,
+            component.LinearVelocity,
+            component.AngularVelocity,
+            component.BodyType,
+            component._friction,
+            component.LinearDamping,
+            component.AngularDamping);
     }
 
     private void OnPhysicsHandleState(EntityUid uid, PhysicsComponent component, ref ComponentHandleState args)
     {
-        if (args.Current is PhysicsDeltaState delta)
-        {
-            component.LinearVelocity = delta.LinearVelocity;
-            component.AngularVelocity = delta.AngularVelocity;
-            return;
-        }
-
         if (args.Current is not PhysicsComponentState newState)
             return;
 
@@ -111,7 +94,7 @@ public partial class SharedPhysicsSystem
 
         // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
         // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
-        _fixturesQuery.TryComp(uid, out var manager);
+        TryComp<FixturesComponent>(uid, out var manager);
 
         SetLinearVelocity(uid, newState.LinearVelocity, body: component, manager: manager);
         SetAngularVelocity(uid, newState.AngularVelocity, body: component, manager: manager);
@@ -295,7 +278,6 @@ public partial class SharedPhysicsSystem
         if (((int) body.BodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
         {
             body._localCenter = Vector2.Zero;
-            FullDirty((uid, body));
             Dirty(uid, body);
             return;
         }
@@ -331,7 +313,6 @@ public partial class SharedPhysicsSystem
 
         // Update center of mass velocity.
         body.LinearVelocity += Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
-        FullDirty((uid, body));
         Dirty(uid, body);
     }
 
@@ -358,9 +339,7 @@ public partial class SharedPhysicsSystem
         body.AngularVelocity = value;
 
         if (dirty)
-        {
             Dirty(uid, body);
-        }
 
         return true;
     }
@@ -388,9 +367,7 @@ public partial class SharedPhysicsSystem
         body.LinearVelocity = velocity;
 
         if (dirty)
-        {
             Dirty(uid, body);
-        }
 
         return true;
     }
@@ -403,10 +380,7 @@ public partial class SharedPhysicsSystem
         body.AngularDamping = value;
 
         if (dirty)
-        {
-            FullDirty((uid, body));
             Dirty(uid, body);
-        }
     }
 
     [Obsolete("Use overload that takes EntityUid")]
@@ -423,10 +397,7 @@ public partial class SharedPhysicsSystem
         body.LinearDamping = value;
 
         if (dirty)
-        {
-            FullDirty((uid, body));
             Dirty(uid, body);
-        }
     }
 
     [Obsolete("Use overload that takes EntityUid")]
@@ -471,7 +442,7 @@ public partial class SharedPhysicsSystem
 
         // Update wake system last, if sleeping but still colliding.
         if (!value && body.CanCollide)
-            _wakeSystem.UpdateCanCollide(ent, checkTerminating: false);
+            _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
 
         if (updateSleepTime)
             SetSleepTime(body, 0);
@@ -484,6 +455,7 @@ public partial class SharedPhysicsSystem
         }
 
         UpdateMapAwakeState(uid, body);
+        Dirty(ent);
     }
 
     public void TrySetBodyType(EntityUid uid, BodyType value, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
@@ -540,10 +512,7 @@ public partial class SharedPhysicsSystem
         body.BodyStatus = status;
 
         if (dirty)
-        {
-            FullDirty((uid, body));
             Dirty(uid, body);
-        }
     }
 
     [Obsolete("Use overload that takes EntityUid")]
@@ -602,10 +571,7 @@ public partial class SharedPhysicsSystem
         }
 
         if (dirty)
-        {
-            FullDirty((uid, body));
             Dirty(uid, body);
-        }
 
         return value;
     }
@@ -620,10 +586,7 @@ public partial class SharedPhysicsSystem
         ResetMassData(uid, manager: manager, body: body);
 
         if (dirty)
-        {
-            FullDirty((uid, body));
             Dirty(uid, body);
-        }
     }
 
     public void SetFriction(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
@@ -634,10 +597,7 @@ public partial class SharedPhysicsSystem
         body._friction = value;
 
         if (dirty)
-        {
-            FullDirty((uid, body));
             Dirty(uid, body);
-        }
     }
 
     [Obsolete("Use overload that takes EntityUid")]
@@ -661,10 +621,7 @@ public partial class SharedPhysicsSystem
             body.InvI = 1.0f / body._inertia;
 
             if (dirty)
-            {
-                FullDirty((uid, body));
                 Dirty(uid, body);
-            }
         }
     }
 
@@ -694,10 +651,7 @@ public partial class SharedPhysicsSystem
         body.SleepingAllowed = value;
 
         if (dirty)
-        {
-            FullDirty((uid, body));
             Dirty(uid, body);
-        }
     }
 
     public void SetSleepTime(PhysicsComponent body, float value)
@@ -819,10 +773,5 @@ public partial class SharedPhysicsSystem
     public virtual void UpdateIsPredicted(EntityUid? uid, PhysicsComponent? physics = null)
     {
         // See client-side system
-    }
-
-    private void FullDirty(Entity<PhysicsComponent> entity)
-    {
-        entity.Comp.FullUpdate = _gameTiming.CurTick;
     }
 }

@@ -40,14 +40,17 @@ END TEMPLATE-->
 ### New features
 
 * `ITileDefinition.EditorHidden` allows hiding a tile from the tile spawn panel.
+* Ordered event subscriptions now take child types into account, so ordering based on a shared type will work.
 
 ### Bugfixes
 
-*None yet*
+* Cross-map BUI range checks now work.
+* Paused entities update on prototype reload.
 
 ### Other
 
-*None yet*
+* Fixed build compatibility with .NET 8.0.300 SDK, due to changes in how Central Package Management behaves.
+* Physics component has delta states to reduce network usage.
 
 ### Internal
 

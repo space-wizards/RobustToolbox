@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -117,10 +118,12 @@ namespace Robust.Shared.GameObjects
         /// Constructs a new instance of <see cref="EntityEventBus"/>.
         /// </summary>
         /// <param name="entMan">The entity manager to watch for entity/component events.</param>
-        public EntityEventBus(IEntityManager entMan)
+        /// <param name="reflection">The reflection manager to use when finding derived types.</param>
+        public EntityEventBus(IEntityManager entMan, IReflectionManager reflection)
         {
             _entMan = entMan;
             _comFac = entMan.ComponentFactory;
+            _reflection = reflection;
 
             // Dynamic handling of components is only for RobustUnitTest compatibility spaghetti.
             _comFac.ComponentsAdded += ComFacOnComponentsAdded;
@@ -248,7 +251,7 @@ namespace Robust.Shared.GameObjects
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, args);
 
-            var orderData = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
+            var orderData = CreateOrderingData(orderType, before, after);
 
             EntSubscribe<TEvent>(
                 CompIdx.Index<TComp>(),
@@ -281,7 +284,7 @@ namespace Robust.Shared.GameObjects
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, ref args);
 
-            var orderData = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
+            var orderData = CreateOrderingData(orderType, before, after);
 
             EntSubscribe<TEvent>(
                 CompIdx.Index<TComp>(),
@@ -300,7 +303,7 @@ namespace Robust.Shared.GameObjects
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(new Entity<TComp>(uid, (TComp) comp), ref args);
 
-            var orderData = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
+            var orderData = CreateOrderingData(orderType, before, after);
 
             EntSubscribe<TEvent>(
                 CompIdx.Index<TComp>(),
@@ -667,6 +670,7 @@ namespace Robust.Shared.GameObjects
             // punishment for use-after-free
             _entMan = null!;
             _comFac = null!;
+            _reflection = null!;
             _entEventTables = null!;
             _compEventSubs = null!;
             _eventSubs = null!;

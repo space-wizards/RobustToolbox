@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added the following types from `System.Numerics` to the sandbox: `Complex`, `Matrix3x2`, `Matrix4x4`, `Plane`, `Quaternion`, `Vector3`, `Vector4`.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 222.4.0
+
+### New features
+
+* Added the following types from `System.Numerics` to the sandbox: `Complex`, `Matrix3x2`, `Matrix4x4`, `Plane`, `Quaternion`, `Vector3`, `Vector4`.
 
 
 ## 222.3.0

@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Robust.Roslyn.Shared;
+using Robust.Shared.Serialization.Manager.Definition;
 
 namespace Robust.Analyzers;
 
@@ -285,8 +286,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             return false;
 
         // Get the name that sourcegen would provide
-        var fieldName = symbol.Name.AsSpan();
-        var automaticName = $"{char.ToLowerInvariant(fieldName[0])}{fieldName.Slice(1).ToString()}";
+        var automaticName = DataDefinitionUtility.AutoGenerateTag(symbol.Name);
 
         // If the explicit name matches the sourcegen name, we have a redundancy
         return explicitName == automaticName;

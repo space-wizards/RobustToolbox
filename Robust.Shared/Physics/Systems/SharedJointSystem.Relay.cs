@@ -48,6 +48,9 @@ public abstract partial class SharedJointSystem
 
     private void OnRelayShutdown(EntityUid uid, JointRelayTargetComponent component, ComponentShutdown args)
     {
+        if (_gameTiming.ApplyingState)
+            return;
+
         foreach (var relay in component.Relayed)
         {
             if (TerminatingOrDeleted(relay) || !_jointsQuery.TryGetComponent(relay, out var joint))

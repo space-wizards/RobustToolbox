@@ -133,6 +133,11 @@ public sealed partial class ReplayLoadManager
         var spawnedTracker = 0;
         var stateTracker = 0;
         var curState = state0;
+
+        var stats_due_ticks = 0;
+        var stats_due_spawned = 0;
+        var stats_due_state = 0;
+
         for (var i = 1; i < states.Count; i++)
         {
             if (i % 10 == 0)
@@ -157,6 +162,20 @@ public sealed partial class ReplayLoadManager
                 continue;
             }
 
+            // Track and update statistics about why checkpoints are getting created:
+            if (ticksSinceLastCheckpoint > _checkpointInterval)
+            {
+                stats_due_ticks += 1;
+            }
+            else if (spawnedTracker > _checkpointEntitySpawnThreshold)
+            {
+                stats_due_spawned += 1;
+            }
+            else if (stateTracker > _checkpointEntityStateThreshold)
+            {
+                stats_due_state += 1;
+            }
+
             ticksSinceLastCheckpoint = 0;
             spawnedTracker = 0;
             stateTracker = 0;
@@ -169,7 +188,8 @@ public sealed partial class ReplayLoadManager
             checkPoints.Add(new CheckpointState(newState, timeBase, cvars, i, detached));
         }
 
-        _sawmill.Info($"Finished generating checkpoints. Elapsed time: {st.Elapsed}");
+        _sawmill.Info($"Finished generating {checkPoints.Count} checkpoints. Elapsed time: {st.Elapsed}. Checkpoint every {(float)states.Count / checkPoints.Count} ticks on average");
+        _sawmill.Info($"Checkpoint stats - Spawning: {stats_due_spawned} StateChanges: {stats_due_state} Ticks: {stats_due_ticks}. ");
         await callback(states.Count, states.Count, LoadingState.ProcessingFiles, false);
         return (checkPoints.ToArray(), serverTime);
     }

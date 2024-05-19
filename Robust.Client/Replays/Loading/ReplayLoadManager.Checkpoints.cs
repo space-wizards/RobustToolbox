@@ -390,8 +390,8 @@ public sealed partial class ReplayLoadManager
                 continue;
             }
 
-            DebugTools.Assert(existing.State is not IComponentDeltaState);
-            combined[index] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State), newCompState.LastModifiedTick);
+            DebugTools.Assert(existing.State != null && existing.State is not IComponentDeltaState);
+            combined[index] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State!), newCompState.LastModifiedTick);
         }
 
         foreach (var compChange in newCompStates.Values)

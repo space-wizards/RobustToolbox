@@ -46,8 +46,7 @@ public sealed partial class ReplayLoadManager
 
             var state = _entMan.GetComponentState(_entMan.EventBus, component, null, GameTick.Zero);
             DebugTools.Assert(state is not IComponentDeltaState);
-            if (state != null)
-                list.Add(new ComponentChange(netId, state, GameTick.Zero));
+            list.Add(new ComponentChange(netId, state, GameTick.Zero));
             set.Add(netId);
         }
 
@@ -62,7 +61,7 @@ public sealed partial class ReplayLoadManager
         {
             if (comp.NetID == _metaId)
             {
-                var state = (MetaDataComponentState) comp.State;
+                var state = (MetaDataComponentState) comp.State!;
                 return state.PrototypeId;
             }
         }

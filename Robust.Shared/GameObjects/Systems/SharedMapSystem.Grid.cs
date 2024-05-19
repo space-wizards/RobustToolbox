@@ -244,40 +244,50 @@ public abstract partial class SharedMapSystem
 
     private void OnGridHandleState(EntityUid uid, MapGridComponent component, ref ComponentHandleState args)
     {
-        if (args.Current is not MapGridComponentState state)
-            return;
+        HashSet<MapChunk> modifiedChunks;
 
-        DebugTools.Assert(component.ChunkSize == state.ChunkSize || component.Chunks.Count == 0,
-            "Can't modify chunk size of an existing grid.");
-
-        component.ChunkSize = state.ChunkSize;
-        if (state.ChunkData == null && state.FullGridData == null)
-            return;
-
-        var modifiedChunks = new HashSet<MapChunk>();
-
-        // delta state
-        if (state.ChunkData != null)
+        switch (args.Current)
         {
-            foreach (var chunkData in state.ChunkData)
+            case MapGridComponentDeltaState delta:
             {
-                ApplyChunkData(uid, component, chunkData, modifiedChunks);
-            }
-        }
+                modifiedChunks = new();
+                DebugTools.Assert(component.ChunkSize == delta.ChunkSize || component.Chunks.Count == 0,
+                    "Can't modify chunk size of an existing grid.");
 
-        // full state
-        if (state.FullGridData != null)
-        {
-            foreach (var index in component.Chunks.Keys)
-            {
-                if (!state.FullGridData.ContainsKey(index))
-                    ApplyChunkData(uid, component, ChunkDatum.CreateDeleted(index), modifiedChunks);
-            }
+                component.ChunkSize = delta.ChunkSize;
+                if (delta.ChunkData == null)
+                    return;
 
-            foreach (var (index, tiles) in state.FullGridData)
-            {
-                ApplyChunkData(uid, component, ChunkDatum.CreateModified(index, tiles), modifiedChunks);
+                foreach (var chunkData in delta.ChunkData)
+                {
+                    ApplyChunkData(uid, component, chunkData, modifiedChunks);
+                }
+
+                break;
             }
+            case MapGridComponentState state:
+            {
+                modifiedChunks = new();
+                DebugTools.Assert(component.ChunkSize == state.ChunkSize || component.Chunks.Count == 0,
+                    "Can't modify chunk size of an existing grid.");
+
+                component.ChunkSize = state.ChunkSize;
+
+                foreach (var index in component.Chunks.Keys)
+                {
+                    if (!state.FullGridData.ContainsKey(index))
+                        ApplyChunkData(uid, component, ChunkDatum.CreateDeleted(index), modifiedChunks);
+                }
+
+                foreach (var (index, tiles) in state.FullGridData)
+                {
+                    ApplyChunkData(uid, component, ChunkDatum.CreateModified(index, tiles), modifiedChunks);
+                }
+
+                break;
+            }
+            default:
+                return;
         }
 
         var count = component.Chunks.Count;
@@ -409,7 +419,7 @@ public abstract partial class SharedMapSystem
             }
         }
 
-        args.State = new MapGridComponentState(component.ChunkSize, chunkData);
+        args.State = new MapGridComponentDeltaState(component.ChunkSize, chunkData);
 
 #if DEBUG
         if (chunkData == null)

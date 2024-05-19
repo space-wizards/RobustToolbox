@@ -35,9 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `BoundUserInterfaceCheckRangeEvent` is no longer a broadcast event, It is now only raised directed at the interface owner.
-* Various `EntityCoordinates` methods have been removed or moved to `SharedTransformSystem` 
-* Various `ContainerSystem` methods now take in an `Entity<TransformComponent?>` instead of `EntityUid`
+*None yet*
 
 ### New features
 
@@ -49,7 +47,8 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Various `ContainerSystem` methods have been obsoleted in favour of overrides that take in an `Entity` struct instead of `EntityUid`
+* Various `EntityCoordinates` methods have been obsoleted with replacements added  to `SharedTransformSystem`
 
 ### Internal
 

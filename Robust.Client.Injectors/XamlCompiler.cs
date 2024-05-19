@@ -239,6 +239,7 @@ namespace Robust.Build.Tasks
                         engine.LogErrorEvent(new BuildErrorEventArgs("XAMLIL", "", res.FilePath, 0, 0, 0, 0,
                             $"{res.FilePath}: {e.Message}", "", "CompileRobustXaml"));
                     }
+                    res.Remove();
                 }
                 return true;
             }

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Markdown;
@@ -440,5 +441,7 @@ namespace Robust.Shared.Serialization.Manager
         }
 
         #endregion
+
+        public bool TryGetVariableType(Type type, string variableName, [NotNullWhen(true)] out Type? variableType);
     }
 }

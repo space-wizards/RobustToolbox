@@ -1681,6 +1681,8 @@ namespace Robust.Client.GameObjects
                 DirOffset = toClone.DirOffset;
                 _autoAnimated = toClone._autoAnimated;
                 RenderingStrategy = toClone.RenderingStrategy;
+                if (toClone.CopyToShaderParameters is { } copyToShaderParameters)
+                    CopyToShaderParameters = new CopyToShaderParameters(copyToShaderParameters);
             }
 
             void ISerializationHooks.AfterDeserialization()
@@ -2155,6 +2157,12 @@ namespace Robust.Client.GameObjects
             public object LayerKey = layerKey;
             public string? ParameterTexture;
             public string? ParameterUV;
+
+            public CopyToShaderParameters(CopyToShaderParameters toClone) : this(toClone.LayerKey)
+            {
+                ParameterTexture = toClone.ParameterTexture;
+                ParameterUV = toClone.ParameterUV;
+            }
         }
 
         void IAnimationProperties.SetAnimatableProperty(string name, object value)

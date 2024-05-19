@@ -368,6 +368,21 @@ namespace Robust.Shared
         public static readonly CVarDef<float> NetHappyEyeballsDelay =
             CVarDef.Create("net.happy_eyeballs_delay", 0.025f, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Controls whether the networking library will log warning messages.
+        /// </summary>
+        /// <remarks>
+        /// Disabling this should make the networking layer more resilient against some DDoS attacks.
+        /// </remarks>
+        public static readonly CVarDef<bool> NetLidgrenLogWarning =
+            CVarDef.Create("net.lidgren_log_warning", true);
+
+        /// <summary>
+        /// Controls whether the networking library will log error messages.
+        /// </summary>
+        public static readonly CVarDef<bool> NetLidgrenLogError =
+            CVarDef.Create("net.lidgren_log_error", true);
+
         /**
          * SUS
          */
@@ -884,7 +899,7 @@ namespace Robust.Shared
             CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         public static readonly CVarDef<string> RenderFOVColor =
-            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.REPLICATED | CVar.SERVER);
 
         /*
          *  CONTROLS

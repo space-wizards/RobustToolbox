@@ -687,7 +687,10 @@ namespace Robust.Client.GameStates
                     DebugTools.Assert(component.NetSyncEnabled);
 
                     var state = _entityManager.GetComponentState(bus, component, null, GameTick.Zero);
-                    DebugTools.Assert(state is not IComponentDeltaState delta);
+                    if (state == null)
+                        continue;
+
+                    DebugTools.Assert(state is not IComponentDeltaState);
                     compData.Add(netId, state);
                 }
             }

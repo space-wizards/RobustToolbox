@@ -38,8 +38,7 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public readonly struct ComponentChange
     {
-        // 15ish bytes to create a component (strings are big), 5 bytes to remove one
-
+        /// <summary>
         /// State data for the created/modified component, if any.
         /// </summary>
         public readonly IComponentState State;

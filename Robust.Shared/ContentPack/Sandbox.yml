@@ -442,7 +442,14 @@ Types:
     AddressFamily: { }
   System.Numerics:
     BitOperations: { All: True }
+    Complex: { All: True }
+    Matrix3x2: { All: True }
+    Matrix4x4: { All: True }
+    Plane: { All: True }
+    Quaternion: { All: True }
     Vector2: { All: True }
+    Vector3: { All: True }
+    Vector4: { All: True }
   System.Reflection:
     Assembly:
       Methods:

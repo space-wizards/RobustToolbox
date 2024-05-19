@@ -55,5 +55,10 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="id">The new tile ID for this tile definition.</param>
         void AssignTileId(ushort id);
+
+        /// <summary>
+        ///     Allows you to hide tiles from the tile spawn menu.
+        /// </summary>
+        bool EditorHidden => false;
     }
 }

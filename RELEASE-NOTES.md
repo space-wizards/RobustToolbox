@@ -45,7 +45,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* `IEyeManager.GetWorldViewbounds()` and `IEyeManager.GetWorldViewbounds()` should now return the correct bounds if the main viewport does not take up the whole screen.
 
 ### Other
 
@@ -54,6 +54,47 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 222.4.0
+
+### New features
+
+* Added the following types from `System.Numerics` to the sandbox: `Complex`, `Matrix3x2`, `Matrix4x4`, `Plane`, `Quaternion`, `Vector3`, `Vector4`.
+
+
+## 222.3.0
+
+### New features
+
+* `ITileDefinition.EditorHidden` allows hiding a tile from the tile spawn panel.
+* Ordered event subscriptions now take child types into account, so ordering based on a shared type will work.
+
+### Bugfixes
+
+* Cross-map BUI range checks now work.
+* Paused entities update on prototype reload.
+
+### Other
+
+* Fixed build compatibility with .NET 8.0.300 SDK, due to changes in how Central Package Management behaves.
+* Physics component has delta states to reduce network usage.
+
+
+## 222.2.0
+
+### New features
+
+* Added `EntityQuery.Comp()` (abbreviation of `GetComponent()`)
+
+### Bugfixes
+
+* Fix `SerializationManager.TryGetVariableType` checking the wrong property.
+* Fixed GrammarSystem mispredicting a character's gender
+
+### Other
+
+* User interface system now performs range checks in parallel
 
 
 ## 222.1.1

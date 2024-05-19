@@ -957,12 +957,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         EntityUid uid,
         Enum key,
         InterfaceData data,
-        EntityUid actor,
+        Entity<TransformComponent?> actor,
         EntityCoordinates uiCoordinates,
         MapId uiMap)
     {
+        if (!_xformQuery.Resolve(actor, ref actor.Comp) || actor.Comp.MapID != uiMap)
+            return false;
+
         // Handle pluggable BoundUserInterfaceCheckRangeEvent
-        var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, key, data, actor);
+        var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, key, data, actor!);
         RaiseLocalEvent(uid, ref checkRangeEvent);
 
         if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
@@ -978,13 +981,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
 
-        if (!_xformQuery.TryGetComponent(actor, out var actorXform))
-            return false;
-
-        if (uiMap != actorXform.MapID)
-            return false;
-
-        return uiCoordinates.InRange(EntityManager, _transforms, actorXform.Coordinates, data.InteractionRange);
+        return uiCoordinates.InRange(EntityManager, _transforms, actor.Comp.Coordinates, data.InteractionRange);
     }
 
     /// <summary>
@@ -1024,7 +1021,7 @@ public struct BoundUserInterfaceCheckRangeEvent(
     EntityUid target,
     Enum uiKey,
     InterfaceData data,
-    EntityUid actor)
+    Entity<TransformComponent> actor)
 {
     /// <summary>
     /// The entity owning the UI being checked for.
@@ -1042,7 +1039,7 @@ public struct BoundUserInterfaceCheckRangeEvent(
     /// <summary>
     /// The player for which the UI is being checked.
     /// </summary>
-    public readonly EntityUid Actor = actor;
+    public readonly Entity<TransformComponent> Actor = actor;
 
     /// <summary>
     /// The result of the range check.

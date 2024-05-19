@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* `IEyeManager.GetWorldViewbounds()` and `IEyeManager.GetWorldViewbounds()` should now return the correct bounds if the main viewport does not take up the whole screen.
 
 ### Other
 
@@ -52,6 +52,183 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 222.4.0
+
+### New features
+
+* Added the following types from `System.Numerics` to the sandbox: `Complex`, `Matrix3x2`, `Matrix4x4`, `Plane`, `Quaternion`, `Vector3`, `Vector4`.
+
+
+## 222.3.0
+
+### New features
+
+* `ITileDefinition.EditorHidden` allows hiding a tile from the tile spawn panel.
+* Ordered event subscriptions now take child types into account, so ordering based on a shared type will work.
+
+### Bugfixes
+
+* Cross-map BUI range checks now work.
+* Paused entities update on prototype reload.
+
+### Other
+
+* Fixed build compatibility with .NET 8.0.300 SDK, due to changes in how Central Package Management behaves.
+* Physics component has delta states to reduce network usage.
+
+
+## 222.2.0
+
+### New features
+
+* Added `EntityQuery.Comp()` (abbreviation of `GetComponent()`)
+
+### Bugfixes
+
+* Fix `SerializationManager.TryGetVariableType` checking the wrong property.
+* Fixed GrammarSystem mispredicting a character's gender
+
+### Other
+
+* User interface system now performs range checks in parallel
+
+
+## 222.1.1
+
+### Bugfixes
+
+* Fixed never setting BoundUserInterface.State.
+
+### Other
+
+* Add truncate for filesaving.
+* Add method for getting the type of a data field by name from ISerializationManager.
+
+
+## 222.1.0
+
+### New features
+
+* Added `BoundKeyEventArgs.IsRepeat`.
+* Added `net.lidgren_log_warning` and `net.lidgren_log_error` CVars.
+
+### Bugfixes
+
+* Fix assert trip when holding repeatable keybinds.
+
+### Other
+
+* Updated Lidgren to v0.3.1. This should provide performance improvements if warning/error logs are disabled.
+
+
+## 222.0.0
+
+### Breaking changes
+
+* Mark IComponentFactory argument in EntityPrototype as mandatory.
+
+### New features
+
+* Add `EntProtoId<T>` to check for components on the attached entity as well.
+
+### Bugfixes
+
+* Fix PVS iterating duplicate chunks for multiple viewsubscriptions.
+
+### Other
+
+* Defer clientside BUI opens if it's the first state that comes in.
+
+
+## 221.2.0
+
+### New features
+
+* Add SetMapAudio helper to SharedAudioSystem to setup map-wide audio entities.
+* Add SetWorldRotNoLerp method to SharedTransformSystem to avoid client lerping.
+
+### Bugfixes
+
+* `SpriteComponent.CopyFrom` now copies `CopyToShaderParameters` configuration.
+
+
+## 221.1.0
+
+
+## 221.0.0
+
+### Breaking changes
+
+* `EntParentChangedMessage.OldMapId` is now an `EntityUid` instead of `MapId`
+* `TransformSystem.DetachParentToNull()` is being renamed to `DetachEntity`
+* The order in which `MoveEvent` handlers are invoked has been changed to prioritise engine subscriptions
+
+### New features
+
+* Added `UpdateHovered()` and `SetHovered()` to `IUserInterfaceManager`, for updating or modifying the currently hovered control.
+* Add SwapPositions to TransformSystem to swap two entity's transforms.
+
+### Bugfixes
+
+* Improve client gamestate exception tolerance.
+
+### Other
+
+* If the currently hovered control is disposed, `UserInterfaceManager` will now look for a new control, rather than just setting the hovered control to null.
+
+### Internal
+
+* Use more `EntityQuery<T>` internally in EntityManager and PhysicsSystem.
+
+
+## 220.2.0
+
+### New features
+
+* RSIs can now specify load parameters, mimicking the ones from `.png.yml`. Currently only disabling sRGB is supported.
+* Added a second UV channel to Clyde's vertex format. On regular batched sprite draws, this goes 0 -> 1 across the sprite quad.
+* Added a new `CopyToShaderParameters` system for `SpriteComponent` layers.
+
+
+## 220.1.0
+
+### Bugfixes
+
+* Fix client-side replay exceptions due to dropped states when recording.
+
+### Other
+
+* Remove IP + HWId from ViewVariables.
+* Close BUIs upon disconnect.
+
+
+## 220.0.0
+
+### Breaking changes
+
+* Refactor UserInterfaceSystem.
+  - The API has been significantly cleaned up and standardised, most noticeably callers don't need to worry about TryGetUi and can rely on either HasUi, SetUiState, CloseUi, or OpenUi to handle their code as appropriate.
+  - Interface data is now stored via key rather than as a flat list which is a breaking change for YAML.
+  - BoundUserInterfaces can now be completely handled via Shared code. Existing Server-side callers will behave similarly to before.
+  - BoundUserInterfaces now properly close in many more situations, additionally they are now attached to the entity so reconnecting can re-open them and they can be serialized properly.
+
+
+## 219.2.0
+
+### New features
+
+* Add SetMapCoordinates to TransformSystem.
+* Improve YAML Linter and validation of static fields.
+
+### Bugfixes
+
+* Fix DebugCoordsPanel freezing when hovering a control.
+
+### Other
+
+* Optimise physics networking to not dirty every tick of movement.
 
 
 ## 219.1.3

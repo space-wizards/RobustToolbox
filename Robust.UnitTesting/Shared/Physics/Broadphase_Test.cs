@@ -354,7 +354,7 @@ public sealed class Broadphase_Test
         Assert.That(lookup.FindBroadphase(child2), Is.EqualTo(mapBroadphase));
 
         // They should get deparented to the map and updated to the map's broadphase instead.
-        xformSystem.DetachParentToNull(parent, parentXform);
+        xformSystem.DetachEntity(parent, parentXform);
         Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(null));
         Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(null));
         Assert.That(lookup.FindBroadphase(child2), Is.EqualTo(null));

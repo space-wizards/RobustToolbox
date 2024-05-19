@@ -1,4 +1,5 @@
 varying highp vec2 UV;
+varying highp vec2 UV2;
 varying highp vec2 Pos;
 varying highp vec4 VtxModulate;
 

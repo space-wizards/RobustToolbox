@@ -134,7 +134,7 @@ internal sealed partial class PvsSystem : EntitySystem
         SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        _transform.OnGlobalMoveEvent += OnEntityMove;
+        _transform.OnBeforeMoveEvent += OnEntityMove;
         EntityManager.EntityAdded += OnEntityAdded;
         EntityManager.EntityDeleted += OnEntityDeleted;
         EntityManager.AfterEntityFlush += AfterEntityFlush;
@@ -159,7 +159,7 @@ internal sealed partial class PvsSystem : EntitySystem
         base.Shutdown();
 
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
-        _transform.OnGlobalMoveEvent -= OnEntityMove;
+        _transform.OnBeforeMoveEvent -= OnEntityMove;
         EntityManager.EntityAdded -= OnEntityAdded;
         EntityManager.EntityDeleted -= OnEntityDeleted;
         EntityManager.AfterEntityFlush -= AfterEntityFlush;

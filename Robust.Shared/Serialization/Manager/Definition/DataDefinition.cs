@@ -65,8 +65,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                var name = field.FieldInfo.Name.AsSpan();
-                attribute.Tag = $"{char.ToLowerInvariant(name[0])}{name[1..]}";
+                attribute.Tag = DataDefinitionUtility.AutoGenerateTag(field.FieldInfo.Name);
             }
 
             var dataFields = fieldDefs

@@ -160,6 +160,9 @@ namespace Robust.Shared.GameObjects
         [Pure]
         string GetComponentName(Type componentType);
 
+        [Pure]
+        string GetComponentName<T>() where T : IComponent, new();
+
         /// <summary>
         ///     Gets the name of a component, throwing an exception if it does not exist.
         /// </summary>

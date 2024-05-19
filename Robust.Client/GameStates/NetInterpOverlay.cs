@@ -49,7 +49,7 @@ namespace Robust.Client.GameStates
             while (query.MoveNext(out var uid, out var transform))
             {
                 // if not on the same map, continue
-                if (transform.MapID != _eyeManager.CurrentMap || _container.IsEntityInContainer(uid))
+                if (transform.MapID != args.MapId || _container.IsEntityInContainer(uid))
                     continue;
 
                 if (transform.GridUid == uid)

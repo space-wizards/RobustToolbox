@@ -6,7 +6,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             ("aPos", 0),
             ("tCoord", 1),
-            ("modulate", 2)
+            ("tCoord2", 2),
+            ("modulate", 3)
         };
 
         private const int UniIModUV = 0;

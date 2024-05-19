@@ -92,7 +92,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             Assert.That(parentXform.MapID, Is.EqualTo(mapId));
             Assert.That(childXform.MapID, Is.EqualTo(mapId));
 
-            xformSystem.DetachParentToNull(parent, parentXform);
+            xformSystem.DetachEntity(parent, parentXform);
             Assert.That(parentXform.MapID, Is.EqualTo(MapId.Nullspace));
             Assert.That(childXform.MapID, Is.EqualTo(MapId.Nullspace));
         }

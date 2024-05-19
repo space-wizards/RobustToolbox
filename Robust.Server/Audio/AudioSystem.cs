@@ -42,6 +42,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Source = new DummyAudioSource();
     }
 
+    public override void SetMapAudio(Entity<AudioComponent>? audio)
+    {
+        if (audio == null)
+            return;
+
+        base.SetMapAudio(audio);
+
+        // Also need a global override because clients not near 0,0 won't get the audio.
+        _pvs.AddGlobalOverride(audio.Value);
+    }
+
     private void AddAudioFilter(EntityUid uid, AudioComponent component, Filter filter)
     {
         var count = filter.Count;

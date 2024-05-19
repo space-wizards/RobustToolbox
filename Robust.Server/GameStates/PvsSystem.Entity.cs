@@ -55,13 +55,10 @@ internal sealed partial class PvsSystem
             return;
         }
 
-        var root = (xform.GridUid ?? xform.MapUid);
-        DebugTools.AssertNotNull(root);
-
-        if (xform.ParentUid != root)
+        if (xform.ParentUid != xform.GridUid && xform.ParentUid != xform.MapUid)
             return;
 
-        var location = new PvsChunkLocation(root.Value, GetChunkIndices(xform._localPosition));
+        var location = new PvsChunkLocation(xform.ParentUid, GetChunkIndices(xform._localPosition));
         if (meta.LastPvsLocation == location)
             return;
 

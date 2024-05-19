@@ -42,11 +42,12 @@ public abstract partial class SharedTransformSystem
     /// <summary>
     /// Converts entity-local coordinates into map terms.
     /// </summary>
-    public MapCoordinates ToMapCoordinates(EntityCoordinates coordinates)
+    public MapCoordinates ToMapCoordinates(EntityCoordinates coordinates, bool logError = true)
     {
         if (!TryComp(coordinates.EntityId, out TransformComponent? xform))
         {
-            Log.Error($"Attempted to convert coordinates with invalid entity: {coordinates}");
+            if (logError)
+                Log.Error($"Attempted to convert coordinates with invalid entity: {coordinates}");
             return MapCoordinates.Nullspace;
         }
 
@@ -144,11 +145,14 @@ public abstract partial class SharedTransformSystem
     /// <returns>True if the two points are within a given range.</returns>
     public bool InRange(EntityCoordinates coordA, EntityCoordinates coordB,  float range)
     {
+        if (!coordA.EntityId.IsValid() || !coordB.EntityId.IsValid())
+            return false;
+
         if (coordA.EntityId == coordB.EntityId)
             return (coordA.Position - coordB.Position).LengthSquared() < range * range;
 
-        var mapA = ToMapCoordinates(coordA);
-        var mapB = ToMapCoordinates(coordB);
+        var mapA = ToMapCoordinates(coordA, logError:false);
+        var mapB = ToMapCoordinates(coordB, logError:false);
 
         if (mapA.MapId != mapB.MapId || mapA.MapId == MapId.Nullspace)
             return false;

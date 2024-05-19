@@ -221,10 +221,9 @@ Had full state: {LastFullState != null}"
                     var compState = change.State;
 
                     if (compState is IComponentDeltaState delta
-                        && !delta.FullState
                         && compData.TryGetValue(change.NetID, out var old)) // May fail if relying on implicit data
                     {
-                        DebugTools.Assert(old is IComponentDeltaState oldDelta && oldDelta.FullState, "last state is not a full state");
+                        DebugTools.Assert(old is not IComponentDeltaState, "last state is not a full state");
 
                         if (cloneDelta)
                         {
@@ -235,7 +234,7 @@ Had full state: {LastFullState != null}"
                             delta.ApplyToFullState(old);
                             compState = old;
                         }
-                        DebugTools.Assert(compState is IComponentDeltaState newState && newState.FullState, "newly constructed state is not a full state");
+                        DebugTools.Assert(compState is not IComponentDeltaState, "newly constructed state is not a full state");
                     }
 
                     compData[change.NetID] = compState;
@@ -407,12 +406,12 @@ Had full state: {LastFullState != null}"
                         continue;
                     }
 
-                    if (serverState is not IComponentDeltaState serverDelta || serverDelta.FullState)
+                    if (serverState is not IComponentDeltaState serverDelta)
                         continue;
 
                     // Server sent an initial delta state. This is fine as long as the client can infer an initial full
                     // state from the entity prototype.
-                    if (implicitCompState is not IComponentDeltaState implicitDelta || !implicitDelta.FullState)
+                    if (implicitCompState is not IComponentDeltaState)
                     {
                         _logger.Error($"Server sent delta state and client failed to construct an implicit full state for entity {netEntity}");
                         continue;
@@ -420,7 +419,7 @@ Had full state: {LastFullState != null}"
 
                     serverDelta.ApplyToFullState(implicitCompState);
                     serverState = implicitCompState;
-                    DebugTools.Assert(implicitCompState is IComponentDeltaState d && d.FullState);
+                    DebugTools.Assert(implicitCompState is not IComponentDeltaState);
                 }
             }
         }

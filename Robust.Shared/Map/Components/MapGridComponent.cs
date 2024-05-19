@@ -335,49 +335,35 @@ namespace Robust.Shared.Map.Components
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class MapGridComponentState : ComponentState
+    internal sealed class MapGridComponentState(ushort chunkSize, Dictionary<Vector2i, Tile[]> fullGridData) : ComponentState
     {
         /// <summary>
         ///     The size of the chunks in the map grid.
         /// </summary>
-        public ushort ChunkSize;
+        public ushort ChunkSize = chunkSize;
 
         /// <summary>
         /// Networked chunk data containing the full grid state.
         /// </summary>
-        public Dictionary<Vector2i, Tile[]> FullGridData;
-
-        /// <summary>
-        ///     Constructs a new full component state.
-        /// </summary>
-        public MapGridComponentState(ushort chunkSize, Dictionary<Vector2i, Tile[]> fullGridData)
-        {
-            ChunkSize = chunkSize;
-            FullGridData = fullGridData;
-        }
+        public Dictionary<Vector2i, Tile[]> FullGridData = fullGridData;
     }
 
     /// <summary>
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class MapGridComponentDeltaState : ComponentState, IComponentDeltaState<MapGridComponentState>
+    internal sealed class MapGridComponentDeltaState(ushort chunkSize, List<ChunkDatum>? chunkData)
+        : ComponentState, IComponentDeltaState<MapGridComponentState>
     {
         /// <summary>
         ///     The size of the chunks in the map grid.
         /// </summary>
-        public ushort ChunkSize;
+        public readonly ushort ChunkSize = chunkSize;
 
         /// <summary>
         /// Networked chunk data.
         /// </summary>
-        public List<ChunkDatum>? ChunkData;
-
-        public MapGridComponentDeltaState(ushort chunkSize, List<ChunkDatum>? chunkData)
-        {
-            ChunkSize = chunkSize;
-            ChunkData = chunkData;
-        }
+        public readonly List<ChunkDatum>? ChunkData = chunkData;
 
         public void ApplyToFullState(MapGridComponentState state)
         {

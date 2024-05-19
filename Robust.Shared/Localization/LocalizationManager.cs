@@ -127,7 +127,8 @@ namespace Robust.Shared.Localization
             return false;
         }
 
-        public bool TryGetString(string messageId, (CultureInfo, FluentBundle) bundle,
+        public bool TryGetString(string messageId,
+            (CultureInfo, FluentBundle) bundle,
             [NotNullWhen(true)] out string? value)
         {
             try
@@ -153,7 +154,8 @@ namespace Robust.Shared.Localization
             }
         }
 
-        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
+        public bool TryGetString(string messageId,
+            [NotNullWhen(true)] out string? value,
             (string, object) arg)
         {
             // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]
@@ -175,8 +177,10 @@ namespace Robust.Shared.Localization
             return TryGetString(messageId, out value, args, bundle, info);
         }
 
-        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
-            (string, object) arg1, (string, object) arg2)
+        public bool TryGetString(string messageId,
+            [NotNullWhen(true)] out string? value,
+            (string, object) arg1,
+            (string, object) arg2)
         {
             // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]
             // I.e., have it automatically call FluentFromObject(context) with the right context if the message exists
@@ -198,7 +202,8 @@ namespace Robust.Shared.Localization
             return TryGetString(messageId, out value, args, bundle, info);
         }
 
-        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
+        public bool TryGetString(string messageId,
+            [NotNullWhen(true)] out string? value,
             params (string, object)[] keyArgs)
         {
             // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]

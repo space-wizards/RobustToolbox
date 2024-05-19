@@ -117,13 +117,6 @@ public interface ISharedPlayerManager
     void GetPlayerStates(GameTick fromTick, List<SessionState> states);
     void UpdateState(ICommonSession commonSession);
 
-    void RemoveSession(ICommonSession session, bool removeData = false);
-    void RemoveSession(NetUserId user, bool removeData = false);
-
-    ICommonSession CreateAndAddSession(INetChannel channel);
-
-    ICommonSession CreateAndAddSession(NetUserId user, string name);
-
     /// <summary>
     /// Sets a session's attached entity, optionally kicking any sessions already attached to it.
     /// </summary>

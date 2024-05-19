@@ -65,6 +65,16 @@ namespace Robust.Client.Player
                 LocalStatusChanged?.Invoke(e);
         }
 
+        public ICommonSession CreateAndAddSession(NetUserId user, string name)
+        {
+            return CreateAndAddSessionInternal(user, name);
+        }
+
+        public ICommonSession CreateAndAddSession(INetChannel channel)
+        {
+            return CreateAndAddSessionInternal(channel);
+        }
+
         public void SetupSinglePlayer(string name)
         {
             if (LocalSession != null)

@@ -80,7 +80,7 @@ namespace Robust.Server.Player
         /// <param name="args"></param>
         private void NewSession(object? sender, NetChannelArgs args)
         {
-            CreateAndAddSession(args.Channel);
+            CreateAndAddSessionInternal(args.Channel);
             PlayerCountMetric.Set(PlayerCount);
             // Synchronize base time.
             var msgTimeBase = new MsgSyncTimeBase();

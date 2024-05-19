@@ -132,17 +132,18 @@ namespace Robust.Shared.Localization
         {
             try
             {
-                // TODO LINGUINI error list nullable.
-                var result = bundle.Item2.TryGetAttrMessage(messageId, null, out var errs, out value);
-                if (errs != null)
+                if (bundle.Item2.TryGetAttrMessage(messageId, null, out var errors, out value))
+                    return true;
+
+                if (errors != null)
                 {
-                    foreach (var err in errs)
+                    foreach (var err in errors)
                     {
                         _logSawmill.Error("{culture}/{messageId}: {error}", bundle.Item1.Name, messageId, err);
                     }
                 }
 
-                return result;
+                return false;
             }
             catch (Exception e)
             {

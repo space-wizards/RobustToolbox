@@ -53,7 +53,7 @@ namespace Robust.Client.UserInterface.Controls
         private TimeSpan? _lastClickTime;
         private Vector2? _lastClickPosition;
 
-        private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
+        private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null && (HidePlaceHolderOnFocus && !Focused);
 
         public event Action<LineEditEventArgs>? OnTextChanged;
         public event Action<LineEditEventArgs>? OnTextEntered;
@@ -185,6 +185,10 @@ namespace Robust.Client.UserInterface.Controls
 
         public int SelectionLower => Math.Min(_selectionStart, _cursorPosition);
         public int SelectionUpper => Math.Max(_selectionStart, _cursorPosition);
+
+        public bool Focused;
+
+        public bool HidePlaceHolderOnFocus;
 
         public bool IgnoreNext { get; set; }
 
@@ -861,6 +865,7 @@ namespace Robust.Client.UserInterface.Controls
             // Reset this so the cursor is always visible immediately after gaining focus..
             _blink.Reset();
             OnFocusEnter?.Invoke(new LineEditEventArgs(this, _text));
+            Focused = true;
 
             if (Editable)
             {
@@ -873,6 +878,7 @@ namespace Robust.Client.UserInterface.Controls
             base.KeyboardFocusExited();
 
             OnFocusExit?.Invoke(new LineEditEventArgs(this, _text));
+            Focused = false;
 
             _clyde.TextInputStop();
             AbortIme(delete: false);

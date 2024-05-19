@@ -260,38 +260,20 @@ namespace Robust.Shared.Map
         /// <param name="otherCoordinates">Other set of coordinates to use.</param>
         /// <param name="range">maximum distance between the two sets of coordinates.</param>
         /// <returns>True if the two points are within a given range.</returns>
-        [Obsolete("Use overload with TransformSystem")]
+        [Obsolete("Use TransformSystem.InRange()")]
         public bool InRange(IEntityManager entityManager, EntityCoordinates otherCoordinates, float range)
         {
             return InRange(entityManager, entityManager.System<SharedTransformSystem>(), otherCoordinates, range);
         }
 
-        /// <summary>
-        ///     Compares two sets of coordinates to see if they are in range of each other.
-        /// </summary>
-        /// <param name="entityManager">Entity Manager containing the two entity Ids.</param>
-        /// <param name="otherCoordinates">Other set of coordinates to use.</param>
-        /// <param name="range">maximum distance between the two sets of coordinates.</param>
-        /// <returns>True if the two points are within a given range.</returns>
+        [Obsolete("Use TransformSystem.InRange()")]
         public bool InRange(
             IEntityManager entityManager,
             SharedTransformSystem transformSystem,
             EntityCoordinates otherCoordinates,
             float range)
         {
-            if (!IsValid(entityManager) || !otherCoordinates.IsValid(entityManager))
-                return false;
-
-            if (EntityId == otherCoordinates.EntityId)
-                return (otherCoordinates.Position - Position).LengthSquared() < range * range;
-
-            var mapCoordinates = ToMap(entityManager, transformSystem);
-            var otherMapCoordinates = otherCoordinates.ToMap(entityManager, transformSystem);
-
-            if (mapCoordinates.MapId != otherMapCoordinates.MapId)
-                return false;
-
-            return mapCoordinates.InRange(otherMapCoordinates, range);
+            return transformSystem.InRange(this, otherCoordinates, range);
         }
 
         /// <summary>

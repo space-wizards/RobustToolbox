@@ -954,19 +954,17 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     ///     Verify that the subscribed clients are still in range of the interface.
     /// </summary>
     private bool CheckRange(
-        EntityUid uid,
+        Entity<TransformComponent> UiEnt,
         Enum key,
         InterfaceData data,
-        Entity<TransformComponent?> actor,
-        EntityCoordinates uiCoordinates,
-        MapId uiMap)
+        Entity<TransformComponent?> actor)
     {
-        if (!_xformQuery.Resolve(actor, ref actor.Comp) || actor.Comp.MapID != uiMap)
+        if (!_xformQuery.Resolve(actor, ref actor.Comp) || actor.Comp.MapID != UiEnt.Comp.MapID)
             return false;
 
         // Handle pluggable BoundUserInterfaceCheckRangeEvent
-        var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, key, data, actor!);
-        RaiseLocalEvent(uid, ref checkRangeEvent);
+        var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(UiEnt, key, data, actor!);
+        RaiseLocalEvent(UiEnt.Owner, ref checkRangeEvent, true);
 
         if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
             return true;
@@ -981,7 +979,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
 
-        return uiCoordinates.InRange(EntityManager, _transforms, actor.Comp.Coordinates, data.InteractionRange);
+        return _transforms.InRange(UiEnt!, actor, data.InteractionRange);
     }
 
     /// <summary>
@@ -1003,7 +1001,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             }
             else
             {
-                data.Result = System.CheckRange(data.Ui, data.Key, data.Data, data.Actor, uiXform.Coordinates, uiXform.MapID);
+                data.Result = System.CheckRange((data.Ui, uiXform), data.Key, data.Data, data.Actor);
             }
 
             ActorRanges[index] = data;
@@ -1018,7 +1016,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 [ByRefEvent]
 [PublicAPI]
 public struct BoundUserInterfaceCheckRangeEvent(
-    EntityUid target,
+    Entity<TransformComponent> target,
     Enum uiKey,
     InterfaceData data,
     Entity<TransformComponent> actor)

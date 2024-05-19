@@ -137,4 +137,54 @@ public abstract partial class SharedTransformSystem
         return !Resolve(entity, ref entity.Comp) ? null : entity.Comp.MapUid;
     }
 
+    /// <summary>
+    ///     Compares two sets of coordinates to see if they are in range of each other.
+    /// </summary>
+    /// <param name="range">maximum distance between the two sets of coordinates.</param>
+    /// <returns>True if the two points are within a given range.</returns>
+    public bool InRange(EntityCoordinates coordA, EntityCoordinates coordB,  float range)
+    {
+        if (coordA.EntityId == coordB.EntityId)
+            return (coordA.Position - coordB.Position).LengthSquared() < range * range;
+
+        var mapA = ToMapCoordinates(coordA);
+        var mapB = ToMapCoordinates(coordB);
+
+        if (mapA.MapId != mapB.MapId || mapA.MapId == MapId.Nullspace)
+            return false;
+
+        return mapA.InRange(mapB, range);
+    }
+
+    /// <summary>
+    ///     Compares the positions of two entities to see if they are within some specified distance of each other.
+    /// </summary>
+    public bool InRange(Entity<TransformComponent?> entA, Entity<TransformComponent?> entB,  float range)
+    {
+        if (!Resolve(entA, ref entA.Comp))
+            return false;
+
+        if (!Resolve(entB, ref entB.Comp))
+            return false;
+
+        if (!entA.Comp.ParentUid.IsValid() || !entB.Comp.ParentUid.IsValid())
+            return false;
+
+        if (entA.Comp.ParentUid == entB.Comp.ParentUid)
+            return (entA.Comp.LocalPosition - entB.Comp.LocalPosition).LengthSquared() < range * range;
+
+        if (entA.Comp.ParentUid == entB.Owner)
+            return entA.Comp.LocalPosition.LengthSquared() < range * range;
+
+        if (entB.Comp.ParentUid == entA.Owner)
+            return entB.Comp.LocalPosition.LengthSquared() < range * range;
+
+        var mapA = GetMapCoordinates(entA!);
+        var mapB = GetMapCoordinates(entB!);
+
+        if (mapA.MapId != mapB.MapId || mapA.MapId == MapId.Nullspace)
+            return false;
+
+        return mapA.InRange(mapB, range);
+    }
 }

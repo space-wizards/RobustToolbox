@@ -17,7 +17,7 @@ internal sealed partial class ReplayPlaybackManager
     /// </summary>
     /// <param name="index">The target tick/index. The actual checkpoint will have an index less than or equal to this.</param>
     /// <param name="flushEntities">Whether to delete all entities</param>
-    public void ResetToNearestCheckpoint(int index, bool flushEntities)
+    public void ResetToNearestCheckpoint(int index, bool flushEntities, CheckpointState? checkpoint = null)
     {
         if (Replay == null)
             throw new Exception("Not currently playing a replay");
@@ -25,7 +25,8 @@ internal sealed partial class ReplayPlaybackManager
         if (flushEntities)
             _entMan.FlushEntities();
 
-        var checkpoint = GetLastCheckpoint(Replay, index);
+        // Look up the desired checkpoint, unless our caller kindly provided one to us.
+        checkpoint ??= GetLastCheckpoint(Replay, index);
 
         _sawmill.Info($"Resetting to checkpoint. From {Replay.CurrentIndex} to {checkpoint.Index}");
         var st = new Stopwatch();

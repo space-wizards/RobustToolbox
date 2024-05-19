@@ -1642,6 +1642,13 @@ namespace Robust.Shared
             CVar.SERVER | CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
+        /// How many milliseconds we will spend moving forward from the nearest checkpoint or current position.
+        /// We will spend this time when scrubbing the timeline per game tick. This limits CPU usage / locking up and
+        /// improves responsiveness
+        /// </summary>
+        public static readonly CVarDef<int> ReplayMaxScrubTime = CVarDef.Create("replay.max_scrub_time", 10);
+
+        /// <summary>
         /// Determines the threshold before visual events (muzzle flashes, chat pop-ups, etc) are suppressed when
         /// jumping forward in time. Jumps larger than this will simply skip directly to the target tick.
         /// </summary>

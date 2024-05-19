@@ -1586,6 +1586,13 @@ namespace Robust.Shared.GameObjects
             return default;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public TComp1 Comp(EntityUid uid)
+        {
+            return GetComponent(uid);
+        }
+
         #region Internal
 
         /// <summary>

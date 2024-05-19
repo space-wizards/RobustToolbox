@@ -600,8 +600,12 @@ namespace Robust.Client.GameStates
                         if (_sawmill.Level <= LogLevel.Debug)
                             _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
 
-                        var handleState = new ComponentHandleState(compState, null);
-                        _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
+                        if (compState != null)
+                        {
+                            var handleState = new ComponentHandleState(compState, null);
+                            _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
+                        }
+
                         comp.LastModifiedTick = _timing.LastRealTick;
                     }
                 }

@@ -41,12 +41,12 @@ internal sealed partial class ReplayPlaybackManager
             skipEffectEvents = true;
             ResetToNearestCheckpoint(value, false);
         }
-        else if (value > Replay.CurrentIndex + _checkpointInterval)
+        else if (value > Replay.CurrentIndex + _checkpointMinInterval)
         {
             // If we are skipping many ticks into the future, we try to skip directly to a checkpoint instead of
             // applying every tick.
             var nextCheckpoint = GetNextCheckpoint(Replay, Replay.CurrentIndex);
-            if (nextCheckpoint.Index < value)
+            if (nextCheckpoint.Index < value && nextCheckpoint.Index > Replay.CurrentIndex)
                 ResetToNearestCheckpoint(value, false);
         }
 

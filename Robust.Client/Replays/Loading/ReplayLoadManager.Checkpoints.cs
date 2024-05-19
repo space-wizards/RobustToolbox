@@ -155,9 +155,10 @@ public sealed partial class ReplayLoadManager
             serverTime[i] = GetTime(curState.ToSequence) - initialTime;
             ticksSinceLastCheckpoint++;
 
-            if (ticksSinceLastCheckpoint < _checkpointInterval
+            if (ticksSinceLastCheckpoint < _checkpointMinInterval ||
+                (ticksSinceLastCheckpoint < _checkpointInterval
                 && spawnedTracker < _checkpointEntitySpawnThreshold
-                && stateTracker < _checkpointEntityStateThreshold)
+                && stateTracker < _checkpointEntityStateThreshold))
             {
                 continue;
             }

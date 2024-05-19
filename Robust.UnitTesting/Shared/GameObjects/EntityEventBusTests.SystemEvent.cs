@@ -2,6 +2,7 @@ using System;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Reflection;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
@@ -12,8 +13,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             var compFacMock = new Mock<IComponentFactory>();
             var entManMock = new Mock<IEntityManager>();
+            var reflectMock = new Mock<IReflectionManager>();
             entManMock.SetupGet(e => e.ComponentFactory).Returns(compFacMock.Object);
-            var bus = new EntityEventBus(entManMock.Object);
+            var bus = new EntityEventBus(entManMock.Object, reflectMock.Object);
             return bus;
         }
 

@@ -19,7 +19,7 @@ namespace Robust.Client.Placement.Modes
 
         public SnapgridCenter(PlacementManager pMan) : base(pMan) { }
 
-        public override void Render(DrawingHandleWorld handle)
+        public override void Render(in OverlayDrawArgs args)
         {
             if (Grid != null)
             {
@@ -34,18 +34,18 @@ namespace Robust.Client.Placement.Modes
                 {
                     var from = ScreenToWorld(new Vector2(a, 0));
                     var to = ScreenToWorld(new Vector2(a, viewportSize.Y));
-                    handle.DrawLine(from, to, new Color(0, 0, 1f));
+                    args.WorldHandle.DrawLine(from, to, new Color(0, 0, 1f));
                 }
                 for (var a = gridstart.Y; a < viewportSize.Y; a += SnapSize * EyeManager.PixelsPerMeter)
                 {
                     var from = ScreenToWorld(new Vector2(0, a));
                     var to = ScreenToWorld(new Vector2(viewportSize.X, a));
-                    handle.DrawLine(from, to, new Color(0, 0, 1f));
+                    args.WorldHandle.DrawLine(from, to, new Color(0, 0, 1f));
                 }
             }
 
             // Draw grid BELOW the ghost thing.
-            base.Render(handle);
+            base.Render(args);
         }
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)

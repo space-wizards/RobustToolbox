@@ -59,10 +59,10 @@ namespace Robust.Shared.GameObjects
 
             // Collect all subscriptions, broadcast and ordered.
             IEnumerable<OrderedRegistration> regs = sub.BroadcastRegistrations;
-            if (_entSubscriptionsInv.TryGetValue(eventType, out var comps))
+            if (_eventSubsInv.TryGetValue(eventType, out var comps))
             {
                 regs = regs.Concat(comps
-                    .Select(c => _entSubscriptions[c.Value])
+                    .Select(c => _eventSubs[c.Value])
                     .Where(c => c != null)
                     .Select(c => c![eventType]));
             }
@@ -198,6 +198,34 @@ namespace Robust.Shared.GameObjects
                 {
                     UpdateOrderSeq(type, sub);
                 }
+            }
+        }
+
+        private OrderingData CreateOrderingData(Type orderType, Type[]? before, Type[]? after)
+        {
+            AddChildrenTypes(ref before);
+            AddChildrenTypes(ref after);
+            return new OrderingData(orderType, before ?? [], after ?? []);
+        }
+
+        private void AddChildrenTypes(ref Type[]? original)
+        {
+            if (original == null || original.Length == 0)
+                return;
+
+            _childrenTypesTemp.Clear();
+            foreach (var beforeType in original)
+            {
+                foreach (var child in _reflection.GetAllChildren(beforeType))
+                {
+                    _childrenTypesTemp.Add(child);
+                }
+            }
+
+            if (_childrenTypesTemp.Count > 0)
+            {
+                Array.Resize(ref original, original.Length + _childrenTypesTemp.Count);
+                _childrenTypesTemp.CopyTo(original, original.Length - _childrenTypesTemp.Count);
             }
         }
     }

@@ -56,7 +56,7 @@ public sealed class EyeSystem : SharedEyeSystem
             if (eyeComponent.Eye == null)
                 continue;
 
-            if (!TryComp<TransformComponent>(eyeComponent.Target, out var xform))
+            if (!TryComp(eyeComponent.Target, out TransformComponent? xform))
             {
                 xform = Transform(uid);
                 eyeComponent.Target = null;

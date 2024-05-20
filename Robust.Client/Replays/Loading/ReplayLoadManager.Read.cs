@@ -41,6 +41,9 @@ public sealed partial class ReplayLoadManager
         var i = 0;
         var intBuf = new byte[4];
         var name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
+
+        MemoryStream? decompressedStream = null;
+
         while (fileReader.Exists(name))
         {
             await callback(i+1, totalData, LoadingState.ReadingFiles, false);
@@ -51,12 +54,20 @@ public sealed partial class ReplayLoadManager
             fileStream.ReadExactly(intBuf);
             var uncompressedSize = BitConverter.ToInt32(intBuf);
 
-            var decompressedStream = new MemoryStream(uncompressedSize);
+            if (decompressedStream == null || decompressedStream.Length < uncompressedSize)
+            {
+                // Double required size to increase chance of reuse by next slightly larger file.
+                decompressedStream = new MemoryStream(uncompressedSize * 2);
+            }
+            // Set position to 0 ready to decompress data into it
+            decompressedStream.Position = 0;
             decompressStream.CopyTo(decompressedStream, uncompressedSize);
+
+            // Prepare for a read from the start of it
             decompressedStream.Position = 0;
             DebugTools.Assert(uncompressedSize == decompressedStream.Length);
 
-            while (decompressedStream.Position < decompressedStream.Length)
+            while (decompressedStream.Position < uncompressedSize)
             {
                 _serializer.DeserializeDirect(decompressedStream, out GameState state);
                 _serializer.DeserializeDirect(decompressedStream, out ReplayMessage msg);

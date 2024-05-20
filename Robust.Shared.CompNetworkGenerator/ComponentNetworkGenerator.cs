@@ -134,11 +134,22 @@ namespace Robust.Shared.CompNetworkGenerator
             //            component.Count = state.Count;
             var handleStateSetters = new StringBuilder();
 
+            // Implements a switch case to correspond string field names to sourcegenned fields.
+            var deltaGetFields = new StringBuilder();
+            var deltaHandleFields = new StringBuilder();
+
+            var deltaApply = new StringBuilder();
+            var deltaCreate = new StringBuilder();
+
             foreach (var (type, name) in fields)
             {
                 var typeDisplayStr = type.ToDisplayString(FullNullableFormat);
                 var nullable = type.NullableAnnotation == NullableAnnotation.Annotated;
                 var nullableAnnotation = nullable ? "?" : string.Empty;
+                string? getField;
+                string? cast;
+                // TODO: Uhh I just need casts or something.
+                var castString = typeDisplayStr.Substring(8);
 
                 switch (typeDisplayStr)
                 {
@@ -147,10 +158,33 @@ namespace Robust.Shared.CompNetworkGenerator
                         stateFields.Append($@"
         public NetEntity{nullableAnnotation} {name} = default!;");
 
+                        getField = $"GetNetEntity(component.{name})";
+
                         getStateInit.Append($@"
-                {name} = GetNetEntity(component.{name}),");
+                    {name} = {getField},");
+
+                        deltaGetFields.Append($@"
+                    case ""{name}"":
+                        data[fieldName] = {getField};
+                        break;");
+
+                        cast = $"(NetEntity{nullableAnnotation})";
+
                         handleStateSetters.Append($@"
-            component.{name} = EnsureEntity<{componentName}>(state.{name}, uid);");
+                        component.{name} = EnsureEntity<{componentName}>(state.{name}, uid);");
+
+                        deltaHandleFields.Append($@"
+                        case ""{name}"":
+                            component.{name} = EnsureEntity<{componentName}>({cast} value!, uid);
+                            break;");
+
+                        deltaCreate.Append($@"
+                    {name} = fullState.{name},");
+
+                        deltaApply.Append($@"
+                    case ""{name}"":
+                        fullState.{name} = {cast} Fields[""{name}""]!;
+                        break;");
 
                         break;
                     case GlobalEntityCoordinatesName:
@@ -158,30 +192,99 @@ namespace Robust.Shared.CompNetworkGenerator
                         stateFields.Append($@"
         public NetCoordinates{nullableAnnotation} {name} = default!;");
 
+                        getField = $"GetNetCoordinates(component.{name})";
+
                         getStateInit.Append($@"
-                {name} = GetNetCoordinates(component.{name}),");
+                    {name} = {getField},");
+
+                        deltaGetFields.Append($@"
+                    case ""{name}"":
+                        data[fieldName] = {getField};
+                        break;");
+
+                        cast = $"(NetCoordinates{nullableAnnotation})";
+
                         handleStateSetters.Append($@"
-            component.{name} = EnsureCoordinates<{componentName}>(state.{name}, uid);");
+                        component.{name} = EnsureCoordinates<{componentName}>(state.{name}, uid);");
+
+                        deltaHandleFields.Append($@"
+                        case ""{name}"":
+                            component.{name} = EnsureCoordinates<{componentName}>({cast} value!, uid);
+                            break;");
+
+                        deltaCreate.Append($@"
+                    {name} = fullState.{name},");
+
+                        deltaApply.Append($@"
+                    case ""{name}"":
+                        fullState.{name} = {cast} Fields[""{name}""]!;
+                        break;");
 
                         break;
                     case GlobalEntityUidSetName:
                         stateFields.Append($@"
         public {GlobalNetEntityUidSetName} {name} = default!;");
 
+                        getField = $"GetNetEntitySet(component.{name})";
+
                         getStateInit.Append($@"
-                {name} = GetNetEntitySet(component.{name}),");
+                    {name} = {getField},");
+
+                        deltaGetFields.Append($@"
+                    case ""{name}"":
+                        data[fieldName] = {getField};
+                        break;");
+
+                        cast = $"({GlobalNetEntityUidSetName})";
+
                         handleStateSetters.Append($@"
-            EnsureEntitySet<{componentName}>(state.{name}, uid, component.{name});");
+                        EnsureEntitySet<{componentName}>(state.{name}, uid, component.{name});");
+
+                        deltaHandleFields.Append($@"
+                        case ""{name}"":
+                            EnsureEntitySet<{componentName}>({cast} value!, uid, component.{name});
+                            break;");
+
+                        deltaCreate.Append($@"
+                    {name} = new(fullState.{name}),");
+
+                        deltaApply.Append($@"
+                    case ""{name}"":
+                        fullState.{name} = {cast} Fields[""{name}""]!;
+                        break;");
 
                         break;
                     case GlobalEntityUidListName:
                         stateFields.Append($@"
-        public {GlobalNetEntityUidListName} {name} = default!;");
+                        public {GlobalNetEntityUidListName} {name} = default!;");
+
+                        getField = $"GetNetEntityList(component.{name})";
 
                         getStateInit.Append($@"
-                {name} = GetNetEntityList(component.{name}),");
+                    {name} = {getField},");
+
+                        deltaGetFields.Append($@"
+                    case ""{name}"":
+                        data[fieldName] = {getField};
+                        break;");
+
+                        cast = $"({GlobalNetEntityUidListName})";
+
                         handleStateSetters.Append($@"
-            EnsureEntityList<{componentName}>(state.{name}, uid, component.{name});");
+                        EnsureEntityList<{componentName}>(state.{name}, uid, component.{name});");
+
+                        deltaHandleFields.Append($@"
+                        case ""{name}"":
+                            EnsureEntityList<{componentName}>({cast} value!, uid, component.{name});
+                            break;");
+
+                        deltaCreate.Append($@"
+                    {name} = new(fullState.{name}),");
+
+                        deltaApply.Append($@"
+                    case ""{name}"":
+                        fullState.{name} = {cast} Fields[""{name}""]!;
+                        break;");
 
                         break;
                     default:
@@ -208,19 +311,48 @@ namespace Robust.Shared.CompNetworkGenerator
                                 stateFields.Append($@"
         public Dictionary<{key}, {value}> {name} = default!;");
 
+                                getField = $"GetNetEntityDictionary(component.{name})";
+
                                 getStateInit.Append($@"
-                {name} = GetNetEntityDictionary(component.{name}),");
+                            {name} = {getField},");
+
+                                deltaGetFields.Append($@"
+                            case ""{name}"":
+                                data[fieldName] = {getField};
+                                break;");
 
                                 if (valueNullable && value is not GlobalNetEntityName and not GlobalNetEntityNullableName)
                                 {
+                                    cast = $"(Dictionary<{key}, {value}>)";
+
                                     handleStateSetters.Append($@"
-            EnsureEntityDictionaryNullableValue<{componentName}, {value}>(state.{name}, uid, component.{name});");
+                                    EnsureEntityDictionaryNullableValue<{componentName}, {value}>(state.{name}, uid, component.{name});");
+
+                                    deltaHandleFields.Append($@"
+                                    case ""{name}"":
+                                        EnsureEntityDictionaryNullableValue<{componentName}, {value}>({cast} value!, uid, component.{name});
+                                        break;");
                                 }
                                 else
                                 {
+                                    cast = $"({castString})";
+
                                     handleStateSetters.Append($@"
-            EnsureEntityDictionary<{ensureGeneric}>(state.{name}, uid, component.{name});");
+                                    EnsureEntityDictionary<{ensureGeneric}>(state.{name}, uid, component.{name})");
+
+                                    deltaHandleFields.Append($@"
+                                    case ""{name}"":
+                                        EnsureEntityDictionary<{ensureGeneric}>( value!, uid, component.{name});
+                                        break;");
                                 }
+
+                                deltaCreate.Append($@"
+                            {name} = new(fullState.{name}),");
+
+                                deltaApply.Append($@"
+                            case ""{name}"":
+                                fullState.{name} = {cast} Fields[""{name}""]!;
+                                break;");
 
                                 break;
                             }
@@ -232,10 +364,33 @@ namespace Robust.Shared.CompNetworkGenerator
                                 stateFields.Append($@"
         public Dictionary<{key}, {value}> {name} = default!;");
 
+                                getField = $"GetNetEntityDictionary(component.{name})";
+
                                 getStateInit.Append($@"
-                {name} = GetNetEntityDictionary(component.{name}),");
+                            {name} = {getField},");
+
+                                deltaGetFields.Append($@"
+                            case ""{name}"":
+                                data[fieldName] = {getField};
+                                break;");
+
+                                cast = $"(Dictionary<{key}, {value}>)";
+
                                 handleStateSetters.Append($@"
-            EnsureEntityDictionary<{componentName}, {key}>(state.{name}, uid, component.{name});");
+                                EnsureEntityDictionary<{componentName}, {key}>(state.{name}, uid, component.{name});");
+
+                                deltaHandleFields.Append($@"
+                                case ""{name}"":
+                                    EnsureEntityDictionary<{componentName}, {key}>({cast} value!, uid, component.{name});
+                                    break;");
+
+                                deltaCreate.Append($@"
+                            {name} = new(fullState.{name}),");
+
+                                deltaApply.Append($@"
+                            case ""{name}"":
+                                fullState.{name} = {cast} Fields[""{name}""]!;
+                                break;");
 
                                 break;
                             }
@@ -249,21 +404,78 @@ namespace Robust.Shared.CompNetworkGenerator
                             // get first ctor arg of the field attribute, which determines whether the field should be cloned
                             // (like if its a dict or list)
                             getStateInit.Append($@"
-                {name} = component.{name},");
+                        {name} = component.{name},");
+
+                            deltaGetFields.Append($@"
+                        case ""{name}"":
+                            data[fieldName] = component.{name};
+                            break;");
+
+                            cast = $"({castString})";
+                            var nullCast = nullable ? castString.Substring(0, castString.Length - 1) : castString;
 
                             handleStateSetters.Append($@"
-            if (state.{name} == null)
-                component.{name} = null!;
-            else
-                component.{name} = new(state.{name});");
+                            if (state.{name} == null)
+                                component.{name} = null!;
+                            else
+                                component.{name} = new(state.{name});");
+
+                            deltaHandleFields.Append($@"
+                            case ""{name}"":
+                                var {name}Value = {cast} value!;
+                                if ({name}Value == null)
+                                    component.{name} = null!;
+                                else
+                                    component.{name} = new {nullCast}({name}Value);
+                                break;");
+
+                            if (nullable)
+                            {
+                                deltaCreate.Append($@"
+                            {name} = fullState.{name} == null ? null : new(fullState.{name}),");
+                            }
+                            else
+                            {
+                                deltaCreate.Append($@"
+                            {name} = new(fullState.{name}),");
+                            }
+
+                            deltaApply.Append($@"
+                        case ""{name}"":
+                            var {name}Value = Fields[""{name}""]!;
+                            if ({name}Value == null)
+                                fullState.{name} = null!;
+                            else
+                                fullState.{name} = new {nullCast}(({nullCast}) {name}Value);
+                            break;");
                         }
                         else
                         {
                             getStateInit.Append($@"
-                {name} = component.{name},");
+                        {name} = component.{name},");
+
+                            deltaGetFields.Append($@"
+                        case ""{name}"":
+                            data[fieldName] = component.{name};
+                            break;");
+
+                            cast = $"({castString})";
 
                             handleStateSetters.Append($@"
-            component.{name} = state.{name};");
+                            component.{name} = state.{name};");
+
+                            deltaHandleFields.Append($@"
+                            case ""{name}"":
+                                component.{name} = {cast} value!;
+                                break;");
+
+                            deltaCreate.Append($@"
+                        {name} = fullState.{name},");
+
+                            deltaApply.Append($@"
+                        case ""{name}"":
+                            fullState.{name} = {cast} Fields[""{name}""]!;
+                            break;");
                         }
 
                         break;
@@ -286,11 +498,19 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization;
 using Robust.Shared.Map;
+using Robust.Shared.Timing;
+using System.Collections.Generic;
 
 namespace {nameSpace};
 
-public partial class {componentName}
+public partial class {componentName} : IComponentDelta
 {{
+    /// <inheritdoc />
+    public GameTick LastFieldUpdate {{ get; set; }} = GameTick.Zero;
+
+    /// <inheritdoc />
+    public Dictionary<string, GameTick> LastModifiedFields {{ get; set; }} = new();
+
     [System.Serializable, NetSerializable]
     public sealed class {stateName} : IComponentState
     {{{stateFields}
@@ -307,6 +527,34 @@ public partial class {componentName}
 
         private void OnGetState(EntityUid uid, {componentName} component, ref ComponentGetState args)
         {{
+            // Delta state
+            var delta = (IComponentDelta)component;
+
+            if (args.FromTick > component.CreationTick && delta.LastFieldUpdate >= args.FromTick)
+            {{
+                var data = new Dictionary<string, object?>();
+
+                foreach (var (fieldName, lastUpdate) in delta.LastModifiedFields)
+                {{
+                    // Field not dirty
+                    if (lastUpdate < args.FromTick)
+                        continue;
+
+                    switch (fieldName)
+                    {{{deltaGetFields}
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }}
+                }}
+
+                args.State = new {componentName}DeltaFieldComponentState()
+                {{
+                    Fields = data,
+                }};
+
+                return;
+            }}
+
             args.State = new {stateName}
             {{{getStateInit}
             }};
@@ -314,9 +562,56 @@ public partial class {componentName}
 
         private void OnHandleState(EntityUid uid, {componentName} component, ref ComponentHandleState args)
         {{
+            if (args.Current is {componentName}DeltaFieldComponentState deltaState)
+            {{
+                foreach (var (fieldName, value) in deltaState.Fields)
+                {{
+                    switch (fieldName)
+                    {{{deltaHandleFields}
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }}
+                }}
+
+                return;
+            }}
+
             if (args.Current is not {stateName} state)
                 return;
 {handleStateSetters}{eventRaise}
+        }}
+    }}
+
+    [Serializable, NetSerializable]
+    public sealed class {componentName}DeltaFieldComponentState : IComponentDeltaState<{stateName}>
+    {{
+        public Dictionary<string, object?> Fields = new();
+
+        public void ApplyToFullState({stateName} fullState)
+        {{
+            foreach (var (fieldName, value) in Fields)
+            {{
+                switch (fieldName)
+                {{{deltaApply}
+                }}
+            }}
+
+        }}
+
+        public {stateName} CreateNewFullState({stateName} fullState)
+        {{
+            var newState = new {stateName}
+            {{{deltaCreate}
+            }};
+
+            foreach (var (fieldName, value) in Fields)
+            {{
+                switch (fieldName)
+                {{{deltaApply}
+                }}
+            }}
+
+            return newState;
         }}
     }}
 }}

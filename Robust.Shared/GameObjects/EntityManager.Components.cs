@@ -375,6 +375,20 @@ namespace Robust.Shared.GameObjects
                 metadata.NetComponents.Add(netId, component);
             }
 
+            if (component is IComponentDelta delta)
+            {
+                var curTick = _gameTiming.CurTick;
+
+                foreach (var field in delta.GetType().GetFields())
+                {
+                    if (!field.HasCustomAttribute<AutoNetworkedFieldAttribute>())
+                        continue;
+
+                    var data = field.GetValue(component);
+                    delta.LastModifiedFields[field.Name] = curTick;
+                }
+            }
+
             component.Networked = reg.NetID != null;
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);

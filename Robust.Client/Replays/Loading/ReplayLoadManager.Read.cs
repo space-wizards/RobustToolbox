@@ -10,8 +10,10 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System.IO;
 using System.Linq;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared;
+using Robust.Shared.IoC;
 using Robust.Shared.Replays;
 using static Robust.Shared.Replays.ReplayConstants;
 
@@ -38,60 +40,79 @@ public sealed partial class ReplayLoadManager
 
         var totalData = fileReader.AllFiles.Count(x => x.Filename.StartsWith(DataFilePrefix));
 
-        var i = 0;
-        var intBuf = new byte[4];
-        var name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
-
         MemoryStream? decompressedStream = null;
 
-        while (fileReader.Exists(name))
-        {
-            await callback(i+1, totalData, LoadingState.ReadingFiles, false);
-
-            using var fileStream = fileReader.Open(name);
-            using var decompressStream = new ZStdDecompressStream(fileStream, false);
-
-            fileStream.ReadExactly(intBuf);
-            var uncompressedSize = BitConverter.ToInt32(intBuf);
-
-            if (decompressedStream == null || decompressedStream.Length < uncompressedSize)
-            {
-                // Double required size to increase chance of reuse by next slightly larger file.
-                decompressedStream = new MemoryStream(uncompressedSize * 2);
-            }
-            // Set position to 0 ready to decompress data into it
-            decompressedStream.Position = 0;
-            decompressStream.CopyTo(decompressedStream, uncompressedSize);
-
-            // Prepare for a read from the start of it
-            decompressedStream.Position = 0;
-            DebugTools.Assert(uncompressedSize == decompressedStream.Length);
-
-            while (decompressedStream.Position < uncompressedSize)
-            {
-                _serializer.DeserializeDirect(decompressedStream, out GameState state);
-                _serializer.DeserializeDirect(decompressedStream, out ReplayMessage msg);
-                states.Add(state);
-                messages.Add(msg);
-            }
-
-            name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
-        }
-
-        // Could happen if there's gaps in the numbers of the data.
-        if (i - 1 != totalData)
-            throw new Exception("Could not read expected amount of data files from replay");
-
-        await callback(totalData, totalData, LoadingState.ReadingFiles, false);
+        // Only allow the file reader to get _checkpointInterval ticks ahead of the checkpoint creation thread.
+        // This improves memory locality because it means the checkpoint logic is always reading recently written data.
+        // If the reader gets too far ahead, data relevant to the checkpoint system will get flushed out of cache.
+        var checkpointChannel = Channel.CreateBounded<ReplayTickData>(_checkpointInterval);
 
         var initData = LoadInitFile(fileReader, compressionContext);
-        compressionContext.Dispose();
+        // Capture this thread's iocInstance for our subthread
+        var iocInstance = IoCManager.Instance!;
+        // Spin up a background task to create checkpoints as we read the file
+        var loadTask = Task.Run(async () =>
+        {
+            var i = 0;
+            var intBuf = new byte[4];
+            var name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
 
+            while (fileReader.Exists(name))
+            {
+                // await callback(i + 1, totalData, LoadingState.ReadingFiles, false);
+
+                using var fileStream = fileReader.Open(name);
+                using var decompressStream = new ZStdDecompressStream(fileStream, false);
+
+                fileStream.ReadExactly(intBuf);
+                var uncompressedSize = BitConverter.ToInt32(intBuf);
+
+                if (decompressedStream == null || decompressedStream.Length < uncompressedSize)
+                {
+                    // Double required size to increase chance of reuse by next slightly larger file.
+                    decompressedStream = new MemoryStream(uncompressedSize * 2);
+                }
+
+                // Set position to 0 ready to decompress data into it
+                decompressedStream.Position = 0;
+                decompressStream.CopyTo(decompressedStream, uncompressedSize);
+
+                // Prepare for a read from the start of it
+                decompressedStream.Position = 0;
+                DebugTools.Assert(uncompressedSize == decompressedStream.Length);
+
+                while (decompressedStream.Position < uncompressedSize)
+                {
+                    _serializer.DeserializeDirect(decompressedStream, out GameState state);
+                    _serializer.DeserializeDirect(decompressedStream, out ReplayMessage msg);
+                    states.Add(state);
+                    messages.Add(msg);
+                    // Send this tick to be processed for checkpoints (this might block until checkpoint creation catches up)
+                    await checkpointChannel.Writer.WriteAsync(new ReplayTickData(states.Count - 1, state, msg, i, totalData));
+                }
+
+                name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
+            }
+
+            // Could happen if there's gaps in the numbers of the data.
+            if (i - 1 != totalData)
+                throw new Exception("Could not read expected amount of data files from replay");
+
+            // Done creating replay data to process in the background
+            checkpointChannel.Writer.Complete();
+            compressionContext.Dispose();
+        });
+
+        // await callback(totalData, totalData, LoadingState.ReadingFiles, false);
+
+        // Wait for checkpoints to complete
         var (checkpoints, serverTime) = await GenerateCheckpointsAsync(
-            initData,
-            metaData.CVars,
-            states, messages,
-            callback);
+                initData,
+                metaData.CVars,
+                checkpointChannel.Reader,
+                callback);
+        await loadTask;
+
 
         _timing.Paused = false;
         return new ReplayData(

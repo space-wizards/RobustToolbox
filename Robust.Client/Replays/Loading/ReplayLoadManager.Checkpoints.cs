@@ -379,16 +379,18 @@ public sealed partial class ReplayLoadManager
 
             // Get scratch versions (with write access) for entities modified since last checkpoint
             UpdateScratchData? scratch;
+            bool modifyInPlace = true;
             if (!modified.TryGetValue(entState.NetEntity, out scratch))
             {
                 scratch = new UpdateScratchData(oldEntState);
                 modified[entState.NetEntity] = scratch;
+                modifyInPlace = false; // Can't modify components in place this tick, let's clone them instead.
             }
 
             stateTracker++;
             DebugTools.Assert(oldEntState.NetEntity == entState.NetEntity);
             // Note this does not change entStates, that change occurs later in ApplyModifiedEntities (to avoid early copies)
-            UpdateScratch(entState, scratch.Changes);
+            UpdateScratch(entState, scratch.Changes, modifyInPlace);
             if (entState.NetComponents != null)
                 scratch.netComps = entState.NetComponents;
             scratch.lastChange = entState;
@@ -415,7 +417,8 @@ public sealed partial class ReplayLoadManager
 
     private void UpdateScratch(
         EntityState newState,
-        Dictionary<ushort, ComponentChange> oldState)
+        Dictionary<ushort, ComponentChange> oldState,
+        bool modifyInPlace)
     {
         // remove any deleted components
         if (newState.NetComponents != null)
@@ -446,7 +449,16 @@ public sealed partial class ReplayLoadManager
             }
 
             DebugTools.Assert(existing.State is IComponentDeltaState fullDelta && fullDelta.FullState);
-            oldState[newCompState.NetID] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State), newCompState.LastModifiedTick);
+            var internalState = existing.State;
+            if (modifyInPlace)
+            {
+                delta.ApplyToFullState(internalState);
+            }
+            else
+            {
+                internalState = delta.CreateNewFullState(existing.State);
+            }
+            oldState[newCompState.NetID] = new ComponentChange(existing.NetID, internalState, newCompState.LastModifiedTick);
         }
     }
 

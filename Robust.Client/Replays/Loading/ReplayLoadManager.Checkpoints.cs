@@ -155,24 +155,26 @@ public sealed partial class ReplayLoadManager
             serverTime[i] = GetTime(curState.ToSequence) - initialTime;
             ticksSinceLastCheckpoint++;
 
-            if (ticksSinceLastCheckpoint < _checkpointMinInterval ||
-                (ticksSinceLastCheckpoint < _checkpointInterval
-                && spawnedTracker < _checkpointEntitySpawnThreshold
-                && stateTracker < _checkpointEntityStateThreshold))
-            {
+            // Don't create checkpoints too frequently no matter the circumstance
+            if (ticksSinceLastCheckpoint < _checkpointMinInterval)
                 continue;
-            }
+
+            // Check if enough time, spawned entities or changed states have occurred.
+            if (ticksSinceLastCheckpoint < _checkpointInterval
+                && spawnedTracker < _checkpointEntitySpawnThreshold
+                && stateTracker < _checkpointEntityStateThreshold)
+                continue;
 
             // Track and update statistics about why checkpoints are getting created:
-            if (ticksSinceLastCheckpoint > _checkpointInterval)
+            if (ticksSinceLastCheckpoint >= _checkpointInterval)
             {
                 stats_due_ticks += 1;
             }
-            else if (spawnedTracker > _checkpointEntitySpawnThreshold)
+            else if (spawnedTracker >= _checkpointEntitySpawnThreshold)
             {
                 stats_due_spawned += 1;
             }
-            else if (stateTracker > _checkpointEntityStateThreshold)
+            else if (stateTracker >= _checkpointEntityStateThreshold)
             {
                 stats_due_state += 1;
             }

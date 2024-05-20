@@ -1660,12 +1660,12 @@ namespace Robust.Shared
         /// <summary>
         /// Maximum number of entities that can be spawned before a new checkpoint tick is generated.
         /// </summary>
-        public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 2000);
+        public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 1000);
 
         /// <summary>
         /// Maximum number of entity states that can be applied before a new checkpoint tick is generated.
         /// </summary>
-        public static readonly CVarDef<int> CheckpointEntityStateThreshold = CVarDef.Create("replay.checkpoint_entity_state_threshold", 100 * 600);
+        public static readonly CVarDef<int> CheckpointEntityStateThreshold = CVarDef.Create("replay.checkpoint_entity_state_threshold", 50 * 600);
 
         /// <summary>
         /// Whether or not to constantly apply game states while using something like a slider to scrub through replays.

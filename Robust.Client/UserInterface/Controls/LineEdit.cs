@@ -8,6 +8,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -53,7 +54,7 @@ namespace Robust.Client.UserInterface.Controls
         private TimeSpan? _lastClickTime;
         private Vector2? _lastClickPosition;
 
-        private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null && (HidePlaceHolderOnFocus && !Focused);
+        private bool IsPlaceHolderVisible => !(HidePlaceHolderOnFocus && Focused) && string.IsNullOrEmpty(_text) && _placeHolder != null;
 
         public event Action<LineEditEventArgs>? OnTextChanged;
         public event Action<LineEditEventArgs>? OnTextEntered;

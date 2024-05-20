@@ -104,6 +104,7 @@ public sealed partial class ReplayLoadManager
         var detachQueue = new Dictionary<GameTick, List<NetEntity>>();
 
         var firstData = await states.ReadAsync();
+        await callback(firstData.Progress, firstData.MaxProgress, LoadingState.ProcessingFiles, false);
         if (initMessages != null)
             UpdateMessages(initMessages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
         UpdateMessages(firstData.Messages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);

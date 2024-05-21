@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameStates;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -13,7 +12,6 @@ using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared;
-using Robust.Shared.IoC;
 using Robust.Shared.Replays;
 using static Robust.Shared.Replays.ReplayConstants;
 
@@ -21,17 +19,11 @@ namespace Robust.Client.Replays.Loading;
 
 public sealed partial class ReplayLoadManager
 {
-    private struct DecompressedFile
+    private struct DecompressedFile(MemoryStream stream, int fileSize)
     {
         // Store the filesize seperately so we can use streams that are "too large" allowing reuse of MemoryStreams between files
-        public int FileSize;
-        public MemoryStream Stream;
-
-        public DecompressedFile(MemoryStream stream, int fileSize)
-        {
-            this.Stream = stream;
-            this.FileSize = fileSize;
-        }
+        public readonly int FileSize = fileSize;
+        public readonly MemoryStream Stream = stream;
     }
 
     [SuppressMessage("ReSharper", "UseAwaitUsing")]
@@ -51,12 +43,9 @@ public sealed partial class ReplayLoadManager
         List<GameState> states = new();
         List<ReplayMessage> messages = new();
 
-        var compressionContext = new ZStdCompressionContext();
         var metaData = LoadMetadata(fileReader);
 
         var totalData = fileReader.AllFiles.Count(x => x.Filename.StartsWith(DataFilePrefix));
-
-        MemoryStream? decompressedStream = null;
 
         // Only allow the file reader to get _checkpointInterval ticks ahead of the checkpoint creation thread.
         // This improves memory locality because it means the checkpoint logic is always reading recently written data.
@@ -74,9 +63,7 @@ public sealed partial class ReplayLoadManager
                 FullMode = BoundedChannelFullMode.DropWrite
             });
 
-        var initData = LoadInitFile(fileReader, compressionContext);
-        // Capture this thread's iocInstance for our subthread
-        var iocInstance = IoCManager.Instance!;
+        var initData = LoadInitFile(fileReader);
 
         // The Decompression task reads files from the replay and creates decompressed MemoryStreams for the next task
         // Old memory streams are passed back here for reuse.
@@ -153,7 +140,6 @@ public sealed partial class ReplayLoadManager
 
             // Done creating replay data to process in the background
             checkpointChannel.Writer.Complete();
-            compressionContext.Dispose();
         });
 
         // Wait for checkpoints to complete
@@ -184,8 +170,7 @@ public sealed partial class ReplayLoadManager
     }
 
     private ReplayMessage? LoadInitFile(
-        IReplayFileReader fileReader,
-        ZStdCompressionContext compressionContext)
+        IReplayFileReader fileReader)
     {
         if (!fileReader.Exists(FileInit))
             return null;

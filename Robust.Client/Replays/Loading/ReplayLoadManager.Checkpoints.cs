@@ -10,7 +10,6 @@ using Robust.Shared.Utility;
 using System.Threading.Tasks;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Replays;
 using Robust.Shared.Upload;
 using static Robust.Shared.Replays.ReplayMessage;
@@ -22,22 +21,13 @@ namespace Robust.Client.Replays.Loading;
 // so that when jumping to tick 1001 the client only has to apply states for tick 1000 and 1001, instead of 0, 1, 2, ...
 public sealed partial class ReplayLoadManager
 {
-    public class ReplayTickData
+    public struct ReplayTickData(int stateId, GameState state, ReplayMessage messages, int progress, int maxProgress)
     {
-        public int StateId;
-        public GameState State;
-        public ReplayMessage Messages;
-        public int Progress;
-        public int MaxProgress;
-
-        public ReplayTickData(int stateId, GameState state, ReplayMessage messages, int progress, int maxProgress)
-        {
-            StateId = stateId;
-            State = state;
-            Messages = messages;
-            Progress = progress;
-            MaxProgress = maxProgress;
-        }
+        public readonly int StateId = stateId;
+        public readonly GameState State = state;
+        public readonly ReplayMessage Messages = messages;
+        public readonly int Progress = progress;
+        public readonly int MaxProgress = maxProgress;
     }
 
     public async Task<(CheckpointState[], TimeSpan[])> GenerateCheckpointsAsync(
@@ -144,8 +134,7 @@ public sealed partial class ReplayLoadManager
             return timeBase.Item1 + (tick.Value - timeBase.Item2.Value) * period;
         }
 
-        var serverTime = new List<TimeSpan>();
-        serverTime.Add(TimeSpan.Zero);
+        var serverTime = new List<TimeSpan> { TimeSpan.Zero };
         var initialTime = GetTime(state0.ToSequence);
 
         var ticksSinceLastCheckpoint = 0;
@@ -158,10 +147,9 @@ public sealed partial class ReplayLoadManager
             if (state.StateId % 10 == 0)
                 await callback(state.Progress, state.MaxProgress, LoadingState.ProcessingFiles, false);
 
-            var lastState = curState;
+            DebugTools.Assert(state.State.FromSequence <= curState.ToSequence);
             lastStateId = state.StateId;
             curState = state.State;
-            DebugTools.Assert(curState.FromSequence <= lastState.ToSequence);
 
             UpdatePlayerStates(curState.PlayerStates.Span, playerStates);
             UpdateEntityStates(curState.EntityStates.Span, entStates, ref spawnedTracker, ref stateTracker, detached);

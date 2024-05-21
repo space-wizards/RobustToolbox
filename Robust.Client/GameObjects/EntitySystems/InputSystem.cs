@@ -82,18 +82,36 @@ namespace Robust.Client.GameObjects
             }
 
             // send it off to the server
-            var clientMsg = (ClientFullInputCmdMessage)message;
-            var fullMsg = new FullInputCmdMessage(
-                clientMsg.Tick,
-                clientMsg.SubTick,
-                (int)clientMsg.InputSequence,
-                clientMsg.InputFunctionId,
-                clientMsg.State,
-                GetNetCoordinates(clientMsg.Coordinates),
-                clientMsg.ScreenCoordinates)
+            ClientFullInputCmdMessage clientMsg = default!;
+            FullInputCmdMessage fullMsg = default!;
+            switch (message)
             {
-                Uid = GetNetEntity(clientMsg.Uid)
-            };
+                case ClientFullInputCmdMessage cmdMessage:
+                    clientMsg = cmdMessage;
+                    fullMsg = new FullInputCmdMessage(
+                        clientMsg.Tick,
+                        clientMsg.SubTick,
+                        (int)clientMsg.InputSequence,
+                        clientMsg.InputFunctionId,
+                        clientMsg.State,
+                        GetNetCoordinates(clientMsg.Coordinates),
+                        clientMsg.ScreenCoordinates)
+                    {
+                        Uid = GetNetEntity(clientMsg.Uid)
+                    };
+                    break;
+                case FullInputCmdMessage cmdMessage:
+                    fullMsg = cmdMessage;
+                    clientMsg = new ClientFullInputCmdMessage(
+                        fullMsg.Tick,
+                        fullMsg.SubTick,
+                        fullMsg.InputFunctionId,
+                        fullMsg.State,
+                        GetCoordinates(fullMsg.Coordinates),
+                        fullMsg.ScreenCoordinates,
+                        GetEntity(fullMsg.Uid));
+                    break;
+            }
 
             DispatchInputCommand(clientMsg, fullMsg);
             return false;

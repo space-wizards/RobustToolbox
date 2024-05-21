@@ -173,6 +173,22 @@ namespace Robust.Shared.Input
         public ClientFullInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId) : base(tick, subTick, inputFunctionId)
         {
         }
+
+        public ClientFullInputCmdMessage(
+            GameTick tick,
+            ushort subTick,
+            KeyFunctionId inputFunctionId,
+            BoundKeyState state,
+            EntityCoordinates coordinates,
+            ScreenCoordinates screenCoordinates,
+            EntityUid uid)
+            : base(tick, subTick, inputFunctionId)
+        {
+            State = state;
+            Coordinates = coordinates;
+            ScreenCoordinates = screenCoordinates;
+            Uid = uid;
+        }
     }
 
     public interface IFullInputCmdMessage

@@ -46,7 +46,7 @@ internal sealed class Matrix3x2Serializer : IStaticTypeSerializer
 
     public static void ReadPrimitive(Stream stream, out Matrix3x2 value)
     {
-        var buf = new float[6];
+        Span<float> buf = stackalloc float[6];
         for (int i = 0; i < 6; i++)
         {
             Primitives.ReadPrimitive(stream, out buf[i]);

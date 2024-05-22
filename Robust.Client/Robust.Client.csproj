@@ -9,7 +9,7 @@
     <OutputPath>../bin/Client</OutputPath>
     <RobustILLink>true</RobustILLink>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(GenerateXMLDocFile)' == 'true'">
+  <PropertyGroup Condition="'$(RobustGenerateXMLDocFile)' == 'true'">
     <DocumentationFile>../bin/Client/Robust.Client.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>

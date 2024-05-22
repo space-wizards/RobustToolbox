@@ -6,7 +6,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CA1416</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(GenerateXMLDocFile)' == 'true'">
+  <PropertyGroup Condition="'$(RobustGenerateXMLDocFile)' == 'true'">
     <DocumentationFile>../bin/Shared/Robust.Shared.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>

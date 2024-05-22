@@ -19,7 +19,7 @@
     <EnableClientScripting>False</EnableClientScripting>
     <!-- Client scripting is only enabled on tools builds for security and size reasons. -->
     <EnableClientScripting Condition="'$(RobustToolsBuild)' == 'true'">True</EnableClientScripting>
-    <GenerateXMLDocFile>False</GenerateXMLDocFile>
+    <RobustGenerateXMLDocFile>False</RobustGenerateXMLDocFile>
   </PropertyGroup>
 
   <!-- built-in define constants -->

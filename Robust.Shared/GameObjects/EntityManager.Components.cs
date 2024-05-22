@@ -1464,7 +1464,7 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, IComponent> _traitDict;
         private readonly ISawmill _sawmill;
 
-        public EntityQuery(Dictionary<EntityUid, IComponent> traitDict, ISawmill sawmill)
+        internal EntityQuery(Dictionary<EntityUid, IComponent> traitDict, ISawmill sawmill)
         {
             _traitDict = traitDict;
             _sawmill = sawmill;
@@ -1702,7 +1702,7 @@ namespace Robust.Shared.GameObjects
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
 
-        public EntityQueryEnumerator(
+        internal EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             EntityQuery<MetaDataComponent> metaQuery)
         {
@@ -1762,7 +1762,7 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
 
-        public EntityQueryEnumerator(
+        internal EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             EntityQuery<MetaDataComponent> metaQuery)
@@ -1833,7 +1833,7 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, IComponent> _traitDict3;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
 
-        public EntityQueryEnumerator(
+        internal EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             Dictionary<EntityUid, IComponent> traitDict3,
@@ -1918,7 +1918,7 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, IComponent> _traitDict4;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
 
-        public EntityQueryEnumerator(
+        internal EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             Dictionary<EntityUid, IComponent> traitDict3,

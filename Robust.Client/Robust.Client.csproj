@@ -9,6 +9,9 @@
     <OutputPath>../bin/Client</OutputPath>
     <RobustILLink>true</RobustILLink>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Tools' Or '$(Configuration)' == 'Debug' Or '$(Configuration)' == 'DebugOpt'">
+    <DocumentationFile>../bin/Client/Robust.Client.xml</DocumentationFile>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DiscordRichPresence" PrivateAssets="compile" />
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />

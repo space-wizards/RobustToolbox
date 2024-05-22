@@ -12,7 +12,7 @@
     <RobustILLink>true</RobustILLink>
     <NoWarn>CA1416</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Tools' Or '$(Configuration)' == 'Debug' Or '$(Configuration)' == 'DebugOpt'">
+  <PropertyGroup Condition="'$(GenerateXMLDocFile)' == 'true'">
     <DocumentationFile>../bin/Server/Robust.Server.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>

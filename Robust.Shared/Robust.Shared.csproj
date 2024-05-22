@@ -6,7 +6,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CA1416</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Tools' Or '$(Configuration)' == 'Debug' Or '$(Configuration)' == 'DebugOpt'">
+  <PropertyGroup Condition="'$(GenerateXMLDocFile)' == 'true'">
     <DocumentationFile>../bin/Shared/Robust.Shared.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>

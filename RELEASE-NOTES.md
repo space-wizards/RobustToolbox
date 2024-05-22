@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `EntityQuery` and `EntityQueryEnumerator` constructors are now internal to avoid mistakes.
 
 ### New features
 

@@ -32,7 +32,7 @@ namespace Robust.Shared.Configuration
 
         private ISawmill _sawmill = default!;
 
-        public event Action<IConfigurationManager.CvarChangeArgs>? OnCvarValueChanged;
+        public event Action<CVarChangeInfo>? OnCvarValueChanged;
 
         /// <summary>
         ///     Constructs a new ConfigurationManager.
@@ -95,10 +95,8 @@ namespace Robust.Shared.Configuration
         {
             if (_configVars.TryGetValue(cvar, out var cfgVar))
             {
-                // overwrite the value with the saved one
+                changedInvokes.Add(SetupInvokeValueChanged(cfgVar, value));
                 cfgVar.Value = value;
-                if (SetupInvokeValueChanged(cfgVar, value) is { } invoke)
-                    changedInvokes.Add(invoke);
             }
             else
             {
@@ -142,13 +140,10 @@ namespace Robust.Shared.Configuration
                         }
                     }
 
-                    cVar.DefaultValue = convertedValue;
-
                     if (cVar.OverrideValue == null && cVar.Value == null)
-                    {
-                        if (SetupInvokeValueChanged(cVar, convertedValue) is { } invoke)
-                            callbackEvents.Add(invoke);
-                    }
+                        callbackEvents.Add(SetupInvokeValueChanged(cVar, convertedValue));
+
+                    cVar.DefaultValue = convertedValue;
                 }
             }
 
@@ -414,10 +409,11 @@ namespace Robust.Shared.Configuration
         public void OnValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull
         {
+            object value;
             using (Lock.WriteGuard())
             {
                 var reg = _configVars[name];
-
+                value = GetConfigVarValue(reg);
                 reg.ValueChanged.AddInPlace(
                     (object value, in CVarChangeInfo info) => onValueChanged((T)value, info),
                     onValueChanged);
@@ -425,7 +421,7 @@ namespace Robust.Shared.Configuration
 
             if (invokeImmediately)
             {
-                onValueChanged(GetCVar<T>(name), new CVarChangeInfo(_gameTiming.CurTick));
+                onValueChanged(GetCVar<T>(name), new CVarChangeInfo(name, _gameTiming.CurTick, value, value));
             }
         }
 
@@ -517,19 +513,17 @@ namespace Robust.Shared.Configuration
                     DebugTools.AssertEqual(oldValue.GetType(), cVar.Type);
                     if (!Equals(cVar.OverrideValueParsed ?? cVar.Value, value))
                     {
+                        invoke = SetupInvokeValueChanged(cVar, value, intendedTick);
+
                         // Setting an overriden var just turns off the override, basically.
                         cVar.OverrideValue = null;
                         cVar.OverrideValueParsed = null;
-
                         cVar.Value = value;
-                        invoke = SetupInvokeValueChanged(cVar, value, intendedTick);
                     }
                 }
                 else
                     throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
             }
-
-            OnCvarValueChanged?.Invoke(new (name, value, oldValue, intendedTick));
 
             if (invoke != null)
                 InvokeValueChanged(invoke.Value);
@@ -550,10 +544,11 @@ namespace Robust.Shared.Configuration
                 if (!_configVars.TryGetValue(name, out var cVar) || !cVar.Registered)
                     throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
 
-                cVar.DefaultValue = value;
-
                 if (cVar.OverrideValue == null && cVar.Value == null)
                     invoke = SetupInvokeValueChanged(cVar, value);
+
+                cVar.DefaultValue = value;
+
             }
 
             if (invoke != null)
@@ -605,7 +600,6 @@ namespace Robust.Shared.Configuration
         public void OverrideConVars(IEnumerable<(string key, string value)> cVars)
         {
             var invokes = new ValueList<ValueChangedInvoke>();
-            var changes = new Dictionary<string, IConfigurationManager.CvarChangeArgs>();
 
             using (Lock.WriteGuard())
             {
@@ -617,12 +611,9 @@ namespace Robust.Shared.Configuration
                         if (!cfgVar.Registered)
                             continue;
 
-                        var oldValue = GetConfigVarValue(cfgVar);
                         var newValue = ParseOverrideValue(value, cfgVar.Type!);
-                        changes.TryAdd(key, new(key, oldValue, newValue, _gameTiming.CurTick));
+                        invokes.Add(SetupInvokeValueChanged(cfgVar, newValue));
                         cfgVar.OverrideValueParsed = newValue;
-                        if (SetupInvokeValueChanged(cfgVar, cfgVar.OverrideValueParsed) is { } invoke)
-                            invokes.Add(invoke);
                     }
                     else
                     {
@@ -632,11 +623,6 @@ namespace Robust.Shared.Configuration
                         _configVars.Add(key, cVar);
                     }
                 }
-            }
-
-            foreach (var change in changes.Values)
-            {
-                OnCvarValueChanged?.Invoke(change);
             }
 
             foreach (var invoke in invokes)
@@ -712,25 +698,21 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        private static void InvokeValueChanged(in ValueChangedInvoke invoke)
+        private void InvokeValueChanged(in ValueChangedInvoke invoke)
         {
+            OnCvarValueChanged?.Invoke(invoke.Info);
             foreach (var entry in invoke.Invoke.Entries)
             {
                 entry.Value!.Invoke(invoke.Value, in invoke.Info);
             }
         }
 
-        private ValueChangedInvoke? SetupInvokeValueChanged(ConfigVar var, object value, GameTick? tick = null)
+        private ValueChangedInvoke SetupInvokeValueChanged(ConfigVar var, object newValue, GameTick? tick = null)
         {
-            if (var.ValueChanged.Count == 0)
-                return null;
-
-            return new ValueChangedInvoke
-            {
-                Info = new CVarChangeInfo(tick ?? _gameTiming.CurTick),
-                Invoke = var.ValueChanged,
-                Value = value
-            };
+            tick ??= _gameTiming.CurTick;
+            var oldValue = GetConfigVarValue(var);
+            var info = new CVarChangeInfo(var.Name, tick.Value, newValue, oldValue);
+            return new ValueChangedInvoke(info, var.ValueChanged);
         }
 
         private IEnumerable<(string cvar, object value)> ParseCVarValuesFromToml(Stream stream)
@@ -915,8 +897,14 @@ namespace Robust.Shared.Configuration
         private struct ValueChangedInvoke
         {
             public InvokeList<ValueChangedDelegate> Invoke;
-            public object Value;
+            public object Value => Info.NewValue;
             public CVarChangeInfo Info;
+
+            public ValueChangedInvoke(CVarChangeInfo info, InvokeList<ValueChangedDelegate> invoke) : this()
+            {
+                Info = info;
+                Invoke = invoke;
+            }
         }
 
         protected delegate void ValueChangedDelegate(object value, in CVarChangeInfo info);

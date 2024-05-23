@@ -8,8 +8,13 @@ namespace Robust.Shared.Configuration
     /// <summary>
     /// Additional information about a CVar change.
     /// </summary>
-    public readonly struct CVarChangeInfo
+    public readonly struct CVarChangeInfo(string name, GameTick tickChanged, object newValue, object oldValue)
     {
+        /// <summary>
+        /// The name of the cvar that was changed.
+        /// </summary>
+        public readonly string Name = name;
+
         /// <summary>
         /// The tick this CVar changed at.
         /// </summary>
@@ -18,12 +23,17 @@ namespace Robust.Shared.Configuration
         /// however due to poor network conditions it is possible for CVars to get applied late.
         /// In this case, this is effectively "this is the tick it was SUPPOSED to have been applied at".
         /// </remarks>
-        public readonly GameTick TickChanged;
+        public readonly GameTick TickChanged = tickChanged;
 
-        internal CVarChangeInfo(GameTick tickChanged)
-        {
-            TickChanged = tickChanged;
-        }
+        /// <summary>
+        /// The new value.
+        /// </summary>
+        public readonly object NewValue = newValue;
+
+        /// <summary>
+        /// The previous value.
+        /// </summary>
+        public readonly object OldValue = oldValue;
     }
 
     public delegate void CVarChanged<in T>(T newValue, in CVarChangeInfo info);
@@ -253,7 +263,6 @@ namespace Robust.Shared.Configuration
         void UnsubValueChanged<T>(string name, CVarChanged<T> onValueChanged)
             where T : notnull;
 
-        public event Action<CvarChangeArgs>? OnCvarValueChanged;
-        public readonly record struct CvarChangeArgs(string Name, object NewValue, object OldValue, GameTick Tick);
+        public event Action<CVarChangeInfo>? OnCvarValueChanged;
     }
 }

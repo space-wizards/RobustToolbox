@@ -34,7 +34,8 @@ public sealed partial class ReplayLoadManager
         ReplayMessage? initMessages,
         HashSet<string> initialCvars,
         ChannelReader<ReplayTickData> states,
-        LoadReplayCallback callback)
+        LoadReplayCallback callback,
+        LoadReplayJob? job)
     {
         // Given a set of states [0 to X], [X to X+1], [X+1 to X+2]..., this method  will generate additional states
         // like [0 to x+60 ], [0 to x+120], etc. This will make scrubbing/jumping to a state much faster, but requires
@@ -93,7 +94,12 @@ public sealed partial class ReplayLoadManager
         var detached = new HashSet<NetEntity>();
         var detachQueue = new Dictionary<GameTick, List<NetEntity>>();
 
-        var firstData = await states.ReadAsync();
+        var firstTask = states.ReadAsync();
+        if (job != null)
+        {
+            firstTask = job.WaitAsyncTask(firstTask);
+        }
+        var firstData = await firstTask;
         await callback(firstData.Progress, firstData.MaxProgress, LoadingState.ProcessingFiles, false);
         if (initMessages != null)
             UpdateMessages(initMessages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
@@ -142,7 +148,12 @@ public sealed partial class ReplayLoadManager
         var stateTracker = 0;
         var curState = state0;
         var lastStateId = 0;
-        await foreach (var state in states.ReadAllAsync())
+        var stateEnumerator = states.ReadAllAsync();
+        if (job != null)
+        {
+            stateEnumerator = job.WrapAsyncEnumerator(stateEnumerator);
+        }
+        await foreach (var state in stateEnumerator)
         {
             if (state.StateId % 10 == 0)
                 await callback(state.Progress, state.MaxProgress, LoadingState.ProcessingFiles, false);
@@ -152,7 +163,11 @@ public sealed partial class ReplayLoadManager
             curState = state.State;
 
             UpdatePlayerStates(curState.PlayerStates.Span, playerStates);
-            UpdateEntityStates(curState.EntityStates.Span, entStates, ref spawnedTracker, ref stateTracker, detached);
+            UpdateEntityStates(curState.EntityStates.Span,
+                entStates,
+                ref spawnedTracker,
+                ref stateTracker,
+                detached);
             UpdateMessages(state.Messages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase);
             ProcessQueue(curState.ToSequence, detachQueue, detached, entStates);
             UpdateDeletions(curState.EntityDeletions, entStates, detached);

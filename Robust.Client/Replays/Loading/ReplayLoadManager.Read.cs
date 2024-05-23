@@ -27,7 +27,7 @@ public sealed partial class ReplayLoadManager
     }
 
     [SuppressMessage("ReSharper", "UseAwaitUsing")]
-    public async Task<ReplayData> LoadReplayAsync(IReplayFileReader fileReader, LoadReplayCallback callback)
+    public async Task<ReplayData> LoadReplayAsync(IReplayFileReader fileReader, LoadReplayJob? job, LoadReplayCallback callback)
     {
         using var _ = fileReader;
 
@@ -147,13 +147,22 @@ public sealed partial class ReplayLoadManager
                 initData,
                 metaData.CVars,
                 checkpointChannel.Reader,
-                callback);
+                callback,
+                job);
 
         // Ensure book-keeping for our background tasks has a chance to complete.
         //  Note - decompressTask and deserializeTask need to be awaited AFTER GenerateCheckpointsAsync because they
         //         will internally pause if GenerateCheckpointsAsync is not keeping up.
-        await decompressTask;
-        await deserializeTask;
+        if (job != null)
+        {
+            await job.WaitAsyncTask(decompressTask);
+            await job.WaitAsyncTask(deserializeTask);
+        }
+        else
+        {
+            await decompressTask;
+            await deserializeTask;
+        }
 
         _timing.Paused = false;
         return new ReplayData(

@@ -31,7 +31,7 @@ public interface IReplayLoadManager
     /// <param name="fileReader">A reader containing the replay files. Disposed when loading is done.</param>
     /// <param name="callback">A callback delegate that invoked to provide information about the current loading
     /// progress. This callback can be used to invoke <see cref="Job{T}.SuspendIfOutOfTime"/>. </param>
-    Task<ReplayData> LoadReplayAsync(IReplayFileReader fileReader, LoadReplayCallback callback);
+    Task<ReplayData> LoadReplayAsync(IReplayFileReader fileReader, LoadReplayJob? job, LoadReplayCallback callback);
 
     /// <summary>
     /// Async task that loads the initial state of a replay, including spawning and initializing all entities. Note that
@@ -56,7 +56,7 @@ public interface IReplayLoadManager
     /// <param name="fileReader">A reader containing the replay files. Disposed when loading is done.</param>
     /// <param name="callback">A callback delegate that invoked to provide information about the current loading
     /// progress. This callback can be used to invoke <see cref="Job{T}.SuspendIfOutOfTime"/>. </param>
-    Task LoadAndStartReplayAsync(IReplayFileReader fileReader, LoadReplayCallback? callback = null);
+    Task LoadAndStartReplayAsync(IReplayFileReader fileReader, LoadReplayJob? job, LoadReplayCallback? callback = null);
 
     /// <summary>
     /// This is a variant of <see cref="LoadAndStartReplayAsync"/> that will first invoke <see cref="LoadOverride"/>

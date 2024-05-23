@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Log;
@@ -85,6 +86,59 @@ namespace Robust.Shared.CPUJob.JobQueues
             return new ValueTask(SuspendNow());
         }
 
+        protected async IAsyncEnumerable<TEnum> WrapAsyncEnumerator<TEnum>(IAsyncEnumerable<TEnum> innerEnum)
+        {
+            var e = innerEnum.GetAsyncEnumerator();
+            try
+            {
+                while (await WaitAsyncTask(e.MoveNextAsync()))
+                {
+                    yield return e.Current;
+                }
+            }
+            finally { if (e != null) await WaitAsyncTask(e.DisposeAsync()); }
+        }
+
+        /// <summary>
+        ///     Wrapper to await on an external ValueTask.
+        /// </summary>
+        protected async ValueTask WaitAsyncTask(ValueTask task)
+        {
+            DebugTools.AssertNull(_resume);
+
+            Status = JobStatus.Waiting;
+            DebugTime += StopWatch.Elapsed.TotalSeconds;
+
+            await task;
+
+            // Immediately block on resume so that everything stays correct.
+            Status = JobStatus.Paused;
+            _resume = new TaskCompletionSource<object?>();
+
+            await _resume.Task;
+        }
+
+        /// <summary>
+        ///     Wrapper to await on an external ValueTask.
+        /// </summary>
+        protected async ValueTask<TTask> WaitAsyncTask<TTask>(ValueTask<TTask> task)
+        {
+            DebugTools.AssertNull(_resume);
+
+            Status = JobStatus.Waiting;
+            DebugTime += StopWatch.Elapsed.TotalSeconds;
+
+            var result = await task;
+
+            // Immediately block on resume so that everything stays correct.
+            Status = JobStatus.Paused;
+            _resume = new TaskCompletionSource<object?>();
+
+            await _resume.Task;
+
+            return result;
+        }
+
         /// <summary>
         ///     Wrapper to await on an external task.
         /// </summary>
@@ -139,6 +193,7 @@ namespace Robust.Shared.CPUJob.JobQueues
                 "Run() called without resume. Was this called while the job is in Waiting state?");
             var resume = _resume;
             _resume = null;
+            Logger.Info($"Job: Run return state {Status} resume {resume}");
 
             Status = JobStatus.Running;
 

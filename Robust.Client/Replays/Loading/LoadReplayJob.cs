@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Robust.Shared.ContentPack;
 using System.Threading.Tasks;
 using Robust.Shared.CPUJob.JobQueues;
@@ -27,7 +28,7 @@ public class LoadReplayJob : Job<bool>
 
     protected override async Task<bool> Process()
     {
-        await _loadMan.LoadAndStartReplayAsync(_fileReader, Yield);
+        await _loadMan.LoadAndStartReplayAsync(_fileReader, this, Yield);
         return true;
     }
 
@@ -39,5 +40,19 @@ public class LoadReplayJob : Job<bool>
             await SuspendNow();
         else
             await SuspendIfOutOfTime();
+    }
+
+    public new IAsyncEnumerable<TEnum> WrapAsyncEnumerator<TEnum>(IAsyncEnumerable<TEnum> innerEnum)
+    {
+        return base.WrapAsyncEnumerator(innerEnum);
+    }
+
+    public new ValueTask<TTask> WaitAsyncTask<TTask>(ValueTask<TTask> task)
+    {
+        return base.WaitAsyncTask(task);
+    }
+    public new Task WaitAsyncTask(Task task)
+    {
+        return base.WaitAsyncTask(task);
     }
 }

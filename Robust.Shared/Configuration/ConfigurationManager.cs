@@ -32,6 +32,8 @@ namespace Robust.Shared.Configuration
 
         private ISawmill _sawmill = default!;
 
+        public event Action<IConfigurationManager.CvarChangeArgs>? OnCvarValueChanged;
+
         /// <summary>
         ///     Constructs a new ConfigurationManager.
         /// </summary>
@@ -505,11 +507,13 @@ namespace Robust.Shared.Configuration
         {
             ValueChangedInvoke? invoke = null;
 
+            object oldValue;
             using (Lock.WriteGuard())
             {
                 //TODO: Make flags work, required non-derpy net system.
                 if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 {
+                    oldValue = cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue;
                     if (!Equals(cVar.OverrideValueParsed ?? cVar.Value, value))
                     {
                         // Setting an overriden var just turns off the override, basically.
@@ -526,6 +530,8 @@ namespace Robust.Shared.Configuration
 
             if (invoke != null)
                 InvokeValueChanged(invoke.Value);
+
+            OnCvarValueChanged?.Invoke(new (name, value, oldValue, intendedTick));
         }
 
         public void SetCVar<T>(CVarDef<T> def, T value, bool force = false) where T : notnull

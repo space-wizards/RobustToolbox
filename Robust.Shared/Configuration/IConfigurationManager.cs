@@ -252,5 +252,8 @@ namespace Robust.Shared.Configuration
         /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
         void UnsubValueChanged<T>(string name, CVarChanged<T> onValueChanged)
             where T : notnull;
+
+        public event Action<CvarChangeArgs>? OnCvarValueChanged;
+        public readonly record struct CvarChangeArgs(string Name, object NewValue, object OldValue, GameTick Tick);
     }
 }

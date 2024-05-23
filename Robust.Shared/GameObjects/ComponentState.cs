@@ -13,8 +13,6 @@ public abstract class ComponentState : IComponentState;
 /// </summary>
 public interface IComponentState;
 
-// Not really obsolete, but I can't make the interface internal so eehhh..
-[Obsolete("Use IComponentDeltaState<TState>")]
 public interface IComponentDeltaState : IComponentState
 {
     public void ApplyToFullState(IComponentState fullState);

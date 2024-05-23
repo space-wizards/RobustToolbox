@@ -513,7 +513,7 @@ namespace Robust.Shared.Configuration
                 //TODO: Make flags work, required non-derpy net system.
                 if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 {
-                    oldValue = cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue;
+                    oldValue = GetConfigVarValue(cVar);
                     DebugTools.AssertEqual(oldValue.GetType(), cVar.Type);
                     if (!Equals(cVar.OverrideValueParsed ?? cVar.Value, value))
                     {
@@ -529,10 +529,10 @@ namespace Robust.Shared.Configuration
                     throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
             }
 
+            OnCvarValueChanged?.Invoke(new (name, value, oldValue, intendedTick));
+
             if (invoke != null)
                 InvokeValueChanged(invoke.Value);
-
-            OnCvarValueChanged?.Invoke(new (name, value, oldValue, intendedTick));
         }
 
         public void SetCVar<T>(CVarDef<T> def, T value, bool force = false) where T : notnull
@@ -605,6 +605,7 @@ namespace Robust.Shared.Configuration
         public void OverrideConVars(IEnumerable<(string key, string value)> cVars)
         {
             var invokes = new ValueList<ValueChangedInvoke>();
+            var changes = new Dictionary<string, IConfigurationManager.CvarChangeArgs>();
 
             using (Lock.WriteGuard())
             {
@@ -613,12 +614,15 @@ namespace Robust.Shared.Configuration
                     if (_configVars.TryGetValue(key, out var cfgVar))
                     {
                         cfgVar.OverrideValue = value;
-                        if (cfgVar.Registered)
-                        {
-                            cfgVar.OverrideValueParsed = ParseOverrideValue(value, cfgVar.DefaultValue?.GetType());
-                            if (SetupInvokeValueChanged(cfgVar, cfgVar.OverrideValueParsed) is { } invoke)
-                                invokes.Add(invoke);
-                        }
+                        if (!cfgVar.Registered)
+                            continue;
+
+                        var oldValue = GetConfigVarValue(cfgVar);
+                        var newValue = ParseOverrideValue(value, cfgVar.Type!);
+                        changes.TryAdd(key, new(key, oldValue, newValue, _gameTiming.CurTick));
+                        cfgVar.OverrideValueParsed = newValue;
+                        if (SetupInvokeValueChanged(cfgVar, cfgVar.OverrideValueParsed) is { } invoke)
+                            invokes.Add(invoke);
                     }
                     else
                     {
@@ -628,6 +632,11 @@ namespace Robust.Shared.Configuration
                         _configVars.Add(key, cVar);
                     }
                 }
+            }
+
+            foreach (var change in changes.Values)
+            {
+                OnCvarValueChanged?.Invoke(change);
             }
 
             foreach (var invoke in invokes)
@@ -855,6 +864,7 @@ namespace Robust.Shared.Configuration
                     DebugTools.AssertNotNull(DefaultValue);
                     DebugTools.AssertEqual(DefaultValue.GetType(), Type);
                     DebugTools.Assert(Value == null || Value.GetType() == Type);
+                    DebugTools.Assert(OverrideValueParsed == null || OverrideValueParsed.GetType() == Type);
                     return;
                 }
 
@@ -863,6 +873,9 @@ namespace Robust.Shared.Configuration
 
                 if (Value != null && DefaultValue.GetType() != Value.GetType())
                     throw new Exception($"The cvar value & default value must be of the same type");
+
+                if (OverrideValueParsed != null && DefaultValue.GetType() != OverrideValueParsed.GetType())
+                    throw new Exception($"The cvar override value & default value must be of the same type");
 
                 Type = DefaultValue.GetType();
                 Registered = true;
@@ -877,12 +890,23 @@ namespace Robust.Shared.Configuration
             public InvokeList<ValueChangedDelegate> ValueChanged;
             private object _defaultValue;
             private object? _value;
+            private object? _overrideValueParsed;
 
             // We don't know what the type of the var is until it's registered.
             // So we can't actually parse them until then.
             // So we keep the raw string around.
             public string? OverrideValue { get; set; }
-            public object? OverrideValueParsed { get; set; }
+
+            public object? OverrideValueParsed
+            {
+                get => _overrideValueParsed;
+                set
+                {
+                    if (value != null && Registered)
+                        DebugTools.AssertEqual(value.GetType(), Type);
+                    _overrideValueParsed = value;
+                }
+            }
         }
 
         /// <summary>

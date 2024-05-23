@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* A new `replay.checkpoint_min_interval` cvar has been added. It can be used to limit the frequency at which checkpoints are generated when loading a replay.
 
 ### Bugfixes
 
@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* The default values of various replay related cvars have been changed to try and reduce memory usage.
 
 ### Internal
 

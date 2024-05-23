@@ -1347,12 +1347,12 @@ public abstract partial class SharedTransformSystem
         if (xform.MapUid is not { } map || TerminatingOrDeleted(map))
             return false;
 
-        var newParent = map;
         var oldPos = GetWorldPosition(xform);
         if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _) && !TerminatingOrDeleted(gridUid))
-            newParent = gridUid;
+            coordinates = new EntityCoordinates(gridUid, GetInvWorldMatrix(gridUid).Transform(oldPos));
+        else
+            coordinates = new EntityCoordinates(map, oldPos);
 
-        coordinates = new EntityCoordinates(newParent, GetInvWorldMatrix(newParent).Transform(oldPos));
         return true;
     }
 

@@ -1296,13 +1296,21 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     public void AttachToGridOrMap(EntityUid uid, TransformComponent? xform = null)
     {
-        if (!GetAndValidateTransform(uid, ref xform))
+        // TODO make this log an error?
+        // SetCoordinates already does this when trying to move entities mid-deletion.
+        if (TerminatingOrDeleted(uid))
+            return;
+
+        if (!XformQuery.Resolve(uid, ref xform, false))
+            return;
+
+        if (!xform.ParentUid.IsValid())
             return;
 
         if (xform.ParentUid == xform.GridUid)
             return;
 
-        if (!TryGetMapOrGridCoordinates(xform, out var coordinates))
+        if (!TryGetMapOrGridCoordinates(uid, out var coordinates, xform))
         {
             if (!_mapManager.IsMap(uid))
                 Log.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
@@ -1329,20 +1337,13 @@ public abstract partial class SharedTransformSystem
         [NotNullWhen(true)] out EntityCoordinates? coordinates,
         TransformComponent? xform = null)
     {
-        if (!GetAndValidateTransform(uid, ref xform))
-        {
-            coordinates = null;
-            return false;
-        }
-
-        return TryGetMapOrGridCoordinates(xform, out coordinates);
-    }
-
-    private bool TryGetMapOrGridCoordinates(
-        TransformComponent xform,
-        [NotNullWhen(true)] out EntityCoordinates? coordinates)
-    {
         coordinates = null;
+
+        if (!XformQuery.Resolve(uid, ref xform, false))
+            return false;
+
+        if (!xform.ParentUid.IsValid())
+            return false;
 
         if (xform.MapUid is not { } map || TerminatingOrDeleted(map))
             return false;
@@ -1352,20 +1353,6 @@ public abstract partial class SharedTransformSystem
             coordinates = new EntityCoordinates(gridUid, GetInvWorldMatrix(gridUid).Transform(oldPos));
         else
             coordinates = new EntityCoordinates(map, oldPos);
-
-        return true;
-    }
-
-    private bool GetAndValidateTransform(EntityUid uid, [NotNullWhen(true)] ref TransformComponent? xform)
-    {
-        if (TerminatingOrDeleted(uid))
-            return false;
-
-        if (!XformQuery.Resolve(uid, ref xform))
-            return false;
-
-        if (!xform.ParentUid.IsValid())
-            return false;
 
         return true;
     }

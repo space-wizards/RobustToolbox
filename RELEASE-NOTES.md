@@ -36,7 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * The `ComponentState` class is now abstract. Networked components that don't have state information now just return a null state.
-* The way that delta component states work has changed. It now expects there to be two different state classes, only one of which should implement `IComponentDeltaState<TFulState>`
+* The way that delta component states work has changed. It now expects there to be two different state classes, only one of which should implement `IComponentDeltaState<TFullState>`
 
 ### New features
 

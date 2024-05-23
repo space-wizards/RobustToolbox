@@ -1302,7 +1302,7 @@ public abstract partial class SharedTransformSystem
         if (xform.ParentUid == xform.GridUid)
             return;
 
-        if (!TryGetMapOrGridCoordinates(uid, out var coordinates, xform))
+        if (!TryGetMapOrGridCoordinates(xform, out var coordinates))
         {
             if (!_mapManager.IsMap(uid))
                 Log.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
@@ -1329,10 +1329,20 @@ public abstract partial class SharedTransformSystem
         [NotNullWhen(true)] out EntityCoordinates? coordinates,
         TransformComponent? xform = null)
     {
-        coordinates = null;
-
         if (!GetAndValidateTransform(uid, ref xform))
+        {
+            coordinates = null;
             return false;
+        }
+
+        return TryGetMapOrGridCoordinates(xform, out coordinates);
+    }
+
+    private bool TryGetMapOrGridCoordinates(
+        TransformComponent xform,
+        [NotNullWhen(true)] out EntityCoordinates? coordinates)
+    {
+        coordinates = null;
 
         if (xform.MapUid is not { } map || TerminatingOrDeleted(map))
             return false;

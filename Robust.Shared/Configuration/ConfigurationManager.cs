@@ -850,7 +850,15 @@ namespace Robust.Shared.Configuration
 
             public void Register()
             {
-                DebugTools.Assert(!Registered);
+                if (Registered)
+                {
+                    DebugTools.AssertNotNull(Type);
+                    DebugTools.AssertNotNull(DefaultValue);
+                    DebugTools.AssertEqual(DefaultValue.GetType(), Type);
+                    DebugTools.Assert(Value == null || Value.GetType() == Type);
+                    return;
+                }
+
                 DebugTools.AssertNull(Type);
                 DebugTools.AssertNotNull(DefaultValue);
                 DebugTools.Assert(Value == null || DefaultValue.GetType() == Value.GetType());

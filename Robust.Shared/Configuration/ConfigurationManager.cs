@@ -95,7 +95,9 @@ namespace Robust.Shared.Configuration
         {
             if (_configVars.TryGetValue(cvar, out var cfgVar))
             {
-                changedInvokes.Add(SetupInvokeValueChanged(cfgVar, value));
+                // overwrite the value with the saved one
+                var oldValue = GetConfigVarValue(cfgVar);
+                changedInvokes.Add(SetupInvokeValueChanged(cfgVar, value, oldValue));
                 cfgVar.Value = value;
             }
             else
@@ -141,7 +143,10 @@ namespace Robust.Shared.Configuration
                     }
 
                     if (cVar.OverrideValue == null && cVar.Value == null)
-                        callbackEvents.Add(SetupInvokeValueChanged(cVar, convertedValue));
+                    {
+                        var oldValue = GetConfigVarValue(cVar);
+                        callbackEvents.Add(SetupInvokeValueChanged(cVar, convertedValue, oldValue));
+                    }
 
                     cVar.DefaultValue = convertedValue;
                 }
@@ -503,17 +508,15 @@ namespace Robust.Shared.Configuration
         {
             ValueChangedInvoke? invoke = null;
 
-            object oldValue;
             using (Lock.WriteGuard())
             {
                 //TODO: Make flags work, required non-derpy net system.
                 if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 {
-                    oldValue = GetConfigVarValue(cVar);
-                    DebugTools.AssertEqual(oldValue.GetType(), cVar.Type);
                     if (!Equals(cVar.OverrideValueParsed ?? cVar.Value, value))
                     {
-                        invoke = SetupInvokeValueChanged(cVar, value, intendedTick);
+                        var oldValue = GetConfigVarValue(cVar);
+                        invoke = SetupInvokeValueChanged(cVar, value, oldValue, intendedTick);
 
                         // Setting an overriden var just turns off the override, basically.
                         cVar.OverrideValue = null;
@@ -545,7 +548,10 @@ namespace Robust.Shared.Configuration
                     throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
 
                 if (cVar.OverrideValue == null && cVar.Value == null)
-                    invoke = SetupInvokeValueChanged(cVar, value);
+                {
+                    var oldValue = GetConfigVarValue(cVar);
+                    invoke = SetupInvokeValueChanged(cVar, value, oldValue);
+                }
 
                 cVar.DefaultValue = value;
 
@@ -612,7 +618,8 @@ namespace Robust.Shared.Configuration
                             continue;
 
                         var newValue = ParseOverrideValue(value, cfgVar.Type!);
-                        invokes.Add(SetupInvokeValueChanged(cfgVar, newValue));
+                        var oldValue = GetConfigVarValue(cfgVar);
+                        invokes.Add(SetupInvokeValueChanged(cfgVar, newValue, oldValue));
                         cfgVar.OverrideValueParsed = newValue;
                     }
                     else
@@ -707,10 +714,9 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        private ValueChangedInvoke SetupInvokeValueChanged(ConfigVar var, object newValue, GameTick? tick = null)
+        private ValueChangedInvoke SetupInvokeValueChanged(ConfigVar var, object newValue, object oldValue, GameTick? tick = null)
         {
             tick ??= _gameTiming.CurTick;
-            var oldValue = GetConfigVarValue(var);
             var info = new CVarChangeInfo(var.Name, tick.Value, newValue, oldValue);
             return new ValueChangedInvoke(info, var.ValueChanged);
         }

@@ -105,7 +105,7 @@ namespace Robust.Server.ServerStatus
 
             if (auth != _watchdogToken)
             {
-                _sawmill.Warning(
+                _sawmill.Verbose(
                     "received POST /shutdown with invalid authentication token. Ignoring {0}, {1}", auth,
                     _watchdogToken);
                 await context.RespondErrorAsync(HttpStatusCode.Unauthorized);

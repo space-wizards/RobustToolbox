@@ -103,8 +103,8 @@ namespace Robust.Shared.Configuration
             else
             {
                 //or add another unregistered CVar
-                //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
-                cfgVar = new ConfigVar(cvar, 0, CVar.NONE) { Value = value };
+                //Note: the initial defaultValue is null, but it will get overwritten when the cvar is registered.
+                cfgVar = new ConfigVar(cvar, null!, CVar.NONE) { Value = value };
                 _configVars.Add(cvar, cfgVar);
             }
 
@@ -129,20 +129,20 @@ namespace Robust.Shared.Configuration
                     }
 
                     var convertedValue = value;
-                    if (!cVar.DefaultValue.GetType().IsEnum && cVar.DefaultValue.GetType() != value.GetType())
+                    if (cVar.Type != value.GetType())
                     {
                         try
                         {
-                            convertedValue = ConvertToCVarType(value, cVar.DefaultValue.GetType());
+                            convertedValue = ConvertToCVarType(value, cVar.Type!);
                         }
                         catch
                         {
-                            _sawmill.Error($"Override TOML parsed cvar does not match registered cvar type. Name: {cVarName}. Code Type: {cVar.DefaultValue.GetType()}. Toml type: {value.GetType()}");
+                            _sawmill.Error($"Override TOML parsed cvar does not match registered cvar type. Name: {cVarName}. Code Type: {cVar.Type}. Toml type: {value.GetType()}");
                             continue;
                         }
                     }
 
-                    cVar.DefaultValue = value;
+                    cVar.DefaultValue = convertedValue;
 
                     if (cVar.OverrideValue == null && cVar.Value == null)
                     {
@@ -319,6 +319,7 @@ namespace Robust.Shared.Configuration
 
         private void RegisterCVar(string name, Type type, object defaultValue, CVar flags)
         {
+            DebugTools.AssertEqual(defaultValue.GetType(), type);
             DebugTools.Assert(!type.IsEnum || type.GetEnumUnderlyingType() == typeof(int),
                 $"{name}: Enum cvars must have int as underlying type.");
 
@@ -352,7 +353,7 @@ namespace Robust.Shared.Configuration
 
                 cVar.DefaultValue = defaultValue;
                 cVar.Flags = flags;
-                cVar.Registered = true;
+                cVar.Register();
 
                 if (cVar.OverrideValue != null)
                 {
@@ -362,10 +363,9 @@ namespace Robust.Shared.Configuration
                 return;
             }
 
-            _configVars.Add(name, new ConfigVar(name, defaultValue, flags)
-            {
-                Registered = true
-            });
+            var cvar = new ConfigVar(name, defaultValue, flags);
+            cvar.Register();
+            _configVars.Add(name, cvar);
         }
 
         public void OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
@@ -514,6 +514,7 @@ namespace Robust.Shared.Configuration
                 if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 {
                     oldValue = cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue;
+                    DebugTools.AssertEqual(oldValue.GetType(), cVar.Type);
                     if (!Equals(cVar.OverrideValueParsed ?? cVar.Value, value))
                     {
                         // Setting an overriden var just turns off the override, basically.
@@ -593,7 +594,7 @@ namespace Robust.Shared.Configuration
             }
 
             // If it's null it's a string, since the rest is primitives which aren't null.
-            return cVar.DefaultValue.GetType();
+            return cVar.Type!;
         }
 
         protected static object GetConfigVarValue(ConfigVar cVar)
@@ -622,8 +623,8 @@ namespace Robust.Shared.Configuration
                     else
                     {
                         //or add another unregistered CVar
-                        //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
-                        var cVar = new ConfigVar(key, 0, CVar.NONE) { OverrideValue = value };
+                        //Note: the initial defaultValue is null, but it will get overwritten when the cvar is registered.
+                        var cVar = new ConfigVar(key, null!, CVar.NONE) { OverrideValue = value };
                         _configVars.Add(key, cVar);
                     }
                 }
@@ -773,6 +774,9 @@ namespace Robust.Shared.Configuration
         /// <returns></returns>
         private static object ConvertToCVarType(object value, Type cVar)
         {
+            if (cVar.IsEnum)
+                return Enum.Parse(cVar, value.ToString() ?? string.Empty);
+
             return Convert.ChangeType(value, cVar);
         }
 
@@ -792,9 +796,14 @@ namespace Robust.Shared.Configuration
             public ConfigVar(string name, object defaultValue, CVar flags)
             {
                 Name = name;
-                DefaultValue = defaultValue;
                 Flags = flags;
+                _defaultValue = defaultValue;
             }
+
+            /// <summary>
+            ///     The type of the cvar's value. This may be null until the cvar is registered.
+            /// </summary>
+            public Type? Type { get; internal set; }
 
             /// <summary>
             ///     The name of the CVar.
@@ -804,7 +813,16 @@ namespace Robust.Shared.Configuration
             /// <summary>
             ///     The default value of this CVar.
             /// </summary>
-            public object DefaultValue { get; set; }
+            public object DefaultValue
+            {
+                get => _defaultValue;
+                set
+                {
+                    if (Registered)
+                        DebugTools.AssertEqual(value.GetType(), Type);
+                    _defaultValue = value;
+                }
+            }
 
             /// <summary>
             ///     Optional flags to modify the behavior of this CVar.
@@ -814,12 +832,31 @@ namespace Robust.Shared.Configuration
             /// <summary>
             ///     The current value of this CVar.
             /// </summary>
-            public object? Value { get; set; }
+            public object? Value
+            {
+                get => _value;
+                set
+                {
+                    if (value != null && Registered)
+                        DebugTools.AssertEqual(value.GetType(), Type);
+                    _value = value;
+                }
+            }
 
             /// <summary>
             ///     Has this CVar been registered in code?
             /// </summary>
-            public bool Registered { get; set; }
+            public bool Registered { get; private set; }
+
+            public void Register()
+            {
+                DebugTools.Assert(!Registered);
+                DebugTools.AssertNull(Type);
+                DebugTools.AssertNotNull(DefaultValue);
+                DebugTools.Assert(Value == null || DefaultValue.GetType() == Value.GetType());
+                Type = DefaultValue.GetType();
+                Registered = true;
+            }
 
             /// <summary>
             ///     Was the CVar present in the config file?
@@ -828,6 +865,8 @@ namespace Robust.Shared.Configuration
             public bool ConfigModified;
 
             public InvokeList<ValueChangedDelegate> ValueChanged;
+            private object _defaultValue;
+            private object? _value;
 
             // We don't know what the type of the var is until it's registered.
             // So we can't actually parse them until then.

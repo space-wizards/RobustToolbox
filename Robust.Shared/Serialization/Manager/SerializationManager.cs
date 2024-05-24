@@ -271,7 +271,7 @@ namespace Robust.Shared.Serialization.Manager
                 variableType = null;
                 return false;
             }
-            var foundFieldDef = definition.BaseFieldDefinitions.FirstOrDefault(fieldDef => fieldDef?.BackingField.Name==variableName, null);
+            var foundFieldDef = definition.BaseFieldDefinitions.FirstOrDefault(fieldDef => fieldDef?.Attribute is DataFieldAttribute attr && attr.Tag==variableName, null);
             if(foundFieldDef != null)
             {
                 variableType = foundFieldDef.BackingField.FieldType;

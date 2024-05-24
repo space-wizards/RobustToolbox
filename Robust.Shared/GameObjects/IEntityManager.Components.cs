@@ -404,7 +404,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="player">The player that is going to receive this state. Null implies that this state is for a replay.</param>
         /// <param name="fromTick">The from tick, which indicates the range of data that must be included for delta-states.</param>
         /// <returns>The component state of the component.</returns>
-        IComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? player, GameTick fromTick);
+        IComponentState? GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? player, GameTick fromTick);
 
         /// <summary>
         ///     Checks if a certain player should get a component state.

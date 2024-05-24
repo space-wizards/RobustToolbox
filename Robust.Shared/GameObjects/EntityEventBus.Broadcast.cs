@@ -167,7 +167,7 @@ namespace Robust.Shared.GameObjects
             if (eventHandler == null)
                 throw new ArgumentNullException(nameof(eventHandler));
 
-            var order = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
+            var order = CreateOrderingData(orderType, before, after);
 
             SubscribeEventCommon<T>(source, subscriber,
                 (ref Unit ev) => eventHandler(Unsafe.As<Unit, T>(ref ev)), eventHandler, order, false);
@@ -187,7 +187,7 @@ namespace Robust.Shared.GameObjects
             EntityEventRefHandler<T> eventHandler,
             Type orderType, Type[]? before = null, Type[]? after = null) where T : notnull
         {
-            var order = new OrderingData(orderType, before ?? Array.Empty<Type>(), after ?? Array.Empty<Type>());
+            var order = CreateOrderingData(orderType, before, after);
 
             SubscribeEventCommon<T>(source, subscriber, (ref Unit ev) =>
             {

@@ -664,7 +664,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 fixed (byte* p = buffer)
                 {
-                    GL.GetnTexImage(TextureTarget.Texture2D, 0, PF.Rgba, PT.UnsignedByte, bufSize, (IntPtr) p);
+                    GL.GetTexImage(TextureTarget.Texture2D, 0, PF.Rgba, PT.UnsignedByte, (IntPtr) p);
                 }
 
                 GL.BindTexture(TextureTarget.Texture2D, curTexture2D);

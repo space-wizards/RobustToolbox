@@ -32,7 +32,7 @@ namespace Robust.Shared.Configuration
 
         private ISawmill _sawmill = default!;
 
-        public event Action<CVarChangeInfo>? OnCvarValueChanged;
+        public event Action<CVarChangeInfo>? OnCVarValueChanged;
 
         /// <summary>
         ///     Constructs a new ConfigurationManager.
@@ -707,7 +707,7 @@ namespace Robust.Shared.Configuration
 
         private void InvokeValueChanged(in ValueChangedInvoke invoke)
         {
-            OnCvarValueChanged?.Invoke(invoke.Info);
+            OnCVarValueChanged?.Invoke(invoke.Info);
             foreach (var entry in invoke.Invoke.Entries)
             {
                 entry.Value!.Invoke(invoke.Value, in invoke.Info);

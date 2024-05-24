@@ -263,6 +263,6 @@ namespace Robust.Shared.Configuration
         void UnsubValueChanged<T>(string name, CVarChanged<T> onValueChanged)
             where T : notnull;
 
-        public event Action<CVarChangeInfo>? OnCvarValueChanged;
+        public event Action<CVarChangeInfo>? OnCVarValueChanged;
     }
 }

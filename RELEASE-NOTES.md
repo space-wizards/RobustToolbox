@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 223.0.0
+
+### Breaking changes
+
 * The `ComponentState` class is now abstract. Networked components that don't have state information now just return a null state.
 * The way that delta component states work has changed. It now expects there to be two different state classes, only one of which should implement `IComponentDeltaState<TFullState>`
 
@@ -50,10 +73,6 @@ END TEMPLATE-->
 ### Other
 
 * The default values of various replay related cvars have been changed to try and reduce memory usage.
-
-### Internal
-
-*None yet*
 
 
 ## 222.4.0

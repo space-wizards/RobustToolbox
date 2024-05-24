@@ -115,6 +115,15 @@ namespace Robust.Shared.GameObjects
             where TEvent : notnull;
 
         /// <summary>
+        /// Max size of a components event subscription linked list.
+        /// Used to limit the stackalloc in <see cref="EntDispatch"/>
+        /// </summary>
+        /// <remarks>
+        /// SS14 currently requires only 18, I doubt it will ever need to exceed 256.
+        /// </remarks>
+        private const int MaxEventLinkedListSize = 256;
+
+        /// <summary>
         /// Constructs a new instance of <see cref="EntityEventBus"/>.
         /// </summary>
         /// <param name="entMan">The entity manager to watch for entity/component events.</param>
@@ -505,6 +514,8 @@ namespace Robust.Shared.GameObjects
                 // Assign new list entry to EventIndices dictionary.
                 indices.Start = entryIdx;
                 indices.Count++;
+                if (indices.Count > MaxEventLinkedListSize)
+                    throw new NotSupportedException($"Exceeded maximum event linked list size. Need to implement stackalloc fallback.");
             }
         }
 

@@ -178,7 +178,10 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void RegisterNetworkedFields(ComponentRegistration compReg, params string[] fields)
         {
-            DebugTools.Assert(compReg.NetworkedFields.Length == 0);
+            // Nothing to do.
+            if (compReg.NetworkedFields.Length > 0 || fields.Length == 0)
+                return;
+
             compReg.NetworkedFields = fields;
             var lookup = new Dictionary<string, int>();
             var i = 0;

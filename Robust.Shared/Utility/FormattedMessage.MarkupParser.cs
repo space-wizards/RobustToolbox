@@ -22,8 +22,9 @@ public sealed partial class FormattedMessage
 
     /// <summary>
     /// Attempts to add markup. If an error occurs, it will do nothing and return an error message.
+    /// This method does NOT fall back to using the permissive parser (which parses invalid markup as text).
     /// </summary>
-    public bool TryAddMarkup(string markup, [NotNullWhen(false)] out string? error )
+    public bool TryAddMarkup(string markup, [NotNullWhen(false)] out string? error)
     {
         if (!TryParse(markup, out var nodes, out error))
             return false;
@@ -33,10 +34,7 @@ public sealed partial class FormattedMessage
     }
 
     [Obsolete("Use AddMarkupOrThrow or TryAddMarkup")]
-    public void AddMarkup(string markup)
-    {
-        _nodes.AddRange(ParseOrThrow(markup));
-    }
+    public void AddMarkup(string markup) => AddMarkupOrThrow(markup);
 
     /// <summary>
     /// Parses the given markup and adds the resulting nodes to this formatted message
@@ -81,7 +79,7 @@ public sealed partial class FormattedMessage
     private static List<MarkupNode> ParseOrThrow(string input) => ParseNodes.ParseOrThrow(input);
 
     /// <summary>
-    /// Attempt to parse the given input. Returns an error message if it fails.
+    /// Attempt to parse the given input. Returns an error message if it fails. Does not fall back to the permissive parser
     /// </summary>
     public static bool TryParse(string input, [NotNullWhen(true)] out List<MarkupNode>? nodes, [NotNullWhen(false)] out string? error)
     {

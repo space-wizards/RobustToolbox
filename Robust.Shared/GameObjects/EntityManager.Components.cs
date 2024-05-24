@@ -378,15 +378,8 @@ namespace Robust.Shared.GameObjects
             if (component is IComponentDelta delta)
             {
                 var curTick = _gameTiming.CurTick;
-
-                foreach (var field in delta.GetType().GetFields())
-                {
-                    if (!field.HasCustomAttribute<AutoNetworkedFieldAttribute>())
-                        continue;
-
-                    var data = field.GetValue(component);
-                    delta.LastModifiedFields[field.Name] = curTick;
-                }
+                delta.LastModifiedFields = new GameTick[reg.NetworkedFields.Length];
+                Array.Fill(delta.LastModifiedFields, curTick);
             }
 
             component.Networked = reg.NetID != null;

@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -16,43 +13,20 @@ public abstract partial class EntityManager
             return;
         }
 
-#if DEBUG
-        // TODO: Compfactory cache this.
-        var field = component.GetType().GetField(fieldName);
-        DebugTools.Assert(field!.HasCustomAttribute<AutoNetworkedFieldAttribute>());
-#endif
-
-        if (!delta.LastModifiedFields.ContainsKey(fieldName))
-        {
-            _sawmill.Error($"Tried to dirty delta field {fieldName} on {ToPrettyString(uid)} that isn't implemented.");
-            return;
-        }
-
-        var curTick = _gameTiming.CurTick;
-        delta.LastFieldUpdate = curTick;
-        delta.LastModifiedFields[fieldName] = curTick;
-        Dirty(uid, component, metadata);
+        var compReg = ComponentFactory.GetRegistration(component);
+        InternalDirty(uid, component, delta, compReg, fieldName, metadata);
     }
 
     public void DirtyField<T>(EntityUid uid, T component, string fieldName, MetaDataComponent? metadata = null) where T : IComponent, IComponentDelta
     {
         var delta = (IComponentDelta)component;
+        var compReg = ComponentFactory.GetRegistration(CompIdx.Index<T>());
+        InternalDirty(uid, component, delta, compReg, fieldName, metadata);
+    }
 
-#if DEBUG
-        var field = typeof(T).GetField(fieldName);
-
-        if (field == null)
-        {
-            var property = typeof(T).GetProperty(fieldName);
-            DebugTools.Assert(property!.HasCustomAttribute<AutoNetworkedFieldAttribute>());
-        }
-        else
-        {
-            DebugTools.Assert(field.HasCustomAttribute<AutoNetworkedFieldAttribute>());
-        }
-#endif
-
-        if (!delta.LastModifiedFields.ContainsKey(fieldName))
+    private void InternalDirty(EntityUid uid, IComponent comp, IComponentDelta delta, ComponentRegistration compReg, string fieldName, MetaDataComponent? metadata = null)
+    {
+        if (!compReg.NetworkedFieldLookup.TryGetValue(fieldName, out var idx))
         {
             _sawmill.Error($"Tried to dirty delta field {fieldName} on {ToPrettyString(uid)} that isn't implemented.");
             return;
@@ -60,8 +34,8 @@ public abstract partial class EntityManager
 
         var curTick = _gameTiming.CurTick;
         delta.LastFieldUpdate = curTick;
-        delta.LastModifiedFields[fieldName] = curTick;
-        Dirty(uid, component, metadata);
+        delta.LastModifiedFields[idx] = curTick;
+        Dirty(uid, comp, metadata);
     }
 }
 
@@ -79,7 +53,7 @@ public interface IComponentDelta
     /// <summary>
     /// Stores the last modified tick for fields.
     /// </summary>
-    public Dictionary<string, GameTick> LastModifiedFields
+    public GameTick[] LastModifiedFields
     {
         get;
         set;

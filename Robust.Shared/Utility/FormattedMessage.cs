@@ -90,6 +90,17 @@ public sealed partial class FormattedMessage
     }
 
     /// <summary>
+    ///     Remove all markup, leaving only the basic text content behind.
+    /// </summary>
+    /// <remarks>
+    ///     Uses <see cref="FromMarkupPermissive"/>, so bad markup doesn't throw an exception.
+    /// </remarks>
+    public static string RemoveMarkupPermissive(string text)
+    {
+        return FromMarkupPermissive(text).ToString();
+    }
+
+    /// <summary>
     /// Adds a text node.
     /// This node doesn't need to be closed with <see cref="Pop"/>.
     /// </summary>

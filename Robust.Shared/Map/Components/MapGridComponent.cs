@@ -335,48 +335,38 @@ namespace Robust.Shared.Map.Components
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class MapGridComponentState : ComponentState, IComponentDeltaState
+    internal sealed class MapGridComponentState(ushort chunkSize, Dictionary<Vector2i, Tile[]> fullGridData) : ComponentState
     {
         /// <summary>
         ///     The size of the chunks in the map grid.
         /// </summary>
-        public ushort ChunkSize;
-
-        /// <summary>
-        /// Networked chunk data.
-        /// </summary>
-        public List<ChunkDatum>? ChunkData;
+        public ushort ChunkSize = chunkSize;
 
         /// <summary>
         /// Networked chunk data containing the full grid state.
         /// </summary>
-        public Dictionary<Vector2i, Tile[]>? FullGridData;
+        public Dictionary<Vector2i, Tile[]> FullGridData = fullGridData;
+    }
 
-        public bool FullState => FullGridData != null;
+    /// <summary>
+    ///     Serialized state of a <see cref="MapGridComponentState"/>.
+    /// </summary>
+    [Serializable, NetSerializable]
+    internal sealed class MapGridComponentDeltaState(ushort chunkSize, List<ChunkDatum>? chunkData)
+        : ComponentState, IComponentDeltaState<MapGridComponentState>
+    {
+        /// <summary>
+        ///     The size of the chunks in the map grid.
+        /// </summary>
+        public readonly ushort ChunkSize = chunkSize;
 
         /// <summary>
-        ///     Constructs a new grid component delta state.
+        /// Networked chunk data.
         /// </summary>
-        public MapGridComponentState(ushort chunkSize, List<ChunkDatum>? chunkData)
-        {
-            ChunkSize = chunkSize;
-            ChunkData = chunkData;
-        }
+        public readonly List<ChunkDatum>? ChunkData = chunkData;
 
-        /// <summary>
-        ///     Constructs a new full component state.
-        /// </summary>
-        public MapGridComponentState(ushort chunkSize, Dictionary<Vector2i, Tile[]> fullGridData)
+        public void ApplyToFullState(MapGridComponentState state)
         {
-            ChunkSize = chunkSize;
-            FullGridData = fullGridData;
-        }
-
-        public void ApplyToFullState(IComponentState fullState)
-        {
-            var state = (MapGridComponentState)fullState;
-            DebugTools.Assert(!FullState && state.FullState);
-
             state.ChunkSize = ChunkSize;
 
             if (ChunkData == null)
@@ -391,12 +381,9 @@ namespace Robust.Shared.Map.Components
             }
         }
 
-        public IComponentState CreateNewFullState(IComponentState fullState)
+        public MapGridComponentState CreateNewFullState(MapGridComponentState state)
         {
-            var state = (MapGridComponentState)fullState;
-            DebugTools.Assert(!FullState && state.FullState);
-
-            var fullGridData = new Dictionary<Vector2i, Tile[]>(state.FullGridData!.Count);
+            var fullGridData = new Dictionary<Vector2i, Tile[]>(state.FullGridData.Count);
 
             foreach (var (key, value) in state.FullGridData)
             {

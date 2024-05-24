@@ -131,11 +131,6 @@ public sealed partial class ReplayLoadManager
                 // Send the memory stream back for reuse
                 await reuseFileChannel.Writer.WriteAsync(decompressed.Stream);
                 i += 1;
-
-                if (i % 10 == 1)
-                {
-                    _sawmill.Info($"Deserialized {i}. Decompressed files {decompressedFileChannel.Reader.Count}. Queued states {checkpointChannel.Reader.Count}. Total ticks {states.Count}");
-                }
             }
 
             // Done creating replay data to process in the background

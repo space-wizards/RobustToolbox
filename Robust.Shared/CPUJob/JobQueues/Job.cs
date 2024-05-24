@@ -86,19 +86,6 @@ namespace Robust.Shared.CPUJob.JobQueues
             return new ValueTask(SuspendNow());
         }
 
-        protected async IAsyncEnumerable<TEnum> WrapAsyncEnumerator<TEnum>(IAsyncEnumerable<TEnum> innerEnum)
-        {
-            var e = innerEnum.GetAsyncEnumerator();
-            try
-            {
-                while (await WaitAsyncTask(e.MoveNextAsync()))
-                {
-                    yield return e.Current;
-                }
-            }
-            finally { if (e != null) await WaitAsyncTask(e.DisposeAsync()); }
-        }
-
         /// <summary>
         ///     Wrapper to await on an external ValueTask.
         /// </summary>
@@ -193,7 +180,6 @@ namespace Robust.Shared.CPUJob.JobQueues
                 "Run() called without resume. Was this called while the job is in Waiting state?");
             var resume = _resume;
             _resume = null;
-            Logger.Info($"Job: Run return state {Status} resume {resume}");
 
             Status = JobStatus.Running;
 

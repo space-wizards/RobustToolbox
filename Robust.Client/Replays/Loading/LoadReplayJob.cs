@@ -42,11 +42,6 @@ public class LoadReplayJob : Job<bool>
             await SuspendIfOutOfTime();
     }
 
-    public new IAsyncEnumerable<TEnum> WrapAsyncEnumerator<TEnum>(IAsyncEnumerable<TEnum> innerEnum)
-    {
-        return base.WrapAsyncEnumerator(innerEnum);
-    }
-
     public new ValueTask<TTask> WaitAsyncTask<TTask>(ValueTask<TTask> task)
     {
         return base.WaitAsyncTask(task);

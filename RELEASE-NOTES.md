@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * A new `replay.checkpoint_min_interval` cvar has been added. It can be used to limit the frequency at which checkpoints are generated when loading a replay.
+* Added `IConfigurationManager.OnCVarValueChanged`. This is a c# event that gets invoked whenever any cvar value changes.
 
 ### Bugfixes
 

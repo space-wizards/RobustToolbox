@@ -384,6 +384,7 @@ namespace Robust.Shared.Map.Components
             var state = (MapGridComponentState)fullState;
             DebugTools.Assert(!FullState && state.FullState);
 
+            state.LastTileModifiedTick = LastTileModifiedTick;
             state.ChunkSize = ChunkSize;
 
             if (ChunkData == null)

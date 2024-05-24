@@ -250,6 +250,7 @@ public abstract partial class SharedMapSystem
         DebugTools.Assert(component.ChunkSize == state.ChunkSize || component.Chunks.Count == 0,
             "Can't modify chunk size of an existing grid.");
 
+        component.LastTileModifiedTick = state.LastTileModifiedTick;
         component.ChunkSize = state.ChunkSize;
         if (state.ChunkData == null && state.FullGridData == null)
             return;
@@ -409,7 +410,7 @@ public abstract partial class SharedMapSystem
             }
         }
 
-        args.State = new MapGridComponentState(component.ChunkSize, chunkData);
+        args.State = new MapGridComponentState(component.ChunkSize, chunkData, component.LastModifiedTick);
 
 #if DEBUG
         if (chunkData == null)
@@ -445,7 +446,7 @@ public abstract partial class SharedMapSystem
             chunkData.Add(index, tileBuffer);
         }
 
-        args.State = new MapGridComponentState(component.ChunkSize, chunkData);
+        args.State = new MapGridComponentState(component.ChunkSize, chunkData, component.LastTileModifiedTick);
 
 #if DEBUG
         foreach (var chunk in chunkData.Values)

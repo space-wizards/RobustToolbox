@@ -13,7 +13,7 @@ public abstract class ComponentState : IComponentState;
 /// </summary>
 public interface IComponentState;
 
-internal interface IComponentDeltaState : IComponentState
+public interface IComponentDeltaState : IComponentState
 {
     public void ApplyToFullState(IComponentState fullState);
 
@@ -25,7 +25,7 @@ internal interface IComponentDeltaState : IComponentState
 /// separate class from the full component states.
 /// </summary>
 /// <typeparam name="TState">The full-state class associated with this partial state</typeparam>
-public interface IComponentDeltaState<TState> : IComponentState where TState: IComponentState
+public interface IComponentDeltaState<TState> : IComponentDeltaState where TState: IComponentState
 {
     /// <summary>
     /// This function will apply the current delta state to the provided full state, modifying it in the process.
@@ -37,4 +37,20 @@ public interface IComponentDeltaState<TState> : IComponentState where TState: IC
     /// modifying the original input state.
     /// </summary>
     public TState CreateNewFullState(TState fullState);
+
+    void IComponentDeltaState.ApplyToFullState(IComponentState fullState)
+    {
+        if (fullState is TState state)
+            ApplyToFullState(state);
+        else
+            throw new Exception($"Unexpected type. Expected {nameof(TState)} but got {fullState.GetType().Name}");
+    }
+
+    IComponentState IComponentDeltaState.CreateNewFullState(IComponentState fullState)
+    {
+        if (fullState is TState state)
+            return CreateNewFullState(state);
+        else
+            throw new Exception($"Unexpected type. Expected {nameof(TState)} but got {fullState.GetType().Name}");
+    }
 }

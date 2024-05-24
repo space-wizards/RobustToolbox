@@ -24,7 +24,6 @@ namespace Robust.Shared.GameObjects
 
         // Bunch of dictionaries to allow lookups in all directions.
         /// <summary>
-        /// <summary>
         /// Mapping of component name to type.
         /// </summary>
         private FrozenDictionary<string, ComponentRegistration> _names

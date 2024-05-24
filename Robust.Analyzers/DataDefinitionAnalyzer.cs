@@ -321,9 +321,6 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             return false;
 
         // Make sure it has ViewVariablesAttribute
-        // if (!IsViewVariables(symbol, out _, out var viewVariablesAttribute))
-        //     return false;
-
         AttributeData? viewVariablesAttribute = null;
         foreach (var attr in symbol.GetAttributes())
         {

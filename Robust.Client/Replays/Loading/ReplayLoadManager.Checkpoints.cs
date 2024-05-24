@@ -208,8 +208,8 @@ public sealed partial class ReplayLoadManager
             }
         }
 
-        _sawmill.Info($"Finished generating {checkPoints.Count} checkpoints. Elapsed time: {st.Elapsed}. Checkpoint every {(float)states.Count / checkPoints.Count} ticks on average");
-        _sawmill.Info($"Finished generating checkpoints. Elapsed time: {st.Elapsed}");
+        _sawmill.Info($"Finished generating {checkPoints.Count} checkpoints. Elapsed time: {st.Elapsed}. Checkpoint every {(float)lastStateId / checkPoints.Count} ticks on average");
+        _sawmill.Info($"Checkpoint stats - Spawning: {stats_due_spawned} StateChanges: {stats_due_state} Ticks: {stats_due_ticks}. ");
         await callback(10000, 10000, LoadingState.ProcessingFiles, false);
         return (checkPoints.ToArray(), serverTime.ToArray());
     }

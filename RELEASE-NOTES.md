@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed an exception caused by enum cvars using integer type values instead of enum values
 
 ### Other
 

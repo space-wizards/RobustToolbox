@@ -338,7 +338,7 @@ namespace Robust.Shared.Configuration
                 if (cVar.Registered)
                     _sawmill.Error($"The variable '{name}' has already been registered.");
 
-                if (!type.IsEnum && cVar.Value != null && !type.IsAssignableFrom(cVar.Value.GetType()))
+                if (cVar.Value != null && type != cVar.Value.GetType())
                 {
                     try
                     {

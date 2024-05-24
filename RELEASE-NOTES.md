@@ -47,12 +47,19 @@ END TEMPLATE-->
 
 ### Other
 
-* Various `ContainerSystem` methods have been obsoleted in favour of overrides that take in an `Entity` struct instead of `EntityUid`
-* Various `EntityCoordinates` methods have been obsoleted with replacements added  to `SharedTransformSystem`
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 223.1.0
+
+### Other
+
+* Various `ContainerSystem` methods have been obsoleted in favour of overrides that take in an `Entity` struct instead of `EntityUid`
+* Various `EntityCoordinates` methods have been obsoleted with replacements added  to `SharedTransformSystem`
 
 
 ## 223.0.0

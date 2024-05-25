@@ -1,6 +1,7 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameStates
 {
@@ -12,6 +13,7 @@ namespace Robust.Shared.GameStates
 
         public ComponentHandleState(IComponentState? current, IComponentState? next)
         {
+            DebugTools.Assert(current != null || next != null);
             Current = current;
             Next = next;
         }

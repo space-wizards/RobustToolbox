@@ -363,7 +363,7 @@ public sealed partial class ReplayLoadManager
 #if DEBUG
                 foreach (var state in modifiedState.ComponentChanges.Value)
                 {
-                    DebugTools.Assert(state.State is not IComponentDeltaState delta || delta.FullState);
+                    DebugTools.Assert(state.State is not IComponentDeltaState delta);
                 }
 #endif
                 continue;
@@ -376,7 +376,7 @@ public sealed partial class ReplayLoadManager
 #if DEBUG
             foreach (var state in entStates[entState.NetEntity].ComponentChanges.Span)
             {
-                DebugTools.Assert(state.State is not IComponentDeltaState delta || delta.FullState);
+                DebugTools.Assert(state.State is not IComponentDeltaState delta);
             }
 #endif
         }
@@ -407,20 +407,20 @@ public sealed partial class ReplayLoadManager
             if (!newCompStates.Remove(existing.NetID, out var newCompState))
                 continue;
 
-            if (newCompState.State is not IComponentDeltaState delta || delta.FullState)
+            if (newCompState.State is not IComponentDeltaState delta)
             {
                 combined[index] = newCompState;
                 continue;
             }
 
-            DebugTools.Assert(existing.State is IComponentDeltaState fullDelta && fullDelta.FullState);
-            combined[index] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State), newCompState.LastModifiedTick);
+            DebugTools.Assert(existing.State != null && existing.State is not IComponentDeltaState);
+            combined[index] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State!), newCompState.LastModifiedTick);
         }
 
         foreach (var compChange in newCompStates.Values)
         {
             // I'm not 100% sure about this, but I think delta states should always be full states here?
-            DebugTools.Assert(compChange.State is not IComponentDeltaState delta || delta.FullState);
+            DebugTools.Assert(compChange.State is not IComponentDeltaState delta);
             combined.Add(compChange);
         }
 

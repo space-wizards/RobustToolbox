@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 223.1.2
+
+### Bugfixes
+
+* `MapGridComponent.LastTileModifiedTick` is now actually networked to clients.
+
+
 ## 223.1.1
 
 ### Bugfixes

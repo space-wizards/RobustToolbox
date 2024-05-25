@@ -262,6 +262,7 @@ public abstract partial class SharedMapSystem
                     ApplyChunkData(uid, component, chunkData, modifiedChunks);
                 }
 
+                component.LastTileModifiedTick = delta.LastTileModifiedTick;
                 break;
             }
             case MapGridComponentState state:
@@ -419,7 +420,7 @@ public abstract partial class SharedMapSystem
             }
         }
 
-        args.State = new MapGridComponentDeltaState(component.ChunkSize, chunkData);
+        args.State = new MapGridComponentDeltaState(component.ChunkSize, chunkData, component.LastTileModifiedTick);
 
 #if DEBUG
         if (chunkData == null)

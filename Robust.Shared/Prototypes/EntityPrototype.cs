@@ -60,9 +60,9 @@ namespace Robust.Shared.Prototypes
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
 
-        [DataField("categories")]
+        [DataField]
         [AlwaysPushInheritance]
-        public HashSet<string> Categories = new();
+        public HashSet<ProtoId<EntityCategoryPrototype>> Categories = new();
 
         [ViewVariables]
         public IReadOnlyDictionary<string, string> LocProperties => _locPropertiesSet ?? LocPropertiesDefault;

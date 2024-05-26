@@ -120,7 +120,7 @@ namespace Robust.Client.GameObjects
                 {
                     var type = _serializer.FindSerializedType(typeof(BaseContainer), data.ContainerType);
                     container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type!, inject:false);
-                    InitContainer(container, (uid, component), id);
+                    container.Init(this, id, (uid, component));
                     component.Containers.Add(id, container);
                 }
 

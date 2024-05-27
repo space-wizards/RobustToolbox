@@ -324,7 +324,7 @@ namespace Robust.Shared.GameObjects
             if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var gridUid, out var grid))
             {
                 coords = new EntityCoordinates(gridUid, _mapSystem.WorldToLocal(gridUid, grid, coordinates.Position));
-                _xforms.SetCoordinates(newEntity, transform, coords, unanchor: false);
+                _xforms.SetCoordinates(newEntity, transform, coords, rotation, unanchor: false);
             }
             else
             {

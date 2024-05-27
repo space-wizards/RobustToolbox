@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added several new `FormattedMessage` methods for better exception tolerance when parsing markup. Several existing methods have been marked as obsolete, with new renamed methods taking their place.
 
 ### Bugfixes
 

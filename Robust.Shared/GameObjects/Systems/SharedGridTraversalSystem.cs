@@ -34,14 +34,13 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
         CheckTraverse(ev.Entity);
     }
 
-    internal void CheckTraverse(Entity<TransformComponent, MetaDataComponent> entity)
+    internal void CheckTraverse(Entity<TransformComponent> entity)
     {
         if (!Enabled || _timing.ApplyingState)
             return;
 
         var uid = entity.Owner;
-        var xform = entity.Comp1;
-        var metadata = entity.Comp2;
+        var xform = entity.Comp;
 
         // Grid-traversal can result in a stack overflow. This is probably because of rounding errors when checking
         // grid intersections using the map vs grid coordinates.
@@ -59,7 +58,7 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
             || uid == xform.GridUid
             || uid == xform.MapUid
             || xform.MapUid is not {} map
-            || (metadata.Flags & MetaDataFlags.NoGridTraverse) != 0x0)
+            || !xform.GridTraversal)
         {
             return;
         }

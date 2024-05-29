@@ -238,8 +238,6 @@ namespace Robust.Shared.GameObjects
         /// a grid or map.
         /// </summary>
         PvsPriority = 1 << 4,
-
-        NoGridTraverse = 1 << 5,
     }
 
     /// <summary>

@@ -317,7 +317,7 @@ public abstract partial class SharedTransformSystem
         var parentEv = new EntParentChangedMessage(uid, null, null, xform);
         RaiseLocalEvent(uid, ref parentEv, true);
 
-        var ev = new TransformStartupEvent((uid, xform, MetaData(uid)));
+        var ev = new TransformStartupEvent((uid, xform));
         RaiseLocalEvent(uid, ref ev, true);
 
         DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0, $"NoRot entity has a non-zero local rotation. entity: {ToPrettyString(uid)}");
@@ -692,7 +692,8 @@ public abstract partial class SharedTransformSystem
             component.LocalRotation,
             parent,
             component.NoLocalRotation,
-            component.Anchored);
+            component.Anchored,
+            component.GridTraversal);
     }
 
     internal void OnHandleState(EntityUid uid, TransformComponent xform, ref ComponentHandleState args)

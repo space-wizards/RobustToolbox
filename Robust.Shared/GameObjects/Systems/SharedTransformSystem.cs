@@ -299,10 +299,10 @@ namespace Robust.Shared.GameObjects
     }
 
     [ByRefEvent]
-    public readonly struct TransformStartupEvent(Entity<TransformComponent, MetaDataComponent> entity)
+    public readonly struct TransformStartupEvent(Entity<TransformComponent> entity)
     {
-        public readonly Entity<TransformComponent, MetaDataComponent> Entity = entity;
-        public TransformComponent Component => Entity.Comp1;
+        public readonly Entity<TransformComponent> Entity = entity;
+        public TransformComponent Component => Entity.Comp;
     }
 
     /// <summary>
@@ -336,6 +336,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly bool Anchored;
 
+        public readonly bool GridTraversal;
+
         /// <summary>
         ///     Constructs a new state snapshot of a TransformComponent.
         /// </summary>
@@ -343,13 +345,14 @@ namespace Robust.Shared.GameObjects
         /// <param name="rotation">Current direction offset of this entity.</param>
         /// <param name="parentId">Current parent transform of this entity.</param>
         /// <param name="noLocalRotation"></param>
-        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored)
+        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored, bool gridTraversal)
         {
             LocalPosition = localPosition;
             Rotation = rotation;
             ParentID = parentId;
             NoLocalRotation = noLocalRotation;
             Anchored = anchored;
+            GridTraversal = gridTraversal;
         }
     }
 }

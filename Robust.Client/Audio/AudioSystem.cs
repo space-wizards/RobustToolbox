@@ -640,10 +640,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(AudioParams? audioParams, AudioStream stream)
     {
         var audioP = audioParams ?? AudioParams.Default;
-        var entity = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
-        var comp = SetupAudio(entity, null, audioP, stream.Length);
-        LoadStream((entity, comp), stream);
+        var entity = SetupAudio(null, audioP, initialize: false, length: stream.Length);
+        LoadStream(entity, stream);
         EntityManager.InitializeAndStartEntity(entity);
+        var comp = entity.Comp;
         var source = comp.Source;
 
         // TODO clamp the offset inside of SetPlaybackPosition() itself.

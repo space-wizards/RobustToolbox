@@ -295,16 +295,15 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     #region AudioParams
 
-    protected AudioComponent SetupAudio(EntityUid uid, string? fileName, AudioParams? audioParams, TimeSpan? length = null)
+    protected Entity<AudioComponent> SetupAudio(string? fileName, AudioParams? audioParams, bool initialize = true, TimeSpan? length = null)
     {
-        DebugTools.Assert(
-            (!string.IsNullOrEmpty(fileName) || length is not null));
+        var uid = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
+        DebugTools.Assert(!string.IsNullOrEmpty(fileName) || length is not null);
         audioParams ??= AudioParams.Default;
         var comp = AddComp<AudioComponent>(uid);
         comp.FileName = fileName ?? string.Empty;
         comp.Params = audioParams.Value;
         comp.AudioStart = Timing.CurTime;
-        MetadataSys.AddFlag(uid, MetaDataFlags.NoGridTraverse);
 
         if (!audioParams.Value.Loop)
         {
@@ -320,7 +319,12 @@ public abstract partial class SharedAudioSystem : EntitySystem
             comp.Params.Pitch *= (float) RandMan.NextGaussian(1, comp.Params.Variation.Value);
         }
 
-        return comp;
+        if (initialize)
+        {
+            EntityManager.InitializeAndStartEntity(uid);
+        }
+
+        return new Entity<AudioComponent>(uid, comp);
     }
 
     public static float GainToVolume(float value)

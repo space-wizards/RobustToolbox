@@ -41,7 +41,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
     [Dependency] private readonly IAudioInternal _audio = default!;
-    [Dependency] private readonly MetaDataSystem _metadata = default!;
+    [Dependency] private readonly SharedMapSystem _maps = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
@@ -216,11 +216,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
             }
         }
 
-        if ((component.Flags & AudioFlags.GridAudio) != 0x0)
-        {
-            _metadata.SetFlag(entity.Owner, MetaDataFlags.Undetachable, true);
-        }
-
         // Need to set all initial data for first frame.
         ApplyAudioParams(component.Params, component);
         component.Source.Global = component.Global;
@@ -336,55 +331,22 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         Vector2 worldPos;
-        var gridUid = xform.ParentUid;
+        component.Volume = component.Params.Volume;
+        Vector2 delta;
 
-        // Handle grid audio differently by using nearest-edge instead of entity centre.
+        // Handle grid audio differently by using grid position.
         if ((component.Flags & AudioFlags.GridAudio) != 0x0)
         {
-            // It's our grid so max volume.
-            if (_listenerGrid == gridUid)
-            {
-                component.Volume = component.Params.Volume;
-                component.Occlusion = 0f;
-                component.Position = listener.Position;
-                return;
-            }
-
-            // TODO: Need a grid-optimised version because this is gonna be expensive.
-            // Just to avoid clipping on and off grid or nearestPoint changing we'll
-            // always set the sound to listener's pos, we'll just manually do gain ourselves.
-            if (_physics.TryGetNearest(gridUid, listener, out _, out var gridDistance))
-            {
-                // Out of range
-                if (gridDistance > component.MaxDistance)
-                {
-                    component.Gain = 0f;
-                    return;
-                }
-
-                var paramsGain = VolumeToGain(component.Params.Volume);
-
-                // Thought I'd never have to manually calculate gain again but this is the least
-                // unpleasant audio I could get at the moment.
-                component.Gain = paramsGain * _audio.GetAttenuationGain(
-                    gridDistance,
-                    component.Params.RolloffFactor,
-                    component.Params.ReferenceDistance,
-                    component.Params.MaxDistance);
-                component.Position = listener.Position;
-                return;
-            }
-
-            // Can't get nearest point so don't play anymore.
-            component.Gain = 0f;
-            return;
+            var parentUid = xform.ParentUid;
+            worldPos = _maps.GetGridPosition(parentUid);
+        }
+        else
+        {
+            worldPos = _xformSys.GetWorldPosition(entity);
         }
 
-        worldPos = _xformSys.GetWorldPosition(entity);
-        component.Volume = component.Params.Volume;
-
         // Max distance check
-        var delta = worldPos - listener.Position;
+        delta = worldPos - listener.Position;
         var distance = delta.Length();
 
         // Out of range so just clip it for us.
@@ -403,8 +365,15 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         // Update audio occlusion
-        var occlusion = GetOcclusion(listener, delta, distance, entity);
-        component.Occlusion = occlusion;
+        if ((component.Flags & AudioFlags.NoOcclusion) == AudioFlags.NoOcclusion)
+        {
+            component.Occlusion = 0f;
+        }
+        else
+        {
+            var occlusion = GetOcclusion(listener, delta, distance, entity);
+            component.Occlusion = occlusion;
+        }
 
         // Update audio positions.
         component.Position = worldPos;
@@ -671,10 +640,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(AudioParams? audioParams, AudioStream stream)
     {
         var audioP = audioParams ?? AudioParams.Default;
-        var entity = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
-        var comp = SetupAudio(entity, null, audioP, stream.Length);
-        LoadStream((entity, comp), stream);
+        var entity = SetupAudio(null, audioP, initialize: false, length: stream.Length);
+        LoadStream(entity, stream);
         EntityManager.InitializeAndStartEntity(entity);
+        var comp = entity.Comp;
         var source = comp.Source;
 
         // TODO clamp the offset inside of SetPlaybackPosition() itself.

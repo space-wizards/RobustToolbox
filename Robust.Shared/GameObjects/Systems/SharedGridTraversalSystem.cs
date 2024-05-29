@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -86,22 +87,31 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
         DebugTools.Assert(!HasComp<MapGridComponent>(entity));
         DebugTools.Assert(!HasComp<MapComponent>(entity));
 
-        var mapPos = xform.ParentUid == xform.MapUid
-            ? xform.LocalPosition
-            : Transform(xform.ParentUid).LocalMatrix.Transform(xform.LocalPosition);
+        Vector2 mapPos;
+        TransformComponent? parentXform = null;
+
+        if (xform.ParentUid == xform.MapUid)
+        {
+            mapPos = xform.LocalPosition;
+        }
+        else
+        {
+            parentXform = Transform(xform.ParentUid);
+            mapPos = parentXform.LocalMatrix.Transform(xform.LocalPosition);
+        }
 
         // Change parent if necessary
         if (_mapManager.TryFindGridAt(map, mapPos, out var gridUid, out _))
         {
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
             if (gridUid != xform.GridUid)
-                _transform.SetParent(entity, xform, gridUid);
+                _transform.SetParent(entity, xform, gridUid, parentXform: parentXform);
             return;
         }
 
         // Attach them to map / they are on an invalid grid
         if (xform.GridUid != null)
-            _transform.SetParent(entity, xform, map);
+            _transform.SetParent(entity, xform, map, parentXform: parentXform);
     }
 }
 

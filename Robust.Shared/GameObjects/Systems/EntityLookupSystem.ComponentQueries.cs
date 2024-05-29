@@ -739,6 +739,47 @@ public sealed partial class EntityLookupSystem
 
     #endregion
 
+    #region Local
+
+    /// <summary>
+    /// Gets the entities intersecting the specified broadphase entity using a local AABB.
+    /// </summary>
+    public void GetLocalEntitiesIntersecting<T>(
+        EntityUid gridUid,
+        Vector2i localTile,
+        HashSet<Entity<T>> intersecting,
+        float enlargement = TileEnlargementRadius,
+        LookupFlags flags = DefaultFlags,
+        MapGridComponent? gridComp = null) where T : IComponent
+    {
+        ushort tileSize = 1;
+
+        if (_gridQuery.Resolve(gridUid, ref gridComp))
+        {
+            tileSize = gridComp.TileSize;
+        }
+
+        var localAABB = GetLocalBounds(localTile, tileSize);
+        localAABB = localAABB.Enlarged(TileEnlargementRadius);
+        GetLocalEntitiesIntersecting(gridUid, localAABB, intersecting, flags);
+    }
+
+    /// <summary>
+    /// Gets the entities intersecting the specified broadphase entity using a local AABB.
+    /// </summary>
+    public void GetLocalEntitiesIntersecting<T>(
+        EntityUid gridUid,
+        Box2 localAABB,
+        HashSet<Entity<T>> intersecting,
+        LookupFlags flags = DefaultFlags) where T : IComponent
+    {
+        var query = GetEntityQuery<T>();
+        AddLocalEntitiesIntersecting(gridUid, intersecting, localAABB, flags, query);
+        AddContained(intersecting, flags, query);
+    }
+
+    #endregion
+
     /// <summary>
     /// Gets entities with the specified component with the specified parent.
     /// </summary>

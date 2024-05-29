@@ -68,7 +68,7 @@ namespace Robust.Server.ServerStatus
             if (auth != _watchdogToken)
             {
                 // Holy shit nobody read these logs please.
-                _sawmill.Info(@"Failed auth: ""{0}"" vs ""{1}""", auth, _watchdogToken);
+                _sawmill.Verbose(@"Failed auth: ""{0}"" vs ""{1}""", auth, _watchdogToken);
                 await context.RespondErrorAsync(HttpStatusCode.Unauthorized);
                 return true;
             }
@@ -105,7 +105,7 @@ namespace Robust.Server.ServerStatus
 
             if (auth != _watchdogToken)
             {
-                _sawmill.Warning(
+                _sawmill.Verbose(
                     "received POST /shutdown with invalid authentication token. Ignoring {0}, {1}", auth,
                     _watchdogToken);
                 await context.RespondErrorAsync(HttpStatusCode.Unauthorized);

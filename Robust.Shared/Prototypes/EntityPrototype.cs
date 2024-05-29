@@ -11,6 +11,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Prototypes
@@ -59,9 +60,9 @@ namespace Robust.Shared.Prototypes
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
 
-        [DataField("categories")]
+        [DataField]
         [AlwaysPushInheritance]
-        public HashSet<string> Categories = new();
+        public HashSet<ProtoId<EntityCategoryPrototype>> Categories = new();
 
         [ViewVariables]
         public IReadOnlyDictionary<string, string> LocProperties => _locPropertiesSet ?? LocPropertiesDefault;
@@ -168,28 +169,37 @@ namespace Robust.Shared.Prototypes
             _loc = IoCManager.Resolve<ILocalizationManager>();
         }
 
-        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component, IComponentFactory? factory = null) where T : IComponent
+        [Obsolete("Pass in IComponentFactory")]
+        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component)
+            where T : IComponent
         {
-            if (factory == null)
-            {
-                factory = IoCManager.Resolve<IComponentFactory>();
-            }
+            var compName = IoCManager.Resolve<IComponentFactory>().GetComponentName(typeof(T));
+            return TryGetComponent(compName, out component);
+        }
 
-            var compName = factory.GetComponentName(typeof(T));
+        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component, IComponentFactory factory) where T : IComponent, new()
+        {
+            var compName = factory.GetComponentName<T>();
             return TryGetComponent(compName, out component);
         }
 
         public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent
         {
+            DebugTools.AssertEqual(IoCManager.Resolve<IComponentFactory>().GetComponentName(typeof(T)), name);
+
             if (!Components.TryGetValue(name, out var componentUnCast))
             {
                 component = default;
                 return false;
             }
 
-            // There are no duplicate component names
-            // TODO Sanity check with names being in an attribute of the type instead
-            component = (T) componentUnCast.Component;
+            if (componentUnCast.Component is not T cast)
+            {
+                component = default;
+                return false;
+            }
+
+            component = cast;
             return true;
         }
 

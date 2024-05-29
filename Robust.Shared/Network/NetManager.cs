@@ -249,6 +249,9 @@ namespace Robust.Shared.Network
 
             IsServer = isServer;
 
+            _config.OnValueChanged(CVars.NetLidgrenLogWarning, LidgrenLogWarningChanged);
+            _config.OnValueChanged(CVars.NetLidgrenLogError, LidgrenLogErrorChanged);
+
             _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
             if (isServer)
             {
@@ -269,6 +272,22 @@ namespace Robust.Shared.Network
             if (IsServer)
             {
                 SAGenerateKeys();
+            }
+        }
+
+        private void LidgrenLogWarningChanged(bool newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.SetMessageTypeEnabled(NetIncomingMessageType.WarningMessage, newValue);
+            }
+        }
+
+        private void LidgrenLogErrorChanged(bool newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.SetMessageTypeEnabled(NetIncomingMessageType.ErrorMessage, newValue);
             }
         }
 
@@ -422,6 +441,8 @@ namespace Robust.Shared.Network
             _config.UnsubValueChanged(CVars.NetFakeLagMin, _fakeLagMinChanged);
             _config.UnsubValueChanged(CVars.NetFakeLagRand, _fakeLagRandomChanged);
             _config.UnsubValueChanged(CVars.NetFakeDuplicates, FakeDuplicatesChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogWarning, LidgrenLogWarningChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogError, LidgrenLogErrorChanged);
 
             _serializer.ClientHandshakeComplete -= OnSerializerOnClientHandshakeComplete;
 
@@ -575,6 +596,14 @@ namespace Robust.Shared.Network
 
             // ping the client once per second.
             netConfig.PingInterval = 1f;
+
+            netConfig.SetMessageTypeEnabled(
+                NetIncomingMessageType.WarningMessage,
+                _config.GetCVar(CVars.NetLidgrenLogWarning));
+
+            netConfig.SetMessageTypeEnabled(
+                NetIncomingMessageType.ErrorMessage,
+                _config.GetCVar(CVars.NetLidgrenLogError));
 
             var poolSize = _config.GetCVar(CVars.NetPoolSize);
 

@@ -17,6 +17,8 @@ namespace Robust.Shared.Localization
 {
     internal sealed partial class LocalizationManager
     {
+        private static readonly Regex RegexWordMatch = new Regex(@"\w+");
+
         private void AddBuiltInFunctions(FluentBundle bundle)
         {
             // Grammatical gender / pronouns
@@ -108,7 +110,7 @@ namespace Robust.Shared.Localization
             var a = new LocValueString("a");
             var an = new LocValueString("an");
 
-            var m = Regex.Match(input, @"\w+");
+            var m = RegexWordMatch.Match(input);
             if (m.Success)
             {
                 word = m.Groups[0].Value;

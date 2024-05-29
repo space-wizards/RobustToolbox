@@ -10,6 +10,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -20,6 +21,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     [Dependency] private readonly IDynamicTypeFactory _factory = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private readonly IParallelManager _parallel = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ISharedPlayerManager _player = default!;
     [Dependency] private readonly SharedTransformSystem _transforms = default!;
@@ -29,6 +31,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     private EntityQuery<UserInterfaceComponent> _uiQuery;
     private EntityQuery<UserInterfaceUserComponent> _userQuery;
 
+    private ActorRangeCheckJob _rangeJob;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -37,6 +41,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         _xformQuery = GetEntityQuery<TransformComponent>();
         _uiQuery = GetEntityQuery<UserInterfaceComponent>();
         _userQuery = GetEntityQuery<UserInterfaceUserComponent>();
+
+        _rangeJob = new()
+        {
+            System = this,
+            XformQuery = _xformQuery,
+        };
 
         SubscribeAllEvent<BoundUIWrapMessage>((msg, args) =>
         {
@@ -48,6 +58,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         SubscribeLocalEvent<UserInterfaceComponent, OpenBoundInterfaceMessage>(OnUserInterfaceOpen);
         SubscribeLocalEvent<UserInterfaceComponent, CloseBoundInterfaceMessage>(OnUserInterfaceClosed);
+        SubscribeLocalEvent<UserInterfaceComponent, ComponentStartup>(OnUserInterfaceStartup);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentGetState>(OnUserInterfaceGetState);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentHandleState>(OnUserInterfaceHandleState);
@@ -55,28 +66,10 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<PlayerAttachedEvent>(OnPlayerAttached);
         SubscribeLocalEvent<PlayerDetachedEvent>(OnPlayerDetached);
 
+        SubscribeLocalEvent<UserInterfaceUserComponent, ComponentShutdown>(OnActorShutdown);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentGetStateAttemptEvent>(OnGetStateAttempt);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentGetState>(OnActorGetState);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentHandleState>(OnActorHandleState);
-
-        _player.PlayerStatusChanged += OnStatusChange;
-    }
-
-    private void OnStatusChange(object? sender, SessionStatusEventArgs e)
-    {
-        var attachedEnt = e.Session.AttachedEntity;
-
-        if (attachedEnt == null)
-            return;
-
-        // Content can't handle it yet sadly :(
-        CloseUserUis(attachedEnt.Value);
-    }
-
-    public override void Shutdown()
-    {
-        base.Shutdown();
-        _player.PlayerStatusChanged -= OnStatusChange;
     }
 
     /// <summary>
@@ -112,7 +105,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // If it's a close message something else might try to cancel it but we want to force it.
         if (msg.Message is not CloseBoundInterfaceMessage && ui.RequireInputValidation)
         {
-            var attempt = new BoundUserInterfaceMessageAttempt(sender, uid, msg.UiKey);
+            var attempt = new BoundUserInterfaceMessageAttempt(sender, uid, msg.UiKey, msg.Message);
             RaiseLocalEvent(attempt);
             if (attempt.Cancelled)
                 return;
@@ -134,6 +127,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     }
 
     #region User
+
+    private void OnActorShutdown(Entity<UserInterfaceUserComponent> ent, ref ComponentShutdown args)
+    {
+        CloseUserUis((ent.Owner, ent.Comp));
+    }
 
     private void OnGetStateAttempt(Entity<UserInterfaceUserComponent> ent, ref ComponentGetStateAttemptEvent args)
     {
@@ -207,11 +205,10 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
             foreach (var key in keys)
             {
-                if (!uiComp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
+                if (!uiComp.ClientOpenInterfaces.Remove(key, out var cBui))
                     continue;
 
                 cBui.Dispose();
-                uiComp.ClientOpenInterfaces.Remove(key);
             }
         }
     }
@@ -233,10 +230,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         Dirty(ent);
 
         // If the actor is also deleting then don't worry about updating what they have open.
-        if (!TerminatingOrDeleted(actor))
+        if (!TerminatingOrDeleted(actor) && _userQuery.TryComp(actor, out var actorComp))
         {
-            var actorComp = EnsureComp<UserInterfaceUserComponent>(actor);
-
             if (actorComp.OpenInterfaces.TryGetValue(ent.Owner, out var keys))
             {
                 keys.Remove(args.UiKey);
@@ -280,6 +275,20 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         // If we're client we want this handled immediately.
         EnsureClientBui(ent, args.UiKey, ent.Comp.Interfaces[args.UiKey]);
+    }
+
+    private void OnUserInterfaceStartup(Entity<UserInterfaceComponent> ent, ref ComponentStartup args)
+    {
+        // PlayerAttachedEvent will catch some of these.
+        foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
+        {
+            bui.Open();
+
+            if (ent.Comp.States.TryGetValue(key, out var state))
+            {
+                bui.UpdateState(state);
+            }
+        }
     }
 
     private void OnUserInterfaceShutdown(EntityUid uid, UserInterfaceComponent component, ComponentShutdown args)
@@ -387,17 +396,21 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
                 continue;
 
+            cBui.State = buiState;
             cBui.UpdateState(buiState);
         }
 
         // If UI not open then open it
         var attachedEnt = _player.LocalEntity;
 
+        // If we get the first state for an ent coming in then don't open BUIs yet, just defer it until later.
+        var open = ent.Comp.LifeStage > ComponentLifeStage.Added;
+
         if (attachedEnt != null)
         {
             foreach (var (key, value) in ent.Comp.Interfaces)
             {
-                EnsureClientBui(ent, key, value);
+                EnsureClientBui(ent, key, value, open);
             }
         }
     }
@@ -405,7 +418,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Opens a client's BUI if not already open and applies the state to it.
     /// </summary>
-    private void EnsureClientBui(Entity<UserInterfaceComponent> entity, Enum key, InterfaceData data)
+    private void EnsureClientBui(Entity<UserInterfaceComponent> entity, Enum key, InterfaceData data, bool open = true)
     {
         // If it's out BUI open it up and apply the state, otherwise do nothing.
         var player = _player.LocalEntity;
@@ -428,10 +441,16 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
 
         entity.Comp.ClientOpenInterfaces[key] = boundUserInterface;
+
+        // This is just so we don't open while applying UI states.
+        if (!open)
+            return;
+
         boundUserInterface.Open();
 
         if (entity.Comp.States.TryGetValue(key, out var buiState))
         {
+            boundUserInterface.State = buiState;
             boundUserInterface.UpdateState(buiState);
         }
     }
@@ -873,12 +892,31 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), msg, bui.UiKey));
     }
 
+    public bool TryGetInterfaceData(Entity<UserInterfaceComponent?> entity,
+        Enum key,
+        [NotNullWhen(true)] out InterfaceData? data)
+    {
+        data = null;
+        return Resolve(entity, ref entity.Comp, false) && entity.Comp.Interfaces.TryGetValue(key, out data);
+    }
+
+    public float GetUiRange(Entity<UserInterfaceComponent?> entity, Enum key)
+    {
+        TryGetInterfaceData(entity, key, out var data);
+        return data?.InteractionRange ?? 0;
+    }
+
     /// <inheritdoc />
     public override void Update(float frameTime)
     {
         var query = AllEntityQuery<ActiveUserInterfaceComponent, UserInterfaceComponent>();
+        // Run these in parallel because it's expensive.
+        _rangeJob.ActorRanges.Clear();
 
         // Handles closing the BUI if actors move out of range of them.
+        // TODO iterate over BUI users, not BUI entities.
+        // I.e., a user may have more than one BUI open, but its rare for a bui to be open by more than one user.
+        // This means we won't have to fetch the user's transform as frequently.
         while (query.MoveNext(out var uid, out _, out var uiComp))
         {
             foreach (var (key, actors) in uiComp.Actors)
@@ -887,26 +925,28 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 var data = uiComp.Interfaces[key];
 
                 // Short-circuit
-                if (data.InteractionRange <= 0f || actors.Count == 0)
+                if (data.InteractionRange <= 0f)
                     continue;
 
-                // Okay so somehow UISystem is high up on the server profile
-                // If that's actually still a problem turn this into an IParallelRobustJob and slam all the UIs in parallel.
-                var xform = _xformQuery.GetComponent(uid);
-                var coordinates = xform.Coordinates;
-                var mapId = xform.MapID;
-
-                for (var i = actors.Count - 1; i >= 0; i--)
+                foreach (var actor in actors)
                 {
-                    var actor = actors[i];
-
-                    if (CheckRange(uid, key, data, actor, coordinates, mapId))
-                        continue;
-
-                    // Using the non-predicted one here seems fine?
-                    CloseUi((uid, uiComp), key, actor);
+                    _rangeJob.ActorRanges.Add((uid, key, data, actor, false));
                 }
             }
+        }
+
+        _parallel.ProcessNow(_rangeJob, _rangeJob.ActorRanges.Count);
+
+        foreach (var data in _rangeJob.ActorRanges)
+        {
+            var uid = data.Ui;
+            var actor = data.Actor;
+            var key = data.Key;
+
+            if (data.Result || Deleted(uid) || Deleted(actor) || !_uiQuery.TryComp(uid, out var uiComp))
+                continue;
+
+            CloseUi((uid, uiComp), key, actor);
         }
     }
 
@@ -914,24 +954,24 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     ///     Verify that the subscribed clients are still in range of the interface.
     /// </summary>
     private bool CheckRange(
-        EntityUid uid,
+        Entity<TransformComponent> UiEnt,
         Enum key,
         InterfaceData data,
-        EntityUid actor,
-        EntityCoordinates uiCoordinates,
-        MapId uiMap)
+        Entity<TransformComponent?> actor)
     {
-        if (_ignoreUIRangeQuery.HasComponent(actor))
-            return true;
-
-        if (!_xformQuery.TryGetComponent(actor, out var actorXform))
+        if (!_xformQuery.Resolve(actor, ref actor.Comp) || actor.Comp.MapID != UiEnt.Comp.MapID)
             return false;
 
         // Handle pluggable BoundUserInterfaceCheckRangeEvent
-        var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, key, data, actor);
-        RaiseLocalEvent(uid, ref checkRangeEvent, broadcast: true);
+        var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(UiEnt, key, data, actor!);
+        RaiseLocalEvent(UiEnt.Owner, ref checkRangeEvent, true);
 
         if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
+            return true;
+
+        // We only check if the range check should be ignored if it did not pass.
+        // The majority of the time the check will be passing and users generally do not have this component.
+        if (_ignoreUIRangeQuery.HasComponent(actor))
             return true;
 
         if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Fail)
@@ -939,54 +979,70 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
 
-        if (uiMap != actorXform.MapID)
-            return false;
+        return _transforms.InRange(UiEnt!, actor, data.InteractionRange);
+    }
 
-        return uiCoordinates.InRange(EntityManager, _transforms, actorXform.Coordinates, data.InteractionRange);
+    /// <summary>
+    /// Used for running UI raycast checks in parallel.
+    /// </summary>
+    private record struct ActorRangeCheckJob() : IParallelRobustJob
+    {
+        public EntityQuery<TransformComponent> XformQuery;
+        public SharedUserInterfaceSystem System;
+        public readonly List<(EntityUid Ui, Enum Key, InterfaceData Data, EntityUid Actor, bool Result)> ActorRanges = new();
+
+        public void Execute(int index)
+        {
+            var data = ActorRanges[index];
+
+            if (!XformQuery.TryComp(data.Ui, out var uiXform))
+            {
+                data.Result = false;
+            }
+            else
+            {
+                data.Result = System.CheckRange((data.Ui, uiXform), data.Key, data.Data, data.Actor);
+            }
+
+            ActorRanges[index] = data;
+        }
     }
 }
 
 /// <summary>
 /// Raised by <see cref="UserInterfaceSystem"/> to check whether an interface is still accessible by its user.
+/// The event is raised directed at the entity that owns the interface.
 /// </summary>
 [ByRefEvent]
 [PublicAPI]
-public struct BoundUserInterfaceCheckRangeEvent
+public struct BoundUserInterfaceCheckRangeEvent(
+    Entity<TransformComponent> target,
+    Enum uiKey,
+    InterfaceData data,
+    Entity<TransformComponent> actor)
 {
     /// <summary>
     /// The entity owning the UI being checked for.
     /// </summary>
-    public readonly EntityUid Target;
+    public readonly EntityUid Target = target;
 
     /// <summary>
     /// The UI itself.
     /// </summary>
     /// <returns></returns>
-    public readonly Enum UiKey;
+    public readonly Enum UiKey = uiKey;
 
-    public readonly InterfaceData Data;
+    public readonly InterfaceData Data = data;
 
     /// <summary>
     /// The player for which the UI is being checked.
     /// </summary>
-    public readonly EntityUid Actor;
+    public readonly Entity<TransformComponent> Actor = actor;
 
     /// <summary>
     /// The result of the range check.
     /// </summary>
     public BoundUserInterfaceRangeResult Result;
-
-    public BoundUserInterfaceCheckRangeEvent(
-        EntityUid target,
-        Enum uiKey,
-        InterfaceData data,
-        EntityUid actor)
-    {
-        Target = target;
-        UiKey = uiKey;
-        Data = data;
-        Actor = actor;
-    }
 }
 
 /// <summary>

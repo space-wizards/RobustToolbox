@@ -7,6 +7,18 @@ indent_size = 4
 trim_trailing_whitespace = true
 charset = utf-8
 
+max_line_length = 120
+
+# ReSharper properties
+resharper_csharp_max_line_length = 120
+resharper_csharp_wrap_after_declaration_lpar = true
+resharper_csharp_wrap_arguments_style = chop_if_long
+resharper_csharp_wrap_parameters_style = chop_if_long
+resharper_keep_existing_attribute_arrangement = true
+resharper_place_field_attribute_on_same_line = if_owner_is_single_line
+resharper_wrap_chained_binary_patterns = chop_if_long
+resharper_wrap_chained_method_calls = chop_if_long
+
 [*.{csproj,xml,yml,dll.config,targets,props}]
 indent_size = 2
 

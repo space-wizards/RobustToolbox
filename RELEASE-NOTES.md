@@ -54,6 +54,19 @@ END TEMPLATE-->
 *None yet*
 
 
+## 223.3.0
+
+### New features
+
+* Better exception logging for IRobustJob.
+* Add SetGridAudio helper for SharedAudioSystem.
+
+### Bugfixes
+
+* Fix placement manager not setting entity rotation correctly.
+* Fix grid-based audio not playing correctly.
+
+
 ## 223.2.0
 
 ### New features

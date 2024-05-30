@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Player;
 
@@ -15,6 +16,11 @@ namespace Robust.Shared.GameObjects
 
         public readonly Enum UiKey;
         public EntityUid Owner { get; }
+
+        /// <summary>
+        /// Additional controls to be disposed when this BUI is disposed.
+        /// </summary>
+        internal List<IDisposable>? Disposals;
 
         /// <summary>
         ///     The last received state object sent from the server.
@@ -86,6 +92,18 @@ namespace Robust.Shared.GameObjects
 
         protected virtual void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                if (Disposals != null)
+                {
+                    foreach (var control in Disposals)
+                    {
+                        control.Dispose();
+                    }
+
+                    Disposals = null;
+                }
+            }
         }
     }
 }

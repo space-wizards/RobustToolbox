@@ -366,12 +366,16 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
 
         toRemove.Clear();
+        var attachedEnt = _player.LocalEntity;
 
-        // Check if the UI is still open, otherwise call close.
+        // Check if the UI is open by us, otherwise dispose of it.
         foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
         {
-            if (ent.Comp.Actors.ContainsKey(key))
+            if (ent.Comp.Actors.TryGetValue(key, out var actors) &&
+                (attachedEnt == null || actors.Contains(attachedEnt.Value)))
+            {
                 continue;
+            }
 
             bui.Dispose();
             toRemove.Add(key);
@@ -401,8 +405,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
 
         // If UI not open then open it
-        var attachedEnt = _player.LocalEntity;
-
         // If we get the first state for an ent coming in then don't open BUIs yet, just defer it until later.
         var open = ent.Comp.LifeStage > ComponentLifeStage.Added;
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects
 {
@@ -49,6 +50,14 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected internal virtual void UpdateState(BoundUserInterfaceState state)
         {
+        }
+
+        /// <summary>
+        /// Helper method that gets called upon prototype reload.
+        /// </summary>
+        public virtual void OnProtoReload(PrototypesReloadedEventArgs args)
+        {
+
         }
 
         /// <summary>

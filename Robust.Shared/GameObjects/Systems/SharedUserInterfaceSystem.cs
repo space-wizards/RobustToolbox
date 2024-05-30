@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -22,14 +23,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly IParallelManager _parallel = default!;
+    [Dependency] protected readonly IPrototypeManager ProtoManager = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
-    [Dependency] private readonly ISharedPlayerManager _player = default!;
+    [Dependency] protected readonly ISharedPlayerManager Player = default!;
     [Dependency] private readonly SharedTransformSystem _transforms = default!;
 
     private EntityQuery<IgnoreUIRangeComponent> _ignoreUIRangeQuery;
     private EntityQuery<TransformComponent> _xformQuery;
-    private EntityQuery<UserInterfaceComponent> _uiQuery;
-    private EntityQuery<UserInterfaceUserComponent> _userQuery;
+    protected EntityQuery<UserInterfaceComponent> UIQuery;
+    protected EntityQuery<UserInterfaceUserComponent> UserQuery;
 
     private ActorRangeCheckJob _rangeJob;
 
@@ -39,8 +41,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         _ignoreUIRangeQuery = GetEntityQuery<IgnoreUIRangeComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
-        _uiQuery = GetEntityQuery<UserInterfaceComponent>();
-        _userQuery = GetEntityQuery<UserInterfaceUserComponent>();
+        UIQuery = GetEntityQuery<UserInterfaceComponent>();
+        UserQuery = GetEntityQuery<UserInterfaceUserComponent>();
 
         _rangeJob = new()
         {
@@ -70,6 +72,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentGetStateAttemptEvent>(OnGetStateAttempt);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentGetState>(OnActorGetState);
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentHandleState>(OnActorHandleState);
+
     }
 
     /// <summary>
@@ -81,7 +84,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         var uid = GetEntity(msg.Entity);
 
-        if (!_uiQuery.TryComp(uid, out var uiComp))
+        if (!UIQuery.TryComp(uid, out var uiComp))
         {
             return;
         }
@@ -173,13 +176,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void OnPlayerAttached(PlayerAttachedEvent ev)
     {
-        if (!_userQuery.TryGetComponent(ev.Entity, out var actor))
+        if (!UserQuery.TryGetComponent(ev.Entity, out var actor))
             return;
 
         // Open BUIs upon attachment
         foreach (var (uid, keys) in actor.OpenInterfaces)
         {
-            if (!_uiQuery.TryGetComponent(uid, out var uiComp))
+            if (!UIQuery.TryGetComponent(uid, out var uiComp))
                 continue;
 
             foreach (var key in keys)
@@ -194,13 +197,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void OnPlayerDetached(PlayerDetachedEvent ev)
     {
-        if (!_userQuery.TryGetComponent(ev.Entity, out var actor))
+        if (!UserQuery.TryGetComponent(ev.Entity, out var actor))
             return;
 
         // Close BUIs open detachment.
         foreach (var (uid, keys) in actor.OpenInterfaces)
         {
-            if (!_uiQuery.TryGetComponent(uid, out var uiComp))
+            if (!UIQuery.TryGetComponent(uid, out var uiComp))
                 continue;
 
             foreach (var key in keys)
@@ -230,7 +233,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         Dirty(ent);
 
         // If the actor is also deleting then don't worry about updating what they have open.
-        if (!TerminatingOrDeleted(actor) && _userQuery.TryComp(actor, out var actorComp))
+        if (!TerminatingOrDeleted(actor) && UserQuery.TryComp(actor, out var actorComp))
         {
             if (actorComp.OpenInterfaces.TryGetValue(ent.Owner, out var keys))
             {
@@ -401,7 +404,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
 
         // If UI not open then open it
-        var attachedEnt = _player.LocalEntity;
+        var attachedEnt = Player.LocalEntity;
 
         // If we get the first state for an ent coming in then don't open BUIs yet, just defer it until later.
         var open = ent.Comp.LifeStage > ComponentLifeStage.Added;
@@ -421,7 +424,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     private void EnsureClientBui(Entity<UserInterfaceComponent> entity, Enum key, InterfaceData data, bool open = true)
     {
         // If it's out BUI open it up and apply the state, otherwise do nothing.
-        var player = _player.LocalEntity;
+        var player = Player.LocalEntity;
 
         if (player == null ||
             !entity.Comp.Actors.TryGetValue(key, out var actors) ||
@@ -460,7 +463,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public IEnumerable<(EntityUid Entity, Enum Key)> GetActorUis(Entity<UserInterfaceUserComponent?> entity)
     {
-        if (!_userQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UserQuery.Resolve(entity.Owner, ref entity.Comp, false))
             yield break;
 
         foreach (var berry in entity.Comp.OpenInterfaces)
@@ -477,7 +480,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public IEnumerable<EntityUid> GetActors(Entity<UserInterfaceComponent?> entity, Enum key)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false) || !entity.Comp.Actors.TryGetValue(key, out var actors))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false) || !entity.Comp.Actors.TryGetValue(key, out var actors))
             yield break;
 
         foreach (var actorUid in actors)
@@ -491,7 +494,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public void CloseUi(Entity<UserInterfaceComponent?> entity, Enum key)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         if (!entity.Comp.Actors.TryGetValue(key, out var actors))
@@ -527,7 +530,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (actor == null)
             return;
 
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         // Short-circuit if no UI.
@@ -558,7 +561,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public bool TryOpenUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid actor, bool predicted = false)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return false;
 
         OpenUi(entity, key, actor, predicted);
@@ -575,7 +578,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid? actor, bool predicted = false)
     {
-        if (actor == null || !_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (actor == null || !UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         // No implementation for that UI key on this ent so short-circuit.
@@ -615,7 +618,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public void SetUiState(Entity<UserInterfaceComponent?> entity, Enum key, BoundUserInterfaceState? state)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         if (!entity.Comp.Interfaces.ContainsKey(key))
@@ -659,7 +662,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public bool IsUiOpen(Entity<UserInterfaceComponent?> entity, Enum uiKey)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return false;
 
         if (!entity.Comp.Actors.TryGetValue(uiKey, out var actors))
@@ -671,7 +674,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     public bool IsUiOpen(Entity<UserInterfaceComponent?> entity, Enum uiKey, EntityUid actor)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return false;
 
         if (!entity.Comp.Actors.TryGetValue(uiKey, out var actors))
@@ -686,7 +689,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     [PublicAPI]
     public void RaiseUiMessage(Entity<UserInterfaceComponent?> entity, Enum key, BoundUserInterfaceMessage message)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         if (!entity.Comp.Actors.TryGetValue(key, out var actors))
@@ -702,7 +705,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public void ServerSendUiMessage(Entity<UserInterfaceComponent?> entity, Enum key, BoundUserInterfaceMessage message)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         if (!entity.Comp.Actors.TryGetValue(key, out var actors))
@@ -717,7 +720,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public void ServerSendUiMessage(Entity<UserInterfaceComponent?> entity, Enum key, BoundUserInterfaceMessage message, EntityUid actor)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         if (!entity.Comp.Actors.TryGetValue(key, out var actors) || !actors.Contains(actor))
@@ -734,7 +737,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!_netManager.IsClient)
             return;
 
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false) || actor.AttachedEntity is not { } attachedEntity)
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false) || actor.AttachedEntity is not { } attachedEntity)
             return;
 
         if (!entity.Comp.Actors.TryGetValue(key, out var actors) || !actors.Contains(attachedEntity))
@@ -750,11 +753,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public void ClientSendUiMessage(Entity<UserInterfaceComponent?> entity, Enum key, BoundUserInterfaceMessage message)
     {
-        var player = _player.LocalEntity;
+        var player = Player.LocalEntity;
 
         // Don't send it if we're not a valid actor for it just in case.
         if (player == null ||
-            !_uiQuery.Resolve(entity.Owner, ref entity.Comp, false) ||
+            !UIQuery.Resolve(entity.Owner, ref entity.Comp, false) ||
             !entity.Comp.Actors.TryGetValue(key, out var actors) ||
             !actors.Contains(player.Value))
         {
@@ -769,7 +772,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public void CloseUserUis(Entity<UserInterfaceUserComponent?> actor)
     {
-        if (!_userQuery.Resolve(actor.Owner, ref actor.Comp, false))
+        if (!UserQuery.Resolve(actor.Owner, ref actor.Comp, false))
             return;
 
         if (actor.Comp.OpenInterfaces.Count == 0)
@@ -795,7 +798,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public void CloseUis(Entity<UserInterfaceComponent?> entity)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         entity.Comp.Actors.Clear();
@@ -808,7 +811,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public void CloseUis(Entity<UserInterfaceComponent?> entity, EntityUid actor)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         foreach (var key in entity.Comp.Interfaces.Keys)
@@ -822,7 +825,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public void CloseUis(Entity<UserInterfaceComponent?> entity, ICommonSession actor)
     {
-        if (actor.AttachedEntity is not { } attachedEnt || !_uiQuery.Resolve(entity.Owner, ref entity.Comp, false))
+        if (actor.AttachedEntity is not { } attachedEnt || !UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         CloseUis(entity, attachedEnt);
@@ -835,7 +838,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         bui = null;
 
-        return _uiQuery.Resolve(entity.Owner, ref entity.Comp, false) && entity.Comp.ClientOpenInterfaces.TryGetValue(uiKey, out bui);
+        return UIQuery.Resolve(entity.Owner, ref entity.Comp, false) && entity.Comp.ClientOpenInterfaces.TryGetValue(uiKey, out bui);
     }
 
     /// <summary>
@@ -843,7 +846,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public bool TryGetOpenUi<T>(Entity<UserInterfaceComponent?> entity, Enum uiKey, [NotNullWhen(true)] out T? bui) where T : BoundUserInterface
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false) || !entity.Comp.ClientOpenInterfaces.TryGetValue(uiKey, out var cBui))
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false) || !entity.Comp.ClientOpenInterfaces.TryGetValue(uiKey, out var cBui))
         {
             bui = null;
             return false;
@@ -866,7 +869,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     public bool TryToggleUi(Entity<UserInterfaceComponent?> entity, Enum uiKey, EntityUid actor)
     {
-        if (!_uiQuery.Resolve(entity.Owner, ref entity.Comp, false) ||
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false) ||
             !entity.Comp.Interfaces.ContainsKey(uiKey))
         {
             return false;
@@ -943,7 +946,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             var actor = data.Actor;
             var key = data.Key;
 
-            if (data.Result || Deleted(uid) || Deleted(actor) || !_uiQuery.TryComp(uid, out var uiComp))
+            if (data.Result || Deleted(uid) || Deleted(actor) || !UIQuery.TryComp(uid, out var uiComp))
                 continue;
 
             CloseUi((uid, uiComp), key, actor);

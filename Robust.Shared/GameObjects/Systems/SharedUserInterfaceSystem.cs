@@ -437,8 +437,9 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return;
         }
 
-        // Try-catch to try prevent error loops / bricked clients if creating a BUI is broken for whatever reason.
-        // E.g., stripping UI used to throw NREs while fetching the identity of unknown entities, causing a hard crash.
+        // Try-catch to try prevent error loops / bricked clients that constantly throw exceptions while applying game
+        // states. E.g., stripping UI used to throw NREs in some instances while fetching the identity of unknown
+        // entities.
         BoundUserInterface boundUserInterface;
 #if EXCEPTION_TOLERANCE
         try

@@ -301,8 +301,7 @@ namespace Robust.Shared.GameObjects
             var newEntity = CreateEntity(prototypeName, out _, overrides);
 
             var xformComp = TransformQuery.GetComponent(newEntity);
-            var newRotation = rotation;
-            _xforms.SetCoordinates(newEntity, xformComp, coordinates, rotation: newRotation, unanchor: false);
+            _xforms.SetCoordinates(newEntity, xformComp, coordinates, rotation: rotation, unanchor: false);
             return newEntity;
         }
 

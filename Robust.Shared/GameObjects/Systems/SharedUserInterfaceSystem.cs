@@ -445,7 +445,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         try
         {
 #endif
-        var type = _reflection.LooseGetType(data.ClientType)!;
+        var type = _reflection.LooseGetType(data.ClientType);
         boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
         entity.Comp.ClientOpenInterfaces[key] = boundUserInterface;
 

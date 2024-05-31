@@ -440,13 +440,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // Try-catch to try prevent error loops / bricked clients that constantly throw exceptions while applying game
         // states. E.g., stripping UI used to throw NREs in some instances while fetching the identity of unknown
         // entities.
-        BoundUserInterface boundUserInterface;
 #if EXCEPTION_TOLERANCE
         try
         {
 #endif
         var type = _reflection.LooseGetType(data.ClientType);
-        boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
+        var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
         entity.Comp.ClientOpenInterfaces[key] = boundUserInterface;
 
         // This is just so we don't open while applying UI states.

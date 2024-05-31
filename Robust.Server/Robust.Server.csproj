@@ -43,6 +43,9 @@
     <Content Include="server_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="run_server.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="ExtraMappedSerializerStrings.txt">
       <LogicalName>Robust.Server.ExtraMappedSerializerStrings.txt</LogicalName>
     </EmbeddedResource>

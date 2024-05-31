@@ -1648,14 +1648,19 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ReplaySkipThreshold = CVarDef.Create("replay.skip_threshold", 30);
 
         /// <summary>
+        /// Minimum number of ticks before a new checkpoint tick is generated (overrides SpawnThreshold and StateThreshold)
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointMinInterval = CVarDef.Create("replay.checkpoint_min_interval", 60);
+
+        /// <summary>
         /// Maximum number of ticks before a new checkpoint tick is generated.
         /// </summary>
-        public static readonly CVarDef<int> CheckpointInterval = CVarDef.Create("replay.checkpoint_interval", 200);
+        public static readonly CVarDef<int> CheckpointInterval = CVarDef.Create("replay.checkpoint_interval", 500);
 
         /// <summary>
         /// Maximum number of entities that can be spawned before a new checkpoint tick is generated.
         /// </summary>
-        public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 100);
+        public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 1000);
 
         /// <summary>
         /// Maximum number of entity states that can be applied before a new checkpoint tick is generated.

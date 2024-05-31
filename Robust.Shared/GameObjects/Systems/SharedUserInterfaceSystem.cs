@@ -105,7 +105,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // If it's a close message something else might try to cancel it but we want to force it.
         if (msg.Message is not CloseBoundInterfaceMessage && ui.RequireInputValidation)
         {
-            var attempt = new BoundUserInterfaceMessageAttempt(sender, uid, msg.UiKey);
+            var attempt = new BoundUserInterfaceMessageAttempt(sender, uid, msg.UiKey, msg.Message);
             RaiseLocalEvent(attempt);
             if (attempt.Cancelled)
                 return;
@@ -892,6 +892,20 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), msg, bui.UiKey));
     }
 
+    public bool TryGetInterfaceData(Entity<UserInterfaceComponent?> entity,
+        Enum key,
+        [NotNullWhen(true)] out InterfaceData? data)
+    {
+        data = null;
+        return Resolve(entity, ref entity.Comp, false) && entity.Comp.Interfaces.TryGetValue(key, out data);
+    }
+
+    public float GetUiRange(Entity<UserInterfaceComponent?> entity, Enum key)
+    {
+        TryGetInterfaceData(entity, key, out var data);
+        return data?.InteractionRange ?? 0;
+    }
+
     /// <inheritdoc />
     public override void Update(float frameTime)
     {
@@ -900,6 +914,9 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         _rangeJob.ActorRanges.Clear();
 
         // Handles closing the BUI if actors move out of range of them.
+        // TODO iterate over BUI users, not BUI entities.
+        // I.e., a user may have more than one BUI open, but its rare for a bui to be open by more than one user.
+        // This means we won't have to fetch the user's transform as frequently.
         while (query.MoveNext(out var uid, out _, out var uiComp))
         {
             foreach (var (key, actors) in uiComp.Actors)
@@ -908,7 +925,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 var data = uiComp.Interfaces[key];
 
                 // Short-circuit
-                if (data.InteractionRange <= 0f || actors.Count == 0)
+                if (data.InteractionRange <= 0f)
                     continue;
 
                 foreach (var actor in actors)
@@ -937,24 +954,24 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     ///     Verify that the subscribed clients are still in range of the interface.
     /// </summary>
     private bool CheckRange(
-        EntityUid uid,
+        Entity<TransformComponent> UiEnt,
         Enum key,
         InterfaceData data,
-        EntityUid actor,
-        EntityCoordinates uiCoordinates,
-        MapId uiMap)
+        Entity<TransformComponent?> actor)
     {
-        if (!_xformQuery.TryGetComponent(actor, out var actorXform) || actorXform.MapID != uiMap)
+        if (!_xformQuery.Resolve(actor, ref actor.Comp) || actor.Comp.MapID != UiEnt.Comp.MapID)
             return false;
 
-        if (_ignoreUIRangeQuery.HasComponent(actor))
-            return true;
-
         // Handle pluggable BoundUserInterfaceCheckRangeEvent
-        var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, key, data, actor);
-        RaiseLocalEvent(uid, ref checkRangeEvent, broadcast: true);
+        var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(UiEnt, key, data, actor!);
+        RaiseLocalEvent(UiEnt.Owner, ref checkRangeEvent, true);
 
         if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
+            return true;
+
+        // We only check if the range check should be ignored if it did not pass.
+        // The majority of the time the check will be passing and users generally do not have this component.
+        if (_ignoreUIRangeQuery.HasComponent(actor))
             return true;
 
         if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Fail)
@@ -962,10 +979,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
 
-        if (uiMap != actorXform.MapID)
-            return false;
-
-        return uiCoordinates.InRange(EntityManager, _transforms, actorXform.Coordinates, data.InteractionRange);
+        return _transforms.InRange(UiEnt!, actor, data.InteractionRange);
     }
 
     /// <summary>
@@ -987,7 +1001,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             }
             else
             {
-                data.Result = System.CheckRange(data.Ui, data.Key, data.Data, data.Actor, uiXform.Coordinates, uiXform.MapID);
+                data.Result = System.CheckRange((data.Ui, uiXform), data.Key, data.Data, data.Actor);
             }
 
             ActorRanges[index] = data;
@@ -997,45 +1011,38 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
 /// <summary>
 /// Raised by <see cref="UserInterfaceSystem"/> to check whether an interface is still accessible by its user.
+/// The event is raised directed at the entity that owns the interface.
 /// </summary>
 [ByRefEvent]
 [PublicAPI]
-public struct BoundUserInterfaceCheckRangeEvent
+public struct BoundUserInterfaceCheckRangeEvent(
+    Entity<TransformComponent> target,
+    Enum uiKey,
+    InterfaceData data,
+    Entity<TransformComponent> actor)
 {
     /// <summary>
     /// The entity owning the UI being checked for.
     /// </summary>
-    public readonly EntityUid Target;
+    public readonly EntityUid Target = target;
 
     /// <summary>
     /// The UI itself.
     /// </summary>
     /// <returns></returns>
-    public readonly Enum UiKey;
+    public readonly Enum UiKey = uiKey;
 
-    public readonly InterfaceData Data;
+    public readonly InterfaceData Data = data;
 
     /// <summary>
     /// The player for which the UI is being checked.
     /// </summary>
-    public readonly EntityUid Actor;
+    public readonly Entity<TransformComponent> Actor = actor;
 
     /// <summary>
     /// The result of the range check.
     /// </summary>
     public BoundUserInterfaceRangeResult Result;
-
-    public BoundUserInterfaceCheckRangeEvent(
-        EntityUid target,
-        Enum uiKey,
-        InterfaceData data,
-        EntityUid actor)
-    {
-        Target = target;
-        UiKey = uiKey;
-        Data = data;
-        Actor = actor;
-    }
 }
 
 /// <summary>

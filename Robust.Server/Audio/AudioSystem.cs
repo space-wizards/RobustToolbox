@@ -105,10 +105,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return null;
 
         if (TerminatingOrDeleted(uid))
-        {
-            Log.Error($"Tried to play audio on a terminating / deleted entity {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
             return null;
-        }
 
         var entity = SetupAudio(filename, audioParams);
         // Move it after setting it up
@@ -125,10 +122,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return null;
 
         if (TerminatingOrDeleted(uid))
-        {
-            Log.Error($"Tried to play audio on a terminating / deleted entity {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
             return null;
-        }
 
         var entity = SetupAudio(filename, audioParams);
         XformSystem.SetCoordinates(entity, new EntityCoordinates(uid, Vector2.Zero));

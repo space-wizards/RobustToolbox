@@ -932,6 +932,9 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
                 foreach (var actor in actors)
                 {
+                    if (_netManager.IsClient && !actor.IsValid())
+                        continue; // Client might not have received the entity. Server should log errors.
+
                     _rangeJob.ActorRanges.Add((uid, key, data, actor, false));
                 }
             }

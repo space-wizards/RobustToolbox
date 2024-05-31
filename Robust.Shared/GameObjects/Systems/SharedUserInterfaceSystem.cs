@@ -439,9 +439,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return;
         }
 
+        // Try-catch to try prevent error loops / bricked clients that constantly throw exceptions while applying game
+        // states. E.g., stripping UI used to throw NREs in some instances while fetching the identity of unknown
+        // entities.
+#if EXCEPTION_TOLERANCE
+        try
+        {
+#endif
         var type = _reflection.LooseGetType(data.ClientType);
         var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
-
         entity.Comp.ClientOpenInterfaces[key] = boundUserInterface;
 
         // This is just so we don't open while applying UI states.
@@ -455,6 +461,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             boundUserInterface.State = buiState;
             boundUserInterface.UpdateState(buiState);
         }
+#if EXCEPTION_TOLERANCE
+        }
+        catch (Exception e)
+        {
+            Log.Error(
+                $"Caught exception while attempting to create a BUI {key} with type {data.ClientType} on entity {ToPrettyString(entity.Owner)}. Exception: {e}");
+            return;
+        }
+#endif
     }
 
     /// <summary>

@@ -431,6 +431,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [PreferNonGenericVariantFor(typeof(TransformComponent), typeof(MetaDataComponent))]
     protected bool TryComp<T>(EntityUid uid, [NotNullWhen(true)] out T? comp) where T : IComponent
     {
         return EntityManager.TryGetComponent(uid, out comp);

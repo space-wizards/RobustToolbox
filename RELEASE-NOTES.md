@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `Array.Clear(Array)` is now available in the sandbox.
 
 ### Bugfixes
 
@@ -52,6 +52,19 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 223.3.0
+
+### New features
+
+* Better exception logging for IRobustJob.
+* Add SetGridAudio helper for SharedAudioSystem.
+
+### Bugfixes
+
+* Fix placement manager not setting entity rotation correctly.
+* Fix grid-based audio not playing correctly.
 
 
 ## 223.2.0

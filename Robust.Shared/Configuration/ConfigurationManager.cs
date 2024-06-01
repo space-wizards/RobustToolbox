@@ -777,6 +777,24 @@ namespace Robust.Shared.Configuration
             return Convert.ChangeType(value, cVar);
         }
 
+        internal List<Delegate> GetSubs(string name)
+        {
+            using (Lock.ReadGuard())
+            {
+                var list = new List<Delegate>();
+
+                if (!_configVars.TryGetValue(name, out var cVar))
+                    throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
+
+                foreach (var entry in cVar.ValueChanged.Entries)
+                {
+                    list.Add((Delegate) entry.Equality!);
+                }
+
+                return list;
+            }
+        }
+
         /// <summary>
         ///     Holds the data for a single configuration variable.
         /// </summary>

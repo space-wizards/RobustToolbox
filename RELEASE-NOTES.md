@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `Array.Clear(Array)` is now available in the sandbox.
+* `ScrollbarContainer` now has new methods for handling the position of the scrollbar thumb. `SetScrollValueToPercentage` , `SetHScrollValueToPercentage` and `SetVScrollValueToPercentage`
 
 ### Bugfixes
 

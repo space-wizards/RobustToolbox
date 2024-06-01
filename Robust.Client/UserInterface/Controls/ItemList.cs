@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -66,7 +66,7 @@ namespace Robust.Client.UserInterface.Controls
             foreach (var item in _itemList)
             {
                 var itemHeight = 0f;
-                if (item.Icon != null)
+                if (item.IconTextures != null)
                 {
                     itemHeight = item.IconSize.Y;
                 }
@@ -86,7 +86,7 @@ namespace Robust.Client.UserInterface.Controls
         public void Add(Item item)
         {
             if (item == null) return;
-            if(item.Owner != this) throw new ArgumentException("Item is owned by another ItemList!");
+            if (item.Owner != this) throw new ArgumentException("Item is owned by another ItemList!");
 
             _itemList.Add(item);
 
@@ -100,7 +100,19 @@ namespace Robust.Client.UserInterface.Controls
 
         public Item AddItem(string text, Texture? icon = null, bool selectable = true, object? metadata = null)
         {
-            var item = new Item(this) {Text = text, Icon = icon, Selectable = selectable, Metadata = metadata};
+            Item item;
+            if (icon != null)
+                item = new Item(this) { Text = text, IconTextures = new List<Texture> { icon }, Selectable = selectable, Metadata = metadata };
+            else
+                item = new Item(this) { Text = text, IconTextures = null, Selectable = selectable, Metadata = metadata };
+
+            Add(item);
+            return item;
+        }
+
+        public Item AddItem(string text, List<Texture> textures, bool selectable = true, object? metadata = null)
+        {
+            var item = new Item(this) { Text = text, IconTextures = textures, Selectable = selectable, Metadata = metadata };
             Add(item);
             return item;
         }
@@ -129,7 +141,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (item == null) return false;
 
-            var value =  _itemList.Remove(item);
+            var value = _itemList.Remove(item);
 
             item.OnSelected -= Select;
             item.OnDeselected -= Deselect;
@@ -164,7 +176,7 @@ namespace Robust.Client.UserInterface.Controls
         public void Insert(int index, Item item)
         {
             if (item == null) return;
-            if(item.Owner != this) throw new ArgumentException("Item is owned by another ItemList!");
+            if (item.Owner != this) throw new ArgumentException("Item is owned by another ItemList!");
 
             _itemList.Insert(index, item);
 
@@ -199,7 +211,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private void Select(int idx)
         {
-            if(SelectMode != ItemListSelectMode.Multiple)
+            if (SelectMode != ItemListSelectMode.Multiple)
                 ClearSelected(idx);
             OnItemSelected?.Invoke(new ItemListSelectedEventArgs(idx, this));
         }
@@ -227,7 +239,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             foreach (var item in GetSelected())
             {
-                if(IndexOf(item) == except) continue;
+                if (IndexOf(item) == except) continue;
                 item.Selected = false;
             }
         }
@@ -359,7 +371,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 var itemHeight = 0f;
-                if (item.Icon != null)
+                if (item.IconTextures != null)
                 {
                     itemHeight = item.IconSize.Y;
                 }
@@ -376,16 +388,16 @@ namespace Robust.Client.UserInterface.Controls
 
                     var contentBox = bg.GetContentBox(item.Region.Value, UIScale);
                     var drawOffset = contentBox.TopLeft;
-                    if (item.Icon != null)
+                    if (item.IconTextures != null)
                     {
                         if (item.IconRegion.Size == Vector2.Zero)
                         {
-                            handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size),
+                            handle.DrawLayeredTextureRect(item.IconTextures, UIBox2.FromDimensions(drawOffset, item.IconTextures[0].Size),
                                 item.IconModulate);
                         }
                         else
                         {
-                            handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size),
+                            handle.DrawLayeredTextureRectRegion(item.IconTextures, UIBox2.FromDimensions(drawOffset, item.IconTextures[0].Size),
                                 item.IconRegion, item.IconModulate);
                         }
                     }
@@ -410,7 +422,7 @@ namespace Robust.Client.UserInterface.Controls
             var font = ActualFont;
 
             var color = ActualFontColor;
-            var offsetY = (int) (box.Height - font.GetHeight(UIScale)) / 2;
+            var offsetY = (int)(box.Height - font.GetHeight(UIScale)) / 2;
             var baseLine = new Vector2i(5, offsetY + font.GetAscent(UIScale)) + box.TopLeft;
 
             foreach (var rune in text.EnumerateRunes())
@@ -461,7 +473,7 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (item.Selected && SelectMode != ItemListSelectMode.Button)
                     {
-                        if(SelectMode != ItemListSelectMode.Multiple)
+                        if (SelectMode != ItemListSelectMode.Multiple)
                             ClearSelected();
                         item.Selected = false;
                         return;
@@ -469,7 +481,7 @@ namespace Robust.Client.UserInterface.Controls
 
                     item.Selected = true;
                     if (SelectMode == ItemListSelectMode.Button)
-                        Timer.Spawn(ButtonDeselectDelay, () => {  item.Selected = false; } );
+                        Timer.Spawn(ButtonDeselectDelay, () => { item.Selected = false; });
                 }
                 break;
             }
@@ -522,9 +534,9 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void UIScaleChanged()
         {
-             RecalculateContentHeight();
+            RecalculateContentHeight();
 
-             base.UIScaleChanged();
+            base.UIScaleChanged();
         }
 
         private void _updateScrollbarVisibility()
@@ -603,7 +615,7 @@ namespace Robust.Client.UserInterface.Controls
             public ItemList Owner { get; }
             public string? Text { get; set; }
             public string? TooltipText { get; set; }
-            public Texture? Icon { get; set; }
+            public List<Texture>? IconTextures { get; set; }
             public UIBox2 IconRegion { get; set; }
             public Color IconModulate { get; set; } = Color.White;
             public bool Selectable { get; set; } = true;
@@ -627,7 +639,7 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (!Selectable) return;
                     _selected = value;
-                    if(_selected) OnSelected?.Invoke(this);
+                    if (_selected) OnSelected?.Invoke(this);
                     else OnDeselected?.Invoke(this);
                 }
             }
@@ -636,9 +648,9 @@ namespace Robust.Client.UserInterface.Controls
             {
                 get
                 {
-                    if (Icon == null)
+                    if (IconTextures == null)
                         return Vector2.Zero;
-                    return IconRegion.Size != Vector2.Zero ? IconRegion.Size : Icon.Size;
+                    return IconRegion.Size != Vector2.Zero ? IconRegion.Size : IconTextures[0].Size;
                 }
             }
 

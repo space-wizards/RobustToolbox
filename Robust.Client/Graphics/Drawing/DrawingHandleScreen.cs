@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using Robust.Client.GameObjects;
@@ -92,6 +93,9 @@ namespace Robust.Client.Graphics
 
         public abstract void DrawTextureRectRegion(Texture texture, UIBox2 rect, UIBox2? subRegion = null, Color? modulate = null);
 
+        public abstract void DrawLayeredTextureRectRegion(List<Texture> textures, UIBox2 rect, UIBox2? subRegion = null, Color? modulate = null);
+
+
         public void DrawTexture(Texture texture, Vector2 position, Color? modulate = null)
         {
             CheckDisposed();
@@ -106,6 +110,13 @@ namespace Robust.Client.Graphics
             DrawTextureRectRegion(texture, rect, null, modulate);
         }
 
+        public void DrawLayeredTextureRect(List<Texture> textures, UIBox2 rect, Color? modulate = null)
+        {
+            CheckDisposed();
+
+            DrawLayeredTextureRectRegion(textures, rect, null, modulate);
+        }
+
         public override void DrawCircle(Vector2 position, float radius, Color color, bool filled = true)
         {
             const int segments = 64;
@@ -113,7 +124,7 @@ namespace Robust.Client.Graphics
 
             for (var i = 0; i <= segments; i++)
             {
-                var angle = i / (float) segments * MathHelper.TwoPi;
+                var angle = i / (float)segments * MathHelper.TwoPi;
                 var pos = new Vector2(MathF.Sin(angle), MathF.Cos(angle));
 
                 buffer[i] = position + pos * radius;

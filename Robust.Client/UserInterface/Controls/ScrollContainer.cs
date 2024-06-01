@@ -15,10 +15,10 @@ namespace Robust.Client.UserInterface.Controls
         private bool _vScrollVisible;
         private bool _hScrollVisible;
 
-        private bool _suppressScrollValueChanged;
+        private readonly VScrollBar _vScrollBar;
+        private readonly HScrollBar _hScrollBar;
 
-        public readonly VScrollBar VScrollBar;
-        public readonly HScrollBar HScrollBar;
+        private bool _suppressScrollValueChanged;
 
         /// <summary>
         /// If true then if we have a y-axis scroll it will convert it to an x-axis scroll.
@@ -38,8 +38,8 @@ namespace Robust.Client.UserInterface.Controls
                     return;
 
                 _reserveScrollbarSpace = value;
-                VScrollBar.ReservesSpace = value;
-                HScrollBar.ReservesSpace = value;
+                _vScrollBar.ReservesSpace = value;
+                _hScrollBar.ReservesSpace = value;
             }
         }
 
@@ -53,24 +53,24 @@ namespace Robust.Client.UserInterface.Controls
             RectClipContent = true;
 
             Action<Range> ev = _scrollValueChanged;
-            HScrollBar = new HScrollBar
+            _hScrollBar = new HScrollBar
             {
                 Visible = _hScrollEnabled,
                 VerticalAlignment = VAlignment.Bottom,
                 HorizontalAlignment = HAlignment.Stretch
             };
-            VScrollBar = new VScrollBar
+            _vScrollBar = new VScrollBar
             {
                 Visible = _vScrollEnabled,
                 VerticalAlignment = VAlignment.Stretch,
                 HorizontalAlignment = HAlignment.Right
             };
-            AddChild(HScrollBar);
-            AddChild(VScrollBar);
-            HScrollBar.OnValueChanged += ev;
-            VScrollBar.OnValueChanged += ev;
-            VScrollBar.ReservesSpace = ReserveScrollbarSpace;
-            HScrollBar.ReservesSpace = ReserveScrollbarSpace;
+            AddChild(_hScrollBar);
+            AddChild(_vScrollBar);
+            _hScrollBar.OnValueChanged += ev;
+            _vScrollBar.OnValueChanged += ev;
+            _vScrollBar.ReservesSpace = ReserveScrollbarSpace;
+            _hScrollBar.ReservesSpace = ReserveScrollbarSpace;
         }
 
         public bool VScrollEnabled
@@ -97,14 +97,14 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (_vScrollEnabled)
             {
-                VScrollBar.Measure(availableSize);
-                availableSize.X -= VScrollBar.DesiredSize.X;
+                _vScrollBar.Measure(availableSize);
+                availableSize.X -= _vScrollBar.DesiredSize.X;
             }
 
             if (_hScrollEnabled)
             {
-                HScrollBar.Measure(availableSize);
-                availableSize.Y -= HScrollBar.DesiredSize.Y;
+                _hScrollBar.Measure(availableSize);
+                availableSize.Y -= _hScrollBar.DesiredSize.Y;
             }
 
             var constraint = new Vector2(
@@ -124,17 +124,17 @@ namespace Robust.Client.UserInterface.Controls
                 return Vector2.Zero;
 
             if (_vScrollEnabled && size.Y >= availableSize.Y)
-                size.X += VScrollBar.DesiredSize.X;
+                size.X += _vScrollBar.DesiredSize.X;
 
             if (_hScrollEnabled && size.X >= availableSize.X)
-                size.Y += HScrollBar.DesiredSize.Y;
+                size.Y += _hScrollBar.DesiredSize.Y;
 
             return size;
         }
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
-            if (VScrollBar?.Parent == null || HScrollBar?.Parent == null)
+            if (_vScrollBar?.Parent == null || _hScrollBar?.Parent == null)
             {
                 // Just don't run this before we're properly initialized.
                 return Vector2.Zero;
@@ -144,7 +144,7 @@ namespace Robust.Client.UserInterface.Controls
 
             foreach (var child in Children)
             {
-                if (child == VScrollBar || child == HScrollBar)
+                if (child == _vScrollBar || child == _hScrollBar)
                 {
                     continue;
                 }
@@ -153,8 +153,8 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var (cWidth, cHeight) = maxChildMinSize;
-            var hBarSize = HScrollBar.DesiredSize.Y;
-            var vBarSize = VScrollBar.DesiredSize.X;
+            var hBarSize = _hScrollBar.DesiredSize.Y;
+            var vBarSize = _vScrollBar.DesiredSize.X;
 
             var (sWidth, sHeight) = finalSize;
 
@@ -175,24 +175,24 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (sWidth < cWidth && _hScrollEnabled && !MathHelper.CloseTo(sWidth, cWidth, 1e-3))
                 {
-                    HScrollBar.Visible = _hScrollVisible = true;
-                    HScrollBar.Page = sWidth;
-                    HScrollBar.MaxValue = cWidth;
+                    _hScrollBar.Visible = _hScrollVisible = true;
+                    _hScrollBar.Page = sWidth;
+                    _hScrollBar.MaxValue = cWidth;
                 }
                 else
                 {
-                    HScrollBar.Visible = _hScrollVisible = false;
+                    _hScrollBar.Visible = _hScrollVisible = false;
                 }
 
                 if (sHeight < cHeight && _vScrollEnabled && !MathHelper.CloseTo(sHeight, cHeight, 1e-3))
                 {
-                    VScrollBar.Visible = _vScrollVisible = true;
-                    VScrollBar.Page = sHeight;
-                    VScrollBar.MaxValue = cHeight;
+                    _vScrollBar.Visible = _vScrollVisible = true;
+                    _vScrollBar.Page = sHeight;
+                    _vScrollBar.MaxValue = cHeight;
                 }
                 else
                 {
-                    VScrollBar.Visible = _vScrollVisible = false;
+                    _vScrollBar.Visible = _vScrollVisible = false;
                 }
             }
             finally
@@ -203,12 +203,12 @@ namespace Robust.Client.UserInterface.Controls
 
             if (_vScrollVisible)
             {
-                VScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
+                _vScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
             }
 
             if (_hScrollVisible)
             {
-                HScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
+                _hScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
             }
 
             var realFinalSize = new Vector2(
@@ -217,7 +217,7 @@ namespace Robust.Client.UserInterface.Controls
 
             foreach (var child in Children)
             {
-                if (child == VScrollBar || child == HScrollBar)
+                if (child == _vScrollBar || child == _hScrollBar)
                 {
                     continue;
                 }
@@ -246,7 +246,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (_vScrollEnabled)
             {
-                VScrollBar.ValueTarget -= args.Delta.Y * ScrollSpeedY;
+                _vScrollBar.ValueTarget -= args.Delta.Y * ScrollSpeedY;
             }
 
             if (_hScrollEnabled)
@@ -258,7 +258,7 @@ namespace Robust.Client.UserInterface.Controls
                         -args.Delta.Y :
                         args.Delta.X;
 
-                HScrollBar.ValueTarget += delta * ScrollSpeedX;
+                _hScrollBar.ValueTarget += delta * ScrollSpeedX;
             }
 
             if (!_vScrollVisible && !_hScrollVisible)
@@ -271,24 +271,24 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.ChildAdded(newChild);
 
-            if (VScrollBar?.Parent == null || HScrollBar?.Parent == null)
+            if (_vScrollBar?.Parent == null || _hScrollBar?.Parent == null)
             {
                 // Just don't run this before we're properly initialized.
                 return;
             }
 
-            VScrollBar?.SetPositionLast();
-            HScrollBar?.SetPositionLast();
+            _vScrollBar?.SetPositionLast();
+            _hScrollBar?.SetPositionLast();
         }
 
         [Pure]
         public Vector2 GetScrollValue(bool ignoreVisible = false)
         {
             if (ignoreVisible)
-                return new(HScrollBar.Value, VScrollBar.Value);
+                return new(_hScrollBar.Value, _vScrollBar.Value);
 
-            var h = HScrollBar.Value;
-            var v = VScrollBar.Value;
+            var h = _hScrollBar.Value;
+            var v = _vScrollBar.Value;
             if (!_hScrollVisible)
             {
                 h = 0;
@@ -302,16 +302,6 @@ namespace Robust.Client.UserInterface.Controls
             return new Vector2(h, v);
         }
 
-        public void SetScrollValue(Vector2 value)
-        {
-            _suppressScrollValueChanged = true;
-            HScrollBar.Value = value.X;
-            VScrollBar.Value = value.Y;
-            _suppressScrollValueChanged = false;
-            InvalidateArrange();
-            _queueScrolled = true;
-        }
-
         private void _scrollValueChanged(Range obj)
         {
             if (_suppressScrollValueChanged)
@@ -322,5 +312,66 @@ namespace Robust.Client.UserInterface.Controls
             InvalidateArrange();
             _queueScrolled = true;
         }
+
+        #region Scrollbat Set Methods
+
+        /// <summary>
+        /// Sets the scrollbars thumbs position to a value from 1 (the start of the scrollbar) to 100 (the end of the scrollbar)
+        /// </summary>
+        /// <param name="value">
+        /// The value from 1 to 100 that we want to put the scrollbars thumbs in.
+        /// Any value higher than 100 will just be interpreted as 100
+        /// </param>
+        public void SetScrollValueToPercentage(int? hValue, int? vValue)
+        {
+            if (hValue != null)
+                SetHScrollValueToPercentage(hValue.Value);
+            if (vValue != null)
+                SetVScrollValueToPercentage(vValue.Value);
+        }
+
+        /// <summary>
+        /// Sets the horizontal scrollbar thumb position to a value from 1 (the start of the scrollbar) to 100 (the end of the scrollbar)
+        /// </summary>
+        /// <param name="value">
+        /// The value from 1 to 100 that we want to put the scrollbar thumb in.
+        /// Any value higher than 100 will just be interpreted as 100
+        /// </param>
+        public void SetHScrollValueToPercentage(int value)
+        {
+            var size = _hScrollBar.MaxValue - _hScrollBar.Page;
+            var target = (float) (0.01 * value * size);
+            SetScrollValue(target, null);
+        }
+
+        /// <summary>
+        /// Sets the vertical scrollbar thumb position to a value from 1 (the start of the scrollbar) to 100 (the end of the scrollbar)
+        /// </summary>
+        /// <param name="value">
+        /// The value from 1 to 100 that we want to put the scrollbar thumb in.
+        /// Any value higher than 100 will just be interpreted as 100
+        /// </param>
+        public void SetVScrollValueToPercentage(int value)
+        {
+            var size = _vScrollBar.MaxValue - _vScrollBar.Page;
+            var target = (float) (0.01 * value * size);
+            SetScrollValue(null, target);
+        }
+
+        public void SetScrollValue(Vector2 value) => SetScrollValue(value.X, value.Y);
+
+        public void SetScrollValue(float? hValue, float? vValue)
+        {
+            _suppressScrollValueChanged = true;
+            if (hValue != null)
+                _hScrollBar.Value = hValue.Value;
+            if (vValue != null)
+                _vScrollBar.Value = vValue.Value;
+            _suppressScrollValueChanged = false;
+            InvalidateArrange();
+            _queueScrolled = true;
+        }
+
+        #endregion
     }
 }

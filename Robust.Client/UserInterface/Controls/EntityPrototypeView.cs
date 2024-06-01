@@ -42,12 +42,17 @@ public class EntityPrototypeView : SpriteView
         }
     }
 
-    protected override void Dispose(bool disposing)
+    protected override void EnteredTree()
     {
-        base.Dispose(disposing);
+        base.EnteredTree();
 
-        if (!disposing)
-            return;
+        if (_currentPrototype != null)
+            SetPrototype(_currentPrototype);
+    }
+
+    protected override void ExitedTree()
+    {
+        base.ExitedTree();
 
         if (!EntMan.Deleted(_ourEntity))
             EntMan.QueueDeleteEntity(_ourEntity);

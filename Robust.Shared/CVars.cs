@@ -368,6 +368,21 @@ namespace Robust.Shared
         public static readonly CVarDef<float> NetHappyEyeballsDelay =
             CVarDef.Create("net.happy_eyeballs_delay", 0.025f, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Controls whether the networking library will log warning messages.
+        /// </summary>
+        /// <remarks>
+        /// Disabling this should make the networking layer more resilient against some DDoS attacks.
+        /// </remarks>
+        public static readonly CVarDef<bool> NetLidgrenLogWarning =
+            CVarDef.Create("net.lidgren_log_warning", true);
+
+        /// <summary>
+        /// Controls whether the networking library will log error messages.
+        /// </summary>
+        public static readonly CVarDef<bool> NetLidgrenLogError =
+            CVarDef.Create("net.lidgren_log_error", true);
+
         /**
          * SUS
          */
@@ -884,7 +899,7 @@ namespace Robust.Shared
             CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         public static readonly CVarDef<string> RenderFOVColor =
-            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.REPLICATED | CVar.SERVER);
 
         /*
          *  CONTROLS
@@ -1633,14 +1648,19 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ReplaySkipThreshold = CVarDef.Create("replay.skip_threshold", 30);
 
         /// <summary>
+        /// Minimum number of ticks before a new checkpoint tick is generated (overrides SpawnThreshold and StateThreshold)
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointMinInterval = CVarDef.Create("replay.checkpoint_min_interval", 60);
+
+        /// <summary>
         /// Maximum number of ticks before a new checkpoint tick is generated.
         /// </summary>
-        public static readonly CVarDef<int> CheckpointInterval = CVarDef.Create("replay.checkpoint_interval", 200);
+        public static readonly CVarDef<int> CheckpointInterval = CVarDef.Create("replay.checkpoint_interval", 500);
 
         /// <summary>
         /// Maximum number of entities that can be spawned before a new checkpoint tick is generated.
         /// </summary>
-        public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 100);
+        public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 1000);
 
         /// <summary>
         /// Maximum number of entity states that can be applied before a new checkpoint tick is generated.

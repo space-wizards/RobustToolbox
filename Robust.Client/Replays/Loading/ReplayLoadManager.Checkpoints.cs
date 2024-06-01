@@ -88,7 +88,6 @@ public sealed partial class ReplayLoadManager
         if (initMessages != null)
             UpdateMessages(initMessages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
         UpdateMessages(messages[0], uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
-        ProcessQueue(GameTick.MaxValue, detachQueue, detached);
 
         var entSpan = state0.EntityStates.Value;
         Dictionary<NetEntity, EntityState> entStates = new(entSpan.Count);
@@ -97,6 +96,8 @@ public sealed partial class ReplayLoadManager
             var modifiedState = AddImplicitData(entState);
             entStates.Add(entState.NetEntity, modifiedState);
         }
+
+        ProcessQueue(GameTick.MaxValue, detachQueue, detached, entStates);
 
         await callback(0, states.Count, LoadingState.ProcessingFiles, true);
         var playerSpan = state0.PlayerStates.Value;
@@ -132,6 +133,11 @@ public sealed partial class ReplayLoadManager
         var spawnedTracker = 0;
         var stateTracker = 0;
         var curState = state0;
+
+        var stats_due_ticks = 0;
+        var stats_due_spawned = 0;
+        var stats_due_state = 0;
+
         for (var i = 1; i < states.Count; i++)
         {
             if (i % 10 == 0)
@@ -144,16 +150,33 @@ public sealed partial class ReplayLoadManager
             UpdatePlayerStates(curState.PlayerStates.Span, playerStates);
             UpdateEntityStates(curState.EntityStates.Span, entStates, ref spawnedTracker, ref stateTracker, detached);
             UpdateMessages(messages[i], uploadedFiles, prototypes, cvars, detachQueue, ref timeBase);
-            ProcessQueue(curState.ToSequence, detachQueue, detached);
+            ProcessQueue(curState.ToSequence, detachQueue, detached, entStates);
             UpdateDeletions(curState.EntityDeletions, entStates, detached);
             serverTime[i] = GetTime(curState.ToSequence) - initialTime;
             ticksSinceLastCheckpoint++;
 
+            // Don't create checkpoints too frequently no matter the circumstance
+            if (ticksSinceLastCheckpoint < _checkpointMinInterval)
+                continue;
+
+            // Check if enough time, spawned entities or changed states have occurred.
             if (ticksSinceLastCheckpoint < _checkpointInterval
                 && spawnedTracker < _checkpointEntitySpawnThreshold
                 && stateTracker < _checkpointEntityStateThreshold)
-            {
                 continue;
+
+            // Track and update statistics about why checkpoints are getting created:
+            if (ticksSinceLastCheckpoint >= _checkpointInterval)
+            {
+                stats_due_ticks += 1;
+            }
+            else if (spawnedTracker >= _checkpointEntitySpawnThreshold)
+            {
+                stats_due_spawned += 1;
+            }
+            else if (stateTracker >= _checkpointEntityStateThreshold)
+            {
+                stats_due_state += 1;
             }
 
             ticksSinceLastCheckpoint = 0;
@@ -168,7 +191,8 @@ public sealed partial class ReplayLoadManager
             checkPoints.Add(new CheckpointState(newState, timeBase, cvars, i, detached));
         }
 
-        _sawmill.Info($"Finished generating checkpoints. Elapsed time: {st.Elapsed}");
+        _sawmill.Info($"Finished generating {checkPoints.Count} checkpoints. Elapsed time: {st.Elapsed}. Checkpoint every {(float)states.Count / checkPoints.Count} ticks on average");
+        _sawmill.Info($"Checkpoint stats - Spawning: {stats_due_spawned} StateChanges: {stats_due_state} Ticks: {stats_due_ticks}. ");
         await callback(states.Count, states.Count, LoadingState.ProcessingFiles, false);
         return (checkPoints.ToArray(), serverTime);
     }
@@ -176,14 +200,28 @@ public sealed partial class ReplayLoadManager
     private void ProcessQueue(
         GameTick curTick,
         Dictionary<GameTick, List<NetEntity>> detachQueue,
-        HashSet<NetEntity> detached)
+        HashSet<NetEntity> detached,
+        Dictionary<NetEntity, EntityState> entStates)
     {
         foreach (var (tick, ents) in detachQueue)
         {
             if (tick > curTick)
                 continue;
             detachQueue.Remove(tick);
-            detached.UnionWith(ents);
+
+            foreach (var e in ents)
+            {
+                if (entStates.ContainsKey(e))
+                    detached.Add(e);
+                else
+                {
+                    // AFAIK this should only happen if the client skipped over some ticks, probably due to packet loss
+                    // I.e., entity was created on tick n, then leaves PVS range on the tick n+1
+                    // If the n-th tick gets dropped, the client only ever receives the pvs-leave message.
+                    // In that case we should just ignore it.
+                    _sawmill.Debug($"Received a PVS detach msg for entity {e} before it was received?");
+                }
+            }
         }
     }
 
@@ -325,7 +363,7 @@ public sealed partial class ReplayLoadManager
 #if DEBUG
                 foreach (var state in modifiedState.ComponentChanges.Value)
                 {
-                    DebugTools.Assert(state.State is not IComponentDeltaState delta || delta.FullState);
+                    DebugTools.Assert(state.State is not IComponentDeltaState delta);
                 }
 #endif
                 continue;
@@ -338,7 +376,7 @@ public sealed partial class ReplayLoadManager
 #if DEBUG
             foreach (var state in entStates[entState.NetEntity].ComponentChanges.Span)
             {
-                DebugTools.Assert(state.State is not IComponentDeltaState delta || delta.FullState);
+                DebugTools.Assert(state.State is not IComponentDeltaState delta);
             }
 #endif
         }
@@ -369,20 +407,20 @@ public sealed partial class ReplayLoadManager
             if (!newCompStates.Remove(existing.NetID, out var newCompState))
                 continue;
 
-            if (newCompState.State is not IComponentDeltaState delta || delta.FullState)
+            if (newCompState.State is not IComponentDeltaState delta)
             {
                 combined[index] = newCompState;
                 continue;
             }
 
-            DebugTools.Assert(existing.State is IComponentDeltaState fullDelta && fullDelta.FullState);
-            combined[index] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State), newCompState.LastModifiedTick);
+            DebugTools.Assert(existing.State != null && existing.State is not IComponentDeltaState);
+            combined[index] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State!), newCompState.LastModifiedTick);
         }
 
         foreach (var compChange in newCompStates.Values)
         {
             // I'm not 100% sure about this, but I think delta states should always be full states here?
-            DebugTools.Assert(compChange.State is not IComponentDeltaState delta || delta.FullState);
+            DebugTools.Assert(compChange.State is not IComponentDeltaState delta);
             combined.Add(compChange);
         }
 

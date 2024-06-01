@@ -16,6 +16,11 @@
     <Compile Include="..\Robust.Shared\Analyzers\PreferGenericVariantAttribute.cs" LinkBase="Implementations" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Needed for DataDefinitionAnalyzer. -->
+    <Compile Include="..\Robust.Shared\Serialization\Manager\Definition\DataDefinitionUtility.cs" LinkBase="Implementations" />
+  </ItemGroup>
+
   <Import Project="../Robust.Roslyn.Shared/Robust.Roslyn.Shared.props" />
 
   <PropertyGroup>

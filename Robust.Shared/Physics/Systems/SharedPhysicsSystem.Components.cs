@@ -115,7 +115,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyAngularImpulse(EntityUid uid, float impulse, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
@@ -125,7 +125,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyForce(EntityUid uid, Vector2 force, Vector2 point, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
@@ -137,7 +137,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyForce(EntityUid uid, Vector2 force, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
@@ -148,7 +148,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyTorque(EntityUid uid, float torque, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
@@ -159,7 +159,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyLinearImpulse(EntityUid uid, Vector2 impulse, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
@@ -169,7 +169,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyLinearImpulse(EntityUid uid, Vector2 impulse, Vector2 point, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
@@ -250,7 +250,10 @@ public partial class SharedPhysicsSystem
 
     public void ResetMassData(EntityUid uid, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref manager, ref body))
+        if (!PhysicsQuery.Resolve(uid, ref body))
+            return;
+
+        if (!_fixturesQuery.Resolve(uid, ref manager))
             return;
 
         body._mass = 0.0f;
@@ -315,7 +318,7 @@ public partial class SharedPhysicsSystem
 
     public bool SetAngularVelocity(EntityUid uid, float value, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body))
+        if (!PhysicsQuery.Resolve(uid, ref body))
             return false;
 
         if (body.BodyType == BodyType.Static)
@@ -346,7 +349,7 @@ public partial class SharedPhysicsSystem
     /// </summary>
     public bool SetLinearVelocity(EntityUid uid, Vector2 velocity, bool dirty = true, bool wakeBody = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body))
+        if (!PhysicsQuery.Resolve(uid, ref body))
             return false;
 
         if (body.BodyType == BodyType.Static)
@@ -467,7 +470,7 @@ public partial class SharedPhysicsSystem
 
     public void SetBodyType(EntityUid uid, BodyType value, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
     {
-        if (!Resolve(uid, ref body))
+        if (!PhysicsQuery.Resolve(uid, ref body))
             return;
 
         if (body.BodyType == value)
@@ -531,7 +534,7 @@ public partial class SharedPhysicsSystem
         FixturesComponent? manager = null,
         PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body))
+        if (!PhysicsQuery.Resolve(uid, ref body))
             return false;
 
         if (body.CanCollide == value)
@@ -545,7 +548,7 @@ public partial class SharedPhysicsSystem
                 if (_containerSystem.IsEntityOrParentInContainer(uid))
                     return false;
 
-                if (!Resolve(uid, ref manager) || manager.FixtureCount == 0 && !_mapManager.IsGrid(uid))
+                if (!_fixturesQuery.Resolve(uid, ref manager) || manager.FixtureCount == 0 && !_mapManager.IsGrid(uid))
                     return false;
             }
             else
@@ -575,7 +578,7 @@ public partial class SharedPhysicsSystem
 
     public void SetFixedRotation(EntityUid uid, bool value, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || body.FixedRotation == value)
+        if (!PhysicsQuery.Resolve(uid, ref body) || body.FixedRotation == value)
             return;
 
         body.FixedRotation = value;
@@ -668,10 +671,13 @@ public partial class SharedPhysicsSystem
     /// <returns>true if the body is collidable and awake</returns>
     public bool WakeBody(EntityUid uid, bool force = false, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!SetCanCollide(uid, true, manager: manager, body: body, force: force) || !Resolve(uid, ref body))
+        if (!PhysicsQuery.Resolve(uid, ref body))
             return false;
 
-        SetAwake(uid, body, true);
+        if (!SetCanCollide(uid, true, manager: manager, body: body, force: force))
+            return false;
+
+        SetAwake((uid, body), true);
         return body.Awake;
     }
 
@@ -715,7 +721,9 @@ public partial class SharedPhysicsSystem
 
     public Box2 GetHardAABB(EntityUid uid, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
     {
-        if (!Resolve(uid, ref body, ref xform, ref manager))
+        if (!PhysicsQuery.Resolve(uid, ref body)
+            || !_fixturesQuery.Resolve(uid, ref manager)
+            || !Resolve(uid, ref xform))
         {
             return Box2.Empty;
         }

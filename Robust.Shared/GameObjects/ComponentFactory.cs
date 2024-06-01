@@ -290,6 +290,12 @@ namespace Robust.Shared.GameObjects
         }
 
         [Pure]
+        public string GetComponentName<T>() where T : IComponent, new()
+        {
+            return GetRegistration<T>().Name;
+        }
+
+        [Pure]
         public string GetComponentName(ushort netID)
         {
             return GetRegistration(netID).Name;
@@ -324,7 +330,7 @@ namespace Robust.Shared.GameObjects
 
         public ComponentRegistration GetRegistration<T>() where T : IComponent, new()
         {
-            return GetRegistration(typeof(T));
+            return GetRegistration(CompIdx.Index<T>());
         }
 
         public ComponentRegistration GetRegistration(IComponent component)

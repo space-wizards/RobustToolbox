@@ -23,9 +23,12 @@ namespace Robust.Client.Graphics.Clyde
             // Texture Coords.
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
-            // Colour Modulation.
-            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 4 * sizeof(float));
+            // Texture Coords (2).
+            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 4 * sizeof(float));
             GL.EnableVertexAttribArray(2);
+            // Colour Modulation.
+            GL.VertexAttribPointer(3, 4, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 6 * sizeof(float));
+            GL.EnableVertexAttribArray(3);
         }
 
         // NOTE: This is:
@@ -37,6 +40,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             public readonly Vector2 Position;
             public readonly Vector2 TextureCoordinates;
+            public readonly Vector2 TextureCoordinates2;
             // Note that this color is in linear space.
             public readonly Color Modulate;
 
@@ -45,6 +49,15 @@ namespace Robust.Client.Graphics.Clyde
             {
                 Position = position;
                 TextureCoordinates = textureCoordinates;
+                Modulate = modulate;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Vertex2D(Vector2 position, Vector2 textureCoordinates, Vector2 textureCoordinates2, Color modulate)
+            {
+                Position = position;
+                TextureCoordinates = textureCoordinates;
+                TextureCoordinates2 = textureCoordinates2;
                 Modulate = modulate;
             }
 

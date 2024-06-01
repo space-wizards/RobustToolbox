@@ -43,6 +43,13 @@ cmd-cvar-compl-list = List available CVars
 cmd-cvar-arg-name = <name | ?>
 cmd-cvar-value-hidden = <value hidden>
 
+## 'cvar_subs' command
+cmd-cvar_subs-desc = Lists the OnValueChanged subscriptions for a CVar.
+cmd-cvar_subs-help = Usage: cvar_subs <name>
+
+cmd-cvar_subs-invalid-args = Must provide exactly one argument.
+cmd-cvar_subs-arg-name = <name>
+
 ## 'list' command
 cmd-list-desc = Lists available commands, with optional search filter
 cmd-list-help = Usage: list [filter]

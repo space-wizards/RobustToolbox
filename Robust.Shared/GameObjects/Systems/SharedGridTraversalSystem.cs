@@ -1,3 +1,4 @@
+using Robust.Shared.Audio.Components;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -26,29 +27,20 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
     {
         base.Initialize();
         SubscribeLocalEvent<TransformStartupEvent>(OnStartup);
-        _transform.OnGlobalMoveEvent += OnMove;
     }
 
     private void OnStartup(ref TransformStartupEvent ev)
     {
-        CheckTraverse(ev.Entity.Owner, ev.Entity.Comp);
+        CheckTraverse(ev.Entity);
     }
 
-    public override void Shutdown()
-    {
-        _transform.OnGlobalMoveEvent -= OnMove;
-    }
-
-    private void OnMove(ref MoveEvent moveEv)
-    {
-        CheckTraverse(moveEv.Sender, moveEv.Component);
-    }
-
-
-    internal void CheckTraverse(EntityUid uid, TransformComponent xform)
+    internal void CheckTraverse(Entity<TransformComponent> entity)
     {
         if (!Enabled || _timing.ApplyingState)
             return;
+
+        var uid = entity.Owner;
+        var xform = entity.Comp;
 
         // Grid-traversal can result in a stack overflow. This is probably because of rounding errors when checking
         // grid intersections using the map vs grid coordinates.
@@ -65,7 +57,8 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
             || xform.Anchored
             || uid == xform.GridUid
             || uid == xform.MapUid
-            || xform.MapUid is not {} map)
+            || xform.MapUid is not {} map
+            || !xform.GridTraversal)
         {
             return;
         }

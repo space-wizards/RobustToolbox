@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -25,15 +26,25 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         // Currently this field just exists for VV. In future, it might become a real field
-        [ViewVariables]
+        [ViewVariables, PublicAPI]
         private NetEntity NetParent => _entMan.GetNetEntity(_parent);
 
         [DataField("parent")] internal EntityUid _parent;
-        [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
+
+        [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from parent
+
         [DataField("rot")] internal Angle _localRotation; // local rotation
+
         [DataField("noRot")] internal bool _noLocalRotation;
+
         [DataField("anchored")]
         internal bool _anchored;
+
+        /// <summary>
+        /// Indicates this entity can traverse grids.
+        /// </summary>
+        [DataField]
+        public bool GridTraversal = true;
 
         /// <summary>
         ///     The broadphase that this entity is currently stored on, if any.
@@ -157,9 +168,7 @@ namespace Robust.Shared.GameObjects
                 if (!Initialized)
                     return;
 
-                var moveEvent = new MoveEvent((Owner, this, meta), Coordinates, Coordinates, oldRotation, _localRotation, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
-                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
+                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), _parent, _localPosition, oldRotation, MapUid);
             }
         }
 
@@ -334,7 +343,9 @@ namespace Robust.Shared.GameObjects
                 if (_localPosition.EqualsApprox(value))
                     return;
 
-                var oldGridPos = Coordinates;
+                var oldParent = _parent;
+                var oldPos = _localPosition;
+
                 _localPosition = value;
                 var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
                 _entMan.Dirty(Owner, this, meta);
@@ -343,9 +354,7 @@ namespace Robust.Shared.GameObjects
                 if (!Initialized)
                     return;
 
-                var moveEvent = new MoveEvent((Owner, this, meta), oldGridPos, Coordinates, _localRotation, _localRotation, _gameTiming.ApplyingState);
-                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
-                _entMan.System<SharedTransformSystem>().InvokeGlobalMoveEvent(ref moveEvent);
+                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), oldParent, oldPos, _localRotation, MapUid);
             }
         }
 
@@ -602,8 +611,12 @@ namespace Robust.Shared.GameObjects
     /// move events, subscribe to the <see cref="SharedTransformSystem.OnGlobalMoveEvent"/>.
     /// </summary>
     [ByRefEvent]
-    public readonly struct MoveEvent(Entity<TransformComponent, MetaDataComponent> entity, EntityCoordinates oldPos,
-        EntityCoordinates newPos, Angle oldRotation, Angle newRotation, bool stateHandling = false)
+    public readonly struct MoveEvent(
+        Entity<TransformComponent, MetaDataComponent> entity,
+        EntityCoordinates oldPos,
+        EntityCoordinates newPos,
+        Angle oldRotation,
+        Angle newRotation)
     {
         public readonly Entity<TransformComponent, MetaDataComponent> Entity = entity;
         public readonly EntityCoordinates OldPosition = oldPos;
@@ -615,15 +628,6 @@ namespace Robust.Shared.GameObjects
         public TransformComponent Component => Entity.Comp1;
 
         public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
-
-        [Obsolete("Check IGameTiming.ApplyingState")]
-        public readonly bool FromStateHandling = stateHandling;
-
-        [Obsolete]
-        public MoveEvent(EntityUid uid, EntityCoordinates oldPos, EntityCoordinates newPos, Angle oldRot, Angle newRot, TransformComponent xform, bool state)
-            : this((uid, xform, default!), oldPos, newPos, oldRot, newRot)
-        {
-        }
     }
 
     public struct TransformChildrenEnumerator : IDisposable

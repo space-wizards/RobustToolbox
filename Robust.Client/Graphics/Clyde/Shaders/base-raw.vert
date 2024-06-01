@@ -2,10 +2,12 @@
 /*layout (location = 0)*/ attribute vec2 aPos;
 // Texture coordinates.
 /*layout (location = 1)*/ attribute vec2 tCoord;
+/*layout (location = 2)*/ attribute vec2 tCoord2;
 // Colour modulation.
-/*layout (location = 2)*/ attribute vec4 modulate;
+/*layout (location = 3)*/ attribute vec4 modulate;
 
 varying vec2 UV;
+varying vec2 UV2;
 
 // Maybe we should merge these CPU side.
 // idk yet.
@@ -40,6 +42,7 @@ void main()
     vec2 VERTEX = aPos;
 
     UV = tCoord;
+    UV2 = tCoord2;
 
     // [SHADER_CODE]
 

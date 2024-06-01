@@ -42,6 +42,28 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Source = new DummyAudioSource();
     }
 
+    public override void SetGridAudio(Entity<AudioComponent>? entity)
+    {
+        if (entity == null)
+            return;
+
+        base.SetGridAudio(entity);
+
+        // Need to global override so everyone can hear it.
+        _pvs.AddGlobalOverride(entity.Value.Owner);
+    }
+
+    public override void SetMapAudio(Entity<AudioComponent>? audio)
+    {
+        if (audio == null)
+            return;
+
+        base.SetMapAudio(audio);
+
+        // Also need a global override because clients not near 0,0 won't get the audio.
+        _pvs.AddGlobalOverride(audio.Value);
+    }
+
     private void AddAudioFilter(EntityUid uid, AudioComponent component, Filter filter)
     {
         var count = filter.Count;
@@ -70,11 +92,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string? filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
-        var entity = Spawn("Audio", MapCoordinates.Nullspace);
-        var audio = SetupAudio(entity, filename, audioParams);
-        AddAudioFilter(entity, audio, playerFilter);
-        audio.Global = true;
-        return (entity, audio);
+        var entity = SetupAudio(filename, audioParams);
+        AddAudioFilter(entity, entity.Comp, playerFilter);
+        entity.Comp.Global = true;
+        return (entity, entity.Comp);
     }
 
     /// <inheritdoc />
@@ -84,16 +105,14 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return null;
 
         if (TerminatingOrDeleted(uid))
-        {
-            Log.Error($"Tried to play audio on a terminating / deleted entity {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
             return null;
-        }
 
-        var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
-        var audio = SetupAudio(entity, filename, audioParams);
-        AddAudioFilter(entity, audio, playerFilter);
+        var entity = SetupAudio(filename, audioParams);
+        // Move it after setting it up
+        XformSystem.SetCoordinates(entity, new EntityCoordinates(uid, Vector2.Zero));
+        AddAudioFilter(entity, entity.Comp, playerFilter);
 
-        return (entity, audio);
+        return (entity, entity.Comp);
     }
 
     /// <inheritdoc />
@@ -103,15 +122,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return null;
 
         if (TerminatingOrDeleted(uid))
-        {
-            Log.Error($"Tried to play audio on a terminating / deleted entity {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
             return null;
-        }
 
-        var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
-        var audio = SetupAudio(entity, filename, audioParams);
+        var entity = SetupAudio(filename, audioParams);
+        XformSystem.SetCoordinates(entity, new EntityCoordinates(uid, Vector2.Zero));
 
-        return (entity, audio);
+        return (entity, entity.Comp);
     }
 
     /// <inheritdoc />
@@ -129,11 +145,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (!coordinates.IsValid(EntityManager))
             return null;
 
-        var entity = Spawn("Audio", coordinates);
-        var audio = SetupAudio(entity, filename, audioParams);
-        AddAudioFilter(entity, audio, playerFilter);
+        var entity = SetupAudio(filename, audioParams);
+        XformSystem.SetCoordinates(entity, coordinates);
+        AddAudioFilter(entity, entity.Comp, playerFilter);
 
-        return (entity, audio);
+        return (entity, entity.Comp);
     }
 
     /// <inheritdoc />
@@ -152,10 +168,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (!coordinates.IsValid(EntityManager))
             return null;
 
-        var entity = Spawn("Audio", coordinates);
-        var audio = SetupAudio(entity, filename, audioParams);
+        // TODO: Transform TryFindGridAt mess + optimisation required.
+        var entity = SetupAudio(filename, audioParams);
+        XformSystem.SetCoordinates(entity, coordinates);
 
-        return (entity, audio);
+        return (entity, entity.Comp);
     }
 
     /// <inheritdoc />

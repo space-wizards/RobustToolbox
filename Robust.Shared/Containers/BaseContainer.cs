@@ -1,16 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Network;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -23,6 +15,19 @@ namespace Robust.Shared.Containers
     [ImplicitDataDefinitionForInheritors]
     public abstract partial class BaseContainer
     {
+        // Will be null until after the component has been initialized.
+        protected SharedContainerSystem? System;
+
+        [Access(typeof(SharedContainerSystem), typeof(ContainerManagerComponent))]
+        internal void Init(SharedContainerSystem system, string id, Entity<ContainerManagerComponent> owner)
+        {
+            DebugTools.Assert(ID == null || ID == id);
+            ID = id;
+            Owner = owner;
+            Manager = owner;
+            System = system;
+        }
+
         /// <summary>
         /// Readonly collection of all the entities contained within this specific container
         /// </summary>

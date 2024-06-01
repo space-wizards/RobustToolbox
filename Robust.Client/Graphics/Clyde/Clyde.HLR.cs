@@ -480,7 +480,7 @@ namespace Robust.Client.Graphics.Clyde
                 var worldBounds = CalcWorldBounds(viewport);
                 var worldAABB = worldBounds.CalcBoundingBox();
 
-                if (_eyeManager.CurrentMap != MapId.Nullspace)
+                if (eye.Position.MapId != MapId.Nullspace)
                 {
                     using (DebugGroup("Lights"))
                     using (_prof.Group("Lights"))
@@ -544,9 +544,12 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));
                 }
 
-                using (_prof.Group("Overlays WS"))
+                if (eye.Position.MapId != MapId.Nullspace)
                 {
-                    RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
+                    using (_prof.Group("Overlays WS"))
+                    {
+                        RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
+                    }
                 }
 
                 _currentViewport = oldVp;

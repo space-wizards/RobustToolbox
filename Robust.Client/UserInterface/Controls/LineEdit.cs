@@ -53,7 +53,7 @@ namespace Robust.Client.UserInterface.Controls
         private TimeSpan? _lastClickTime;
         private Vector2? _lastClickPosition;
 
-        private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
+        private bool IsPlaceHolderVisible => !(HidePlaceHolderOnFocus && HasKeyboardFocus()) && string.IsNullOrEmpty(_text) && _placeHolder != null;
 
         public event Action<LineEditEventArgs>? OnTextChanged;
         public event Action<LineEditEventArgs>? OnTextEntered;
@@ -185,6 +185,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public int SelectionLower => Math.Min(_selectionStart, _cursorPosition);
         public int SelectionUpper => Math.Max(_selectionStart, _cursorPosition);
+
+        public bool HidePlaceHolderOnFocus { get; set; }
 
         public bool IgnoreNext { get; set; }
 

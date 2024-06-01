@@ -225,7 +225,7 @@ namespace Robust.Client.Debugging
         {
             var viewBounds = args.WorldBounds;
             var viewAABB = args.WorldAABB;
-            var mapId = _eyeManager.CurrentMap;
+            var mapId = args.MapId;
 
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.Shapes) != 0)
             {
@@ -373,7 +373,7 @@ namespace Robust.Client.Debugging
 
         private void DrawScreen(DrawingHandleScreen screenHandle, OverlayDrawArgs args)
         {
-            var mapId = _eyeManager.CurrentMap;
+            var mapId = args.MapId;
             var mousePos = _inputManager.MouseScreenPosition;
 
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.ShapeInfo) != 0x0)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -25,15 +26,25 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         // Currently this field just exists for VV. In future, it might become a real field
-        [ViewVariables]
+        [ViewVariables, PublicAPI]
         private NetEntity NetParent => _entMan.GetNetEntity(_parent);
 
         [DataField("parent")] internal EntityUid _parent;
-        [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
+
+        [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from parent
+
         [DataField("rot")] internal Angle _localRotation; // local rotation
+
         [DataField("noRot")] internal bool _noLocalRotation;
+
         [DataField("anchored")]
         internal bool _anchored;
+
+        /// <summary>
+        /// Indicates this entity can traverse grids.
+        /// </summary>
+        [DataField]
+        public bool GridTraversal = true;
 
         /// <summary>
         ///     The broadphase that this entity is currently stored on, if any.

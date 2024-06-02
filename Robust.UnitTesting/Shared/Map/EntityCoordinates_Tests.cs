@@ -18,7 +18,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.RegisterKind(typeof(EntityPrototype));
+            prototypeManager.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             prototypeManager.ResolveResults();
 
             var factory = IoCManager.Resolve<IComponentFactory>();

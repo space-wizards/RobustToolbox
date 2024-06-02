@@ -555,7 +555,7 @@ namespace Robust.Shared.Prototypes
                     item.KindData.UnfrozenInstances[item.Id] = item.Instance;
                 }
 
-                Freeze(kinds);
+                Freeze(kinds.Where(data => data.UnfrozenInstances != null));
             }
             finally
             {

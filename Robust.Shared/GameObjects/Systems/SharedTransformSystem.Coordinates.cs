@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map;
 
@@ -52,7 +53,7 @@ public abstract partial class SharedTransformSystem
             return MapCoordinates.Nullspace;
         }
 
-        var worldPos = GetWorldMatrix(xform).Transform(coordinates.Position);
+        var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(xform));
         return new MapCoordinates(worldPos, xform.MapID);
     }
 
@@ -83,7 +84,7 @@ public abstract partial class SharedTransformSystem
             return default;
         }
 
-        var localPos = GetInvWorldMatrix(entity.Comp).Transform(coordinates.Position);
+        var localPos = Vector2.Transform(coordinates.Position, GetInvWorldMatrix(entity.Comp));
         return new EntityCoordinates(entity, localPos);
     }
 

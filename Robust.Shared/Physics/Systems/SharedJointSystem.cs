@@ -246,7 +246,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         anchorA ??= Vector2.Zero;
         anchorB ??= Vector2.Zero;
 
-        var length = xformA.WorldMatrix.Transform(anchorA.Value) - xformB.WorldMatrix.Transform(anchorB.Value);
+        var length = Vector2.Transform(anchorA.Value, xformA.WorldMatrix) - Vector2.Transform(anchorB.Value, xformB.WorldMatrix);
 
         var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, length.Length());
         id ??= GetJointId(joint);

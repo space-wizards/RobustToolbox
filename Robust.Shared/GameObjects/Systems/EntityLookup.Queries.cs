@@ -118,7 +118,7 @@ public sealed partial class EntityLookupSystem
             return;
 
         var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
-        var lookupTransform = new Transform(lookupInvMatrix.Transform(shapeTransform.Position),
+        var lookupTransform = new Transform(Vector2.Transform(shapeTransform.Position, lookupInvMatrix),
             shapeTransform.Quaternion2D.Angle - lookupRot);
 
         var localAABB = shape.ComputeAABB(lookupTransform, 0);
@@ -291,7 +291,7 @@ public sealed partial class EntityLookupSystem
         // Transform is in world terms
         // Need to convert both back to lookup-local for AABB.
         var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
-        var lookupTransform = new Transform(lookupInvMatrix.Transform(shapeTransform.Position),
+        var lookupTransform = new Transform(Vector2.Transform(shapeTransform.Position, lookupInvMatrix),
             shapeTransform.Quaternion2D.Angle - lookupRot);
 
         var localAABB = shape.ComputeAABB(lookupTransform, 0);
@@ -902,7 +902,7 @@ public sealed partial class EntityLookupSystem
         return GetLocalBounds(tileRef.GridIndices, tileSize);
     }
 
-    public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3? worldMatrix = null, Angle? angle = null)
+    public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3x2? worldMatrix = null, Angle? angle = null)
     {
         var grid = _gridQuery.GetComponent(tileRef.GridUid);
 
@@ -914,7 +914,7 @@ public sealed partial class EntityLookupSystem
         }
 
         var expand = new Vector2(0.5f, 0.5f);
-        var center = worldMatrix.Value.Transform(tileRef.GridIndices + expand) * grid.TileSize;
+        var center = Vector2.Transform(tileRef.GridIndices + expand, worldMatrix.Value) * grid.TileSize;
         var translatedBox = Box2.CenteredAround(center, new Vector2(grid.TileSize, grid.TileSize));
 
         return new Box2Rotated(translatedBox, -angle.Value, center);

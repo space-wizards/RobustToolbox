@@ -54,6 +54,15 @@ END TEMPLATE-->
 *None yet*
 
 
+## 224.0.1
+
+### Bugfixes
+
+* Fixes PVS throwing exceptions when invalid entities are passed to `ExpandPvsEvent`. Now it just logs an error.
+* Fixes BUIs not properly closing, resulting in invalid entities in `UserInterfaceUserComponent.OpenInterfaces`
+* Fixes an unknown/invalid prototype exception sometimes being thrown when running ``IPrototypeManager.ResolveResults()`
+
+
 ## 224.0.0
 
 ### Breaking changes

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Server.GameStates;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects;
 
@@ -23,6 +24,8 @@ public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
 
         foreach (var ui in buis)
         {
+            DebugTools.Assert(ent.Comp.OpenInterfaces[ui].Count > 0);
+            DebugTools.Assert(HasComp<UserInterfaceComponent>(ui));
             args.Entities.Add(ui);
         }
     }

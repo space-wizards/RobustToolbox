@@ -12,6 +12,7 @@ public class OptionButton : ContainerButton
 {
     public const string StyleClassOptionButton = "optionButton";
     public const string StyleClassPopup = "optionButtonPopup";
+    public const string StyleClassBackPanel = "optionButtonBackPanel";
     public const string StyleClassOptionTriangle = "optionTriangle";
     public readonly ScrollContainer OptionsScroll;
 
@@ -74,13 +75,8 @@ public class OptionButton : ContainerButton
 
         var panelContainer = new PanelContainer
         {
-            Children = { OptionsScroll }
-        };
-        panelContainer.PanelOverride = new StyleBoxFlat
-        {
-            BorderColor = new Color(53, 56, 76), //#35384c
-            BackgroundColor = new Color(36, 36, 43), //#24242b
-            BorderThickness = new Thickness(2, 2, 2, 2)
+            Children = { OptionsScroll },
+            StyleClasses = { StyleClassBackPanel }
         };
 
         _popup = new Popup()

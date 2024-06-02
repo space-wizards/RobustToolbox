@@ -72,9 +72,20 @@ public class OptionButton : ContainerButton
             MaxHeight = 300
         };
 
+        var panelContainer = new PanelContainer
+        {
+            Children = { OptionsScroll }
+        };
+        panelContainer.PanelOverride = new StyleBoxFlat
+        {
+            BorderColor = new Color(53, 56, 76), //#35384c
+            BackgroundColor = new Color(36, 36, 43), //#24242b
+            BorderThickness = new Thickness(2, 2, 2, 2)
+        };
+
         _popup = new Popup()
         {
-            Children = { new PanelContainer(), OptionsScroll },
+            Children = { panelContainer },
             StyleClasses = { StyleClassPopup }
         };
         _popup.OnPopupHide += OnPopupHide;

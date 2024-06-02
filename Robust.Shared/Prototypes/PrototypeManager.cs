@@ -35,6 +35,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly ILocalizationManager _locMan = default!;
         [Dependency] private readonly IComponentFactory _factory = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly IRobustRandom _random = default!;
 
         private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
         private EntityDiffContext _context = new();
@@ -436,7 +437,7 @@ namespace Robust.Shared.Prototypes
             _entMan.EventBus.RaiseEvent(EventSource.Local, ev);
         }
 
-        private void Freeze(HashSet<KindData> kinds)
+        private void Freeze(IEnumerable<KindData> kinds)
         {
             var st = RStopwatch.StartNew();
             foreach (var kind in kinds)
@@ -467,108 +468,99 @@ namespace Robust.Shared.Prototypes
                     continue;
 
                 var task = Task.Run(() => PushKindInheritance(k, v));
-
                 inheritanceTasks.Add(k, task);
             }
 
-            var rand = new System.Random();
-            var priorities = _kinds.Keys.GroupBy(k => _kindPriorities[k]).OrderByDescending(k => k.Key);
+            var priorities = _kinds.Keys
+                .GroupBy(k => _kindPriorities[k])
+                .OrderByDescending(k => k.Key);
+
             foreach (var group in priorities)
             {
-                // Wait for all inheritance pushing in this group to finish.
-                // This isn't ideal, but since entity prototypes are the big ones in SS14 it's fine.
-                foreach (var k in group)
-                {
-                    if (inheritanceTasks.TryGetValue(k, out var task))
-                        task.Wait();
-                }
+                var kinds = group.Select(k => _kinds[k]).ToArray();
+                InstantiateKinds(kinds, inheritanceTasks);
+            }
 
-                // Process all prototypes in this group in a single parallel operation.
-                var allResults = group.Select(k => new
-                {
-                    Kind = k,
-                    KindData = _kinds[k],
-                }).SelectMany(k => k.KindData.Results, (data, pair) => new
-                {
-                    data.Kind,
-                    data.KindData,
-                    Id = pair.Key,
-                    Mapping = pair.Value
-                }).ToArray();
+            UpdateCategories();
+        }
 
-                // Randomize to remove any patterns that could cause uneven load.
-                rand.Shuffle(allResults.AsSpan());
+        private void InstantiateKinds(KindData[] kinds, Dictionary<Type, Task> inheritanceTasks)
+        {
+            // Wait for all inheritance pushing in this group to finish.
+            // This isn't ideal, but since entity prototypes are the big ones in SS14 it's fine.
+            foreach (var kind in kinds)
+            {
+                if (inheritanceTasks.TryGetValue(kind.Type, out var task))
+                    task.Wait();
+            }
 
-                // Create channel that all AfterDeserialization hooks in this group will be sent into.
-                var hooksChannelOptions = new UnboundedChannelOptions
-                {
-                    SingleReader = true,
-                    SingleWriter = false,
-                    // Don't use an async job to unblock the read task.
-                    AllowSynchronousContinuations = true
-                };
-#pragma warning disable CS0618
-                var hooksChannel = Channel.CreateUnbounded<ISerializationHooks>(hooksChannelOptions);
-#pragma warning restore CS0618
-                var hookCtx = new SerializationHookContext(hooksChannel.Writer, false);
+            // Process all prototypes in this group in a single parallel operation.
+            var results = kinds
+                .SelectMany(data => data.Results,
+                    (data, results) => (KindData: data, Id: results.Key, Mapping: results.Value, Instance: (IPrototype?)null))
+                .ToArray();
 
-                var mergeTask = Task.Run(() =>
-                {
-                    // Start a thread pool job that will Parallel.ForEach the list of prototype instances.
-                    // When the list of prototype instances is processed, merge them into the instances on the KindData.
-                    try
-                    {
-                        var protoChannel =
-                            Channel.CreateUnbounded<(KindData KindData, string Id, IPrototype Prototype)>(
-                                new UnboundedChannelOptions
-                                {
-                                    SingleReader = true,
-                                    SingleWriter = false
-                                });
+            // Randomize to remove any patterns that could cause uneven load.
+            _random.Shuffle(results.AsSpan());
 
-                        Parallel.ForEach(allResults, item =>
-                        {
-                            var prototype = TryReadPrototype(item.Kind, item.Id, item.Mapping, hookCtx);
-                            if (prototype != null)
-                                protoChannel.Writer.TryWrite((item.KindData, item.Id, prototype));
-                        });
+            // Create channel that all AfterDeserialization hooks in this group will be sent into.
+            var hooksChannelOptions = new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = false,
+                // Don't use an async job to unblock the read task.
+                AllowSynchronousContinuations = true
+            };
 
-                        var modifiedKinds = new HashSet<KindData>();
-                        bool reloadCategories = false;
-                        while (protoChannel.Reader.TryRead(out var item))
-                        {
-                            var kind = item.KindData;
-                            kind.UnfrozenInstances ??= kind.Instances.ToDictionary();
-                            kind.UnfrozenInstances[item.Id] = item.Prototype;
-                            modifiedKinds.Add(kind);
-                            if (kind.Type == typeof(EntityPrototype) || kind.Type == typeof(EntityCategoryPrototype))
-                                reloadCategories = true;
-                        }
-                        Freeze(modifiedKinds);
-                        if (reloadCategories)
-                            UpdateCategories();
-                    }
-                    finally
-                    {
-                        // Mark the hooks channel as complete so the game thread unblocks.
-                        hooksChannel.Writer.Complete();
-                    }
-                });
+            var hooksChannel = Channel.CreateUnbounded<ISerializationHooks>(hooksChannelOptions);
+            var instantiateTask = Task.Run(() => InstantiatePrototypes(kinds, results, hooksChannel));
 
-                // On the game thread: process AfterDeserialization hooks from the channel.
-                var channelReader = hooksChannel.Reader;
+            // On the game thread: process AfterDeserialization hooks from the channel.
+            var channelReader = hooksChannel.Reader;
 #pragma warning disable RA0004
-                while (channelReader.WaitToReadAsync().AsTask().Result)
+            while (channelReader.WaitToReadAsync().AsTask().Result)
 #pragma warning restore RA0004
+            {
+                while (channelReader.TryRead(out var hooks))
                 {
-                    while (channelReader.TryRead(out var hooks))
+                    hooks.AfterDeserialization();
+                }
+            }
+
+            // Join task in case an exception was raised.
+            instantiateTask.Wait();
+        }
+
+        private void InstantiatePrototypes(
+            KindData[] kinds,
+            (KindData KindData, string Id, MappingDataNode Mapping, IPrototype? Instance)[] results,
+            Channel<ISerializationHooks> hooks)
+        {
+            var hookCtx = new SerializationHookContext(hooks.Writer, false);
+            try
+            {
+                Parallel.For(0,
+                    results.Length,
+                    i =>
                     {
-                        hooks.AfterDeserialization();
-                    }
+                        ref var item = ref results[i];
+                        item.Instance = TryReadPrototype(item.KindData.Type, item.Id, item.Mapping, hookCtx);
+                    });
+
+                foreach (var item in results)
+                {
+                    if (item.Instance == null)
+                        continue;
+                    item.KindData.UnfrozenInstances ??= item.KindData.Instances.ToDictionary();
+                    item.KindData.UnfrozenInstances[item.Id] = item.Instance;
                 }
 
-                // Join task in case an exception was raised.
-                mergeTask.Wait();
+                Freeze(kinds.Where(data => data.UnfrozenInstances != null));
+            }
+            finally
+            {
+                // Mark the hooks channel as complete so the game thread unblocks.
+                hooks.Writer.Complete();
             }
         }
 

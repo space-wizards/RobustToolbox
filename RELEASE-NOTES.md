@@ -36,18 +36,28 @@ END TEMPLATE-->
 ### Breaking changes
 
 * `Matrix3` has been replaced with `System.Numerics.Matrix3x2`. Various Matrix related methods have been turned into extension methods in the `Matrix3Helpers` class.
+* Engine `EntityCategory` prototype IDs have been changed to use CamelCase. I.e., `hideSpawnMenu` -> `HideSpawnMenu`
+* Prototypes can now be implicitly cast `ProtoId<T>` or `EntProtoId` ID structs. The new implicit cast might cause previous function calls to be ambiguous.
 
 ### New features
 
 * `Array.Clear(Array)` is now available in the sandbox.
+* BUIs now use `ExpandPvsEvent`. I.e., if a player has a UI open, then the entity associated with that UI will always get sent to the player by the PVS system.
+* Added `cvar_subs` command for listing all subscribers to cvar changes
+* Entity categories have been reworked
+  * Each category now has a `HideSpawnMenu` field. The old `HideSpawnMenu` category is now just a normal category with that field set to true.
+  * Reworked category inheritance. Inheritance can now be disabled per category using a `Inheritable` field.
+  * Entity prototypes can now be automatically added to categories based on the components that they have, either by specifying components when defining the category in yml, or by adding the EntityCategoryAttribute to the component class.
 
 ### Bugfixes
 
-*None yet*
+* Fixed client-side BUI error log spam if an unknown entity has a UI open.
+* Fixed placement manager spawning entities with incorrect rotations.
 
 ### Other
 
-*None yet*
+* Added a try-catch block to BUI constructors, to avoid clients getting stuck in error loops while applying states.
+* Attempting to play sounds on terminating entities no longer logs an error.
 
 ### Internal
 

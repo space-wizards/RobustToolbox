@@ -215,17 +215,16 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void OnUserInterfaceClosed(Entity<UserInterfaceComponent> ent, ref CloseBoundInterfaceMessage args)
     {
-        // This handles all of the actually closing BUI.
-        // This is because CloseUi just relays the event so client sending message to server vs just server
-        // go through the same path.
+        CloseUi(ent, args.Actor, args.UiKey);
+    }
 
-        var actor = args.Actor;
-
-        var actors = ent.Comp.Actors[args.UiKey];
+    private void CloseUi(Entity<UserInterfaceComponent> ent, EntityUid actor, Enum key)
+    {
+        var actors = ent.Comp.Actors[key];
         actors.Remove(actor);
 
         if (actors.Count == 0)
-            ent.Comp.Actors.Remove(args.UiKey);
+            ent.Comp.Actors.Remove(key);
 
         Dirty(ent);
 
@@ -234,7 +233,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         {
             if (actorComp.OpenInterfaces.TryGetValue(ent.Owner, out var keys))
             {
-                keys.Remove(args.UiKey);
+                keys.Remove(key);
 
                 if (keys.Count == 0)
                     actorComp.OpenInterfaces.Remove(ent.Owner);
@@ -244,7 +243,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
 
         // If we're client we want this handled immediately.
-        if (ent.Comp.ClientOpenInterfaces.Remove(args.UiKey, out var cBui))
+        if (ent.Comp.ClientOpenInterfaces.Remove(key, out var cBui))
         {
             cBui.Dispose();
         }
@@ -252,7 +251,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (ent.Comp.Actors.Count == 0)
             RemCompDeferred<ActiveUserInterfaceComponent>(ent.Owner);
 
-        var ev = new BoundUIClosedEvent(args.UiKey, ent.Owner, args.Actor);
+        var ev = new BoundUIClosedEvent(key, ent.Owner, actor);
         RaiseLocalEvent(ent.Owner, ev);
     }
 
@@ -291,14 +290,23 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
     }
 
-    private void OnUserInterfaceShutdown(EntityUid uid, UserInterfaceComponent component, ComponentShutdown args)
+    private void OnUserInterfaceShutdown(Entity<UserInterfaceComponent> ent, ref ComponentShutdown args)
     {
-        foreach (var bui in component.ClientOpenInterfaces.Values)
+        var actors = new List<EntityUid>();
+        foreach (var (key, acts) in ent.Comp.Actors)
         {
-            bui.Dispose();
+            actors.Clear();
+            actors.AddRange(acts);
+            foreach (var actor in actors)
+            {
+                CloseUi(ent, actor, key);
+                DebugTools.Assert(!acts.Contains(actor));
+            }
+
+            DebugTools.Assert(!ent.Comp.Actors.ContainsKey(key));
         }
 
-        component.ClientOpenInterfaces.Clear();
+        DebugTools.AssertEqual(ent.Comp.ClientOpenInterfaces.Count, 0);
     }
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)

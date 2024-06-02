@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `Matrix3` has been replaced with `System.Numerics.Matrix3x2`. Various Matrix related methods have been turned into extension methods in the `Matrix3Helpers` class.
 
 ### New features
 

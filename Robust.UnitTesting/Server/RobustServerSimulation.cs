@@ -325,6 +325,11 @@ namespace Robust.UnitTesting.Server
             protoMan.Initialize();
             protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             _protoDelegate?.Invoke(protoMan);
+
+            // This just exists to set protoMan._hasEverBeenReloaded to True
+            // The code is perfect.
+            protoMan.LoadString("");
+
             protoMan.ResolveResults();
 
             return this;

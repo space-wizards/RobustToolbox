@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 224.0.0
+
+### Breaking changes
+
 * `Matrix3` has been replaced with `System.Numerics.Matrix3x2`. Various Matrix related methods have been turned into extension methods in the `Matrix3Helpers` class.
 * Engine `EntityCategory` prototype IDs have been changed to use CamelCase. I.e., `hideSpawnMenu` -> `HideSpawnMenu`
 * Prototypes can now be implicitly cast `ProtoId<T>` or `EntProtoId` ID structs. The new implicit cast might cause previous function calls to be ambiguous.
@@ -58,10 +81,6 @@ END TEMPLATE-->
 
 * Added a try-catch block to BUI constructors, to avoid clients getting stuck in error loops while applying states.
 * Attempting to play sounds on terminating entities no longer logs an error.
-
-### Internal
-
-*None yet*
 
 
 ## 223.3.0

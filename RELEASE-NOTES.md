@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `Array.Clear(Array)` is now available in the sandbox.
 
 ### Bugfixes
 

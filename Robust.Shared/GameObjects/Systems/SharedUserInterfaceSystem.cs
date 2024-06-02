@@ -366,12 +366,16 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
 
         toRemove.Clear();
+        var attachedEnt = _player.LocalEntity;
 
-        // Check if the UI is still open, otherwise call close.
+        // Check if the UI is open by us, otherwise dispose of it.
         foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
         {
-            if (ent.Comp.Actors.ContainsKey(key))
+            if (ent.Comp.Actors.TryGetValue(key, out var actors) &&
+                (attachedEnt == null || actors.Contains(attachedEnt.Value)))
+            {
                 continue;
+            }
 
             bui.Dispose();
             toRemove.Add(key);
@@ -401,8 +405,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
 
         // If UI not open then open it
-        var attachedEnt = _player.LocalEntity;
-
         // If we get the first state for an ent coming in then don't open BUIs yet, just defer it until later.
         var open = ent.Comp.LifeStage > ComponentLifeStage.Added;
 
@@ -437,9 +439,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return;
         }
 
+        // Try-catch to try prevent error loops / bricked clients that constantly throw exceptions while applying game
+        // states. E.g., stripping UI used to throw NREs in some instances while fetching the identity of unknown
+        // entities.
+#if EXCEPTION_TOLERANCE
+        try
+        {
+#endif
         var type = _reflection.LooseGetType(data.ClientType);
         var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
-
         entity.Comp.ClientOpenInterfaces[key] = boundUserInterface;
 
         // This is just so we don't open while applying UI states.
@@ -453,6 +461,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             boundUserInterface.State = buiState;
             boundUserInterface.UpdateState(buiState);
         }
+#if EXCEPTION_TOLERANCE
+        }
+        catch (Exception e)
+        {
+            Log.Error(
+                $"Caught exception while attempting to create a BUI {key} with type {data.ClientType} on entity {ToPrettyString(entity.Owner)}. Exception: {e}");
+            return;
+        }
+#endif
     }
 
     /// <summary>
@@ -930,6 +947,9 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
                 foreach (var actor in actors)
                 {
+                    if (_netManager.IsClient && !actor.IsValid())
+                        continue; // Client might not have received the entity. Server should log errors.
+
                     _rangeJob.ActorRanges.Add((uid, key, data, actor, false));
                 }
             }

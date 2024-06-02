@@ -832,6 +832,7 @@ Types:
       - "object GetValue(long[])"
       - "System.Collections.IEnumerator GetEnumerator()"
       - "System.Collections.ObjectModel.ReadOnlyCollection`1<!!0> AsReadOnly<>(!!0[])"
+      - "void Clear(System.Array)"
       - "void Clear(System.Array, int, int)"
       - "void ConstrainedCopy(System.Array, int, System.Array, int, int)"
       - "void Copy(System.Array, int, System.Array, int, int)"

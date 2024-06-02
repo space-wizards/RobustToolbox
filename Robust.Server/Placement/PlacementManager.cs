@@ -172,7 +172,7 @@ namespace Robust.Server.Placement
                     }
                 }
 
-                var created = _entityManager.Spawn(entityTemplateName, _xformSystem.ToMapCoordinates(coordinates), rotation: dirRcv.ToAngle());
+                var created = _entityManager.SpawnAttachedTo(entityTemplateName, coordinates, rotation: dirRcv.ToAngle());
 
                 var placementCreateEvent = new PlacementEntityEvent(created, coordinates, PlacementEventAction.Create, msg.MsgChannel.UserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementCreateEvent);

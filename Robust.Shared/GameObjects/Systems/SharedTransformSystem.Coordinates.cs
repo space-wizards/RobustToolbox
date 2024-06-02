@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map;
@@ -48,7 +49,7 @@ public abstract partial class SharedTransformSystem
         if (!TryComp(coordinates.EntityId, out TransformComponent? xform))
         {
             if (logError)
-                Log.Error($"Attempted to convert coordinates with invalid entity: {coordinates}");
+                Log.Error($"Attempted to convert coordinates with invalid entity: {coordinates}. Trace: {Environment.StackTrace}");
             return MapCoordinates.Nullspace;
         }
 
@@ -73,13 +74,13 @@ public abstract partial class SharedTransformSystem
     {
         if (!Resolve(entity, ref entity.Comp, false))
         {
-            Log.Error($"Attempted to convert coordinates with invalid entity: {coordinates}");
+            Log.Error($"Attempted to convert coordinates with invalid entity: {coordinates}. Trace: {Environment.StackTrace}");
             return default;
         }
 
         if (entity.Comp.MapID != coordinates.MapId)
         {
-            Log.Error($"Attempted to convert map coordinates {coordinates} to entity coordinates on a different map. Entity: {ToPrettyString(entity)}");
+            Log.Error($"Attempted to convert map coordinates {coordinates} to entity coordinates on a different map. Entity: {ToPrettyString(entity)}. Trace: {Environment.StackTrace}");
             return default;
         }
 
@@ -95,7 +96,7 @@ public abstract partial class SharedTransformSystem
         if (_map.TryGetMap(coordinates.MapId, out var uid))
             return ToCoordinates(uid.Value, coordinates);
 
-        Log.Error($"Attempted to convert map coordinates with unknown map id: {coordinates}");
+        Log.Error($"Attempted to convert map coordinates with unknown map id: {coordinates}. Trace: {Environment.StackTrace}");
         return default;
 
     }

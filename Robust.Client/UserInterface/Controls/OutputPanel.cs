@@ -30,6 +30,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool ScrollFollowing { get; set; } = true;
 
+        private bool _invalidOnVisible;
+
         public OutputPanel()
         {
             IoCManager.InjectDependencies(this);
@@ -239,7 +241,13 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void UIScaleChanged()
         {
-            _invalidateEntries();
+            // If this control isn't visible, don't invalidate entries immediately.
+            // This saves invalidating the debug console if it's hidden,
+            // which is a huge boon as auto-scaling changes UI scale a lot in that scenario.
+            if (!VisibleInTree)
+                _invalidOnVisible = true;
+            else
+                _invalidateEntries();
 
             base.UIScaleChanged();
         }
@@ -256,6 +264,15 @@ namespace Robust.Client.UserInterface.Controls
             // e.g. the control has not had its UI scale set and the messages were added, but the
             // existing ones were valid when the UI scale was set.
             _invalidateEntries();
+        }
+
+        protected override void VisibilityChanged(bool newVisible)
+        {
+            if (newVisible && _invalidOnVisible)
+            {
+                _invalidateEntries();
+                _invalidOnVisible = false;
+            }
         }
     }
 }

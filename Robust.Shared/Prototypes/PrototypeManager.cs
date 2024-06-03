@@ -744,19 +744,29 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype)
+        public bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
         {
-            return TryIndex(id.Id, out prototype);
+            if (TryIndex(id.Id, out prototype))
+                return true;
+
+            if (logError)
+                Sawmill.Error($"Attempted to resolve invalid {nameof(EntProtoId)}: {id.Id}");
+            return false;
         }
 
         /// <inheritdoc />
-        public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
+        public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype
         {
-            return TryIndex(id.Id, out prototype);
+            if (TryIndex(id.Id, out prototype))
+                return true;
+
+            if (logError)
+                Sawmill.Error($"Attempted to resolve invalid ProtoId<{typeof(T).Name}>: {id.Id}");
+            return false;
         }
 
         /// <inheritdoc />
-        public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype)
+        public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
         {
             if (id == null)
             {
@@ -764,11 +774,11 @@ namespace Robust.Shared.Prototypes
                 return false;
             }
 
-            return TryIndex(id.Value, out prototype);
+            return TryIndex(id.Value, out prototype, logError);
         }
 
         /// <inheritdoc />
-        public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
+        public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype
         {
             if (id == null)
             {
@@ -776,7 +786,7 @@ namespace Robust.Shared.Prototypes
                 return false;
             }
 
-            return TryIndex(id.Value, out prototype);
+            return TryIndex(id.Value, out prototype, logError);
         }
 
         /// <inheritdoc />

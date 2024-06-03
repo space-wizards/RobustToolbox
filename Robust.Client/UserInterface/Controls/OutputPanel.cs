@@ -93,7 +93,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             var entry = new RichTextEntry(message, this, _tagManager, null);
 
-            entry.Update(_getFont(), _getContentBox().Width, UIScale);
+            entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
 
             _entries.Add(entry);
             var font = _getFont();
@@ -149,7 +149,7 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 }
 
-                entry.Draw(handle, font, contentBox, entryOffset, context, UIScale);
+                entry.Draw(_tagManager, handle, font, contentBox, entryOffset, context, UIScale);
 
                 entryOffset += entry.Height + font.GetLineSeparation(UIScale);
             }
@@ -189,7 +189,7 @@ namespace Robust.Client.UserInterface.Controls
             var sizeX = _getContentBox().Width;
             foreach (ref var entry in CollectionsMarshal.AsSpan(_entries))
             {
-                entry.Update(font, sizeX, UIScale);
+                entry.Update(_tagManager, font, sizeX, UIScale);
                 _totalContentHeight += entry.Height + font.GetLineSeparation(UIScale);
             }
 

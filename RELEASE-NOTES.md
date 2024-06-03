@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `ServerIntegrationInstance` has new methods for adding dummy player sessions for tests that require multiple players.
 
 ### Bugfixes
 
@@ -51,8 +51,8 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
-
+* Added `DummySession` and `DummyChannel` classes for use in integration tests and benchmarks to fool the server into thinking that there are multiple players connected.
+* Added `ICommonSessionInternal` and updated `CommonSession` so that the internal setters now go through that interface.
 
 ## 224.0.1
 

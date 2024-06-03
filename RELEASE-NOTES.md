@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `Control.VisibilityChanged()` virtual function.
 
 ### Bugfixes
 

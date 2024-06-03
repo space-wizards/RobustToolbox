@@ -108,7 +108,7 @@ public abstract partial class PrototypeManager : IPrototypeManagerInternal
             }
         }
 
-        DebugTools.Assert(!TryIndex(id, out var instance)
+        DebugTools.Assert(!TryIndex(id, out var instance, false)
                           || instance.CategoriesInternal == null
                           || instance.CategoriesInternal.All(x =>
                               set.Any(y => y.ID == x)));
@@ -124,7 +124,7 @@ public abstract partial class PrototypeManager : IPrototypeManagerInternal
             }
         }
 
-        if (!TryIndex(id, out var protoInstance))
+        if (!TryIndex(id, out var protoInstance, false))
         {
             // Prototype is abstract
             cache.Add(id, set);

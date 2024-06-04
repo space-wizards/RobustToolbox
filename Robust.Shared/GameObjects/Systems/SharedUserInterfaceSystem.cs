@@ -985,9 +985,9 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         Entity<TransformComponent> UiEnt,
         Enum key,
         InterfaceData data,
-        Entity<TransformComponent?> actor)
+        Entity<TransformComponent> actor)
     {
-        if (!_xformQuery.Resolve(actor, ref actor.Comp) || actor.Comp.MapID != UiEnt.Comp.MapID)
+        if (actor.Comp.MapID != UiEnt.Comp.MapID)
             return false;
 
         // Handle pluggable BoundUserInterfaceCheckRangeEvent
@@ -1007,7 +1007,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
 
-        return _transforms.InRange(UiEnt!, actor, data.InteractionRange);
+        return _transforms.InRange(UiEnt!, (actor.Owner, actor.Comp), data.InteractionRange);
     }
 
     /// <summary>
@@ -1023,13 +1023,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         {
             var data = ActorRanges[index];
 
-            if (!XformQuery.TryComp(data.Ui, out var uiXform))
+            if (!XformQuery.TryComp(data.Ui, out var uiXform) ||
+                !XformQuery.TryComp(data.Actor, out var actorXform))
             {
                 data.Result = false;
             }
             else
             {
-                data.Result = System.CheckRange((data.Ui, uiXform), data.Key, data.Data, data.Actor);
+                data.Result = System.CheckRange((data.Ui, uiXform), data.Key, data.Data, (data.Actor, actorXform));
             }
 
             ActorRanges[index] = data;

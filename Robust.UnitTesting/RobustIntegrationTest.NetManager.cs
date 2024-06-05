@@ -11,6 +11,7 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -258,6 +259,9 @@ namespace Robust.UnitTesting
             {
                 DebugTools.Assert(IsServer);
 
+                if (recipient is DummyChannel)
+                    return;
+
                 var channel = (IntegrationNetChannel) recipient;
                 channel.OtherChannel.TryWrite(SerializeNetMessage(message, channel.RemoteUid));
             }
@@ -443,6 +447,7 @@ namespace Robust.UnitTesting
                 public int CurrentMtu => 1000; // Arbitrary.
 
                 // TODO: Should this port value make sense?
+                // See also the DummyChannel class
                 public IPEndPoint RemoteEndPoint { get; } = new(IPAddress.Loopback, 1212);
                 public NetUserId UserId => UserData.UserId;
                 public string UserName => UserData.UserName;

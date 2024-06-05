@@ -24,8 +24,12 @@ public class EntityPrototypeView : SpriteView
     {
         SpriteSystem ??= EntMan.System<SpriteSystem>();
 
-        if (entProto == _currentPrototype)
+        if (entProto == _currentPrototype
+            && EntMan.TryGetComponent(Entity?.Owner, out MetaDataComponent? meta)
+            && meta.EntityPrototype?.ID == _currentPrototype)
+        {
             return;
+        }
 
         _currentPrototype = entProto;
         SetEntity(null);

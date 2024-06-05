@@ -24,7 +24,7 @@ namespace Robust.Shared.GameObjects
         /// Actors that currently have interfaces open.
         /// </summary>
         [DataField]
-        public Dictionary<Enum, List<EntityUid>> Actors = new();
+        public Dictionary<Enum, HashSet<EntityUid>> Actors = new();
 
         /// <summary>
         /// Legacy data, new BUIs should be using comp states.

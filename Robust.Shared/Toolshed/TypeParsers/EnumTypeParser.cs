@@ -16,7 +16,7 @@ public sealed class EnumTypeParser<T> : TypeParser<T>
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result,
         out IConError? error)
     {
-        var word = parserContext.GetWord(ParserContext.IsToken)?.ToLowerInvariant();
+        var word = parserContext.GetWord(ParserContext.IsToken);
         if (word is null)
         {
             if (parserContext.PeekChar() is null)
@@ -34,7 +34,7 @@ public sealed class EnumTypeParser<T> : TypeParser<T>
             }
         }
 
-        if (!Enum.TryParse<T>(word, out var value))
+        if (!Enum.TryParse<T>(word, ignoreCase: true, out var value))
         {
             result = null;
             error = new InvalidEnum<T>(word);

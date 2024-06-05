@@ -20,6 +20,11 @@ public readonly record struct ProtoId<T>(string Id) : IEquatable<string>, ICompa
         return protoId.Id;
     }
 
+    public static implicit operator ProtoId<T>(T proto)
+    {
+        return new ProtoId<T>(proto.ID);
+    }
+
     public static implicit operator ProtoId<T>(string id)
     {
         return new ProtoId<T>(id);

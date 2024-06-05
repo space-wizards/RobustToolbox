@@ -145,7 +145,7 @@ public sealed partial class EntityLookupSystem
         // Transform is in world terms
         // Need to convert both back to lookup-local for AABB.
         var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
-        var lookupTransform = new Transform(lookupInvMatrix.Transform(shapeTransform.Position),
+        var lookupTransform = new Transform(Vector2.Transform(shapeTransform.Position, lookupInvMatrix),
             shapeTransform.Quaternion2D.Angle - lookupRot);
 
         var localAABB = shape.ComputeAABB(lookupTransform, 0);
@@ -287,7 +287,7 @@ public sealed partial class EntityLookupSystem
             return false;
 
         var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
-        var lookupTransform = new Transform(lookupInvMatrix.Transform(shapeTransform.Position),
+        var lookupTransform = new Transform(Vector2.Transform(shapeTransform.Position, lookupInvMatrix),
             shapeTransform.Quaternion2D.Angle - lookupRot);
 
         var localAABB = shape.ComputeAABB(lookupTransform, 0);

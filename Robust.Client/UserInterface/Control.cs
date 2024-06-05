@@ -567,7 +567,7 @@ namespace Robust.Client.UserInterface
             public Vector2i Position;
             public Color Modulate;
             public UIBox2i? ScissorBox;
-            public ref Matrix3 CoordinateTransform;
+            public ref Matrix3x2 CoordinateTransform;
         }
 
         protected void RenderControl(ref ControlRenderArguments args, int childIndex, Vector2i position)

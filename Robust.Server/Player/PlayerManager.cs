@@ -90,18 +90,18 @@ namespace Robust.Server.Player
             _cfg.SyncConnectingClient(args.Channel);
         }
 
+        private void EndSession(object? sender, NetChannelArgs args)
+        {
+            EndSession(args.Channel.UserId);
+        }
+
         /// <summary>
         ///     Ends a clients session, and disconnects them.
         /// </summary>
-        private void EndSession(object? sender, NetChannelArgs args)
+        internal void EndSession(NetUserId user)
         {
-            if (!TryGetSessionByChannel(args.Channel, out var session))
-            {
+            if (!TryGetSessionById(user, out var session))
                 return;
-            }
-
-            // make sure nothing got messed up during the life of the session
-            DebugTools.Assert(session.Channel == args.Channel);
 
             SetStatus(session, SessionStatus.Disconnected);
             SetAttachedEntity(session, null, out _, true);
@@ -159,5 +159,32 @@ namespace Robust.Server.Player
             session = actor.PlayerSession;
             return true;
         }
+
+    internal ICommonSession AddDummySession(NetUserId user, string name)
+    {
+#if FULL_RELEASE
+        // Lets not make it completely trivial to fake player counts.
+        throw new NotSupportedException();
+#endif
+        Lock.EnterWriteLock();
+        DummySession session;
+        try
+        {
+            UserIdMap[name] = user;
+            if (!PlayerData.TryGetValue(user, out var data))
+                PlayerData[user] = data = new(user, name);
+
+            session = new DummySession(user, name, data);
+            InternalSessions.Add(user, session);
+        }
+        finally
+        {
+            Lock.ExitWriteLock();
+        }
+
+        UpdateState(session);
+
+        return session;
+    }
     }
 }

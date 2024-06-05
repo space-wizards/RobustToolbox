@@ -96,8 +96,6 @@ public abstract partial class SharedTransformSystem
 
     public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null)
     {
-        DebugTools.Assert(grid == null);
-
         if (grid == null)
         {
             if (!TryComp(entity.Comp.GridUid, out MapGridComponent? gridComp))

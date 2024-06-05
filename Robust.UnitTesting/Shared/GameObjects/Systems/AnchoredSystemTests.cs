@@ -91,10 +91,11 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Reflect(false)]
         private sealed class AnchorOnInitTestSystem : EntitySystem
         {
+            [Dependency] private readonly SharedTransformSystem _transform = default!;
             public override void Initialize()
             {
                 base.Initialize();
-                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => Transform(e).Anchored = true);
+                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => _transform.AnchorEntity(e, Transform(e)));
             }
         }
 
@@ -406,12 +407,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var (sim, gridId, coords) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var transformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
             var grid = entMan.GetComponent<MapGridComponent>(gridId);
             var ent1 = entMan.SpawnEntity(null, coords);
             var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
+            transformSystem.AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid), tileIndices);
 
             // Act
             // assumed default body is Dynamic

@@ -149,14 +149,14 @@ namespace Robust.Client.GameObjects
 
             if (args.Length is not (2 or 4))
             {
-                shell.WriteLine("Wrong number of arguments");
+                shell.WriteLine(Loc.GetString($"cmd-invalid-arg-number-error"));
                 return;
             }
 
             var keyFunction = new BoundKeyFunction(args[0]);
             if (!Enum.TryParse<BoundKeyState>(args[1], out var state))
             {
-                shell.WriteLine($"BoundKeyState {args[1]} is unrecognized.");
+                shell.WriteLine(Loc.GetString("cmd-parse-failure-enum", ("arg", args[1]), ("enum", nameof(BoundKeyState))));
                 return;
             }
 
@@ -165,13 +165,13 @@ namespace Robust.Client.GameObjects
             {
                 if (!float.TryParse(args[2], out var wX))
                 {
-                    shell.WriteError($"{args[2]} is not a valid float.");
+                    shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
                     return;
                 }
 
                 if (!float.TryParse(args[3], out var wY))
                 {
-                    shell.WriteError($"{args[3]} is not a valid float.");
+                    shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[3])));
                     return;
                 }
 

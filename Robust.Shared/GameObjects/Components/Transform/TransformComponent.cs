@@ -373,9 +373,9 @@ namespace Robust.Shared.GameObjects
                 {
                     _anchored = value;
                 }
-                else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out _, out var grid))
+                else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var gridUid, out var gridComp))
                 {
-                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(Owner, this, grid);
+                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity((Owner, this), (gridUid, gridComp));
                 }
                 else if (!value && _anchored)
                 {

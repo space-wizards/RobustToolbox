@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Log;
@@ -83,6 +84,46 @@ namespace Robust.Shared.CPUJob.JobQueues
             }
 
             return new ValueTask(SuspendNow());
+        }
+
+        /// <summary>
+        ///     Wrapper to await on an external ValueTask.
+        /// </summary>
+        protected async ValueTask WaitAsyncTask(ValueTask task)
+        {
+            DebugTools.AssertNull(_resume);
+
+            Status = JobStatus.Waiting;
+            DebugTime += StopWatch.Elapsed.TotalSeconds;
+
+            await task;
+
+            // Immediately block on resume so that everything stays correct.
+            Status = JobStatus.Paused;
+            _resume = new TaskCompletionSource<object?>();
+
+            await _resume.Task;
+        }
+
+        /// <summary>
+        ///     Wrapper to await on an external ValueTask.
+        /// </summary>
+        protected async ValueTask<TTask> WaitAsyncTask<TTask>(ValueTask<TTask> task)
+        {
+            DebugTools.AssertNull(_resume);
+
+            Status = JobStatus.Waiting;
+            DebugTime += StopWatch.Elapsed.TotalSeconds;
+
+            var result = await task;
+
+            // Immediately block on resume so that everything stays correct.
+            Status = JobStatus.Paused;
+            _resume = new TaskCompletionSource<object?>();
+
+            await _resume.Task;
+
+            return result;
         }
 
         /// <summary>

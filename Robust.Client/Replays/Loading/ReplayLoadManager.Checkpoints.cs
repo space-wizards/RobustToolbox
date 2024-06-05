@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 using NetSerializer;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
@@ -20,12 +21,21 @@ namespace Robust.Client.Replays.Loading;
 // so that when jumping to tick 1001 the client only has to apply states for tick 1000 and 1001, instead of 0, 1, 2, ...
 public sealed partial class ReplayLoadManager
 {
+    public struct ReplayTickData(int stateId, GameState state, ReplayMessage messages, int progress, int maxProgress)
+    {
+        public readonly int StateId = stateId;
+        public readonly GameState State = state;
+        public readonly ReplayMessage Messages = messages;
+        public readonly int Progress = progress;
+        public readonly int MaxProgress = maxProgress;
+    }
+
     public async Task<(CheckpointState[], TimeSpan[])> GenerateCheckpointsAsync(
         ReplayMessage? initMessages,
         HashSet<string> initialCvars,
-        List<GameState> states,
-        List<ReplayMessage> messages,
-        LoadReplayCallback callback)
+        ChannelReader<ReplayTickData> states,
+        LoadReplayCallback callback,
+        LoadReplayJob? job)
     {
         // Given a set of states [0 to X], [X to X+1], [X+1 to X+2]..., this method  will generate additional states
         // like [0 to x+60 ], [0 to x+120], etc. This will make scrubbing/jumping to a state much faster, but requires
@@ -66,7 +76,6 @@ public sealed partial class ReplayLoadManager
 
         var timeBase = _timing.TimeBase;
         var checkPoints = new List<CheckpointState>(1 + states.Count / _checkpointInterval);
-        var state0 = states[0];
 
         // Get all initial prototypes
         var prototypes = new Dictionary<Type, HashSet<string>>();
@@ -85,11 +94,13 @@ public sealed partial class ReplayLoadManager
         var detached = new HashSet<NetEntity>();
         var detachQueue = new Dictionary<GameTick, List<NetEntity>>();
 
+        var firstData = await (job?.WaitAsyncTask(states.ReadAsync()) ?? states.ReadAsync());
+        await callback(firstData.Progress, firstData.MaxProgress, LoadingState.ProcessingFiles, false);
         if (initMessages != null)
             UpdateMessages(initMessages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
-        UpdateMessages(messages[0], uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
+        UpdateMessages(firstData.Messages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
 
-        var entSpan = state0.EntityStates.Value;
+        var entSpan = firstData.State.EntityStates.Value;
         Dictionary<NetEntity, EntityState> entStates = new(entSpan.Count);
         foreach (var entState in entSpan)
         {
@@ -99,16 +110,15 @@ public sealed partial class ReplayLoadManager
 
         ProcessQueue(GameTick.MaxValue, detachQueue, detached, entStates);
 
-        await callback(0, states.Count, LoadingState.ProcessingFiles, true);
-        var playerSpan = state0.PlayerStates.Value;
+        var playerSpan = firstData.State.PlayerStates.Value;
         Dictionary<NetUserId, SessionState> playerStates = new(playerSpan.Count);
         foreach (var player in playerSpan)
         {
             playerStates.Add(player.UserId, player);
         }
 
-        state0 = new GameState(GameTick.Zero,
-            state0.ToSequence,
+        var state0 = new GameState(GameTick.Zero,
+            firstData.State.ToSequence,
             default,
             entStates.Values.ToArray(),
             playerStates.Values.ToArray(),
@@ -125,8 +135,7 @@ public sealed partial class ReplayLoadManager
             return timeBase.Item1 + (tick.Value - timeBase.Item2.Value) * period;
         }
 
-        var serverTime = new TimeSpan[states.Count];
-        serverTime[0] = TimeSpan.Zero;
+        var serverTime = new List<TimeSpan> { TimeSpan.Zero };
         var initialTime = GetTime(state0.ToSequence);
 
         var ticksSinceLastCheckpoint = 0;
@@ -138,32 +147,39 @@ public sealed partial class ReplayLoadManager
         var stats_due_spawned = 0;
         var stats_due_state = 0;
 
-        for (var i = 1; i < states.Count; i++)
+        var lastStateId = 0;
+        while (await (job?.WaitAsyncTask(states.WaitToReadAsync()) ?? states.WaitToReadAsync()))
         {
-            if (i % 10 == 0)
-                await callback(i, states.Count, LoadingState.ProcessingFiles, false);
+            while (states.TryRead(out var state))
+            {
+                if (state.StateId % 10 == 0)
+                    await callback(state.Progress, state.MaxProgress, LoadingState.ProcessingFiles, false);
 
-            var lastState = curState;
-            curState = states[i];
-            DebugTools.Assert(curState.FromSequence <= lastState.ToSequence);
+                DebugTools.Assert(state.State.FromSequence <= curState.ToSequence);
+                lastStateId = state.StateId;
+                curState = state.State;
 
-            UpdatePlayerStates(curState.PlayerStates.Span, playerStates);
-            UpdateEntityStates(curState.EntityStates.Span, entStates, ref spawnedTracker, ref stateTracker, detached);
-            UpdateMessages(messages[i], uploadedFiles, prototypes, cvars, detachQueue, ref timeBase);
-            ProcessQueue(curState.ToSequence, detachQueue, detached, entStates);
-            UpdateDeletions(curState.EntityDeletions, entStates, detached);
-            serverTime[i] = GetTime(curState.ToSequence) - initialTime;
-            ticksSinceLastCheckpoint++;
+                UpdatePlayerStates(curState.PlayerStates.Span, playerStates);
+                UpdateEntityStates(curState.EntityStates.Span,
+                    entStates,
+                    ref spawnedTracker,
+                    ref stateTracker,
+                    detached);
+                UpdateMessages(state.Messages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase);
+                ProcessQueue(curState.ToSequence, detachQueue, detached, entStates);
+                UpdateDeletions(curState.EntityDeletions, entStates, detached);
+                serverTime.Add(GetTime(curState.ToSequence) - initialTime);
+                ticksSinceLastCheckpoint++;
 
             // Don't create checkpoints too frequently no matter the circumstance
             if (ticksSinceLastCheckpoint < _checkpointMinInterval)
                 continue;
 
             // Check if enough time, spawned entities or changed states have occurred.
-            if (ticksSinceLastCheckpoint < _checkpointInterval
-                && spawnedTracker < _checkpointEntitySpawnThreshold
-                && stateTracker < _checkpointEntityStateThreshold)
-                continue;
+                if (ticksSinceLastCheckpoint < _checkpointInterval
+                    && spawnedTracker < _checkpointEntitySpawnThreshold
+                    && stateTracker < _checkpointEntityStateThreshold)
+                    continue;
 
             // Track and update statistics about why checkpoints are getting created:
             if (ticksSinceLastCheckpoint >= _checkpointInterval)
@@ -177,24 +193,25 @@ public sealed partial class ReplayLoadManager
             else if (stateTracker >= _checkpointEntityStateThreshold)
             {
                 stats_due_state += 1;
-            }
+                }
 
-            ticksSinceLastCheckpoint = 0;
-            spawnedTracker = 0;
-            stateTracker = 0;
-            var newState = new GameState(GameTick.Zero,
-                curState.ToSequence,
-                default,
-                entStates.Values.ToArray(),
-                playerStates.Values.ToArray(),
-                empty); // for full states, deletions are implicit by simply not being in the state
-            checkPoints.Add(new CheckpointState(newState, timeBase, cvars, i, detached));
+                ticksSinceLastCheckpoint = 0;
+                spawnedTracker = 0;
+                stateTracker = 0;
+                var newState = new GameState(GameTick.Zero,
+                    curState.ToSequence,
+                    default,
+                    entStates.Values.ToArray(),
+                    playerStates.Values.ToArray(),
+                    empty); // for full states, deletions are implicit by simply not being in the state
+                checkPoints.Add(new CheckpointState(newState, timeBase, cvars, state.StateId, detached));
+            }
         }
 
-        _sawmill.Info($"Finished generating {checkPoints.Count} checkpoints. Elapsed time: {st.Elapsed}. Checkpoint every {(float)states.Count / checkPoints.Count} ticks on average");
+        _sawmill.Info($"Finished generating {checkPoints.Count} checkpoints. Elapsed time: {st.Elapsed}. Checkpoint every {(float)lastStateId / checkPoints.Count} ticks on average");
         _sawmill.Info($"Checkpoint stats - Spawning: {stats_due_spawned} StateChanges: {stats_due_state} Ticks: {stats_due_ticks}. ");
-        await callback(states.Count, states.Count, LoadingState.ProcessingFiles, false);
-        return (checkPoints.ToArray(), serverTime);
+        await callback(10000, 10000, LoadingState.ProcessingFiles, false);
+        return (checkPoints.ToArray(), serverTime.ToArray());
     }
 
     private void ProcessQueue(

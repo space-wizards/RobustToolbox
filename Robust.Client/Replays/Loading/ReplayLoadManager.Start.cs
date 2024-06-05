@@ -25,10 +25,11 @@ public sealed partial class ReplayLoadManager
 
     public async Task LoadAndStartReplayAsync(
         IReplayFileReader fileReader,
+        LoadReplayJob? job = null,
         LoadReplayCallback? callback = null)
     {
         callback ??= (_, _, _, _) => Task.CompletedTask;
-        var data = await LoadReplayAsync(fileReader, callback);
+        var data = await LoadReplayAsync(fileReader, job, callback);
         await StartReplayAsync(data, callback);
     }
 

@@ -51,7 +51,7 @@ namespace Robust.Client.GameObjects
         /// <param name="message">Arguments for this event.</param>
         /// <param name="replay">if true, current cmd state will not be checked or updated - use this for "replaying" an
         /// old input that was saved or buffered until further processing could be done</param>
-        public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, ClientFullInputCmdMessage message, bool replay = false)
+        public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, IFullInputCmdMessage message, bool replay = false)
         {
             #if DEBUG
 
@@ -83,20 +83,38 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            // send it off to the server
-            var fullMsg = new FullInputCmdMessage(
-                message.Tick,
-                message.SubTick,
-                (int)message.InputSequence,
-                message.InputFunctionId,
-                message.State,
-                GetNetCoordinates(message.Coordinates),
-                message.ScreenCoordinates)
+            var clientMsg = message switch
             {
-                Uid = GetNetEntity(message.Uid)
+                ClientFullInputCmdMessage clientInput => clientInput,
+                FullInputCmdMessage fullInput => new ClientFullInputCmdMessage(
+                    fullInput.Tick,
+                    fullInput.SubTick,
+                    fullInput.InputFunctionId,
+                    GetCoordinates(fullInput.Coordinates),
+                    fullInput.ScreenCoordinates,
+                    fullInput.State,
+                    GetEntity(fullInput.Uid)),
+
+                _ => throw new ArgumentOutOfRangeException()
             };
 
-            DispatchInputCommand(message, fullMsg);
+            var fullMsg = message switch
+            {
+                FullInputCmdMessage fullInput => fullInput,
+                ClientFullInputCmdMessage client => new FullInputCmdMessage(
+                    client.Tick,
+                    client.SubTick,
+                    client.InputFunctionId,
+                    clientMsg.State,
+                    GetNetCoordinates(client.Coordinates),
+                    clientMsg.ScreenCoordinates,
+                    GetNetEntity(clientMsg.Uid)
+                    ),
+
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            DispatchInputCommand(clientMsg, fullMsg);
             return false;
         }
 

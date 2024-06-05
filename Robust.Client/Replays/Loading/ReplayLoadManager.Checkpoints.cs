@@ -455,20 +455,20 @@ public sealed partial class ReplayLoadManager
             {
                 // This is a new component
                 // I'm not 100% sure about this, but I think delta states should always be full states here?
-                DebugTools.Assert(newCompState.State is not IComponentDeltaState newDelta || newDelta.FullState);
+                DebugTools.Assert(newCompState.State is not IComponentDeltaState newDelta);
                 oldState[newCompState.NetID] = newCompState;
                 continue;
             }
 
             // Modify or replace existing component
-            if (newCompState.State is not IComponentDeltaState delta || delta.FullState)
+            if (newCompState.State is not IComponentDeltaState delta)
             {
                 oldState[newCompState.NetID] = newCompState;
                 continue;
             }
 
-            DebugTools.Assert(existing.State is IComponentDeltaState fullDelta && fullDelta.FullState);
-            oldState[newCompState.NetID] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State), newCompState.LastModifiedTick);
+            DebugTools.Assert(existing.State != null && existing.State is not IComponentDeltaState);
+            oldState[newCompState.NetID] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State!), newCompState.LastModifiedTick);
         }
     }
 
@@ -510,7 +510,7 @@ public sealed partial class ReplayLoadManager
         foreach (var compChange in newCompStates.Values)
         {
             // I'm not 100% sure about this, but I think delta states should always be full states here?
-            DebugTools.Assert(compChange.State is not IComponentDeltaState delta);
+            DebugTools.Assert(compChange.State is not IComponentDeltaState);
             combined.Add(compChange);
         }
 

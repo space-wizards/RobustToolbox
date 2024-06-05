@@ -1,43 +1,56 @@
 using System;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.GameObjects;
+
+[RequiresSerializable]
+[Serializable, NetSerializable]
+[Virtual]
+public abstract class ComponentState : IComponentState;
+
+/// <summary>
+/// Represents the state of a component for networking purposes.
+/// </summary>
+public interface IComponentState;
+
+public interface IComponentDeltaState : IComponentState
 {
-    [RequiresSerializable]
-    [Serializable, NetSerializable]
-    [Virtual]
-    public class ComponentState : IComponentState
-    {
+    public void ApplyToFullState(IComponentState fullState);
 
-    }
+    public IComponentState CreateNewFullState(IComponentState fullState);
+}
+
+/// <summary>
+/// Interface for component states that only contain partial state data. The actual delta state class should be a
+/// separate class from the full component states.
+/// </summary>
+/// <typeparam name="TState">The full-state class associated with this partial state</typeparam>
+public interface IComponentDeltaState<TState> : IComponentDeltaState where TState: IComponentState
+{
+    /// <summary>
+    /// This function will apply the current delta state to the provided full state, modifying it in the process.
+    /// </summary>
+    public void ApplyToFullState(TState fullState);
 
     /// <summary>
-    /// Represents the state of a component for networking purposes.
+    /// This function should take in a full state and return a new full state with the current delta applied, WITHOUT
+    /// modifying the original input state.
     /// </summary>
-    public interface IComponentState
-    {
+    public TState CreateNewFullState(TState fullState);
 
+    void IComponentDeltaState.ApplyToFullState(IComponentState fullState)
+    {
+        if (fullState is TState state)
+            ApplyToFullState(state);
+        else
+            throw new Exception($"Unexpected type. Expected {nameof(TState)} but got {fullState.GetType().Name}");
     }
 
-    /// <summary>
-    ///     Interface for components that support delta-states.
-    /// </summary>
-    public interface IComponentDeltaState
+    IComponentState IComponentDeltaState.CreateNewFullState(IComponentState fullState)
     {
-        /// <summary>
-        ///     Whether this state is a delta or full state.
-        /// </summary>
-        bool FullState { get; }
-
-        /// <summary>
-        ///     This function will apply the current delta state to the provided full state, modifying it in the process.
-        /// </summary>
-        public void ApplyToFullState(IComponentState fullState);
-
-        /// <summary>
-        ///     This function should take in a full state and return a new full state with the current delta applied,
-        ///     WITHOUT modifying the original input state.
-        /// </summary>
-        public IComponentState CreateNewFullState(IComponentState fullState);
+        if (fullState is TState state)
+            return CreateNewFullState(state);
+        else
+            throw new Exception($"Unexpected type. Expected {nameof(TState)} but got {fullState.GetType().Name}");
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Configuration;
@@ -110,7 +111,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 moveBuffer[proxy] = worldAABB;
                 // If something is in our AABB then try grid traversal for it
-                _traversal.CheckTraverse(proxy.Entity, Transform(proxy.Entity));
+                _traversal.CheckTraverse((proxy.Entity, _xformQuery.GetComponent(proxy.Entity)));
             }
         }
 
@@ -288,8 +289,8 @@ namespace Robust.Shared.Physics.Systems
                         ref (EntityUid gridUid,
                             MapGridComponent grid,
                             Transform transform,
-                            Matrix3 worldMatrix,
-                            Matrix3 invWorldMatrix,
+                            Matrix3x2 worldMatrix,
+                            Matrix3x2 invWorldMatrix,
                             SharedMapSystem _map,
                             SharedPhysicsSystem _physicsSystem,
                             SharedTransformSystem xformSystem,
@@ -446,7 +447,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private void TouchProxies(EntityUid mapId, Matrix3 broadphaseMatrix, Fixture fixture)
+        private void TouchProxies(EntityUid mapId, Matrix3x2 broadphaseMatrix, Fixture fixture)
         {
             foreach (var proxy in fixture.Proxies)
             {

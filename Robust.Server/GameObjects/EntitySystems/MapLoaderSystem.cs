@@ -844,7 +844,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
             if (xformQuery.TryGetComponent(rootEntity, out var xform) && IsRoot(xform, mapQuery) && !HasComp<MapComponent>(rootEntity))
             {
-                _transform.SetLocalPosition(xform, data.Options.TransformMatrix.Transform(xform.LocalPosition));
+                _transform.SetLocalPosition(xform, Vector2.Transform(xform.LocalPosition, data.Options.TransformMatrix));
                 xform.LocalRotation += data.Options.Rotation;
             }
         }
@@ -856,7 +856,7 @@ public sealed class MapLoaderSystem : EntitySystem
             if (xformQuery.TryGetComponent(entity, out var xform) && IsRoot(xform, mapQuery))
             {
                 // Don't want to trigger events
-                xform._localPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
+                xform._localPosition = Vector2.Transform(xform.LocalPosition, data.Options.TransformMatrix);
                 if (!xform.NoLocalRotation)
                     xform._localRotation += data.Options.Rotation;
 

@@ -30,9 +30,7 @@ namespace Robust.Shared.Containers
         {
             foreach (var (id, container) in Containers)
             {
-                container.ID = id;
-                container.Owner = Owner;
-                container.Manager = this;
+                container.Init(default!, id, (Owner, this));
             }
         }
 

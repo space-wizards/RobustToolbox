@@ -62,7 +62,7 @@ internal sealed class PvsChunk
     /// <summary>
     /// The <see cref="Root"/>'s inverse world matrix.
     /// </summary>
-    public Matrix3 InvWorldMatrix { get; set; }
+    public Matrix3x2 InvWorldMatrix { get; set; }
 
     // These are only used while populating the chunk. They aren't local variables because the chunks are pooled, so
     // the same chunk can be repopulated more than once.

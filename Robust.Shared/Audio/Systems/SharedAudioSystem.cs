@@ -10,6 +10,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -34,6 +35,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
     [Dependency] protected readonly MetaDataSystem MetadataSys = default!;
+    [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
 
     /// <summary>
     /// Default max range at which the sound can be heard.
@@ -92,7 +94,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         var currentPos = (entity.Comp.PauseTime ?? Timing.CurTime) - entity.Comp.AudioStart;
         var timeOffset = TimeSpan.FromSeconds(position - currentPos.TotalSeconds);
 
-        DebugTools.Assert(currentPos > TimeSpan.Zero);
+        DebugTools.Assert(currentPos >= TimeSpan.Zero);
 
         // Rounding.
         if (Math.Abs(timeOffset.TotalSeconds) <= 0.01)
@@ -143,6 +145,33 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
         audio.Value.Comp.Global = true;
         MetadataSys.AddFlag(audio.Value.Owner, MetaDataFlags.Undetachable);
+    }
+
+    public virtual void SetGridAudio(Entity<AudioComponent>? entity)
+    {
+        if (entity == null)
+            return;
+
+        entity.Value.Comp.Flags |= AudioFlags.GridAudio;
+        var gridUid = Transform(entity.Value).GridUid;
+
+        if (TryComp(gridUid, out PhysicsComponent? gridPhysics))
+        {
+            XformSystem.SetLocalPosition(entity.Value.Owner, gridPhysics.LocalCenter);
+        }
+
+        if (TryComp(gridUid, out MapGridComponent? mapGrid))
+        {
+            var extents = mapGrid.LocalAABB.Extents;
+            var minDistance = MathF.Max(extents.X, extents.Y);
+
+            entity.Value.Comp.Params = entity.Value.Comp.Params
+                .WithMaxDistance(minDistance + DefaultSoundRange)
+                .WithReferenceDistance(minDistance);
+        }
+
+        entity.Value.Comp.Flags |= AudioFlags.NoOcclusion;
+        Dirty(entity.Value);
     }
 
     /// <summary>
@@ -266,15 +295,15 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
     #region AudioParams
 
-    protected AudioComponent SetupAudio(EntityUid uid, string? fileName, AudioParams? audioParams, TimeSpan? length = null)
+    protected Entity<AudioComponent> SetupAudio(string? fileName, AudioParams? audioParams, bool initialize = true, TimeSpan? length = null)
     {
-        DebugTools.Assert((!string.IsNullOrEmpty(fileName) || length is not null));
+        var uid = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
+        DebugTools.Assert(!string.IsNullOrEmpty(fileName) || length is not null);
         audioParams ??= AudioParams.Default;
         var comp = AddComp<AudioComponent>(uid);
         comp.FileName = fileName ?? string.Empty;
         comp.Params = audioParams.Value;
         comp.AudioStart = Timing.CurTime;
-
 
         if (!audioParams.Value.Loop)
         {
@@ -290,7 +319,12 @@ public abstract partial class SharedAudioSystem : EntitySystem
             comp.Params.Pitch *= (float) RandMan.NextGaussian(1, comp.Params.Variation.Value);
         }
 
-        return comp;
+        if (initialize)
+        {
+            EntityManager.InitializeAndStartEntity(uid);
+        }
+
+        return new Entity<AudioComponent>(uid, comp);
     }
 
     public static float GainToVolume(float value)
@@ -597,7 +631,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, Components.AudioComponent Component)? PlayStatic(SoundSpecifier? sound, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayStatic(GetSound(sound), playerFilter, coordinates, recordReplay);
+        return sound == null ? null : PlayStatic(GetSound(sound), playerFilter, coordinates, recordReplay, audioParams);
     }
 
     /// <summary>

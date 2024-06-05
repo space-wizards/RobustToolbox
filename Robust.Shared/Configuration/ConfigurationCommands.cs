@@ -140,4 +140,47 @@ namespace Robust.Shared.Configuration
             throw new NotSupportedException();
         }
     }
+
+    internal sealed class CVarSubsCommand : LocalizedCommands
+    {
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+
+        public override string Command => "cvar_subs";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (args.Length < 1)
+            {
+                shell.WriteError(Loc.GetString("cmd-cvar_subs-invalid-args"));
+                return;
+            }
+
+            var name = args[0];
+            var subs = ((ConfigurationManager)_cfg).GetSubs(name);
+
+            foreach (var @delegate in subs)
+            {
+                shell.WriteLine(ShowDelegateInfo(@delegate));
+            }
+        }
+
+        private static string ShowDelegateInfo(Delegate del)
+        {
+            return $"{del}: {del.Method} -> {del.Target}";
+        }
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                return CompletionResult.FromHintOptions(
+                    _cfg.GetRegisteredCVars()
+                        .Select(c => new CompletionOption(c))
+                        .OrderBy(c => c.Value),
+                    Loc.GetString("cmd-cvar_subs-arg-name"));
+            }
+
+            return CompletionResult.Empty;
+        }
+    }
 }

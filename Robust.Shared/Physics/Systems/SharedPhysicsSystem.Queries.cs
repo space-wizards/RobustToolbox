@@ -274,7 +274,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 var (_, rot, matrix, invMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(uid);
 
-                var position = invMatrix.Transform(ray.Position);
+                var position = Vector2.Transform(ray.Position, invMatrix);
                 var gridRot = new Angle(-rot.Theta);
                 var direction = gridRot.RotateVec(ray.Direction);
 
@@ -300,7 +300,7 @@ namespace Robust.Shared.Physics.Systems
                     // TODO: Shape raycast here
 
                     // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
+                    var result = new RayCastResults(distFromOrigin, Vector2.Transform(point, matrix), proxy.Entity);
                     results.Add(result);
 #if DEBUG
                     _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, result, _netMan.IsServer, mapId));
@@ -328,7 +328,7 @@ namespace Robust.Shared.Physics.Systems
                     // TODO: Shape raycast here
 
                     // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
+                    var result = new RayCastResults(distFromOrigin, Vector2.Transform(point, matrix), proxy.Entity);
                     results.Add(result);
 #if DEBUG
                     _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, result, _netMan.IsServer, mapId));
@@ -385,7 +385,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 var (_, rot, invMatrix) = _transform.GetWorldPositionRotationInvMatrix(uid);
 
-                var position = invMatrix.Transform(ray.Position);
+                var position = Vector2.Transform(ray.Position, invMatrix);
                 var gridRot = new Angle(-rot.Theta);
                 var direction = gridRot.RotateVec(ray.Direction);
 

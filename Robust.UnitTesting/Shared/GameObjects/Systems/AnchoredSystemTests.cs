@@ -203,7 +203,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // Act
             entMan.System<MoveEventTestSystem>().ResetCounters();
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid));
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.Owner));
             entMan.System<MoveEventTestSystem>().AssertMoved();
             traversal.Enabled = true;
@@ -246,7 +246,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             grid.SetTile(tileIndices, new Tile(1));
 
             // Act
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
+            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid), tileIndices);
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
@@ -450,10 +450,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
             var physComp = entMan.AddComponent<PhysicsComponent>(ent1);
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
-
+            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid), tileIndices);
             // Act
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = false;
+            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(ent1, entMan.GetComponent<TransformComponent>(ent1));
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Dynamic));
         }

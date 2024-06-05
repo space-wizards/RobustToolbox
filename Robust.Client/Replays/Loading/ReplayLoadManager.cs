@@ -33,6 +33,7 @@ public sealed partial class ReplayLoadManager : IReplayLoadManager
 
     private ushort _metaId;
     private bool _initialized;
+    private int _checkpointInterval;
     private int _checkpointMinInterval;
     private int _checkpointEntitySpawnThreshold;
     private int _checkpointEntityStateThreshold;
@@ -44,6 +45,7 @@ public sealed partial class ReplayLoadManager : IReplayLoadManager
             return;
 
         _initialized = true;
+        _confMan.OnValueChanged(CVars.CheckpointInterval, value => _checkpointInterval = value, true);
         _confMan.OnValueChanged(CVars.CheckpointMinInterval, value => _checkpointMinInterval = value, true);
         _confMan.OnValueChanged(CVars.CheckpointEntitySpawnThreshold, value => _checkpointEntitySpawnThreshold = value,
             true);

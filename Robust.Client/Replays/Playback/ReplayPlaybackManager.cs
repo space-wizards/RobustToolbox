@@ -51,7 +51,6 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
 
     public ReplayData? Replay { get; private set; }
     public NetUserId? Recorder => Replay?.Recorder;
-    private int _checkpointInterval;
     private int _checkpointMinInterval;
     private int _replayMaxScrubTime;
     private int _visualEventThreshold;

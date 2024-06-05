@@ -225,7 +225,7 @@ namespace Robust.Client.Debugging
         {
             var viewBounds = args.WorldBounds;
             var viewAABB = args.WorldAABB;
-            var mapId = _eyeManager.CurrentMap;
+            var mapId = args.MapId;
 
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.Shapes) != 0)
             {
@@ -368,12 +368,12 @@ namespace Robust.Client.Debugging
             }
 
             worldHandle.UseShader(null);
-            worldHandle.SetTransform(Matrix3.Identity);
+            worldHandle.SetTransform(Matrix3x2.Identity);
         }
 
         private void DrawScreen(DrawingHandleScreen screenHandle, OverlayDrawArgs args)
         {
-            var mapId = _eyeManager.CurrentMap;
+            var mapId = args.MapId;
             var mousePos = _inputManager.MouseScreenPosition;
 
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.ShapeInfo) != 0x0)
@@ -443,7 +443,7 @@ namespace Robust.Client.Debugging
             }
 
             screenHandle.UseShader(null);
-            screenHandle.SetTransform(Matrix3.Identity);
+            screenHandle.SetTransform(Matrix3x2.Identity);
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)
@@ -520,11 +520,11 @@ namespace Robust.Client.Debugging
             var matrix1 = xform1.WorldMatrix;
             var matrix2 = xform2.WorldMatrix;
 
-            var xf1 = new Vector2(matrix1.R0C2, matrix1.R1C2);
-            var xf2 = new Vector2(matrix2.R0C2, matrix2.R1C2);
+            var xf1 = new Vector2(matrix1.M31, matrix1.M32);
+            var xf2 = new Vector2(matrix2.M31, matrix2.M32);
 
-            var p1 = matrix1.Transform(joint.LocalAnchorA);
-            var p2 = matrix2.Transform(joint.LocalAnchorB);
+            var p1 = Vector2.Transform(joint.LocalAnchorA, matrix1);
+            var p2 = Vector2.Transform(joint.LocalAnchorB, matrix2);
 
             var xfa = new Transform(xf1, xform1.WorldRotation);
             var xfb = new Transform(xf2, xform2.WorldRotation);

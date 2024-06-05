@@ -296,10 +296,12 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
         {
             var newEntity = CreateEntity(prototypeName, out _, overrides);
-            _xforms.SetCoordinates(newEntity, TransformQuery.GetComponent(newEntity), coordinates, unanchor: false);
+
+            var xformComp = TransformQuery.GetComponent(newEntity);
+            _xforms.SetCoordinates(newEntity, xformComp, coordinates, rotation: rotation, unanchor: false);
             return newEntity;
         }
 
@@ -324,7 +326,7 @@ namespace Robust.Shared.GameObjects
             if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var gridUid, out var grid))
             {
                 coords = new EntityCoordinates(gridUid, _mapSystem.WorldToLocal(gridUid, grid, coordinates.Position));
-                _xforms.SetCoordinates(newEntity, transform, coords, unanchor: false);
+                _xforms.SetCoordinates(newEntity, transform, coords, rotation, unanchor: false);
             }
             else
             {

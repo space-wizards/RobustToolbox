@@ -244,40 +244,51 @@ public abstract partial class SharedMapSystem
 
     private void OnGridHandleState(EntityUid uid, MapGridComponent component, ref ComponentHandleState args)
     {
-        if (args.Current is not MapGridComponentState state)
-            return;
-
-        DebugTools.Assert(component.ChunkSize == state.ChunkSize || component.Chunks.Count == 0,
-            "Can't modify chunk size of an existing grid.");
-
-        component.ChunkSize = state.ChunkSize;
-        if (state.ChunkData == null && state.FullGridData == null)
-            return;
-
-        var modifiedChunks = new HashSet<MapChunk>();
-
-        // delta state
-        if (state.ChunkData != null)
+        HashSet<MapChunk> modifiedChunks;
+        switch (args.Current)
         {
-            foreach (var chunkData in state.ChunkData)
+            case MapGridComponentDeltaState delta:
             {
-                ApplyChunkData(uid, component, chunkData, modifiedChunks);
-            }
-        }
+                modifiedChunks = new();
+                DebugTools.Assert(component.ChunkSize == delta.ChunkSize || component.Chunks.Count == 0,
+                    "Can't modify chunk size of an existing grid.");
 
-        // full state
-        if (state.FullGridData != null)
-        {
-            foreach (var index in component.Chunks.Keys)
-            {
-                if (!state.FullGridData.ContainsKey(index))
-                    ApplyChunkData(uid, component, ChunkDatum.CreateDeleted(index), modifiedChunks);
-            }
+                component.ChunkSize = delta.ChunkSize;
+                if (delta.ChunkData == null)
+                    return;
 
-            foreach (var (index, tiles) in state.FullGridData)
-            {
-                ApplyChunkData(uid, component, ChunkDatum.CreateModified(index, tiles), modifiedChunks);
+                foreach (var chunkData in delta.ChunkData)
+                {
+                    ApplyChunkData(uid, component, chunkData, modifiedChunks);
+                }
+
+                component.LastTileModifiedTick = delta.LastTileModifiedTick;
+                break;
             }
+            case MapGridComponentState state:
+            {
+                modifiedChunks = new();
+                DebugTools.Assert(component.ChunkSize == state.ChunkSize || component.Chunks.Count == 0,
+                    "Can't modify chunk size of an existing grid.");
+
+                component.LastTileModifiedTick = state.LastTileModifiedTick;
+                component.ChunkSize = state.ChunkSize;
+
+                foreach (var index in component.Chunks.Keys)
+                {
+                    if (!state.FullGridData.ContainsKey(index))
+                        ApplyChunkData(uid, component, ChunkDatum.CreateDeleted(index), modifiedChunks);
+                }
+
+                foreach (var (index, tiles) in state.FullGridData)
+                {
+                    ApplyChunkData(uid, component, ChunkDatum.CreateModified(index, tiles), modifiedChunks);
+                }
+
+                break;
+            }
+            default:
+                return;
         }
 
         var count = component.Chunks.Count;
@@ -409,7 +420,7 @@ public abstract partial class SharedMapSystem
             }
         }
 
-        args.State = new MapGridComponentState(component.ChunkSize, chunkData);
+        args.State = new MapGridComponentDeltaState(component.ChunkSize, chunkData, component.LastTileModifiedTick);
 
 #if DEBUG
         if (chunkData == null)
@@ -445,7 +456,7 @@ public abstract partial class SharedMapSystem
             chunkData.Add(index, tileBuffer);
         }
 
-        args.State = new MapGridComponentState(component.ChunkSize, chunkData);
+        args.State = new MapGridComponentState(component.ChunkSize, chunkData, component.LastTileModifiedTick);
 
 #if DEBUG
         foreach (var chunk in chunkData.Values)
@@ -1281,7 +1292,7 @@ public abstract partial class SharedMapSystem
     public Vector2 WorldToLocal(EntityUid uid, MapGridComponent grid, Vector2 posWorld)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
-        return matrix.Transform(posWorld);
+        return Vector2.Transform(posWorld, matrix);
     }
 
     public EntityCoordinates MapToGrid(EntityUid uid, MapCoordinates posWorld)
@@ -1304,7 +1315,7 @@ public abstract partial class SharedMapSystem
     public Vector2 LocalToWorld(EntityUid uid, MapGridComponent grid, Vector2 posLocal)
     {
         var matrix = _transform.GetWorldMatrix(uid);
-        return matrix.Transform(posLocal);
+        return Vector2.Transform(posLocal, matrix);
     }
 
     public Vector2i WorldToTile(EntityUid uid, MapGridComponent grid, Vector2 posWorld)
@@ -1424,7 +1435,7 @@ public abstract partial class SharedMapSystem
         var locX = gridTile.X * grid.TileSize + (grid.TileSize / 2f);
         var locY = gridTile.Y * grid.TileSize + (grid.TileSize / 2f);
 
-        return _transform.GetWorldMatrix(uid).Transform(new Vector2(locX, locY));
+        return Vector2.Transform(new Vector2(locX, locY), _transform.GetWorldMatrix(uid));
     }
 
     public MapCoordinates GridTileToWorld(EntityUid uid, MapGridComponent grid, Vector2i gridTile)

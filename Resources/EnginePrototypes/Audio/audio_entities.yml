@@ -3,3 +3,6 @@
   name: Audio
   description: Audio entity used by engine
   save: false
+  components:
+    - type: Transform
+      gridTraversal: false

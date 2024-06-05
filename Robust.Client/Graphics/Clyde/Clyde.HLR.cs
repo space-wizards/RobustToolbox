@@ -367,7 +367,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.UseShader(entry.Sprite.PostShader);
                     CalcScreenMatrices(viewport.Size, out var proj, out var view);
                     _renderHandle.SetProjView(proj, view);
-                    _renderHandle.SetModelTransform(Matrix3.Identity);
+                    _renderHandle.SetModelTransform(Matrix3x2.Identity);
 
                     var rounded = roundedPos - entityPostRenderTarget.Size / 2;
 
@@ -480,7 +480,7 @@ namespace Robust.Client.Graphics.Clyde
                 var worldBounds = CalcWorldBounds(viewport);
                 var worldAABB = worldBounds.CalcBoundingBox();
 
-                if (_eyeManager.CurrentMap != MapId.Nullspace)
+                if (eye.Position.MapId != MapId.Nullspace)
                 {
                     using (DebugGroup("Lights"))
                     using (_prof.Group("Lights"))
@@ -530,7 +530,7 @@ namespace Robust.Client.Graphics.Clyde
                     // Because the math is wrong.
                     // So there are distortions from incorrect projection.
                     _renderHandle.UseShader(_fovDebugShaderInstance);
-                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
+                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3x2.Identity);
                     var pos = UIBox2.FromDimensions(viewport.Size / 2 - new Vector2(200, 200), new Vector2(400, 400));
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(FovTexture, pos);
                 }
@@ -538,15 +538,18 @@ namespace Robust.Client.Graphics.Clyde
                 if (DebugLayers == ClydeDebugLayers.Light)
                 {
                     _renderHandle.UseShader(null);
-                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
+                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3x2.Identity);
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(
                         viewport.WallBleedIntermediateRenderTarget2.Texture,
                         UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));
                 }
 
-                using (_prof.Group("Overlays WS"))
+                if (eye.Position.MapId != MapId.Nullspace)
                 {
-                    RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
+                    using (_prof.Group("Overlays WS"))
+                    {
+                        RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
+                    }
                 }
 
                 _currentViewport = oldVp;

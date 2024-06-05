@@ -234,7 +234,7 @@ public abstract partial class SharedPhysicsSystem
 
         var parent = oldParent;
         TransformComponent? parentXform = _xformQuery.GetComponent(parent);
-        var localPos = _transform.GetInvWorldMatrix(parentXform).Transform(_transform.GetWorldPosition(xform));
+        var localPos = Vector2.Transform(_transform.GetWorldPosition(xform), _transform.GetInvWorldMatrix(parentXform));
 
         var oldLinear = physics.LinearVelocity;
         var oldAngular = physics.AngularVelocity;

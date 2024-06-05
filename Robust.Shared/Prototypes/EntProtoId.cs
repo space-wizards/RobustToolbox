@@ -23,6 +23,11 @@ public readonly record struct EntProtoId(string Id) : IEquatable<string>, ICompa
         return protoId.Id;
     }
 
+    public static implicit operator EntProtoId(EntityPrototype proto)
+    {
+        return new EntProtoId(proto.ID);
+    }
+
     public static implicit operator EntProtoId(string id)
     {
         return new EntProtoId(id);

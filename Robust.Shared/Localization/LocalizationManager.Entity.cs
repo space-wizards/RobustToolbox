@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Linguini.Bundle;
 using Linguini.Bundle.Errors;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
@@ -92,14 +93,14 @@ namespace Robust.Shared.Localization
 
                         var allErrors = new List<FluentError>();
                         if (desc == null
-                            && !bundle.TryGetMsg(locId, "desc", null, out var err1, out desc))
+                            && !bundle.TryGetMessage(locId, "desc", null, out var err1, out desc))
                         {
                             desc = null;
                             allErrors.AddRange(err1);
                         }
 
                         if (suffix == null
-                            && !bundle.TryGetMsg(locId, "suffix", null, out var err, out suffix))
+                            && !bundle.TryGetMessage(locId, "suffix", null, out var err, out suffix))
                         {
                             suffix = null;
                         }
@@ -125,6 +126,15 @@ namespace Robust.Shared.Localization
                 }
             }
 
+            // Attempt to infer suffix from entity categories
+            if (suffix == null)
+            {
+                var suffixes = _prototype.Index<EntityPrototype>(prototypeId).Categories
+                    .Where(x => x.Suffix != null)
+                    .Select(x => GetString(x.Suffix!));
+                suffix = string.Join(", ", suffixes);
+            }
+            
             return new EntityLocData(
                 name ?? "",
                 desc ?? "",

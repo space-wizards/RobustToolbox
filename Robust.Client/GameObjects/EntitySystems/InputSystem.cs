@@ -51,7 +51,7 @@ namespace Robust.Client.GameObjects
         /// <param name="message">Arguments for this event.</param>
         /// <param name="replay">if true, current cmd state will not be checked or updated - use this for "replaying" an
         /// old input that was saved or buffered until further processing could be done</param>
-        public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, IFullInputCmdMessage message, bool replay = false)
+        public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, ClientFullInputCmdMessage message, bool replay = false)
         {
             #if DEBUG
 
@@ -84,20 +84,19 @@ namespace Robust.Client.GameObjects
             }
 
             // send it off to the server
-            var clientMsg = (ClientFullInputCmdMessage)message;
             var fullMsg = new FullInputCmdMessage(
-                clientMsg.Tick,
-                clientMsg.SubTick,
-                (int)clientMsg.InputSequence,
-                clientMsg.InputFunctionId,
-                clientMsg.State,
-                GetNetCoordinates(clientMsg.Coordinates),
-                clientMsg.ScreenCoordinates)
+                message.Tick,
+                message.SubTick,
+                (int)message.InputSequence,
+                message.InputFunctionId,
+                message.State,
+                GetNetCoordinates(message.Coordinates),
+                message.ScreenCoordinates)
             {
-                Uid = GetNetEntity(clientMsg.Uid)
+                Uid = GetNetEntity(message.Uid)
             };
 
-            DispatchInputCommand(clientMsg, fullMsg);
+            DispatchInputCommand(message, fullMsg);
             return false;
         }
 

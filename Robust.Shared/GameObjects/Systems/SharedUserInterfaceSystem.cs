@@ -190,9 +190,10 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!_uiQuery.Resolve(ent.Owner, ref ent.Comp, false))
             return;
 
-        var actors = ent.Comp.Actors[key];
-        actors.Remove(actor);
+        if (!ent.Comp.Actors.TryGetValue(key, out var actors))
+            return;
 
+        actors.Remove(actor);
         if (actors.Count == 0)
             ent.Comp.Actors.Remove(key);
 

@@ -94,7 +94,6 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
         _initialized = true;
         _sawmill = _logMan.GetSawmill("replay");
         _metaId = _factory.GetRegistration(typeof(MetaDataComponent)).NetID!.Value;
-        _confMan.OnValueChanged(CVars.CheckpointInterval, (value) => _checkpointInterval = value, true);
         _confMan.OnValueChanged(CVars.CheckpointMinInterval, (value) => _checkpointMinInterval = value, true);
         _confMan.OnValueChanged(CVars.ReplayMaxScrubTime, (value) => _replayMaxScrubTime = value, true);
         _confMan.OnValueChanged(CVars.ReplaySkipThreshold, (value) => _visualEventThreshold = value, true);

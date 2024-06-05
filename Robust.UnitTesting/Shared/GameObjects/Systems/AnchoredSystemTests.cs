@@ -195,7 +195,8 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // can only be anchored to a tile
             var grid = entMan.GetComponent<MapGridComponent>(gridId);
-            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
+            var tileIndices = grid.TileIndicesFor(coordinates);
+            grid.SetTile(tileIndices, new Tile(1));
 
             var traversal = entMan.System<SharedGridTraversalSystem>();
             traversal.Enabled = false;
@@ -203,7 +204,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // Act
             entMan.System<MoveEventTestSystem>().ResetCounters();
-            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid));
+            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid), tileIndices);
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.Owner));
             entMan.System<MoveEventTestSystem>().AssertMoved();
             traversal.Enabled = true;

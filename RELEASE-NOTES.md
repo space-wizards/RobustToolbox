@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 224.1.1
+
+### Bugfixes
+
+* Fixed UserInterfaceSystem sometimes throwing a key-not-found exception when trying to close UIs.
+
+
 ## 224.1.0
 
 ### New features

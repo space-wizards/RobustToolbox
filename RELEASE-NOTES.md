@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `ServerIntegrationInstance` has new methods for adding dummy player sessions for tests that require multiple players.
+*None yet*
 
 ### Bugfixes
 
@@ -48,6 +48,30 @@ END TEMPLATE-->
 ### Other
 
 *None yet*
+
+### Internal
+
+*None yet*
+
+
+## 224.1.0
+
+### New features
+
+* `ServerIntegrationInstance` has new methods for adding dummy player sessions for tests that require multiple players.
+* Linguini has been updated to v0.8.1. Errors will now be logged when a duplicate localization key is found.
+* Added `UserInterfaceSystem.SetUi()` for modifying the `InterfaceData` associated with some BUI.
+* Added the `EntityPrototypeView` control for spawning & rendering an entity prototype.
+
+### Bugfixes
+
+* Fix `UserInterfaceSystem` spamming client side errors when entities with UIs open are deleted while outside of PVS range.
+* Fix Toolshed's EnumTypeParse not working enum values with upercase characters.
+* Fixed `incmd` command not working due to an invalid cast.
+
+### Other
+
+* There have been various performance improvements to replay loading & playback.
 
 ### Internal
 

@@ -96,7 +96,7 @@ public abstract partial class SharedTransformSystem
 
     public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null)
     {
-        DebugTools.Assert(grid == null || grid.Value.Owner == entity.Comp.GridUid);
+        DebugTools.Assert(grid == null);
 
         if (grid == null)
         {
@@ -227,7 +227,7 @@ public abstract partial class SharedTransformSystem
         InitializeGridUid(uid, component);
         component.MatricesDirty = true;
 
-        DebugTools.Assert(component._gridUid == uid || !HasComp<MapGridComponent>(uid));
+        DebugTools.Assert((component._gridUid == uid) || !HasComp<MapGridComponent>(uid));
         if (!component._anchored)
             return;
 

@@ -232,10 +232,12 @@ public abstract partial class SharedTransformSystem
             return;
 
         MapGridComponent? grid;
+        EntityUid gridUid;
 
         // First try find grid via parent:
         if (component.GridUid == component.ParentUid && TryComp(component.ParentUid, out MapGridComponent? gridComp))
         {
+            gridUid = component.ParentUid;
             grid = gridComp;
         }
         else
@@ -243,7 +245,7 @@ public abstract partial class SharedTransformSystem
             // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordinates)
             // in that case, we attempt to attach to a grid.
             var pos = new MapCoordinates(GetWorldPosition(component), component.MapID);
-            _mapManager.TryFindGridAt(pos, out _, out grid);
+            _mapManager.TryFindGridAt(pos, out gridUid, out grid);
         }
 
         if (grid == null)
@@ -252,7 +254,7 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        if (!AnchorEntity(uid, component, grid))
+        if (!AnchorEntity((uid, component), (gridUid, grid)))
             component._anchored = false;
     }
 

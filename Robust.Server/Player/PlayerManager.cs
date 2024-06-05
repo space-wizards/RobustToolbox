@@ -162,6 +162,10 @@ namespace Robust.Server.Player
 
     internal ICommonSession AddDummySession(NetUserId user, string name)
     {
+#if FULL_RELEASE
+        // Lets not make it completely trivial to fake player counts.
+        throw new NotSupportedException();
+#endif
         Lock.EnterWriteLock();
         DummySession session;
         try

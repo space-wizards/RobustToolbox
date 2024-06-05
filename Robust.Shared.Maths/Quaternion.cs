@@ -1,4 +1,4 @@
-﻿#region --- License ---
+#region --- License ---
 
 /*
 Copyright (c) 2006 - 2008 The Open Toolkit library.
@@ -26,6 +26,7 @@ SOFTWARE.
 #endregion --- License ---
 
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
@@ -73,9 +74,9 @@ namespace Robust.Shared.Maths
             : this(new Vector3(x, y, z), w) { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Quaternion(ref Matrix3 matrix)
+        public Quaternion(ref Matrix3x2 matrix)
         {
-            var scale = Math.Pow(matrix.Determinant, 1.0d / 3.0d);
+            var scale = Math.Pow(matrix.GetDeterminant(), 1.0d / 3.0d);
             float x, y, z;
 
             w = (float) (Math.Sqrt(Math.Max(0, scale + matrix[0, 0] + matrix[1, 1] + matrix[2, 2])) / 2);

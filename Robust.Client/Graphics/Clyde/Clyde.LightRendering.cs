@@ -492,18 +492,18 @@ namespace Robust.Client.Graphics.Clyde
 
                     var offset = new Vector2(component.Radius, component.Radius);
 
-                    Matrix3 matrix;
+                    Matrix3x2 matrix;
                     if (mask == null)
                     {
-                        matrix = Matrix3.Identity;
+                        matrix = Matrix3x2.Identity;
                     }
                     else
                     {
                         // Only apply rotation if a mask is said, because else it doesn't matter.
-                        matrix = Matrix3.CreateRotation(rotation);
+                        matrix = Matrix3Helpers.CreateRotation(rotation);
                     }
 
-                    (matrix.R0C2, matrix.R1C2) = lightPos;
+                    (matrix.M31, matrix.M32) = lightPos;
 
                     _drawQuad(-offset, offset, matrix, lightShader);
                 }
@@ -692,7 +692,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Blur horizontally to _wallBleedIntermediateRenderTarget1.
                 shader.SetUniformMaybe("direction", Vector2.UnitX);
-                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3x2.Identity, shader);
 
                 SetTexture(TextureUnit.Texture0, viewport.LightBlurTarget.Texture);
 
@@ -700,7 +700,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Blur vertically to _wallBleedIntermediateRenderTarget2.
                 shader.SetUniformMaybe("direction", Vector2.UnitY);
-                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3x2.Identity, shader);
 
                 SetTexture(TextureUnit.Texture0, viewport.LightRenderTarget.Texture);
             }
@@ -754,14 +754,14 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Blur horizontally to _wallBleedIntermediateRenderTarget1.
                 shader.SetUniformMaybe("direction", Vector2.UnitX);
-                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3x2.Identity, shader);
 
                 SetTexture(TextureUnit.Texture0, viewport.WallBleedIntermediateRenderTarget1.Texture);
                 BindRenderTargetFull(viewport.WallBleedIntermediateRenderTarget2);
 
                 // Blur vertically to _wallBleedIntermediateRenderTarget2.
                 shader.SetUniformMaybe("direction", Vector2.UnitY);
-                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3x2.Identity, shader);
 
                 SetTexture(TextureUnit.Texture0, viewport.WallBleedIntermediateRenderTarget2.Texture);
             }
@@ -909,13 +909,13 @@ namespace Robust.Client.Graphics.Clyde
             // Second modification is that output must be fov-centred (difference-space)
             uZero -= fovCentre;
 
-            var clipToDiff = new Matrix3(in uX, in uY, in uZero);
+            var clipToDiff = new Matrix3x2(uX.X, uX.Y, uY.X, uY.Y, uZero.X, uZero.Y);
 
             fovShader.SetUniformMaybe("clipToDiff", clipToDiff);
-            _drawQuad(Vector2.Zero, Vector2.One, Matrix3.Identity, fovShader);
+            _drawQuad(Vector2.Zero, Vector2.One, Matrix3x2.Identity, fovShader);
         }
 
-        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Matrix3 eyeTransform)
+        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Matrix3x2 eyeTransform)
         {
             using var _ = _prof.Group("UpdateOcclusionGeometry");
             using var _p = DebugGroup(nameof(UpdateOcclusionGeometry));
@@ -968,9 +968,9 @@ namespace Robust.Client.Graphics.Clyde
                         var worldTransform = xformSystem.GetWorldMatrix(transform, xforms);
                         var box = occluder.BoundingBox;
 
-                        var tl = worldTransform.Transform(box.TopLeft);
-                        var tr = worldTransform.Transform(box.TopRight);
-                        var br = worldTransform.Transform(box.BottomRight);
+                        var tl = Vector2.Transform(box.TopLeft, worldTransform);
+                        var tr = Vector2.Transform(box.TopRight, worldTransform);
+                        var br = Vector2.Transform(box.BottomRight, worldTransform);
                         var bl = tl + br - tr;
 
                         // Faces.
@@ -1010,9 +1010,9 @@ namespace Robust.Client.Graphics.Clyde
                         //
 
                         // Calculate delta positions from camera.
-                        var dTl = eyeTransform.Transform(tl);
-                        var dTr = eyeTransform.Transform(tr);
-                        var dBl = eyeTransform.Transform(bl);
+                        var dTl = Vector2.Transform(tl, eyeTransform);
+                        var dTr = Vector2.Transform(tr, eyeTransform);
+                        var dBl = Vector2.Transform(bl, eyeTransform);
                         var dBr = dBl + dTr - dTl;
 
                         // Get which neighbors are occluding.

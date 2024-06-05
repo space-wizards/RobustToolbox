@@ -88,7 +88,7 @@ namespace Robust.Client.Placement
         /// <returns></returns>
         public abstract bool IsValidPosition(EntityCoordinates position);
 
-        public virtual void Render(DrawingHandleWorld handle)
+        public virtual void Render(in OverlayDrawArgs args)
         {
             var uid = pManager.CurrentPlacementOverlayEntity;
             if (!pManager.EntityManager.TryGetComponent(uid, out SpriteComponent? sprite) || !sprite.Visible)
@@ -125,7 +125,8 @@ namespace Robust.Client.Placement
                 var worldRot = pManager.EntityManager.GetComponent<TransformComponent>(coordinate.EntityId).WorldRotation + dirAng;
 
                 sprite.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
-                spriteSys.Render(uid.Value, sprite, handle, pManager.EyeManager.CurrentEye.Rotation, worldRot, worldPos);
+                var rot = args.Viewport.Eye?.Rotation ?? default;
+                spriteSys.Render(uid.Value, sprite, args.WorldHandle, rot, worldRot, worldPos);
             }
         }
 

@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using JetBrains.Annotations;
+using Nett.Parser;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
@@ -49,29 +51,71 @@ public sealed partial class FormattedMessage
     /// <param name="toCopy">The message to copy.</param>
     public FormattedMessage(FormattedMessage toCopy)
     {
-        _nodes = Extensions.ShallowClone<MarkupNode>(toCopy._nodes);
+        _nodes = toCopy._nodes.ShallowClone();
     }
 
-    public static FormattedMessage FromMarkup(string markup)
+    private FormattedMessage(List<MarkupNode> nodes)
+    {
+        _nodes = nodes;
+    }
+
+    /// <summary>
+    /// Attempt to create a new formatted message from some markup text. Returns an error if it fails.
+    /// </summary>
+    public static bool TryFromMarkup(string markup, [NotNullWhen(true)] out FormattedMessage? msg, [NotNullWhen(false)] out string? error)
+    {
+        if (!TryParse(markup, out var nodes, out error))
+        {
+            msg = null;
+            return false;
+        }
+
+        msg = new FormattedMessage(nodes);
+        return true;
+    }
+
+    /// <summary>
+    /// Attempt to create a new formatted message from some markup text.
+    /// </summary>
+    public static bool TryFromMarkup(string markup, [NotNullWhen(true)] out FormattedMessage? msg)
+        => TryFromMarkup(markup, out msg, out _);
+
+    /// <summary>
+    /// Attempt to create a new formatted message from some markup text. Throws if the markup is invalid.
+    /// </summary>
+    /// <exception cref="ParseException">Thrown when an error occurs while trying to parse the markup.</exception>
+    public static FormattedMessage FromMarkupOrThrow(string markup)
     {
         var msg = new FormattedMessage();
-        msg.AddMarkup(markup);
+        msg.AddMarkupOrThrow(markup);
         return msg;
     }
 
-    public static FormattedMessage FromUnformatted(string markup)
+    [Obsolete("Use FromMarkupOrThrow or TryFromMarkup")]
+    public static FormattedMessage FromMarkup(string markup) => FromMarkupOrThrow(markup);
+
+    public static FormattedMessage FromUnformatted(string text)
     {
         var msg = new FormattedMessage();
-        msg.AddText(markup);
+        msg.AddText(text);
         return msg;
     }
 
-    public static FormattedMessage FromMarkupPermissive(string markup)
+    /// <summary>
+    /// Variant of <see cref="TryFromMarkup(string,out Robust.Shared.Utility.FormattedMessage?,out string?)"/> that
+    /// attempts to fall back to using the permissive parser that interprets invalid markup tags as normal text.
+    /// This may still throw if the permissive parser fails.
+    /// </summary>
+    /// <exception cref="ParseException">Thrown when an error occurs while trying to parse the markup.</exception>
+    public static FormattedMessage FromMarkupPermissive(string markup, out string? error)
     {
         var msg = new FormattedMessage();
-        msg.AddMarkupPermissive(markup);
+        msg.AddMarkupPermissive(markup, out error);
         return msg;
     }
+
+    /// <inheritdoc cref="FromMarkupPermissive(string,out string?)"/>
+    public static FormattedMessage FromMarkupPermissive(string markup) => FromMarkupPermissive(markup, out _);
 
     /// <summary>
     ///     Escape a string of text to be able to be formatted into markup.
@@ -82,12 +126,27 @@ public sealed partial class FormattedMessage
     }
 
     /// <summary>
-    ///     Remove all markup, leaving only the basic text content behind.
+    ///     Remove all markup, leaving only the basic text content behind. Throws if it fails to parse the markup tags.
     /// </summary>
-    public static string RemoveMarkup(string text)
+    /// <exception cref="ParseException">Thrown when an error occurs while trying to parse the markup.</exception>
+    public static string RemoveMarkupOrThrow(string markup)
     {
-        return FromMarkup(text).ToString();
+        return FromMarkupOrThrow(markup).ToString();
     }
+
+    /// <summary>
+    /// Attempts to remove all valid markup tags, leaving only the basic text content behind.
+    /// If this markup contains invalid tags that cannot be parsed, they will not be removed and will instead be trated
+    /// as normal text. Hence the output should probably only be parsed using try-parse the permissive parser.
+    /// </summary>
+    /// <exception cref="ParseException">Thrown when an error occurs while trying to fall back to the permissive parser.</exception>
+    public static string RemoveMarkupPermissive(string markup)
+    {
+        return FromMarkupPermissive(markup).ToString();
+    }
+
+    [Obsolete("Use RemoveMarkupOrThrow or RemoveMarkupPermissive")]
+    public static string RemoveMarkup(string markup) => RemoveMarkupOrThrow(markup);
 
     /// <summary>
     /// Adds a text node.

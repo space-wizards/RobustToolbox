@@ -38,7 +38,7 @@ public partial interface IEntityManager
     /// <summary>
     /// Spawns an entity and then parents it to the entity that the given entity coordinates are relative to.
     /// </summary>
-    EntityUid SpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
+    EntityUid SpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default);
 
     /// <summary>
     /// Resolves the given entity coordinates into world coordinates and spawns an entity at that location. The

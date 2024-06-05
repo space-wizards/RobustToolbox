@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -35,8 +36,6 @@ namespace Robust.Shared.GameObjects
         private const int ComponentCollectionCapacity = 1024;
         private const int EntityCapacity = 1024;
         private const int NetComponentCapacity = 8;
-
-        private static readonly IComponentState DefaultComponentState = new ComponentState();
 
         private FrozenDictionary<Type, Dictionary<EntityUid, IComponent>> _entTraitDict
             = FrozenDictionary<Type, Dictionary<EntityUid, IComponent>>.Empty;
@@ -1404,13 +1403,13 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? session, GameTick fromTick)
+        public IComponentState? GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? session, GameTick fromTick)
         {
             DebugTools.Assert(component.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {component.GetType()}");
             var getState = new ComponentGetState(session, fromTick);
             eventBus.RaiseComponentEvent(component, ref getState);
 
-            return getState.State ?? DefaultComponentState;
+            return getState.State;
         }
 
         public bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
@@ -1565,7 +1564,9 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+            {
+                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{Environment.StackTrace}");
+            }
 
             return false;
         }

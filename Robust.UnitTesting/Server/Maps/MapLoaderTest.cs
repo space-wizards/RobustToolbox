@@ -69,7 +69,7 @@ entities:
             resourceManager.MountString("/EnginePrototypes/TestMapEntity.yml", Prototype);
 
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
-            protoMan.RegisterKind(typeof(EntityPrototype));
+            protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
 
             protoMan.LoadDirectory(new ("/EnginePrototypes"));
             protoMan.LoadDirectory(new ("/Prototypes"));

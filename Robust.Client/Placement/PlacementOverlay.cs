@@ -19,7 +19,7 @@ namespace Robust.Client.Placement
 
             protected internal override void Draw(in OverlayDrawArgs args)
             {
-                _manager.Render(args.WorldHandle);
+                _manager.Render(args);
             }
         }
     }

@@ -506,7 +506,7 @@ namespace Robust.Client.Graphics.Clyde
                 data.Parameters[name] = value;
             }
 
-            private protected override void SetParameterImpl(string name, in Matrix3 value)
+            private protected override void SetParameterImpl(string name, in Matrix3x2 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.ParametersDirty = true;

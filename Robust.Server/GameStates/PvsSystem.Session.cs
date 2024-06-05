@@ -163,7 +163,7 @@ internal sealed partial class PvsSystem
 
                 dist = Math.Min(dist, (pos.Position - chunk.Position.Position).LengthSquared());
 
-                var relative = chunk.InvWorldMatrix.Transform(pos.Position)  - chunk.Centre;
+                var relative = Vector2.Transform(pos.Position, chunk.InvWorldMatrix)  - chunk.Centre;
                 relative = Vector2.Abs(relative);
                 chebDist = Math.Min(chebDist, Math.Max(relative.X, relative.Y));
             }

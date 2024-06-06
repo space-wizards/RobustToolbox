@@ -29,7 +29,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         {
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
-            manager.RegisterKind(typeof(EntityPrototype));
+            manager.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             manager.LoadString(DOCUMENT);
             manager.ResolveResults();
         }

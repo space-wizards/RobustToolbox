@@ -330,7 +330,7 @@ namespace Robust.Client.UserInterface
         }
 
         public void RenderControl(IRenderHandle renderHandle, ref int total, Control control, Vector2i position, Color modulate,
-            UIBox2i? scissorBox, Matrix3 coordinateTransform)
+            UIBox2i? scissorBox, Matrix3x2 coordinateTransform)
         {
             if (!control.Visible)
             {
@@ -378,8 +378,7 @@ namespace Robust.Client.UserInterface
 
             var handle = renderHandle.DrawingHandleScreen;
             var oldXform = handle.GetTransform();
-            var xform = oldXform;
-            xform.Multiply(Matrix3.CreateTransform(position, Angle.Zero, Vector2.One));
+            var xform = oldXform * Matrix3Helpers.CreateTransform(position, Angle.Zero, Vector2.One);
             handle.SetTransform(xform);
             modulate *= control.Modulate;
 
@@ -406,7 +405,7 @@ namespace Robust.Client.UserInterface
 
             foreach (var child in control.Children)
             {
-                var pos = position + (Vector2i) coordinateTransform.Transform(child.PixelPosition);
+                var pos = position + (Vector2i)Vector2.Transform(child.PixelPosition, coordinateTransform);
                 control.RenderChildOverride(ref args, child.GetPositionInParent(), pos);
             }
 

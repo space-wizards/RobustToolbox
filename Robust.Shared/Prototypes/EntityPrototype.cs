@@ -27,9 +27,6 @@ namespace Robust.Shared.Prototypes
 
         private static readonly Dictionary<string, string> LocPropertiesDefault = new();
 
-        [ValidatePrototypeId<EntityCategoryPrototype>]
-        private const string HideCategory = "hideSpawnMenu";
-
         // LOCALIZATION NOTE:
         // Localization-related properties in here are manually localized in LocalizationManager.
         // As such, they should NOT be inherited to avoid confusing the system.
@@ -60,9 +57,16 @@ namespace Robust.Shared.Prototypes
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
 
-        [DataField]
-        [AlwaysPushInheritance]
-        public HashSet<ProtoId<EntityCategoryPrototype>> Categories = new();
+        [DataField("categories"), Access(typeof(PrototypeManager))]
+        [NeverPushInheritance]
+        internal HashSet<ProtoId<EntityCategoryPrototype>>? CategoriesInternal;
+
+        /// <summary>
+        /// What categories this prototype belongs to. This includes categories inherited from parents and categories
+        /// that were automatically inferred from the prototype's components.
+        /// </summary>
+        [ViewVariables]
+        public IReadOnlySet<EntityCategoryPrototype> Categories { get; internal set; } = new HashSet<EntityCategoryPrototype>();
 
         [ViewVariables]
         public IReadOnlyDictionary<string, string> LocProperties => _locPropertiesSet ?? LocPropertiesDefault;
@@ -99,10 +103,11 @@ namespace Robust.Shared.Prototypes
         [ViewVariables]
         [NeverPushInheritance]
         [DataField("noSpawn")]
-        [Obsolete("Use the HideSpawnMenu")]
+        [Obsolete("Use HideSpawnMenu")]
         public bool NoSpawn { get; private set; }
 
-        public bool HideSpawnMenu => Categories.Contains(HideCategory) || NoSpawn;
+        [Access(typeof(PrototypeManager))]
+        public bool HideSpawnMenu { get; internal set; }
 
         [DataField("placement")]
         private EntityPlacementProperties PlacementProperties = new();

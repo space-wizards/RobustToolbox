@@ -361,7 +361,7 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
-            private protected override void SetParameterImpl(string name, in Matrix3 value)
+            private protected override void SetParameterImpl(string name, in Matrix3x2 value)
             {
             }
 
@@ -482,7 +482,7 @@ namespace Robust.Client.Graphics.Clyde
                 return default;
             }
 
-            public Matrix3 GetWorldToLocalMatrix() => default;
+            public Matrix3x2 GetWorldToLocalMatrix() => default;
 
             public Vector2 WorldToLocal(Vector2 point)
             {

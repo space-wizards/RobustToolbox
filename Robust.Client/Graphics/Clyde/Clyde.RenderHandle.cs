@@ -33,17 +33,17 @@ namespace Robust.Client.Graphics.Clyde
                 DrawingHandleWorld = new DrawingHandleWorldImpl(white, this);
             }
 
-            public void SetModelTransform(in Matrix3 matrix)
+            public void SetModelTransform(in Matrix3x2 matrix)
             {
                 _clyde.DrawSetModelTransform(matrix);
             }
 
-            public Matrix3 GetModelTransform()
+            public Matrix3x2 GetModelTransform()
             {
                 return _clyde.DrawGetModelTransform();
             }
 
-            public void SetProjView(in Matrix3 proj, in Matrix3 view)
+            public void SetProjView(in Matrix3x2 proj, in Matrix3x2 view)
             {
                 _clyde.DrawSetProjViewTransform(proj, view);
             }
@@ -177,9 +177,9 @@ namespace Robust.Client.Graphics.Clyde
                 var oldModel = _clyde._currentMatrixModel;
 
                 var newModel = oldModel;
-                position += new Vector2(oldModel.R0C2, oldModel.R1C2);
-                newModel.R0C2 = 0;
-                newModel.R1C2 = 0;
+                position += new Vector2(oldModel.M31, oldModel.M32);
+                newModel.M31 = 0;
+                newModel.M32 = 0;
                 SetModelTransform(newModel);
 
                 // Switch rendering to pseudo-world space.
@@ -194,7 +194,7 @@ namespace Robust.Client.Graphics.Clyde
                     // Maaaaybe this is meant to have a minus sign.
                     var rot = -(float) eyeRot.Theta;
 
-                    var view = Matrix3.CreateTransform(ofsX, ofsY, rot, scale.X, scale.Y);
+                    var view = Matrix3Helpers.CreateTransform(ofsX, ofsY, rot, scale.X, scale.Y);
                     SetProjView(proj, view);
                 }
 
@@ -297,12 +297,12 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle = renderHandle;
                 }
 
-                public override void SetTransform(in Matrix3 matrix)
+                public override void SetTransform(in Matrix3x2 matrix)
                 {
                     _renderHandle.SetModelTransform(matrix);
                 }
 
-                public override Matrix3 GetTransform()
+                public override Matrix3x2 GetTransform()
                 {
                     return _renderHandle.GetModelTransform();
                 }
@@ -402,12 +402,12 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle = renderHandle;
                 }
 
-                public override void SetTransform(in Matrix3 matrix)
+                public override void SetTransform(in Matrix3x2 matrix)
                 {
                     _renderHandle.SetModelTransform(matrix);
                 }
 
-                public override Matrix3 GetTransform()
+                public override Matrix3x2 GetTransform()
                 {
                     return _renderHandle.GetModelTransform();
                 }

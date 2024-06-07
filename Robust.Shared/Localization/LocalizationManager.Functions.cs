@@ -425,6 +425,7 @@ namespace Robust.Shared.Localization
             {
                 ILocValue wrap => new FluentLocWrapperType(wrap, context),
                 EntityUid entity => new FluentLocWrapperType(new LocValueEntity(entity), context),
+                IFluentEntityUid entity => new FluentLocWrapperType(new LocValueEntity(entity.FluentOwner), context),
                 DateTime dateTime => new FluentLocWrapperType(new LocValueDateTime(dateTime), context),
                 TimeSpan timeSpan => new FluentLocWrapperType(new LocValueTimeSpan(timeSpan), context),
                 Color color => (FluentString)color.ToHex(),
@@ -455,4 +456,9 @@ namespace Robust.Shared.Localization
             };
         }
     }
+
+    internal interface IFluentEntityUid
+    {
+        internal EntityUid FluentOwner { get; }
+    };
 }

@@ -1,4 +1,3 @@
-using Robust.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -211,6 +210,16 @@ namespace Robust.Client.UserInterface.Controls
             else if (args.Delta.Y < 0)
                 Value -= _stepSize;
         }
+
+        private sealed class SpinBoxButton : Button
+        {
+            public readonly int Value;
+
+            public SpinBoxButton(int value)
+            {
+                Value = value;
+            }
+        }
     }
 
     public sealed class ValueChangedEventArgs : EventArgs
@@ -218,16 +227,6 @@ namespace Robust.Client.UserInterface.Controls
         public readonly int Value;
 
         public ValueChangedEventArgs(int value)
-        {
-            Value = value;
-        }
-    }
-
-    public sealed class SpinBoxButton : Button
-    {
-        public readonly int Value;
-
-        public SpinBoxButton(int value)
         {
             Value = value;
         }

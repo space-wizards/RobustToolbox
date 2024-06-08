@@ -20,4 +20,14 @@ public sealed class ActorSystem : EntitySystem
     {
         _playerManager.SetAttachedEntity(component.PlayerSession, null);
     }
+
+    public ICommonSession? GetSession(EntityUid? uid)
+    {
+        if (TryComp(uid, out ActorComponent? actorComp))
+        {
+            return actorComp.PlayerSession;
+        }
+
+        return null;
+    }
 }

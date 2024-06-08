@@ -214,6 +214,9 @@ public static class CompletionHelper
 
     public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null, int limit = 20) where T : IComponent
     {
+        if (!NetEntity.TryParse(text, out _))
+            yield break;
+
         IoCManager.Resolve(ref entManager);
         var query = entManager.AllEntityQueryEnumerator<T, MetaDataComponent>();
 

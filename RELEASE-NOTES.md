@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `NetEntity.Parse` and `TryParse` will now fail to parse empty strings.
 
 ### New features
 

@@ -65,6 +65,8 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public StyleBox? PanelStyleBoxOverride { get; set; }
+
         public event Action<int>? OnTabChanged;
 
         public TabContainer()
@@ -381,6 +383,9 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private StyleBox? _getPanel()
         {
+            if (PanelStyleBoxOverride != null)
+                return PanelStyleBoxOverride;
+
             TryGetStyleProperty<StyleBox>(StylePropertyPanelStyleBox, out var box);
             return box;
         }

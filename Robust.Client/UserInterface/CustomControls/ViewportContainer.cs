@@ -65,13 +65,13 @@ namespace Robust.Client.UserInterface.CustomControls
 
         // -- Handlers: Out --
 
-        protected internal override void Draw(DrawingHandleScreen handle)
+        protected internal override void Draw(IRenderHandle handle)
         {
             base.Draw(handle);
 
             if (Viewport == null)
             {
-                handle.DrawRect(UIBox2.FromDimensions(new Vector2(0, 0), Size * UIScale), Color.Red);
+                handle.DrawingHandleScreen.DrawRect(UIBox2.FromDimensions(new Vector2(0, 0), Size * UIScale), Color.Red);
             }
             else
             {
@@ -82,7 +82,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 Viewport.RenderScreenOverlaysBelow(handle, this, viewportBounds);
 
                 Viewport.Render();
-                handle.DrawTextureRect(Viewport.RenderTarget.Texture,
+                handle.DrawingHandleScreen.DrawTextureRect(Viewport.RenderTarget.Texture,
                     UIBox2.FromDimensions(new Vector2(0, 0), (Vector2i) (Viewport.Size / _viewportResolution)));
 
                 Viewport.RenderScreenOverlaysAbove(handle, this, viewportBounds);

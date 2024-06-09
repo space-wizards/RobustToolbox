@@ -224,7 +224,7 @@ namespace Robust.Client.UserInterface.Controls
             _spriteSize = new Vector2(longestRotatedSide, longestRotatedSide);
         }
 
-        internal override void DrawInternal(IRenderHandle renderHandle)
+        protected internal override void Draw(IRenderHandle renderHandle)
         {
             if (!ResolveEntity(out var uid, out var sprite, out var xform))
                 return;

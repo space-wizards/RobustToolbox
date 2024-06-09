@@ -37,14 +37,14 @@ END TEMPLATE-->
 
 * `NetEntity.Parse` and `TryParse` will now fail to parse empty strings.
 * `IClydeViewport` overlay rendering methods now take in an `IRenderHandle` instead of a world/screen handle.
-* The `OverlayDrawArgs` constructor is now internal and provides an `IRenderHandle`
-* 
+* The `OverlayDrawArgs` struct now has an internal constructor.
 
 ### New features
 
 * `IPrototypeManager.TryIndex` will now default to logging errors if passed an invalid prototype id struct (i,e., `EntProtoId` or `ProtoId<T>`). There is a new optional bool argument to disable logging errors.
 * Controls can now be manually restyled via `Control.InvalidateStyleSheet()` and `Control.DoStyleUpdate()`
-* Added `IUserInterfaceManager.RenderControl` for manually drawing controls.
+* Added `IUserInterfaceManager.RenderControl()` for manually drawing controls.
+* `OverlayDrawArgs` struct now has an `IRenderHandle` field such that overlays can use the new `RenderControl()` methods.
 
 ### Bugfixes
 

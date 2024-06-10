@@ -1292,7 +1292,7 @@ public abstract partial class SharedMapSystem
     public Vector2 WorldToLocal(EntityUid uid, MapGridComponent grid, Vector2 posWorld)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
-        return matrix.Transform(posWorld);
+        return Vector2.Transform(posWorld, matrix);
     }
 
     public EntityCoordinates MapToGrid(EntityUid uid, MapCoordinates posWorld)
@@ -1315,7 +1315,7 @@ public abstract partial class SharedMapSystem
     public Vector2 LocalToWorld(EntityUid uid, MapGridComponent grid, Vector2 posLocal)
     {
         var matrix = _transform.GetWorldMatrix(uid);
-        return matrix.Transform(posLocal);
+        return Vector2.Transform(posLocal, matrix);
     }
 
     public Vector2i WorldToTile(EntityUid uid, MapGridComponent grid, Vector2 posWorld)
@@ -1435,7 +1435,7 @@ public abstract partial class SharedMapSystem
         var locX = gridTile.X * grid.TileSize + (grid.TileSize / 2f);
         var locY = gridTile.Y * grid.TileSize + (grid.TileSize / 2f);
 
-        return _transform.GetWorldMatrix(uid).Transform(new Vector2(locX, locY));
+        return Vector2.Transform(new Vector2(locX, locY), _transform.GetWorldMatrix(uid));
     }
 
     public MapCoordinates GridTileToWorld(EntityUid uid, MapGridComponent grid, Vector2i gridTile)

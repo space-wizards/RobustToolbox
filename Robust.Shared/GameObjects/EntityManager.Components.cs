@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -1563,7 +1564,9 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+            {
+                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{Environment.StackTrace}");
+            }
 
             return false;
         }

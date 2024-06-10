@@ -19,14 +19,15 @@ namespace Robust.Shared.GameObjects;
 
 public abstract class SharedUserInterfaceSystem : EntitySystem
 {
-    [Dependency] private readonly IDynamicTypeFactory _factory = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly IParallelManager _parallel = default!;
+    [Dependency] private   readonly IDynamicTypeFactory _factory = default!;
+    [Dependency] private   readonly IGameTiming _timing = default!;
+    [Dependency] private   readonly INetManager _netManager = default!;
+    [Dependency] private   readonly IParallelManager _parallel = default!;
+    [Dependency] private readonly ISharedPlayerManager _player = default!;
     [Dependency] protected readonly IPrototypeManager ProtoManager = default!;
-    [Dependency] private readonly IReflectionManager _reflection = default!;
+    [Dependency] private   readonly IReflectionManager _reflection = default!;
     [Dependency] protected readonly ISharedPlayerManager Player = default!;
-    [Dependency] private readonly SharedTransformSystem _transforms = default!;
+    [Dependency] private   readonly SharedTransformSystem _transforms = default!;
 
     private EntityQuery<IgnoreUIRangeComponent> _ignoreUIRangeQuery;
     private EntityQuery<TransformComponent> _xformQuery;
@@ -189,7 +190,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void CloseUiInternal(Entity<UserInterfaceComponent?> ent, Enum key, EntityUid actor)
     {
-        if (!_uiQuery.Resolve(ent.Owner, ref ent.Comp, false))
+        if (!UIQuery.Resolve(ent.Owner, ref ent.Comp, false))
             return;
 
         if (!ent.Comp.Actors.TryGetValue(key, out var actors))
@@ -203,7 +204,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         // If the actor is also deleting then don't worry about updating what they have open.
         if (!TerminatingOrDeleted(actor)
-            && _userQuery.TryComp(actor, out var actorComp)
+            && UserQuery.TryComp(actor, out var actorComp)
             && actorComp.OpenInterfaces.TryGetValue(ent.Owner, out var keys))
         {
             keys.Remove(key);
@@ -235,7 +236,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void OpenUiInternal(Entity<UserInterfaceComponent?> ent, Enum key, EntityUid actor)
     {
-        if (!_uiQuery.Resolve(ent.Owner, ref ent.Comp, false))
+        if (!UIQuery.Resolve(ent.Owner, ref ent.Comp, false))
             return;
 
         // Similar to the close method this handles actually opening a UI, it just gets relayed here

@@ -390,8 +390,21 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private (Vector2 worldPos, float range, EntityUid? map) CalcViewBounds(Entity<TransformComponent, EyeComponent?> eye)
     {
-        var size = Math.Max(eye.Comp2?.PvsSize ?? _priorityViewSize, 1);
-        return (_transform.GetWorldPosition(eye.Comp1), size / 2f, eye.Comp1.MapUid);
+        var size = _priorityViewSize;
+        var worldPos = _transform.GetWorldPosition(eye.Comp1);
+
+        if (eye.Comp2 is not null)
+        {
+            // not using EyeComponent.Eye.Position, because it's updated only on the client's side
+            worldPos += eye.Comp2.Offset;
+
+            // zoom multiplier should be at least 1, otherwise player zooming in could cause issues
+            size = (eye.Comp2.PvsSize ?? size) * Math.Max(Math.Max(eye.Comp2.Zoom.X, eye.Comp2.Zoom.Y), 1);
+        }
+
+        size = Math.Max(size, 1);
+
+        return (worldPos, size / 2f, eye.Comp1.MapUid);
     }
 
     private void CullDeletionHistoryUntil(GameTick tick)

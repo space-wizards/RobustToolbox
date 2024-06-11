@@ -95,10 +95,25 @@ namespace Robust.Shared.Localization
         CultureInfo? DefaultCulture { get; set; }
 
         /// <summary>
+        ///
+        /// </summary>
+        void SetCulture(CultureInfo culture);
+
+        /// <summary>
+        /// Checks to see if the culture has been loaded.
+        /// </summary>
+        bool HasCulture(CultureInfo culture);
+
+        /// <summary>
         ///     Load data for a culture.
         /// </summary>
         /// <param name="culture"></param>
         void LoadCulture(CultureInfo culture);
+
+        /// <summary>
+        ///
+        /// </summary>
+        CultureInfo LoadDefault();
 
         /// <summary>
         ///     Sets culture to be used in the absence of the main one.

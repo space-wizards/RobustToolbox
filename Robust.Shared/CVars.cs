@@ -1753,5 +1753,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> LaunchContentBundle =
             CVarDef.Create("launch.content_bundle", false, CVar.CLIENTONLY);
+
+        /*
+         * Localization
+         */
+
+        public static readonly CVarDef<string> CultureName =
+            CVarDef.Create("loc.culture_name", "en-US", CVar.ARCHIVE);
     }
 }

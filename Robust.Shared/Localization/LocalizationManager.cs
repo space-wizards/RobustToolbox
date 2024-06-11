@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -12,6 +13,7 @@ using Linguini.Shared.Types.Bundle;
 using Linguini.Syntax.Ast;
 using Linguini.Syntax.Parser;
 using Linguini.Syntax.Parser.Error;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -24,6 +26,7 @@ namespace Robust.Shared.Localization
 {
     internal sealed partial class LocalizationManager : ILocalizationManagerInternal, IPostInjectInit
     {
+        [Dependency] private readonly IConfigurationManager _configuration = default!;
         [Dependency] private readonly IResourceManager _res = default!;
         [Dependency] private readonly ILogManager _log = default!;
         [Dependency] private readonly IPrototypeManager _prototype = default!;
@@ -39,6 +42,18 @@ namespace Robust.Shared.Localization
         {
             _logSawmill = _log.GetSawmill("loc");
             _prototype.PrototypesReloaded += OnPrototypesReloaded;
+        }
+
+        public CultureInfo LoadDefault()
+        {
+            var name = _configuration.GetCVar(CVars.CultureName);
+            var culture = new CultureInfo(name);
+
+            SetCulture(culture);
+
+            // Return the culture for further work with it,
+            // like of adding functions
+            return culture;
         }
 
         public string GetString(string messageId)
@@ -337,8 +352,27 @@ namespace Robust.Shared.Localization
             }
         }
 
+        public void SetCulture(CultureInfo culture)
+        {
+            if (HasCulture(culture))
+            {
+                DefaultCulture = culture;
+                return;
+            }
+
+            LoadCulture(culture);
+        }
+
+        public bool HasCulture(CultureInfo culture)
+        {
+            return _contexts.ContainsKey(culture);
+        }
+
         public void LoadCulture(CultureInfo culture)
         {
+            // Attempting to load an already loaded culture
+            Debug.Assert(!HasCulture(culture));
+
             var bundle = LinguiniBuilder.Builder()
                 .CultureInfo(culture)
                 .SkipResources()

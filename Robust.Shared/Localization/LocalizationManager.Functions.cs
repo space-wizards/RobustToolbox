@@ -14,7 +14,7 @@ namespace Robust.Shared.Localization
 {
     internal sealed partial class LocalizationManager
     {
-        private static readonly Regex RegexWordMatch = new Regex(@"\w+");
+        private static readonly Regex RegexWordMatch = new(@"\w+");
 
         private void AddBuiltInFunctions(FluentBundle bundle)
         {
@@ -56,9 +56,9 @@ namespace Robust.Shared.Localization
         private ILocValue FuncCapitalize(LocArgs args)
         {
             var input = args.Args[0].Format(new LocContext());
-            if (!String.IsNullOrEmpty(input))
-                return new LocValueString(input[0].ToString().ToUpper() + input.Substring(1));
-            else return new LocValueString("");
+            return !string.IsNullOrEmpty(input) ?
+                new LocValueString(input[0].ToString().ToUpper() + input.Substring(1)) :
+                new LocValueString(string.Empty);
         }
 
         private static readonly string[] IndefExceptions = { "euler", "heir", "honest" };

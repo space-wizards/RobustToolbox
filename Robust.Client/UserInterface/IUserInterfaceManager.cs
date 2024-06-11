@@ -7,6 +7,7 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface
 {
@@ -146,6 +147,16 @@ namespace Robust.Client.UserInterface
         /// but not necessarily a new or existing control is rearranged.
         /// </summary>
         void UpdateHovered();
+
+        /// <summary>
+        /// Render a control and all of its children.
+        /// </summary>
+        void RenderControl(in Control.ControlRenderArguments args, Control control);
+
+        /// <summary>
+        /// Render a control and all of its children.
+        /// </summary>
+        void RenderControl(IRenderHandle handle, Control control, Vector2i position);
     }
 
     public readonly struct PostDrawUIRootEventArgs

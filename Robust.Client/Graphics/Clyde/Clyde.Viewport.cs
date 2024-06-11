@@ -171,7 +171,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void RenderScreenOverlaysBelow(
-                DrawingHandleScreen handle,
+                IRenderHandle handle,
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
@@ -179,7 +179,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void RenderScreenOverlaysAbove(
-                DrawingHandleScreen handle,
+                IRenderHandle handle,
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {

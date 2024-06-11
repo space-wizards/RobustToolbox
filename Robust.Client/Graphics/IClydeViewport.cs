@@ -66,7 +66,7 @@ namespace Robust.Client.Graphics
         ///     Not relative to the current transform of <see cref="handle"/>.
         /// </param>
         public void RenderScreenOverlaysBelow(
-            DrawingHandleScreen handle,
+            IRenderHandle handle,
             IViewportControl control,
             in UIBox2i viewportBounds);
 
@@ -80,7 +80,7 @@ namespace Robust.Client.Graphics
         ///     Not relative to the current transform of <see cref="handle"/>.
         /// </param>
         public void RenderScreenOverlaysAbove(
-            DrawingHandleScreen handle,
+            IRenderHandle handle,
             IViewportControl control,
             in UIBox2i viewportBounds);
     }

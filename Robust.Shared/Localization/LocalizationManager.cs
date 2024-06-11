@@ -363,7 +363,7 @@ namespace Robust.Shared.Localization
             if (!HasCulture(culture))
                 LoadCulture(culture);
 
-            if (DefaultCulture?.Name == culture.Name)
+            if (DefaultCulture?.Equals(culture) ?? false)
                 return;
 
             DefaultCulture = culture;

@@ -410,7 +410,10 @@ namespace Robust.Shared.GameObjects
             var added = new ComponentRegistration[types.Length];
             for (int i = 0; i < types.Length; i++)
             {
-                added[i] = Register(types[i], names, lowerCaseNames, typesDict, idxToType, ignored, overwrite);
+                var type = types[i];
+                CompIdx.Register(type);
+
+                added[i] = Register(type, names, lowerCaseNames, typesDict, idxToType, ignored, overwrite);
             }
 
             var st = RStopwatch.StartNew();

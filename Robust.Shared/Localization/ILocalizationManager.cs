@@ -114,10 +114,10 @@ namespace Robust.Shared.Localization
         void LoadCulture(CultureInfo culture);
 
         /// <summary>
-        /// Loads <see cref="CultureInfo"/> obtained from <see cref="CVars.CultureName"/>,
+        /// Loads <see cref="CultureInfo"/> obtained from <see cref="CVars.LocCultureName"/>,
         /// they are different for client and server, and also can be saved.
         /// </summary>
-        CultureInfo LoadDefault();
+        CultureInfo SetDefaultCulture();
 
         /// <summary>
         /// Returns all locale derictories from the game's resources.

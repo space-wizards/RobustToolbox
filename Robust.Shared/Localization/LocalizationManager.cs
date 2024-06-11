@@ -44,10 +44,16 @@ namespace Robust.Shared.Localization
             _prototype.PrototypesReloaded += OnPrototypesReloaded;
         }
 
-        public CultureInfo LoadDefault()
+        public CultureInfo SetDefaultCulture()
         {
-            var name = _configuration.GetCVar(CVars.CultureName);
-            var culture = new CultureInfo(name);
+            var defaultCode = _configuration.GetCVar(CVars.LocDefaultCultureName);
+            var code = _configuration.GetCVar(CVars.LocCultureName);
+
+            if (!CultureInfoHelper.TryGetCultureInfo(code, out var culture))
+            {
+                // He'll throw out the exception if he can't find a default culture
+                CultureInfoHelper.GetCultureInfo(defaultCode, out culture);
+            }
 
             SetCulture(culture);
 
@@ -354,13 +360,13 @@ namespace Robust.Shared.Localization
 
         public void SetCulture(CultureInfo culture)
         {
-            if (HasCulture(culture))
-            {
-                DefaultCulture = culture;
-                return;
-            }
+            if (!HasCulture(culture))
+                LoadCulture(culture);
 
-            LoadCulture(culture);
+            if (DefaultCulture?.Name == culture.Name)
+                return;
+
+            DefaultCulture = culture;
         }
 
         public bool HasCulture(CultureInfo culture)

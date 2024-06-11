@@ -11,6 +11,7 @@ cmd-parse-failure-uid = {$arg} is not a valid entity UID.
 cmd-parse-failure-mapid = {$arg} is not a valid MapId.
 cmd-parse-failure-enum = {$arg} is not a {$enum} Enum.
 cmd-parse-failure-grid = {$arg} is not a valid grid.
+cmd-parse-failure-cultureinfo = {$arg} is not valid CultureInfo.
 cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 cmd-parse-failure-session = There is no session with username: {$username}
 

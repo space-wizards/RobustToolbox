@@ -95,7 +95,9 @@ namespace Robust.Shared.Localization
         CultureInfo? DefaultCulture { get; set; }
 
         /// <summary>
-        ///
+        /// Checks if the culture is loaded, if not,
+        /// loads it via <see cref="ILocalizationManager.LoadCulture"/>
+        /// and then set it as <see cref="ILocalizationManager.DefaultCulture"/>.
         /// </summary>
         void SetCulture(CultureInfo culture);
 
@@ -111,7 +113,8 @@ namespace Robust.Shared.Localization
         void LoadCulture(CultureInfo culture);
 
         /// <summary>
-        ///
+        /// Loads <see cref="CultureInfo"/> obtained from <see cref="CVars.CultureName"/>,
+        /// they are different for client and server, and also can be saved.
         /// </summary>
         CultureInfo LoadDefault();
 

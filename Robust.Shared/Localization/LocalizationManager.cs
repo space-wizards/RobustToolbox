@@ -387,6 +387,20 @@ namespace Robust.Shared.Localization
             DefaultCulture ??= culture;
         }
 
+        public List<CultureInfo> GetFoundCultures()
+        {
+            var result = new List<CultureInfo>();
+            foreach (var name in _res.ContentGetDirectoryEntries(new ResPath("/Locale")))
+            {
+                // Remove last "/" symbol
+                // Example "en-US/" -> "en-US"
+                var cultureName = name.Remove(name.Length - 1, 1);
+                result.Add(new CultureInfo(cultureName));
+            }
+
+            return result;
+        }
+
         public void SetFallbackCluture(params CultureInfo[] cultures)
         {
             _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();

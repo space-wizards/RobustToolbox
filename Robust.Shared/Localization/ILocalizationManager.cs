@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
@@ -117,6 +118,11 @@ namespace Robust.Shared.Localization
         /// they are different for client and server, and also can be saved.
         /// </summary>
         CultureInfo LoadDefault();
+
+        /// <summary>
+        /// Returns all locale derictories from the game's resources.
+        /// </summary>
+        List<CultureInfo> GetFoundCultures();
 
         /// <summary>
         ///     Sets culture to be used in the absence of the main one.

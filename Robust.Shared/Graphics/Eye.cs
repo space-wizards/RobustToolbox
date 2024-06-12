@@ -28,7 +28,7 @@ namespace Robust.Shared.Graphics
         public virtual MapCoordinates Position
         {
             get => _coords;
-            internal set => _coords = value;
+            set => _coords = value;
         }
 
         [ViewVariables(VVAccess.ReadWrite)]

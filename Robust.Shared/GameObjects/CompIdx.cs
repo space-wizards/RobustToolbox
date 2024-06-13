@@ -9,29 +9,19 @@ namespace Robust.Shared.GameObjects;
 
 public readonly struct CompIdx : IEquatable<CompIdx>
 {
-    private static readonly Dictionary<Type, CompIdx> SlowStore = new();
-
     internal readonly int Value;
 
     internal static CompIdx Index<T>() => Store<T>.Index;
 
-    internal static void Register(Type t)
+    internal static int ArrayIndex<T>() => Index<T>().Value;
+
+    internal static CompIdx GetIndex(Type type)
     {
-        var idx = (CompIdx)typeof(Store<>)
-            .MakeGenericType(t)
+        return (CompIdx)typeof(Store<>)
+            .MakeGenericType(type)
             .GetField(nameof(Store<int>.Index), BindingFlags.Static | BindingFlags.Public)!
             .GetValue(null)!;
-
-        SlowStore[t] = idx;
     }
-
-    internal static CompIdx Index(Type t)
-    {
-        return SlowStore[t];
-    }
-
-    internal static int ArrayIndex<T>() => Index<T>().Value;
-    internal static int ArrayIndex(Type type) => Index(type).Value;
 
     internal static void AssignArray<T>(ref T[] array, CompIdx idx, T value)
     {

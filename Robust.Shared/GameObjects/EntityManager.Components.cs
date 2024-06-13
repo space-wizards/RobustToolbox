@@ -126,7 +126,7 @@ namespace Robust.Shared.GameObjects
             foreach (var comp in comps)
             {
                 if (comp is { LifeStage:  ComponentLifeStage.Added })
-                    LifeInitialize(comp, CompIdx.Index(comp.GetType()));
+                    LifeInitialize(comp, _componentFactory.GetIndex(comp.GetType()));
             }
 
 #if DEBUG
@@ -999,7 +999,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
-            var comps = _entTraitArray[CompIdx.ArrayIndex(type)];
+            var comps = _entTraitArray[_componentFactory.GetArrayIndex(type)];
             DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
             return new EntityQuery<IComponent>(comps, _resolveSawmill);
         }

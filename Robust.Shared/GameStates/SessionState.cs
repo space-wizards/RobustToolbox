@@ -47,6 +47,7 @@ namespace Robust.Shared.GameStates
     [ByRefEvent]
     public record struct GetSessionStateAttempt(ICommonSession Session)
     {
+        public ICommonSession Session = Session;
         public bool Cancelled;
     }
 }

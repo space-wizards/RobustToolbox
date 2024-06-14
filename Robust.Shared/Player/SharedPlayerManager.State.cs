@@ -13,7 +13,7 @@ internal abstract partial class SharedPlayerManager
         LastStateUpdate = Timing.CurTick;
     }
 
-    public void GetPlayerStates(ICommonSession session, GameTick fromTick, List<SessionState> states)
+    public void GetPlayerStates(ICommonSession? session, GameTick fromTick, List<SessionState> states)
     {
         states.Clear();
         if (LastStateUpdate < fromTick)
@@ -21,7 +21,15 @@ internal abstract partial class SharedPlayerManager
 
         states.EnsureCapacity(InternalSessions.Count);
         var ev = new GetSessionStateAttempt(session);
-        EntManager.EventBus.RaiseEvent(EventSource.Local, ref ev);
+
+        if (session == null)
+        {
+            ev.Cancelled = true;
+        }
+        else
+        {
+            EntManager.EventBus.RaiseEvent(EventSource.Local, ref ev);
+        }
 
         foreach (var player in InternalSessions.Values)
         {

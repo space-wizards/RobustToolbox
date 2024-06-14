@@ -167,6 +167,8 @@ namespace Robust.Client.Graphics
 
         public Color Modulate { get; set; } = Color.White;
 
+        public Color BackgroundColor { get; set; } = Color.Transparent;
+
         public Texture? Texture { get; set; }
 
         /// <summary>
@@ -232,6 +234,8 @@ namespace Robust.Client.Graphics
                 box.Top - ExpandMarginTop * uiScale,
                 box.Right + ExpandMarginRight * uiScale,
                 box.Bottom + ExpandMarginBottom * uiScale);
+
+            handle.DrawRect(box, BackgroundColor);
 
             var scaledMargin = new UIBox2(PatchMarginLeft * TextureScale.X * uiScale, PatchMarginTop * TextureScale.Y * uiScale,
                     PatchMarginRight * TextureScale.X * uiScale, PatchMarginBottom * TextureScale.Y * uiScale);

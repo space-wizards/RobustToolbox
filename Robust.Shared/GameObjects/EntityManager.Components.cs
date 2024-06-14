@@ -126,7 +126,7 @@ namespace Robust.Shared.GameObjects
             foreach (var comp in comps)
             {
                 if (comp is { LifeStage:  ComponentLifeStage.Added })
-                    LifeInitialize(comp, CompIdx.Index(comp.GetType()));
+                    LifeInitialize(comp, _componentFactory.GetIndex(comp.GetType()));
             }
 
 #if DEBUG

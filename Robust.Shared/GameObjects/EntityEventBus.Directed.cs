@@ -138,7 +138,7 @@ namespace Robust.Shared.GameObjects
             DispatchComponent<TEvent>(
                 component.Owner,
                 component,
-                CompIdx.Index(component.GetType()),
+                _comFac.GetIndex(component.GetType()),
                 ref unitRef);
         }
 
@@ -161,7 +161,7 @@ namespace Robust.Shared.GameObjects
             DispatchComponent<TEvent>(
                 component.Owner,
                 component,
-                CompIdx.Index(component.GetType()),
+                _comFac.GetIndex(component.GetType()),
                 ref unitRef);
         }
 
@@ -390,7 +390,7 @@ namespace Robust.Shared.GameObjects
 
         public void OnComponentRemoved(in RemovedComponentEventArgs e)
         {
-            EntRemoveComponent(e.BaseArgs.Owner, CompIdx.Index(e.BaseArgs.Component.GetType()));
+            EntRemoveComponent(e.BaseArgs.Owner, _comFac.GetIndex(e.BaseArgs.Component.GetType()));
         }
 
         private void EntAddSubscription(

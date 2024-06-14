@@ -52,7 +52,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // view matrix
             vp.Eye.GetViewMatrixInv(out var viewMatrixInv, vp.RenderScale);
-            point = viewMatrixInv * point;
+            point = Vector2.Transform(point, viewMatrixInv);
 
             return point;
         }
@@ -136,7 +136,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // view matrix
                 Eye.GetViewMatrixInv(out var viewMatrixInv, RenderScale);
-                newPoint = viewMatrixInv * newPoint;
+                newPoint = Vector2.Transform(newPoint, viewMatrixInv);
 
                 return new MapCoordinates(newPoint, Eye.Position.MapId);
             }
@@ -150,7 +150,7 @@ namespace Robust.Client.Graphics.Clyde
                 var newPoint = point;
 
                 eye.GetViewMatrix(out var viewMatrix, RenderScale);
-                newPoint = viewMatrix * newPoint;
+                newPoint = Vector2.Transform(newPoint, viewMatrix);
 
                 // (inlined version of UiProjMatrix)
                 newPoint *= new Vector2(1, -1) * EyeManager.PixelsPerMeter;
@@ -159,14 +159,14 @@ namespace Robust.Client.Graphics.Clyde
                 return newPoint;
             }
 
-            public Matrix3 GetWorldToLocalMatrix()
+            public Matrix3x2 GetWorldToLocalMatrix()
             {
                 if (Eye == null)
-                    return Matrix3.Identity;
+                    return Matrix3x2.Identity;
 
                 Eye.GetViewMatrix(out var viewMatrix, RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter));
-                viewMatrix.R0C2 += Size.X / 2f;
-                viewMatrix.R1C2 += Size.Y / 2f;
+                viewMatrix.M31 += Size.X / 2f;
+                viewMatrix.M32 += Size.Y / 2f;
                 return viewMatrix;
             }
 

@@ -42,12 +42,19 @@ public abstract class MetaDataSystem : EntitySystem
         component.PauseTime = state.PauseTime;
     }
 
-    public void SetEntityName(EntityUid uid, string value, MetaDataComponent? metadata = null)
+    public void SetEntityName(EntityUid uid, string value, MetaDataComponent? metadata = null, bool raiseEvents = true)
     {
         if (!_metaQuery.Resolve(uid, ref metadata) || value.Equals(metadata.EntityName))
             return;
 
         metadata._entityName = value;
+
+        if (raiseEvents)
+        {
+            var ev = new EntityRenamedEvent(value);
+            RaiseLocalEvent(uid, ref ev);
+        }
+
         Dirty(uid, metadata, metadata);
     }
 

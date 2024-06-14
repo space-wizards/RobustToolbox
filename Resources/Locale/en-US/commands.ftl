@@ -9,6 +9,7 @@ cmd-parse-failure-float = {$arg} is not a valid float.
 cmd-parse-failure-bool = {$arg} is not a valid bool.
 cmd-parse-failure-uid = {$arg} is not a valid entity UID.
 cmd-parse-failure-mapid = {$arg} is not a valid MapId.
+cmd-parse-failure-enum = {$arg} is not a {$enum} Enum.
 cmd-parse-failure-grid = {$arg} is not a valid grid.
 cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 cmd-parse-failure-session = There is no session with username: {$username}
@@ -42,6 +43,13 @@ cmd-cvar-parse-error = Input value is in incorrect format for type { $type }
 cmd-cvar-compl-list = List available CVars
 cmd-cvar-arg-name = <name | ?>
 cmd-cvar-value-hidden = <value hidden>
+
+## 'cvar_subs' command
+cmd-cvar_subs-desc = Lists the OnValueChanged subscriptions for a CVar.
+cmd-cvar_subs-help = Usage: cvar_subs <name>
+
+cmd-cvar_subs-invalid-args = Must provide exactly one argument.
+cmd-cvar_subs-arg-name = <name>
 
 ## 'list' command
 cmd-list-desc = Lists available commands, with optional search filter
@@ -245,9 +253,6 @@ cmd-bind-arg-command = <InputCommand>
 cmd-net-draw-interp-desc = Toggles the debug drawing of the network interpolation.
 cmd-net-draw-interp-help = Usage: net_draw_interp
 
-cmd-net-draw-interp-desc = Toggles the debug drawing of the network interpolation.
-cmd-net-draw-interp-help = Usage: net_draw_interp
-
 cmd-net-watch-ent-desc = Dumps all network updates for an EntityId to the console.
 cmd-net-watch-ent-help = Usage: net_watchent <0|EntityUid>
 
@@ -299,15 +304,8 @@ cmd-savegrid-help = savegrid <gridID> <Path>
 cmd-testbed-desc = Loads a physics testbed on the specified map.
 cmd-testbed-help = testbed <mapid> <test>
 
-cmd-saveconfig-desc = Saves the client configuration to the config file.
-cmd-saveconfig-help = saveconfig
-
 ## 'flushcookies' command
 # Note: the flushcookies command is from Robust.Client.WebView, it's not in the main engine code.
-
-cmd-flushcookies-desc = Flush CEF cookie storage to disk
-cmd-flushcookies-help = This ensure cookies are properly saved to disk in the event of unclean shutdowns.
-    Note that the actual operation is asynchronous.
 
 ## 'addcomp' command
 cmd-addcomp-desc = Adds a component to an entity.
@@ -384,9 +382,9 @@ cmd-tp-desc = Teleports a player to any location in the round.
 cmd-tp-help = tp <x> <y> [<mapID>]
 
 cmd-tpto-desc = Teleports the current player or the specified players/entities to the location of the first player/entity.
-cmd-tpto-help = tpto <username|uid> [username|uid]...
-cmd-tpto-destination-hint = destination (uid or username)
-cmd-tpto-victim-hint = entity to teleport (uid or username)
+cmd-tpto-help = tpto <username|uid> [username|NetEntity]...
+cmd-tpto-destination-hint = destination (NetEntity or username)
+cmd-tpto-victim-hint = entity to teleport (NetEntity or username)
 cmd-tpto-parse-error = Cant resolve entity or player: {$str}
 
 cmd-listplayers-desc = Lists all players currently connected.
@@ -445,9 +443,6 @@ cmd-showanchored-help = Usage: showanchored
 
 cmd-dmetamem-desc = Dumps a type's members in a format suitable for the sandbox configuration file.
 cmd-dmetamem-help = Usage: dmetamem <type>
-
-cmd-dmetamem-desc = Displays chunk bounds for the purposes of rendering.
-cmd-dmetamem-help = Usage: showchunkbb <type>
 
 cmd-launchauth-desc = Load authentication tokens from launcher data to aid in testing of live servers.
 cmd-launchauth-help = Usage: launchauth <account name>
@@ -515,9 +510,6 @@ cmd-profsnap-help = Usage: profsnap
 cmd-devwindow-desc = Dev Window
 cmd-devwindow-help = Usage: devwindow
 
-cmd-devwindow-desc = Open file
-cmd-devwindow-help = Usage: testopenfile
-
 cmd-scene-desc = Immediately changes the UI scene/state.
 cmd-scene-help = Usage: scene <className>
 
@@ -528,13 +520,10 @@ cmd-hwid-desc = Returns the current HWID (HardWare ID).
 cmd-hwid-help = Usage: hwid
 
 cmd-vvread-desc = Retrieve a path's value using VV (View Variables).
-cmd-vvread-desc = Usage: vvread <path>
+cmd-vvread-help = Usage: vvread <path>
 
 cmd-vvwrite-desc = Modify a path's value using VV (View Variables).
 cmd-vvwrite-help = Usage: vvwrite <path>
-
-cmd-vv-desc = Opens View Variables (VV).
-cmd-vv-help = Usage: vv <path|entity ID|guihover>
 
 cmd-vvinvoke-desc = Invoke/Call a path with arguments using VV.
 cmd-vvinvoke-help = Usage: vvinvoke <path> [arguments...]

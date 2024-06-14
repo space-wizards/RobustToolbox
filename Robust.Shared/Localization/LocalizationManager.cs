@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Linguini.Bundle;
 using Linguini.Bundle.Builder;
 using Linguini.Bundle.Errors;
@@ -47,7 +48,8 @@ namespace Robust.Shared.Localization
 
             if (!TryGetString(messageId, out var msg))
             {
-                _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name, messageId);
+                _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+                    messageId);
                 msg = messageId;
             }
 
@@ -64,8 +66,9 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, arg))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name, messageId);
-            return  messageId;
+            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+                messageId);
+            return messageId;
         }
 
         public string GetString(string messageId, (string, object) arg1, (string, object) arg2)
@@ -76,8 +79,9 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, arg1, arg2))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name, messageId);
-            return  messageId;
+            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+                messageId);
+            return messageId;
         }
 
         public string GetString(string messageId, params (string, object)[] args)
@@ -88,8 +92,9 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, args))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name, messageId);
-            return  messageId;
+            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+                messageId);
+            return messageId;
         }
 
         #endregion
@@ -101,7 +106,7 @@ namespace Robust.Shared.Localization
 
         #region TryGetString
 
-public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value)
+        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value)
         {
             if (_defaultCulture == null)
             {
@@ -112,7 +117,7 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
             if (TryGetString(messageId, _defaultCulture.Value, out value))
                 return true;
 
-            foreach (var fallback in  _fallbackCultures)
+            foreach (var fallback in _fallbackCultures)
             {
                 if (TryGetString(messageId, fallback, out value))
                     return true;
@@ -122,18 +127,24 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
             return false;
         }
 
-        public bool TryGetString(string messageId, (CultureInfo, FluentBundle) bundle, [NotNullWhen(true)] out string? value)
+        public bool TryGetString(string messageId,
+            (CultureInfo, FluentBundle) bundle,
+            [NotNullWhen(true)] out string? value)
         {
             try
             {
-                // TODO LINGUINI error list nullable.
-                var result = bundle.Item2.TryGetAttrMsg(messageId, null, out var errs, out value);
-                foreach (var err in errs)
+                if (bundle.Item2.TryGetAttrMessage(messageId, null, out var errors, out value))
+                    return true;
+
+                if (errors != null)
                 {
-                    _logSawmill.Error("{culture}/{messageId}: {error}", bundle.Item1.Name, messageId, err);
+                    foreach (var err in errors)
+                    {
+                        _logSawmill.Error("{culture}/{messageId}: {error}", bundle.Item1.Name, messageId, err);
+                    }
                 }
 
-                return result;
+                return false;
             }
             catch (Exception e)
             {
@@ -143,7 +154,8 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
             }
         }
 
-        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
+        public bool TryGetString(string messageId,
+            [NotNullWhen(true)] out string? value,
             (string, object) arg)
         {
             // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]
@@ -165,8 +177,10 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
             return TryGetString(messageId, out value, args, bundle, info);
         }
 
-        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
-            (string, object) arg1, (string, object) arg2)
+        public bool TryGetString(string messageId,
+            [NotNullWhen(true)] out string? value,
+            (string, object) arg1,
+            (string, object) arg2)
         {
             // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]
             // I.e., have it automatically call FluentFromObject(context) with the right context if the message exists
@@ -188,7 +202,8 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
             return TryGetString(messageId, out value, args, bundle, info);
         }
 
-        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
+        public bool TryGetString(string messageId,
+            [NotNullWhen(true)] out string? value,
             params (string, object)[] keyArgs)
         {
             // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]
@@ -216,10 +231,13 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
         {
             try
             {
-                var result = bundle.TryGetAttrMsg(messageId, args, out var errs, out value);
-                foreach (var err in errs)
+                var result = bundle.TryGetAttrMessage(messageId, args, out var errs, out value);
+                if (errs != null)
                 {
-                    _logSawmill.Error("{culture}/{messageId}: {error}", culture.Name, messageId, err);
+                    foreach (var err in errs)
+                    {
+                        _logSawmill.Error("{culture}/{messageId}: {error}", culture.Name, messageId, err);
+                    }
                 }
 
                 return result;
@@ -245,14 +263,14 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
             }
 
             var idx = messageId.IndexOf('.');
-            if (idx != -1 )
+            if (idx != -1)
                 messageId = messageId.Remove(idx);
 
             culture = _defaultCulture;
             if (culture.Value.Item2.HasMessage(messageId))
                 return true;
 
-            foreach (var fallback in  _fallbackCultures)
+            foreach (var fallback in _fallbackCultures)
             {
                 culture = fallback;
                 if (culture.Value.Item2.HasMessage(messageId))
@@ -279,7 +297,7 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
             if (bundle.TryGetAstMessage(messageId, out message))
                 return true;
 
-            foreach (var fallback in  _fallbackCultures)
+            foreach (var fallback in _fallbackCultures)
             {
                 bundle = fallback.Item2;
                 if (bundle.TryGetAstMessage(messageId, out message))
@@ -331,13 +349,13 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
             _contexts.Add(culture, bundle);
             AddBuiltInFunctions(bundle);
 
-            _loadData(_res, culture, bundle);
+            _initData(_res, culture, bundle);
             DefaultCulture ??= culture;
         }
 
         public void SetFallbackCluture(params CultureInfo[] cultures)
         {
-            _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();;
+            _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();
             var tuples = new (CultureInfo, FluentBundle)[cultures.Length];
             var i = 0;
             foreach (var culture in cultures)
@@ -377,6 +395,41 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
 
         private void _loadData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context)
         {
+            var resources = ReadLocaleFolder(resourceManager, culture);
+
+            foreach (var (path, resource, data) in resources)
+            {
+                var errors = resource.Errors;
+                context.AddResourceOverriding(resource);
+                WriteWarningForErrs(path, errors, data);
+            }
+        }
+
+        private void _initData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context)
+        {
+            var resources = ReadLocaleFolder(resourceManager, culture);
+
+            var resErrors = new List<LocError>();
+            foreach (var (path, resource, data) in resources)
+            {
+                var errors = resource.Errors;
+                WriteWarningForErrs(path, errors, data);
+                if (!context.InsertResourcesAndReport(resource, path, out var errs))
+                {
+                    resErrors.AddRange(errs);
+                }
+
+            }
+
+            if (resErrors.Count > 0)
+            {
+                WriteLocErrors(resErrors);
+            }
+        }
+
+        private static ParallelQuery<(ResPath path, Resource resource, string contents)> ReadLocaleFolder(
+            IResourceManager resourceManager, CultureInfo culture)
+        {
             // Load data from .ftl files.
             // Data is loaded from /Locale/<language-code>/*
 
@@ -400,13 +453,7 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
                 var resource = parser.Parse();
                 return (path, resource, contents);
             });
-
-            foreach (var (path, resource, data) in resources)
-            {
-                var errors = resource.Errors;
-                context.AddResourceOverriding(resource);
-                WriteWarningForErrs(path, errors, data);
-            }
+            return resources;
         }
 
         private void WriteWarningForErrs(ResPath path, List<ParseError> errs, string resource)
@@ -417,12 +464,24 @@ public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value
             }
         }
 
-        private void WriteWarningForErrs(IList<FluentError> errs, string locId)
+        private void WriteWarningForErrs(IList<FluentError>? errs, string locId)
         {
+            if (errs == null) return;
             foreach (var err in errs)
             {
                 _logSawmill.Error("Error extracting `{locId}`\n{e1}", locId, err);
             }
+        }
+
+        private void WriteLocErrors(IList<LocError>? errs)
+        {
+            if (errs == null) return;
+            var sbErr = new StringBuilder();
+            foreach (var err in errs)
+            {
+                sbErr.Append(err).AppendLine();
+            }
+            _logSawmill.Error(sbErr.ToString());
         }
     }
 }

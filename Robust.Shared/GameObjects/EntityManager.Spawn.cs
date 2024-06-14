@@ -73,12 +73,12 @@ public partial class EntityManager
         return ents;
     }
 
-    public virtual EntityUid SpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+    public virtual EntityUid SpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
     {
         if (!coordinates.IsValid(this))
             throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
-        var entity = CreateEntityUninitialized(protoName, coordinates, overrides);
+        var entity = CreateEntityUninitialized(protoName, coordinates, overrides, rotation);
         InitializeAndStartEntity(entity, coordinates.GetMapId(this));
         return entity;
     }

@@ -44,19 +44,19 @@ namespace Robust.Client.Graphics
         {
             CheckDisposed();
 
-            var matrix = Matrix3.CreateTransform(in position, in rotation, in scale);
+            var matrix = Matrix3Helpers.CreateTransform(in position, in rotation, in scale);
             SetTransform(in matrix);
         }
 
         public void SetTransform(in Vector2 position, in Angle rotation)
         {
-            var matrix = Matrix3.CreateTransform(in position, in rotation);
+            var matrix = Matrix3Helpers.CreateTransform(in position, in rotation);
             SetTransform(in matrix);
         }
 
-        public abstract void SetTransform(in Matrix3 matrix);
+        public abstract void SetTransform(in Matrix3x2 matrix);
 
-        public abstract Matrix3 GetTransform();
+        public abstract Matrix3x2 GetTransform();
 
         public abstract void UseShader(ShaderInstance? shader);
 

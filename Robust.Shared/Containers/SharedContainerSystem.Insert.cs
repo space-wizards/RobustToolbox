@@ -49,14 +49,14 @@ public abstract partial class SharedContainerSystem
 
         if (!TryComp(container.Owner, out MetaDataComponent? ownerMeta))
         {
-            Log.Error($"Attempted to insert an entity {ToPrettyString(toInsert)} into a non-existent entity.");
+            Log.Error($"Attempted to insert an entity {ToPrettyString(toInsert)} into a non-existent entity. Trace: {Environment.StackTrace}");
             QueueDel(toInsert);
             return false;
         }
 
         if (ownerMeta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
-            Log.Error($"Attempted to insert an entity {ToPrettyString(toInsert)} into an entity that is terminating. Entity: {ToPrettyString(container.Owner)}.");
+            Log.Error($"Attempted to insert an entity {ToPrettyString(toInsert)} into an entity that is terminating. Entity: {ToPrettyString(container.Owner)}. Trace: {Environment.StackTrace}");
             QueueDel(toInsert);
             return false;
         }
@@ -67,7 +67,7 @@ public abstract partial class SharedContainerSystem
 
         if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
-            Log.Error($"Attempted to insert a terminating entity {ToPrettyString(uid)} into a container {container.ID} in entity: {ToPrettyString(container.Owner)}.");
+            Log.Error($"Attempted to insert a terminating entity {ToPrettyString(uid)} into a container {container.ID} in entity: {ToPrettyString(container.Owner)}. Trace: {Environment.StackTrace}");
             return false;
         }
 

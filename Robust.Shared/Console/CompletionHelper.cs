@@ -189,27 +189,45 @@ public static class CompletionHelper
         return Components<MapComponent>(string.Empty, entManager);
     }
 
-    public static IEnumerable<CompletionOption> NetEntities(string text, IEntityManager? entManager = null)
+    /// <summary>
+    /// Return all existing entities as possible completions. You should generally avoid using this unless you need to.
+    /// </summary>
+    public static IEnumerable<CompletionOption> NetEntities(string text, IEntityManager? entManager = null, int limit = 20)
     {
-        return Components<MetaDataComponent>(text, entManager);
-    }
+        if (!NetEntity.TryParse(text, out _))
+            yield break;
 
-    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null) where T : IComponent
-    {
         IoCManager.Resolve(ref entManager);
+        var query = entManager.AllEntityQueryEnumerator<MetaDataComponent>();
 
-        var query = entManager.AllEntityQueryEnumerator<T, MetaDataComponent>();
-
-        while (query.MoveNext(out var uid, out _, out var metadata))
+        var i = 0;
+        while (i < limit && query.MoveNext(out var metadata))
         {
-            if (!entManager.TryGetNetEntity(uid, out var netEntity, metadata: metadata))
-                continue;
-
-            var netString = netEntity.Value.ToString();
-
+            var netString = metadata.NetEntity.ToString();
             if (!netString.StartsWith(text))
                 continue;
 
+            i++;
+            yield return new CompletionOption(netString, metadata.EntityName);
+        }
+    }
+
+    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null, int limit = 20) where T : IComponent
+    {
+        if (!NetEntity.TryParse(text, out _))
+            yield break;
+
+        IoCManager.Resolve(ref entManager);
+        var query = entManager.AllEntityQueryEnumerator<T, MetaDataComponent>();
+
+        var i = 0;
+        while (i < limit && query.MoveNext(out _, out var metadata))
+        {
+            var netString = metadata.NetEntity.ToString();
+            if (!netString.StartsWith(text))
+                continue;
+
+            i++;
             yield return new CompletionOption(netString, metadata.EntityName);
         }
     }

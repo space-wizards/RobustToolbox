@@ -7,6 +7,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
@@ -42,7 +43,7 @@ internal sealed partial class PvsSystem
 
         // PVS benchmarks use dummy sessions.
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (session.Channel != null)
+        if (session.Channel is not DummyChannel)
         {
             _netMan.ServerSendMessage(msg, session.Channel);
             if (msg.ShouldSendReliably())
@@ -163,7 +164,7 @@ internal sealed partial class PvsSystem
 
                 dist = Math.Min(dist, (pos.Position - chunk.Position.Position).LengthSquared());
 
-                var relative = chunk.InvWorldMatrix.Transform(pos.Position)  - chunk.Centre;
+                var relative = Vector2.Transform(pos.Position, chunk.InvWorldMatrix)  - chunk.Centre;
                 relative = Vector2.Abs(relative);
                 chebDist = Math.Min(chebDist, Math.Max(relative.X, relative.Y));
             }

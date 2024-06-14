@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Timing;
 
@@ -12,16 +13,28 @@ internal abstract partial class SharedPlayerManager
         LastStateUpdate = Timing.CurTick;
     }
 
-    public void GetPlayerStates(GameTick fromTick, List<SessionState> states)
+    public void GetPlayerStates(ICommonSession session, GameTick fromTick, List<SessionState> states)
     {
         states.Clear();
         if (LastStateUpdate < fromTick)
             return;
 
         states.EnsureCapacity(InternalSessions.Count);
+        var ev = new GetSessionStateAttempt(session);
+        EntManager.EventBus.RaiseEvent(EventSource.Local, ref ev);
+
         foreach (var player in InternalSessions.Values)
         {
-            states.Add(player.State);
+            if (ev.Cancelled)
+            {
+                var copy = player.State.Clone();
+                copy.Name = string.Empty;
+                states.Add(copy);
+            }
+            else
+            {
+                states.Add(player.State);
+            }
         }
     }
 

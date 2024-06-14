@@ -90,7 +90,7 @@ internal sealed partial class PvsSystem
         else
             GetAllEntityStates(session);
 
-        _playerManager.GetPlayerStates(session.FromTick, session.PlayerStates);
+        _playerManager.GetPlayerStates(session.Session, session.FromTick, session.PlayerStates);
 
         // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
 

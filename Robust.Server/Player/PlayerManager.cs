@@ -130,15 +130,19 @@ namespace Robust.Server.Player
             session.ConnectedTime = DateTime.UtcNow;
             SetStatus(session, SessionStatus.Connected);
 
-            var list = new List<SessionState>();
+            var list = new List<SessionState>(players.Length);
+            var ev = new GetSessionStateAttempt(session);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, ref ev);
+
             foreach (var client in players)
             {
                 var info = new SessionState
                 {
                     UserId = client.UserId,
-                    Name = client.Name,
+                    Name = ev.Cancelled ? string.Empty : client.Name,
                     Status = client.Status,
-                    Ping = client.Channel!.Ping
+                    Ping = client.Channel.Ping,
+                    ControlledEntity = EntManager.GetNetEntity(client.AttachedEntity),
                 };
                 list.Add(info);
             }

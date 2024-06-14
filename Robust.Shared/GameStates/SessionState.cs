@@ -3,6 +3,7 @@ using System;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.ViewVariables;
 
 #nullable disable
@@ -38,5 +39,14 @@ namespace Robust.Shared.GameStates
                 ControlledEntity = ControlledEntity
             };
         }
+    }
+
+    /// <summary>
+    /// Event raised to determine whether the session can see all session state data.
+    /// </summary>
+    [ByRefEvent]
+    public record struct GetSessionStateAttempt(ICommonSession Session)
+    {
+        public bool Cancelled;
     }
 }

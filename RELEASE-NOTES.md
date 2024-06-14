@@ -49,7 +49,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Improved engine's Happy Eyeballs implementation, should result in more usage of IPv6 for HTTP APIs when available.
 
 ### Internal
 

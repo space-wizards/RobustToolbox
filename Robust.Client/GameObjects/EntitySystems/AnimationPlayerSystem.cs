@@ -11,6 +11,7 @@ namespace Robust.Client.GameObjects
     {
         private readonly List<Entity<AnimationPlayerComponent>> _activeAnimations = new();
 
+        private EntityQuery<AnimationPlayerComponent> _playerQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
 
         [Dependency] private readonly IComponentFactory _compFact = default!;
@@ -18,6 +19,7 @@ namespace Robust.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
+            _playerQuery = GetEntityQuery<AnimationPlayerComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
         }
 
@@ -171,28 +173,32 @@ namespace Robust.Client.GameObjects
             return component.PlayingAnimations.ContainsKey(key);
         }
 
+        [Obsolete]
         public void Stop(AnimationPlayerComponent component, string key)
         {
-            component.PlayingAnimations.Remove(key);
+            Stop((component.Owner, component), key);
         }
 
-        public void Stop(EntityUid uid, string key)
+        public void Stop(Entity<AnimationPlayerComponent?> entity, string key)
         {
-            if (!TryComp<AnimationPlayerComponent>(uid, out var player))
+            if (!_playerQuery.Resolve(entity.Owner, ref entity.Comp, false) ||
+                !entity.Comp.PlayingAnimations.Remove(key))
+            {
                 return;
+            }
 
-            player.PlayingAnimations.Remove(key);
+            EntityManager.EventBus.RaiseLocalEvent(entity.Owner, new AnimationCompletedEvent {Uid = entity.Owner, Key = key}, true);
         }
 
         public void Stop(EntityUid uid, AnimationPlayerComponent? component, string key)
         {
-            if (!Resolve(uid, ref component, false))
-                return;
-
-            component.PlayingAnimations.Remove(key);
+            Stop((uid, component), key);
         }
     }
 
+    /// <summary>
+    /// Raised whenever an animation stops, either due to running its course or being stopped manually.
+    /// </summary>
     public sealed class AnimationCompletedEvent : EntityEventArgs
     {
         public EntityUid Uid { get; init; }

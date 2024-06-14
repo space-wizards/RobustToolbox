@@ -40,14 +40,16 @@ END TEMPLATE-->
 ### New features
 
 * `IPrototypeManager.TryIndex` will now default to logging errors if passed an invalid prototype id struct (i,e., `EntProtoId` or `ProtoId<T>`). There is a new optional bool argument to disable logging errors.
+* `Eye` now allows its `Position` to be set directly. Please only do this with the `FixedEye` child type constructed manually.
+* Engine now respects the hub's `can_skip_build` parameter on info query, fixing an issue where the first hub advertisement fails due to ACZ taking too long.
 
 ### Bugfixes
 
-*None yet*
+* The `ent` toolshed command now takes `NetEntity` values, fixing parsing in practical uses.
 
 ### Other
 
-*None yet*
+* Improved engine's Happy Eyeballs implementation, should result in more usage of IPv6 for HTTP APIs when available.
 
 ### Internal
 

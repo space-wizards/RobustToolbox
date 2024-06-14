@@ -45,7 +45,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*
+* The `ent` toolshed command now takes `NetEntity` values, fixing parsing in practical uses.
 
 ### Other
 

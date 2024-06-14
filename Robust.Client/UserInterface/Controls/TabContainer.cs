@@ -17,6 +17,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyTabStyleBoxInactive = "tab-stylebox-inactive";
         public const string stylePropertyTabFontColor = "tab-font-color";
         public const string StylePropertyTabFontColorInactive = "tab-font-color-inactive";
+        public const string StylePropertyBackgroundStyleBox = "panel-background-stylebox";
         public const string StylePropertyPanelStyleBox = "panel-stylebox";
 
         private int _currentTab;
@@ -65,7 +66,10 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public StyleBox? BackgroundStyleBoxOverride { get; set; }
         public StyleBox? PanelStyleBoxOverride { get; set; }
+        public Color? TabFontColorOverride { get; set; }
+        public Color? TabFontColorInactiveOverride { get; set; }
 
         public event Action<int>? OnTabChanged;
 
@@ -140,7 +144,12 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.Draw(handle);
 
-            // First, draw panel.
+            // First, draw background panel.
+            var backgroundPanel = _getBackgroundPanel();
+
+            backgroundPanel?.Draw(handle, PixelSizeBox, UIScale);
+
+            // Second, draw tab panel.
             var headerSize = _getHeaderSize();
             var panel = _getPanel();
             var panelBox = new UIBox2(0, headerSize, PixelWidth, PixelHeight);
@@ -363,6 +372,9 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private Color _getTabFontColorActive()
         {
+            if (TabFontColorOverride != null)
+                return TabFontColorOverride.Value;
+
             if (TryGetStyleProperty(stylePropertyTabFontColor, out Color color))
             {
                 return color;
@@ -373,11 +385,24 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private Color _getTabFontColorInactive()
         {
+            if (TabFontColorInactiveOverride != null)
+                return TabFontColorInactiveOverride.Value;
+
             if (TryGetStyleProperty(StylePropertyTabFontColorInactive, out Color color))
             {
                 return color;
             }
             return Color.Gray;
+        }
+
+        [System.Diagnostics.Contracts.Pure]
+        private StyleBox? _getBackgroundPanel()
+        {
+            if (BackgroundStyleBoxOverride != null)
+                return BackgroundStyleBoxOverride;
+
+            TryGetStyleProperty<StyleBox>(StylePropertyBackgroundStyleBox, out var box);
+            return box;
         }
 
         [System.Diagnostics.Contracts.Pure]

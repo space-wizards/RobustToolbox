@@ -999,7 +999,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
-            var comps = _entTraitArray[CompIdx.ArrayIndex(type)];
+            var comps = _entTraitDict[type];
             DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
             return new EntityQuery<IComponent>(comps, _resolveSawmill);
         }

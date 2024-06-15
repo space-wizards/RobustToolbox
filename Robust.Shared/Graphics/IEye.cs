@@ -53,7 +53,7 @@ namespace Robust.Shared.Graphics
         /// </summary>
         /// <param name="viewMatrix">View matrix for this camera.</param>
         /// <param name="renderScale"></param>
-        void GetViewMatrix(out Matrix3 viewMatrix, Vector2 renderScale);
+        void GetViewMatrix(out Matrix3x2 viewMatrix, Vector2 renderScale);
 
         /// <summary>
         /// Returns the inverted view matrix for this eye, used to convert a point from
@@ -61,8 +61,8 @@ namespace Robust.Shared.Graphics
         /// </summary>
         /// <param name="viewMatrixInv">Inverted view matrix for this camera.</param>
         /// <param name="renderScale"></param>
-        void GetViewMatrixInv(out Matrix3 viewMatrixInv, Vector2 renderScale);
+        void GetViewMatrixInv(out Matrix3x2 viewMatrixInv, Vector2 renderScale);
 
-        void GetViewMatrixNoOffset(out Matrix3 viewMatrix, Vector2 renderScale);
+        void GetViewMatrixNoOffset(out Matrix3x2 viewMatrix, Vector2 renderScale);
     }
 }

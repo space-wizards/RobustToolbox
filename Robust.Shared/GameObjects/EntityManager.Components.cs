@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -125,7 +126,7 @@ namespace Robust.Shared.GameObjects
             foreach (var comp in comps)
             {
                 if (comp is { LifeStage:  ComponentLifeStage.Added })
-                    LifeInitialize(comp, CompIdx.Index(comp.GetType()));
+                    LifeInitialize(comp, _componentFactory.GetIndex(comp.GetType()));
             }
 
 #if DEBUG
@@ -998,7 +999,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
-            var comps = _entTraitArray[CompIdx.ArrayIndex(type)];
+            var comps = _entTraitDict[type];
             DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
             return new EntityQuery<IComponent>(comps, _resolveSawmill);
         }
@@ -1563,7 +1564,9 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+            {
+                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{Environment.StackTrace}");
+            }
 
             return false;
         }

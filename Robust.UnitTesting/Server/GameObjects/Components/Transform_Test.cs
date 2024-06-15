@@ -52,7 +52,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
-            manager.RegisterKind(typeof(EntityPrototype));
+            manager.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             manager.LoadFromStream(new StringReader(Prototypes));
             manager.ResolveResults();
 
@@ -367,7 +367,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void TreeComposeWorldMatricesTest()
         {
             // Arrange
-            var control = Matrix3.Identity;
+            var control = Matrix3x2.Identity;
 
             var node1 = EntityManager.SpawnEntity(null, InitialPos);
             var node2 = EntityManager.SpawnEntity(null, InitialPos);
@@ -395,8 +395,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var worldMat = XformSystem.GetWorldMatrix(node4Trans);
             var invWorldMat = XformSystem.GetInvWorldMatrix(node4Trans);
 
-            Matrix3.Multiply(in worldMat, in invWorldMat, out var leftVerifyMatrix);
-            Matrix3.Multiply(in invWorldMat, in worldMat, out var rightVerifyMatrix);
+            var leftVerifyMatrix = Matrix3x2.Multiply(worldMat, invWorldMat);
+            var rightVerifyMatrix = Matrix3x2.Multiply(invWorldMat, worldMat);
 
             //Assert
 

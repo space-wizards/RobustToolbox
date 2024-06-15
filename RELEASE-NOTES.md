@@ -39,7 +39,6 @@ END TEMPLATE-->
 
 ### New features
 
-* `Array.Clear(Array)` is now available in the sandbox.
 * `ScrollbarContainer` now has new methods for handling the position of the scrollbar thumb. `SetScrollValueToPercentage` , `SetHScrollValueToPercentage` and `SetVScrollValueToPercentage`
 
 ### Bugfixes
@@ -53,6 +52,104 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 225.0.0
+
+### Breaking changes
+
+* `NetEntity.Parse` and `TryParse` will now fail to parse empty strings.
+* Try to prevent EventBus looping. This also caps the amount of directed component subscriptions for a particular component to 256.
+
+### New features
+
+* `IPrototypeManager.TryIndex` will now default to logging errors if passed an invalid prototype id struct (i,e., `EntProtoId` or `ProtoId<T>`). There is a new optional bool argument to disable logging errors.
+* `Eye` now allows its `Position` to be set directly. Please only do this with the `FixedEye` child type constructed manually.
+* Engine now respects the hub's `can_skip_build` parameter on info query, fixing an issue where the first hub advertisement fails due to ACZ taking too long.
+* Add GetSession & TryGetSession to ActorSystem.
+* Raise an event when an entity's name is changed.
+
+### Bugfixes
+
+* The `ent` toolshed command now takes `NetEntity` values, fixing parsing in practical uses.
+* Fix ComponentFactory test mocks.
+* Fix LookupFlags missing from a couple of EntityLookupSystem methods.
+
+### Other
+
+* Improved engine's Happy Eyeballs implementation, should result in more usage of IPv6 for HTTP APIs when available.
+* Remove CompIdx locks to improve performance inside Pvs at higher player counts.
+* Avoid a read lock in GetEntityQuery to also improve performance.
+* Mark `EntityManager.System<T>` as Pure.
+
+
+## 224.1.1
+
+### Bugfixes
+
+* Fixed UserInterfaceSystem sometimes throwing a key-not-found exception when trying to close UIs.
+
+
+## 224.1.0
+
+### New features
+
+* `ServerIntegrationInstance` has new methods for adding dummy player sessions for tests that require multiple players.
+* Linguini has been updated to v0.8.1. Errors will now be logged when a duplicate localization key is found.
+* Added `UserInterfaceSystem.SetUi()` for modifying the `InterfaceData` associated with some BUI.
+* Added the `EntityPrototypeView` control for spawning & rendering an entity prototype.
+
+### Bugfixes
+
+* Fix `UserInterfaceSystem` spamming client side errors when entities with UIs open are deleted while outside of PVS range.
+* Fix Toolshed's EnumTypeParse not working enum values with upercase characters.
+* Fixed `incmd` command not working due to an invalid cast.
+
+### Other
+
+* There have been various performance improvements to replay loading & playback.
+
+### Internal
+
+* Added `DummySession` and `DummyChannel` classes for use in integration tests and benchmarks to fool the server into thinking that there are multiple players connected.
+* Added `ICommonSessionInternal` and updated `CommonSession` so that the internal setters now go through that interface.
+
+## 224.0.1
+
+### Bugfixes
+
+* Fixes PVS throwing exceptions when invalid entities are passed to `ExpandPvsEvent`. Now it just logs an error.
+* Fixes BUIs not properly closing, resulting in invalid entities in `UserInterfaceUserComponent.OpenInterfaces`
+* Fixes an unknown/invalid prototype exception sometimes being thrown when running ``IPrototypeManager.ResolveResults()`
+
+
+## 224.0.0
+
+### Breaking changes
+
+* `Matrix3` has been replaced with `System.Numerics.Matrix3x2`. Various Matrix related methods have been turned into extension methods in the `Matrix3Helpers` class.
+* Engine `EntityCategory` prototype IDs have been changed to use CamelCase. I.e., `hideSpawnMenu` -> `HideSpawnMenu`
+* Prototypes can now be implicitly cast `ProtoId<T>` or `EntProtoId` ID structs. The new implicit cast might cause previous function calls to be ambiguous.
+
+### New features
+
+* `Array.Clear(Array)` is now available in the sandbox.
+* BUIs now use `ExpandPvsEvent`. I.e., if a player has a UI open, then the entity associated with that UI will always get sent to the player by the PVS system.
+* Added `cvar_subs` command for listing all subscribers to cvar changes
+* Entity categories have been reworked
+  * Each category now has a `HideSpawnMenu` field. The old `HideSpawnMenu` category is now just a normal category with that field set to true.
+  * Reworked category inheritance. Inheritance can now be disabled per category using a `Inheritable` field.
+  * Entity prototypes can now be automatically added to categories based on the components that they have, either by specifying components when defining the category in yml, or by adding the EntityCategoryAttribute to the component class.
+
+### Bugfixes
+
+* Fixed client-side BUI error log spam if an unknown entity has a UI open.
+* Fixed placement manager spawning entities with incorrect rotations.
+
+### Other
+
+* Added a try-catch block to BUI constructors, to avoid clients getting stuck in error loops while applying states.
+* Attempting to play sounds on terminating entities no longer logs an error.
 
 
 ## 223.3.0

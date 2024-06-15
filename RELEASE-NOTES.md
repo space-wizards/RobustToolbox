@@ -36,6 +36,8 @@ END TEMPLATE-->
 ### Breaking changes
 
 * `NetEntity.Parse` and `TryParse` will now fail to parse empty strings.
+* `IEventBus.RaiseComponentEvent` now requires an EntityUid argument.
+* The `AddedComponentEventArgs` constructor is now internal
 
 ### New features
 

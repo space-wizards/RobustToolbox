@@ -69,39 +69,29 @@ namespace Robust.Shared.GameObjects
         /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
         /// is because of the component network source generator.
         /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        public void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent;
+
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, TEvent args)
             where TEvent : notnull;
 
-        /// <summary>
-        /// Dispatches an event directly to a specific component.
-        /// </summary>
-        /// <remarks>
-        /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
-        /// is because of the component network source generator.
-        /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="idx">Type of the component, for faster lookups.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        public void RaiseComponentEvent<TEvent>(IComponent component, CompIdx idx, TEvent args)
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx idx, TEvent args)
             where TEvent : notnull;
 
-        /// <summary>
-        /// Dispatches an event directly to a specific component, by-ref.
-        /// </summary>
-        /// <remarks>
-        /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
-        /// is because of the component network source generator.
-        /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        public void RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, ref TEvent args)
+            where TEvent : notnull;
+
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, ref TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent;
+
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx idx, ref TEvent args)
             where TEvent : notnull;
 
         public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
@@ -140,37 +130,58 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, TEvent args)
+            where TEvent : notnull
         {
-            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
-
-            DispatchComponent<TEvent>(
-                component.Owner,
-                component,
-                _comFac.GetIndex(component.GetType()),
-                ref unitRef);
-        }
-
-        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, CompIdx type, TEvent args)
-        {
-            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
-
-            DispatchComponent<TEvent>(
-                component.Owner,
-                component,
-                type,
-                ref unitRef);
+            RaiseComponentEvent(uid, component, _comFac.GetIndex(component.GetType()), ref args);
         }
 
         /// <inheritdoc />
-        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent
+        {
+            RaiseComponentEvent(uid, component, CompIdx.Index<TComponent>(), ref args);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx type, TEvent args)
+            where TEvent : notnull
+        {
+            RaiseComponentEvent(uid, component, type, ref args);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, ref TEvent args)
+            where TEvent : notnull
+        {
+            RaiseComponentEvent(uid, component, _comFac.GetIndex(component.GetType()), ref args);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, ref TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent
+        {
+            RaiseComponentEvent(uid, component, CompIdx.Index<TComponent>(), ref args);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx type, ref TEvent args)
+            where TEvent : notnull
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
             DispatchComponent<TEvent>(
-                component.Owner,
+                uid,
                 component,
-                _comFac.GetIndex(component.GetType()),
+                type,
                 ref unitRef);
         }
 
@@ -399,7 +410,7 @@ namespace Robust.Shared.GameObjects
 
         public void OnComponentRemoved(in RemovedComponentEventArgs e)
         {
-            EntRemoveComponent(e.BaseArgs.Owner, _comFac.GetIndex(e.BaseArgs.Component.GetType()));
+            EntRemoveComponent(e.BaseArgs.Owner, e.Idx);
         }
 
         private void EntAddSubscription(

@@ -85,6 +85,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<MetaDataComponent>())).Returns(compRegistration);
             compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { compRegistration });
+            compFacMock.Setup(m => m.GetIndex(typeof(MetaDataComponent))).Returns(CompIdx.Index<MetaDataComponent>());
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
@@ -143,6 +144,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<MetaDataComponent>())).Returns(compRegistration);
             compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { compRegistration });
+            compFacMock.Setup(m => m.GetIndex(typeof(MetaDataComponent))).Returns(CompIdx.Index<MetaDataComponent>());
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
@@ -199,6 +201,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     CompIdx.Index<T>());
 
                 compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<T>())).Returns(reg);
+                compFacMock.Setup(m => m.GetIndex(typeof(T))).Returns(CompIdx.Index<T>());
                 entManMock.Setup(m => m.TryGetComponent(entUid, CompIdx.Index<T>(), out inst)).Returns(true);
                 entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<T>())).Returns(inst);
                 entManMock.Setup(m => m.GetComponentInternal(entUid, CompIdx.Index<T>())).Returns(inst);
@@ -281,6 +284,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     CompIdx.Index<T>());
 
                 compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<T>())).Returns(reg);
+                compFacMock.Setup(m => m.GetIndex(typeof(T))).Returns(CompIdx.Index<T>());
                 entManMock.Setup(m => m.TryGetComponent(entUid, CompIdx.Index<T>(), out inst)).Returns(true);
                 entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<T>())).Returns(inst);
                 entManMock.Setup(m => m.GetComponentInternal(entUid, CompIdx.Index<T>())).Returns(inst);

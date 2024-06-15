@@ -143,17 +143,20 @@ public interface IPrototypeManager
     /// </summary>
     FrozenDictionary<string, T> GetInstances<T>() where T : IPrototype;
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
+    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
+    bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+    /// <summary>
+    /// Attempt to retrieve the prototype corresponding to the given prototype id.
+    /// Unless otherwise specified, this will log an error if the id does not match any known prototype.
+    /// </summary>
+    bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype,  bool logError = true) where T : class, IPrototype;
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
+    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
+    bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
+    bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype;
 
     bool HasMapping<T>(string id);
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);

@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 
@@ -21,6 +22,21 @@ public sealed class ActorSystem : EntitySystem
         _playerManager.SetAttachedEntity(component.PlayerSession, null);
     }
 
+    [PublicAPI]
+    public bool TryGetSession(EntityUid? uid, out ICommonSession? session)
+    {
+        if (TryComp(uid, out ActorComponent? actorComp))
+        {
+            session = actorComp.PlayerSession;
+            return true;
+        }
+
+        session = null;
+        return false;
+    }
+
+    [PublicAPI]
+    [Pure]
     public ICommonSession? GetSession(EntityUid? uid)
     {
         if (TryComp(uid, out ActorComponent? actorComp))

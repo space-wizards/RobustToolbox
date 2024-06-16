@@ -35,8 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `IEventBus.RaiseComponentEvent` now requires an EntityUid argument.
-* The `AddedComponentEventArgs` and `RemovedComponentEventArgs` constructors are now internal
+*None yet*
 
 ### New features
 
@@ -53,6 +52,22 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 226.0.0
+
+### Breaking changes
+
+* `IEventBus.RaiseComponentEvent` now requires an EntityUid argument.
+* The `AddedComponentEventArgs` and `RemovedComponentEventArgs` constructors are now internal
+
+### New features
+
+* Allow RequestScreenTexture to be set in overlays.
+
+### Bugfixes
+
+* Fix AnimationCompletedEvent not always going out.
 
 
 ## 225.0.0

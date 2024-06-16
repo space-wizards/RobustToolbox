@@ -35,7 +35,8 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `IEventBus.RaiseComponentEvent` now requires an EntityUid argument.
+* The `AddedComponentEventArgs` and `RemovedComponentEventArgs` constructors are now internal
 
 ### New features
 

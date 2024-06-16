@@ -169,7 +169,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(new ComponentEventArgs(compInstance, entUid), reg));
 
             // Raise
-            ((IEventBus)bus).RaiseComponentEvent(compInstance, new ComponentInit());
+            ((IEventBus)bus).RaiseComponentEvent(entUid, compInstance, new ComponentInit());
 
             // Assert
             Assert.That(calledCount, Is.EqualTo(1));
@@ -310,7 +310,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 handlerACount++;
 
                 // add and then remove component B
-                bus.OnComponentRemoved(new RemovedComponentEventArgs(new ComponentEventArgs(instB, entUid), false, default!));
+                bus.OnComponentRemoved(new RemovedComponentEventArgs(new ComponentEventArgs(instB, entUid), false, default!, CompIdx.Index<OrderBComponent>()));
                 bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instB, entUid), regB));
             }
 
@@ -321,7 +321,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 handlerBCount++;
 
                 // add and then remove component A
-                bus.OnComponentRemoved(new RemovedComponentEventArgs(new ComponentEventArgs(instA, entUid), false, default!));
+                bus.OnComponentRemoved(new RemovedComponentEventArgs(new ComponentEventArgs(instA, entUid), false, default!, CompIdx.Index<OrderAComponent>()));
                 bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instA, entUid), regA));
             }
 

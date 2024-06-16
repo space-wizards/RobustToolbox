@@ -143,7 +143,6 @@ namespace Robust.Server.Player
                 list.Add(info);
             }
             netMsg.Plyrs = list;
-            netMsg.PlyCount = (byte)list.Count;
 
             channel.SendMessage(netMsg);
         }

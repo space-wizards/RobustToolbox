@@ -49,6 +49,7 @@ END TEMPLATE-->
 
 * Fix internal networking logic
 * Updates of `OutputPanel` contents caused by change in UI scale are now deferred until visible. Especially important to avoid updates from debug console.
+* Debug console is now limited to only keep `con.max_entries` entries.
 
 ### Internal
 

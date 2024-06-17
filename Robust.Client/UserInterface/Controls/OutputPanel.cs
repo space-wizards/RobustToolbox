@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.RichText;
+using Robust.Shared.Collections;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -20,7 +19,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public const string StylePropertyStyleBox = "stylebox";
 
-        private readonly List<RichTextEntry> _entries = new();
+        private readonly RingBufferList<RichTextEntry> _entries = new();
         private bool _isAtBottom = true;
 
         private int _totalContentHeight;
@@ -46,6 +45,8 @@ namespace Robust.Client.UserInterface.Controls
             AddChild(_scrollBar);
             _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
         }
+
+        public int EntryCount => _entries.Count;
 
         public StyleBox? StyleBoxOverride
         {
@@ -136,7 +137,7 @@ namespace Robust.Client.UserInterface.Controls
             // So when a new color tag gets hit this stack gets the previous color pushed on.
             var context = new MarkupDrawingContext(2);
 
-            foreach (ref var entry in CollectionsMarshal.AsSpan(_entries))
+            foreach (ref var entry in _entries)
             {
                 if (entryOffset + entry.Height < 0)
                 {
@@ -187,7 +188,7 @@ namespace Robust.Client.UserInterface.Controls
             _totalContentHeight = 0;
             var font = _getFont();
             var sizeX = _getContentBox().Width;
-            foreach (ref var entry in CollectionsMarshal.AsSpan(_entries))
+            foreach (ref var entry in _entries)
             {
                 entry.Update(_tagManager, font, sizeX, UIScale);
                 _totalContentHeight += entry.Height + font.GetLineSeparation(UIScale);

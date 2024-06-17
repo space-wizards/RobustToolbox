@@ -39,5 +39,5 @@ public sealed class AutoNetworkedFieldAttribute : Attribute
 ///     <see cref="AutoGenerateComponentStateAttribute.RaiseAfterAutoHandleState"/> is true, so that other systems
 ///     can have effects after handling state without having to redefine all replication.
 /// </summary>
-[ByRefEvent]
+[ByRefEvent, ComponentEvent]
 public record struct AfterAutoHandleStateEvent(IComponentState State);

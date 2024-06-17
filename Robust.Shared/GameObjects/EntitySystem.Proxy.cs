@@ -8,7 +8,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -74,6 +73,15 @@ public partial class EntitySystem
     protected bool TerminatingOrDeleted(EntityUid uid, MetaDataComponent? metaData = null)
     {
         return LifeStage(uid, metaData) >= EntityLifeStage.Terminating;
+    }
+
+    /// <summary>
+    ///     Checks whether the entity is being or has been deleted (or never existed in the first place).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TerminatingOrDeleted(EntityUid? uid, MetaDataComponent? metaData = null)
+    {
+        return !uid.HasValue || TerminatingOrDeleted(uid.Value, metaData);
     }
 
     [Obsolete("Use override without the EntityQuery")]

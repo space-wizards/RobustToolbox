@@ -18,6 +18,8 @@ namespace Robust.Shared.Utility;
 [Serializable, NetSerializable]
 public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
 {
+    public static FormattedMessage Empty => new();
+
     /// <summary>
     /// The list of nodes the formatted message is made out of
     /// </summary>

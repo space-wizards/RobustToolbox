@@ -97,8 +97,23 @@ namespace Robust.Shared.Configuration
             {
                 // overwrite the value with the saved one
                 var oldValue = GetConfigVarValue(cfgVar);
-                changedInvokes.Add(SetupInvokeValueChanged(cfgVar, value, oldValue));
-                cfgVar.Value = value;
+
+                var convertedValue = value;
+                if (cfgVar.Type != value.GetType())
+                {
+                    try
+                    {
+                        convertedValue = ConvertToCVarType(value, cfgVar.Type!);
+                    }
+                    catch
+                    {
+                        _sawmill.Error($"TOML parsed cvar does not match registered cvar type. Name: {cvar}. Code Type: {cfgVar.Type}. Toml type: {value.GetType()}");
+                        return;
+                    }
+                }
+
+                changedInvokes.Add(SetupInvokeValueChanged(cfgVar, convertedValue, oldValue));
+                cfgVar.Value = convertedValue;
             }
             else
             {

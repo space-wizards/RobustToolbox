@@ -43,7 +43,7 @@
     <PackageVersion Include="NUnit.Analyzers" Version="3.10.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="4.5.0" />
     <PackageVersion Include="Nett" Version="0.15.0" />
-    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.4" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
     <PackageVersion Include="OpenTK.OpenAL" Version="4.7.7" />
     <PackageVersion Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
     <PackageVersion Include="Pidgin" Version="3.2.2" />

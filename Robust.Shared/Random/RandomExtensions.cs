@@ -129,7 +129,7 @@ public static class RandomExtensions
         return minAngle + (maxAngle - minAngle) * random.NextDouble();
     }
 
-    public static Vector2 NextVector2(this System.Random random, float minMagnitude, float maxMagnitude)
+    public static Vector2 NextPolarVector2(this System.Random random, float minMagnitude, float maxMagnitude)
         => random.NextAngle().RotateVec(new Vector2(random.NextFloat(minMagnitude, maxMagnitude), 0));
 
     public static float NextFloat(this IRobustRandom random)

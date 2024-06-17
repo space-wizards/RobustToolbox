@@ -586,7 +586,7 @@ namespace Robust.Shared.GameObjects
                 {
                     try
                     {
-                        LifeShutdown(component);
+                        LifeShutdown(uid, component, _componentFactory.GetIndex(component.GetType()));
                     }
                     catch (Exception e)
                     {

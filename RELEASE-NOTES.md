@@ -35,25 +35,68 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+* Fix internal networking logic
+
+### Internal
+
+*None yet*
+
+
+## 226.0.0
+
+### Breaking changes
+
+* `IEventBus.RaiseComponentEvent` now requires an EntityUid argument.
+* The `AddedComponentEventArgs` and `RemovedComponentEventArgs` constructors are now internal
+
+### New features
+
+* Allow RequestScreenTexture to be set in overlays.
+
+### Bugfixes
+
+* Fix AnimationCompletedEvent not always going out.
+
+
+## 225.0.0
+
+### Breaking changes
+
 * `NetEntity.Parse` and `TryParse` will now fail to parse empty strings.
+* Try to prevent EventBus looping. This also caps the amount of directed component subscriptions for a particular component to 256.
 
 ### New features
 
 * `IPrototypeManager.TryIndex` will now default to logging errors if passed an invalid prototype id struct (i,e., `EntProtoId` or `ProtoId<T>`). There is a new optional bool argument to disable logging errors.
 * `Eye` now allows its `Position` to be set directly. Please only do this with the `FixedEye` child type constructed manually.
 * Engine now respects the hub's `can_skip_build` parameter on info query, fixing an issue where the first hub advertisement fails due to ACZ taking too long.
+* Add GetSession & TryGetSession to ActorSystem.
+* Raise an event when an entity's name is changed.
 
 ### Bugfixes
 
 * The `ent` toolshed command now takes `NetEntity` values, fixing parsing in practical uses.
+* Fix ComponentFactory test mocks.
+* Fix LookupFlags missing from a couple of EntityLookupSystem methods.
 
 ### Other
 
-*None yet*
-
-### Internal
-
-*None yet*
+* Improved engine's Happy Eyeballs implementation, should result in more usage of IPv6 for HTTP APIs when available.
+* Remove CompIdx locks to improve performance inside Pvs at higher player counts.
+* Avoid a read lock in GetEntityQuery to also improve performance.
+* Mark `EntityManager.System<T>` as Pure.
 
 
 ## 224.1.1

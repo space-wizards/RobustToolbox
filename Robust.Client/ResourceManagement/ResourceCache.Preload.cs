@@ -144,8 +144,8 @@ namespace Robust.Client.ResourceManagement
             });
 
             // Do not meta-atlas RSIs with custom load parameters.
-            var atlasList = rsiList.Where(x => x.LoadParameters == TextureLoadParameters.Default).ToArray();
-            var nonAtlasList = rsiList.Where(x => x.LoadParameters != TextureLoadParameters.Default).ToArray();
+            var atlasList = rsiList.Where(x => x.LoadParameters == TextureLoadParameters.Default && x.AtlasGroup >= 0).ToArray();
+            var nonAtlasList = rsiList.Where(x => x.LoadParameters != TextureLoadParameters.Default || x.AtlasGroup < 0).ToArray();
 
             foreach (var data in nonAtlasList)
             {
@@ -173,15 +173,19 @@ namespace Robust.Client.ResourceManagement
             // everything fits onto a single 8k x 8k image so as long as the computer can manage that, it should be
             // fine.
 
-            // TODO allow RSIs to opt out (useful for very big & rare RSIs)
             // TODO combine with (non-rsi) texture atlas?
+            // TODO use rectangle packing algorithms.
 
-            Array.Sort(atlasList, (b, a) => (b.AtlasSheet?.Height ?? 0).CompareTo(a.AtlasSheet?.Height ?? 0));
+            // TODO ensure that atlas groups are actually grouped together
+            // Currently atlas groups are just used for this Sort( call), which helps to try ensure that group 0 are
+            // all together, but doesn't really do anything for other groups.
+            Array.Sort(atlasList, RSIResource.LoadStepData.Comparison);
 
             // Each RSI sub atlas has a different size.
             // Even if we iterate through them once to estimate total area, I have NFI how to sanely estimate an optimal square-texture size.
             // So fuck it, just default to letting it be as large as it needs to and crop it as needed?
-            var maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
+            var maxSize = GL.GetInteger(GetPName.MaxTextureSize);
+            maxSize = Math.Min(maxSize, _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
             var sheet = new Image<Rgba32>(maxSize, maxSize);
 
             var deltaY = 0;

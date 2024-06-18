@@ -50,7 +50,8 @@
                         ]
                     ]
                 }
-            ]
+            ],
+            "atlasGroup": 0
         }
     ],
     "required": [
@@ -184,6 +185,13 @@
                     }
                 }
             }
+        },
+        "atlasGroup": {
+            "$id": "#/properties/atlasGroup",
+            "default": "",
+            "description": "An integer that is used to group RSIs into the same texture atlas. Defaults to 0. Negative values prevent the RSI from being put into a larger atlas.",
+            "title": "atlasGroup",
+            "type": "integer"
         }
     },
     "additionalProperties": true

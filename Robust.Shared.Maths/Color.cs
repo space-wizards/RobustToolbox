@@ -1003,7 +1003,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="other">The Color4 structure to compare to.</param>
         /// <returns>True if both Color4 structures contain the same components; false otherwise.</returns>
-        public readonly bool Equals(in Color other)
+        public readonly bool Equals(Color other)
         {
             // TODO COLOR why is this approximate
             // This method literally doesn't do what its docstring says it does.

@@ -21,7 +21,7 @@ namespace Robust.Client.Graphics.Clyde
         private const string UniModelMatrix = "modelMatrix";
         private const string UniTexturePixelSize = "TEXTURE_PIXEL_SIZE";
         private const string UniMainTexture = "TEXTURE";
-        private const string UniLightTexture = "lightMap";
+        private const string UniLightTexture = "LIGHTMAP";
         private const string UniProjViewMatrices = "projectionViewMatrices";
         private const string UniUniformConstants = "uniformConstants";
 

@@ -1,7 +1,7 @@
 varying highp vec2 UV;
 varying highp vec2 UV2;
 
-uniform sampler2D lightMap;
+uniform sampler2D LIGHTMAP;
 
 // [SHADER_HEADER_CODE]
 

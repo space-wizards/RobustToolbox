@@ -145,7 +145,7 @@ public sealed partial class EntityLookupSystem
         // Transform is in world terms
         // Need to convert both back to lookup-local for AABB.
         var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
-        var lookupTransform = new Transform(lookupInvMatrix.Transform(shapeTransform.Position),
+        var lookupTransform = new Transform(Vector2.Transform(shapeTransform.Position, lookupInvMatrix),
             shapeTransform.Quaternion2D.Angle - lookupRot);
 
         var localAABB = shape.ComputeAABB(lookupTransform, 0);
@@ -287,7 +287,7 @@ public sealed partial class EntityLookupSystem
             return false;
 
         var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
-        var lookupTransform = new Transform(lookupInvMatrix.Transform(shapeTransform.Position),
+        var lookupTransform = new Transform(Vector2.Transform(shapeTransform.Position, lookupInvMatrix),
             shapeTransform.Quaternion2D.Angle - lookupRot);
 
         var localAABB = shape.ComputeAABB(lookupTransform, 0);
@@ -614,16 +614,16 @@ public sealed partial class EntityLookupSystem
 
     #region EntityCoordinates
 
-    public void GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, HashSet<Entity<T>> entities) where T : IComponent
+    public void GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         var mapPos = coordinates.ToMap(EntityManager, _transform);
-        GetEntitiesInRange(mapPos, range, entities);
+        GetEntitiesInRange(mapPos, range, entities, flags);
     }
 
-    public HashSet<Entity<T>> GetEntitiesInRange<T>(EntityCoordinates coordinates, float range) where T : IComponent
+    public HashSet<Entity<T>> GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         var entities = new HashSet<Entity<T>>();
-        GetEntitiesInRange(coordinates, range, entities);
+        GetEntitiesInRange(coordinates, range, entities, flags);
         return entities;
     }
 

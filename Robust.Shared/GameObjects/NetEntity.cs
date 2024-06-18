@@ -49,7 +49,7 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     public static NetEntity Parse(ReadOnlySpan<char> uid)
     {
         if (uid.Length == 0)
-            return default;
+            throw new FormatException($"An empty string is not a valid NetEntity");
 
         if (uid[0] != 'c')
             return new NetEntity(int.Parse(uid));

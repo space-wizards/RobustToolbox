@@ -272,4 +272,6 @@ public enum AudioFlags : byte
     /// Should the audio act as if attached to a grid?
     /// </summary>
     GridAudio = 1 << 0,
+
+    NoOcclusion = 1 << 1,
 }

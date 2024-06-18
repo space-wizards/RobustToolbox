@@ -43,9 +43,8 @@ public interface ICommonSession
     /// <remarks>
     /// On the Server every player has a network channel,
     /// on the Client only the LocalPlayer has a network channel, and that channel points to the server.
-    /// Unless you know what you are doing, you shouldn't be modifying this directly.
     /// </remarks>
-    INetChannel Channel { get; set; }
+    INetChannel Channel { get; [Obsolete] set; }
 
     LoginType AuthType { get; }
 
@@ -74,4 +73,13 @@ public interface ICommonSession
     /// game state.
     /// </summary>
     bool ClientSide { get; set; }
+}
+
+internal interface ICommonSessionInternal : ICommonSession
+{
+    public void SetStatus(SessionStatus status);
+    public void SetAttachedEntity(EntityUid? uid);
+    public void SetPing(short ping);
+    public void SetName(string name);
+    void SetChannel(INetChannel channel);
 }

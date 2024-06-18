@@ -109,7 +109,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            worldHandle.SetTransform(Matrix3.Identity);
+            worldHandle.SetTransform(Matrix3x2.Identity);
         }
     }
 }

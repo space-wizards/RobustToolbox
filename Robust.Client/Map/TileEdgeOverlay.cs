@@ -120,6 +120,6 @@ public sealed class TileEdgeOverlay : GridOverlay
             }
         }
 
-        args.WorldHandle.SetTransform(Matrix3.Identity);
+        args.WorldHandle.SetTransform(Matrix3x2.Identity);
     }
 }

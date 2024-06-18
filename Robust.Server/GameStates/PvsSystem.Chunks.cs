@@ -72,7 +72,7 @@ internal sealed partial class PvsSystem
         var xform = Transform(chunk.Root);
         DebugTools.AssertEqual(chunk.Map.Owner, xform.MapUid);
         chunk.InvWorldMatrix = xform.InvLocalMatrix;
-        var worldPos = xform.LocalMatrix.Transform(chunk.Centre);
+        var worldPos = Vector2.Transform(chunk.Centre, xform.LocalMatrix);
         chunk.Position = new(worldPos, xform.MapID);
         chunk.UpdateQueued = false;
     }
@@ -137,7 +137,7 @@ internal sealed partial class PvsSystem
 
         foreach (var (grid, _) in _grids)
         {
-            var localPos = _transform.GetInvWorldMatrix(grid).Transform(viewPos);
+            var localPos = Vector2.Transform(viewPos, _transform.GetInvWorldMatrix(grid));
             var gridChunkEnumerator = new ChunkIndicesEnumerator(localPos, range, ChunkSize);
             while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
             {

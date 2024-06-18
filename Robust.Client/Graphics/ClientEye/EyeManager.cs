@@ -101,18 +101,16 @@ namespace Robust.Client.Graphics
         }
 
         /// <inheritdoc />
-        public void GetScreenProjectionMatrix(out Matrix3 projMatrix)
+        public void GetScreenProjectionMatrix(out Matrix3x2 projMatrix)
         {
-            Matrix3 result = default;
+            Matrix3x2 result = default;
 
-            result.R0C0 = PixelsPerMeter;
-            result.R1C1 = -PixelsPerMeter;
+            result.M11 = PixelsPerMeter;
+            result.M22 = -PixelsPerMeter;
 
             var screenSize = _displayManager.ScreenSize;
-            result.R0C2 = screenSize.X / 2f;
-            result.R1C2 = screenSize.Y / 2f;
-
-            result.R2C2 = 1;
+            result.M31 = screenSize.X / 2f;
+            result.M32 = screenSize.Y / 2f;
 
             /* column major
              Sx 0 Tx

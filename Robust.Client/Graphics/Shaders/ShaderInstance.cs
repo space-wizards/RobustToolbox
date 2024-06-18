@@ -148,7 +148,7 @@ namespace Robust.Client.Graphics
             SetParameterImpl(name, value);
         }
 
-        public void SetParameter(string name, in Matrix3 value)
+        public void SetParameter(string name, in Matrix3x2 value)
         {
             EnsureAlive();
             EnsureMutable();
@@ -219,7 +219,7 @@ namespace Robust.Client.Graphics
         private protected abstract void SetParameterImpl(string name, int value);
         private protected abstract void SetParameterImpl(string name, Vector2i value);
         private protected abstract void SetParameterImpl(string name, bool value);
-        private protected abstract void SetParameterImpl(string name, in Matrix3 value);
+        private protected abstract void SetParameterImpl(string name, in Matrix3x2 value);
         private protected abstract void SetParameterImpl(string name, in Matrix4 value);
         private protected abstract void SetParameterImpl(string name, Texture value);
         private protected abstract void SetStencilImpl(StencilParameters value);

@@ -14,7 +14,7 @@ public partial class EntityManager
     /// Increases the life stage from <see cref="ComponentLifeStage.PreAdd" /> to <see cref="ComponentLifeStage.Added" />,
     /// after raising a <see cref="ComponentAdd"/> event.
     /// </summary>
-    internal void LifeAddToEntity(IComponent component, CompIdx type)
+    internal void LifeAddToEntity(EntityUid uid, IComponent component, CompIdx idx)
     {
         DebugTools.Assert(component.LifeStage == ComponentLifeStage.PreAdd);
 
@@ -23,7 +23,7 @@ public partial class EntityManager
         component.CreationTick = CurrentTick;
         // networked components are assumed to be dirty when added to entities. See also: ClearTicks()
         component.LastModifiedTick = CurrentTick;
-        EventBus.RaiseComponentEvent(component, type, CompAddInstance);
+        EventBus.RaiseComponentEvent(uid, component, idx, CompAddInstance);
         component.LifeStage = ComponentLifeStage.Added;
 #pragma warning restore CS0618 // Type or member is obsolete
     }
@@ -32,12 +32,12 @@ public partial class EntityManager
     /// Increases the life stage from <see cref="ComponentLifeStage.Added" /> to <see cref="ComponentLifeStage.Initialized" />,
     /// calling <see cref="Initialize" />.
     /// </summary>
-    internal void LifeInitialize(IComponent component, CompIdx type)
+    internal void LifeInitialize(EntityUid uid, IComponent component, CompIdx idx)
     {
         DebugTools.Assert(component.LifeStage == ComponentLifeStage.Added);
 
         component.LifeStage = ComponentLifeStage.Initializing;
-        EventBus.RaiseComponentEvent(component, type, CompInitInstance);
+        EventBus.RaiseComponentEvent(uid, component, idx, CompInitInstance);
         component.LifeStage = ComponentLifeStage.Initialized;
     }
 
@@ -45,12 +45,12 @@ public partial class EntityManager
     /// Increases the life stage from <see cref="ComponentLifeStage.Initialized" /> to
     /// <see cref="ComponentLifeStage.Running" />, calling <see cref="Startup" />.
     /// </summary>
-    internal void LifeStartup(IComponent component)
+    internal void LifeStartup(EntityUid uid, IComponent component, CompIdx idx)
     {
         DebugTools.Assert(component.LifeStage == ComponentLifeStage.Initialized);
 
         component.LifeStage = ComponentLifeStage.Starting;
-        EventBus.RaiseComponentEvent(component, CompStartupInstance);
+        EventBus.RaiseComponentEvent(uid, component, idx, CompStartupInstance);
         component.LifeStage = ComponentLifeStage.Running;
     }
 
@@ -61,7 +61,7 @@ public partial class EntityManager
     /// <remarks>
     /// Components are allowed to remove themselves in their own Startup function.
     /// </remarks>
-    internal void LifeShutdown(IComponent component)
+    internal void LifeShutdown(EntityUid uid, IComponent component, CompIdx idx)
     {
         DebugTools.Assert(component.LifeStage is >= ComponentLifeStage.Initializing and < ComponentLifeStage.Stopping);
 
@@ -73,7 +73,7 @@ public partial class EntityManager
         }
 
         component.LifeStage = ComponentLifeStage.Stopping;
-        EventBus.RaiseComponentEvent(component, CompShutdownInstance);
+        EventBus.RaiseComponentEvent(uid, component, idx, CompShutdownInstance);
         component.LifeStage = ComponentLifeStage.Stopped;
     }
 
@@ -81,13 +81,13 @@ public partial class EntityManager
     /// Increases the life stage from <see cref="ComponentLifeStage.Stopped" /> to <see cref="ComponentLifeStage.Deleted" />,
     /// calling <see cref="Component.OnRemove" />.
     /// </summary>
-    internal void LifeRemoveFromEntity(IComponent component)
+    internal void LifeRemoveFromEntity(EntityUid uid, IComponent component, CompIdx idx)
     {
         // can be called at any time after PreAdd, including inside other life stage events.
         DebugTools.Assert(component.LifeStage != ComponentLifeStage.PreAdd);
 
         component.LifeStage = ComponentLifeStage.Removing;
-        EventBus.RaiseComponentEvent(component, CompRemoveInstance);
+        EventBus.RaiseComponentEvent(uid, component, idx, CompRemoveInstance);
         component.LifeStage = ComponentLifeStage.Deleted;
     }
 

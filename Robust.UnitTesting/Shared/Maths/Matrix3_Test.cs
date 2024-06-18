@@ -9,20 +9,20 @@ namespace Robust.UnitTesting.Shared.Maths
 {
     [TestFixture]
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
-    [TestOf(typeof(Matrix3))]
+    [TestOf(typeof(Matrix3x2))]
     public sealed class Matrix3_Test
     {
         [Test]
         public void GetRotationTest()
         {
-            Assert.That(Matrix3.Identity.Rotation(), Is.EqualTo(Angle.Zero));
+            Assert.That(Matrix3x2.Identity.Rotation(), Is.EqualTo(Angle.Zero));
 
             var piOver2 = new Angle(Math.PI / 2);
-            var piOver2Mat = Matrix3.CreateRotation(piOver2.Theta);
+            var piOver2Mat = Matrix3Helpers.CreateRotation(piOver2.Theta);
             Assert.That(piOver2Mat.Rotation(), Is.EqualTo(piOver2));
 
             var pi = new Angle(Math.PI);
-            var piMat = Matrix3.CreateRotation(pi.Theta);
+            var piMat = Matrix3Helpers.CreateRotation(pi.Theta);
             Assert.That(piMat.Rotation(), Is.EqualTo(pi));
         }
 
@@ -30,12 +30,11 @@ namespace Robust.UnitTesting.Shared.Maths
         public void TranslationTest()
         {
             var control = new Vector2(1, 1);
-            var matrix = Matrix3.CreateTranslation(control);
+            var matrix = Matrix3Helpers.CreateTranslation(control);
 
-            var origin = new Vector3(0, 0, 1);
-            Matrix3.Transform(matrix, ref origin);
+            var origin = new Vector2(0, 0);
+            var result = Vector2.Transform(origin, matrix);
 
-            var result = origin.Xy;
             Assert.That(control == result, Is.True, result.ToString);
         }
 
@@ -57,13 +56,12 @@ namespace Robust.UnitTesting.Shared.Maths
         {
             var angle = testCase.Item2;
 
-            var matrix = Matrix3.CreateRotation((float)angle);
+            var matrix = Matrix3Helpers.CreateRotation((float)angle);
 
-            var test = new Vector3(1, 0, 1);
-            Matrix3.Transform(matrix, ref test);
+            var test = new Vector2(1, 0);
+            var result = Vector2.Transform(test, matrix);
 
             var control = testCase.Item1;
-            var result = test.Xy;
 
             Assert.That(MathHelper.CloseToPercent(control.X, result.X), Is.True, result.ToString);
             Assert.That(MathHelper.CloseToPercent(control.Y, result.Y), Is.True, result.ToString);
@@ -72,28 +70,28 @@ namespace Robust.UnitTesting.Shared.Maths
         [Test]
         public void MultiplyTransformOrder()
         {
-            var startPoint = new Vector3(1, 0, 1);
+            var startPoint = new Vector2(1, 0);
 
             Vector2 scale = new Vector2(2, 2);
             Angle angle = new Angle(System.MathF.PI / 2);
             Vector2 offset = new Vector2(-5, -3);
 
-            var scaleMatrix = Matrix3.CreateScale(scale);
-            var rotateMatrix = Matrix3.CreateRotation(angle);
-            var translateMatrix = Matrix3.CreateTranslation(offset);
+            var scaleMatrix = Matrix3Helpers.CreateScale(scale);
+            var rotateMatrix = Matrix3Helpers.CreateRotation(angle);
+            var translateMatrix = Matrix3Helpers.CreateTranslation(offset);
 
             // 1. Take the start point  -> ( 1, 0)
             // 2. Scale it by 2         -> ( 2, 0)
             // 3. Rotate by +90 degrees -> ( 0, 2)
             // 4. Translate by (-5, -3) -> (-5,-1)
-            var result = (scaleMatrix * rotateMatrix * translateMatrix) * startPoint;
+            var result = Vector2.Transform(startPoint, scaleMatrix * rotateMatrix * translateMatrix);
 
             Assert.That(result.X, Is.Approximately(-5f));
             Assert.That(result.Y, Is.Approximately(-1f));
 
             // repeat but with CreateTransform()
-            var transform = Matrix3.CreateTransform(offset, angle, scale);
-            result = transform * startPoint;
+            var transform = Matrix3Helpers.CreateTransform(offset, angle, scale);
+            result = Vector2.Transform(startPoint, transform);
             Assert.That(result.X, Is.Approximately(-5f));
             Assert.That(result.Y, Is.Approximately(-1f));
         }
@@ -105,54 +103,27 @@ namespace Robust.UnitTesting.Shared.Maths
             Angle angle = new Angle(System.MathF.PI / 2.21f);
             Vector2 offset = new Vector2(-5, 3);
 
-            var transform = Matrix3.CreateTransform(offset, angle, scale);
-            var invTransform = Matrix3.CreateInverseTransform(offset, angle, scale);
+            var transform = Matrix3Helpers.CreateTransform(offset, angle, scale);
+            var expectedInv = Matrix3Helpers.CreateInverseTransform(offset, angle, scale);
 
-            Assert.That(Matrix3.Invert(transform).EqualsApprox(invTransform));
-        }
-
-        [Test]
-        public void InvertTest()
-        {
-            const float epsilon = 1.0E-7f;
-            var control = Matrix3.Identity;
-
-            // take our matrix
-            var normalMatrix = new Matrix3(
-                3, 7, 2,
-                1, 8, 4,
-                2, 1, 9
-            );
-
-            // invert it (1/matrix)
-            var invMatrix = Matrix3.Invert(normalMatrix);
-
-            // multiply it back together
-            Matrix3.Multiply(in normalMatrix, in invMatrix, out var leftVerifyMatrix);
-            Matrix3.Multiply(in invMatrix, in normalMatrix, out var rightVerifyMatrix);
-
-            // these should be the same (A × A-1 = A-1 × A = I)
-            Assert.That(leftVerifyMatrix, new ApproxEqualityConstraint(rightVerifyMatrix, epsilon));
-
-            // verify matrix == identity matrix (or very close to because float precision)
-            Assert.That(leftVerifyMatrix, new ApproxEqualityConstraint(control, epsilon));
+            Matrix3x2.Invert(transform, out var invTransform);
+            Assert.That(invTransform.EqualsApprox(expectedInv));
         }
 
         [Test]
         public void TranslateMultiplyTest()
         {
             // Arrange
-            var mat1 = Matrix3.CreateTranslation(new Vector2(1, 1));
-            var mat2 = Matrix3.CreateTranslation(new Vector2(-2, -2));
-            var mat3 = Matrix3.CreateTranslation(new Vector2(3, 3));
+            var mat1 = Matrix3Helpers.CreateTranslation(new Vector2(1, 1));
+            var mat2 = Matrix3Helpers.CreateTranslation(new Vector2(-2, -2));
+            var mat3 = Matrix3Helpers.CreateTranslation(new Vector2(3, 3));
 
-            mat1.Multiply(in mat2, out var res2);
-            res2.Multiply(in mat3, out var res3);
+            var res2 = Matrix3x2.Multiply(mat1, mat2);
+            var res3 = Matrix3x2.Multiply(res2, mat3);
 
             // Act
-            Vector3 test = new Vector3(0, 0, 1);
-            Matrix3.Transform(res3, ref test);
-            var result = test.Xy;
+            Vector2 test = new Vector2(0, 0);
+            var result = Vector2.Transform(test, res3);
 
             // Assert
             Assert.That(MathHelper.CloseToPercent(result.X, 2), result.ToString);
@@ -163,19 +134,19 @@ namespace Robust.UnitTesting.Shared.Maths
         public void SpaceSwitchTest()
         {
             // Arrange
-            var startPoint = new Vector3(2, 0, 1);
-            var rotateMatrix = Matrix3.CreateRotation((float)(System.Math.PI / 6.3967));
-            var translateMatrix = Matrix3.CreateTranslation(new Vector2(5.357f, -37.53854f));
+            var startPoint = new Vector2(2, 0);
+            var rotateMatrix = Matrix3Helpers.CreateRotation((float)(System.Math.PI / 6.3967));
+            var translateMatrix = Matrix3Helpers.CreateTranslation(new Vector2(5.357f, -37.53854f));
 
             // NOTE: Matrix Product is NOT commutative. OpenTK (and this) uses pre-multiplication, OpenGL and all the tutorials
             // you will read about it use post-multiplication. So in OpenTK MVP = M*V*P; in OpenGL it is MVP = P*V*M.
-            Matrix3.Multiply(in rotateMatrix, in translateMatrix, out var transformMatrix);
+            var transformMatrix = Matrix3x2.Multiply(rotateMatrix, translateMatrix);
 
             // Act
-            Matrix3.Transform(in transformMatrix, in startPoint, out var localPoint);
+            var localPoint = Vector2.Transform(startPoint, transformMatrix);
 
-            var invMatrix = Matrix3.Invert(transformMatrix);
-            Matrix3.Transform(in invMatrix, in localPoint, out var result);
+            Matrix3x2.Invert(transformMatrix, out var invMatrix);
+            var result = Vector2.Transform(localPoint, invMatrix);
 
             // Assert
             Assert.That(MathHelper.CloseToPercent(startPoint.X, result.X), Is.True, result.ToString);
@@ -193,10 +164,9 @@ namespace Robust.UnitTesting.Shared.Maths
         {
             var (box, expected) = set;
 
-            var matrix = Matrix3.Identity;
-            matrix.Rotate(Angle.FromDegrees(20));
-            matrix.R0C2 += 10;
-            matrix.R1C2 += 10;
+            var matrix = Matrix3Helpers.CreateRotation(Angle.FromDegrees(-20));
+            matrix.M31 += 10;
+            matrix.M32 += 10;
 
             var transformed = matrix.TransformBox(box);
 

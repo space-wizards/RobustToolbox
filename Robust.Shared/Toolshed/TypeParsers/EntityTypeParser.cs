@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
@@ -12,13 +13,15 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 
 internal sealed class EntityTypeParser : TypeParser<EntityUid>
 {
+    [Dependency] private readonly IEntityManager _entityManager = default!;
+
     public override bool TryParse(ParserContext parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {
         var start = parser.Index;
         var word = parser.GetWord(ParserContext.IsToken);
         error = null;
 
-        if (!EntityUid.TryParse(word, out var ent))
+        if (!NetEntity.TryParse(word, out var ent))
         {
             result = null;
 
@@ -31,7 +34,7 @@ internal sealed class EntityTypeParser : TypeParser<EntityUid>
             return false;
         }
 
-        result = ent;
+        result = _entityManager.GetEntity(ent);
         return true;
     }
 

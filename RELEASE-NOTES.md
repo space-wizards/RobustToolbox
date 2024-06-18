@@ -47,11 +47,22 @@ END TEMPLATE-->
 
 ### Other
 
-* Fix internal networking logic
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 226.1.0
+
+### New features
+
+* Add some GetLocalEntitiesIntersecting methods for `Entity<T>`.
+
+### Other
+
+* Fix internal networking logic
 
 
 ## 226.0.0

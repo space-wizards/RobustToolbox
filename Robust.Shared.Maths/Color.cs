@@ -42,38 +42,34 @@ namespace Robust.Shared.Maths
     ///     Represents a color with 4 floating-point components (R, G, B, A).
     /// </summary>
     [Serializable]
-    [StructLayout(LayoutKind.Explicit)]
+    [StructLayout(LayoutKind.Sequential)]
     public struct Color : IEquatable<Color>, ISpanFormattable
     {
         /// <summary>
         ///     The red component of this Color4 structure.
         /// </summary>
-        [FieldOffset(0)]
         public float R;
 
         /// <summary>
         ///     The green component of this Color4 structure.
         /// </summary>
-        [FieldOffset(sizeof(float))]
         public float G;
 
         /// <summary>
         ///     The blue component of this Color4 structure.
         /// </summary>
-        [FieldOffset(2*sizeof(float))]
         public float B;
 
         /// <summary>
         ///     The alpha component of this Color4 structure.
         /// </summary>
-        [FieldOffset(3*sizeof(float))]
         public float A;
 
         /// <summary>
         /// Vector representation, for easy SIMD operations.
         /// </summary>
-        [FieldOffset(0), NonSerialized]
-        public SysVector4 RGBA;
+        // ReSharper disable once InconsistentNaming
+        public readonly SysVector4 RGBA => Unsafe.BitCast<Color, SysVector4>(this);
 
         public readonly byte RByte => (byte) (R * byte.MaxValue);
         public readonly byte GByte => (byte) (G * byte.MaxValue);
@@ -89,20 +85,24 @@ namespace Robust.Shared.Maths
         /// <param name="a">The alpha component of the new Color4 structure.</param>
         public Color(float r, float g, float b, float a = 1)
         {
-            Unsafe.SkipInit(out this);
             R = r;
             G = g;
             B = b;
             A = a;
         }
 
-        public Color(SysVector4 vec)
+        /// <summary>
+        ///     Constructs a new Color4 structure from the components in a <see cref="SysVector4"/>.
+        /// </summary>
+        public Color(in SysVector4 vec)
         {
-            Unsafe.SkipInit(out this);
-            RGBA = vec;
+            this = Unsafe.BitCast<SysVector4, Color>(vec);
         }
 
-        public Color(Color color) : this(color.RGBA)
+        /// <summary>
+        ///     Constructs a new Color4 structure by coping the contents of another color struct.
+        /// </summary>
+        public Color(in Color color) : this(color.RGBA)
         {
         }
 

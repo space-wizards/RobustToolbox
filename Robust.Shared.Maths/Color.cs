@@ -46,22 +46,22 @@ namespace Robust.Shared.Maths
     public struct Color : IEquatable<Color>, ISpanFormattable
     {
         /// <summary>
-        ///     The red component of this Color4 structure.
+        ///     The red component of this Color structure.
         /// </summary>
         public float R;
 
         /// <summary>
-        ///     The green component of this Color4 structure.
+        ///     The green component of this Color structure.
         /// </summary>
         public float G;
 
         /// <summary>
-        ///     The blue component of this Color4 structure.
+        ///     The blue component of this Color structure.
         /// </summary>
         public float B;
 
         /// <summary>
-        ///     The alpha component of this Color4 structure.
+        ///     The alpha component of this Color structure.
         /// </summary>
         public float A;
 
@@ -77,12 +77,12 @@ namespace Robust.Shared.Maths
         public readonly byte AByte => (byte) (A * byte.MaxValue);
 
         /// <summary>
-        ///     Constructs a new Color4 structure from the specified components.
+        ///     Constructs a new <see cref="Color"/> structure from the specified components.
         /// </summary>
-        /// <param name="r">The red component of the new Color4 structure.</param>
-        /// <param name="g">The green component of the new Color4 structure.</param>
-        /// <param name="b">The blue component of the new Color4 structure.</param>
-        /// <param name="a">The alpha component of the new Color4 structure.</param>
+        /// <param name="r">The red component of the new Color structure.</param>
+        /// <param name="g">The green component of the new Color structure.</param>
+        /// <param name="b">The blue component of the new Color structure.</param>
+        /// <param name="a">The alpha component of the new Color structure.</param>
         public Color(float r, float g, float b, float a = 1)
         {
             R = r;
@@ -92,7 +92,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Constructs a new Color4 structure from the components in a <see cref="SysVector4"/>.
+        ///     Constructs a new Color structure from the components in a <see cref="SysVector4"/>.
         /// </summary>
         public Color(in SysVector4 vec)
         {
@@ -100,19 +100,19 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Constructs a new Color4 structure by coping the contents of another color struct.
+        ///     Constructs a new Color structure by coping the contents of another color struct.
         /// </summary>
         public Color(in Color color) : this(color.RGBA)
         {
         }
 
         /// <summary>
-        ///     Constructs a new Color4 structure from the specified components.
+        ///     Constructs a new Color structure from the specified components.
         /// </summary>
-        /// <param name="r">The red component of the new Color4 structure.</param>
-        /// <param name="g">The green component of the new Color4 structure.</param>
-        /// <param name="b">The blue component of the new Color4 structure.</param>
-        /// <param name="a">The alpha component of the new Color4 structure.</param>
+        /// <param name="r">The red component of the new Color structure.</param>
+        /// <param name="g">The green component of the new Color structure.</param>
+        /// <param name="b">The blue component of the new Color structure.</param>
+        /// <param name="a">The alpha component of the new Color structure.</param>
         public Color(byte r, byte g, byte b, byte a = 255)
         {
             Unsafe.SkipInit(out this);
@@ -142,7 +142,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Compares the specified Color4 structures for equality.
+        ///     Compares the specified Color structures for equality.
         /// </summary>
         /// <param name="left">The left-hand side of the comparison.</param>
         /// <param name="right">The right-hand side of the comparison.</param>
@@ -153,7 +153,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Compares the specified Color4 structures for inequality.
+        ///     Compares the specified Color structures for inequality.
         /// </summary>
         /// <param name="left">The left-hand side of the comparison.</param>
         /// <param name="right">The right-hand side of the comparison.</param>
@@ -164,10 +164,10 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Converts the specified System.Drawing.Color to a Color4 structure.
+        ///     Converts the specified System.Drawing.Color to a Color structure.
         /// </summary>
         /// <param name="color">The System.Drawing.Color to convert.</param>
-        /// <returns>A new Color4 structure containing the converted components.</returns>
+        /// <returns>A new Color structure containing the converted components.</returns>
         public static implicit operator Color(System.Drawing.Color color)
         {
             return new(color.R, color.G, color.B, color.A);
@@ -199,9 +199,9 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Converts the specified Color4 to a System.Drawing.Color structure.
+        ///     Converts the specified Color to a System.Drawing.Color structure.
         /// </summary>
-        /// <param name="color">The Color4 to convert.</param>
+        /// <param name="color">The Color to convert.</param>
         /// <returns>A new System.Drawing.Color structure containing the converted components.</returns>
         public static explicit operator System.Drawing.Color(Color color)
         {
@@ -228,10 +228,10 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Compares whether this Color4 structure is equal to the specified object.
+        ///     Compares whether this Color structure is equal to the specified object.
         /// </summary>
         /// <param name="obj">An object to compare to.</param>
-        /// <returns>True obj is a Color4 structure with the same components as this Color4; false otherwise.</returns>
+        /// <returns>True obj is a Color structure with the same components as this Color; false otherwise.</returns>
         public readonly override bool Equals(object? obj)
         {
             if (!(obj is Color))
@@ -241,18 +241,18 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Calculates the hash code for this Color4 structure.
+        ///     Calculates the hash code for this Color structure.
         /// </summary>
-        /// <returns>A System.Int32 containing the hash code of this Color4 structure.</returns>
+        /// <returns>A System.Int32 containing the hash code of this Color structure.</returns>
         public readonly override int GetHashCode()
         {
             return ToArgb();
         }
 
         /// <summary>
-        ///     Creates a System.String that describes this Color4 structure.
+        ///     Creates a System.String that describes this Color structure.
         /// </summary>
-        /// <returns>A System.String that describes this Color4 structure.</returns>
+        /// <returns>A System.String that describes this Color structure.</returns>
         public readonly override string ToString()
         {
             return $"{{(R, G, B, A) = ({R}, {G}, {B}, {A})}}";
@@ -999,10 +999,10 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Compares whether this Color4 structure is equal to the specified Color4.
+        ///     Compares whether this Color structure is equal to the specified Color.
         /// </summary>
-        /// <param name="other">The Color4 structure to compare to.</param>
-        /// <returns>True if both Color4 structures contain the same components; false otherwise.</returns>
+        /// <param name="other">The Color structure to compare to.</param>
+        /// <returns>True if both Color structures contain the same components; false otherwise.</returns>
         public readonly bool Equals(Color other)
         {
             // TODO COLOR why is this approximate

@@ -48,6 +48,7 @@ END TEMPLATE-->
 ### Other
 
 * Non-existent resources are cached by `IResourceCache.TryGetResource`. This avoids the game constantly trying to re-load non-existent resources in common patterns such as UI theme texture fallbacks.
+* Default IPv4 MTU has been lowered to 700.
 
 ### Internal
 

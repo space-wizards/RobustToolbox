@@ -213,6 +213,40 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        /// Enlarges this box to contain another box.
+        /// </summary>
+        public bool EnlargeAabb(Box2 other)
+        {
+            var changed = false;
+
+            if (other.Left < Left)
+            {
+                Left = other.Left;
+                changed = true;
+            }
+
+            if (other.Bottom < Bottom)
+            {
+                Bottom = other.Bottom;
+                changed = true;
+            }
+
+            if (Right < other.Right)
+            {
+                Right = other.Right;
+                changed = true;
+            }
+
+            if (other.Top < Top)
+            {
+                Top = other.Top;
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        /// <summary>
         ///     Returns the smallest rectangle that contains both of the rectangles.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

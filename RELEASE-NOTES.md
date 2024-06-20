@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `Control.VisibilityChanged()` virtual function.
 
 ### Bugfixes
 
@@ -47,6 +47,9 @@ END TEMPLATE-->
 
 ### Other
 
+* Fix internal networking logic
+* Updates of `OutputPanel` contents caused by change in UI scale are now deferred until visible. Especially important to avoid updates from debug console.
+* Debug console is now limited to only keep `con.max_entries` entries.
 * Non-existent resources are cached by `IResourceCache.TryGetResource`. This avoids the game constantly trying to re-load non-existent resources in common patterns such as UI theme texture fallbacks.
 * Default IPv4 MTU has been lowered to 700.
 

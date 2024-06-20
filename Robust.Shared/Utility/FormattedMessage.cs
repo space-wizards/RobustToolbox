@@ -16,26 +16,30 @@ namespace Robust.Shared.Utility;
 /// </summary>
 [PublicAPI]
 [Serializable, NetSerializable]
-public sealed partial class FormattedMessage
+public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
 {
     public static FormattedMessage Empty => new();
 
     /// <summary>
     /// The list of nodes the formatted message is made out of
     /// </summary>
-    public IReadOnlyList<MarkupNode> Nodes => _nodes.AsReadOnly();
+    public IReadOnlyList<MarkupNode> Nodes => _nodes;
 
     /// <summary>
     /// true if the formatted message doesn't contain any nodes
     /// </summary>
     public bool IsEmpty => _nodes.Count == 0;
 
+    public int Count => _nodes.Count;
+
+    public MarkupNode this[int index] => _nodes[index];
+
     private readonly List<MarkupNode> _nodes;
 
     /// <summary>
     /// Used for inserting the correct closing node when calling <see cref="Pop"/>
     /// </summary>
-    private readonly Stack<MarkupNode> _openNodeStack = new();
+    private Stack<MarkupNode>? _openNodeStack;
 
     public FormattedMessage()
     {
@@ -199,6 +203,7 @@ public sealed partial class FormattedMessage
             return;
         }
 
+        _openNodeStack ??= new Stack<MarkupNode>();
         _openNodeStack.Push(markupNode);
     }
 
@@ -207,7 +212,7 @@ public sealed partial class FormattedMessage
     /// </summary>
     public void Pop()
     {
-        if (!_openNodeStack.TryPop(out var node))
+        if (_openNodeStack == null || !_openNodeStack.TryPop(out var node))
             return;
 
         _nodes.Add(new MarkupNode(node.Name, null, null, true));
@@ -238,6 +243,16 @@ public sealed partial class FormattedMessage
         return new FormattedMessageRuneEnumerator(this);
     }
 
+    public NodeEnumerator GetEnumerator()
+    {
+        return new NodeEnumerator(_nodes.GetEnumerator());
+    }
+
+    IEnumerator<MarkupNode> IEnumerable<MarkupNode>.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
     /// <returns>The string without markup tags.</returns>
     public override string ToString()
     {
@@ -252,6 +267,11 @@ public sealed partial class FormattedMessage
         return builder.ToString();
     }
 
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
     /// <returns>The string without filtering out markup tags.</returns>
     public string ToMarkup()
     {
@@ -261,13 +281,13 @@ public sealed partial class FormattedMessage
     public struct FormattedMessageRuneEnumerator : IEnumerable<Rune>, IEnumerator<Rune>
     {
         private readonly FormattedMessage _msg;
-        private IEnumerator<MarkupNode> _tagEnumerator;
+        private List<MarkupNode>.Enumerator _tagEnumerator;
         private StringRuneEnumerator _runeEnumerator;
 
         internal FormattedMessageRuneEnumerator(FormattedMessage msg)
         {
             _msg = msg;
-            _tagEnumerator = msg.Nodes.GetEnumerator();
+            _tagEnumerator = msg._nodes.GetEnumerator();
             // Rune enumerator will immediately give false on first iteration so I dont' need to special case anything.
             _runeEnumerator = "".EnumerateRunes();
         }
@@ -301,7 +321,7 @@ public sealed partial class FormattedMessage
 
         public void Reset()
         {
-            _tagEnumerator = _msg.Nodes.GetEnumerator();
+            _tagEnumerator = _msg._nodes.GetEnumerator();
             _runeEnumerator = "".EnumerateRunes();
         }
 
@@ -311,6 +331,35 @@ public sealed partial class FormattedMessage
 
         void IDisposable.Dispose()
         {
+        }
+    }
+
+    public struct NodeEnumerator : IEnumerator<MarkupNode>
+    {
+        private List<MarkupNode>.Enumerator _enumerator;
+
+        internal NodeEnumerator(List<MarkupNode>.Enumerator enumerator)
+        {
+            _enumerator = enumerator;
+        }
+
+        public bool MoveNext()
+        {
+            return _enumerator.MoveNext();
+        }
+
+        void IEnumerator.Reset()
+        {
+            ((IEnumerator) _enumerator).Reset();
+        }
+
+        public MarkupNode Current => _enumerator.Current;
+
+        object IEnumerator.Current => Current;
+
+        public void Dispose()
+        {
+            _enumerator.Dispose();
         }
     }
 }

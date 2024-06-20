@@ -11,7 +11,7 @@ public sealed class MarkupNode : IComparable<MarkupNode>
 {
     public readonly string? Name;
     public readonly MarkupParameter Value;
-    public readonly Dictionary<string, MarkupParameter> Attributes = new();
+    public readonly Dictionary<string, MarkupParameter> Attributes;
     public readonly bool Closing;
 
     /// <summary>
@@ -20,6 +20,7 @@ public sealed class MarkupNode : IComparable<MarkupNode>
     /// <param name="text">The plaintext the tag will consist of</param>
     public MarkupNode(string text)
     {
+        Attributes = new Dictionary<string, MarkupParameter>();
         Value = new MarkupParameter(text);
     }
 

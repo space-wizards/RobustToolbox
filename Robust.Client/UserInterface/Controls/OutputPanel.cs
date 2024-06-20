@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.RichText;
+using Robust.Shared.Collections;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -20,7 +19,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public const string StylePropertyStyleBox = "stylebox";
 
-        private readonly List<RichTextEntry> _entries = new();
+        private readonly RingBufferList<RichTextEntry> _entries = new();
         private bool _isAtBottom = true;
 
         private int _totalContentHeight;
@@ -29,6 +28,8 @@ namespace Robust.Client.UserInterface.Controls
         private VScrollBar _scrollBar;
 
         public bool ScrollFollowing { get; set; } = true;
+
+        private bool _invalidOnVisible;
 
         public OutputPanel()
         {
@@ -44,6 +45,8 @@ namespace Robust.Client.UserInterface.Controls
             AddChild(_scrollBar);
             _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
         }
+
+        public int EntryCount => _entries.Count;
 
         public StyleBox? StyleBoxOverride
         {
@@ -91,7 +94,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             var entry = new RichTextEntry(message, this, _tagManager, null);
 
-            entry.Update(_getFont(), _getContentBox().Width, UIScale);
+            entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
 
             _entries.Add(entry);
             var font = _getFont();
@@ -134,7 +137,7 @@ namespace Robust.Client.UserInterface.Controls
             // So when a new color tag gets hit this stack gets the previous color pushed on.
             var context = new MarkupDrawingContext(2);
 
-            foreach (ref var entry in CollectionsMarshal.AsSpan(_entries))
+            foreach (ref var entry in _entries)
             {
                 if (entryOffset + entry.Height < 0)
                 {
@@ -147,7 +150,7 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 }
 
-                entry.Draw(handle, font, contentBox, entryOffset, context, UIScale);
+                entry.Draw(_tagManager, handle, font, contentBox, entryOffset, context, UIScale);
 
                 entryOffset += entry.Height + font.GetLineSeparation(UIScale);
             }
@@ -185,9 +188,9 @@ namespace Robust.Client.UserInterface.Controls
             _totalContentHeight = 0;
             var font = _getFont();
             var sizeX = _getContentBox().Width;
-            foreach (ref var entry in CollectionsMarshal.AsSpan(_entries))
+            foreach (ref var entry in _entries)
             {
-                entry.Update(font, sizeX, UIScale);
+                entry.Update(_tagManager, font, sizeX, UIScale);
                 _totalContentHeight += entry.Height + font.GetLineSeparation(UIScale);
             }
 
@@ -239,7 +242,13 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void UIScaleChanged()
         {
-            _invalidateEntries();
+            // If this control isn't visible, don't invalidate entries immediately.
+            // This saves invalidating the debug console if it's hidden,
+            // which is a huge boon as auto-scaling changes UI scale a lot in that scenario.
+            if (!VisibleInTree)
+                _invalidOnVisible = true;
+            else
+                _invalidateEntries();
 
             base.UIScaleChanged();
         }
@@ -256,6 +265,15 @@ namespace Robust.Client.UserInterface.Controls
             // e.g. the control has not had its UI scale set and the messages were added, but the
             // existing ones were valid when the UI scale was set.
             _invalidateEntries();
+        }
+
+        protected override void VisibilityChanged(bool newVisible)
+        {
+            if (newVisible && _invalidOnVisible)
+            {
+                _invalidateEntries();
+                _invalidOnVisible = false;
+            }
         }
     }
 }

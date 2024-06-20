@@ -47,7 +47,7 @@ namespace Robust.Client.ResourceManagement
         {
             sawmill.Debug("Preloading textures...");
             var sw = Stopwatch.StartNew();
-            var resList = GetTypeDict<TextureResource>();
+            var resList = GetTypeData<TextureResource>().Resources;
 
             var texList = _manager.ContentFindFiles("/Textures/")
                 // Skip PNG files inside RSIs.
@@ -119,7 +119,7 @@ namespace Robust.Client.ResourceManagement
         private void PreloadRsis(ISawmill sawmill)
         {
             var sw = Stopwatch.StartNew();
-            var resList = GetTypeDict<RSIResource>();
+            var resList = GetTypeData<RSIResource>().Resources;
 
             var rsiList = _manager.ContentFindFiles("/Textures/")
                 .Where(p => p.ToString().EndsWith(".rsi/meta.json"))

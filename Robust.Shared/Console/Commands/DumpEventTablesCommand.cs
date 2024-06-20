@@ -34,7 +34,7 @@ internal sealed class DumpEventTablesCommand : LocalizedCommands
         {
             shell.WriteLine($"{evType}:");
 
-            var idx = comps;
+            var idx = comps.Start;
             while (idx != -1)
             {
                 ref var entry = ref table.ComponentLists[idx];

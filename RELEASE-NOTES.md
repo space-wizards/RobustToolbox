@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `System.Collections.IList` and `System.Collections.ICollection` are now sandbox safe, this fixes some collection expression cases.
+* The sandboxing system will now report the methods responsible for references to illegal items.
 
 ### Bugfixes
 

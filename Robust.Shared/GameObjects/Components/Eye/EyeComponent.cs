@@ -58,7 +58,9 @@ namespace Robust.Shared.GameObjects
         /// <see cref="CVars.NetMaxUpdateRange"/> and <see cref="CVars.NetPvsPriorityRange"/> cvars to be configured per
         /// eye.
         /// </summary>
-        [DataField] public float PvsScale = 1;
+        [Access(typeof(SharedEyeSystem))]
+        [DataField]
+        public float PvsScale = 1;
     }
 
     /// <summary>

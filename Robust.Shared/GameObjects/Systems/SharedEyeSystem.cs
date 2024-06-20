@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -99,8 +100,19 @@ public abstract class SharedEyeSystem : EntitySystem
 
     public void SetPvsScale(Entity<EyeComponent?> eye, float scale)
     {
-        if (Resolve(eye.Owner, ref eye.Comp, false))
-            eye.Comp.PvsScale = scale;
+        if (!Resolve(eye.Owner, ref eye.Comp, false))
+            return;
+
+        // Prevent a admin or some other fuck-up from causing exception spam in PVS system due to divide-by-zero or
+        // other such issues
+        if (!float.IsFinite(scale))
+        {
+            Log.Error($"Attempted to set pvs scale to invalid value: {scale}. Eye: {ToPrettyString(eye)}");
+            SetPvsScale(eye, 1);
+            return;
+        }
+
+        eye.Comp.PvsScale = Math.Clamp(scale, 0.1f, 100f);
     }
 
     public void SetVisibilityMask(EntityUid uid, int value, EyeComponent? eyeComponent = null)

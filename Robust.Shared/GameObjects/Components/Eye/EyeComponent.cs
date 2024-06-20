@@ -1,7 +1,6 @@
 using System.Numerics;
 using Robust.Shared.GameStates;
 using Robust.Shared.Graphics;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -41,6 +40,9 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite), DataField("zoom")]
         public Vector2 Zoom = Vector2.One;
 
+        /// <summary>
+        /// Eye offset, relative to the map, and not affected by <see cref="Rotation"/>
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite), DataField("offset"), AutoNetworkedField]
         public Vector2 Offset;
 
@@ -52,9 +54,11 @@ namespace Robust.Shared.GameObjects
         public int VisibilityMask = DefaultVisibilityMask;
 
         /// <summary>
-        /// Overrides the PVS view range of this eye, Effectively a per-eye <see cref="CVars.NetMaxUpdateRange"/> cvar.
+        /// Scaling factor for the PVS view range of this eye. This effectively allows the
+        /// <see cref="CVars.NetMaxUpdateRange"/> and <see cref="CVars.NetPvsPriorityRange"/> cvars to be configured per
+        /// eye.
         /// </summary>
-        [DataField] public float? PvsSize;
+        [DataField] public float PvsScale = 1;
     }
 
     /// <summary>

@@ -97,6 +97,12 @@ public abstract class SharedEyeSystem : EntitySystem
         eyeComponent.Eye.Zoom = value;
     }
 
+    public void SetPvsScale(Entity<EyeComponent?> eye, float scale)
+    {
+        if (Resolve(eye.Owner, ref eye.Comp, false))
+            eye.Comp.PvsScale = scale;
+    }
+
     public void SetVisibilityMask(EntityUid uid, int value, EyeComponent? eyeComponent = null)
     {
         if (!Resolve(uid, ref eyeComponent))

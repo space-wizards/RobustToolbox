@@ -397,9 +397,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             // not using EyeComponent.Eye.Position, because it's updated only on the client's side
             worldPos += eye.Comp2.Offset;
-
-            // zoom multiplier should be at least 1, otherwise player zooming in could cause issues
-            size = (eye.Comp2.PvsSize ?? size) * Math.Max(Math.Max(eye.Comp2.Zoom.X, eye.Comp2.Zoom.Y), 1);
+            size *= eye.Comp2.PvsScale;
         }
 
         size = Math.Max(size, 1);

@@ -125,7 +125,7 @@ internal sealed partial class PvsSystem
         // Update visibility masks & viewer positions
         // TODO PVS do this before sending state.
         // I,e, we already enumerate over all eyes when computing visible chunks.
-        Span<(MapCoordinates pos, Vector2? zoom)> positions = stackalloc (MapCoordinates, Vector2?)[session.Viewers.Length];
+        Span<(MapCoordinates pos, float scale)> positions = stackalloc (MapCoordinates, float)[session.Viewers.Length];
         int i = 0;
         foreach (var viewer in session.Viewers)
         {
@@ -134,8 +134,8 @@ internal sealed partial class PvsSystem
 
             var mapCoordinates = _transform.GetMapCoordinates(viewer.Owner, viewer.Comp1);
             mapCoordinates = mapCoordinates.Offset(viewer.Comp2?.Offset ?? Vector2.Zero);
-
-            positions[i++] = (mapCoordinates, viewer.Comp2?.Zoom);
+            var scale = MathF.Max((viewer.Comp2?.PvsScale ?? 1), 0.1f);
+            positions[i++] = (mapCoordinates, scale);
         }
 
         if (!CullingEnabled || session.DisableCulling)
@@ -160,7 +160,7 @@ internal sealed partial class PvsSystem
             DebugTools.Assert(!chunk.UpdateQueued);
             DebugTools.Assert(!chunk.Dirty);
 
-            foreach (var (pos, zoom) in positions)
+            foreach (var (pos, scale) in positions)
             {
                 if (pos.MapId != chunk.Position.MapId)
                     continue;
@@ -169,9 +169,8 @@ internal sealed partial class PvsSystem
 
                 var relative = Vector2.Transform(pos.Position, chunk.InvWorldMatrix)  - chunk.Centre;
 
-                // max with 1, otherwise this could cause issues
-                relative = Vector2.Abs(relative) / Vector2.Max(zoom ?? Vector2.One, Vector2.One);
-                chebDist = Math.Min(chebDist, Math.Max(relative.X, relative.Y));
+                relative = Vector2.Abs(relative);
+                chebDist = Math.Min(chebDist, Math.Max(relative.X, relative.Y) / scale);
             }
 
             distances.Add(dist);

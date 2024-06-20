@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Server.Configuration;
@@ -16,9 +14,6 @@ using Robust.Server.Replays;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
@@ -99,6 +94,10 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     private readonly List<GameTick> _deletedTick = new();
 
+    /// <summary>
+    /// The sessions that are currently being processed. Note that this is in general used by parallel & async tasks.
+    /// Hence player disconnection processing is deferred and only run via <see cref="ProcessDisconnections"/>.
+    /// </summary>
     private PvsSession[] _sessions = default!;
 
     private bool _async;
@@ -183,52 +182,25 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     internal void SendGameStates(ICommonSession[] players)
     {
+        // Wait for pending jobs and process disconnected players
+        ProcessDisconnections();
+
         // Ensure each session has a PvsSession entry before starting any parallel jobs.
         CacheSessionData(players);
 
         // Get visible chunks, and update any dirty chunks.
-        BeforeSendState();
+        BeforeSerializeStates();
 
-        // Construct & send the game state to each player.
-        SendStates(players);
+        // Construct & serialize the game state for each player (and for the replay).
+        SerializeStates();
+
+        // Compress & send the states.
+        SendStates();
 
         // Cull deletion history
-        AfterSendState(players);
+        AfterSerializeStates();
 
-        ProcessLeavePvs(players);
-    }
-
-    private void SendStates(ICommonSession[] players)
-    {
-        using var _ = Histogram.WithLabels("Send States").NewTimer();
-
-        var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
-        _oldestAck = GameTick.MaxValue.Value;
-
-        // Replays process game states in parallel with players
-        Parallel.For(-1, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
-
-        PvsThreadResources SendPlayer(int i, ParallelLoopState state, PvsThreadResources resource)
-        {
-            try
-            {
-                var guid = i >= 0 ? players[i].UserId.UserId : default;
-                ServerGameStateManager.PvsEventSource.Log.WorkStart(_gameTiming.CurTick.Value, i, guid);
-
-                if (i >= 0)
-                    SendStateUpdate(players[i], resource);
-                else
-                    _replay.Update();
-
-                ServerGameStateManager.PvsEventSource.Log.WorkStop(_gameTiming.CurTick.Value, i, guid);
-            }
-            catch (Exception e) // Catch EVERY exception
-            {
-                var source = i >= 0 ? players[i].ToString() : "replays";
-                Log.Log(LogLevel.Error, e, $"Caught exception while generating mail for {source}.");
-            }
-            return resource;
-        }
+        ProcessLeavePvs();
     }
 
     private void ResetParallelism(int _) => ResetParallelism();
@@ -414,22 +386,10 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private void BeforeSendState()
+    private void BeforeSerializeStates()
     {
         DebugTools.Assert(_chunks.Values.All(x => Exists(x.Map) && Exists(x.Root)));
         DebugTools.Assert(_chunkSets.Keys.All(Exists));
-
-        _leaveTask?.WaitOne();
-        _leaveTask = null;
-
-        foreach (var session in _disconnected)
-        {
-            if (PlayerData.Remove(session, out var pvsSession))
-            {
-                ClearSendHistory(pvsSession);
-                FreeSessionDataMemory(pvsSession);
-            }
-        }
 
         var ackJob = ProcessQueuedAcks();
 
@@ -443,6 +403,21 @@ internal sealed partial class PvsSystem : EntitySystem
         ackJob?.WaitOne();
     }
 
+    internal void ProcessDisconnections()
+    {
+        _leaveTask?.WaitOne();
+        _leaveTask = null;
+
+        foreach (var session in _disconnected)
+        {
+            if (PlayerData.Remove(session, out var pvsSession))
+            {
+                ClearSendHistory(pvsSession);
+                FreeSessionDataMemory(pvsSession);
+            }
+        }
+    }
+
     internal void CacheSessionData(ICommonSession[] players)
     {
         Array.Resize(ref _sessions, players.Length);
@@ -452,9 +427,9 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private void AfterSendState(ICommonSession[] players)
+    private void AfterSerializeStates()
     {
-        CleanupDirty(players);
+        CleanupDirty();
 
         if (_oldestAck == GameTick.MaxValue.Value)
         {

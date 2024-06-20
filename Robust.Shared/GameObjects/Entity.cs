@@ -23,6 +23,11 @@ public record struct Entity<T> : IFluentEntityUid
         return new Entity<T>(tuple.Owner, tuple.Comp);
     }
 
+    public static implicit operator Entity<T?>(Entity<T> ent)
+    {
+        return new Entity<T?>(ent.Owner, ent.Comp);
+    }
+
     public static implicit operator Entity<T?>(EntityUid owner)
     {
         return new Entity<T?>(owner, default);
@@ -68,6 +73,11 @@ public record struct Entity<T1, T2> : IFluentEntityUid
     public static implicit operator Entity<T1, T2>((EntityUid Owner, T1 Comp1, T2 Comp2) tuple)
     {
         return new Entity<T1, T2>(tuple.Owner, tuple.Comp1, tuple.Comp2);
+    }
+
+    public static implicit operator Entity<T1?, T2?>(Entity<T1, T2> ent)
+    {
+        return new Entity<T1?, T2?>(ent.Owner, ent.Comp1, ent.Comp2);
     }
 
     public static implicit operator Entity<T1?, T2?>(EntityUid owner)
@@ -137,6 +147,11 @@ public record struct Entity<T1, T2, T3> : IFluentEntityUid
     public static implicit operator Entity<T1, T2, T3>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3) tuple)
     {
         return new Entity<T1, T2, T3>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?>(Entity<T1, T2, T3> ent)
+    {
+        return new Entity<T1?, T2?, T3?>(ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3);
     }
 
     public static implicit operator Entity<T1?, T2?, T3?>(EntityUid owner)
@@ -242,6 +257,11 @@ public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid
     public static implicit operator Entity<T1, T2, T3, T4>((EntityUid Owner, T1 Comp1, T2 Comp2, T3 Comp3, T4 Comp4) tuple)
     {
         return new Entity<T1, T2, T3, T4>(tuple.Owner, tuple.Comp1, tuple.Comp2, tuple.Comp3, tuple.Comp4);
+    }
+
+    public static implicit operator Entity<T1?, T2?, T3?, T4?>(Entity<T1, T2, T3, T4> ent)
+    {
+        return new Entity<T1?, T2?, T3?, T4?>(ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3, ent.Comp4);
     }
 
     public static implicit operator Entity<T1?, T2?, T3?, T4?>(EntityUid owner)

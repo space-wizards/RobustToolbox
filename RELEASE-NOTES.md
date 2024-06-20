@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `System.Collections.IList` and `System.Collections.ICollection` are now sandbox safe, this fixes some collection expression cases.
 
 ### Bugfixes
 

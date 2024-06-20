@@ -39,23 +39,47 @@ END TEMPLATE-->
 
 ### New features
 
-* `Control.VisibilityChanged()` virtual function.
+*None yet*
 
 ### Bugfixes
 
-* Fixes ContainerSystem failing client-side debug asserts when an entity gets unanchored & inserted into a container on the same tick.
+*None yet*
 
 ### Other
 
-* Fix internal networking logic
-* Updates of `OutputPanel` contents caused by change in UI scale are now deferred until visible. Especially important to avoid updates from debug console.
-* Debug console is now limited to only keep `con.max_entries` entries.
-* Non-existent resources are cached by `IResourceCache.TryGetResource`. This avoids the game constantly trying to re-load non-existent resources in common patterns such as UI theme texture fallbacks.
-* Default IPv4 MTU has been lowered to 700.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 226.2.0
+
+### New features
+
+* `Control.VisibilityChanged()` virtual function.
+* Add some System.Random methods for NextFloat and NextPolarVector2.
+
+### Bugfixes
+
+* Fixes ContainerSystem failing client-side debug asserts when an entity gets unanchored & inserted into a container on the same tick.
+* Remove potential race condition on server startup from invoking ThreadPool.SetMinThreads.
+
+### Other
+
+* Increase default value of res.rsi_atlas_size.
+* Fix internal networking logic.
+* Updates of `OutputPanel` contents caused by change in UI scale are now deferred until visible. Especially important to avoid updates from debug console.
+* Debug console is now limited to only keep `con.max_entries` entries.
+* Non-existent resources are cached by `IResourceCache.TryGetResource`. This avoids the game constantly trying to re-load non-existent resources in common patterns such as UI theme texture fallbacks.
+* Default IPv4 MTU has been lowered to 700.
+* Update Robust.LoaderApi.
+
+### Internal
+
+* Split out PVS serialization from compression and sending game states.
+* Turn broadphase contacts into an IParallelRobustJob and remove unnecessary GetMapEntityIds for every contact.
 
 
 ## 226.1.0

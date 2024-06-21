@@ -909,6 +909,26 @@ public abstract partial class SharedMapSystem
         }
     }
 
+    public IEnumerable<TileRef> GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Circle localCircle, bool ignoreEmpty = true,
+        Predicate<TileRef>? predicate = null)
+    {
+        var aabb = new Box2(localCircle.Position.X - localCircle.Radius, localCircle.Position.Y - localCircle.Radius,
+            localCircle.Position.X + localCircle.Radius, localCircle.Position.Y + localCircle.Radius);
+
+        var tileEnumerator = GetLocalTilesEnumerator(uid, grid, aabb, ignoreEmpty, predicate);
+
+        while (tileEnumerator.MoveNext(out var tile))
+        {
+            var tileCenter = tile.GridIndices + grid.TileSizeHalfVector;
+            var direction = tileCenter - localCircle.Position;
+
+            if (direction.LengthSquared() <= localCircle.Radius * localCircle.Radius)
+            {
+                yield return tile;
+            }
+        }
+    }
+
     public IEnumerable<TileRef> GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Circle worldArea, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {

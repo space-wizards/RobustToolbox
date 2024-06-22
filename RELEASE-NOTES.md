@@ -38,7 +38,7 @@ END TEMPLATE-->
 * The default shader now interprets negative color modulation as a flag that indicates that the light map should be ignored.
   * This can be used to avoid having to change the light map texture, thus reducing draw batches.
   * Sprite layers that are set to use the "unshaded" shader prototype now use this.
-* The `vec3 lightSample` shader variable has been changed to `vec4 LIGHT`, and the `uniform sampler2D lightMap` has been renamed to `LIGHTMAP`
+  * Any fragment shaders that previously the `VtxModulate` colour modulation variable should instead use the new `MODULATE` variable, as the former may now contain negative values.
 
 ### New features
 

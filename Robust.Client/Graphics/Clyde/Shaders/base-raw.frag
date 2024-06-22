@@ -1,7 +1,8 @@
 varying highp vec2 UV;
 varying highp vec2 UV2;
 
-uniform sampler2D LIGHTMAP;
+// TODO CLYDE consistent shader variable naming
+uniform sampler2D lightMap;
 
 // [SHADER_HEADER_CODE]
 

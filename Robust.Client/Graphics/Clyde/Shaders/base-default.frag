@@ -16,7 +16,8 @@ varying highp vec4 VtxModulate;
 
 // The current light map. Unless disabled, this is automatically sampled to create the LIGHT vector, which is then used
 // to modulate the output colour.
-uniform sampler2D LIGHTMAP;
+// TODO CLYDE consistent shader variable naming
+uniform sampler2D lightMap;
 
 // [SHADER_HEADER_CODE]
 
@@ -35,7 +36,7 @@ void main()
     highp vec4 MODULATE;
 
     // Sample the texture outside of the branch / with uniform control flow.
-    LIGHT = texture2D(LIGHTMAP, Pos);
+    LIGHT = texture2D(lightMap, Pos);
 
     if (VtxModulate.x < 0.0)
     {
@@ -48,7 +49,13 @@ void main()
         MODULATE = VtxModulate;
     }
 
+    // TODO CLYDE consistent shader variable naming
+    // Requires breaking changes.
+    lowp vec3 lightSample = LIGHT.xyz;
+
     // [SHADER_CODE]
+
+    LIGHT.xyz = lightSample;
 
     gl_FragColor = zAdjustResult(COLOR * MODULATE * LIGHT);
 }

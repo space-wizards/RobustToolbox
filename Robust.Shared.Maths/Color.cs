@@ -100,13 +100,6 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Constructs a new Color structure by coping the contents of another color struct.
-        /// </summary>
-        public Color(in Color color) : this(color.RGBA)
-        {
-        }
-
-        /// <summary>
         ///     Constructs a new Color structure from the specified components.
         /// </summary>
         /// <param name="r">The red component of the new Color structure.</param>

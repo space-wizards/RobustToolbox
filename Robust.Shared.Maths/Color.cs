@@ -140,7 +140,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The left-hand side of the comparison.</param>
         /// <param name="right">The right-hand side of the comparison.</param>
         /// <returns>True if left is equal to right; false otherwise.</returns>
-        public static bool operator ==(in Color left, in Color right)
+        public static bool operator ==(Color left, Color right)
         {
             return left.Equals(right);
         }
@@ -151,7 +151,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The left-hand side of the comparison.</param>
         /// <param name="right">The right-hand side of the comparison.</param>
         /// <returns>True if left is not equal to right; false otherwise.</returns>
-        public static bool operator !=(in Color left, in Color right)
+        public static bool operator !=(Color left, Color right)
         {
             return !left.Equals(right);
         }

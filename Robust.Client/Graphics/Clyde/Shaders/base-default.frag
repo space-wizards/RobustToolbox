@@ -34,6 +34,9 @@ void main()
     // Colour modulation vector.
     highp vec4 MODULATE;
 
+    // Sample the texture outside of the branch / with uniform control flow.
+    LIGHT = texture2D(LIGHTMAP, Pos);
+
     if (VtxModulate.x < 0.0)
     {
         // Negative VtxModulate implies unshaded/no lighting.
@@ -43,7 +46,6 @@ void main()
     else
     {
         MODULATE = VtxModulate;
-        LIGHT = texture2D(LIGHTMAP, Pos);
     }
 
     // [SHADER_CODE]

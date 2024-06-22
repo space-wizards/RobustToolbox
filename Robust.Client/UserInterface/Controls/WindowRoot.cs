@@ -13,6 +13,12 @@ namespace Robust.Client.UserInterface.Controls
         }
         public override float UIScale => UIScaleSet;
         internal float UIScaleSet { get; set; }
+
+        /// <summary>
+        /// Set after the window is resized, to batch up UI scale updates on window resizes.
+        /// </summary>
+        internal bool UIScaleUpdateNeeded { get; set; }
+
         public override IClydeWindow Window { get; }
 
         /// <summary>

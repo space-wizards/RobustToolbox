@@ -7,8 +7,6 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -26,49 +24,6 @@ internal sealed partial class PvsSystem
     internal readonly Dictionary<ICommonSession, PvsSession> PlayerData = new();
 
     private List<ICommonSession> _disconnected = new();
-
-    private void SendStateUpdate(ICommonSession session, PvsThreadResources resources)
-    {
-        var data = GetOrNewPvsSession(session);
-        ComputeSessionState(data);
-
-        InterlockedHelper.Min(ref _oldestAck, data.FromTick.Value);
-
-        // actually send the state
-        var msg = new MsgState
-        {
-            State = data.State,
-            CompressionContext = resources.CompressionContext
-        };
-
-        // PVS benchmarks use dummy sessions.
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (session.Channel is not DummyChannel)
-        {
-            _netMan.ServerSendMessage(msg, session.Channel);
-            if (msg.ShouldSendReliably())
-            {
-                data.RequestedFull = false;
-                data.LastReceivedAck = _gameTiming.CurTick;
-                lock (PendingAcks)
-                {
-                    PendingAcks.Add(session);
-                }
-            }
-        }
-        else
-        {
-            // Always "ack" dummy sessions.
-            data.LastReceivedAck = _gameTiming.CurTick;
-            data.RequestedFull = false;
-            lock (PendingAcks)
-            {
-                PendingAcks.Add(session);
-            }
-        }
-
-        data.ClearState();
-    }
 
     private PvsSession GetOrNewPvsSession(ICommonSession session)
     {
@@ -104,7 +59,7 @@ internal sealed partial class PvsSystem
             session.PlayerStates,
             _deletedEntities);
 
-        session.State.ForceSendReliably = session.RequestedFull
+        session.ForceSendReliably = session.RequestedFull
                                           || _gameTiming.CurTick > session.LastReceivedAck + (uint) ForceAckThreshold;
     }
 

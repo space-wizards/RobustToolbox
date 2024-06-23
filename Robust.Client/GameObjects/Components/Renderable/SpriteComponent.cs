@@ -30,6 +30,7 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 using Direction = Robust.Shared.Maths.Direction;
 using Vector4 = Robust.Shared.Maths.Vector4;
+using SysVec4 = System.Numerics.Vector4;
 
 namespace Robust.Client.GameObjects
 {
@@ -2123,9 +2124,7 @@ namespace Robust.Client.GameObjects
                     // Specifically we set colour = -1 - colour
                     // This ensures that non-negative values become negative & is trivially invertible.
                     // Alternatively we could just clamp the colour to [0,1] and subtract a constant.
-
-                    // TODO COLOR SIMD
-                    layerColor = new(-1 - layerColor.R, -1 - layerColor.G, -1 - layerColor.B, -1 - layerColor.A);
+                    layerColor = new(new SysVec4(-1) - layerColor.RGBA);
                 }
 
                 var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;

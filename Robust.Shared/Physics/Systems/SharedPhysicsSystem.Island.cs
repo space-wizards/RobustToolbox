@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
@@ -716,12 +717,14 @@ public abstract partial class SharedPhysicsSystem
         var angles = ArrayPool<float>.Shared.Rent(bodyCount);
         var offset = island.Offset;
         var xformQuery = GetEntityQuery<TransformComponent>();
+        var mapGridQuery = GetEntityQuery<MapGridComponent>();
 
         for (var i = 0; i < island.Bodies.Count; i++)
         {
             var body = island.Bodies[i];
+            var xform = xformQuery.GetComponent(body.Owner);
             var (worldPos, worldRot) =
-                _transform.GetWorldPositionRotation(xformQuery.GetComponent(body.Owner), xformQuery);
+                _transform.GetWorldPositionRotation(xform, xformQuery);
 
             var transform = new Transform(worldPos, worldRot);
             var position = Physics.Transform.Mul(transform, body.LocalCenter);
@@ -744,7 +747,12 @@ public abstract partial class SharedPhysicsSystem
 
                 angularVelocity += body.InvI * body.Torque * data.FrameTime;
 
-                linearVelocity *= Math.Clamp(1.0f - data.FrameTime * body.LinearDamping, 0.0f, 1.0f);
+                var onGrid = xform.GridUid != null || mapGridQuery.HasComp(xform.MapUid);
+                var linearDamping = onGrid
+                    ? body.LinearDamping
+                    : body.OffGridLinearDamping;
+
+                linearVelocity *= Math.Clamp(1.0f - data.FrameTime * linearDamping, 0.0f, 1.0f);
                 angularVelocity *= Math.Clamp(1.0f - data.FrameTime * body.AngularDamping, 0.0f, 1.0f);
             }
 

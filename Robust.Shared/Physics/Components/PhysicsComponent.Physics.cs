@@ -222,6 +222,12 @@ public sealed partial class PhysicsComponent : Component
     public float LinearDamping = 0.2f;
 
     /// <summary>
+    ///     This is a set amount that the body's linear velocity is reduced by every tick when the body is off-grid.
+    /// </summary>
+    [DataField, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    public float OffGridLinearDamping = 0.05f;
+
+    /// <summary>
     ///     This is a set amount that the body's angular velocity is reduced every tick.
     ///     Combined with the tile friction.
     /// </summary>

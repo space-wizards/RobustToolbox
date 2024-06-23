@@ -997,12 +997,7 @@ namespace Robust.Shared.Maths
         /// <param name="other">The Color structure to compare to.</param>
         /// <returns>True if both Color structures contain the same components; false otherwise.</returns>
         public readonly bool Equals(Color other)
-        {
-            // TODO COLOR why is this approximate
-            // This method literally doesn't do what its docstring says it does.
-            // If people wanted approximate equality, they can check that manually.
-            return MathHelper.CloseToPercent(this, other);
-        }
+            => RGBA == other.RGBA;
 
         [PublicAPI]
         public enum BlendFactor : byte

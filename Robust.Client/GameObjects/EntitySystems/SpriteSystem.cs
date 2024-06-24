@@ -184,7 +184,8 @@ namespace Robust.Client.GameObjects
         /// <summary>
         /// Gets the specified frame for this sprite at the specified time.
         /// </summary>
-        public Texture GetFrame(SpriteSpecifier spriteSpec, TimeSpan curTime)
+        /// <param name="loop">Should we clamp on the last frame and not loop</param>
+        public Texture GetFrame(SpriteSpecifier spriteSpec, TimeSpan curTime, bool loop = true)
         {
             Texture? sprite = null;
 
@@ -196,19 +197,29 @@ namespace Robust.Client.GameObjects
                     var frames = state!.GetFrames(RsiDirection.South);
                     var delays = state.GetDelays();
                     var totalDelay = delays.Sum();
-                    var time = curTime.TotalSeconds % totalDelay;
-                    var delaySum = 0f;
 
-                    for (var i = 0; i < delays.Length; i++)
+                    // No looping
+                    if (!loop && curTime.TotalSeconds >= totalDelay)
                     {
-                        var delay = delays[i];
-                        delaySum += delay;
+                        sprite = frames[^1];
+                    }
+                    // Loopable
+                    else
+                    {
+                        var time = curTime.TotalSeconds % totalDelay;
+                        var delaySum = 0f;
 
-                        if (time > delaySum)
-                            continue;
+                        for (var i = 0; i < delays.Length; i++)
+                        {
+                            var delay = delays[i];
+                            delaySum += delay;
 
-                        sprite = frames[i];
-                        break;
+                            if (time > delaySum)
+                                continue;
+
+                            sprite = frames[i];
+                            break;
+                        }
                     }
 
                     sprite ??= Frame0(spriteSpec);

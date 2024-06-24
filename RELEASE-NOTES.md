@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Tab completions containing spaces are now properly quoted, so the command will actually work properly once entered.
 
 ### Internal
 

@@ -39,7 +39,9 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `LocalizedEntityCommands`, which are console commands that have the ability to take entity system dependencies.
+* Added `BeginRegistrationRegion` to `IConsoleHost` to allow efficient bulk-registration of console commands.
+* Added `IConsoleHost.RegisterCommand` overload that takes an `IConsoleCommand`.
 
 ### Bugfixes
 

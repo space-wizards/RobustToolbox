@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.GameObjects;
@@ -29,7 +30,8 @@ namespace Robust.Client.Map
 
         public Texture TileTextureAtlas => _tileTextureAtlas ?? Texture.Transparent;
 
-        private readonly Dictionary<int, Box2[]> _tileRegions = new();
+        private FrozenDictionary<int, Box2[]> _tileRegions = FrozenDictionary<int, Box2[]>.Empty;
+
 
         public Box2 ErrorTileRegion { get; private set; }
 
@@ -42,6 +44,7 @@ namespace Robust.Client.Map
         /// <inheritdoc />
         public Box2[]? TileAtlasRegion(int tileType)
         {
+            // ReSharper disable once CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
             if (_tileRegions.TryGetValue(tileType, out var region))
             {
                 return region;
@@ -59,7 +62,7 @@ namespace Robust.Client.Map
 
         internal void _genTextureAtlas()
         {
-            _tileRegions.Clear();
+            var tileRegs = new Dictionary<int, Box2[]>();
             _tileTextureAtlas = null;
 
             var defList = TileDefs.Where(t => t.Sprite != null).ToList();
@@ -146,9 +149,22 @@ namespace Robust.Client.Map
                     }
                 }
 
-                _tileRegions.Add(def.TileId, regionList);
+                tileRegs.Add(def.TileId, regionList);
+
+                // Edges
+                for (var x = -1; x <= 1; x++)
+                {
+                    for (var y = -1; y <= 1; y++)
+                    {
+                        if (x == 0 && y == 0)
+                            continue;
+
+                        // TODO: Add to texture atlas.
+                    }
+                }
             }
 
+            _tileRegions = tileRegs.ToFrozenDictionary();
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
         }
     }

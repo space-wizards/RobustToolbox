@@ -27,6 +27,8 @@ public sealed class TileEdgeOverlay : GridOverlay
 
     protected internal override void Draw(in OverlayDrawArgs args)
     {
+        return;
+
         if (args.MapId == MapId.Nullspace)
             return;
 
@@ -59,11 +61,11 @@ public sealed class TileEdgeOverlay : GridOverlay
                         continue;
 
                     var neighborIndices = new Vector2i(tileRef.GridIndices.X + x, tileRef.GridIndices.Y + y);
-                    var neighborTile = mapSystem.GetTileRef(Grid.Owner, Grid, neighborIndices);
-                    var neighborDef = _tileDefManager[neighborTile.Tile.TypeId];
+                    mapSystem.TryGetTile(Grid.Comp, neighborIndices, out var neighborTile);
+                    var neighborDef = _tileDefManager[neighborTile.TypeId];
 
                     // If it's the same tile then no edge to be drawn.
-                    if (tileRef.Tile.TypeId == neighborTile.Tile.TypeId)
+                    if (tileRef.Tile.TypeId == neighborTile.TypeId)
                         continue;
 
                     // Don't draw if the the neighbor tile edges should draw over us (or if we have the same priority)

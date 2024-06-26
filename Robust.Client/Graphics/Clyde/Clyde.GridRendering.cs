@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
@@ -73,7 +74,7 @@ namespace Robust.Client.Graphics.Clyde
                 while (enumerator.MoveNext(out var chunk))
                 {
                     DebugTools.Assert(chunk.FilledTiles > 0);
-                    if (!data.TryGetValue(chunk.Indices, out MapChunkData? datum))
+                    if (!data.TryGetValue(chunk.Indices, out var datum))
                         data[chunk.Indices] = datum = _initChunkBuffers(mapGrid, chunk);
 
                     if (datum.Dirty)
@@ -145,40 +146,122 @@ namespace Robust.Client.Graphics.Clyde
             Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk)];
 
             var i = 0;
-            var cSz = grid.Comp.ChunkSize;
-            var cScaled = chunk.Indices * cSz;
-            for (ushort x = 0; x < cSz; x++)
+            var chunkSize = grid.Comp.ChunkSize;
+            var chunkOriginScaled = chunk.Indices * chunkSize;
+            var maps = _entityManager.System<SharedMapSystem>();
+
+            for (short x = -1; x <= chunkSize; x++)
             {
-                for (ushort y = 0; y < cSz; y++)
+                for (short y = -1; y <= chunkSize; y++)
                 {
-                    var tile = chunk.GetTile(x, y);
-                    if (tile.IsEmpty)
-                        continue;
+                    var gridX = x + chunkOriginScaled.X;
+                    var gridY = y + chunkOriginScaled.Y;
+                    var tile = chunk.GetTile((ushort) x, (ushort) y);
+                    var tileDef = _tileDefinitionManager[tile.TypeId];
 
-                    var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile);
-
-                    Box2 region;
-                    if (regionMaybe == null || regionMaybe.Length <= tile.Variant)
+                    // Tile render
+                    if (x != -1  && y != -1 &&
+                        x != chunkSize && y != chunkSize)
                     {
-                        region = _tileDefinitionManager.ErrorTileRegion;
+                        // ReSharper disable once IntVariableOverflowInUncheckedContext
+                        if (tile.IsEmpty)
+                            continue;
+
+                        var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile);
+
+                        Box2 region;
+                        if (regionMaybe == null || regionMaybe.Length <= tile.Variant)
+                        {
+                            region = _tileDefinitionManager.ErrorTileRegion;
+                        }
+                        else
+                        {
+                            region = regionMaybe[tile.Variant];
+                        }
+
+                        var vIdx = i * 4;
+                        vertexBuffer[vIdx + 0] = new Vertex2D(gridX, gridY, region.Left, region.Bottom, Color.White);
+                        vertexBuffer[vIdx + 1] = new Vertex2D(gridX + 1, gridY, region.Right, region.Bottom, Color.White);
+                        vertexBuffer[vIdx + 2] = new Vertex2D(gridX + 1, gridY + 1, region.Right, region.Top, Color.White);
+                        vertexBuffer[vIdx + 3] = new Vertex2D(gridX, gridY + 1, region.Left, region.Top, Color.White);
+                        var nIdx = i * GetQuadBatchIndexCount();
+                        var tIdx = (ushort)(i * 4);
+                        QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
+                        i += 1;
                     }
-                    else
+                    // Edge render
+                    for (var nx = -1; nx <= 1; nx++)
                     {
-                        region = regionMaybe[tile.Variant];
+                        for (var ny = -1; ny <= 1; ny++)
+                        {
+                            var neighborIndices = new Vector2i(gridX + x, gridY + y);
+                            maps.TryGetTile(grid.Comp, neighborIndices, out var neighborTile);
+                            var neighborDef = _tileDefinitionManager[neighborTile.TypeId];
+
+                            // If it's the same tile then no edge to be drawn.
+                            if (tile.TypeId == neighborTile.TypeId)
+                                continue;
+
+                            // Don't draw if the the neighbor tile edges should draw over us (or if we have the same priority)
+                            if (neighborDef.EdgeSprites.Count != 0 && neighborDef.EdgeSpritePriority >= tileDef.EdgeSpritePriority)
+                                continue;
+
+                            var direction = new Vector2i(x, y).AsDirection();
+
+                            // No edge tile
+                            if (!tileDef.EdgeSprites.TryGetValue(direction, out var edgePath))
+                                continue;
+
+                            var texture = _resourceCache.GetResource<TextureResource>(edgePath);
+                            var box = Box2.FromDimensions(neighborIndices, grid.Comp.TileSizeVector);
+
+                            var angle = Angle.Zero;
+
+                            // If we ever need one for both cardinals and corners then update this.
+                            switch (direction)
+                            {
+                                // Corner sprites
+                                case Direction.SouthEast:
+                                    break;
+                                case Direction.NorthEast:
+                                    angle = new Angle(MathF.PI / 2f);
+                                    break;
+                                case Direction.NorthWest:
+                                    angle = new Angle(MathF.PI);
+                                    break;
+                                case Direction.SouthWest:
+                                    angle = new Angle(MathF.PI * 1.5f);
+                                    break;
+                                // Edge sprites
+                                case Direction.South:
+                                    break;
+                                case Direction.East:
+                                    angle = new Angle(MathF.PI / 2f);
+                                    break;
+                                case Direction.North:
+                                    angle = new Angle(MathF.PI);
+                                    break;
+                                case Direction.West:
+                                    angle = new Angle(MathF.PI * 1.5f);
+                                    break;
+                            }
+
+                            var vIdx = i * 4;
+                            vertexBuffer[vIdx + 0] = new Vertex2D(gridX, gridY, region.Left, region.Bottom, Color.White);
+                            vertexBuffer[vIdx + 1] = new Vertex2D(gridX + 1, gridY, region.Right, region.Bottom, Color.White);
+                            vertexBuffer[vIdx + 2] = new Vertex2D(gridX + 1, gridY + 1, region.Right, region.Top, Color.White);
+                            vertexBuffer[vIdx + 3] = new Vertex2D(gridX, gridY + 1, region.Left, region.Top, Color.White);
+                            var nIdx = i * GetQuadBatchIndexCount();
+                            var tIdx = (ushort)(i * 4);
+                            QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
+                            i += 1;
+
+                            if (angle == Angle.Zero)
+                                args.WorldHandle.DrawTextureRect(texture.Texture, box);
+                            else
+                                args.WorldHandle.DrawTextureRect(texture.Texture, new Box2Rotated(box, angle, box.Center));
+                        }
                     }
-
-                    var gx = x + cScaled.X;
-                    var gy = y + cScaled.Y;
-
-                    var vIdx = i * 4;
-                    vertexBuffer[vIdx + 0] = new Vertex2D(gx, gy, region.Left, region.Bottom, Color.White);
-                    vertexBuffer[vIdx + 1] = new Vertex2D(gx + 1, gy, region.Right, region.Bottom, Color.White);
-                    vertexBuffer[vIdx + 2] = new Vertex2D(gx + 1, gy + 1, region.Right, region.Top, Color.White);
-                    vertexBuffer[vIdx + 3] = new Vertex2D(gx, gy + 1, region.Left, region.Top, Color.White);
-                    var nIdx = i * GetQuadBatchIndexCount();
-                    var tIdx = (ushort)(i * 4);
-                    QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
-                    i += 1;
                 }
             }
 

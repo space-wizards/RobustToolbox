@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -310,11 +311,10 @@ public abstract partial class SharedPhysicsSystem
                  (fixtureB.CollisionMask & fixtureA.CollisionLayer) == 0x0);
     }
 
-    public void DestroyContact(Contact contact)
+    public bool DestroyContact(Contact contact)
     {
-        // Don't recursive update or we're in for a bad time.
         if ((contact.Flags & ContactFlags.Deleting) != 0x0)
-            return;
+            return false;
 
         Fixture fixtureA = contact.FixtureA!;
         Fixture fixtureB = contact.FixtureB!;
@@ -326,7 +326,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (contact.IsTouching)
         {
-            var ev1 = new EndCollideEvent(aUid, bUid, contact.FixtureAId, contact.FixtureBId ,fixtureA, fixtureB, bodyA, bodyB);
+            var ev1 = new EndCollideEvent(aUid, bUid, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
             var ev2 = new EndCollideEvent(bUid, aUid, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
             RaiseLocalEvent(aUid, ref ev1);
             RaiseLocalEvent(bUid, ref ev2);
@@ -335,10 +335,10 @@ public abstract partial class SharedPhysicsSystem
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
         {
             if (bodyA.CanCollide)
-                SetAwake(aUid, bodyA, true);
+                SetAwake((aUid, bodyA), true);
 
             if (bodyB.CanCollide)
-                SetAwake(bUid, bodyB, true);
+                SetAwake((bUid, bodyB), true);
         }
 
         // Remove from the world
@@ -347,16 +347,19 @@ public abstract partial class SharedPhysicsSystem
         // Remove from body 1
         DebugTools.Assert(fixtureA.Contacts.ContainsKey(fixtureB));
         fixtureA.Contacts.Remove(fixtureB);
-        DebugTools.Assert(bodyA.Contacts.Contains(contact.BodyANode!.Value));
+        DebugTools.Assert(bodyA.Contacts.Contains(contact.BodyANode.Value));
         bodyA.Contacts.Remove(contact.BodyANode);
 
         // Remove from body 2
         DebugTools.Assert(fixtureB.Contacts.ContainsKey(fixtureA));
         fixtureB.Contacts.Remove(fixtureA);
+        DebugTools.Assert(bodyB.Contacts.Contains(contact.BodyBNode.Value));
         bodyB.Contacts.Remove(contact.BodyBNode);
 
         // Insert into the pool.
         _contactPool.Return(contact);
+
+        return true;
     }
 
     internal void CollideContacts()
@@ -436,8 +439,8 @@ public abstract partial class SharedPhysicsSystem
             // Special-case grid contacts.
             if ((contact.Flags & ContactFlags.Grid) != 0x0)
             {
-                var gridABounds = fixtureA.Shape.ComputeAABB(GetPhysicsTransform(uidA, xformA, _xformQuery), 0);
-                var gridBBounds = fixtureB.Shape.ComputeAABB(GetPhysicsTransform(uidB, xformB, _xformQuery), 0);
+                var gridABounds = fixtureA.Shape.ComputeAABB(GetPhysicsTransform(uidA, xformA), 0);
+                var gridBBounds = fixtureB.Shape.ComputeAABB(GetPhysicsTransform(uidB, xformB), 0);
 
                 if (!gridABounds.Intersects(gridBBounds))
                 {

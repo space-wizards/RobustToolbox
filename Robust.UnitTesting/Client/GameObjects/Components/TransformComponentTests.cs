@@ -13,22 +13,18 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
     [TestOf(typeof(TransformComponent))]
     public sealed class TransformComponentTests
     {
-        private static readonly MapId TestMapId = new(1);
-
         private static (ISimulation, EntityUid gridA, EntityUid gridB)  SimulationFactory()
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
                 .InitializeInstance();
 
+            var mapId = sim.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap();
             var mapManager = sim.Resolve<IMapManager>();
 
-            // Adds the map with id 1, and spawns entity 1 as the map entity.
-            mapManager.CreateMap(TestMapId);
-
             // Adds two grids to use in tests.
-            var gridA = mapManager.CreateGridEntity(TestMapId);
-            var gridB = mapManager.CreateGridEntity(TestMapId);
+            var gridA = mapManager.CreateGridEntity(mapId);
+            var gridB = mapManager.CreateGridEntity(mapId);
 
             return (sim, gridA, gridB);
         }
@@ -53,18 +49,18 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var childTrans = entMan.GetComponent<TransformComponent>(child);
             ComponentHandleState handleState;
 
-            var compState = new TransformComponentState(new Vector2(5, 5), new Angle(0), entMan.GetNetEntity(gridIdB), false, false);
+            var compState = new TransformComponentState(new Vector2(5, 5), new Angle(0), entMan.GetNetEntity(gridIdB), false, false, true);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(parent, parentTrans, ref handleState);
 
-            compState = new TransformComponentState(new Vector2(6, 6), new Angle(0), entMan.GetNetEntity(gridIdB), false, false);
+            compState = new TransformComponentState(new Vector2(6, 6), new Angle(0), entMan.GetNetEntity(gridIdB), false, false, true);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(child, childTrans, ref handleState);
             // World pos should be 6, 6 now.
 
             // Act
             var oldWpos = xformSystem.GetWorldPosition(childTrans);
-            compState = new TransformComponentState(new Vector2(1, 1), new Angle(0), entMan.GetNetEntity(parent), false, false);
+            compState = new TransformComponentState(new Vector2(1, 1), new Angle(0), entMan.GetNetEntity(parent), false, false, true);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(child, childTrans, ref handleState);
             var newWpos = xformSystem.GetWorldPosition(childTrans);
@@ -102,15 +98,15 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var node2Trans = entMan.GetComponent<TransformComponent>(node2);
             var node3Trans = entMan.GetComponent<TransformComponent>(node3);
 
-            var compState = new TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), entMan.GetNetEntity(gridIdB), false, false);
+            var compState = new TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), entMan.GetNetEntity(gridIdB), false, false, true);
             var handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(node1, node1Trans, ref handleState);
 
-            compState = new TransformComponentState(new Vector2(1, 1), Angle.FromDegrees(45), entMan.GetNetEntity(node1), false, false);
+            compState = new TransformComponentState(new Vector2(1, 1), Angle.FromDegrees(45), entMan.GetNetEntity(node1), false, false, true);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(node2, node2Trans, ref handleState);
 
-            compState = new TransformComponentState(new Vector2(0, 0), Angle.FromDegrees(45), entMan.GetNetEntity(node2), false, false);
+            compState = new TransformComponentState(new Vector2(0, 0), Angle.FromDegrees(45), entMan.GetNetEntity(node2), false, false, true);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(node3, node3Trans, ref handleState);
 

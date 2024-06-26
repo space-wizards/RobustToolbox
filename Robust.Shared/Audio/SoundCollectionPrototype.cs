@@ -1,13 +1,13 @@
+using System.Collections.Generic;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using System.Collections.Generic;
 
 namespace Robust.Shared.Audio;
 
 [Prototype("soundCollection")]
-public sealed class SoundCollectionPrototype : IPrototype
+public sealed partial class SoundCollectionPrototype : IPrototype
 {
     [ViewVariables]
     [IdDataField]

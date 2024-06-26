@@ -20,12 +20,14 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class InputSystem : SharedInputSystem, IPostInjectInit
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientGameStateManager _stateManager = default!;
         [Dependency] private readonly IConsoleHost _conHost = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         private ISawmill _sawmillInputContext = default!;
 
@@ -81,18 +83,35 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            // send it off to the server
-            var clientMsg = (ClientFullInputCmdMessage)message;
-            var fullMsg = new FullInputCmdMessage(
-                clientMsg.Tick,
-                clientMsg.SubTick,
-                (int)clientMsg.InputSequence,
-                clientMsg.InputFunctionId,
-                clientMsg.State,
-                GetNetCoordinates(clientMsg.Coordinates),
-                clientMsg.ScreenCoordinates)
+            var clientMsg = message switch
             {
-                Uid = GetNetEntity(clientMsg.Uid)
+                ClientFullInputCmdMessage clientInput => clientInput,
+                FullInputCmdMessage fullInput => new ClientFullInputCmdMessage(
+                    fullInput.Tick,
+                    fullInput.SubTick,
+                    fullInput.InputFunctionId,
+                    GetCoordinates(fullInput.Coordinates),
+                    fullInput.ScreenCoordinates,
+                    fullInput.State,
+                    GetEntity(fullInput.Uid)),
+
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            var fullMsg = message switch
+            {
+                FullInputCmdMessage fullInput => fullInput,
+                ClientFullInputCmdMessage client => new FullInputCmdMessage(
+                    client.Tick,
+                    client.SubTick,
+                    client.InputFunctionId,
+                    clientMsg.State,
+                    GetNetCoordinates(client.Coordinates),
+                    clientMsg.ScreenCoordinates,
+                    GetNetEntity(clientMsg.Uid)
+                    ),
+
+                _ => throw new ArgumentOutOfRangeException()
             };
 
             DispatchInputCommand(clientMsg, fullMsg);
@@ -105,12 +124,10 @@ namespace Robust.Client.GameObjects
         /// <param name="inputCmd">Input command to handle as predicted.</param>
         public void PredictInputCommand(IFullInputCmdMessage inputCmd)
         {
-            DebugTools.AssertNotNull(_playerManager.LocalPlayer);
-
             var keyFunc = _inputManager.NetworkBindMap.KeyFunctionName(inputCmd.InputFunctionId);
 
             Predicted = true;
-            var session = _playerManager.LocalPlayer!.Session;
+            var session = _playerManager.LocalSession;
             foreach (var handler in BindRegistry.GetHandlers(keyFunc))
             {
                 if (handler.HandleCmdMessage(EntityManager, session, inputCmd))
@@ -132,7 +149,7 @@ namespace Robust.Client.GameObjects
 
             _conHost.RegisterCommand("incmd",
                 "Inserts an input command into the simulation",
-                "incmd <KeyFunction> <d|u KeyState> <wxPos> <wyPos>",
+                "incmd <KeyFunction> <KeyState> [wxPos] [wyPos]",
                 GenerateInputCommand);
         }
 
@@ -145,27 +162,52 @@ namespace Robust.Client.GameObjects
 
         private void GenerateInputCommand(IConsoleShell shell, string argstr, string[] args)
         {
-            var localPlayer = _playerManager.LocalPlayer;
-            if(localPlayer is null)
+            if (_playerManager.LocalEntity is not { } pent)
                 return;
 
-            var pent = localPlayer.ControlledEntity;
-            if(pent is null)
+            if (args.Length is not (2 or 4))
+            {
+                shell.WriteLine(Loc.GetString($"cmd-invalid-arg-number-error"));
                 return;
+            }
 
-            BoundKeyFunction keyFunction = new BoundKeyFunction(args[0]);
-            BoundKeyState state = args[1] == "u" ? BoundKeyState.Up: BoundKeyState.Down;
+            var keyFunction = new BoundKeyFunction(args[0]);
+            if (!Enum.TryParse<BoundKeyState>(args[1], out var state))
+            {
+                shell.WriteLine(Loc.GetString("cmd-parse-failure-enum", ("arg", args[1]), ("enum", nameof(BoundKeyState))));
+                return;
+            }
 
-            var pxform = Transform(pent.Value);
-            var wPos = pxform.WorldPosition + new Vector2(float.Parse(args[2]), float.Parse(args[3]));
-            var coords = EntityCoordinates.FromMap(EntityManager, pent.Value, new MapCoordinates(wPos, pxform.MapID));
+            var wOffset = Vector2.Zero;
+            if (args.Length == 4)
+            {
+                if (!float.TryParse(args[2], out var wX))
+                {
+                    shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
+                    return;
+                }
 
+                if (!float.TryParse(args[3], out var wY))
+                {
+                    shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[3])));
+                    return;
+                }
+
+                wOffset = new Vector2(wX, wY);
+            }
+
+            var coords = EntityCoordinates.FromMap(pent, _transform.GetMapCoordinates(pent).Offset(wOffset), _transform, EntityManager);
             var funcId = _inputManager.NetworkBindMap.KeyFunctionID(keyFunction);
 
-            var message = new FullInputCmdMessage(_timing.CurTick, _timing.TickFraction, funcId, state,
-                GetNetCoordinates(coords), new ScreenCoordinates(0, 0, default), NetEntity.Invalid);
+            var message = new ClientFullInputCmdMessage(_timing.CurTick,
+                _timing.TickFraction,
+                funcId,
+                coords,
+                new ScreenCoordinates(0, 0, default),
+                state,
+                EntityUid.Invalid);
 
-            HandleInputCommand(localPlayer.Session, keyFunction, message);
+            HandleInputCommand(_playerManager.LocalSession, keyFunction, message);
         }
 
         private void OnAttachedEntityChanged(LocalPlayerAttachedEvent message)
@@ -208,11 +250,8 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void SetEntityContextActive()
         {
-            var controlled = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
-            if (controlled == EntityUid.Invalid)
-            {
+            if (_playerManager.LocalEntity is not { } controlled)
                 return;
-            }
 
             SetEntityContextActive(_inputManager, controlled);
         }

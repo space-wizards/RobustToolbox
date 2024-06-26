@@ -26,6 +26,7 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
@@ -34,6 +35,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using ServerProgram = Robust.Server.Program;
@@ -301,6 +303,12 @@ namespace Robust.UnitTesting
             {
                 return EntMan.GetComponent<MetaDataComponent>(uid);
             }
+
+            public MetaDataComponent MetaData(NetEntity uid)
+                => MetaData(EntMan.GetEntity(uid));
+
+            public TransformComponent Transform(NetEntity uid)
+                => Transform(EntMan.GetEntity(uid));
 
             public async Task ExecuteCommand(string cmd)
             {
@@ -679,6 +687,7 @@ namespace Robust.UnitTesting
                 deps.BuildGraph();
                 //ServerProgram.SetupLogging();
                 ServerProgram.InitReflectionManager(deps);
+                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
@@ -753,12 +762,76 @@ namespace Robust.UnitTesting
                 pvs.SendGameStates(players);
                 Timing.CurTick += 1;
             }
+
+            /// <summary>
+            /// Adds multiple dummy players to the server.
+            /// </summary>
+            public async Task<ICommonSession[]> AddDummySessions(int count)
+            {
+                var sessions = new ICommonSession[count];
+                for (var i = 0; i < sessions.Length; i++)
+                {
+                    sessions[i] = await AddDummySession();
+                }
+
+                return sessions;
+            }
+
+            /// <summary>
+            /// Adds a dummy player to the server.
+            /// </summary>
+            public async Task<ICommonSession> AddDummySession(string? userName = null)
+            {
+                userName ??= $"integration_dummy_{DummyUsers.Count}";
+                Log.Info($"Adding dummy session {userName}");
+                if (!_dummyUsers.TryGetValue(userName, out var userId))
+                    _dummyUsers[userName] = userId = new(Guid.NewGuid());
+
+                var man = (Robust.Server.Player.PlayerManager) PlayerMan;
+                var session = man.AddDummySession(userId, userName);
+                _dummySessions.Add(userId, session);
+
+                session.ConnectedTime = DateTime.UtcNow;
+                await WaitPost(() => man.SetStatus(session, SessionStatus.Connected));
+
+                return session;
+            }
+
+            /// <summary>
+            /// Removes a dummy player from the server.
+            /// </summary>
+            public async Task RemoveDummySession(ICommonSession session, bool removeUser = false)
+            {
+                Log.Info($"Removing dummy session {session.Name}");
+                _dummySessions.Remove(session.UserId);
+                var man = (Robust.Server.Player.PlayerManager) PlayerMan;
+                await WaitPost(() => man.EndSession(session.UserId));
+                if (removeUser)
+                    _dummyUsers.Remove(session.Name);
+            }
+
+            /// <summary>
+            /// Removes all dummy players from the server.
+            /// </summary>
+            public async Task RemoveAllDummySessions()
+            {
+                foreach (var session in _dummySessions.Values)
+                {
+                    await RemoveDummySession(session);
+                }
+            }
+
+            private Dictionary<string, NetUserId> _dummyUsers = new();
+            private Dictionary<NetUserId, ICommonSession> _dummySessions = new();
+            public IReadOnlyDictionary<string, NetUserId> DummyUsers => _dummyUsers;
+            public IReadOnlyDictionary<NetUserId, ICommonSession> DummySessions => _dummySessions;
         }
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
+            [Obsolete("Use Session instead")]
             public LocalPlayer? Player => ((IPlayerManager) PlayerMan).LocalPlayer;
-            public ICommonSession? Session => Player?.Session;
+            public ICommonSession? Session => ((IPlayerManager) PlayerMan).LocalSession;
             public NetUserId? User => Session?.UserId;
             public EntityUid? AttachedEntity => Session?.AttachedEntity;
 
@@ -860,6 +933,7 @@ namespace Robust.UnitTesting
                 deps.BuildGraph();
 
                 GameController.RegisterReflection(deps);
+                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var client = DependencyCollection.Resolve<GameController>();
 

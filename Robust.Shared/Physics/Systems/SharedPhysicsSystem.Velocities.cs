@@ -198,7 +198,7 @@ public abstract partial class SharedPhysicsSystem
         return (linearVelocity + linearVelocityAngularContribution, angularVelocity);
     }
 
-    private void HandleParentChangeVelocity(EntityUid uid, PhysicsComponent physics, ref EntParentChangedMessage args, TransformComponent xform)
+    private void HandleParentChangeVelocity(EntityUid uid, PhysicsComponent physics, EntityUid oldParent, TransformComponent xform)
     {
         // If parent changed due to state handling, don't modify velocities. The physics comp state will take care of itself..
         if (_gameTiming.ApplyingState)
@@ -217,15 +217,13 @@ public abstract partial class SharedPhysicsSystem
         // I guess the question becomes, what do you do with conservation of momentum in that case. I guess its the job
         // of the teleporter to select a velocity at the after the parent has changed.
 
-        var xformQuery = GetEntityQuery<TransformComponent>();
-        var physicsQuery = GetEntityQuery<PhysicsComponent>();
         FixturesComponent? manager = null;
 
         // for the new velocities (that need to be updated), we can just use the existing function:
         var (newLinear, newAngular) = GetMapVelocities(uid, physics, xform);
 
         // for the old velocities, we need to re-implement this function while using the old parent and old local position:
-        if (args.OldParent is not { Valid: true } parent)
+        if (oldParent == EntityUid.Invalid)
         {
             // no previous parent --> simple
             // Old velocity + (old velocity - new velocity)
@@ -234,8 +232,9 @@ public abstract partial class SharedPhysicsSystem
             return;
         }
 
-        TransformComponent? parentXform = xformQuery.GetComponent(parent);
-        var localPos = _transform.GetInvWorldMatrix(parentXform).Transform(_transform.GetWorldPosition(xform));
+        var parent = oldParent;
+        TransformComponent? parentXform = _xformQuery.GetComponent(parent);
+        var localPos = Vector2.Transform(_transform.GetWorldPosition(xform), _transform.GetInvWorldMatrix(parentXform));
 
         var oldLinear = physics.LinearVelocity;
         var oldAngular = physics.AngularVelocity;
@@ -243,7 +242,7 @@ public abstract partial class SharedPhysicsSystem
 
         do
         {
-            if (physicsQuery.TryGetComponent(parent, out var body))
+            if (PhysicsQuery.TryGetComponent(parent, out var body))
             {
                 oldAngular += body.AngularVelocity;
 
@@ -259,7 +258,7 @@ public abstract partial class SharedPhysicsSystem
             localPos = parentXform.LocalPosition + parentXform.LocalRotation.RotateVec(localPos);
             parent = parentXform.ParentUid;
 
-        } while (parent.IsValid() && xformQuery.TryGetComponent(parent, out parentXform));
+        } while (parent.IsValid() && _xformQuery.TryGetComponent(parent, out parentXform));
 
         oldLinear += linearAngularContribution;
 

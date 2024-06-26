@@ -11,6 +11,8 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
+using IgnoreUIRangeComponent = Robust.Shared.GameObjects.IgnoreUIRangeComponent;
 
 namespace Robust.UnitTesting.Server.Maps
 {
@@ -67,7 +69,7 @@ entities:
             resourceManager.MountString("/EnginePrototypes/TestMapEntity.yml", Prototype);
 
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
-            protoMan.RegisterKind(typeof(EntityPrototype));
+            protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
 
             protoMan.LoadDirectory(new ("/EnginePrototypes"));
             protoMan.LoadDirectory(new ("/Prototypes"));
@@ -78,15 +80,10 @@ entities:
         public void TestDataLoadPriority()
         {
             // TODO: Fix after serv3
-            var map = IoCManager.Resolve<IMapManager>();
+            // fix what?
 
             var entMan = IoCManager.Resolve<IEntityManager>();
-
-            var mapId = map.CreateMap();
-            // Yay test bullshit
-            var mapUid = map.GetMapEntityId(mapId);
-            entMan.EnsureComponent<PhysicsMapComponent>(mapUid);
-            entMan.EnsureComponent<BroadphaseComponent>(mapUid);
+            entMan.System<SharedMapSystem>().CreateMap(out var mapId);
 
             var traversal = entMan.System<SharedGridTraversalSystem>();
             traversal.Enabled = false;

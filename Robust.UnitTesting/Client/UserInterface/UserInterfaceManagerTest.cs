@@ -97,6 +97,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             control4.OnKeyBindDown += _ => Assert.Fail("Control 4 should not get a mouse event.");
 
             _userInterfaceManager.KeyBindDown(mouseEvent);
+            _userInterfaceManager.KeyBindUp(mouseEvent);
 
             Assert.Multiple(() =>
             {
@@ -124,6 +125,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             control2.MouseFilter = Control.MouseFilterMode.Pass;
 
             _userInterfaceManager.KeyBindDown(mouseEvent);
+            _userInterfaceManager.KeyBindUp(mouseEvent);
 
             Assert.Multiple(() =>
             {
@@ -247,6 +249,7 @@ namespace Robust.UnitTesting.Client.UserInterface
                 pos, true, pos.Position / 1 - control.GlobalPosition, pos.Position - control.GlobalPixelPosition);
 
             _userInterfaceManager.KeyBindDown(mouseEvent);
+            _userInterfaceManager.KeyBindUp(mouseEvent);
 
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
 

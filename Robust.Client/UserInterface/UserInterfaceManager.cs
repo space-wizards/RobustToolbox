@@ -75,7 +75,7 @@ namespace Robust.Client.UserInterface
 
                 foreach (var root in _roots)
                 {
-                    if (root.Stylesheet != null)
+                    if (root.Stylesheet == null)
                     {
                         root.StylesheetUpdateRecursive();
                     }
@@ -216,6 +216,8 @@ namespace Robust.Client.UserInterface
             {
                 foreach (var root in _roots)
                 {
+                    CheckRootUIScaleUpdate(root);
+
                     using (_prof.Group("Root"))
                     {
                         var totalUpdated = root.DoFrameUpdateRecursive(args);
@@ -329,8 +331,8 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private void _render(IRenderHandle renderHandle, ref int total, Control control, Vector2i position, Color modulate,
-            UIBox2i? scissorBox)
+        public void RenderControl(IRenderHandle renderHandle, ref int total, Control control, Vector2i position, Color modulate,
+            UIBox2i? scissorBox, Matrix3x2 coordinateTransform)
         {
             if (!control.Visible)
             {
@@ -377,7 +379,9 @@ namespace Robust.Client.UserInterface
             total += 1;
 
             var handle = renderHandle.DrawingHandleScreen;
-            handle.SetTransform(position, Angle.Zero, Vector2.One);
+            var oldXform = handle.GetTransform();
+            var xform = oldXform * Matrix3Helpers.CreateTransform(position, Angle.Zero, Vector2.One);
+            handle.SetTransform(xform);
             modulate *= control.Modulate;
 
             if (_rendering || control.AlwaysRender)
@@ -389,16 +393,32 @@ namespace Robust.Client.UserInterface
                 handle.Modulate = oldMod;
                 handle.UseShader(null);
             }
+            handle.SetTransform(oldXform);
+            var args = new Control.ControlRenderArguments()
+            {
+                Handle = renderHandle,
+                Total = ref total,
+                Modulate = modulate,
+                ScissorBox = scissorRegion,
+                CoordinateTransform = ref coordinateTransform
+            };
+
+            control.PreRenderChildren(ref args);
 
             foreach (var child in control.Children)
             {
-                _render(renderHandle, ref total, child, position + child.PixelPosition, modulate, scissorRegion);
+                var pos = position + (Vector2i)Vector2.Transform(child.PixelPosition, coordinateTransform);
+                control.RenderChildOverride(ref args, child.GetPositionInParent(), pos);
             }
+
+            control.PostRenderChildren(ref args);
 
             if (clip)
             {
                 renderHandle.SetScissor(scissorBox);
             }
+
+            handle.SetTransform(oldXform);
         }
 
         public Color GetMainClearColor() => RootControl.ActualBgColor;

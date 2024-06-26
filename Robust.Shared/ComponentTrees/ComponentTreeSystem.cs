@@ -71,6 +71,8 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         }
         else
         {
+            // TODO EXCEPTION TOLERANCE
+            // Ensure lookup trees update before content code handles move events.
             SubscribeLocalEvent<TComp, MoveEvent>(HandleMove);
         }
 
@@ -355,7 +357,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         {
             var (_, treeRot, matrix) = XformSystem.GetWorldPositionRotationInvMatrix(treeUid);
             var relativeAngle = new Angle(-treeRot.Theta).RotateVec(ray.Direction);
-            var treeRay = new Ray(matrix.Transform(ray.Position), relativeAngle);
+            var treeRay = new Ray(Vector2.Transform(ray.Position, matrix), relativeAngle);
             comp.Tree.QueryRay(ref queryState, QueryCallback, treeRay);
             if (returnOnFirstHit && queryState.List.Count > 0)
                 break;

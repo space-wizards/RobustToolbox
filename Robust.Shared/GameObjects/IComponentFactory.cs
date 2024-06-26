@@ -78,6 +78,18 @@ namespace Robust.Shared.GameObjects
         ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false);
 
         /// <summary>
+        /// Slow-path for Type -> CompIdx mapping without generics.
+        /// </summary>
+        [Pure]
+        CompIdx GetIndex(Type type);
+
+        /// <summary>
+        /// Slow-path to get the component index for a specified type.
+        /// </summary>
+        [Pure]
+        int GetArrayIndex(Type type);
+
+        /// <summary>
         /// Registers a component class with the factory.
         /// </summary>
         /// <param name="overwrite">If the component already exists, will this replace it?</param>
@@ -159,6 +171,9 @@ namespace Robust.Shared.GameObjects
         /// </exception>
         [Pure]
         string GetComponentName(Type componentType);
+
+        [Pure]
+        string GetComponentName<T>() where T : IComponent, new();
 
         /// <summary>
         ///     Gets the name of a component, throwing an exception if it does not exist.

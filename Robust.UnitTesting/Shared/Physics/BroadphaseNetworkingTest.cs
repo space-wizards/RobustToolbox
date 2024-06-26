@@ -60,8 +60,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         EntityUid map1 = default;
         await server.WaitPost(() =>
         {
-            var mapId = mapMan.CreateMap();
-            map1 = mapMan.GetMapEntityId(mapId);
+            map1 = sEntMan.System<SharedMapSystem>().CreateMap(out var mapId);
             var gridEnt = mapMan.CreateGridEntity(mapId);
             gridEnt.Comp.SetTile(Vector2i.Zero, new Tile(1));
             grid1 = gridEnt.Owner;
@@ -132,8 +131,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             // Create grid
-            var mapId = mapMan.CreateMap();
-            map2 = mapMan.GetMapEntityId(mapId);
+            map2 = sEntMan.System<SharedMapSystem>().CreateMap(out var mapId);
             var gridEnt = mapMan.CreateGridEntity(mapId);
             gridEnt.Comp.SetTile(Vector2i.Zero, new Tile(1));
             grid2 = gridEnt.Owner;

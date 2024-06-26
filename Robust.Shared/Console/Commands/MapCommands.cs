@@ -10,7 +10,8 @@ namespace Robust.Shared.Console.Commands;
 
 sealed class AddMapCommand : LocalizedCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private readonly IMapManagerInternal _map = default!;
+    [Dependency] private readonly IEntityManager _entMan = default!;
 
     public override string Command => "addmap";
     public override bool RequireServerOrSingleplayer => true;
@@ -24,11 +25,8 @@ sealed class AddMapCommand : LocalizedCommands
 
         if (!_map.MapExists(mapId))
         {
-            _map.CreateMap(mapId);
-            if (args.Length >= 2 && args[1] == "false")
-            {
-                _map.AddUninitializedMap(mapId);
-            }
+            var init = args.Length < 2 || !bool.Parse(args[1]);
+            _entMan.System<SharedMapSystem>().CreateMap(mapId, runMapInit: init);
 
             shell.WriteLine($"Map with ID {mapId} created.");
             return;
@@ -84,7 +82,7 @@ sealed class RemoveGridCommand : LocalizedCommands
 
         var gridIdNet = NetEntity.Parse(args[0]);
 
-        if (!_entManager.TryGetEntity(gridIdNet, out var gridId) || !_map.GridExists(gridId))
+        if (!_entManager.TryGetEntity(gridIdNet, out var gridId) || !_entManager.HasComponent<MapGridComponent>(gridId))
         {
             shell.WriteError($"Grid {gridId} does not exist.");
             return;

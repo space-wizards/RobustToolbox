@@ -274,7 +274,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 var (_, rot, matrix, invMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(uid);
 
-                var position = invMatrix.Transform(ray.Position);
+                var position = Vector2.Transform(ray.Position, invMatrix);
                 var gridRot = new Angle(-rot.Theta);
                 var direction = gridRot.RotateVec(ray.Direction);
 
@@ -291,7 +291,7 @@ namespace Robust.Shared.Physics.Systems
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (!proxy.Body.Hard)
+                    if (!proxy.Fixture.Hard)
                         return true;
 
                     if (predicate.Invoke(proxy.Entity, state) == true)
@@ -300,7 +300,7 @@ namespace Robust.Shared.Physics.Systems
                     // TODO: Shape raycast here
 
                     // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
+                    var result = new RayCastResults(distFromOrigin, Vector2.Transform(point, matrix), proxy.Entity);
                     results.Add(result);
 #if DEBUG
                     _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, result, _netMan.IsServer, mapId));
@@ -319,7 +319,7 @@ namespace Robust.Shared.Physics.Systems
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (!proxy.Body.Hard)
+                    if (!proxy.Fixture.Hard)
                         return true;
 
                     if (predicate.Invoke(proxy.Entity, state) == true)
@@ -328,7 +328,7 @@ namespace Robust.Shared.Physics.Systems
                     // TODO: Shape raycast here
 
                     // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
+                    var result = new RayCastResults(distFromOrigin, Vector2.Transform(point, matrix), proxy.Entity);
                     results.Add(result);
 #if DEBUG
                     _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, result, _netMan.IsServer, mapId));
@@ -385,7 +385,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 var (_, rot, invMatrix) = _transform.GetWorldPositionRotationInvMatrix(uid);
 
-                var position = invMatrix.Transform(ray.Position);
+                var position = Vector2.Transform(ray.Position, invMatrix);
                 var gridRot = new Angle(-rot.Theta);
                 var direction = gridRot.RotateVec(ray.Direction);
 
@@ -567,6 +567,7 @@ namespace Robust.Shared.Physics.Systems
             // No requirement on collision being enabled so chainshapes will fail
             foreach (var fixtureA in manager.Fixtures.Values)
             {
+                // We ignore non-hard fixtures if there is at least one hard fixture (i.e., if the body is hard)
                 if (body.Hard && !fixtureA.Hard)
                     continue;
 

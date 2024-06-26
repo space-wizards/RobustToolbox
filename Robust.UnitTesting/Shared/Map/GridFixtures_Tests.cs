@@ -14,6 +14,7 @@ namespace Robust.UnitTesting.Shared.Map
     /// <summary>
     /// Tests whether grid fixtures are being generated correctly.
     /// </summary>
+    [Parallelizable(ParallelScope.All)]
     [TestFixture]
     public sealed class GridFixtures_Tests : RobustIntegrationTest
     {
@@ -29,7 +30,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapManager.CreateMap();
+                entManager.System<SharedMapSystem>().CreateMap(out var mapId);
                 var grid = mapManager.CreateGridEntity(mapId);
 
                 // Should be nothing if grid empty

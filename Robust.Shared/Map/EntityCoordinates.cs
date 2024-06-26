@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
@@ -76,109 +76,55 @@ namespace Robust.Shared.Map
             return true;
         }
 
-        /// <summary>
-        ///     Transforms this set of coordinates from the entity's local space to the map space.
-        /// </summary>
-        /// <param name="entityManager">Entity Manager containing the entity Id.</param>
-        /// <returns></returns>
-        [Obsolete("Use ToMap() with TransformSystem overload")]
+        [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
         public MapCoordinates ToMap(IEntityManager entityManager)
         {
             return ToMap(entityManager, entityManager.System<SharedTransformSystem>());
         }
 
-        /// <summary>
-        ///     Transforms this set of coordinates from the entity's local space to the map space.
-        /// </summary>
-        /// <param name="entityManager">Entity Manager containing the entity Id.</param>
-        /// <param name="transformSystem">Shared transform system for doing calculations.</param>
+        [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
         public MapCoordinates ToMap(IEntityManager entityManager, SharedTransformSystem transformSystem)
         {
-            if(!IsValid(entityManager))
-                return MapCoordinates.Nullspace;
-
-            var transform = entityManager.GetComponent<TransformComponent>(EntityId);
-            var worldPos = transformSystem.GetWorldMatrix(transform).Transform(Position);
-            return new MapCoordinates(worldPos, transform.MapID);
+            return transformSystem.ToMapCoordinates(this);
         }
 
-        /// <summary>
-        ///    Transform this set of coordinates from the entity's local space to the map space.
-        /// </summary>
-        /// <param name="entityManager">Entity Manager containing the entity Id.</param>
-        /// <returns></returns>
-        [Obsolete("Use ToMapPos() with TransformSystem overload")]
+        [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
         public Vector2 ToMapPos(IEntityManager entityManager)
         {
-            return ToMap(entityManager).Position;
+            return ToMap(entityManager, entityManager.System<SharedTransformSystem>()).Position;
         }
 
-        /// <summary>
-        ///    Transform this set of coordinates from the entity's local space to the map space.
-        /// </summary>
-        /// <param name="entityManager">Entity Manager containing the entity Id.</param>
-        /// <param name="transformSystem">Shared transform system for doing calculations.</param>
+        [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
         public Vector2 ToMapPos(IEntityManager entityManager, SharedTransformSystem transformSystem)
         {
             return ToMap(entityManager, transformSystem).Position;
         }
 
-        /// <summary>
-        ///    Creates EntityCoordinates given an entity and some MapCoordinates.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">If <see cref="entity"/> is not on the same map as the <see cref="coordinates"/>.</exception>
-        [Obsolete("Use FromMap() with TransformSystem overload")]
+        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
         public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
             return FromMap(entity, coordinates, entMan.System<SharedTransformSystem>(), entMan);
         }
 
-        /// <summary>
-        ///    Creates EntityCoordinates given an entity and some MapCoordinates.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">If <see cref="entity"/> is not on the same map as the <see cref="coordinates"/>.</exception>
+        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
         public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates, SharedTransformSystem transformSystem, IEntityManager? entMan = null)
         {
-            IoCManager.Resolve(ref entMan);
-            var transform = entMan.GetComponent<TransformComponent>(entity);
-            if(transform.MapID != coordinates.MapId)
-                throw new InvalidOperationException("Entity is not on the same map!");
-
-            var localPos = transformSystem.GetInvWorldMatrix(transform).Transform(coordinates.Position);
-            return new EntityCoordinates(entity, localPos);
+            return transformSystem.ToCoordinates(entity, coordinates);
         }
 
-        /// <summary>
-        ///    Creates EntityCoordinates given an entity Uid and some MapCoordinates.
-        /// </summary>
-        /// <param name="entityManager">Entity Manager containing the entity Id.</param>
-        /// <param name="entityUid"></param>
-        /// <param name="coordinates"></param>
-        /// <returns></returns>
-        /// <exception cref="InvalidOperationException">If <see cref="entityUid"/> is not on the same map as the <see cref="coordinates"/>.</exception>
-        [Obsolete("Use overload with other parameter order.")]
+        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
         public static EntityCoordinates FromMap(IEntityManager entityManager, EntityUid entityUid, MapCoordinates coordinates)
         {
-            return FromMap(entityUid, coordinates, entityManager);
+            return FromMap(entityUid, coordinates, entityManager.System<SharedTransformSystem>(), entityManager);
         }
 
-        /// <summary>
-        ///    Creates a set of EntityCoordinates given some MapCoordinates.
-        /// </summary>
-        /// <param name="mapManager"></param>
-        /// <param name="coordinates"></param>
+        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
         public static EntityCoordinates FromMap(IMapManager mapManager, MapCoordinates coordinates)
         {
-            var mapId = coordinates.MapId;
-            var mapEntity = mapManager.GetMapEntityId(mapId);
-
-            return new EntityCoordinates(mapEntity, coordinates.Position);
+            return IoCManager.Resolve<IEntityManager>().System<SharedTransformSystem>().ToCoordinates(coordinates);
         }
 
-        /// <summary>
-        ///     Converts this set of coordinates to Vector2i.
-        /// </summary>
         [Obsolete("Use overload with TransformSystem")]
         public Vector2i ToVector2i(IEntityManager entityManager, IMapManager mapManager)
         {
@@ -200,7 +146,7 @@ namespace Robust.Shared.Map
             var gridIdOpt = GetGridUid(entityManager);
             if (gridIdOpt is { } gridId && gridId.IsValid())
             {
-                var grid = mapManager.GetGrid(gridId);
+                var grid = entityManager.GetComponent<MapGridComponent>(gridId);
                 return mapSystem.GetTileRef(gridId, grid, this).GridIndices;
             }
 
@@ -226,9 +172,10 @@ namespace Robust.Shared.Map
         /// <param name="entityManager">The Entity Manager holding this entity</param>
         /// <param name="entityId">The entity that the new coordinates will be local to</param>
         /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
+        [Obsolete("Use SharedTransformSystem.WithEntityId()")]
         public EntityCoordinates WithEntityId(IEntityManager entityManager, EntityUid entityId)
         {
-            if(!entityManager.EntityExists(entityId))
+            if (!entityManager.EntityExists(entityId))
                 return new EntityCoordinates(entityId, Vector2.Zero);
 
             return WithEntityId(entityId);
@@ -239,6 +186,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entity">The entity that the new coordinates will be local to</param>
         /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
+        [Obsolete("Use SharedTransformSystem.WithEntityId()")]
         public EntityCoordinates WithEntityId(EntityUid entity, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
@@ -250,19 +198,13 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entity">The entity that the new coordinates will be local to</param>
         /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
+        [Obsolete("Use SharedTransformSystem.WithEntityId()")]
         public EntityCoordinates WithEntityId(
             EntityUid entity,
             SharedTransformSystem transformSystem,
             IEntityManager? entMan = null)
         {
-            IoCManager.Resolve(ref entMan);
-            var mapPos = ToMap(entMan, transformSystem);
-
-            if(!IsValid(entMan) || entMan.GetComponent<TransformComponent>(entity).MapID != mapPos.MapId)
-                return new EntityCoordinates(entity, Vector2.Zero);
-
-            var localPos = transformSystem.GetInvWorldMatrix(entity).Transform(mapPos.Position);
-            return new EntityCoordinates(entity, localPos);
+            return transformSystem.WithEntityId(this, entity);
         }
 
         /// <summary>
@@ -271,6 +213,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entityManager"></param>
         /// <returns>Grid EntityUid this entity is on or null</returns>
+        [Obsolete("Use SharedTransformSystem.GetGrid()")]
         public EntityUid? GetGridUid(IEntityManager entityManager)
         {
             return !IsValid(entityManager) ? null : entityManager.GetComponent<TransformComponent>(EntityId).GridUid;
@@ -282,6 +225,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entityManager"></param>
         /// <returns>Map Id these coordinates are on or <see cref="MapId.Nullspace"/></returns>
+        [Obsolete("Use SharedTransformSystem.GetMapId()")]
         public MapId GetMapId(IEntityManager entityManager)
         {
             return !IsValid(entityManager) ? MapId.Nullspace : entityManager.GetComponent<TransformComponent>(EntityId).MapID;
@@ -293,6 +237,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entityManager"></param>
         /// <returns>Map Id these coordinates are on or null</returns>
+        [Obsolete("Use SharedTransformSystem.GetMap()")]
         public EntityUid? GetMapUid(IEntityManager entityManager)
         {
             return !IsValid(entityManager) ? null : entityManager.GetComponent<TransformComponent>(EntityId).MapUid;
@@ -303,6 +248,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="position">The vector to offset by local to the entity.</param>
         /// <returns>Newly offset coordinates.</returns>
+        [Pure]
         public EntityCoordinates Offset(Vector2 position)
         {
             return new(EntityId, Position + position);
@@ -315,35 +261,20 @@ namespace Robust.Shared.Map
         /// <param name="otherCoordinates">Other set of coordinates to use.</param>
         /// <param name="range">maximum distance between the two sets of coordinates.</param>
         /// <returns>True if the two points are within a given range.</returns>
-        [Obsolete("Use overload with TransformSystem")]
+        [Obsolete("Use TransformSystem.InRange()")]
         public bool InRange(IEntityManager entityManager, EntityCoordinates otherCoordinates, float range)
         {
             return InRange(entityManager, entityManager.System<SharedTransformSystem>(), otherCoordinates, range);
         }
 
-        /// <summary>
-        ///     Compares two sets of coordinates to see if they are in range of each other.
-        /// </summary>
-        /// <param name="entityManager">Entity Manager containing the two entity Ids.</param>
-        /// <param name="otherCoordinates">Other set of coordinates to use.</param>
-        /// <param name="range">maximum distance between the two sets of coordinates.</param>
-        /// <returns>True if the two points are within a given range.</returns>
+        [Obsolete("Use TransformSystem.InRange()")]
         public bool InRange(
             IEntityManager entityManager,
             SharedTransformSystem transformSystem,
             EntityCoordinates otherCoordinates,
             float range)
         {
-            if (!IsValid(entityManager) || !otherCoordinates.IsValid(entityManager))
-                return false;
-
-            if (EntityId == otherCoordinates.EntityId)
-                return (otherCoordinates.Position - Position).LengthSquared() < range * range;
-
-            var mapCoordinates = ToMap(entityManager, transformSystem);
-            var otherMapCoordinates = otherCoordinates.ToMap(entityManager, transformSystem);
-
-            return mapCoordinates.InRange(otherMapCoordinates, range);
+            return transformSystem.InRange(this, otherCoordinates, range);
         }
 
         /// <summary>

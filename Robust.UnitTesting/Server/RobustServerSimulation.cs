@@ -38,6 +38,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
@@ -71,8 +72,7 @@ namespace Robust.UnitTesting.Server
         /// <summary>
         /// Adds a new map directly to the map manager.
         /// </summary>
-        EntityUid AddMap(int mapId);
-        EntityUid AddMap(MapId mapId);
+        (EntityUid Uid, MapId MapId) CreateMap();
         EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates);
         EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates);
     }
@@ -99,18 +99,10 @@ namespace Robust.UnitTesting.Server
             return Collection.Resolve<T>();
         }
 
-        public EntityUid AddMap(int mapId)
+        public (EntityUid Uid, MapId MapId) CreateMap()
         {
-            var mapMan = Collection.Resolve<IMapManager>();
-            mapMan.CreateMap(new MapId(mapId));
-            return mapMan.GetMapEntityId(new MapId(mapId));
-        }
-
-        public EntityUid AddMap(MapId mapId)
-        {
-            var mapMan = Collection.Resolve<IMapManager>();
-            mapMan.CreateMap(mapId);
-            return mapMan.GetMapEntityId(mapId);
+            var uid = Collection.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var mapId);
+            return (uid, mapId);
         }
 
         public EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates)
@@ -228,6 +220,7 @@ namespace Robust.UnitTesting.Server
             container.Register<INetworkedMapManager, NetworkedMapManager>();
             container.Register<IMapManagerInternal, NetworkedMapManager>();
             container.Register<ISerializationManager, SerializationManager>();
+            container.Register<IRobustRandom, RobustRandom>();
             container.Register<IPrototypeManager, ServerPrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
@@ -330,8 +323,13 @@ namespace Robust.UnitTesting.Server
 
             var protoMan = container.Resolve<IPrototypeManager>();
             protoMan.Initialize();
-            protoMan.RegisterKind(typeof(EntityPrototype));
+            protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             _protoDelegate?.Invoke(protoMan);
+
+            // This just exists to set protoMan._hasEverBeenReloaded to True
+            // The code is perfect.
+            protoMan.LoadString("");
+
             protoMan.ResolveResults();
 
             return this;

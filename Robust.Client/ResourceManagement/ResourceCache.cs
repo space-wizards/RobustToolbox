@@ -17,9 +17,7 @@ namespace Robust.Client.ResourceManagement;
 /// </summary>
 internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
 {
-    private readonly Dictionary<Type, Dictionary<ResPath, BaseResource>> _cachedResources =
-    new();
-
+    private readonly Dictionary<Type, TypeData> _cachedResources = new();
     private readonly Dictionary<Type, BaseResource> _fallbacks = new();
 
     public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
@@ -29,8 +27,8 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
 
     public T GetResource<T>(ResPath path, bool useFallback = true) where T : BaseResource, new()
     {
-        var cache = GetTypeDict<T>();
-        if (cache.TryGetValue(path, out var cached))
+        var cache = GetTypeData<T>();
+        if (cache.Resources.TryGetValue(path, out var cached))
         {
             return (T) cached;
         }
@@ -40,7 +38,7 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         {
             var dependencies = IoCManager.Instance!;
             resource.Load(dependencies, path);
-            cache[path] = resource;
+            cache.Resources[path] = resource;
             return resource;
         }
         catch (Exception e)
@@ -67,11 +65,17 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
 
     public bool TryGetResource<T>(ResPath path, [NotNullWhen(true)] out T? resource) where T : BaseResource, new()
     {
-        var cache = GetTypeDict<T>();
-        if (cache.TryGetValue(path, out var cached))
+        var cache = GetTypeData<T>();
+        if (cache.Resources.TryGetValue(path, out var cached))
         {
             resource = (T) cached;
             return true;
+        }
+
+        if (cache.NonExistent.Contains(path))
+        {
+            resource = null;
+            return false;
         }
 
         var _resource = new T();
@@ -80,11 +84,12 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
             var dependencies = IoCManager.Instance!;
             _resource.Load(dependencies, path);
             resource = _resource;
-            cache[path] = resource;
+            cache.Resources[path] = resource;
             return true;
         }
         catch (FileNotFoundException)
         {
+            cache.NonExistent.Add(path);
             resource = null;
             return false;
         }
@@ -109,9 +114,9 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
 
     public void ReloadResource<T>(ResPath path) where T : BaseResource, new()
     {
-        var cache = GetTypeDict<T>();
+        var cache = GetTypeData<T>();
 
-        if (!cache.TryGetValue(path, out var res))
+        if (!cache.Resources.TryGetValue(path, out var res))
         {
             return;
         }
@@ -145,7 +150,7 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
 
     public void CacheResource<T>(ResPath path, T resource) where T : BaseResource, new()
     {
-        GetTypeDict<T>()[path] = resource;
+        GetTypeData<T>().Resources[path] = resource;
     }
 
     public T GetFallback<T>() where T : BaseResource, new()
@@ -168,7 +173,7 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
 
     public IEnumerable<KeyValuePair<ResPath, T>> GetAllResources<T>() where T : BaseResource, new()
     {
-        return GetTypeDict<T>().Select(p => new KeyValuePair<ResPath, T>(p.Key, (T) p.Value));
+        return GetTypeData<T>().Resources.Select(p => new KeyValuePair<ResPath, T>(p.Key, (T) p.Value));
     }
 
     public event Action<TextureLoadedEventArgs>? OnRawTextureLoaded;
@@ -193,7 +198,7 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
 
         if (disposing)
         {
-            foreach (var res in _cachedResources.Values.SelectMany(dict => dict.Values))
+            foreach (var res in _cachedResources.Values.SelectMany(dict => dict.Resources.Values))
             {
                 res.Dispose();
             }
@@ -210,15 +215,9 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
     #endregion IDisposable Members
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected Dictionary<ResPath, BaseResource> GetTypeDict<T>()
+    private TypeData GetTypeData<T>()
     {
-        if (!_cachedResources.TryGetValue(typeof(T), out var ret))
-        {
-            ret = new Dictionary<ResPath, BaseResource>();
-            _cachedResources.Add(typeof(T), ret);
-        }
-
-        return ret;
+        return _cachedResources.GetOrNew(typeof(T));
     }
 
     public void TextureLoaded(TextureLoadedEventArgs eventArgs)
@@ -229,5 +228,14 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
     public void RsiLoaded(RsiLoadedEventArgs eventArgs)
     {
         OnRsiLoaded?.Invoke(eventArgs);
+    }
+
+    private sealed class TypeData
+    {
+        public readonly Dictionary<ResPath, BaseResource> Resources = new();
+
+        // List of resources which DON'T exist.
+        // Needed to avoid innocuous TryGet calls repeatedly trying to re-load non-existent resources from disk.
+        public readonly HashSet<ResPath> NonExistent = new();
     }
 }

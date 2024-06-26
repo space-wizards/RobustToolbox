@@ -11,6 +11,7 @@ using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
@@ -87,7 +88,7 @@ namespace Robust.Client.Placement
         /// <returns></returns>
         public abstract bool IsValidPosition(EntityCoordinates position);
 
-        public virtual void Render(DrawingHandleWorld handle)
+        public virtual void Render(in OverlayDrawArgs args)
         {
             var uid = pManager.CurrentPlacementOverlayEntity;
             if (!pManager.EntityManager.TryGetComponent(uid, out SpriteComponent? sprite) || !sprite.Visible)
@@ -115,15 +116,17 @@ namespace Robust.Client.Placement
 
             var dirAng = pManager.Direction.ToAngle();
             var spriteSys = pManager.EntityManager.System<SpriteSystem>();
+            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
             foreach (var coordinate in locationcollection)
             {
                 if (!coordinate.IsValid(pManager.EntityManager))
                     return; // Just some paranoia just in case
-                var worldPos = coordinate.ToMapPos(pManager.EntityManager);
+                var worldPos = coordinate.ToMapPos(pManager.EntityManager, transformSys);
                 var worldRot = pManager.EntityManager.GetComponent<TransformComponent>(coordinate.EntityId).WorldRotation + dirAng;
 
                 sprite.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
-                spriteSys.Render(uid.Value, sprite, handle, pManager.EyeManager.CurrentEye.Rotation, worldRot, worldPos);
+                var rot = args.Viewport.Eye?.Rotation ?? default;
+                spriteSys.Render(uid.Value, sprite, args.WorldHandle, rot, worldRot, worldPos);
             }
         }
 
@@ -136,11 +139,12 @@ namespace Robust.Client.Placement
         {
             var mouseScreen = pManager.InputManager.MouseScreenPosition;
             var mousePos = pManager.EyeManager.PixelToMap(mouseScreen);
+            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
 
             if (mousePos.MapId == MapId.Nullspace)
                 yield break;
 
-            var (_, (x, y)) = EntityCoordinates.FromMap(pManager.StartPoint.EntityId, mousePos, pManager.EntityManager) - pManager.StartPoint;
+            var (_, (x, y)) = EntityCoordinates.FromMap(pManager.StartPoint.EntityId, mousePos, transformSys, pManager.EntityManager) - pManager.StartPoint;
             float iterations;
             Vector2 distance;
             if (Math.Abs(x) > Math.Abs(y))
@@ -167,11 +171,12 @@ namespace Robust.Client.Placement
         {
             var mouseScreen = pManager.InputManager.MouseScreenPosition;
             var mousePos = pManager.EyeManager.PixelToMap(mouseScreen);
+            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
 
             if (mousePos.MapId == MapId.Nullspace)
                 yield break;
 
-            var placementdiff = EntityCoordinates.FromMap(pManager.StartPoint.EntityId, mousePos, pManager.EntityManager) - pManager.StartPoint;
+            var placementdiff = EntityCoordinates.FromMap(pManager.StartPoint.EntityId, mousePos, transformSys, pManager.EntityManager) - pManager.StartPoint;
 
             var xSign = Math.Sign(placementdiff.X);
             var ySign = Math.Sign(placementdiff.Y);
@@ -193,9 +198,9 @@ namespace Robust.Client.Placement
         public TileRef GetTileRef(EntityCoordinates coordinates)
         {
             var gridUidOpt = coordinates.GetGridUid(pManager.EntityManager);
-            return gridUidOpt is EntityUid gridUid && gridUid.IsValid() ? pManager.MapManager.GetGrid(gridUid).GetTileRef(MouseCoords)
+            return gridUidOpt is EntityUid gridUid && gridUid.IsValid() ? pManager.EntityManager.GetComponent<MapGridComponent>(gridUid).GetTileRef(MouseCoords)
                 : new TileRef(gridUidOpt ?? EntityUid.Invalid,
-                    MouseCoords.ToVector2i(pManager.EntityManager, pManager.MapManager), Tile.Empty);
+                    MouseCoords.ToVector2i(pManager.EntityManager, pManager.MapManager, pManager.EntityManager.System<SharedTransformSystem>()), Tile.Empty);
         }
 
         public TextureResource GetSprite(string key)
@@ -216,14 +221,15 @@ namespace Robust.Client.Placement
         {
             if (!RangeRequired)
                 return true;
-            var controlled = pManager.PlayerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            var controlled = pManager.PlayerManager.LocalEntity ?? EntityUid.Invalid;
             if (controlled == EntityUid.Invalid)
             {
                 return false;
             }
 
             var range = pManager.CurrentPermission!.Range;
-            if (range > 0 && !pManager.EntityManager.GetComponent<TransformComponent>(controlled).Coordinates.InRange(pManager.EntityManager, coordinates, range))
+            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
+            if (range > 0 && !pManager.EntityManager.GetComponent<TransformComponent>(controlled).Coordinates.InRange(pManager.EntityManager, transformSys, coordinates, range))
                 return false;
             return true;
         }
@@ -231,7 +237,8 @@ namespace Robust.Client.Placement
         public bool IsColliding(EntityCoordinates coordinates)
         {
             var bounds = pManager.ColliderAABB;
-            var mapCoords = coordinates.ToMap(pManager.EntityManager);
+            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
+            var mapCoords = coordinates.ToMap(pManager.EntityManager, transformSys);
             var (x, y) = mapCoords.Position;
 
             var collisionBox = Box2.FromDimensions(
@@ -261,7 +268,8 @@ namespace Robust.Client.Placement
                 return EntityCoordinates.FromMap(pManager.MapManager, mapCoords);
             }
 
-            return EntityCoordinates.FromMap(pManager.EntityManager, gridUid, mapCoords);
+            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
+            return EntityCoordinates.FromMap(gridUid, mapCoords, transformSys, pManager.EntityManager);
         }
     }
 }

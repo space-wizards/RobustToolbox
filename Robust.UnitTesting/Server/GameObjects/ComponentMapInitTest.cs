@@ -2,6 +2,7 @@ using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Reflection;
 
 namespace Robust.UnitTesting.Server.GameObjects;
 
@@ -26,7 +27,7 @@ public sealed partial class ComponentMapInitTest
         var sim = simFactory.InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
-        var mapId = mapManager.CreateMap();
+        sim.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var mapId);
 
         var ent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         Assert.That(entManager.GetComponent<MetaDataComponent>(ent).EntityLifeStage, Is.EqualTo(EntityLifeStage.MapInitialized));
@@ -38,6 +39,7 @@ public sealed partial class ComponentMapInitTest
         mapManager.DeleteMap(mapId);
     }
 
+    [Reflect(false)]
     private sealed class MapInitTestSystem : EntitySystem
     {
         public override void Initialize()
@@ -52,6 +54,7 @@ public sealed partial class ComponentMapInitTest
         }
     }
 
+    [Reflect(false)]
     private sealed partial class MapInitTestComponent : Component
     {
         public int Count = 0;

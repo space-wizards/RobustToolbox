@@ -35,7 +35,6 @@ namespace Robust.Shared.Network
             public bool IsConnected => _connection.Status == NetConnectionStatus.Connected;
 
             /// <inheritdoc />
-            [ViewVariables]
             public IPEndPoint RemoteEndPoint => _connection.RemoteEndPoint;
 
             /// <summary>
@@ -50,6 +49,8 @@ namespace Robust.Shared.Network
 
             // Only used on server, contains the encryption to use for this channel.
             public NetEncryption? Encryption { get; set; }
+
+            [ViewVariables] public int CurrentMtu => _connection.CurrentMTU;
 
             /// <summary>
             ///     Creates a new instance of a NetChannel.
@@ -98,7 +99,7 @@ namespace Robust.Shared.Network
 
             public override string ToString()
             {
-                return $"{RemoteEndPoint}/{UserId}";
+                return $"{ConnectionId}/{UserId}";
             }
         }
     }

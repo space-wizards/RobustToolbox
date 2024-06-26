@@ -116,7 +116,7 @@ internal sealed class HubManager
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorText = await response.Content.ReadAsStringAsync();
-                    _sawmill.Error("Error status while advertising server: [{StatusCode}] {ErrorText}, to {HubUrl}",
+                    _sawmill.Error("Error status while advertising server: [{StatusCode}] {ErrorText}, from {HubUrl}",
                         response.StatusCode,
                         errorText,
                         hubUrl);

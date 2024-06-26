@@ -13,7 +13,7 @@ namespace Robust.Client.UserInterface
             return Task.FromResult<Stream?>(null);
         }
 
-        public Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(FileDialogFilters? filters = null)
+        public Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(FileDialogFilters? filters = null, bool truncate = true)
         {
             return Task.FromResult<(Stream fileStream, bool alreadyExisted)?>(null);
         }

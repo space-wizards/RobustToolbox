@@ -74,4 +74,31 @@ namespace Robust.Shared.Asynchronous
         /// </remarks>
         void BlockWaitOnTask(Task task);
     }
+
+    internal static class TaskManagerExt
+    {
+        /// <summary>
+        /// Run a callback on the main thread, returning a task that represents its completion.
+        /// </summary>
+        /// <seealso cref="ITaskManager.RunOnMainThread"/>
+        public static Task TaskOnMainThread(this ITaskManager taskManager, Action callback)
+        {
+            var tcs = new TaskCompletionSource();
+
+            taskManager.RunOnMainThread(() =>
+            {
+                try
+                {
+                    callback();
+                    tcs.SetResult();
+                }
+                catch (Exception e)
+                {
+                    tcs.TrySetException(e);
+                }
+            });
+
+            return tcs.Task;
+        }
+    }
 }

@@ -15,6 +15,8 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassHover = "hover";
         public const string StylePseudoClassDisabled = "disabled";
 
+        public StyleBox? StyleBoxOverride { get; set; }
+
         public ContainerButton()
         {
             DrawModeChanged();
@@ -24,6 +26,11 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
+                if (StyleBoxOverride != null)
+                {
+                    return StyleBoxOverride;
+                }
+
                 if (TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box))
                 {
                     return box;

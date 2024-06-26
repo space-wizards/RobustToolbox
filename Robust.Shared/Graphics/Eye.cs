@@ -28,7 +28,7 @@ namespace Robust.Shared.Graphics
         public virtual MapCoordinates Position
         {
             get => _coords;
-            internal set => _coords = value;
+            set => _coords = value;
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -59,9 +59,9 @@ namespace Robust.Shared.Graphics
         }
 
         /// <inheritdoc />
-        public void GetViewMatrix(out Matrix3 viewMatrix, Vector2 renderScale)
+        public void GetViewMatrix(out Matrix3x2 viewMatrix, Vector2 renderScale)
         {
-            viewMatrix = Matrix3.CreateInverseTransform(
+            viewMatrix = Matrix3Helpers.CreateInverseTransform(
                 _coords.Position.X + Offset.X,
                 _coords.Position.Y + Offset.Y,
                 (float)-Rotation.Theta,
@@ -69,9 +69,9 @@ namespace Robust.Shared.Graphics
                 1 / (_scale.Y * renderScale.Y));
         }
 
-        public void GetViewMatrixNoOffset(out Matrix3 viewMatrix, Vector2 renderScale)
+        public void GetViewMatrixNoOffset(out Matrix3x2 viewMatrix, Vector2 renderScale)
         {
-            viewMatrix = Matrix3.CreateInverseTransform(
+            viewMatrix = Matrix3Helpers.CreateInverseTransform(
                 _coords.Position.X,
                 _coords.Position.Y,
                 (float)-Rotation.Theta,
@@ -80,9 +80,9 @@ namespace Robust.Shared.Graphics
         }
 
         /// <inheritdoc />
-        public void GetViewMatrixInv(out Matrix3 viewMatrixInv, Vector2 renderScale)
+        public void GetViewMatrixInv(out Matrix3x2 viewMatrixInv, Vector2 renderScale)
         {
-            viewMatrixInv = Matrix3.CreateTransform(
+            viewMatrixInv = Matrix3Helpers.CreateTransform(
                 _coords.Position.X + Offset.X,
                 _coords.Position.Y + Offset.Y,
                 (float)-Rotation.Theta,

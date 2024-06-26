@@ -50,8 +50,7 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         EntityUid map = default;
         await server.WaitPost(() =>
         {
-            var mapId = mapMan.CreateMap();
-            map = mapMan.GetMapEntityId(mapId);
+            map = server.System<SharedMapSystem>().CreateMap(out var mapId);
             var gridComp = mapMan.CreateGridEntity(mapId);
             gridComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
             grid = gridComp.Owner;

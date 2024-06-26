@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
@@ -207,8 +208,8 @@ public sealed partial class PhysicsSystem
             var contact = contacts[i];
             var uidA = contact.EntityA;
             var uidB = contact.EntityB;
-            var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA), xformQuery);
-            var bodyBTransform = GetPhysicsTransform(uidB, xformQuery.GetComponent(uidB), xformQuery);
+            var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA));
+            var bodyBTransform = GetPhysicsTransform(uidB, xformQuery.GetComponent(uidB));
             contact.UpdateIsTouching(bodyATransform, bodyBTransform);
         }
 

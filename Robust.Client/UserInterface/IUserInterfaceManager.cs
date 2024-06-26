@@ -135,6 +135,17 @@ namespace Robust.Client.UserInterface
         /// Plays the UI hover sound if relevant.
         /// </summary>
         void HoverSound();
+
+        /// <summary>
+        /// Sets <see cref="CurrentlyHovered"/> to the given control.
+        /// </summary>
+        void SetHovered(Control? control);
+
+        /// <summary>
+        /// Forces <see cref="CurrentlyHovered"/> to get updated. This is done automatically when the mouse is moved,
+        /// but not necessarily a new or existing control is rearranged.
+        /// </summary>
+        void UpdateHovered();
     }
 
     public readonly struct PostDrawUIRootEventArgs

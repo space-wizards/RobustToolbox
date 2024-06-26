@@ -56,7 +56,7 @@ internal sealed class TeleportCommand : LocalizedCommands
 
         if (_map.TryFindGridAt(mapId, position, out var gridUid, out var grid))
         {
-            var gridPos = xformSystem.GetInvWorldMatrix(gridUid).Transform(position);
+            var gridPos = Vector2.Transform(position, xformSystem.GetInvWorldMatrix(gridUid));
 
             xformSystem.SetCoordinates(entity, transform, new EntityCoordinates(gridUid, gridPos));
         }
@@ -174,12 +174,7 @@ public sealed class TeleportToCommand : LocalizedCommands
 
         var hint = args.Length == 1 ? "cmd-tpto-destination-hint" : "cmd-tpto-victim-hint";
         hint = Loc.GetString(hint);
-
-        var opts = CompletionResult.FromHintOptions(users, hint);
-        if (last != string.Empty && !NetEntity.TryParse(last, out _))
-            return opts;
-
-        return CompletionResult.FromHintOptions(opts.Options.Concat(CompletionHelper.NetEntities(last, _entities)), hint);
+        return CompletionResult.FromHintOptions(users, hint);
     }
 }
 

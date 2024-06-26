@@ -8,6 +8,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.UnitTesting.Shared.GameState;
@@ -23,20 +24,8 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
     public async Task UnknownEntityTest()
     {
         // Setup auto-comp-states. I hate this. Someone please fix reflection in RobustIntegrationTest
-        var compReg = () => IoCManager.Resolve<IComponentFactory>().RegisterClass<UnknownEntityTestComponent>();
-        var sysReg = () => IoCManager.Resolve<IEntitySystemManager>().LoadExtraSystemType<UnknownEntityTestComponent.UnknownEntityTestComponent_AutoNetworkSystem>();
-        var serverOpts = new ServerIntegrationOptions
-        {
-            Pool = false,
-            BeforeRegisterComponents = compReg,
-            BeforeStart = sysReg,
-        };
-        var clientOpts = new ClientIntegrationOptions
-        {
-            Pool = false,
-            BeforeRegisterComponents = compReg,
-            BeforeStart = sysReg,
-        };
+        var serverOpts = new ServerIntegrationOptions { Pool = false };
+        var clientOpts = new ClientIntegrationOptions { Pool = false };
         var server = StartServer(serverOpts);
         var client = StartClient(clientOpts);
 
@@ -49,12 +38,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, true));
 
         // Set up map.
-        EntityUid map = default;
-        await server.WaitPost(() =>
-        {
-            var mapId = server.MapMan.CreateMap();
-            map = server.MapMan.GetMapEntityId(mapId);
-        });
+        var map = server.System<SharedMapSystem>().CreateMap();
 
         await RunTicks();
 
@@ -159,20 +143,8 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
     public async Task UnknownEntityDeleteTest()
     {
         // The first chunk of the test just follows UnknownEntityTest
-        var compReg = () => IoCManager.Resolve<IComponentFactory>().RegisterClass<UnknownEntityTestComponent>();
-        var sysReg = () => IoCManager.Resolve<IEntitySystemManager>().LoadExtraSystemType<UnknownEntityTestComponent.UnknownEntityTestComponent_AutoNetworkSystem>();
-        var serverOpts = new ServerIntegrationOptions
-        {
-            Pool = false,
-            BeforeRegisterComponents = compReg,
-            BeforeStart = sysReg,
-        };
-        var clientOpts = new ClientIntegrationOptions
-        {
-            Pool = false,
-            BeforeRegisterComponents = compReg,
-            BeforeStart = sysReg,
-        };
+        var serverOpts = new ServerIntegrationOptions { Pool = false };
+        var clientOpts = new ClientIntegrationOptions { Pool = false };
         var server = StartServer(serverOpts);
         var client = StartClient(clientOpts);
 
@@ -185,12 +157,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, true));
 
         // Set up map.
-        EntityUid map = default;
-        await server.WaitPost(() =>
-        {
-            var mapId = server.MapMan.CreateMap();
-            map = server.MapMan.GetMapEntityId(mapId);
-        });
+        var map = server.System<SharedMapSystem>().CreateMap();
 
         await RunTicks();
 

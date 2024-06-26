@@ -98,6 +98,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
     public const float TileEnlargementRadius = -PhysicsConstants.PolygonRadius * 4f;
 
     /// <summary>
+    /// The minimum size an entity is assumed to be for point purposes.
+    /// </summary>
+    public const float LookupEpsilon = float.Epsilon * 10f;
+
+    /// <summary>
     /// Returns all non-grid entities. Consider using your own flags if you wish for a faster query.
     /// </summary>
     public const LookupFlags DefaultFlags = LookupFlags.All;
@@ -120,7 +125,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
         SubscribeLocalEvent<MapChangedEvent>(OnMapChange);
 
-        _transform.OnGlobalMoveEvent += OnMove;
+        _transform.OnBeforeMoveEvent += OnMove;
         EntityManager.EntityInitialized += OnEntityInit;
 
         SubscribeLocalEvent<TransformComponent, PhysicsBodyTypeChangedEvent>(OnBodyTypeChange);
@@ -137,7 +142,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
     {
         base.Shutdown();
         EntityManager.EntityInitialized -= OnEntityInit;
-        _transform.OnGlobalMoveEvent -= OnMove;
+        _transform.OnBeforeMoveEvent -= OnMove;
     }
 
     #region DynamicTree
@@ -242,7 +247,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var mapTransform = new Transform(worldPos, worldRot);
 
         var (_, broadWorldRot, _, broadInvMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(broadphase.Owner);
-        var broadphaseTransform = new Transform(broadInvMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadWorldRot);
+        var broadphaseTransform = new Transform(Vector2.Transform(mapTransform.Position, broadInvMatrix), mapTransform.Quaternion2D.Angle - broadWorldRot);
         var tree = body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
         DebugTools.Assert(fixture.ProxyCount == 0);
 
@@ -386,7 +391,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var mapTransform = new Transform(worldPos, worldRot);
 
         // TODO BROADPHASE PARENTING this just assumes local = world
-        var broadphaseTransform = new Transform(broadphaseXform.InvLocalMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadphaseXform.LocalRotation);
+        var broadphaseTransform = new Transform(Vector2.Transform(mapTransform.Position, broadphaseXform.InvLocalMatrix), mapTransform.Quaternion2D.Angle - broadphaseXform.LocalRotation);
 
         foreach (var (id, fixture) in manager.Fixtures)
         {

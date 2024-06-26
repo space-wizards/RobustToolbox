@@ -77,15 +77,12 @@ internal sealed partial class UserInterfaceManager
 
             ReleaseKeyboardFocus(control);
             RemoveModal(control);
-            if (control == CurrentlyHovered)
-            {
-                control.MouseExited();
-                CurrentlyHovered = null;
-                _clearTooltip();
-            }
 
-            if (control != ControlFocused) return;
-            ControlFocused = null;
+            if (control == ControlFocused)
+                ControlFocused = null;
+
+            if (control == CurrentlyHovered)
+                UpdateHovered();
         }
 
         public void PushModal(Control modal)
@@ -132,9 +129,10 @@ internal sealed partial class UserInterfaceManager
             try
             {
                 var total = 0;
-                _render(renderHandle, ref total, root, Vector2i.Zero, Color.White, null);
                 var drawingHandle = renderHandle.DrawingHandleScreen;
-                drawingHandle.SetTransform(Vector2.Zero, Angle.Zero, Vector2.One);
+                drawingHandle.SetTransform(Matrix3x2.Identity);
+                RenderControl(renderHandle, ref total, root, Vector2i.Zero, Color.White, null, Matrix3x2.Identity);
+                drawingHandle.SetTransform(Matrix3x2.Identity);
                 OnPostDrawUIRoot?.Invoke(new PostDrawUIRootEventArgs(root, drawingHandle));
 
                 _prof.WriteValue("Controls rendered", ProfData.Int32(total));

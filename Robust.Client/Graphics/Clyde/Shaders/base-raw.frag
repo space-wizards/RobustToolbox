@@ -1,4 +1,5 @@
 varying highp vec2 UV;
+varying highp vec2 UV2;
 
 uniform sampler2D lightMap;
 

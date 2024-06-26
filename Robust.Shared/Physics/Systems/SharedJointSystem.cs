@@ -21,6 +21,7 @@ public abstract partial class SharedJointSystem : EntitySystem
     [Dependency] private readonly IGameTiming _gameTiming = default!;
 
     private EntityQuery<JointComponent> _jointsQuery;
+    private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<JointRelayTargetComponent> _relayQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
@@ -37,6 +38,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         _jointsQuery = GetEntityQuery<JointComponent>();
         _relayQuery = GetEntityQuery<JointRelayTargetComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
+        _physicsQuery = GetEntityQuery<PhysicsComponent>();
         UpdatesOutsidePrediction = true;
 
         UpdatesBefore.Add(typeof(SharedPhysicsSystem));
@@ -136,7 +138,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         var aUid = joint.BodyAUid;
         var bUid = joint.BodyBUid;
 
-        if (!Resolve(aUid, ref bodyA, false) || !Resolve(bUid, ref bodyB, false))
+        if (!_physicsQuery.Resolve(aUid, ref bodyA, false) || !_physicsQuery.Resolve(bUid, ref bodyB, false))
             return;
 
         DebugTools.Assert(Transform(aUid).MapID == Transform(bUid).MapID, "Attempted to initialize cross-map joint");
@@ -244,7 +246,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         anchorA ??= Vector2.Zero;
         anchorB ??= Vector2.Zero;
 
-        var length = xformA.WorldMatrix.Transform(anchorA.Value) - xformB.WorldMatrix.Transform(anchorB.Value);
+        var length = Vector2.Transform(anchorA.Value, xformA.WorldMatrix) - Vector2.Transform(anchorB.Value, xformB.WorldMatrix);
 
         var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, length.Length());
         id ??= GetJointId(joint);
@@ -311,7 +313,7 @@ public abstract partial class SharedJointSystem : EntitySystem
     public WeldJoint GetOrCreateWeldJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)
     {
         if (id != null &&
-            EntityManager.TryGetComponent(bodyA, out JointComponent? jointComponent) &&
+            _jointsQuery.TryComp(bodyA, out JointComponent? jointComponent) &&
             jointComponent.Joints.TryGetValue(id, out var weldJoint))
         {
             return (WeldJoint) weldJoint;
@@ -404,17 +406,17 @@ public abstract partial class SharedJointSystem : EntitySystem
 
     protected void AddJoint(Joint joint, PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
     {
-        if (!Resolve(joint.BodyAUid, ref bodyA) || !Resolve(joint.BodyBUid, ref bodyB))
+        if (!_physicsQuery.Resolve(joint.BodyAUid, ref bodyA) || !_physicsQuery.Resolve(joint.BodyBUid, ref bodyB))
             return;
 
         if (!joint.CollideConnected)
             FilterContactsForJoint(joint, bodyA, bodyB);
 
         // Maybe make this method AddOrUpdate so we can have an Add one that explicitly throws if present?
-        var mapidA = EntityManager.GetComponent<TransformComponent>(joint.BodyAUid).MapID;
+        var mapidA = Transform(joint.BodyAUid).MapID;
 
         if (mapidA == MapId.Nullspace ||
-            mapidA != EntityManager.GetComponent<TransformComponent>(joint.BodyBUid).MapID)
+            mapidA != Transform(joint.BodyBUid).MapID)
         {
             Log.Error($"Tried to add joint to ineligible bodies");
             return;
@@ -447,7 +449,8 @@ public abstract partial class SharedJointSystem : EntitySystem
         if (!Resolve(uid, ref xform))
             return;
 
-        Resolve(uid, ref component, ref relay, false);
+        _jointsQuery.Resolve(uid, ref component, false);
+        _relayQuery.Resolve(uid, ref relay, false);
 
         if (relay != null)
         {
@@ -471,7 +474,7 @@ public abstract partial class SharedJointSystem : EntitySystem
     /// </summary>
     public void ClearJoints(EntityUid uid, JointComponent? component = null)
     {
-        if (!Resolve(uid, ref component, false))
+        if (!_jointsQuery.Resolve(uid, ref component, false))
             return;
 
         // TODO PERFORMANCE
@@ -497,15 +500,9 @@ public abstract partial class SharedJointSystem : EntitySystem
         }
     }
 
-    [Obsolete("Use the other ClearJoints overload")]
-    public void ClearJoints(JointComponent joint)
-    {
-        ClearJoints(joint.Owner, joint);
-    }
-
     public void RemoveJoint(EntityUid uid, string id)
     {
-        if (!TryComp<JointComponent>(uid, out var jointComp))
+        if (!_jointsQuery.TryComp(uid, out var jointComp))
             return;
 
         if (!jointComp.Joints.TryGetValue(id, out var joint))
@@ -522,12 +519,12 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         // Originally I logged these but because of prediction the client can just nuke them multiple times in a row
         // because each body has its own JointComponent, bleh.
-        if (!TryComp<JointComponent>(bodyAUid, out var jointComponentA))
+        if (!_jointsQuery.TryComp(bodyAUid, out var jointComponentA))
         {
             return;
         }
 
-        if (!TryComp<JointComponent>(bodyBUid, out var jointComponentB))
+        if (!_jointsQuery.TryComp(bodyBUid, out var jointComponentB))
         {
             return;
         }
@@ -543,7 +540,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         }
 
         // Wake up connected bodies.
-        if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
+        if (_physicsQuery.TryComp(bodyAUid, out var bodyA) &&
             MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
         {
             var uidA = jointComponentA.Relay ?? bodyAUid;
@@ -607,7 +604,7 @@ public abstract partial class SharedJointSystem : EntitySystem
 
     internal void FilterContactsForJoint(Joint joint, PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
     {
-        if (!Resolve(joint.BodyBUid, ref bodyB))
+        if (!_physicsQuery.Resolve(joint.BodyBUid, ref bodyB))
             return;
 
         var node = bodyB.Contacts.First;

@@ -7,7 +7,6 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -26,53 +25,13 @@ internal sealed partial class PvsSystem
 
     private List<ICommonSession> _disconnected = new();
 
-    private void SendStateUpdate(ICommonSession session, PvsThreadResources resources)
-    {
-        var data = GetOrNewPvsSession(session);
-        ComputeSessionState(data);
-
-        InterlockedHelper.Min(ref _oldestAck, data.FromTick.Value);
-
-        // actually send the state
-        var msg = new MsgState
-        {
-            State = data.State,
-            CompressionContext = resources.CompressionContext
-        };
-
-        // PVS benchmarks use dummy sessions.
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (session.Channel != null)
-        {
-            _netMan.ServerSendMessage(msg, session.Channel);
-            if (msg.ShouldSendReliably())
-            {
-                data.RequestedFull = false;
-                data.LastReceivedAck = _gameTiming.CurTick;
-                lock (PendingAcks)
-                {
-                    PendingAcks.Add(session);
-                }
-            }
-        }
-        else
-        {
-            // Always "ack" dummy sessions.
-            data.LastReceivedAck = _gameTiming.CurTick;
-            data.RequestedFull = false;
-            lock (PendingAcks)
-            {
-                PendingAcks.Add(session);
-            }
-        }
-
-        data.ClearState();
-    }
-
     private PvsSession GetOrNewPvsSession(ICommonSession session)
     {
         if (!PlayerData.TryGetValue(session, out var pvsSession))
-            PlayerData[session] = pvsSession = new(session);
+        {
+            var memoryRegion = CreateSessionDataMemory();
+            PlayerData[session] = pvsSession = new(session, memoryRegion);
+        }
 
         return pvsSession;
     }
@@ -100,7 +59,7 @@ internal sealed partial class PvsSystem
             session.PlayerStates,
             _deletedEntities);
 
-        session.State.ForceSendReliably = session.RequestedFull
+        session.ForceSendReliably = session.RequestedFull
                                           || _gameTiming.CurTick > session.LastReceivedAck + (uint) ForceAckThreshold;
     }
 
@@ -134,15 +93,19 @@ internal sealed partial class PvsSystem
         if (!CullingEnabled || session.DisableCulling)
             return;
 
+        var chunkSet = session.ChunkSet;
         var chunks = session.Chunks;
         var distances = session.ChunkDistanceSq;
+
+        DebugTools.AssertEqual(chunks.Count, 0);
+
         distances.Clear();
-        distances.EnsureCapacity(chunks.Count);
+        distances.EnsureCapacity(chunkSet.Count);
+        chunks.EnsureCapacity(chunkSet.Count);
 
         // Assemble list of chunks and their distances to the nearest eye.
-        foreach (ref var tuple in CollectionsMarshal.AsSpan(chunks))
+        foreach(var chunk in chunkSet)
         {
-            var chunk = tuple.Chunk;
             var dist = float.MaxValue;
             var chebDist = float.MaxValue;
 
@@ -156,13 +119,13 @@ internal sealed partial class PvsSystem
 
                 dist = Math.Min(dist, (pos.Position - chunk.Position.Position).LengthSquared());
 
-                var relative = chunk.InvWorldMatrix.Transform(pos.Position)  - chunk.Centre;
+                var relative = Vector2.Transform(pos.Position, chunk.InvWorldMatrix)  - chunk.Centre;
                 relative = Vector2.Abs(relative);
                 chebDist = Math.Min(chebDist, Math.Max(relative.X, relative.Y));
             }
 
             distances.Add(dist);
-            tuple.ChebyshevDistance = chebDist;
+            chunks.Add((chunk, chebDist));
         }
 
         // Sort chunks based on distances

@@ -57,7 +57,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                     dependencies
                         .Resolve<ILogManager>()
                         .GetSawmill(SerializationManager.LogCategory)
-                        .Error(SerializationManager.LogCategory, $"Component of type '{compType}' defined twice in prototype!");
+                        .Error($"Component of type '{compType}' defined twice in prototype!");
                     continue;
                 }
 

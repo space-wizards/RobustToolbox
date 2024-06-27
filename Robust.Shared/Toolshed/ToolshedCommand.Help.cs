@@ -1,5 +1,6 @@
-﻿using System.Linq;
-using Robust.Shared.Localization;
+﻿using System;
+using System.Linq;
+using System.Text;
 
 namespace Robust.Shared.Toolshed;
 
@@ -31,15 +32,55 @@ public abstract partial class ToolshedCommand
     /// </summary>
     public string GetHelp(string? subCommand)
     {
-        if (subCommand is null)
-            return $"{Name}: {Description(null)}";
-        else
-            return $"{Name}:{subCommand}: {Description(subCommand)}";
+        // Description
+        var description = subCommand is null
+            ? $"{Name}: {Description(null)}"
+            : $"{Name}:{subCommand}: {Description(subCommand)}";
+
+        // Arguments
+        var usage = new StringBuilder();
+        usage.Append($"Usage: {Name}");
+        foreach (var (pipedType, parameters) in ReadonlyParameters[subCommand ?? ""])
+        {
+            if (pipedType != null)
+                // arguments.Append(Loc.GetString("piped-type-string", ("pipedType", pipedType.ToString())));
+                usage.Append($" PipedType: {pipedType.ToString()}");
+            foreach (var param in parameters)
+            {
+                // arguments.Append($"{Loc.GetString($"command-description-{Name}-param-{param.Key}")}({param.Value}");
+                usage.Append($" <{GetFriendlyName(param)}>");
+            }
+        }
+
+        return string.Join("\n", [description, usage]);
     }
 
     /// <inheritdoc/>
     public override string ToString()
     {
         return GetHelp(null);
+    }
+
+    public static string GetFriendlyName(Type type)
+    {
+        string friendlyName = type.Name;
+        if (type.IsGenericType)
+        {
+            int iBacktick = friendlyName.IndexOf('`');
+            if (iBacktick > 0)
+            {
+                friendlyName = friendlyName.Remove(iBacktick);
+            }
+            friendlyName += "<";
+            Type[] typeParameters = type.GetGenericArguments();
+            for (int i = 0; i < typeParameters.Length; ++i)
+            {
+                string typeParamName = GetFriendlyName(typeParameters[i]);
+                friendlyName += (i == 0 ? typeParamName : "," + typeParamName);
+            }
+            friendlyName += ">";
+        }
+
+        return friendlyName;
     }
 }

@@ -12,6 +12,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed;
 
@@ -74,6 +75,12 @@ public abstract partial class ToolshedCommand
     /// </summary>
     public IEnumerable<string> Subcommands => _implementors.Keys.Where(x => x != "");
 
+    /// <summary>
+    /// List of parameters for this command and all sub commands.
+    /// Dictionary((subCommand, pipedType), SortedDictionary(parameterName, parameterType))
+    /// </summary>
+    public Dictionary<string, List<(Type?, List<Type>)>> ReadonlyParameters;
+
     protected ToolshedCommand()
     {
         var name = GetType().GetCustomAttribute<ToolshedCommandAttribute>()!.Name;
@@ -103,9 +110,12 @@ public abstract partial class ToolshedCommand
         var impls = GetGenericImplementations();
         Dictionary<(string, Type?), SortedDictionary<string, Type>> parameters = new();
 
+        ReadonlyParameters = new();
+
         foreach (var impl in impls)
         {
             var myParams = new SortedDictionary<string, Type>();
+            var orderedParams = new List<Type>();
             string? subCmd = null;
             if (impl.GetCustomAttribute<CommandImplementationAttribute>() is {SubCommand: { } x})
             {
@@ -123,7 +133,11 @@ public abstract partial class ToolshedCommand
             foreach (var param in impl.GetParameters())
             {
                 if (param.GetCustomAttribute<CommandArgumentAttribute>() is not null)
-                    myParams.TryAdd(param.Name!, param.ParameterType);
+                {
+                    if (myParams.TryAdd(param.Name!, param.ParameterType))
+                        orderedParams.Add(param.ParameterType);
+                    param.GetModifiedParameterType();
+                }
 
                 if (param.GetCustomAttribute<PipedArgumentAttribute>() is not null)
                 {
@@ -135,7 +149,11 @@ public abstract partial class ToolshedCommand
 
             var key = (subCmd ?? "", pipedType);
             if (parameters.TryAdd(key, myParams))
+            {
+                var readParam = ReadonlyParameters.GetOrNew(subCmd ?? "");
+                readParam.Add((pipedType, orderedParams));
                 continue;
+            }
 
             if (!parameters[key].SequenceEqual(myParams))
                 throw new NotImplementedException("All command implementations of a given subcommand with the same pipe type must share the same argument types");

@@ -39,6 +39,7 @@ public abstract partial class ToolshedCommand
 
         // Usage
         var usage = new StringBuilder();
+        usage.Append("Usage: ");
         foreach (var (pipedType, parameters) in ReadonlyParameters[subCommand ?? ""])
         {
             usage.AppendLine();
@@ -46,10 +47,10 @@ public abstract partial class ToolshedCommand
             // Piped type
             if (pipedType != null)
                 // arguments.Append(Loc.GetString("piped-type-string", ("pipedType", pipedType.ToString())));
-                usage.Append($"PipedType: {pipedType.ToString()}");
+                usage.Append($"(PipedType: {pipedType.ToString()})");
 
             // Name
-            usage.Append($"Usage: {Name}");
+            usage.Append(Name);
 
             // Parameters
             foreach (var param in parameters)

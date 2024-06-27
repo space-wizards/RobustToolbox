@@ -37,14 +37,21 @@ public abstract partial class ToolshedCommand
             ? $"{Name}: {Description(null)}"
             : $"{Name}:{subCommand}: {Description(subCommand)}";
 
-        // Arguments
+        // Usage
         var usage = new StringBuilder();
-        usage.Append($"Usage: {Name}");
         foreach (var (pipedType, parameters) in ReadonlyParameters[subCommand ?? ""])
         {
+            usage.AppendLine();
+
+            // Piped type
             if (pipedType != null)
                 // arguments.Append(Loc.GetString("piped-type-string", ("pipedType", pipedType.ToString())));
-                usage.Append($" PipedType: {pipedType.ToString()}");
+                usage.Append($"PipedType: {pipedType.ToString()}");
+
+            // Name
+            usage.Append($"Usage: {Name}");
+
+            // Parameters
             foreach (var param in parameters)
             {
                 // arguments.Append($"{Loc.GetString($"command-description-{Name}-param-{param.Key}")}({param.Value}");
@@ -52,7 +59,7 @@ public abstract partial class ToolshedCommand
             }
         }
 
-        return string.Join("\n", [description, usage]);
+        return description + usage;
     }
 
     /// <inheritdoc/>

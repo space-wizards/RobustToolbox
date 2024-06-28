@@ -26,6 +26,7 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
@@ -761,6 +762,69 @@ namespace Robust.UnitTesting
                 pvs.SendGameStates(players);
                 Timing.CurTick += 1;
             }
+
+            /// <summary>
+            /// Adds multiple dummy players to the server.
+            /// </summary>
+            public async Task<ICommonSession[]> AddDummySessions(int count)
+            {
+                var sessions = new ICommonSession[count];
+                for (var i = 0; i < sessions.Length; i++)
+                {
+                    sessions[i] = await AddDummySession();
+                }
+
+                return sessions;
+            }
+
+            /// <summary>
+            /// Adds a dummy player to the server.
+            /// </summary>
+            public async Task<ICommonSession> AddDummySession(string? userName = null)
+            {
+                userName ??= $"integration_dummy_{DummyUsers.Count}";
+                Log.Info($"Adding dummy session {userName}");
+                if (!_dummyUsers.TryGetValue(userName, out var userId))
+                    _dummyUsers[userName] = userId = new(Guid.NewGuid());
+
+                var man = (Robust.Server.Player.PlayerManager) PlayerMan;
+                var session = man.AddDummySession(userId, userName);
+                _dummySessions.Add(userId, session);
+
+                session.ConnectedTime = DateTime.UtcNow;
+                await WaitPost(() => man.SetStatus(session, SessionStatus.Connected));
+
+                return session;
+            }
+
+            /// <summary>
+            /// Removes a dummy player from the server.
+            /// </summary>
+            public async Task RemoveDummySession(ICommonSession session, bool removeUser = false)
+            {
+                Log.Info($"Removing dummy session {session.Name}");
+                _dummySessions.Remove(session.UserId);
+                var man = (Robust.Server.Player.PlayerManager) PlayerMan;
+                await WaitPost(() => man.EndSession(session.UserId));
+                if (removeUser)
+                    _dummyUsers.Remove(session.Name);
+            }
+
+            /// <summary>
+            /// Removes all dummy players from the server.
+            /// </summary>
+            public async Task RemoveAllDummySessions()
+            {
+                foreach (var session in _dummySessions.Values)
+                {
+                    await RemoveDummySession(session);
+                }
+            }
+
+            private Dictionary<string, NetUserId> _dummyUsers = new();
+            private Dictionary<NetUserId, ICommonSession> _dummySessions = new();
+            public IReadOnlyDictionary<string, NetUserId> DummyUsers => _dummyUsers;
+            public IReadOnlyDictionary<NetUserId, ICommonSession> DummySessions => _dummySessions;
         }
 
         public sealed class ClientIntegrationInstance : IntegrationInstance

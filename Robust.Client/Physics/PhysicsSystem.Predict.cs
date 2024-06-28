@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;

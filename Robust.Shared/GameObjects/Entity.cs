@@ -1,12 +1,14 @@
-﻿using Robust.Shared.Utility;
+﻿using Robust.Shared.Localization;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
-public record struct Entity<T>
+public record struct Entity<T> : IFluentEntityUid
     where T : IComponent?
 {
     public EntityUid Owner;
     public T Comp;
+    EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T comp)
     {
@@ -45,12 +47,13 @@ public record struct Entity<T>
     public override int GetHashCode() => Owner.GetHashCode();
 }
 
-public record struct Entity<T1, T2>
+public record struct Entity<T1, T2> : IFluentEntityUid
     where T1 : IComponent? where T2 : IComponent?
 {
     public EntityUid Owner;
     public T1 Comp1;
     public T2 Comp2;
+    EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2)
     {
@@ -110,13 +113,14 @@ public record struct Entity<T1, T2>
     }
 }
 
-public record struct Entity<T1, T2, T3>
+public record struct Entity<T1, T2, T3> : IFluentEntityUid
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent?
 {
     public EntityUid Owner;
     public T1 Comp1;
     public T2 Comp2;
     public T3 Comp3;
+    EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3)
     {
@@ -211,7 +215,7 @@ public record struct Entity<T1, T2, T3>
 #endregion
 }
 
-public record struct Entity<T1, T2, T3, T4>
+public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent?
 {
     public EntityUid Owner;
@@ -219,6 +223,7 @@ public record struct Entity<T1, T2, T3, T4>
     public T2 Comp2;
     public T3 Comp3;
     public T4 Comp4;
+    EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3, T4 comp4)
     {
@@ -336,7 +341,7 @@ public record struct Entity<T1, T2, T3, T4>
 #endregion
 }
 
-public record struct Entity<T1, T2, T3, T4, T5>
+public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent?
 {
     public EntityUid Owner;
@@ -345,6 +350,7 @@ public record struct Entity<T1, T2, T3, T4, T5>
     public T3 Comp3;
     public T4 Comp4;
     public T5 Comp5;
+    EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5)
     {
@@ -485,7 +491,7 @@ public record struct Entity<T1, T2, T3, T4, T5>
 #endregion
 }
 
-public record struct Entity<T1, T2, T3, T4, T5, T6>
+public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent?
 {
     public EntityUid Owner;
@@ -495,6 +501,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6>
     public T4 Comp4;
     public T5 Comp5;
     public T6 Comp6;
+    EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6)
     {
@@ -658,7 +665,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6>
 #endregion
 }
 
-public record struct Entity<T1, T2, T3, T4, T5, T6, T7>
+public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent? where T7 : IComponent?
 {
     public EntityUid Owner;
@@ -669,6 +676,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7>
     public T5 Comp5;
     public T6 Comp6;
     public T7 Comp7;
+    EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7)
     {
@@ -855,7 +863,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7>
 #endregion
 }
 
-public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8>
+public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent? where T7 : IComponent? where T8 : IComponent?
 {
     public EntityUid Owner;
@@ -867,6 +875,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8>
     public T6 Comp6;
     public T7 Comp7;
     public T8 Comp8;
+    EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7, T8 comp8)
     {

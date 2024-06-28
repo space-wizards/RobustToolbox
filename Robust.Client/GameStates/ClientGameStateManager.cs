@@ -54,11 +54,11 @@ namespace Robust.Client.GameStates
         private readonly HashSet<NetEntity> _stateEnts = new();
         private readonly List<EntityUid> _toDelete = new();
         private readonly List<IComponent> _toRemove = new();
-        private readonly Dictionary<NetEntity, Dictionary<ushort, IComponentState>> _outputData = new();
+        private readonly Dictionary<NetEntity, Dictionary<ushort, IComponentState?>> _outputData = new();
         private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
 
-        private readonly ObjectPool<Dictionary<ushort, IComponentState>> _compDataPool =
-            new DefaultObjectPool<Dictionary<ushort, IComponentState>>(new DictPolicy<ushort, IComponentState>(), 256);
+        private readonly ObjectPool<Dictionary<ushort, IComponentState?>> _compDataPool =
+            new DefaultObjectPool<Dictionary<ushort, IComponentState?>>(new DictPolicy<ushort, IComponentState?>(), 256);
 
         private uint _metaCompNetId;
 
@@ -259,7 +259,7 @@ namespace Robust.Client.GameStates
         public void UpdateFullRep(GameState state, bool cloneDelta = false)
             => _processor.UpdateFullRep(state, cloneDelta);
 
-        public Dictionary<NetEntity, Dictionary<ushort, IComponentState>> GetFullRep()
+        public Dictionary<NetEntity, Dictionary<ushort, IComponentState?>> GetFullRep()
             => _processor.GetFullRep();
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
@@ -600,8 +600,12 @@ namespace Robust.Client.GameStates
                         if (_sawmill.Level <= LogLevel.Debug)
                             _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
 
-                        var handleState = new ComponentHandleState(compState, null);
-                        _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
+                        if (compState != null)
+                        {
+                            var handleState = new ComponentHandleState(compState, null);
+                            _entities.EventBus.RaiseComponentEvent(entity, comp, ref handleState);
+                        }
+
                         comp.LastModifiedTick = _timing.LastRealTick;
                     }
                 }
@@ -633,8 +637,12 @@ namespace Robust.Client.GameStates
                         if (_sawmill.Level <= LogLevel.Debug)
                             _sawmill.Debug($"  A component was removed: {comp.GetType()}");
 
-                        var stateEv = new ComponentHandleState(state, null);
-                        _entities.EventBus.RaiseComponentEvent(comp, ref stateEv);
+                        if (state != null)
+                        {
+                            var stateEv = new ComponentHandleState(state, null);
+                            _entities.EventBus.RaiseComponentEvent(entity, comp, ref stateEv);
+                        }
+
                         comp.ClearCreationTick(); // don't undo the re-adding.
                         comp.LastModifiedTick = _timing.LastRealTick;
                     }
@@ -687,7 +695,7 @@ namespace Robust.Client.GameStates
                     DebugTools.Assert(component.NetSyncEnabled);
 
                     var state = _entityManager.GetComponentState(bus, component, null, GameTick.Zero);
-                    DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+                    DebugTools.Assert(state is not IComponentDeltaState);
                     compData.Add(netId, state);
                 }
             }
@@ -1349,8 +1357,11 @@ namespace Robust.Client.GameStates
 
             foreach (var (comp, cur, next) in _compStateWork.Values)
             {
+                if (cur == null && next == null)
+                    continue;
+
                 var handleState = new ComponentHandleState(cur, next);
-                bus.RaiseComponentEvent(comp, ref handleState);
+                bus.RaiseComponentEvent(uid, comp, ref handleState);
             }
         }
 
@@ -1501,8 +1512,11 @@ namespace Robust.Client.GameStates
                     _entityManager.AddComponent(uid, comp, true, meta);
                 }
 
+                if (state == null)
+                    continue;
+
                 var handleState = new ComponentHandleState(state, null);
-                _entityManager.EventBus.RaiseComponentEvent(comp, ref handleState);
+                _entityManager.EventBus.RaiseComponentEvent(uid, comp, ref handleState);
             }
 
             // ensure we don't have any extra components

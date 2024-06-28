@@ -70,7 +70,7 @@ namespace Robust.Shared
         /// <seealso cref="NetMtuExpand"/>
         /// <seealso cref="NetMtuIpv6"/>
         public static readonly CVarDef<int> NetMtu =
-            CVarDef.Create("net.mtu", 900, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu", 700, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum UDP payload size to send by default, for IPv6.
@@ -1374,7 +1374,7 @@ namespace Robust.Shared
         /// the purpose of using an atlas if it gets too small.
         /// </summary>
         public static readonly CVarDef<int> ResRSIAtlasSize =
-            CVarDef.Create("res.rsi_atlas_size", 8192, CVar.CLIENTONLY);
+            CVarDef.Create("res.rsi_atlas_size", 12288, CVar.CLIENTONLY);
 
         // TODO: Currently unimplemented.
         /// <summary>
@@ -1560,6 +1560,12 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ConCompletionMargin =
             CVarDef.Create("con.completion_margin", 3, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Maximum amount of entries stored by the debug console.
+        /// </summary>
+        public static readonly CVarDef<int> ConMaxEntries =
+            CVarDef.Create("con.max_entries", 3_000, CVar.CLIENTONLY);
+
         /*
          * THREAD
          */
@@ -1640,6 +1646,13 @@ namespace Robust.Shared
             "replay.client_recording_enabled",
             true,
             CVar.SERVER | CVar.REPLICATED | CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many milliseconds we will spend moving forward from the nearest checkpoint or current position.
+        /// We will spend this time when scrubbing the timeline per game tick. This limits CPU usage / locking up and
+        /// improves responsiveness
+        /// </summary>
+        public static readonly CVarDef<int> ReplayMaxScrubTime = CVarDef.Create("replay.max_scrub_time", 10);
 
         /// <summary>
         /// Determines the threshold before visual events (muzzle flashes, chat pop-ups, etc) are suppressed when

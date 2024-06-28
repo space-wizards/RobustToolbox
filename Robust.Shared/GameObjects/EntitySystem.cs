@@ -74,6 +74,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [MustCallBase(true)]
         public virtual void Initialize() { }
 
         /// <inheritdoc />
@@ -81,12 +82,15 @@ namespace Robust.Shared.GameObjects
         /// Not ran on the client if prediction is disabled and
         /// <see cref="UpdatesOutsidePrediction"/> is false (the default).
         /// </remarks>
+        [MustCallBase(true)]
         public virtual void Update(float frameTime) { }
 
         /// <inheritdoc />
+        [MustCallBase(true)]
         public virtual void FrameUpdate(float frameTime) { }
 
         /// <inheritdoc />
+        [MustCallBase(true)]
         public virtual void Shutdown()
         {
             ShutdownSubscriptions();

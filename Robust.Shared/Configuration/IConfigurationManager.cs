@@ -11,6 +11,11 @@ namespace Robust.Shared.Configuration
     public readonly struct CVarChangeInfo
     {
         /// <summary>
+        /// The name of the cvar that was changed.
+        /// </summary>
+        public readonly string Name;
+
+        /// <summary>
         /// The tick this CVar changed at.
         /// </summary>
         /// <remarks>
@@ -20,9 +25,22 @@ namespace Robust.Shared.Configuration
         /// </remarks>
         public readonly GameTick TickChanged;
 
-        internal CVarChangeInfo(GameTick tickChanged)
+        /// <summary>
+        /// The new value.
+        /// </summary>
+        public readonly object NewValue;
+
+        /// <summary>
+        /// The previous value.
+        /// </summary>
+        public readonly object OldValue;
+
+        internal CVarChangeInfo(string name, GameTick tickChanged, object newValue, object oldValue)
         {
+            Name = name;
             TickChanged = tickChanged;
+            NewValue = newValue;
+            OldValue = oldValue;
         }
     }
 
@@ -252,5 +270,7 @@ namespace Robust.Shared.Configuration
         /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
         void UnsubValueChanged<T>(string name, CVarChanged<T> onValueChanged)
             where T : notnull;
+
+        public event Action<CVarChangeInfo>? OnCVarValueChanged;
     }
 }

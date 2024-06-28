@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 
@@ -21,7 +21,7 @@ namespace Robust.Server.Maps
             get => _offset;
             set
             {
-                TransformMatrix = Matrix3.CreateTransform(value, Rotation);
+                TransformMatrix = Matrix3Helpers.CreateTransform(value, Rotation);
                 _offset = value;
             }
         }
@@ -37,14 +37,14 @@ namespace Robust.Server.Maps
             get => _rotation;
             set
             {
-                TransformMatrix = Matrix3.CreateTransform(Offset, value);
+                TransformMatrix = Matrix3Helpers.CreateTransform(Offset, value);
                 _rotation = value;
             }
         }
 
         private Angle _rotation = Angle.Zero;
 
-        public Matrix3 TransformMatrix { get; set; } = Matrix3.Identity;
+        public Matrix3x2 TransformMatrix { get; set; } = Matrix3x2.Identity;
 
         /// <summary>
         /// If there is a map entity serialized should we also load it.

@@ -136,7 +136,6 @@ public abstract partial class ToolshedCommand
                 {
                     if (myParams.TryAdd(param.Name!, param.ParameterType))
                         orderedParams.Add(param.ParameterType);
-                    param.GetModifiedParameterType();
                 }
 
                 if (param.GetCustomAttribute<PipedArgumentAttribute>() is not null)

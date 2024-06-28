@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added a `Finished` boolean to `AnimationCompletedEvent` which allows distinguishing if an animation was removed prematurely or completed naturally.
+* Added command usage with types to Toolshed command help.
 
 ### Bugfixes
 

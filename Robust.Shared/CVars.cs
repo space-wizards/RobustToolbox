@@ -70,7 +70,7 @@ namespace Robust.Shared
         /// <seealso cref="NetMtuExpand"/>
         /// <seealso cref="NetMtuIpv6"/>
         public static readonly CVarDef<int> NetMtu =
-            CVarDef.Create("net.mtu", 900, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu", 700, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum UDP payload size to send by default, for IPv6.
@@ -367,6 +367,21 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> NetHappyEyeballsDelay =
             CVarDef.Create("net.happy_eyeballs_delay", 0.025f, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Controls whether the networking library will log warning messages.
+        /// </summary>
+        /// <remarks>
+        /// Disabling this should make the networking layer more resilient against some DDoS attacks.
+        /// </remarks>
+        public static readonly CVarDef<bool> NetLidgrenLogWarning =
+            CVarDef.Create("net.lidgren_log_warning", true);
+
+        /// <summary>
+        /// Controls whether the networking library will log error messages.
+        /// </summary>
+        public static readonly CVarDef<bool> NetLidgrenLogError =
+            CVarDef.Create("net.lidgren_log_error", true);
 
         /**
          * SUS
@@ -884,7 +899,7 @@ namespace Robust.Shared
             CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         public static readonly CVarDef<string> RenderFOVColor =
-            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.REPLICATED | CVar.SERVER);
 
         /*
          *  CONTROLS
@@ -1359,7 +1374,7 @@ namespace Robust.Shared
         /// the purpose of using an atlas if it gets too small.
         /// </summary>
         public static readonly CVarDef<int> ResRSIAtlasSize =
-            CVarDef.Create("res.rsi_atlas_size", 8192, CVar.CLIENTONLY);
+            CVarDef.Create("res.rsi_atlas_size", 12288, CVar.CLIENTONLY);
 
         // TODO: Currently unimplemented.
         /// <summary>
@@ -1545,6 +1560,12 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ConCompletionMargin =
             CVarDef.Create("con.completion_margin", 3, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Maximum amount of entries stored by the debug console.
+        /// </summary>
+        public static readonly CVarDef<int> ConMaxEntries =
+            CVarDef.Create("con.max_entries", 3_000, CVar.CLIENTONLY);
+
         /*
          * THREAD
          */
@@ -1627,20 +1648,32 @@ namespace Robust.Shared
             CVar.SERVER | CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
+        /// How many milliseconds we will spend moving forward from the nearest checkpoint or current position.
+        /// We will spend this time when scrubbing the timeline per game tick. This limits CPU usage / locking up and
+        /// improves responsiveness
+        /// </summary>
+        public static readonly CVarDef<int> ReplayMaxScrubTime = CVarDef.Create("replay.max_scrub_time", 10);
+
+        /// <summary>
         /// Determines the threshold before visual events (muzzle flashes, chat pop-ups, etc) are suppressed when
         /// jumping forward in time. Jumps larger than this will simply skip directly to the target tick.
         /// </summary>
         public static readonly CVarDef<int> ReplaySkipThreshold = CVarDef.Create("replay.skip_threshold", 30);
 
         /// <summary>
+        /// Minimum number of ticks before a new checkpoint tick is generated (overrides SpawnThreshold and StateThreshold)
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointMinInterval = CVarDef.Create("replay.checkpoint_min_interval", 60);
+
+        /// <summary>
         /// Maximum number of ticks before a new checkpoint tick is generated.
         /// </summary>
-        public static readonly CVarDef<int> CheckpointInterval = CVarDef.Create("replay.checkpoint_interval", 200);
+        public static readonly CVarDef<int> CheckpointInterval = CVarDef.Create("replay.checkpoint_interval", 500);
 
         /// <summary>
         /// Maximum number of entities that can be spawned before a new checkpoint tick is generated.
         /// </summary>
-        public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 100);
+        public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 1000);
 
         /// <summary>
         /// Maximum number of entity states that can be applied before a new checkpoint tick is generated.

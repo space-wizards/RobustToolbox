@@ -17,7 +17,7 @@ internal sealed partial class ReplayPlaybackManager
     /// </summary>
     /// <param name="index">The target tick/index. The actual checkpoint will have an index less than or equal to this.</param>
     /// <param name="flushEntities">Whether to delete all entities</param>
-    public void ResetToNearestCheckpoint(int index, bool flushEntities)
+    public void ResetToNearestCheckpoint(int index, bool flushEntities, CheckpointState? checkpoint = null)
     {
         if (Replay == null)
             throw new Exception("Not currently playing a replay");
@@ -25,7 +25,8 @@ internal sealed partial class ReplayPlaybackManager
         if (flushEntities)
             _entMan.FlushEntities();
 
-        var checkpoint = GetLastCheckpoint(Replay, index);
+        // Look up the desired checkpoint, unless our caller kindly provided one to us.
+        checkpoint ??= GetLastCheckpoint(Replay, index);
 
         _sawmill.Info($"Resetting to checkpoint. From {Replay.CurrentIndex} to {checkpoint.Index}");
         var st = new Stopwatch();
@@ -79,13 +80,14 @@ internal sealed partial class ReplayPlaybackManager
         if (checkpoint.DetachedStates == null)
             return;
 
-        DebugTools.Assert(checkpoint.Detached.Count == checkpoint.DetachedStates.Length); ;
-        var metas = _entMan.GetEntityQuery<MetaDataComponent>();
+        DebugTools.Assert(checkpoint.Detached.Count == checkpoint.DetachedStates.Length);
         foreach (var es in checkpoint.DetachedStates)
         {
-            var uid = _entMan.GetEntity(es.NetEntity);
-            if (metas.TryGetComponent(uid, out var meta) && !meta.EntityDeleted)
+            if (_entMan.TryGetEntityData(es.NetEntity, out var uid, out var meta))
+            {
+                DebugTools.Assert(!meta.EntityDeleted);
                 continue;
+            }
 
             var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?
                 .FirstOrDefault(c => c.NetID == _metaId).State;
@@ -93,18 +95,16 @@ internal sealed partial class ReplayPlaybackManager
             if (metaState == null)
                 throw new MissingMetadataException(es.NetEntity);
 
-            _entMan.CreateEntityUninitialized(metaState.PrototypeId, uid);
-            meta = metas.GetComponent(uid);
+            uid = _entMan.CreateEntity(metaState.PrototypeId, out meta);
 
             // Client creates a client-side net entity for the newly created entity.
             // We need to clear this mapping before assigning the real net id.
             // TODO NetEntity Jank: prevent the client from creating this in the first place.
             _entMan.ClearNetEntity(meta.NetEntity);
+            _entMan.SetNetEntity(uid.Value, es.NetEntity, meta);
 
-            _entMan.SetNetEntity(uid, es.NetEntity, meta);
-
-            _entMan.InitializeEntity(uid, meta);
-            _entMan.StartEntity(uid);
+            _entMan.InitializeEntity(uid.Value, meta);
+            _entMan.StartEntity(uid.Value);
             meta.LastStateApplied = checkpoint.Tick;
         }
     }

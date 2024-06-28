@@ -65,6 +65,10 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public StyleBox? PanelStyleBoxOverride { get; set; }
+        public Color? TabFontColorOverride { get; set; }
+        public Color? TabFontColorInactiveOverride { get; set; }
+
         public event Action<int>? OnTabChanged;
 
         public TabContainer()
@@ -361,6 +365,9 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private Color _getTabFontColorActive()
         {
+            if (TabFontColorOverride != null)
+                return TabFontColorOverride.Value;
+
             if (TryGetStyleProperty(stylePropertyTabFontColor, out Color color))
             {
                 return color;
@@ -371,6 +378,9 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private Color _getTabFontColorInactive()
         {
+            if (TabFontColorInactiveOverride != null)
+                return TabFontColorInactiveOverride.Value;
+
             if (TryGetStyleProperty(StylePropertyTabFontColorInactive, out Color color))
             {
                 return color;
@@ -381,6 +391,9 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private StyleBox? _getPanel()
         {
+            if (PanelStyleBoxOverride != null)
+                return PanelStyleBoxOverride;
+
             TryGetStyleProperty<StyleBox>(StylePropertyPanelStyleBox, out var box);
             return box;
         }

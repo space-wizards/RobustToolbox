@@ -86,7 +86,7 @@ namespace Robust.Server.GameObjects
             StartEntity(entity);
         }
 
-        private protected override EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
+        internal override EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
                 return base.CreateEntity(prototypeName, out metadata, context);
@@ -229,21 +229,6 @@ namespace Robust.Server.GameObjects
 
         private void HandleEntityNetworkMessage(MsgEntity message)
         {
-            var msgT = message.SourceTick;
-            var cT = _gameTiming.CurTick;
-
-            if (msgT <= cT)
-            {
-                if (msgT < cT && _logLateMsgs)
-                {
-                    _netEntSawmill.Warning("Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}",
-                        (int) msgT.Value - (int) cT.Value, message.MsgChannel.UserName, msgT, cT);
-                }
-
-                DispatchEntityNetworkMessage(message);
-                return;
-            }
-
             _queue.Add(message);
         }
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Robust.Shared.Random;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -63,13 +64,24 @@ public interface IPrototypeManager
     /// <summary>
     /// Returns an <see cref="IEnumerable{T}"/> of all parents of a prototype of a certain kind.
     /// </summary>
-    IEnumerable<T> EnumerateParents<T>(string kind, bool includeSelf = false)
+    /// <remarks>
+    /// Note that this will skip abstract parents, even if the abstract parent may have concrete grand-parents.
+    /// </remarks>
+    IEnumerable<T> EnumerateParents<T>(T proto, bool includeSelf = false)
         where T : class, IPrototype, IInheritingPrototype;
 
-    /// <summary>
-    /// Returns an <see cref="IEnumerable{T}"/> of parents of a prototype of a certain kind.
-    /// </summary>
+    /// <inheritdoc cref="EnumerateParents{T}(T,bool)"/>
+    IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)
+        where T : class, IPrototype, IInheritingPrototype;
+
+    /// <inheritdoc cref="EnumerateParents{T}(T,bool)"/>
     IEnumerable<IPrototype> EnumerateParents(Type kind, string id, bool includeSelf = false);
+
+    /// <summary>
+    /// Variant of <see cref="EnumerateParents{T}(T,bool)"/> that includes abstract parents.
+    /// </summary>
+    IEnumerable<(string id, T?)> EnumerateAllParents<T>(string id, bool includeSelf = false)
+        where T : class, IPrototype, IInheritingPrototype;
 
     /// <summary>
     /// Returns all of the registered prototype kinds.
@@ -131,17 +143,20 @@ public interface IPrototypeManager
     /// </summary>
     FrozenDictionary<string, T> GetInstances<T>() where T : IPrototype;
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
+    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
+    bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+    /// <summary>
+    /// Attempt to retrieve the prototype corresponding to the given prototype id.
+    /// Unless otherwise specified, this will log an error if the id does not match any known prototype.
+    /// </summary>
+    bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype,  bool logError = true) where T : class, IPrototype;
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
+    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
+    bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
+    bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype;
 
     bool HasMapping<T>(string id);
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
@@ -272,7 +287,8 @@ public interface IPrototypeManager
         out Dictionary<Type, HashSet<string>> prototypes);
 
     /// <summary>
-    /// This method uses reflection to validate that prototype id fields correspond to valid prototypes.
+    /// This method uses reflection to validate that all static prototype id fields correspond to valid prototypes.
+    /// This will validate all known to <see cref="IReflectionManager"/>
     /// </summary>
     /// <remarks>
     /// This will validate any field that has either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
@@ -280,7 +296,12 @@ public interface IPrototypeManager
     /// </remarks>
     /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection
     /// will be considered invalid.</param>
-    List<string> ValidateFields(Dictionary<Type, HashSet<string>> prototypes);
+    List<string> ValidateStaticFields(Dictionary<Type, HashSet<string>> prototypes);
+
+    /// <summary>
+    /// This is a variant of <see cref="ValidateStaticFields(System.Collections.Generic.Dictionary{System.Type,System.Collections.Generic.HashSet{string}})"/> that only validates a single type.
+    /// </summary>
+    List<string> ValidateStaticFields(Type type, Dictionary<Type, HashSet<string>> prototypes);
 
     /// <summary>
     /// This method will serialize all loaded prototypes into yaml and then validate them. This can be used to ensure
@@ -392,6 +413,11 @@ public interface IPrototypeManager
     /// Tries to get a random prototype.
     /// </summary>
     bool TryGetRandom<T>(IRobustRandom random, [NotNullWhen(true)] out IPrototype? prototype) where T : class, IPrototype;
+
+    /// <summary>
+    /// Entity prototypes grouped by their categories.
+    /// </summary>
+    FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; }
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

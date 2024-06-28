@@ -63,7 +63,7 @@ namespace Robust.Client.GameObjects
 
             protected internal override void Draw(in OverlayDrawArgs args)
             {
-                var map = _eyeManager.CurrentMap;
+                var map = args.MapId;
                 if (map == MapId.Nullspace) return;
 
                 foreach (var (_, treeComp) in _trees.GetIntersectingTrees(map, args.WorldBounds))

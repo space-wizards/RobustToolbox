@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -51,9 +53,14 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     public (GameTick ToTick, List<PvsIndex> PreviouslySent)? LastSent;
 
     /// <summary>
-    /// Visible chunks, sorted by proximity to the clients's viewers;
+    /// Visible chunks, sorted by proximity to the client's viewers.
     /// </summary>
     public readonly List<(PvsChunk Chunk, float ChebyshevDistance)> Chunks = new();
+
+    /// <summary>
+    /// Unsorted set of visible chunks. Used to construct the <see cref="Chunks"/> list.
+    /// </summary>
+    public readonly HashSet<PvsChunk> ChunkSet = new();
 
     /// <summary>
     /// Squared distance ta all of the visible chunks.
@@ -111,12 +118,23 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     public GameState? State;
 
     /// <summary>
+    /// The serialized <see cref="State"/> object.
+    /// </summary>
+    public MemoryStream? StateStream;
+
+    /// <summary>
+    /// Whether we should force reliable sending of the <see cref="MsgState"/>.
+    /// </summary>
+    public bool ForceSendReliably { get; set; }
+
+    /// <summary>
     /// Clears all stored game state data. This should only be used after the game state has been serialized.
     /// </summary>
     public void ClearState()
     {
         PlayerStates.Clear();
         Chunks.Clear();
+        ChunkSet.Clear();
         States.Clear();
         State = null;
     }

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -36,6 +34,7 @@ public class Generator : IIncrementalGenerator
                 var (compilation, declarations) = source;
                 var builder = new StringBuilder();
                 var containingTypes = new Stack<INamedTypeSymbol>();
+                var declarationsGenerated = new HashSet<string>();
 
                 foreach (var declaration in declarations)
                 {
@@ -43,6 +42,14 @@ public class Generator : IIncrementalGenerator
                     containingTypes.Clear();
 
                     var type = compilation.GetSemanticModel(declaration.SyntaxTree).GetDeclaredSymbol(declaration)!;
+
+                    var symbolName = type
+                        .ToDisplayString()
+                        .Replace('<', '{')
+                        .Replace('>', '}');
+
+                    if (!declarationsGenerated.Add(symbolName))
+                        continue;
 
                     var nonPartial = !IsPartial(declaration);
 
@@ -106,11 +113,6 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 {{containingTypesEnd}}
 """);
-
-                    var symbolName = type
-                        .ToDisplayString()
-                        .Replace('<', '{')
-                        .Replace('>', '}');
 
                     var sourceText = CSharpSyntaxTree
                         .ParseText(builder.ToString())

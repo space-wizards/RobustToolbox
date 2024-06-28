@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
@@ -118,7 +119,7 @@ public sealed class EntityLookupOverlay : Overlay
                 //DebugTools.Assert(!ent.IsInContainer(_entityManager));
                 var (entPos, entRot) = _transform.GetWorldPositionRotation(ent);
 
-                var lookupPos = invMatrix.Transform(entPos);
+                var lookupPos = Vector2.Transform(entPos, invMatrix);
                 var lookupRot = entRot - rotation;
 
                 var aabb = _lookup.GetAABB(ent, lookupPos, lookupRot, xform, _xformQuery);
@@ -127,6 +128,6 @@ public sealed class EntityLookupOverlay : Overlay
             }
         });
 
-        worldHandle.SetTransform(Matrix3.Identity);
+        worldHandle.SetTransform(Matrix3x2.Identity);
     }
 }

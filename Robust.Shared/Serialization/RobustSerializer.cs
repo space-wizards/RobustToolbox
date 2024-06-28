@@ -90,6 +90,7 @@ namespace Robust.Shared.Serialization
                 {
                     MappedStringSerializer.TypeSerializer,
                     new Vector2Serializer(),
+                    new Matrix3x2Serializer(),
                 }
             };
             _serializer = new Serializer(types, settings);

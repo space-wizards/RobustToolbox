@@ -11,6 +11,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Prototypes
@@ -25,9 +26,6 @@ namespace Robust.Shared.Prototypes
         private ILocalizationManager _loc = default!;
 
         private static readonly Dictionary<string, string> LocPropertiesDefault = new();
-
-        [ValidatePrototypeId<EntityCategoryPrototype>]
-        private const string HideCategory = "hideSpawnMenu";
 
         // LOCALIZATION NOTE:
         // Localization-related properties in here are manually localized in LocalizationManager.
@@ -59,9 +57,16 @@ namespace Robust.Shared.Prototypes
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
 
-        [DataField("categories")]
-        [AlwaysPushInheritance]
-        public HashSet<string> Categories = new();
+        [DataField("categories"), Access(typeof(PrototypeManager))]
+        [NeverPushInheritance]
+        internal HashSet<ProtoId<EntityCategoryPrototype>>? CategoriesInternal;
+
+        /// <summary>
+        /// What categories this prototype belongs to. This includes categories inherited from parents and categories
+        /// that were automatically inferred from the prototype's components.
+        /// </summary>
+        [ViewVariables]
+        public IReadOnlySet<EntityCategoryPrototype> Categories { get; internal set; } = new HashSet<EntityCategoryPrototype>();
 
         [ViewVariables]
         public IReadOnlyDictionary<string, string> LocProperties => _locPropertiesSet ?? LocPropertiesDefault;
@@ -98,10 +103,11 @@ namespace Robust.Shared.Prototypes
         [ViewVariables]
         [NeverPushInheritance]
         [DataField("noSpawn")]
-        [Obsolete("Use the HideSpawnMenu")]
+        [Obsolete("Use HideSpawnMenu")]
         public bool NoSpawn { get; private set; }
 
-        public bool HideSpawnMenu => Categories.Contains(HideCategory) || NoSpawn;
+        [Access(typeof(PrototypeManager))]
+        public bool HideSpawnMenu { get; internal set; }
 
         [DataField("placement")]
         private EntityPlacementProperties PlacementProperties = new();
@@ -168,28 +174,37 @@ namespace Robust.Shared.Prototypes
             _loc = IoCManager.Resolve<ILocalizationManager>();
         }
 
-        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component, IComponentFactory? factory = null) where T : IComponent
+        [Obsolete("Pass in IComponentFactory")]
+        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component)
+            where T : IComponent
         {
-            if (factory == null)
-            {
-                factory = IoCManager.Resolve<IComponentFactory>();
-            }
+            var compName = IoCManager.Resolve<IComponentFactory>().GetComponentName(typeof(T));
+            return TryGetComponent(compName, out component);
+        }
 
-            var compName = factory.GetComponentName(typeof(T));
+        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component, IComponentFactory factory) where T : IComponent, new()
+        {
+            var compName = factory.GetComponentName<T>();
             return TryGetComponent(compName, out component);
         }
 
         public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent
         {
+            DebugTools.AssertEqual(IoCManager.Resolve<IComponentFactory>().GetComponentName(typeof(T)), name);
+
             if (!Components.TryGetValue(name, out var componentUnCast))
             {
                 component = default;
                 return false;
             }
 
-            // There are no duplicate component names
-            // TODO Sanity check with names being in an attribute of the type instead
-            component = (T) componentUnCast.Component;
+            if (componentUnCast.Component is not T cast)
+            {
+                component = default;
+                return false;
+            }
+
+            component = cast;
             return true;
         }
 

@@ -44,19 +44,19 @@ namespace Robust.Client.Graphics
         {
             CheckDisposed();
 
-            var matrix = Matrix3.CreateTransform(in position, in rotation, in scale);
+            var matrix = Matrix3Helpers.CreateTransform(in position, in rotation, in scale);
             SetTransform(in matrix);
         }
 
         public void SetTransform(in Vector2 position, in Angle rotation)
         {
-            var matrix = Matrix3.CreateTransform(in position, in rotation);
+            var matrix = Matrix3Helpers.CreateTransform(in position, in rotation);
             SetTransform(in matrix);
         }
 
-        public abstract void SetTransform(in Matrix3 matrix);
+        public abstract void SetTransform(in Matrix3x2 matrix);
 
-        public abstract Matrix3 GetTransform();
+        public abstract Matrix3x2 GetTransform();
 
         public abstract void UseShader(ShaderInstance? shader);
 
@@ -114,43 +114,12 @@ namespace Robust.Client.Graphics
             DrawPrimitives(primitiveTopology, White, indices, drawVertices);
         }
 
-        private static void PadVerticesV2(ReadOnlySpan<Vector2> input, Span<DrawVertexUV2DColor> output, Color color)
+        private void PadVerticesV2(ReadOnlySpan<Vector2> input, Span<DrawVertexUV2DColor> output, Color color)
         {
-            if (input.Length == 0)
-                return;
-
-            if (input.Length != output.Length)
+            Color colorLinear = Color.FromSrgb(color);
+            for (var i = 0; i < output.Length; i++)
             {
-                throw new InvalidOperationException("Invalid lengths!");
-            }
-
-            var colorLinear = Color.FromSrgb(color);
-            var colorVec = Unsafe.As<Color, Vector128<float>>(ref colorLinear);
-            var uvVec = Vector128.Create(0, 0, 0.5f, 0.5f);
-            var maskVec = Vector128.Create(0xFFFFFFFF, 0xFFFFFFFF, 0, 0).AsSingle();
-
-            var simdVectors = (nuint)(input.Length / 2);
-            ref readonly var srcBase = ref Unsafe.As<Vector2, float>(ref Unsafe.AsRef(in input[0]));
-            ref var dstBase = ref Unsafe.As<DrawVertexUV2DColor, float>(ref output[0]);
-
-            for (nuint i = 0; i < simdVectors; i++)
-            {
-                var positions = Vector128.LoadUnsafe(in srcBase, i * 4);
-
-                var posColorLower = (positions & maskVec) | uvVec;
-                var posColorUpper = (Vector128.Shuffle(positions, Vector128.Create(2, 3, 0, 0)) & maskVec) | uvVec;
-
-                posColorLower.StoreUnsafe(ref dstBase, i * 16);
-                colorVec.StoreUnsafe(ref dstBase, i * 16 + 4);
-                posColorUpper.StoreUnsafe(ref dstBase, i * 16 + 8);
-                colorVec.StoreUnsafe(ref dstBase, i * 16 + 12);
-            }
-
-            var lastPos = (int)simdVectors * 2;
-            if (lastPos != output.Length)
-            {
-                // Odd number of vertices. Handle the last manually.
-                output[lastPos] = new DrawVertexUV2DColor(input[lastPos], new Vector2(0.5f, 0.5f), colorLinear);
+                output[i] = new DrawVertexUV2DColor(input[i], new Vector2(0.5f, 0.5f), colorLinear);
             }
         }
 
@@ -268,6 +237,8 @@ namespace Robust.Client.Graphics
     {
         public Vector2 Position;
         public Vector2 UV;
+        public Vector2 UV2;
+
         /// <summary>
         ///     Modulation colour for this vertex.
         ///     Note that this color is in linear space.

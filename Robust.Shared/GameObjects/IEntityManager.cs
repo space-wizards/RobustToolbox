@@ -71,12 +71,43 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public event Action? AfterEntityFlush;
 
+        /// <summary>
+        /// Creates an uninitialized entity.
+        /// </summary>
+        /// <param name="prototypeName"><inheritdoc cref="CreateEntityUninitialized(string?, MapCoordinates , ComponentRegistry?, Angle)"/></param>
+        /// <param name="euid">Does nothing. Used to be the forced EntityUid of the new entity.</param>
+        /// <param name="overrides"><inheritdoc cref="CreateEntityUninitialized(string?, MapCoordinates , ComponentRegistry?, Angle)"/></param>
+        /// <returns><inheritdoc cref="CreateEntityUninitialized(string?, MapCoordinates , ComponentRegistry?, Angle)"/></returns>
+        [Obsolete($"Use one of the other {nameof(CreateEntityUninitialized)} overloads. euid no longer does anything.")]
         EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null);
 
+        /// <summary>
+        /// Creates an uninitialized entity.
+        /// </summary>
+        /// <param name="prototypeName"><inheritdoc cref="CreateEntityUninitialized(string?, MapCoordinates , ComponentRegistry?, Angle)"/></param>
+        /// <param name="overrides"><inheritdoc cref="CreateEntityUninitialized(string?, MapCoordinates , ComponentRegistry?, Angle)"/></param>
+        /// <returns><inheritdoc cref="CreateEntityUninitialized(string?, MapCoordinates , ComponentRegistry?, Angle)"/></returns>
         EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
+        /// <summary>
+        /// Creates an uninitialized entity and sets its position to the EntityCoordinates provided.
+        /// </summary>
+        /// <param name="prototypeName"><inheritdoc cref="CreateEntityUninitialized(string?, MapCoordinates , ComponentRegistry?, Angle)"/></param>
+        /// <param name="coordinates">Coordinates to set position and parent of the newly spawned entity to.</param>
+        /// <param name="overrides"><inheritdoc cref="CreateEntityUninitialized(string?, MapCoordinates , ComponentRegistry?, Angle)"/></param>
+        /// <returns><inheritdoc cref="CreateEntityUninitialized(string?, MapCoordinates , ComponentRegistry?, Angle)"/></returns>
+        EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default);
 
+        /// <summary>
+        /// Creates an uninitialized entity and puts it on the grid or map at the MapCoordinates provided.
+        /// </summary>
+        /// <param name="prototypeName">Name of the <see cref="EntityPrototype"/> to spawn.</param>
+        /// <param name="coordinates">Coordinates to place the newly spawned entity.</param>
+        /// <param name="overrides">Overrides to add or remove components that differ from the prototype.</param>
+        /// <param name="rotation">Map rotation to set the newly spawned entity to.</param>
+        /// <returns>A new uninitialized entity.</returns>
+        /// <remarks>If there is a grid at the <paramref name="coordinates"/>, the entity will be parented to the grid.
+        /// Otherwise, it will be parented to the map.</remarks>
         EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!);
 
         void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null);

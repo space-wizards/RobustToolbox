@@ -12,6 +12,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
+using IgnoreUIRangeComponent = Robust.Shared.GameObjects.IgnoreUIRangeComponent;
 
 namespace Robust.UnitTesting.Server.Maps
 {
@@ -68,7 +69,7 @@ entities:
             resourceManager.MountString("/EnginePrototypes/TestMapEntity.yml", Prototype);
 
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
-            protoMan.RegisterKind(typeof(EntityPrototype));
+            protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
 
             protoMan.LoadDirectory(new ("/EnginePrototypes"));
             protoMan.LoadDirectory(new ("/Prototypes"));

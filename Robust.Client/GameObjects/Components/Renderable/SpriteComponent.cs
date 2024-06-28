@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using Robust.Client.Graphics;
+using Robust.Client.Graphics.Clyde;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.Animations;
@@ -28,6 +29,7 @@ using static Robust.Client.ComponentTrees.SpriteTreeSystem;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 using Direction = Robust.Shared.Maths.Direction;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.GameObjects
 {
@@ -148,7 +150,7 @@ namespace Robust.Client.GameObjects
         [DataField("color")]
         private Color color = Color.White;
 
-        public Matrix3 LocalMatrix = Matrix3.Identity;
+        public Matrix3x2 LocalMatrix = Matrix3x2.Identity;
 
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -387,10 +389,10 @@ namespace Robust.Client.GameObjects
 
         internal void UpdateLocalMatrix()
         {
-            LocalMatrix = Matrix3.CreateTransform(in offset, in rotation, in scale);
+            LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
         }
 
-        public Matrix3 GetLocalMatrix()
+        public Matrix3x2 GetLocalMatrix()
         {
             return LocalMatrix;
         }
@@ -770,15 +772,7 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var keyString in layerDatum.MapKeys)
                 {
-                    object key;
-                    if (reflection.TryParseEnumReference(keyString, out var @enum))
-                    {
-                        key = @enum;
-                    }
-                    else
-                    {
-                        key = keyString;
-                    }
+                    var key = ParseKey(keyString);
 
                     if (LayerMap.TryGetValue(key, out var mappedIndex))
                     {
@@ -804,7 +798,28 @@ namespace Robust.Client.GameObjects
             // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
             layer.Visible = layerDatum.Visible ?? layer.Visible;
 
+            if (layerDatum.CopyToShaderParameters is { } copyParameters)
+            {
+                layer.CopyToShaderParameters = new CopyToShaderParameters(ParseKey(copyParameters.LayerKey))
+                {
+                    ParameterTexture = copyParameters.ParameterTexture,
+                    ParameterUV = copyParameters.ParameterUV
+                };
+            }
+            else
+            {
+                layer.CopyToShaderParameters = null;
+            }
+
             RebuildBounds();
+        }
+
+        private object ParseKey(string keyString)
+        {
+            if (reflection.TryParseEnumReference(keyString, out var @enum))
+                return @enum;
+
+            return keyString;
         }
 
         public void LayerSetData(object layerKey, PrototypeLayerData data)
@@ -1289,22 +1304,21 @@ namespace Robust.Client.GameObjects
 
             // worldRotation + eyeRotation should be the angle of the entity on-screen. If no-rot is enabled this is just set to zero.
             // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
-            var entityMatrix = Matrix3.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation - cardinal);
+            var entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation - cardinal);
 
-            Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformSprite);
+            var transformSprite = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
 
             if (GranularLayersRendering)
             {
                 //Default rendering
-                entityMatrix = Matrix3.CreateTransform(worldPosition, worldRotation);
-                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformDefault);
+                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation);
+                var transformDefault = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
                 //Snap to cardinals
-                entityMatrix = Matrix3.CreateTransform(worldPosition, worldRotation - angle.GetCardinalDir().ToAngle());
-                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformSnap);
+                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation - angle.GetCardinalDir().ToAngle());
+                var transformSnap = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
                 //No rotation
-                entityMatrix = Matrix3.CreateTransform(worldPosition, -eyeRotation);
-                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformNoRot);
-
+                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, -eyeRotation);
+                var transformNoRot = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
 
                 foreach (var layer in Layers) {
                     switch (layer.RenderingStrategy)
@@ -1365,7 +1379,7 @@ namespace Robust.Client.GameObjects
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             var ev = new QueueSpriteTreeUpdateEvent(entities.GetComponent<TransformComponent>(Owner));
-            entities.EventBus.RaiseComponentEvent(this, ref ev);
+            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
         }
 
         private void QueueUpdateIsInert()
@@ -1375,7 +1389,7 @@ namespace Robust.Client.GameObjects
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             var ev = new SpriteUpdateInertEvent();
-            entities.EventBus.RaiseComponentEvent(this, ref ev);
+            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
         }
 
         [Obsolete("Use SpriteSystem instead.")]
@@ -1531,7 +1545,7 @@ namespace Robust.Client.GameObjects
             private RSI.State? _actualState;
             [ViewVariables] public RSI.State? ActualState => _actualState;
 
-            public Matrix3 LocalMatrix = Matrix3.Identity;
+            public Matrix3x2 LocalMatrix = Matrix3x2.Identity;
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Vector2 Scale
@@ -1635,6 +1649,9 @@ namespace Robust.Client.GameObjects
             [ViewVariables]
             public LayerRenderingStrategy RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy;
 
+            [ViewVariables(VVAccess.ReadWrite)]
+            public CopyToShaderParameters? CopyToShaderParameters;
+
             public Layer(SpriteComponent parent)
             {
                 _parent = parent;
@@ -1663,6 +1680,8 @@ namespace Robust.Client.GameObjects
                 DirOffset = toClone.DirOffset;
                 _autoAnimated = toClone._autoAnimated;
                 RenderingStrategy = toClone.RenderingStrategy;
+                if (toClone.CopyToShaderParameters is { } copyToShaderParameters)
+                    CopyToShaderParameters = new CopyToShaderParameters(copyToShaderParameters);
             }
 
             void ISerializationHooks.AfterDeserialization()
@@ -1672,7 +1691,7 @@ namespace Robust.Client.GameObjects
 
             internal void UpdateLocalMatrix()
             {
-                LocalMatrix = Matrix3.CreateTransform(in _offset, in _rotation, in _scale);
+                LocalMatrix = Matrix3Helpers.CreateTransform(in _offset, in _rotation, in _scale);
             }
 
             RSI? ISpriteLayer.Rsi { get => RSI; set => SetRsi(value); }
@@ -1944,27 +1963,27 @@ namespace Robust.Client.GameObjects
             ///     Given the apparent rotation of an entity on screen (world + eye rotation), get layer's matrix for drawing &
             ///     relevant RSI direction.
             /// </summary>
-            public void GetLayerDrawMatrix(RsiDirection dir, out Matrix3 layerDrawMatrix)
+            public void GetLayerDrawMatrix(RsiDirection dir, out Matrix3x2 layerDrawMatrix)
             {
                 if (_parent.NoRotation || dir == RsiDirection.South)
                     layerDrawMatrix = LocalMatrix;
                 else
                 {
-                    Matrix3.Multiply(in _rsiDirectionMatrices[(int)dir], in LocalMatrix, out layerDrawMatrix);
+                    layerDrawMatrix = Matrix3x2.Multiply(_rsiDirectionMatrices[(int)dir], LocalMatrix);
                 }
             }
 
-            private static Matrix3[] _rsiDirectionMatrices = new Matrix3[]
+            private static Matrix3x2[] _rsiDirectionMatrices = new Matrix3x2[]
             {
                 // array order chosen such that this array can be indexed by casing an RSI direction to an int
-                Matrix3.Identity, // should probably just avoid matrix multiplication altogether if the direction is south.
-                Matrix3.CreateRotation(-Direction.North.ToAngle()),
-                Matrix3.CreateRotation(-Direction.East.ToAngle()),
-                Matrix3.CreateRotation(-Direction.West.ToAngle()),
-                Matrix3.CreateRotation(-Direction.SouthEast.ToAngle()),
-                Matrix3.CreateRotation(-Direction.SouthWest.ToAngle()),
-                Matrix3.CreateRotation(-Direction.NorthEast.ToAngle()),
-                Matrix3.CreateRotation(-Direction.NorthWest.ToAngle())
+                Matrix3x2.Identity, // should probably just avoid matrix multiplication altogether if the direction is south.
+                Matrix3Helpers.CreateRotation(-Direction.North.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.East.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.West.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.SouthEast.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.SouthWest.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.NorthEast.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.NorthWest.ToAngle())
             };
 
             /// <summary>
@@ -1998,7 +2017,7 @@ namespace Robust.Client.GameObjects
             /// <summary>
             ///     Render a layer. This assumes that the input angle is between 0 and 2pi.
             /// </summary>
-            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3 spriteMatrix, Angle angle, Direction? overrideDirection)
+            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection)
             {
                 if (!Visible || Blank)
                     return;
@@ -2007,8 +2026,6 @@ namespace Robust.Client.GameObjects
 
                 // Set the drawing transform for this layer
                 GetLayerDrawMatrix(dir, out var layerMatrix);
-                Matrix3.Multiply(in layerMatrix, in spriteMatrix, out var transformMatrix);
-                drawingHandle.SetTransform(in transformMatrix);
 
                 // The direction used to draw the sprite can differ from the one that the angle would naively suggest,
                 // due to direction overrides or offsets.
@@ -2018,7 +2035,41 @@ namespace Robust.Client.GameObjects
 
                 // Get the correct directional texture from the state, and draw it!
                 var texture = GetRenderTexture(_actualState, dir);
-                RenderTexture(drawingHandle, texture);
+
+                if (CopyToShaderParameters == null)
+                {
+                    // Set the drawing transform for this layer
+                    var transformMatrix = Matrix3x2.Multiply(layerMatrix, spriteMatrix);
+                    drawingHandle.SetTransform(in transformMatrix);
+
+                    RenderTexture(drawingHandle, texture);
+                }
+                else
+                {
+                    // Multiple atrocities to god being committed right here.
+                    var otherLayerIdx = _parent.LayerMap[CopyToShaderParameters.LayerKey!];
+                    var otherLayer = _parent.Layers[otherLayerIdx];
+                    if (otherLayer.Shader is not { } shader)
+                    {
+                        // No shader set apparently..?
+                        return;
+                    }
+
+                    if (!shader.Mutable)
+                        otherLayer.Shader = shader = shader.Duplicate();
+
+                    var clydeTexture = Clyde.RenderHandle.ExtractTexture(texture, null, out var csr);
+                    var sr = Clyde.RenderHandle.WorldTextureBoundsToUV(clydeTexture, csr);
+
+                    if (CopyToShaderParameters.ParameterTexture is { } paramTexture)
+                        shader.SetParameter(paramTexture, clydeTexture);
+
+                    if (CopyToShaderParameters.ParameterUV is { } paramUV)
+                    {
+                        var uv = new Vector4(sr.Left, sr.Bottom, sr.Right, sr.Top);
+                        shader.SetParameter(paramUV, uv);
+                    }
+                }
             }
 
             private void RenderTexture(DrawingHandleWorld drawingHandle, Texture texture)
@@ -2093,6 +2144,23 @@ namespace Robust.Client.GameObjects
 
                     AnimationTimeLeft += state.GetDelay(AnimationFrame);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Instantiated version of <see cref="PrototypeCopyToShaderParameters"/>.
+        /// Has <see cref="LayerKey"/> actually resolved to a a real key.
+        /// </summary>
+        public sealed class CopyToShaderParameters(object layerKey)
+        {
+            public object LayerKey = layerKey;
+            public string? ParameterTexture;
+            public string? ParameterUV;
+
+            public CopyToShaderParameters(CopyToShaderParameters toClone) : this(toClone.LayerKey)
+            {
+                ParameterTexture = toClone.ParameterTexture;
+                ParameterUV = toClone.ParameterUV;
             }
         }
 

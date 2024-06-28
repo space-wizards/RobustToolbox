@@ -1,6 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameStates
 {
@@ -12,6 +14,7 @@ namespace Robust.Shared.GameStates
 
         public ComponentHandleState(IComponentState? current, IComponentState? next)
         {
+            DebugTools.Assert(current != null || next != null);
             Current = current;
             Next = next;
         }
@@ -34,6 +37,7 @@ namespace Robust.Shared.GameStates
         ///     If true, this state is intended for replays or some other server spectator entity, not for specific
         ///     clients.
         /// </summary>
+        [MemberNotNullWhen(false, nameof(Player))]
         public bool ReplayState => Player == null;
 
         /// <summary>

@@ -1,6 +1,7 @@
 using System;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Replays.Playback;
@@ -27,13 +28,18 @@ internal sealed partial class ReplayPlaybackManager
             return;
         }
 
-
         Playing &= !pausePlayback;
         value = Math.Clamp(value, 0, Replay.States.Count - 1);
         if (value == Replay.CurrentIndex)
+        {
+            ScrubbingTarget = null;
             return;
+        }
 
         BeforeSetTick?.Invoke();
+
+        // Begin timing replay processing so we can abort when we run out of time (_replayMaxScrubTime)
+        var st = RStopwatch.StartNew();
 
         bool skipEffectEvents = value > Replay.CurrentIndex + _visualEventThreshold;
         if (value < Replay.CurrentIndex)
@@ -41,13 +47,16 @@ internal sealed partial class ReplayPlaybackManager
             skipEffectEvents = true;
             ResetToNearestCheckpoint(value, false);
         }
-        else if (value > Replay.CurrentIndex + _checkpointInterval)
+        else if (value > Replay.CurrentIndex + _checkpointMinInterval)
         {
             // If we are skipping many ticks into the future, we try to skip directly to a checkpoint instead of
             // applying every tick.
-            var nextCheckpoint = GetNextCheckpoint(Replay, Replay.CurrentIndex);
-            if (nextCheckpoint.Index < value)
-                ResetToNearestCheckpoint(value, false);
+
+            var nextCheckpoint = GetLastCheckpoint(Replay, value);
+            // Sanity-Check that the checkpoint is actually BEFORE the desired position.
+            // Also check that it gets us closer to goal position than we already are.
+            if (nextCheckpoint.Index <= value && nextCheckpoint.Index > Replay.CurrentIndex)
+                ResetToNearestCheckpoint(value, false, nextCheckpoint);
         }
 
         _entMan.EntitySysManager.GetEntitySystem<ClientDirtySystem>().Reset();
@@ -75,6 +84,23 @@ internal sealed partial class ReplayPlaybackManager
             DebugTools.Assert(Replay.LastApplied >= state.FromSequence);
             DebugTools.Assert(Replay.LastApplied + 1 <= state.ToSequence);
             Replay.LastApplied = state.ToSequence;
+
+            if (st.Elapsed.TotalMilliseconds > _replayMaxScrubTime)
+            {
+                // Out of time to advance replay this tick
+                //  Note: We check at end of loop so we always advance at least 1 tick.
+                break;
+            }
+        }
+
+        // Use ScrubbingTarget to force a later invocation to continue moving towards the target tick
+        if (Replay.CurrentIndex < value)
+        {
+            ScrubbingTarget = value;
+        }
+        else
+        {
+            ScrubbingTarget = null;
         }
 
         AfterSetTick?.Invoke();

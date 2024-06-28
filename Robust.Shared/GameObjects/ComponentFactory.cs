@@ -24,7 +24,6 @@ namespace Robust.Shared.GameObjects
 
         // Bunch of dictionaries to allow lookups in all directions.
         /// <summary>
-        /// <summary>
         /// Mapping of component name to type.
         /// </summary>
         private FrozenDictionary<string, ComponentRegistration> _names
@@ -63,6 +62,11 @@ namespace Robust.Shared.GameObjects
         private FrozenDictionary<CompIdx, Type> _idxToType
             = FrozenDictionary<CompIdx, Type>.Empty;
 
+        /// <summary>
+        /// Slow-path for Type -> CompIdx mapping without generics.
+        /// </summary>
+        private FrozenDictionary<Type, CompIdx> _typeToIdx = FrozenDictionary<Type, CompIdx>.Empty;
+
         /// <inheritdoc />
         public event Action<ComponentRegistration[]>? ComponentsAdded;
 
@@ -78,6 +82,7 @@ namespace Robust.Shared.GameObjects
         private IEnumerable<ComponentRegistration> AllRegistrations => _types.Values;
 
         private ComponentRegistration Register(Type type,
+            CompIdx idx,
             Dictionary<string, ComponentRegistration> names,
             Dictionary<string, string> lowerCaseNames,
             Dictionary<Type, ComponentRegistration> types,
@@ -122,8 +127,6 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"{lowerCaseName} is already registered, previous: {prevName}");
 
             var unsaved = type.HasCustomAttribute<UnsavedComponentAttribute>();
-
-            var idx = CompIdx.Index(type);
 
             var registration = new ComponentRegistration(name, type, idx, unsaved);
 
@@ -290,6 +293,12 @@ namespace Robust.Shared.GameObjects
         }
 
         [Pure]
+        public string GetComponentName<T>() where T : IComponent, new()
+        {
+            return GetRegistration<T>().Name;
+        }
+
+        [Pure]
         public string GetComponentName(ushort netID)
         {
             return GetRegistration(netID).Name;
@@ -324,7 +333,7 @@ namespace Robust.Shared.GameObjects
 
         public ComponentRegistration GetRegistration<T>() where T : IComponent, new()
         {
-            return GetRegistration(typeof(T));
+            return GetRegistration(CompIdx.Index<T>());
         }
 
         public ComponentRegistration GetRegistration(IComponent component)
@@ -393,6 +402,20 @@ namespace Robust.Shared.GameObjects
             RegisterTypesInternal(types, false);
         }
 
+        /// <inheritdoc />
+        [Pure]
+        public CompIdx GetIndex(Type type)
+        {
+            return _typeToIdx[type];
+        }
+
+        /// <inheritdoc />
+        [Pure]
+        public int GetArrayIndex(Type type)
+        {
+            return _typeToIdx[type].Value;
+        }
+
         private void RegisterTypesInternal(Type[] types, bool overwrite)
         {
             var names = _names.ToDictionary();
@@ -402,12 +425,19 @@ namespace Robust.Shared.GameObjects
             var ignored = _ignored.ToHashSet();
 
             var added = new ComponentRegistration[types.Length];
+            var typeToidx = _typeToIdx.ToDictionary();
+
             for (int i = 0; i < types.Length; i++)
             {
-                added[i] = Register(types[i], names, lowerCaseNames, typesDict, idxToType, ignored, overwrite);
+                var type = types[i];
+                var idx = CompIdx.GetIndex(type);
+                typeToidx[type] = idx;
+
+                added[i] = Register(type, idx, names, lowerCaseNames, typesDict, idxToType, ignored, overwrite);
             }
 
             var st = RStopwatch.StartNew();
+            _typeToIdx = typeToidx.ToFrozenDictionary();
             _names = names.ToFrozenDictionary();
             _lowerCaseNames = lowerCaseNames.ToFrozenDictionary();
             _types = typesDict.ToFrozenDictionary();

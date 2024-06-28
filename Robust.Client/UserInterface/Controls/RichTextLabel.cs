@@ -68,7 +68,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var font = _getFont();
-            _entry.Update(font, availableSize.X * UIScale, UIScale, LineHeightScale);
+            _entry.Update(_tagManager, font, availableSize.X * UIScale, UIScale, LineHeightScale);
 
             return new Vector2(_entry.Width / UIScale, _entry.Height / UIScale);
         }
@@ -82,7 +82,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _entry.Draw(handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale);
+            _entry.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale);
         }
 
         [Pure]

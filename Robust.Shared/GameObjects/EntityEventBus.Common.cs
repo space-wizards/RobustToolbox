@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Shared.Collections;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
@@ -13,6 +14,7 @@ internal sealed partial class EntityEventBus : IEventBus
 {
     private IEntityManager _entMan;
     private IComponentFactory _comFac;
+    private IReflectionManager _reflection;
 
     // Data on individual events. Used to check ordering info and fire broadcast events.
     private FrozenDictionary<Type, EventData> _eventData = FrozenDictionary<Type, EventData>.Empty;
@@ -29,25 +31,35 @@ internal sealed partial class EntityEventBus : IEventBus
     // See EventTable declaration for layout details
     internal Dictionary<EntityUid, EventTable> _entEventTables = new();
 
-    // CompType -> EventType -> Handler
-    internal FrozenDictionary<Type, DirectedRegistration>?[] _entSubscriptions = default!;
+    /// <summary>
+    /// Array of component events and their handlers. The array is indexed by a component's
+    /// <see cref="CompIdx.Value"/>, while the dictionary is indexed by the event type. This does not include events
+    /// with the <see cref="ComponentEventAttribute"/>
+    /// </summary>
+    internal FrozenDictionary<Type, DirectedRegistration>[] _eventSubs = default!;
 
-    // Variant of _entSubscriptions that omits any events with the ComponentEventAttribute
-    internal FrozenDictionary<Type, DirectedRegistration>?[] _entSubscriptionsNoCompEv = default!;
+    /// <summary>
+    /// Variant of <see cref="_eventSubs"/> that also includes events with the <see cref="ComponentEventAttribute"/>
+    /// </summary>
+    internal FrozenDictionary<Type, DirectedRegistration>[] _compEventSubs = default!;
 
-    // pre-freeze _entSubscriptions data
-    internal Dictionary<Type, DirectedRegistration>?[] _entSubscriptionsUnfrozen =
-        Array.Empty<Dictionary<Type, DirectedRegistration>?>();
+    // pre-freeze event subscription data
+    internal Dictionary<Type, DirectedRegistration>?[] _eventSubsUnfrozen =
+        Array.Empty<Dictionary<Type, DirectedRegistration>>();
 
-    // EventType -> { CompType1, ... CompType N }
+    /// <summary>
+    /// Inverse of <see cref="_eventSubs"/>, mapping event types to sets of components.
+    /// </summary>
+    private Dictionary<Type, HashSet<CompIdx>> _eventSubsInv = new();
     // Only required to sort ordered subscriptions, which only happens during initialization
     // so doesn't need to be a frozen dictionary.
-    private Dictionary<Type, HashSet<CompIdx>> _entSubscriptionsInv = new();
 
     // prevents shitcode, get your subscriptions figured out before you start spawning entities
     private bool _subscriptionLock;
 
     public bool IgnoreUnregisteredComponents;
+
+    private readonly List<Type> _childrenTypesTemp = [];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ref Unit ExtractUnitRef(ref object obj, Type objType)

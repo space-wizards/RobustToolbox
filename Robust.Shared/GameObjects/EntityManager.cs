@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Prometheus;
+using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -11,9 +12,11 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Timing;
@@ -39,6 +42,8 @@ namespace Robust.Shared.GameObjects
         [IoC.Dependency] private readonly ISerializationManager _serManager = default!;
         [IoC.Dependency] private readonly ProfManager _prof = default!;
         [IoC.Dependency] private readonly INetManager _netMan = default!;
+        [IoC.Dependency] private readonly IReflectionManager _reflection = default!;
+        [IoC.Dependency] private readonly EntityConsoleHost _entityConsoleHost = default!;
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
@@ -47,6 +52,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<MetaDataComponent> MetaQuery;
         public EntityQuery<TransformComponent> TransformQuery;
+        private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<ActorComponent> _actorQuery;
 
         #endregion Dependencies
@@ -123,7 +129,7 @@ namespace Robust.Shared.GameObjects
             if (Initialized)
                 throw new InvalidOperationException("Initialize() called multiple times");
 
-            _eventBus = new EntityEventBus(this);
+            _eventBus = new EntityEventBus(this, _reflection);
 
             InitializeComponents();
             _metaReg = _componentFactory.GetRegistration(typeof(MetaDataComponent));
@@ -210,7 +216,9 @@ namespace Robust.Shared.GameObjects
             _containers = System<SharedContainerSystem>();
             MetaQuery = GetEntityQuery<MetaDataComponent>();
             TransformQuery = GetEntityQuery<TransformComponent>();
+            _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _actorQuery = GetEntityQuery<ActorComponent>();
+            _entityConsoleHost.Startup();
         }
 
         public virtual void Shutdown()
@@ -222,6 +230,7 @@ namespace Robust.Shared.GameObjects
             ClearComponents();
             ShuttingDown = false;
             Started = false;
+            _entityConsoleHost.Shutdown();
         }
 
         public virtual void Cleanup()
@@ -278,6 +287,7 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
+        /// <inheritdoc />
         public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null)
         {
             return CreateEntity(prototypeName, out _, overrides);
@@ -290,10 +300,12 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
         {
             var newEntity = CreateEntity(prototypeName, out _, overrides);
-            _xforms.SetCoordinates(newEntity, TransformQuery.GetComponent(newEntity), coordinates, unanchor: false);
+
+            var xformComp = TransformQuery.GetComponent(newEntity);
+            _xforms.SetCoordinates(newEntity, xformComp, coordinates, rotation: rotation, unanchor: false);
             return newEntity;
         }
 
@@ -318,7 +330,7 @@ namespace Robust.Shared.GameObjects
             if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var gridUid, out var grid))
             {
                 coords = new EntityCoordinates(gridUid, _mapSystem.WorldToLocal(gridUid, grid, coordinates.Position));
-                _xforms.SetCoordinates(newEntity, transform, coords, unanchor: false);
+                _xforms.SetCoordinates(newEntity, transform, coords, rotation, unanchor: false);
             }
             else
             {
@@ -551,17 +563,7 @@ namespace Robust.Shared.GameObjects
 
             // Detach the base entity to null before iterating over children
             // This also ensures that the entity-lookup updates don't have to be re-run for every child (which recurses up the transform hierarchy).
-            if (transform.ParentUid != EntityUid.Invalid)
-            {
-                try
-                {
-                    _xforms.DetachParentToNull((uid, transform, metadata), parentXform, true);
-                }
-                catch (Exception e)
-                {
-                    _sawmill.Error($"Caught exception while trying to detach parent of entity '{ToPrettyString(uid, metadata)}' to null.\n{e}");
-                }
-            }
+            _xforms.DetachEntity(uid, transform, metadata, parentXform, true);
 
             foreach (var child in transform._children)
             {
@@ -588,7 +590,7 @@ namespace Robust.Shared.GameObjects
                 {
                     try
                     {
-                        LifeShutdown(component);
+                        LifeShutdown(uid, component, _componentFactory.GetIndex(component.GetType()));
                     }
                     catch (Exception e)
                     {
@@ -776,7 +778,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
+        internal virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
                 return AllocEntity(out metadata);

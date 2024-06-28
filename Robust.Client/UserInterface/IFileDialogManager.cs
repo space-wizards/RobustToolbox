@@ -28,6 +28,7 @@ namespace Robust.Client.UserInterface
         /// The file stream the user chose to save to, and whether the file already existed.
         /// Null if the user cancelled the action.
         /// </returns>
-        Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(FileDialogFilters? filters = null);
+        /// <param name="truncate">Should we truncate an existing file to 0-size then write or append.</param>
+        Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(FileDialogFilters? filters = null, bool truncate = true);
     }
 }

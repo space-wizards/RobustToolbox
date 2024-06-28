@@ -72,7 +72,7 @@ internal sealed partial class PvsSystem
         var xform = Transform(chunk.Root);
         DebugTools.AssertEqual(chunk.Map.Owner, xform.MapUid);
         chunk.InvWorldMatrix = xform.InvLocalMatrix;
-        var worldPos = xform.LocalMatrix.Transform(chunk.Centre);
+        var worldPos = Vector2.Transform(chunk.Centre, xform.LocalMatrix);
         chunk.Position = new(worldPos, xform.MapID);
         chunk.UpdateQueued = false;
     }
@@ -90,15 +90,13 @@ internal sealed partial class PvsSystem
         foreach (var session in _sessions)
         {
             session.Chunks.Clear();
+            session.ChunkSet.Clear();
             GetSessionViewers(session);
 
             foreach (var eye in session.Viewers)
             {
-                GetVisibleChunks(eye, session.Chunks);
+                GetVisibleChunks(eye, session.ChunkSet);
             }
-
-            // The list of visible chunks should be unique.
-            DebugTools.Assert(session.Chunks.Select(x => x.Chunk).ToHashSet().Count == session.Chunks.Count);
         }
         DebugTools.Assert(_dirtyChunks.ToHashSet().Count == _dirtyChunks.Count);
         DebugTools.Assert(_cleanChunks.ToHashSet().Count == _cleanChunks.Count);
@@ -108,7 +106,7 @@ internal sealed partial class PvsSystem
     /// Get the chunks visible to a single entity and add them to a player's set of visible chunks.
     /// </summary>
     private void GetVisibleChunks(Entity<TransformComponent, EyeComponent?> eye,
-        List<(PvsChunk Chunk, float ChebyshevDistance)> playerChunks)
+        HashSet<PvsChunk> chunks)
     {
         var (viewPos, range, mapUid) = CalcViewBounds(eye);
         if (mapUid is not {} map)
@@ -121,7 +119,7 @@ internal sealed partial class PvsSystem
             if (!_chunks.TryGetValue(loc, out var chunk))
                 continue;
 
-            playerChunks.Add((chunk, default));
+            chunks.Add(chunk);
             if (chunk.UpdateQueued)
                 continue;
 
@@ -139,7 +137,7 @@ internal sealed partial class PvsSystem
 
         foreach (var (grid, _) in _grids)
         {
-            var localPos = _transform.GetInvWorldMatrix(grid).Transform(viewPos);
+            var localPos = Vector2.Transform(viewPos, _transform.GetInvWorldMatrix(grid));
             var gridChunkEnumerator = new ChunkIndicesEnumerator(localPos, range, ChunkSize);
             while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
             {
@@ -147,7 +145,7 @@ internal sealed partial class PvsSystem
                 if (!_chunks.TryGetValue(loc, out var chunk))
                     continue;
 
-                playerChunks.Add((chunk, default));
+                chunks.Add(chunk);
                 if (chunk.UpdateQueued)
                     continue;
 

@@ -628,20 +628,20 @@ namespace Robust.Client.Placement
             return true;
         }
 
-        private void Render(DrawingHandleWorld handle)
+        private void Render(in OverlayDrawArgs args)
         {
             if (CurrentMode == null || !IsActive)
             {
                 if (EraserRect.HasValue)
                 {
-                    handle.UseShader(_drawingShader);
-                    handle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 50));
-                    handle.UseShader(null);
+                    args.WorldHandle.UseShader(_drawingShader);
+                    args.WorldHandle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 50));
+                    args.WorldHandle.UseShader(null);
                 }
                 return;
             }
 
-            CurrentMode.Render(handle);
+            CurrentMode.Render(args);
 
             if (CurrentPermission is not {Range: > 0} ||
                 !CurrentMode.RangeRequired ||
@@ -650,7 +650,7 @@ namespace Robust.Client.Placement
 
             var worldPos = EntityManager.GetComponent<TransformComponent>(controlled).WorldPosition;
 
-            handle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
+            args.WorldHandle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
         }
 
         private void HandleStartPlacement(MsgPlacement msg)

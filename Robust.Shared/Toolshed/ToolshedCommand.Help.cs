@@ -39,15 +39,16 @@ public abstract partial class ToolshedCommand
 
         // Usage
         var usage = new StringBuilder();
-        usage.Append("Usage: ");
+        usage.AppendLine();
+        usage.Append(Loc.GetString("command-description-usage"));
         foreach (var (pipedType, parameters) in ReadonlyParameters[subCommand ?? ""])
         {
-            usage.AppendLine();
-
+            usage.Append(Environment.NewLine + "  ");
             // Piped type
             if (pipedType != null)
-                // arguments.Append(Loc.GetString("piped-type-string", ("pipedType", pipedType.ToString())));
-                usage.Append($"(PipedType: {pipedType.ToString()})");
+                // usage.Append($"(PipedType: {pipedType.ToString()})");
+                usage.Append(Loc.GetString("command-description-usage-pipedtype",
+                    ("typeName", GetFriendlyName(pipedType))));
 
             // Name
             usage.Append(Name);

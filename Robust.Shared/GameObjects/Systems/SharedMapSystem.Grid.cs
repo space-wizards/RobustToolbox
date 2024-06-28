@@ -922,7 +922,7 @@ public abstract partial class SharedMapSystem
             var tileCenter = tile.GridIndices + grid.TileSizeHalfVector;
             var direction = tileCenter - localCircle.Position;
 
-            if (direction.LengthSquared() <= localCircle.Radius * localCircle.Radius)
+            if (direction.IsShorterThanOrEqualTo(localCircle.Radius))
             {
                 yield return tile;
             }

@@ -76,7 +76,8 @@ namespace Robust.Client.GameObjects
             foreach (var key in remie)
             {
                 component.PlayingAnimations.Remove(key);
-                EntityManager.EventBus.RaiseLocalEvent(uid, new AnimationCompletedEvent {Uid = uid, Key = key}, true);
+                var completedEvent = new AnimationCompletedEvent {Uid = uid, Key = key, Finished = true};
+                EntityManager.EventBus.RaiseLocalEvent(uid, completedEvent, true);
             }
 
             return false;
@@ -187,7 +188,8 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            EntityManager.EventBus.RaiseLocalEvent(entity.Owner, new AnimationCompletedEvent {Uid = entity.Owner, Key = key}, true);
+            var completedEvent = new AnimationCompletedEvent {Uid = entity.Owner, Key = key, Finished = false};
+            EntityManager.EventBus.RaiseLocalEvent(entity.Owner, completedEvent, true);
         }
 
         public void Stop(EntityUid uid, AnimationPlayerComponent? component, string key)
@@ -203,5 +205,11 @@ namespace Robust.Client.GameObjects
     {
         public EntityUid Uid { get; init; }
         public string Key { get; init; } = string.Empty;
+
+        /// <summary>
+        /// If true, the animation finished by getting to its natural end.
+        /// If false, it was removed prematurely via <see cref="AnimationPlayerSystem.Stop(Robust.Client.GameObjects.AnimationPlayerComponent,string)"/> or similar overloads.
+        /// </summary>
+        public bool Finished { get; init; }
     }
 }

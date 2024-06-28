@@ -59,9 +59,16 @@ namespace Robust.Shared.Network.Messages
                 buffer.ReadAlignedMemory(finalStream, uncompressedLength);
             }
 
-            serializer.DeserializeDirect(finalStream, out State);
+            try
+            {
+                serializer.DeserializeDirect(finalStream, out State);
+            }
+            finally
+            {
+                finalStream.Dispose();
+            }
+
             State.PayloadSize = uncompressedLength;
-            finalStream.Dispose();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)

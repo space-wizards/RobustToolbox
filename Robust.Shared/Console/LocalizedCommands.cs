@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 
@@ -47,4 +48,8 @@ public abstract class LocalizedCommands : IConsoleCommand
 /// These commands are allowed to take dependencies on entity systems, reducing boilerplate for many usages.
 /// </para>
 /// </remarks>
-public abstract class LocalizedEntityCommands : LocalizedCommands, IEntityConsoleCommand;
+public abstract class LocalizedEntityCommands : LocalizedCommands, IEntityConsoleCommand
+{
+    [Dependency]
+    protected readonly EntityManager EntityManager = default!;
+}

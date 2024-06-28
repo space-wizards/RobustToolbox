@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Vec4 = System.Numerics.Vector4;
 
 namespace Robust.Shared.Maths
 {
@@ -524,6 +525,27 @@ namespace Robust.Shared.Maths
             double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * percentage, percentage);
             return Math.Abs(a - b) <= epsilon;
         }
+
+        /// <summary>
+        /// Returns whether two vectors are within <paramref name="percentage"/> of each other
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(Vec4 a, Vec4 b, float percentage = .00001f)
+        {
+            a = Vec4.Abs(a);
+            b = Vec4.Abs(b);
+            var p = new Vec4(percentage);
+            var epsilon = Vec4.Max(Vec4.Max(a, b) * p, p);
+            var delta = Vec4.Abs(a - b);
+            return delta.X <= epsilon.X && delta.Y <= epsilon.Y && delta.Z <= epsilon.Z && delta.W <= epsilon.W;
+        }
+
+        /// <summary>
+        /// Returns whether two colours are within <paramref name="percentage"/> of each other
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(Color a, Color b, float percentage = .00001f)
+            => CloseToPercent(a.RGBA, b.RGBA, percentage);
 
         /// <summary>
         /// Returns whether two floating point numbers are within <paramref name="percentage"/> of eachother

@@ -39,7 +39,10 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `LocalizedEntityCommands`, which are console commands that have the ability to take entity system dependencies.
+* Added `BeginRegistrationRegion` to `IConsoleHost` to allow efficient bulk-registration of console commands.
+* Added `IConsoleHost.RegisterCommand` overload that takes an `IConsoleCommand`.
+* Added a `Finished` boolean to `AnimationCompletedEvent` which allows distinguishing if an animation was removed prematurely or completed naturally.
 
 ### Bugfixes
 
@@ -47,11 +50,103 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Tab completions containing spaces are now properly quoted, so the command will actually work properly once entered.
 
 ### Internal
 
 *None yet*
+
+
+## 226.3.0
+
+### New features
+
+* `System.Collections.IList` and `System.Collections.ICollection` are now sandbox safe, this fixes some collection expression cases.
+* The sandboxing system will now report the methods responsible for references to illegal items.
+
+
+## 226.2.0
+
+### New features
+
+* `Control.VisibilityChanged()` virtual function.
+* Add some System.Random methods for NextFloat and NextPolarVector2.
+
+### Bugfixes
+
+* Fixes ContainerSystem failing client-side debug asserts when an entity gets unanchored & inserted into a container on the same tick.
+* Remove potential race condition on server startup from invoking ThreadPool.SetMinThreads.
+
+### Other
+
+* Increase default value of res.rsi_atlas_size.
+* Fix internal networking logic.
+* Updates of `OutputPanel` contents caused by change in UI scale are now deferred until visible. Especially important to avoid updates from debug console.
+* Debug console is now limited to only keep `con.max_entries` entries.
+* Non-existent resources are cached by `IResourceCache.TryGetResource`. This avoids the game constantly trying to re-load non-existent resources in common patterns such as UI theme texture fallbacks.
+* Default IPv4 MTU has been lowered to 700.
+* Update Robust.LoaderApi.
+
+### Internal
+
+* Split out PVS serialization from compression and sending game states.
+* Turn broadphase contacts into an IParallelRobustJob and remove unnecessary GetMapEntityIds for every contact.
+
+
+## 226.1.0
+
+### New features
+
+* Add some GetLocalEntitiesIntersecting methods for `Entity<T>`.
+
+### Other
+
+* Fix internal networking logic
+
+
+## 226.0.0
+
+### Breaking changes
+
+* `IEventBus.RaiseComponentEvent` now requires an EntityUid argument.
+* The `AddedComponentEventArgs` and `RemovedComponentEventArgs` constructors are now internal
+
+### New features
+
+* Allow RequestScreenTexture to be set in overlays.
+
+### Bugfixes
+
+* Fix AnimationCompletedEvent not always going out.
+
+
+## 225.0.0
+
+### Breaking changes
+
+* `NetEntity.Parse` and `TryParse` will now fail to parse empty strings.
+* Try to prevent EventBus looping. This also caps the amount of directed component subscriptions for a particular component to 256.
+
+### New features
+
+* `IPrototypeManager.TryIndex` will now default to logging errors if passed an invalid prototype id struct (i,e., `EntProtoId` or `ProtoId<T>`). There is a new optional bool argument to disable logging errors.
+* `Eye` now allows its `Position` to be set directly. Please only do this with the `FixedEye` child type constructed manually.
+* Engine now respects the hub's `can_skip_build` parameter on info query, fixing an issue where the first hub advertisement fails due to ACZ taking too long.
+* Add GetSession & TryGetSession to ActorSystem.
+* Raise an event when an entity's name is changed.
+
+### Bugfixes
+
+* The `ent` toolshed command now takes `NetEntity` values, fixing parsing in practical uses.
+* Fix ComponentFactory test mocks.
+* Fix LookupFlags missing from a couple of EntityLookupSystem methods.
+
+### Other
+
+* Improved engine's Happy Eyeballs implementation, should result in more usage of IPv6 for HTTP APIs when available.
+* Remove CompIdx locks to improve performance inside Pvs at higher player counts.
+* Avoid a read lock in GetEntityQuery to also improve performance.
+* Mark `EntityManager.System<T>` as Pure.
 
 
 ## 224.1.1

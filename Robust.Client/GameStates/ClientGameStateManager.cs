@@ -603,7 +603,7 @@ namespace Robust.Client.GameStates
                         if (compState != null)
                         {
                             var handleState = new ComponentHandleState(compState, null);
-                            _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
+                            _entities.EventBus.RaiseComponentEvent(entity, comp, ref handleState);
                         }
 
                         comp.LastModifiedTick = _timing.LastRealTick;
@@ -640,7 +640,7 @@ namespace Robust.Client.GameStates
                         if (state != null)
                         {
                             var stateEv = new ComponentHandleState(state, null);
-                            _entities.EventBus.RaiseComponentEvent(comp, ref stateEv);
+                            _entities.EventBus.RaiseComponentEvent(entity, comp, ref stateEv);
                         }
 
                         comp.ClearCreationTick(); // don't undo the re-adding.
@@ -1361,7 +1361,7 @@ namespace Robust.Client.GameStates
                     continue;
 
                 var handleState = new ComponentHandleState(cur, next);
-                bus.RaiseComponentEvent(comp, ref handleState);
+                bus.RaiseComponentEvent(uid, comp, ref handleState);
             }
         }
 
@@ -1516,7 +1516,7 @@ namespace Robust.Client.GameStates
                     continue;
 
                 var handleState = new ComponentHandleState(state, null);
-                _entityManager.EventBus.RaiseComponentEvent(comp, ref handleState);
+                _entityManager.EventBus.RaiseComponentEvent(uid, comp, ref handleState);
             }
 
             // ensure we don't have any extra components

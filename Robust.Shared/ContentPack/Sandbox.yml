@@ -320,9 +320,10 @@ Types:
     ConcurrentStack`1: { All: True }
   System.Collections:
     BitArray: { All: True }
+    ICollection: { All: True }
     IEnumerable: { All: True }
     IEnumerator: { All: True }
-    IReadOnlyList`1: { All: True }
+    IList: { All: True }
   System.ComponentModel:
     CancelEventArgs: { All: True }
     PropertyDescriptor: { }

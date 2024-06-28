@@ -28,9 +28,12 @@ namespace Robust.Shared.Graphics
         public virtual MapCoordinates Position
         {
             get => _coords;
-            internal set => _coords = value;
+            set => _coords = value;
         }
 
+        /// <summary>
+        /// Eye offset, relative to the map, and not affected by <see cref="Rotation"/>
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Offset { get; set; }
 

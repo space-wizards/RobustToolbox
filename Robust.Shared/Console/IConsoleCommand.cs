@@ -83,4 +83,11 @@ namespace Robust.Shared.Console
             return ValueTask.FromResult(GetCompletion(shell, args));
         }
     }
+
+    /// <summary>
+    /// Special marker interface used to indicate "entity" commands.
+    /// See <see cref="LocalizedEntityCommands"/> for an overview.
+    /// </summary>
+    /// <seealso cref="EntityConsoleHost"/>
+    internal interface IEntityConsoleCommand : IConsoleCommand;
 }

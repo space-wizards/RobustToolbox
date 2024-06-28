@@ -9,36 +9,19 @@ namespace Robust.Shared.GameObjects;
 
 public readonly struct CompIdx : IEquatable<CompIdx>
 {
-    private static readonly ReaderWriterLockSlim SlowStoreLock = new();
-    private static readonly Dictionary<Type, CompIdx> SlowStore = new();
-
     internal readonly int Value;
 
     internal static CompIdx Index<T>() => Store<T>.Index;
 
-    internal static CompIdx Index(Type t)
-    {
-        using (SlowStoreLock.ReadGuard())
-        {
-            if (SlowStore.TryGetValue(t, out var idx))
-                return idx;
-        }
-
-        // Doesn't exist in the store, get a write lock and add it.
-        using (SlowStoreLock.WriteGuard())
-        {
-            var idx = (CompIdx)typeof(Store<>)
-                .MakeGenericType(t)
-                .GetField(nameof(Store<int>.Index), BindingFlags.Static | BindingFlags.Public)!
-                .GetValue(null)!;
-
-            SlowStore[t] = idx;
-            return idx;
-        }
-    }
-
     internal static int ArrayIndex<T>() => Index<T>().Value;
-    internal static int ArrayIndex(Type type) => Index(type).Value;
+
+    internal static CompIdx GetIndex(Type type)
+    {
+        return (CompIdx)typeof(Store<>)
+            .MakeGenericType(type)
+            .GetField(nameof(Store<int>.Index), BindingFlags.Static | BindingFlags.Public)!
+            .GetValue(null)!;
+    }
 
     internal static void AssignArray<T>(ref T[] array, CompIdx idx, T value)
     {

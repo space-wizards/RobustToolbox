@@ -43,6 +43,7 @@ END TEMPLATE-->
 * Added `BeginRegistrationRegion` to `IConsoleHost` to allow efficient bulk-registration of console commands.
 * Added `IConsoleHost.RegisterCommand` overload that takes an `IConsoleCommand`.
 * Added a `Finished` boolean to `AnimationCompletedEvent` which allows distinguishing if an animation was removed prematurely or completed naturally.
+* Added command usage with types to Toolshed command help.
 
 ### Bugfixes
 

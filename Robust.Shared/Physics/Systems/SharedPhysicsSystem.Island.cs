@@ -196,6 +196,19 @@ public abstract partial class SharedPhysicsSystem
     private const int VelocityConstraintsPerThread = 16;
     private const int PositionConstraintsPerThread = 16;
 
+    [ByRefEvent]
+    public struct GetLinearDampingOverrideEvent
+    {
+        public float? LinearDampingOverride;
+    }
+
+    public delegate void LinearDampingOverrideHandler(ref GetLinearDampingOverrideEvent ev);
+
+    /// <summary>
+    ///     Invoked to allow content to override linear damping for objects.
+    /// </summary>
+    public event LinearDampingOverrideHandler? OnGetLinearDampingOverride;
+
     #region Setup
 
     private void InitializeIsland()
@@ -717,7 +730,6 @@ public abstract partial class SharedPhysicsSystem
         var angles = ArrayPool<float>.Shared.Rent(bodyCount);
         var offset = island.Offset;
         var xformQuery = GetEntityQuery<TransformComponent>();
-        var mapGridQuery = GetEntityQuery<MapGridComponent>();
 
         for (var i = 0; i < island.Bodies.Count; i++)
         {
@@ -747,10 +759,9 @@ public abstract partial class SharedPhysicsSystem
 
                 angularVelocity += body.InvI * body.Torque * data.FrameTime;
 
-                var onGrid = xform.GridUid != null || mapGridQuery.HasComp(xform.MapUid);
-                var linearDamping = onGrid
-                    ? body.LinearDamping
-                    : body.OffGridLinearDamping;
+                var ev = new GetLinearDampingOverrideEvent();
+                OnGetLinearDampingOverride?.Invoke(ref ev);
+                var linearDamping = ev.LinearDampingOverride ?? body.LinearDamping;
 
                 linearVelocity *= Math.Clamp(1.0f - data.FrameTime * linearDamping, 0.0f, 1.0f);
                 angularVelocity *= Math.Clamp(1.0f - data.FrameTime * body.AngularDamping, 0.0f, 1.0f);

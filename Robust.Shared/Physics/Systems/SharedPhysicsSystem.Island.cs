@@ -197,7 +197,7 @@ public abstract partial class SharedPhysicsSystem
     private const int PositionConstraintsPerThread = 16;
 
     [ByRefEvent]
-    public struct GetLinearDampingOverrideEvent(Entity<PhysicsComponent> Entity)
+    public struct GetLinearDampingOverrideEvent(Entity<PhysicsComponent, TransformComponent> Entity)
     {
         public float? LinearDampingOverride;
     }
@@ -759,7 +759,7 @@ public abstract partial class SharedPhysicsSystem
 
                 angularVelocity += body.InvI * body.Torque * data.FrameTime;
 
-                var ev = new GetLinearDampingOverrideEvent((body.Owner, body));
+                var ev = new GetLinearDampingOverrideEvent((body.Owner, body, xform));
                 OnGetLinearDampingOverride?.Invoke(ref ev);
                 var linearDamping = ev.LinearDampingOverride ?? body.LinearDamping;
 

@@ -1,5 +1,6 @@
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
@@ -50,6 +51,7 @@ namespace Robust.Shared
             deps.Register<ToolshedManager>();
             deps.Register<HttpClientHolder>();
             deps.Register<RobustMemoryManager>();
+            deps.Register<EntityConsoleHost>();
         }
     }
 }

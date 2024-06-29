@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -114,6 +116,16 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     /// The game state for this tick,
     /// </summary>
     public GameState? State;
+
+    /// <summary>
+    /// The serialized <see cref="State"/> object.
+    /// </summary>
+    public MemoryStream? StateStream;
+
+    /// <summary>
+    /// Whether we should force reliable sending of the <see cref="MsgState"/>.
+    /// </summary>
+    public bool ForceSendReliably { get; set; }
 
     /// <summary>
     /// Clears all stored game state data. This should only be used after the game state has been serialized.

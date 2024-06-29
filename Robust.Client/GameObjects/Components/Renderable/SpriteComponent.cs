@@ -150,7 +150,7 @@ namespace Robust.Client.GameObjects
         [DataField("color")]
         private Color color = Color.White;
 
-        public Matrix3 LocalMatrix = Matrix3.Identity;
+        public Matrix3x2 LocalMatrix = Matrix3x2.Identity;
 
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -389,10 +389,10 @@ namespace Robust.Client.GameObjects
 
         internal void UpdateLocalMatrix()
         {
-            LocalMatrix = Matrix3.CreateTransform(in offset, in rotation, in scale);
+            LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
         }
 
-        public Matrix3 GetLocalMatrix()
+        public Matrix3x2 GetLocalMatrix()
         {
             return LocalMatrix;
         }
@@ -1304,22 +1304,21 @@ namespace Robust.Client.GameObjects
 
             // worldRotation + eyeRotation should be the angle of the entity on-screen. If no-rot is enabled this is just set to zero.
             // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
-            var entityMatrix = Matrix3.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation - cardinal);
+            var entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation - cardinal);
 
-            Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformSprite);
+            var transformSprite = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
 
             if (GranularLayersRendering)
             {
                 //Default rendering
-                entityMatrix = Matrix3.CreateTransform(worldPosition, worldRotation);
-                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformDefault);
+                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation);
+                var transformDefault = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
                 //Snap to cardinals
-                entityMatrix = Matrix3.CreateTransform(worldPosition, worldRotation - angle.GetCardinalDir().ToAngle());
-                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformSnap);
+                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation - angle.GetCardinalDir().ToAngle());
+                var transformSnap = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
                 //No rotation
-                entityMatrix = Matrix3.CreateTransform(worldPosition, -eyeRotation);
-                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformNoRot);
-
+                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, -eyeRotation);
+                var transformNoRot = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
 
                 foreach (var layer in Layers) {
                     switch (layer.RenderingStrategy)
@@ -1380,7 +1379,7 @@ namespace Robust.Client.GameObjects
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             var ev = new QueueSpriteTreeUpdateEvent(entities.GetComponent<TransformComponent>(Owner));
-            entities.EventBus.RaiseComponentEvent(this, ref ev);
+            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
         }
 
         private void QueueUpdateIsInert()
@@ -1390,7 +1389,7 @@ namespace Robust.Client.GameObjects
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             var ev = new SpriteUpdateInertEvent();
-            entities.EventBus.RaiseComponentEvent(this, ref ev);
+            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
         }
 
         [Obsolete("Use SpriteSystem instead.")]
@@ -1546,7 +1545,7 @@ namespace Robust.Client.GameObjects
             private RSI.State? _actualState;
             [ViewVariables] public RSI.State? ActualState => _actualState;
 
-            public Matrix3 LocalMatrix = Matrix3.Identity;
+            public Matrix3x2 LocalMatrix = Matrix3x2.Identity;
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Vector2 Scale
@@ -1692,7 +1691,7 @@ namespace Robust.Client.GameObjects
 
             internal void UpdateLocalMatrix()
             {
-                LocalMatrix = Matrix3.CreateTransform(in _offset, in _rotation, in _scale);
+                LocalMatrix = Matrix3Helpers.CreateTransform(in _offset, in _rotation, in _scale);
             }
 
             RSI? ISpriteLayer.Rsi { get => RSI; set => SetRsi(value); }
@@ -1964,27 +1963,27 @@ namespace Robust.Client.GameObjects
             ///     Given the apparent rotation of an entity on screen (world + eye rotation), get layer's matrix for drawing &
             ///     relevant RSI direction.
             /// </summary>
-            public void GetLayerDrawMatrix(RsiDirection dir, out Matrix3 layerDrawMatrix)
+            public void GetLayerDrawMatrix(RsiDirection dir, out Matrix3x2 layerDrawMatrix)
             {
                 if (_parent.NoRotation || dir == RsiDirection.South)
                     layerDrawMatrix = LocalMatrix;
                 else
                 {
-                    Matrix3.Multiply(in _rsiDirectionMatrices[(int)dir], in LocalMatrix, out layerDrawMatrix);
+                    layerDrawMatrix = Matrix3x2.Multiply(_rsiDirectionMatrices[(int)dir], LocalMatrix);
                 }
             }
 
-            private static Matrix3[] _rsiDirectionMatrices = new Matrix3[]
+            private static Matrix3x2[] _rsiDirectionMatrices = new Matrix3x2[]
             {
                 // array order chosen such that this array can be indexed by casing an RSI direction to an int
-                Matrix3.Identity, // should probably just avoid matrix multiplication altogether if the direction is south.
-                Matrix3.CreateRotation(-Direction.North.ToAngle()),
-                Matrix3.CreateRotation(-Direction.East.ToAngle()),
-                Matrix3.CreateRotation(-Direction.West.ToAngle()),
-                Matrix3.CreateRotation(-Direction.SouthEast.ToAngle()),
-                Matrix3.CreateRotation(-Direction.SouthWest.ToAngle()),
-                Matrix3.CreateRotation(-Direction.NorthEast.ToAngle()),
-                Matrix3.CreateRotation(-Direction.NorthWest.ToAngle())
+                Matrix3x2.Identity, // should probably just avoid matrix multiplication altogether if the direction is south.
+                Matrix3Helpers.CreateRotation(-Direction.North.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.East.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.West.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.SouthEast.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.SouthWest.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.NorthEast.ToAngle()),
+                Matrix3Helpers.CreateRotation(-Direction.NorthWest.ToAngle())
             };
 
             /// <summary>
@@ -2018,7 +2017,7 @@ namespace Robust.Client.GameObjects
             /// <summary>
             ///     Render a layer. This assumes that the input angle is between 0 and 2pi.
             /// </summary>
-            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3 spriteMatrix, Angle angle, Direction? overrideDirection)
+            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection)
             {
                 if (!Visible || Blank)
                     return;
@@ -2040,7 +2039,7 @@ namespace Robust.Client.GameObjects
                 if (CopyToShaderParameters == null)
                 {
                     // Set the drawing transform for this layer
-                    Matrix3.Multiply(in layerMatrix, in spriteMatrix, out var transformMatrix);
+                    var transformMatrix = Matrix3x2.Multiply(layerMatrix, spriteMatrix);
                     drawingHandle.SetTransform(in transformMatrix);
 
                     RenderTexture(drawingHandle, texture);

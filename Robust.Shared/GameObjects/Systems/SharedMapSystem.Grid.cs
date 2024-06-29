@@ -245,7 +245,6 @@ public abstract partial class SharedMapSystem
     private void OnGridHandleState(EntityUid uid, MapGridComponent component, ref ComponentHandleState args)
     {
         HashSet<MapChunk> modifiedChunks;
-
         switch (args.Current)
         {
             case MapGridComponentDeltaState delta:
@@ -263,6 +262,7 @@ public abstract partial class SharedMapSystem
                     ApplyChunkData(uid, component, chunkData, modifiedChunks);
                 }
 
+                component.LastTileModifiedTick = delta.LastTileModifiedTick;
                 break;
             }
             case MapGridComponentState state:
@@ -271,6 +271,7 @@ public abstract partial class SharedMapSystem
                 DebugTools.Assert(component.ChunkSize == state.ChunkSize || component.Chunks.Count == 0,
                     "Can't modify chunk size of an existing grid.");
 
+                component.LastTileModifiedTick = state.LastTileModifiedTick;
                 component.ChunkSize = state.ChunkSize;
 
                 foreach (var index in component.Chunks.Keys)
@@ -419,7 +420,7 @@ public abstract partial class SharedMapSystem
             }
         }
 
-        args.State = new MapGridComponentDeltaState(component.ChunkSize, chunkData);
+        args.State = new MapGridComponentDeltaState(component.ChunkSize, chunkData, component.LastTileModifiedTick);
 
 #if DEBUG
         if (chunkData == null)
@@ -455,7 +456,7 @@ public abstract partial class SharedMapSystem
             chunkData.Add(index, tileBuffer);
         }
 
-        args.State = new MapGridComponentState(component.ChunkSize, chunkData);
+        args.State = new MapGridComponentState(component.ChunkSize, chunkData, component.LastTileModifiedTick);
 
 #if DEBUG
         foreach (var chunk in chunkData.Values)
@@ -908,6 +909,26 @@ public abstract partial class SharedMapSystem
         }
     }
 
+    public IEnumerable<TileRef> GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Circle localCircle, bool ignoreEmpty = true,
+        Predicate<TileRef>? predicate = null)
+    {
+        var aabb = new Box2(localCircle.Position.X - localCircle.Radius, localCircle.Position.Y - localCircle.Radius,
+            localCircle.Position.X + localCircle.Radius, localCircle.Position.Y + localCircle.Radius);
+
+        var tileEnumerator = GetLocalTilesEnumerator(uid, grid, aabb, ignoreEmpty, predicate);
+
+        while (tileEnumerator.MoveNext(out var tile))
+        {
+            var tileCenter = tile.GridIndices + grid.TileSizeHalfVector;
+            var direction = tileCenter - localCircle.Position;
+
+            if (direction.IsShorterThanOrEqualTo(localCircle.Radius))
+            {
+                yield return tile;
+            }
+        }
+    }
+
     public IEnumerable<TileRef> GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Circle worldArea, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
@@ -1291,7 +1312,7 @@ public abstract partial class SharedMapSystem
     public Vector2 WorldToLocal(EntityUid uid, MapGridComponent grid, Vector2 posWorld)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
-        return matrix.Transform(posWorld);
+        return Vector2.Transform(posWorld, matrix);
     }
 
     public EntityCoordinates MapToGrid(EntityUid uid, MapCoordinates posWorld)
@@ -1314,7 +1335,7 @@ public abstract partial class SharedMapSystem
     public Vector2 LocalToWorld(EntityUid uid, MapGridComponent grid, Vector2 posLocal)
     {
         var matrix = _transform.GetWorldMatrix(uid);
-        return matrix.Transform(posLocal);
+        return Vector2.Transform(posLocal, matrix);
     }
 
     public Vector2i WorldToTile(EntityUid uid, MapGridComponent grid, Vector2 posWorld)
@@ -1434,7 +1455,7 @@ public abstract partial class SharedMapSystem
         var locX = gridTile.X * grid.TileSize + (grid.TileSize / 2f);
         var locY = gridTile.Y * grid.TileSize + (grid.TileSize / 2f);
 
-        return _transform.GetWorldMatrix(uid).Transform(new Vector2(locX, locY));
+        return Vector2.Transform(new Vector2(locX, locY), _transform.GetWorldMatrix(uid));
     }
 
     public MapCoordinates GridTileToWorld(EntityUid uid, MapGridComponent grid, Vector2i gridTile)

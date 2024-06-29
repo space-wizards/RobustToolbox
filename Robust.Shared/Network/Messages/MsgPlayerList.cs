@@ -12,14 +12,13 @@ namespace Robust.Shared.Network.Messages
     {
         public override MsgGroups MsgGroup => MsgGroups.Core;
 
-        public byte PlyCount { get; set; }
         public List<SessionState> Plyrs { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
-            Plyrs = new List<SessionState>();
-            PlyCount = buffer.ReadByte();
-            for (var i = 0; i < PlyCount; i++)
+            var playerCount = buffer.ReadInt32();
+            Plyrs = new List<SessionState>(playerCount);
+            for (var i = 0; i < playerCount; i++)
             {
                 var plyNfo = new SessionState
                 {
@@ -34,7 +33,7 @@ namespace Robust.Shared.Network.Messages
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
-            buffer.Write(PlyCount);
+            buffer.Write(Plyrs.Count);
 
             foreach (var ply in Plyrs)
             {

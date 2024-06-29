@@ -277,8 +277,21 @@ public sealed partial class DebugConsole
                 CommandBar.CursorPosition = lastRange.end;
                 CommandBar.SelectionStart = lastRange.start;
                 var insertValue = CommandParsing.Escape(completion);
+
+                // If the replacement contains a space, we must quote it to treat it as a single argument.
+                var mustQuote = insertValue.Contains(' ');
                 if ((completionFlags & CompletionOptionFlags.PartialCompletion) == 0)
+                {
+                    if (mustQuote)
+                        insertValue = $"\"{insertValue}\"";
+
                     insertValue += " ";
+                }
+                else if (mustQuote)
+                {
+                    // If it's a partial completion, only quote the start.
+                    insertValue = '"' + insertValue;
+                }
 
                 CommandBar.InsertAtCursor(insertValue);
 

@@ -82,6 +82,18 @@ namespace Robust.Shared.GameObjects
         public void RegisterNetworkedFields(ComponentRegistration compReg, params string[] fields);
 
         /// <summary>
+        /// Slow-path for Type -> CompIdx mapping without generics.
+        /// </summary>
+        [Pure]
+        CompIdx GetIndex(Type type);
+
+        /// <summary>
+        /// Slow-path to get the component index for a specified type.
+        /// </summary>
+        [Pure]
+        int GetArrayIndex(Type type);
+
+        /// <summary>
         /// Registers a component class with the factory.
         /// </summary>
         /// <param name="overwrite">If the component already exists, will this replace it?</param>

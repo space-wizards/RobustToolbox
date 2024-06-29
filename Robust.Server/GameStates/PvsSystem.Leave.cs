@@ -17,13 +17,12 @@ internal sealed partial class PvsSystem
 {
     private WaitHandle? _leaveTask;
 
-    private void ProcessLeavePvs(ICommonSession[] sessions)
+    private void ProcessLeavePvs()
     {
-        if (!CullingEnabled || sessions.Length == 0)
+        if (!CullingEnabled || _sessions.Length == 0)
             return;
 
         DebugTools.AssertNull(_leaveTask);
-        _leaveJob.Setup(sessions);
 
         if (_async)
         {
@@ -76,28 +75,18 @@ internal sealed partial class PvsSystem
     {
         public int BatchSize => 2;
         private PvsSystem _pvs = _pvs;
-        public int Count => _sessions.Length;
-        private PvsSession[] _sessions;
+        public int Count => _pvs._sessions.Length;
+
 
         public void Execute(int index)
         {
             try
             {
-                _pvs.ProcessLeavePvs(_sessions[index]);
+                _pvs.ProcessLeavePvs(_pvs._sessions[index]);
             }
             catch (Exception e)
             {
                 _pvs.Log.Log(LogLevel.Error, e, $"Caught exception while processing pvs-leave messages.");
-            }
-        }
-
-        public void Setup(ICommonSession[] sessions)
-        {
-            // Copy references to PvsSession, in case players disconnect while the job is running.
-            Array.Resize(ref _sessions, sessions.Length);
-            for (var i = 0; i < sessions.Length; i++)
-            {
-                _sessions[i] = _pvs.PlayerData[sessions[i]];
             }
         }
     }

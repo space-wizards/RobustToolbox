@@ -97,8 +97,23 @@ namespace Robust.Shared.Configuration
             {
                 // overwrite the value with the saved one
                 var oldValue = GetConfigVarValue(cfgVar);
-                changedInvokes.Add(SetupInvokeValueChanged(cfgVar, value, oldValue));
-                cfgVar.Value = value;
+
+                var convertedValue = value;
+                if (cfgVar.Type != value.GetType())
+                {
+                    try
+                    {
+                        convertedValue = ConvertToCVarType(value, cfgVar.Type!);
+                    }
+                    catch
+                    {
+                        _sawmill.Error($"TOML parsed cvar does not match registered cvar type. Name: {cvar}. Code Type: {cfgVar.Type}. Toml type: {value.GetType()}");
+                        return;
+                    }
+                }
+
+                changedInvokes.Add(SetupInvokeValueChanged(cfgVar, convertedValue, oldValue));
+                cfgVar.Value = convertedValue;
             }
             else
             {
@@ -338,7 +353,7 @@ namespace Robust.Shared.Configuration
                 if (cVar.Registered)
                     _sawmill.Error($"The variable '{name}' has already been registered.");
 
-                if (!type.IsEnum && cVar.Value != null && !type.IsAssignableFrom(cVar.Value.GetType()))
+                if (cVar.Value != null && type != cVar.Value.GetType())
                 {
                     try
                     {
@@ -775,6 +790,24 @@ namespace Robust.Shared.Configuration
                 return Enum.Parse(cVar, value.ToString() ?? string.Empty);
 
             return Convert.ChangeType(value, cVar);
+        }
+
+        internal List<Delegate> GetSubs(string name)
+        {
+            using (Lock.ReadGuard())
+            {
+                var list = new List<Delegate>();
+
+                if (!_configVars.TryGetValue(name, out var cVar))
+                    throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
+
+                foreach (var entry in cVar.ValueChanged.Entries)
+                {
+                    list.Add((Delegate) entry.Equality!);
+                }
+
+                return list;
+            }
         }
 
         /// <summary>

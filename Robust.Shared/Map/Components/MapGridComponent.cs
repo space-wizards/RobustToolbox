@@ -335,7 +335,7 @@ namespace Robust.Shared.Map.Components
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class MapGridComponentState(ushort chunkSize, Dictionary<Vector2i, Tile[]> fullGridData) : ComponentState
+    internal sealed class MapGridComponentState(ushort chunkSize, Dictionary<Vector2i, Tile[]> fullGridData, GameTick lastTileModifiedTick) : ComponentState
     {
         /// <summary>
         ///     The size of the chunks in the map grid.
@@ -346,13 +346,18 @@ namespace Robust.Shared.Map.Components
         /// Networked chunk data containing the full grid state.
         /// </summary>
         public Dictionary<Vector2i, Tile[]> FullGridData = fullGridData;
+
+        /// <summary>
+        /// Last game tick that the tile on the grid was modified.
+        /// </summary>
+        public GameTick LastTileModifiedTick = lastTileModifiedTick;
     }
 
     /// <summary>
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class MapGridComponentDeltaState(ushort chunkSize, List<ChunkDatum>? chunkData)
+    internal sealed class MapGridComponentDeltaState(ushort chunkSize, List<ChunkDatum>? chunkData, GameTick lastTileModifiedTick)
         : ComponentState, IComponentDeltaState<MapGridComponentState>
     {
         /// <summary>
@@ -364,6 +369,11 @@ namespace Robust.Shared.Map.Components
         /// Networked chunk data.
         /// </summary>
         public readonly List<ChunkDatum>? ChunkData = chunkData;
+
+        /// <summary>
+        /// Last game tick that the tile on the grid was modified.
+        /// </summary>
+        public GameTick LastTileModifiedTick = lastTileModifiedTick;
 
         public void ApplyToFullState(MapGridComponentState state)
         {
@@ -379,6 +389,8 @@ namespace Robust.Shared.Map.Components
                 else
                     state.FullGridData![data.Index] = data.TileData;
             }
+
+            state.LastTileModifiedTick = LastTileModifiedTick;
         }
 
         public MapGridComponentState CreateNewFullState(MapGridComponentState state)
@@ -391,7 +403,7 @@ namespace Robust.Shared.Map.Components
                 Array.Copy(value, arr, value.Length);
             }
 
-            var newState = new MapGridComponentState(ChunkSize, fullGridData);
+            var newState = new MapGridComponentState(ChunkSize, fullGridData, LastTileModifiedTick);
             ApplyToFullState(newState);
             return newState;
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
@@ -21,7 +22,7 @@ internal sealed partial class PvsSystem
     private EntityState GetEntityState(ICommonSession? player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
     {
         var bus = EntityManager.EventBus;
-        var changed = new List<ComponentChange>();
+        var changed = new ValueList<ComponentChange>();
 
         bool sendCompList = meta.LastComponentRemoved > fromTick;
         HashSet<ushort>? netComps = sendCompList ? new() : null;
@@ -61,7 +62,7 @@ internal sealed partial class PvsSystem
 
         DebugTools.Assert(meta.EntityLastModifiedTick >= meta.LastComponentRemoved);
         DebugTools.Assert(GetEntity(meta.NetEntity) == entityUid);
-        var entState = new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
+        var entState = new EntityState(meta.NetEntity, changed.Span, meta.EntityLastModifiedTick, netComps);
 
         return entState;
     }
@@ -72,7 +73,7 @@ internal sealed partial class PvsSystem
     private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta)
     {
         var bus = EntityManager.EventBus;
-        var changed = new List<ComponentChange>();
+        var changed = new ValueList<ComponentChange>();
 
         HashSet<ushort> netComps = new();
 
@@ -92,7 +93,7 @@ internal sealed partial class PvsSystem
             netComps.Add(netId);
         }
 
-        var entState = new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
+        var entState = new EntityState(meta.NetEntity, changed.Span, meta.EntityLastModifiedTick, netComps);
 
         return entState;
     }

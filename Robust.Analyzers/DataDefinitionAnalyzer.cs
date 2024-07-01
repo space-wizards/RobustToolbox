@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Robust.Roslyn.Shared;
 using Robust.Shared.Serialization.Manager.Definition;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Analyzers;
 
@@ -16,6 +17,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
     private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
+    private const string ViewVariablesNamespace = "Robust.Shared.ViewVariables.ViewVariablesAttribute";
 
     private static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
         Diagnostics.IdDataDefinitionPartial,
@@ -66,9 +68,20 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         true,
         "Make sure to remove the tag string from the data field attribute."
     );
+
+    public static readonly DiagnosticDescriptor DataFieldNoVVReadWriteRule = new(
+        Diagnostics.IdDataFieldNoVVReadWrite,
+        "Data field has VV ReadWrite",
+        "Data field {0} in data definition {1} has ViewVariables attribute with ReadWrite access, which is redundant",
+        "Usage",
+        DiagnosticSeverity.Info,
+        true,
+        "Make sure to remove the ViewVariables attribute."
+    );
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         DataDefinitionPartialRule, NestedDataDefinitionPartialRule, DataFieldWritableRule, DataFieldPropertyWritableRule,
-        DataFieldRedundantTagRule
+        DataFieldRedundantTagRule, DataFieldNoVVReadWriteRule
     );
 
     public override void Initialize(AnalysisContext context)
@@ -141,6 +154,11 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             {
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, context.Node.GetLocation(), fieldSymbol.Name, type.Name));
             }
+
+            if (HasVVReadWrite(fieldSymbol))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, context.Node.GetLocation(), fieldSymbol.Name, type.Name));
+            }
         }
     }
 
@@ -169,6 +187,11 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (HasRedundantTag(propertySymbol))
         {
             context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, context.Node.GetLocation(), propertySymbol.Name, type.Name));
+        }
+
+        if (HasVVReadWrite(propertySymbol))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, context.Node.GetLocation(), propertySymbol.Name, type.Name));
         }
     }
 
@@ -290,6 +313,34 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
         // If the explicit name matches the sourcegen name, we have a redundancy
         return explicitName == automaticName;
+    }
+
+    private static bool HasVVReadWrite(ISymbol symbol)
+    {
+        if (!IsDataField(symbol, out _, out _))
+            return false;
+
+        // Make sure it has ViewVariablesAttribute
+        AttributeData? viewVariablesAttribute = null;
+        foreach (var attr in symbol.GetAttributes())
+        {
+            if (attr.AttributeClass?.ToDisplayString() == ViewVariablesNamespace)
+            {
+                viewVariablesAttribute = attr;
+            }
+        }
+        if (viewVariablesAttribute == null)
+            return false;
+
+        // Default is ReadOnly, which is fine
+        if (viewVariablesAttribute.ConstructorArguments.Length == 0)
+            return false;
+
+        var accessArgument = viewVariablesAttribute.ConstructorArguments[0];
+        if (accessArgument.Value is not byte accessByte)
+            return false;
+
+        return (VVAccess)accessByte == VVAccess.ReadWrite;
     }
 
     private static bool IsImplicitDataDefinition(ITypeSymbol type)

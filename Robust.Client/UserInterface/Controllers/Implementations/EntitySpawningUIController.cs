@@ -327,8 +327,7 @@ public sealed class EntitySpawningUIController : UIController
         if (_window == null || _window.Disposed)
             return;
 
-        var textures = SpriteComponent.GetPrototypeTextures(prototype, _resources).Select(o => o.Default).ToList();
-        var button = _window.InsertEntityButton(prototype, insertFirst, index, textures);
+        var button = _window.InsertEntityButton(prototype, insertFirst, index);
 
         button.ActualButton.OnToggled += OnEntityButtonToggled;
     }

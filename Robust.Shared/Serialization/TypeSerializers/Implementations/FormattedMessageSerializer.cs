@@ -18,7 +18,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<FormattedMessage>? instanceProvider = null)
         {
-            return FormattedMessage.FromMarkup(node.Value);
+            return FormattedMessage.FromMarkupOrThrow(node.Value);
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,

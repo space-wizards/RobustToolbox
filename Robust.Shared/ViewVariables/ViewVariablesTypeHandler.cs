@@ -31,9 +31,11 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
 {
     private readonly List<TypeHandlerData> _handlers = new();
     private readonly Dictionary<string, PathHandler> _paths = new();
+    private readonly ISawmill _sawmill;
 
-    internal ViewVariablesTypeHandler()
+    internal ViewVariablesTypeHandler(ISawmill sawmill)
     {
+        _sawmill = sawmill;
     }
 
     /// <summary>
@@ -210,7 +212,9 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
                     }
                     catch (NullReferenceException e)
                     {
-                        Logger.ErrorS(nameof(ViewVariablesManager), e,
+                        _sawmill.Log(
+                            LogLevel.Error,
+                            e,
                             $"NRE caught in setter for path \"{path}\" for type \"{typeof(T).Name}\"...");
                     }
                 });

@@ -1,24 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
-using Robust.Client.Graphics;
 using Robust.Shared.Audio.Sources;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio.Sources;
 
 internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSource
 {
-    private int? SourceHandle = null;
     private int[] BufferHandles;
     private Dictionary<int, int> BufferMap = new();
     private readonly AudioManager _master;
     private bool _mono = true;
     private bool _float = false;
-    private int FilterHandle;
 
     public int SampleRate { get; set; } = 44100;
 
@@ -43,7 +37,7 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
         get
         {
             _checkDisposed();
-            var state = AL.GetSourceState(SourceHandle!.Value);
+            var state = AL.GetSourceState(SourceHandle);
             _master._checkAlError();
             return state == ALSourceState.Playing;
         }
@@ -53,7 +47,7 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
             {
                 _checkDisposed();
                 // IDK why this stackallocs but gonna leave it for now.
-                AL.SourcePlay(stackalloc int[] {SourceHandle!.Value});
+                AL.SourcePlay(stackalloc int[] {SourceHandle});
                 _master._checkAlError();
             }
             else
@@ -61,7 +55,7 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
                 if (_isDisposed())
                     return;
 
-                AL.SourceStop(SourceHandle!.Value);
+                AL.SourceStop(SourceHandle);
                 _master._checkAlError();
             }
         }
@@ -74,13 +68,13 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
 
     protected override void Dispose(bool disposing)
     {
-        if (SourceHandle == null)
+        if (SourceHandle == -1)
             return;
 
         if (!_master.IsMainThread())
         {
             // We can't run this code inside another thread so tell Clyde to clear it up later.
-            _master.DeleteBufferedSourceOnMainThread(SourceHandle.Value, FilterHandle);
+            _master.DeleteBufferedSourceOnMainThread(SourceHandle, FilterHandle);
 
             foreach (var handle in BufferHandles)
             {
@@ -92,21 +86,21 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
             if (FilterHandle != 0)
                 EFX.DeleteFilter(FilterHandle);
 
-            AL.DeleteSource(SourceHandle.Value);
+            AL.DeleteSource(SourceHandle);
             AL.DeleteBuffers(BufferHandles);
-            _master.RemoveBufferedAudioSource(SourceHandle.Value);
+            _master.RemoveBufferedAudioSource(SourceHandle);
             _master._checkAlError();
         }
 
         FilterHandle = 0;
-        SourceHandle = null;
+        SourceHandle = -1;
     }
 
     public int GetNumberOfBuffersProcessed()
     {
         _checkDisposed();
         // ReSharper disable once PossibleInvalidOperationException
-        AL.GetSource(SourceHandle!.Value, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
+        AL.GetSource(SourceHandle, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
         return buffersProcessed;
     }
 
@@ -116,7 +110,7 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
         var entries = Math.Min(Math.Min(handles.Length, BufferHandles.Length), GetNumberOfBuffersProcessed());
         fixed (int* ptr = handles)
         {
-            AL.SourceUnqueueBuffers(SourceHandle!.Value, entries, ptr);
+            AL.SourceUnqueueBuffers(SourceHandle, entries, ptr);
         }
 
         for (var i = 0; i < entries; i++)
@@ -183,7 +177,7 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
         fixed (int* ptr = realHandles)
             // ReSharper disable once PossibleInvalidOperationException
         {
-            AL.SourceQueueBuffers(SourceHandle!.Value, handles.Length, ptr);
+            AL.SourceQueueBuffers(SourceHandle, handles.Length, ptr);
         }
     }
 

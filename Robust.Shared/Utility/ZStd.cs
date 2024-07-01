@@ -271,30 +271,34 @@ public sealed class ZStdDecompressStream : Stream
                     return 0;
             }
 
-            unsafe
-            {
-                fixed (byte* inputPtr = _buffer)
-                fixed (byte* outputPtr = buffer.Span)
-                {
-                    ZSTD_outBuffer outputBuf = default;
-                    outputBuf.dst = outputPtr;
-                    outputBuf.pos = 0;
-                    outputBuf.size = (nuint)buffer.Length;
-                    ZSTD_inBuffer inputBuf = default;
-                    inputBuf.src = inputPtr;
-                    inputBuf.pos = (nuint)_bufferPos;
-                    inputBuf.size = (nuint)_bufferSize;
+            var ret = DecompressChunk(this, buffer.Span);
+            if (ret > 0)
+                return (int)ret;
 
-                    var ret = ZSTD_decompressStream(_ctx, &outputBuf, &inputBuf);
-
-                    _bufferPos = (int)inputBuf.pos;
-                    ZStdException.ThrowIfError(ret);
-
-                    if (outputBuf.pos > 0)
-                        return (int)outputBuf.pos;
-                }
-            }
         } while (true);
+
+        static unsafe nuint DecompressChunk(ZStdDecompressStream stream, Span<byte> buffer)
+        {
+            fixed (byte* inputPtr = stream._buffer)
+            fixed (byte* outputPtr = buffer)
+            {
+                ZSTD_outBuffer outputBuf = default;
+                outputBuf.dst = outputPtr;
+                outputBuf.pos = 0;
+                outputBuf.size = (nuint)buffer.Length;
+                ZSTD_inBuffer inputBuf = default;
+                inputBuf.src = inputPtr;
+                inputBuf.pos = (nuint)stream._bufferPos;
+                inputBuf.size = (nuint)stream._bufferSize;
+
+                var ret = ZSTD_decompressStream(stream._ctx, &outputBuf, &inputBuf);
+
+                stream._bufferPos = (int)inputBuf.pos;
+                ZStdException.ThrowIfError(ret);
+
+                return outputBuf.pos;
+            }
+        }
     }
 
     public override long Seek(long offset, SeekOrigin origin)

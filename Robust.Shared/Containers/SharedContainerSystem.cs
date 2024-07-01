@@ -659,7 +659,9 @@ namespace Robust.Shared.Containers
             if (!transform.Comp.ParentUid.IsValid()
                 || !TryGetContainingContainer(transform.Comp.ParentUid, out var container)
                 || !TryInsertIntoContainer(transform, container))
-                transform.Comp.AttachToGridOrMap();
+            {
+                _transform.AttachToGridOrMap(transform, transform.Comp);
+            }
         }
 
         private bool TryInsertIntoContainer(Entity<TransformComponent> transform, BaseContainer container)

@@ -82,7 +82,7 @@ public interface IInvocationContext
     /// </remarks>
     public void WriteMarkup(string markup)
     {
-        WriteLine(FormattedMessage.FromMarkup(markup));
+        WriteLine(FormattedMessage.FromMarkupPermissive(markup));
     }
 
     /// <summary>

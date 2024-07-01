@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Maths;
@@ -38,6 +39,36 @@ namespace Robust.UnitTesting.Shared.Utility
                 new("color", null, null, true),
                 new("baz")
             }));
+        }
+
+        [Test]
+        public static void TestParseMarkupAttributes()
+        {
+            var msg = FormattedMessage.FromMarkup("foo[font=\"Roboto\" size=10]bar[/font]baz");
+
+            var attributes = new Dictionary<string, MarkupParameter> {{"size", new MarkupParameter(10)}};
+
+            Assert.That(msg.Nodes, NUnit.Framework.Is.EquivalentTo(new MarkupNode[]
+            {
+                new("foo"),
+                new("font", new MarkupParameter("Roboto"), attributes),
+                new("bar"),
+                new("font", null, null, true),
+                new("baz")
+            }));
+        }
+
+        [Test]
+        public static void TestEquality()
+        {
+            var a = new MarkupNode("A");
+            var b = new MarkupNode("A");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(a.GetHashCode(), NUnit.Framework.Is.EqualTo(b.GetHashCode()));
+                Assert.That(a, NUnit.Framework.Is.EqualTo(b));
+            });
         }
 
         [Test]

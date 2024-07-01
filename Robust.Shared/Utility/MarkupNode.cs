@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
@@ -32,6 +33,13 @@ public sealed class MarkupNode : IComparable<MarkupNode>
         Closing = closing;
     }
 
+    public override bool Equals(object? obj) =>
+        obj is MarkupNode node
+        &&  node.Attributes.Count == Attributes.Count && !node.Attributes.Except(Attributes).Any()
+        && (node.Name, node.Value, node.Closing).Equals((Name, Value, Closing));
+
+    public override int GetHashCode() => (Name, Value, Attributes, Closing).GetHashCode();
+
     public override string ToString()
     {
         if(Name == null)
@@ -44,21 +52,6 @@ public sealed class MarkupNode : IComparable<MarkupNode>
         }
 
         return $"[{(Closing ? "/" : "")}{Name}{Value.ToString().ReplaceLineEndings("\\n") ?? ""}{attributesString}]";
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is MarkupNode node && Equals(node);
-    }
-
-    public bool Equals(MarkupNode node)
-    {
-        var equal = Name == node.Name;
-        equal &= Value.Equals(node.Value);
-        equal &= Attributes.Count == 0 && node.Attributes.Count == 0 || Attributes.Equals(node.Attributes);
-        equal &= Closing == node.Closing;
-
-        return equal;
     }
 
     public int CompareTo(MarkupNode? other)

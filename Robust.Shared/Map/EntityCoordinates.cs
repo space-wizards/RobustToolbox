@@ -248,6 +248,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="position">The vector to offset by local to the entity.</param>
         /// <returns>Newly offset coordinates.</returns>
+        [Pure]
         public EntityCoordinates Offset(Vector2 position)
         {
             return new(EntityId, Position + position);

@@ -39,7 +39,10 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `LocalizedEntityCommands`, which are console commands that have the ability to take entity system dependencies.
+* Added `BeginRegistrationRegion` to `IConsoleHost` to allow efficient bulk-registration of console commands.
+* Added `IConsoleHost.RegisterCommand` overload that takes an `IConsoleCommand`.
+* Added a `Finished` boolean to `AnimationCompletedEvent` which allows distinguishing if an animation was removed prematurely or completed naturally.
 
 ### Bugfixes
 
@@ -47,7 +50,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Tab completions containing spaces are now properly quoted, so the command will actually work properly once entered.
 
 ### Internal
 

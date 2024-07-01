@@ -23,7 +23,6 @@ namespace Robust.Shared.GameObjects
     public sealed partial class TransformComponent : Component, IComponentDebug
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         // Currently this field just exists for VV. In future, it might become a real field
         [ViewVariables, PublicAPI]

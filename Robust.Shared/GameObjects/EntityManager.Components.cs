@@ -376,6 +376,13 @@ namespace Robust.Shared.GameObjects
                 metadata.NetComponents.Add(netId, component);
             }
 
+            if (component is IComponentDelta delta)
+            {
+                var curTick = _gameTiming.CurTick;
+                delta.LastModifiedFields = new GameTick[reg.NetworkedFields.Length];
+                Array.Fill(delta.LastModifiedFields, curTick);
+            }
+
             component.Networked = reg.NetID != null;
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
@@ -718,7 +725,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent<T>(EntityUid? uid) where T : IComponent
+        public bool HasComponent<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent
         {
             return uid.HasValue && HasComponent<T>(uid.Value);
         }
@@ -733,7 +740,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent(EntityUid? uid, Type type)
+        public bool HasComponent([NotNullWhen(true)] EntityUid? uid, Type type)
         {
             if (!uid.HasValue)
             {
@@ -756,7 +763,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent(EntityUid? uid, ushort netId, MetaDataComponent? meta = null)
+        public bool HasComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, MetaDataComponent? meta = null)
         {
             if (!uid.HasValue)
             {
@@ -1552,7 +1559,7 @@ namespace Robust.Shared.GameObjects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool HasComp(EntityUid? uid) => HasComponent(uid);
+        public bool HasComp([NotNullWhen(true)] EntityUid? uid) => HasComponent(uid);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
@@ -1563,7 +1570,7 @@ namespace Robust.Shared.GameObjects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool HasComponent(EntityUid? uid)
+        public bool HasComponent([NotNullWhen(true)] EntityUid? uid)
         {
             return uid != null && HasComponent(uid.Value);
         }

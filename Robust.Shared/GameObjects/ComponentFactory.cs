@@ -172,6 +172,33 @@ namespace Robust.Shared.GameObjects
             return name;
         }
 
+        /// <inheritdoc />
+        public void RegisterNetworkedFields<T>(params string[] fields) where T : IComponent
+        {
+            var compReg = GetRegistration(CompIdx.Index<T>());
+            RegisterNetworkedFields(compReg, fields);
+        }
+
+        /// <inheritdoc />
+        public void RegisterNetworkedFields(ComponentRegistration compReg, params string[] fields)
+        {
+            // Nothing to do.
+            if (compReg.NetworkedFields.Length > 0 || fields.Length == 0)
+                return;
+
+            compReg.NetworkedFields = fields;
+            var lookup = new Dictionary<string, int>();
+            var i = 0;
+
+            foreach (var field in fields)
+            {
+                lookup[field] = i;
+                i++;
+            }
+
+            compReg.NetworkedFieldLookup = lookup.ToFrozenDictionary();
+        }
+
         public void IgnoreMissingComponents(string postfix = "")
         {
             if (_ignoreMissingComponentPostfix != null && _ignoreMissingComponentPostfix != postfix)

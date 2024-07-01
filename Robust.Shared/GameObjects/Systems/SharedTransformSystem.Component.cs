@@ -60,17 +60,6 @@ public abstract partial class SharedTransformSystem
         RaiseLocalEvent(uid, ref ev);
     }
 
-    [Obsolete("Use Entity<T> variant")]
-    public bool AnchorEntity(
-        EntityUid uid,
-        TransformComponent xform,
-        EntityUid gridUid,
-        MapGridComponent grid,
-        Vector2i tileIndices)
-    {
-        return AnchorEntity((uid, xform), (gridUid, grid), tileIndices);
-    }
-
     public bool AnchorEntity(
         Entity<TransformComponent> entity,
         Entity<MapGridComponent> grid,
@@ -100,13 +89,6 @@ public abstract partial class SharedTransformSystem
         return true;
     }
 
-    [Obsolete("Use Entity<T> variants")]
-    public bool AnchorEntity(EntityUid uid, TransformComponent xform, MapGridComponent grid)
-    {
-        var tileIndices = _map.TileIndicesFor(grid.Owner, grid, xform.Coordinates);
-        return AnchorEntity(uid, xform, grid.Owner, grid, tileIndices);
-    }
-
     public bool AnchorEntity(EntityUid uid, TransformComponent xform)
     {
         return AnchorEntity((uid, xform));
@@ -114,8 +96,6 @@ public abstract partial class SharedTransformSystem
 
     public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null)
     {
-        DebugTools.Assert(grid == null || grid.Value.Owner == entity.Comp.GridUid);
-
         if (grid == null)
         {
             if (!TryComp(entity.Comp.GridUid, out MapGridComponent? gridComp))
@@ -245,15 +225,17 @@ public abstract partial class SharedTransformSystem
         InitializeGridUid(uid, component);
         component.MatricesDirty = true;
 
-        DebugTools.Assert(component._gridUid == uid || !HasComp<MapGridComponent>(uid));
+        DebugTools.Assert((component._gridUid == uid) || !HasComp<MapGridComponent>(uid));
         if (!component._anchored)
             return;
 
         MapGridComponent? grid;
+        EntityUid gridUid;
 
         // First try find grid via parent:
         if (component.GridUid == component.ParentUid && TryComp(component.ParentUid, out MapGridComponent? gridComp))
         {
+            gridUid = component.ParentUid;
             grid = gridComp;
         }
         else
@@ -261,7 +243,7 @@ public abstract partial class SharedTransformSystem
             // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordinates)
             // in that case, we attempt to attach to a grid.
             var pos = new MapCoordinates(GetWorldPosition(component), component.MapID);
-            _mapManager.TryFindGridAt(pos, out _, out grid);
+            _mapManager.TryFindGridAt(pos, out gridUid, out grid);
         }
 
         if (grid == null)
@@ -270,7 +252,7 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        if (!AnchorEntity(uid, component, grid))
+        if (!AnchorEntity((uid, component), (gridUid, grid)))
             component._anchored = false;
     }
 

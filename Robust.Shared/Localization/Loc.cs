@@ -1,60 +1,64 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using JetBrains.Annotations;
-using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 
-namespace Robust.Shared.Localization
+namespace Robust.Shared.Localization;
+
+/// <summary>
+/// Static convenience wrapper for the <see cref="ILocalizationManager"/>.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Mirrors the API of <see cref="ILocalizationManager"/>, but statically.
+/// This makes it more convenient to use.
+/// </para>
+/// <para>
+/// This API follows the same thread locality requirements as <see cref="IoCManager"/>
+/// </para>
+/// </remarks>
+[PublicAPI]
+public static class Loc
 {
+    private static ILocalizationManager LocalizationManager => _localizationManagerHash ?? IoCManager.Resolve<ILocalizationManager>();
+
     /// <summary>
-    /// Static convenience wrapper for the <see cref="ILocalizationManager"/>.
+    /// Do not use this field. Use <see cref="Loc.LocalizationManager"/>
+    /// It uses <see cref="ILocalizationManager"/> for hashing
+    /// to remove unnecessary calls to <see cref="IoCManager.Resolve{T}()"/>,
+    /// because localization is called quite often.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Mirrors the API of <see cref="ILocalizationManager"/>, but statically.
-    /// This makes it more convenient to use.
-    /// </para>
-    /// <para>
-    /// This API follows the same thread locality requirements as <see cref="IoCManager"/>
-    /// </para>
-    /// </remarks>
-    [PublicAPI]
-    public static class Loc
+    private static ILocalizationManager? _localizationManagerHash;
+
+    /// <summary>
+    /// Gets a language appropriate string represented by the supplied messageId.
+    /// </summary>
+    /// <param name="messageId">Unique Identifier for a translated message.</param>
+    /// <returns>
+    /// The language appropriate message if available, otherwise the messageId is returned.
+    /// </returns>
+    public static string GetString(string messageId)
     {
-        private static ILocalizationManager LocalizationManager => IoCManager.Resolve<ILocalizationManager>();
+        return LocalizationManager.GetString(messageId);
+    }
 
-        /// <summary>
-        ///     Gets a language appropriate string represented by the supplied messageId.
-        /// </summary>
-        /// <param name="messageId">Unique Identifier for a translated message.</param>
-        /// <returns>
-        ///     The language appropriate message if available, otherwise the messageId is returned.
-        /// </returns>
-        public static string GetString(string messageId)
-        {
-            return LocalizationManager.GetString(messageId);
-        }
+    public static bool TryGetString(string messageId, [NotNullWhen(true)] out string? message)
+    {
+        return LocalizationManager.TryGetString(messageId, out message);
+    }
 
-        public static bool TryGetString(string messageId, [NotNullWhen(true)] out string? message)
-        {
-            return LocalizationManager.TryGetString(messageId, out message);
-        }
+    /// <summary>
+    /// Version of <see cref="GetString(string)"/> that supports arguments.
+    /// </summary>
+    public static string GetString(string messageId, params (string,object)[] args)
+    {
+        return LocalizationManager.GetString(messageId, args);
+    }
 
-        /// <summary>
-        ///     Version of <see cref="GetString(string)"/> that supports arguments.
-        /// </summary>
-        public static string GetString(string messageId, params (string,object)[] args)
-        {
-            return LocalizationManager.GetString(messageId, args);
-        }
-
-        public static bool TryGetString(
-            string messageId,
-            [NotNullWhen(true)] out string? value,
-            params (string, object)[] args)
-        {
-            return LocalizationManager.TryGetString(messageId, out value, args);
-        }
+    public static bool TryGetString(
+        string messageId,
+        [NotNullWhen(true)] out string? value,
+        params (string, object)[] args)
+    {
+        return LocalizationManager.TryGetString(messageId, out value, args);
     }
 }

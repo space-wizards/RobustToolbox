@@ -24,26 +24,26 @@ namespace Robust.Shared.GameObjects
         ///     that without messing with the main viewport's eye. This is important as there are some overlays that are
         ///     only be drawn if that viewport's eye belongs to the currently controlled entity.
         /// </remarks>
-        [ViewVariables, DataField("target"), AutoNetworkedField]
+        [DataField, AutoNetworkedField]
         public EntityUid? Target;
 
-        [ViewVariables(VVAccess.ReadWrite), DataField("drawFov"), AutoNetworkedField]
+        [DataField, AutoNetworkedField]
         public bool DrawFov = true;
 
         [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField]
         public bool DrawLight = true;
 
         // yes it's not networked, don't ask.
-        [ViewVariables(VVAccess.ReadWrite), DataField("rotation")]
+        [ViewVariables(VVAccess.ReadWrite), DataField]
         public Angle Rotation;
 
-        [ViewVariables(VVAccess.ReadWrite), DataField("zoom")]
+        [ViewVariables(VVAccess.ReadWrite), DataField]
         public Vector2 Zoom = Vector2.One;
 
         /// <summary>
         /// Eye offset, relative to the map, and not affected by <see cref="Rotation"/>
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite), DataField("offset"), AutoNetworkedField]
+        [DataField, AutoNetworkedField]
         public Vector2 Offset;
 
         /// <summary>

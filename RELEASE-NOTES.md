@@ -22,7 +22,7 @@ Don't change the format without looking at the script!
 
 ### Other
 
-*None yet*
+* Added a CVar to limit the maximum range of the nearby command. Defaults to 200.
 
 ### Internal
 

@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
@@ -1759,5 +1758,16 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> LaunchContentBundle =
             CVarDef.Create("launch.content_bundle", false, CVar.CLIENTONLY);
+
+        /*
+         * TOOLSHED
+         */
+
+        /// <summary>
+        ///     Whether or not to show a button that opens the guidebook when a player changes their species,
+        ///     explaining the difference between each.
+        /// </summary>
+        public static readonly CVarDef<int> ToolshedNearbyLimit =
+            CVarDef.Create("toolshed.nearby_limit", 200, CVar.SERVER | CVar.REPLICATED);
     }
 }

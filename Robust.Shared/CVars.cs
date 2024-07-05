@@ -1764,8 +1764,8 @@ namespace Robust.Shared
          */
 
         /// <summary>
-        ///     Whether or not to show a button that opens the guidebook when a player changes their species,
-        ///     explaining the difference between each.
+        ///     The max range that can be passed to the nearby toolshed command.
+        ///     Any higher value will cause an exception.
         /// </summary>
         public static readonly CVarDef<int> ToolshedNearbyLimit =
             CVarDef.Create("toolshed.nearby_limit", 200, CVar.SERVER | CVar.REPLICATED);

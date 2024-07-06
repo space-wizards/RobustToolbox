@@ -321,7 +321,7 @@ public partial class SharedPhysicsSystem
         if (body._mass == oldMass && body._inertia == oldInertia && oldCenter == localCenter)
             return;
 
-        var ev = new MassDataChangedEvent((uid, body, manager), body._mass, body._inertia, localCenter, oldMass, oldInertia, oldCenter);
+        var ev = new MassDataChangedEvent((uid, body, manager), oldMass, oldInertia, oldCenter);
         RaiseLocalEvent(uid, ref ev);
     }
 

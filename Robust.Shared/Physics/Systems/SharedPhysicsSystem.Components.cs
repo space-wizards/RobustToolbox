@@ -256,6 +256,9 @@ public partial class SharedPhysicsSystem
         if (!_fixturesQuery.Resolve(uid, ref manager))
             return;
 
+        var oldMass = body._mass;
+        var oldInertia = body._inertia;
+
         body._mass = 0.0f;
         body._invMass = 0.0f;
         body._inertia = 0.0f;
@@ -314,6 +317,12 @@ public partial class SharedPhysicsSystem
         // Update center of mass velocity.
         body.LinearVelocity += Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
         Dirty(uid, body);
+
+        if (body._mass == oldMass && body._inertia == oldInertia && oldCenter == localCenter)
+            return;
+
+        var ev = new MassDataChangedEvent((uid, body, manager), oldMass, oldInertia, oldCenter);
+        RaiseLocalEvent(uid, ref ev);
     }
 
     public bool SetAngularVelocity(EntityUid uid, float value, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)

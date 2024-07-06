@@ -19,9 +19,9 @@ public readonly record struct MassDataChangedEvent(
     Vector2 OldCenter
 )
 {
-    public float NewMass => Entity.Comp._mass;
-    public float NewInertia => Entity.Comp._inertia;
-    public float NewCenter => Entity.Comp._localCenter;
+    public float NewMass => Entity.Comp1._mass;
+    public float NewInertia => Entity.Comp1._inertia;
+    public float NewCenter => Entity.Comp1._localCenter;
     public bool MassChanged => NewMass != OldMass;
     public bool InertiaChanged => NewInertia != OldInertia;
     public bool CenterChanged => NewCenter != OldCenter;

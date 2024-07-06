@@ -43,9 +43,27 @@ public abstract class SharedAppearanceSystem : EntitySystem
         if (component.AppearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
             return;
 
-        DebugTools.Assert(value.GetType().IsValueType || value is ICloneable, "Appearance data values must be cloneable.");
+        //Commented out until there is a suitable way to check that ISerializationManager.CopyTo works without doing the copying
+        //DebugTools.Assert(value.GetType().IsValueType || value is ICloneable, "Appearance data values must be cloneable.");
 
         component.AppearanceData[key] = value;
+        Dirty(uid, component);
+        QueueUpdate(uid, component);
+    }
+
+    public void RemoveData(EntityUid uid, Enum key, AppearanceComponent? component = null)
+    {
+        if (!Resolve(uid, ref component, false))
+            return;
+
+        // If appearance data is changing due to server state application, the server's comp state is getting applied
+        // anyways, so we can skip this.
+        if (_timing.ApplyingState
+            && component.NetSyncEnabled) // TODO consider removing this and avoiding the component resolve altogether.
+            return;
+
+        component.AppearanceData.Remove(key);
+        
         Dirty(uid, component);
         QueueUpdate(uid, component);
     }

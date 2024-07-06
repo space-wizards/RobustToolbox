@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.CodeAnalysis;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Utility;
@@ -9,7 +8,15 @@ namespace Robust.Client.ViewVariables.Editors
 {
     sealed class VVPropEditorEnum : VVPropEditor
     {
-        private Dictionary<int, int> _idToValue = new();
+        private readonly Dictionary<int, int> _idToValue = new();
+        private readonly Dictionary<int, int> _valueToId = new();
+
+        private readonly Dictionary<int, Button> _buttons = new();
+
+        private int _invalidOptionId;
+
+        private int _value;
+        private bool _flagEnum;
 
         protected override Control MakeUI(object? value)
         {
@@ -17,10 +24,18 @@ namespace Robust.Client.ViewVariables.Editors
             var enumType = value.GetType();
             var enumList = Enum.GetValues(enumType);
             var enumNames = Enum.GetNames(enumType);
+            var underlyingType = Enum.GetUnderlyingType(enumType);
 
             var convertedValue = Convert.ToInt32(value);
 
+            var hBoxContainer = new BoxContainer
+            {
+                Orientation = BoxContainer.LayoutOrientation.Horizontal,
+            };
+
             var optionButton = new OptionButton();
+            hBoxContainer.AddChild(optionButton);
+
             var hasValue = false;
             var valueIndex = 0;
             var i = 0;
@@ -29,6 +44,7 @@ namespace Robust.Client.ViewVariables.Editors
                 var label = enumNames[i];
                 var entry = Convert.ToInt32(val);
                 _idToValue.Add(i, entry);
+                _valueToId.TryAdd(entry, i);
                 optionButton.AddItem(label, i);
                 if (entry == convertedValue)
                 {
@@ -38,28 +54,89 @@ namespace Robust.Client.ViewVariables.Editors
                 i += 1;
             }
 
+            var isFlags = enumType.GetCustomAttributes(typeof(FlagsAttribute), false).Length > 0;
+
             // Handle 0 value of flags or weird enum values.
-            if (!hasValue)
+            if (!hasValue || isFlags)
             {
-                valueIndex = _idToValue.Count;
-                _idToValue.Add(valueIndex, convertedValue);
-                optionButton.AddItem(value.ToString() ?? string.Empty, valueIndex);
+                _invalidOptionId = i;
+                _idToValue.Add(_invalidOptionId, convertedValue);
+                optionButton.AddItem(string.Empty, _invalidOptionId);
+                if (!hasValue)
+                    valueIndex = _invalidOptionId;
             }
 
             optionButton.SelectId(valueIndex);
             optionButton.Disabled = ReadOnly;
 
+            // Flags
+            if (isFlags)
+            {
+                _flagEnum = true;
+                var flags = 0;
+                foreach (var val in enumList)
+                {
+                    var entry = Convert.ToInt32(val);
+                    if ((entry & flags) != 0 || entry == 0)
+                        continue;
+
+                    flags |= entry;
+                    var button = new Button
+                    {
+                        Text = enumNames[_valueToId[entry]],
+                    };
+                    _buttons.Add(entry, button);
+                    hBoxContainer.AddChild(button);
+                    button.ToggleMode = true;
+                    if (!ReadOnly)
+                    {
+                        button.OnToggled += args =>
+                        {
+                            if (args.Pressed)
+                                SelectButtons(_value | entry);
+                            else
+                                SelectButtons(_value & ~entry);
+                        };
+                    }
+                }
+            }
+
             if (!ReadOnly)
             {
-                var underlyingType = Enum.GetUnderlyingType(value.GetType());
                 optionButton.OnItemSelected += e =>
                 {
-                    optionButton.SelectId(e.Id);
-                    ValueChanged(Convert.ChangeType(_idToValue[e.Id], underlyingType));
+                    if (e.Id == _invalidOptionId)
+                    {
+                        optionButton.SelectId(_invalidOptionId);
+                        return;
+                    }
+
+                    SelectButtons(_idToValue[e.Id]);
                 };
             }
 
-            return optionButton;
+            SelectButtons(convertedValue, false);
+
+            return hBoxContainer;
+
+            void SelectButtons(int flags, bool changeValue = true)
+            {
+                _value = flags;
+                if (_flagEnum)
+                {
+                    foreach (var (buttonFlags, button) in _buttons)
+                    {
+                        button.Pressed = (buttonFlags & flags) != 0;
+                    }
+                }
+
+                if (!_valueToId.TryGetValue(flags, out var id)
+                    || !optionButton.TrySelectId(id))
+                    optionButton.SelectId(_invalidOptionId);
+
+                if (changeValue)
+                    ValueChanged(Convert.ChangeType(flags, underlyingType));
+            }
         }
     }
 }

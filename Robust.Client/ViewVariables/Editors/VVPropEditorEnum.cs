@@ -37,7 +37,7 @@ namespace Robust.Client.ViewVariables.Editors
             hBoxContainer.AddChild(optionButton);
 
             var hasValue = false;
-            var valueIndex = 0;
+            var selectedId = 0;
             var i = 0;
             foreach (var val in enumList)
             {
@@ -49,24 +49,24 @@ namespace Robust.Client.ViewVariables.Editors
                 if (entry == convertedValue)
                 {
                     hasValue = true;
-                    valueIndex = i;
+                    selectedId = i;
                 }
                 i += 1;
             }
 
             var isFlags = enumType.GetCustomAttributes(typeof(FlagsAttribute), false).Length > 0;
 
-            // Handle 0 value of flags or weird enum values.
+            // Handle unnamed enum values.
             if (!hasValue || isFlags)
             {
                 _invalidOptionId = i;
                 _idToValue.Add(_invalidOptionId, convertedValue);
                 optionButton.AddItem(string.Empty, _invalidOptionId);
                 if (!hasValue)
-                    valueIndex = _invalidOptionId;
+                    selectedId = _invalidOptionId;
             }
 
-            optionButton.SelectId(valueIndex);
+            optionButton.SelectId(selectedId);
             optionButton.Disabled = ReadOnly;
 
             // Flags

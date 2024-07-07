@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StyleClassOptionButton = "optionButton";
         public const string StyleClassPopup = "optionButtonPopup";
         public const string StyleClassOptionTriangle = "optionTriangle";
-        public const string StyleClassOptionsBackground = "optionsBackground";
+        public const string StyleClassOptionsBackground = "optionButtonBackground";
         public readonly ScrollContainer OptionsScroll;
 
         private readonly List<ButtonData> _buttonData = new();

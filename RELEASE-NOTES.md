@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added command usage with types to Toolshed command help.
 
 ### Bugfixes
 

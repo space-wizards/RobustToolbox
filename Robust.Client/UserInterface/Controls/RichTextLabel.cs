@@ -38,6 +38,18 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public string? Text
+        {
+            get => _message?.ToMarkup();
+            set
+            {
+                if (value == null)
+                    _message?.Clear();
+                else
+                    _message?.AddMarkupPermissive(value);
+            }
+        }
+
         public RichTextLabel()
         {
             IoCManager.InjectDependencies(this);

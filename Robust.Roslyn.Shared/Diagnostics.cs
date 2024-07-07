@@ -31,6 +31,7 @@ public static class Diagnostics
     public const string IdDependencyFieldAssigned = "RA0025";
     public const string IdUncachedRegex = "RA0026";
     public const string IdDataFieldRedundantTag = "RA0027";
+    public const string IdMustCallBase = "RA0028";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

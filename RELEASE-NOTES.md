@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Added a toolshed.nearby_limit cvar to limit the maximum range of the nearby command. Defaults to 200.
 
 ### Internal
 

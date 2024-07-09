@@ -468,6 +468,21 @@ namespace Robust.Shared.GameObjects
             ent.Comp4.LastModifiedTick = CurrentTick;
         }
 
+        public bool TryQueueDeleteEntity(EntityUid? uid)
+        {
+            if (uid == null)
+                return false;
+
+            if (Deleted(uid.Value))
+                return false;
+
+            if (!QueuedDeletionsSet.Add(uid.Value))
+                return false;
+
+            QueueDeleteEntity(uid);
+            return true;
+        }
+
         /// <summary>
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>

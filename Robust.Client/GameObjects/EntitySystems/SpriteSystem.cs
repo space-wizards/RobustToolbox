@@ -66,6 +66,11 @@ namespace Robust.Client.GameObjects
             _sawmill = _logManager.GetSawmill("sprite");
         }
 
+        public bool IsVisible(Layer layer)
+        {
+            return layer.Visible && layer.CopyToShaderParameters == null;
+        }
+
         private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
         {
             // I'm not 100% this is needed, but I CBF with this ATM. Somebody kill server sprite component please.

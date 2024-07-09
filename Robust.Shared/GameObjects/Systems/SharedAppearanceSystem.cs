@@ -29,6 +29,11 @@ public abstract class SharedAppearanceSystem : EntitySystem
     {
     }
 
+    private bool CheckIfApplyingState(AppearanceComponent component)
+    {
+        return _timing.ApplyingState && component.NetSyncEnabled; // TODO consider removing this and avoiding the component resolve altogether.
+    }
+
     public void SetData(EntityUid uid, Enum key, object value, AppearanceComponent? component = null)
     {
         if (!Resolve(uid, ref component, false))
@@ -36,8 +41,7 @@ public abstract class SharedAppearanceSystem : EntitySystem
 
         // If appearance data is changing due to server state application, the server's comp state is getting applied
         // anyways, so we can skip this.
-        if (_timing.ApplyingState
-            && component.NetSyncEnabled) // TODO consider removing this and avoiding the component resolve altogether.
+        if (CheckIfApplyingState(component))
             return;
 
         if (component.AppearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
@@ -56,10 +60,7 @@ public abstract class SharedAppearanceSystem : EntitySystem
         if (!Resolve(uid, ref component, false))
             return;
 
-        // If appearance data is changing due to server state application, the server's comp state is getting applied
-        // anyways, so we can skip this.
-        if (_timing.ApplyingState
-            && component.NetSyncEnabled) // TODO consider removing this and avoiding the component resolve altogether.
+        if (CheckIfApplyingState(component))
             return;
 
         component.AppearanceData.Remove(key);

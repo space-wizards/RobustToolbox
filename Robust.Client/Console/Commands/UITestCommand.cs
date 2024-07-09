@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -8,6 +9,9 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Console.Commands;
 
@@ -27,19 +31,57 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
 
     private readonly TabContainer _tabContainer;
     private readonly TabSpriteView _sprite;
+    private readonly IEntityManager _entMan;
+    private readonly IGameTiming _timing;
 
+    private readonly string EntityName = "Crowbar";
+
+    private EntityUid entityuid;
     public UITestControl()
     {
+        IoCManager.Resolve(ref _entMan, ref _timing);
+
         _tabContainer = new TabContainer();
         AddChild(_tabContainer);
+
+        _tabContainer.AddChild(TabGeneral());
+
+        _tabContainer.AddChild(TabItemList());
+
+        _tabContainer.AddChild(TabGrid());
+
+        _tabContainer.AddChild(TabButtonGroup());
+
+        _tabContainer.AddChild(TabSlider());
+
+        _tabContainer.AddChild(TabSplitContainer());
+
+        _tabContainer.AddChild(TabTextEdit());
+
+        _tabContainer.AddChild(TabRichText());
+
+        // this being in a separate file is a bit messy, but it's a test command so whatever
+        _sprite = new TabSpriteView();
+        _tabContainer.AddChild(_sprite);
+
+        _tabContainer.AddChild(TabItemSlot());
+    }
+
+    public void OnClosed()
+    {
+        _sprite.OnClosed();
+
+        _entMan.DeleteEntity( entityuid );
+    }
+
+    private Control TabGeneral()
+    {
         var scroll = new ScrollContainer();
-        _tabContainer.AddChild(scroll);
-        //scroll.SetAnchorAndMarginPreset(Control.LayoutPreset.Wide);
+
         var vBox = new BoxContainer
         {
             Orientation = BoxContainer.LayoutOrientation.Vertical
         };
-        scroll.AddChild(vBox);
 
         var progressBar = new ProgressBar { MaxValue = 10, Value = 5 };
         vBox.AddChild(progressBar);
@@ -62,7 +104,6 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
             child = tree.CreateItem();
             child.Text = $"Bar {i}";
         }
-
         vBox.AddChild(tree);
 
         var rich = new RichTextLabel();
@@ -74,15 +115,17 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
         rich.SetMessage(message);
         vBox.AddChild(rich);
 
-        var itemList = new ItemList();
-        _tabContainer.AddChild(itemList);
-        for (var i = 0; i < 10; i++)
-        {
-            itemList.AddItem(i.ToString());
-        }
+        scroll.AddChild(vBox);
+        //scroll.SetAnchorAndMarginPreset(Control.LayoutPreset.Wide);
+        TabContainer.SetTabTitle(scroll, "General");
 
+        return scroll;
+    }
+
+    private Control TabGrid()
+    {
         var grid = new GridContainer { Columns = 3 };
-        _tabContainer.AddChild(grid);
+
         for (var y = 0; y < 3; y++)
         {
             for (var x = 0; x < 3; x++)
@@ -95,6 +138,26 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
             }
         }
 
+        TabContainer.SetTabTitle(grid, "Grid");
+        return grid;
+    }
+    private Control TabItemList()
+    {
+        var itemList = new ItemList();
+
+        for (var i = 0; i < 10; i++)
+        {
+            itemList.AddItem(i.ToString());
+        }
+
+        TabContainer.SetTabTitle(itemList, "ItemList");
+
+        return itemList;
+    }
+
+    // aka Radio buttons
+    private Control TabButtonGroup()
+    {
         var group = new ButtonGroup();
         var vBoxRadioButtons = new BoxContainer
         {
@@ -108,14 +171,15 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
                 Group = group
             });
 
-            // ftftftftftftft
         }
 
-        _tabContainer.AddChild(vBoxRadioButtons);
+        TabContainer.SetTabTitle(vBoxRadioButtons, "ButtonGroup");
+        return vBoxRadioButtons;
 
-        TabContainer.SetTabTitle(vBoxRadioButtons, "Radio buttons!!");
-
-        _tabContainer.AddChild(new BoxContainer
+    }
+    private Control TabSlider()
+    {
+       var box = new BoxContainer
         {
             Orientation = BoxContainer.LayoutOrientation.Vertical,
             Name = "Slider",
@@ -123,9 +187,14 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
             {
                 new Slider()
             }
-        });
+        };
+        TabContainer.SetTabTitle(box, "Slider");
+        return box;
+    }
 
-        _tabContainer.AddChild(new SplitContainer
+    private Control TabSplitContainer()
+    {
+        var splitContainer = new SplitContainer
         {
             Orientation = SplitContainer.SplitOrientation.Horizontal,
             Children =
@@ -147,20 +216,12 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
                     }
                 },
             }
-        });
+        };
 
-        _tabContainer.AddChild(TabTextEdit());
-        _tabContainer.AddChild(TabRichText());
+        TabContainer.SetTabTitle(splitContainer, "SplitContainer");
 
-        _sprite = new TabSpriteView();
-        _tabContainer.AddChild(_sprite);
+        return splitContainer;
     }
-
-    public void OnClosed()
-    {
-        _sprite.OnClosed();
-    }
-
     private Control TabTextEdit()
     {
         var textEdit = new TextEdit
@@ -175,7 +236,7 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
         while (true)
         {
             var nextIndex = Lipsum.IndexOf(' ', startIndex);
-            var str = nextIndex == -1 ? Lipsum[startIndex..] : Lipsum[startIndex..(nextIndex+1)];
+            var str = nextIndex == -1 ? Lipsum[startIndex..] : Lipsum[startIndex..(nextIndex + 1)];
 
             lipsumRope = new Rope.Branch(lipsumRope, new Rope.Leaf(str));
             if (lipsumRope.Depth > 250)
@@ -194,13 +255,12 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
             rope = new Rope.Branch(rope, lipsumRope);
         }
 
-        rope = (Rope.Branch) Rope.Rebalance(rope);
+        rope = (Rope.Branch)Rope.Rebalance(rope);
 
         textEdit.TextRope = rope;
 
         return textEdit;
     }
-
     private Control TabRichText()
     {
         var label = new RichTextLabel();
@@ -208,6 +268,182 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
 
         TabContainer.SetTabTitle(label, "RichText");
         return label;
+    }
+
+    private Control TabItemSlot()
+    {
+        int currentRotation = 0;
+        bool emptyToggle = true;
+
+        entityuid = _entMan.SpawnEntity(EntityName, MapCoordinates.Nullspace);
+
+        var Label0 = new Label
+        {
+            Text = "ItemSlotButton with MinSize",
+            Align = Label.AlignMode.Center
+        };
+        var itemSlotButton0 = new ItemSlotButton
+        {
+            MinSize = new Vector2(100, 100)
+        };
+
+        itemSlotButton0.SetEntity(entityuid);
+
+        var Label1 = new Label
+        {
+            Text = "ItemSlotButton with Padding",
+            Align = Label.AlignMode.Center
+        };
+        var itemSlotButton1 = new ItemSlotButton
+        {
+            Padding = new Thickness(20)
+        };
+
+        itemSlotButton1.SetEntity(entityuid);
+
+        var Label2 = new Label
+        {
+            Text = "Disabled ItemSlotButton",
+            Align = Label.AlignMode.Center
+        };
+
+        var itemSlotButton2 = new ItemSlotButton
+        {
+            Padding = new Thickness(10),
+            Disabled = true
+        };
+
+        itemSlotButton2.SetEntity(entityuid);
+
+        var Label3 = new Label
+        {
+            Text = "Scaled ItemSlotButton",
+            Align = Label.AlignMode.Center
+        };
+
+        var itemSlotButton3 = new ItemSlotButton
+        {
+            Scale = new Vector2(2, 2),
+            Padding = new Thickness(10),
+        };
+
+        itemSlotButton3.SetEntity(entityuid);
+
+        var Label4 = new Label
+        {
+            Text = "ItemSlotButton with ToggleMode",
+            Align = Label.AlignMode.Center
+        };
+
+        var itemSlotButton4 = new ItemSlotButton
+        {
+            Scale = new Vector2(1, 1),
+            Padding = new Thickness(10),
+            ToggleMode = true
+        };
+
+        itemSlotButton4.SetEntity(entityuid);
+
+        var Label5 = new Label
+        {
+            Text = "ItemSlotButton with OnPressed event",
+            Align = Label.AlignMode.Center
+        };
+
+        var itemSlotButton5 = new ItemSlotButton
+        {
+            Scale = new Vector2(1, 1),
+            Padding = new Thickness(10)
+        };
+
+        itemSlotButton5.SetEntity(entityuid);
+
+        itemSlotButton5.OnPressed += args =>
+        {
+            currentRotation += 90;
+
+            if (currentRotation >= 360)
+                currentRotation = 0;
+
+            itemSlotButton5.WorldRotation = Angle.FromDegrees(currentRotation);
+        };
+
+        var itemSlotButton6 = new ItemSlotButton
+        {
+            Scale = new Vector2(1, 1),
+            MinSize = new Vector2(80,80),
+            Text = "ItemSlotButton with Text",
+        };
+
+        itemSlotButton6.SetEntity(entityuid);
+
+        var itemSlotButton7 = new ItemSlotButton
+        {
+            Scale = new Vector2(1, 1),
+            MinSize = new Vector2(80,80),
+            LabelPosition = ItemSlotButton.LabelPositionMode.Top,
+            Text = "ItemSlotButton with Text on Top",
+        };
+
+        itemSlotButton7.SetEntity(entityuid);
+
+        var itemSlotButton8 = new ItemSlotButton
+        {
+            Text = "Click to insert entity",
+            MinSize = new Vector2(80,80) // If you are creating an empty ItemSlotButton, that will be filled later, you should set the MinSize
+        };
+
+        itemSlotButton8.OnPressed += args =>
+        {
+            if(emptyToggle)
+            {
+                itemSlotButton8.SetEntity(entityuid);
+                //itemSlotButton8.Padding = new Thickness(10); // It is easy to forget to set the padding back if you change the sprite
+                itemSlotButton8.Text = "Click to remove entity";
+                emptyToggle = false;
+            }
+            else
+            {
+                itemSlotButton8.SetEntity(null);
+                //itemSlotButton8.Padding = new Thickness(10); // It is easy to forget to set the padding back if you change the sprite
+                itemSlotButton8.Text = "Click to insert entity";
+                emptyToggle = true;
+            }
+        };
+
+        var _box = new BoxContainer
+        {
+            Orientation = BoxContainer.LayoutOrientation.Vertical,
+            Children = {
+                Label0, itemSlotButton0, VerticalPadding(),
+                Label1, itemSlotButton1, VerticalPadding(),
+                Label2, itemSlotButton2,  VerticalPadding(),
+                Label3, itemSlotButton3,  VerticalPadding(),
+                Label4, itemSlotButton4,  VerticalPadding(),
+                Label5, itemSlotButton5,  VerticalPadding(),
+                itemSlotButton6,  VerticalPadding(),
+                itemSlotButton7,  VerticalPadding(),
+                itemSlotButton8
+            }
+        };
+
+        var _scroll = new ScrollContainer
+        {
+            VerticalExpand = true,
+            HorizontalExpand = true
+        };
+        _scroll.AddChild(_box);
+        TabContainer.SetTabTitle(_scroll, "ItemSlot");
+
+        return _scroll;
+    }
+
+    public Control VerticalPadding()
+    {
+        return new Control
+        {
+            MinSize = new Vector2(0, 10)
+        };
     }
 
     public void SelectTab(Tab tab)

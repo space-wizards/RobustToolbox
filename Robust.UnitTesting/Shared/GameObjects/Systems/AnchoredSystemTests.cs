@@ -91,10 +91,15 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Reflect(false)]
         private sealed class AnchorOnInitTestSystem : EntitySystem
         {
+            [Dependency] private readonly SharedTransformSystem _transform = default!;
+            [Dependency] private readonly IMapManager _mapManager = default!;
             public override void Initialize()
             {
                 base.Initialize();
-                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => Transform(e).Anchored = true);
+                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => {
+                    if (_mapManager.TryFindGridAt(_transform.GetMapCoordinates(e), out var gridUid, out var gridComp))
+                        _transform.AnchorEntity((e, Transform(e)), (gridUid, gridComp));
+                });
             }
         }
 
@@ -159,29 +164,33 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterEntitySystems(f => f.LoadExtraSystemType<AnchorOnInitTestSystem>())
+                .RegisterEntitySystems(f => { f.LoadExtraSystemType<AnchorOnInitTestSystem>();
+                    f.LoadExtraSystemType<MoveEventTestSystem>();
+                })
                 .RegisterComponents(f => f.RegisterClass<AnchorOnInitComponent>())
                 .InitializeInstance();
 
             var entMan = sim.Resolve<IEntityManager>();
+            var mapSystem = entMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGrid(mapId);
+            var grid = mapMan.CreateGridEntity(mapId);
             var coordinates = new MapCoordinates(new Vector2(7, 7), mapId);
-            var pos = grid.TileIndicesFor(coordinates);
-            grid.SetTile(pos, new Tile(1));
+
+            var tileIndices = mapSystem.TileIndicesFor(grid, grid, coordinates);
+            mapSystem.SetTile(grid, tileIndices, new Tile(1));
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).Anchored, Is.False);
-            Assert.That(!grid.GetAnchoredEntities(pos).Any());
+            Assert.That(!mapSystem.GetAnchoredEntities(grid, grid, tileIndices).Any());
             entMan.DeleteEntity(ent1);
 
             var ent2 = entMan.CreateEntityUninitialized(null, coordinates);
             entMan.AddComponent<AnchorOnInitComponent>(ent2);
             entMan.InitializeAndStartEntity(ent2);
             Assert.That(entMan.GetComponent<TransformComponent>(ent2).Anchored);
-            Assert.That(grid.GetAnchoredEntities(pos).Count(), Is.EqualTo(1));
-            Assert.That(grid.GetAnchoredEntities(pos).Contains(ent2));
+            Assert.That(mapSystem.GetAnchoredEntities(grid, grid, tileIndices).Count(), Is.EqualTo(1));
+            Assert.That(mapSystem.GetAnchoredEntities(grid, grid, tileIndices).Contains(ent2));
         }
 
         /// <summary>
@@ -192,10 +201,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var (sim, gridId, coordinates) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var transformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+            var mapSystem = entMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
             // can only be anchored to a tile
             var grid = entMan.GetComponent<MapGridComponent>(gridId);
-            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
+            var tileIndices = mapSystem.TileIndicesFor(gridId, grid, coordinates);
+            grid.SetTile(tileIndices, new Tile(1));
 
             var traversal = entMan.System<SharedGridTraversalSystem>();
             traversal.Enabled = false;
@@ -203,7 +215,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // Act
             entMan.System<MoveEventTestSystem>().ResetCounters();
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
+            transformSystem.AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid));
             Assert.That(entMan.GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.Owner));
             entMan.System<MoveEventTestSystem>().AssertMoved();
             traversal.Enabled = true;
@@ -239,6 +251,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var (sim, gridId, coords) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var transformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
             var grid = entMan.GetComponent<MapGridComponent>(gridId);
             var ent1 = entMan.SpawnEntity(null, coords);
@@ -246,7 +259,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             grid.SetTile(tileIndices, new Tile(1));
 
             // Act
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
+            transformSystem.AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid));
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
@@ -294,12 +307,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var (sim, gridId, coordinates) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
+            var transformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
             var grid = entMan.GetComponent<MapGridComponent>(gridId);
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
             var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
+            transformSystem.AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid));
             entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
@@ -320,12 +335,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var (sim, gridId, coords) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var transformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
             var grid = entMan.GetComponent<MapGridComponent>(gridId);
             var ent1 = entMan.SpawnEntity(null, coords);
             var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
+            transformSystem.AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid));
 
             // Act
             entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(ent1, grid.Owner);
@@ -342,13 +358,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var (sim, gridId, coords) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var transformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
             var grid = entMan.GetComponent<MapGridComponent>(gridId);
             var ent1 = entMan.SpawnEntity(null, coords);
             var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
             grid.SetTile(new Vector2i(100, 100), new Tile(1)); // Prevents the grid from being deleted when the Act happens
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
+            transformSystem.AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid));
 
             // Act
             grid.SetTile(tileIndices, Tile.Empty);
@@ -370,12 +387,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var (sim, gridId, coords) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var transformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
             var grid = entMan.GetComponent<MapGridComponent>(gridId);
             var ent1 = entMan.SpawnEntity(null, coords);
             var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
+            transformSystem.AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid));
 
             // Act
             // We purposefully use the grid as container so parent stays the same, reparent will unanchor
@@ -398,12 +416,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var (sim, gridId, coords) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var transformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
             var grid = entMan.GetComponent<MapGridComponent>(gridId);
             var ent1 = entMan.SpawnEntity(null, coords);
             var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
+            transformSystem.AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid));
 
             // Act
             // assumed default body is Dynamic
@@ -444,16 +463,16 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var (sim, gridId, coords) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var transformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
             var grid = entMan.GetComponent<MapGridComponent>(gridId);
             var ent1 = entMan.SpawnEntity(null, coords);
             var tileIndices = grid.TileIndicesFor(entMan.GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
             var physComp = entMan.AddComponent<PhysicsComponent>(ent1);
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = true;
-
+            transformSystem.AnchorEntity((ent1, entMan.GetComponent<TransformComponent>(ent1)), (gridId, grid));
             // Act
-            entMan.GetComponent<TransformComponent>(ent1).Anchored = false;
+            transformSystem.Unanchor(ent1, entMan.GetComponent<TransformComponent>(ent1));
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Dynamic));
         }

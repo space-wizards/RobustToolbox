@@ -53,7 +53,7 @@ public partial class SharedPhysicsSystem
         {
             if (component.BodyType != BodyType.Static)
             {
-                SetAwake(uid, component, true);
+                SetAwake((uid, component), true);
             }
         }
 
@@ -491,14 +491,14 @@ public partial class SharedPhysicsSystem
 
         if (body.BodyType == BodyType.Static)
         {
-            SetAwake(uid, body, false);
+            SetAwake((uid, body), false);
             body.LinearVelocity = Vector2.Zero;
             body.AngularVelocity = 0.0f;
         }
         // Even if it's dynamic if it can't collide then don't force it awake.
         else if (body.CanCollide)
         {
-            SetAwake(uid, body, true);
+            SetAwake((uid, body), true);
         }
 
         body.Force = Vector2.Zero;
@@ -571,7 +571,7 @@ public partial class SharedPhysicsSystem
         body.CanCollide = value;
 
         if (!value)
-            SetAwake(uid, body, false);
+            SetAwake((uid, body), false);
 
         if (body.Initialized)
         {
@@ -655,7 +655,7 @@ public partial class SharedPhysicsSystem
             return;
 
         if (!value)
-            SetAwake(uid, body, true);
+            SetAwake((uid, body), true);
 
         body.SleepingAllowed = value;
 

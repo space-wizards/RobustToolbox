@@ -115,7 +115,7 @@ internal static class HappyEyeballsHttp
             await socket.ConnectAsync(new IPEndPoint(address, port), cancel).ConfigureAwait(false);
             return socket;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             // Log.Verbose(e, "Happy Eyeballs to {Address} [{Index}] failed", address, index);
             socket.Dispose();

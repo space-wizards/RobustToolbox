@@ -12,7 +12,8 @@ namespace Robust.Shared.Map
         {
             IoCManager.Resolve(ref entityManager, ref mapManager);
 
-            var gridId = coords.GetGridUid(entityManager);
+            var xform = entityManager.System<SharedTransformSystem>();
+            var gridId = xform.GetGrid(coords);
             var mapSystem = entityManager.System<SharedMapSystem>();
 
             if (entityManager.TryGetComponent<MapGridComponent>(gridId, out var mapGrid))
@@ -20,8 +21,7 @@ namespace Robust.Shared.Map
                 return mapSystem.GridTileToLocal(gridId.Value, mapGrid, mapSystem.CoordinatesToTile(gridId.Value, mapGrid, coords));
             }
 
-            var transformSystem = entityManager.System<SharedTransformSystem>();
-            var mapCoords = coords.ToMap(entityManager, transformSystem);
+            var mapCoords = xform.ToMapCoordinates(coords);
 
             if (mapManager.TryFindGridAt(mapCoords, out var gridUid, out mapGrid))
             {
@@ -49,7 +49,8 @@ namespace Robust.Shared.Map
                 // TODO: Use CollisionManager to get nearest edge.
 
                 // figure out closest intersect
-                var gridIntersect = gridSearchBox.Intersect(gridXform.WorldMatrix.TransformBox(grid.Comp.LocalAABB));
+                var worldMatrix = xform.GetWorldMatrix(gridXform);
+                var gridIntersect = gridSearchBox.Intersect(worldMatrix.TransformBox(grid.Comp.LocalAABB));
                 var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared();
 
                 if (gridDist >= distance)

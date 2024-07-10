@@ -111,7 +111,7 @@ namespace Robust.Client.Graphics.Clyde
                     if (!datum.EdgeDirty)
                         continue;
 
-                    // TODO: Edge update.
+                    _updateChunkEdges(mapGrid, chunk, datum);
                     datum.EdgeDirty = false;
                 }
 
@@ -187,20 +187,17 @@ namespace Robust.Client.Graphics.Clyde
             var i = 0;
             var chunkSize = grid.Comp.ChunkSize;
             var chunkOriginScaled = chunk.Indices * chunkSize;
-            var maps = _entityManager.System<SharedMapSystem>();
 
-            for (short x = -1; x <= chunkSize; x++)
+            for (ushort x = 0; x <= chunkSize; x++)
             {
-                for (short y = -1; y <= chunkSize; y++)
+                for (ushort y = 0; y <= chunkSize; y++)
                 {
                     var gridX = x + chunkOriginScaled.X;
                     var gridY = y + chunkOriginScaled.Y;
-                    var tile = chunk.GetTile((ushort) x, (ushort) y);
-                    var tileDef = _tileDefinitionManager[tile.TypeId];
+                    var tile = chunk.GetTile(x, y);
 
                     // Tile render
-                    if (x != -1  && y != -1 &&
-                        x != chunkSize && y != chunkSize)
+                    if (x != chunkSize && y != chunkSize)
                     {
                         // ReSharper disable once IntVariableOverflowInUncheckedContext
                         if (tile.IsEmpty)
@@ -228,6 +225,38 @@ namespace Robust.Client.Graphics.Clyde
                         QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
                         i += 1;
                     }
+                }
+            }
+
+            GL.BindVertexArray(datum.VAO);
+            CheckGlError();
+            datum.EBO.Use();
+            datum.VBO.Use();
+            datum.EBO.Reallocate(indexBuffer[..(i * GetQuadBatchIndexCount())]);
+            datum.VBO.Reallocate(vertexBuffer[..(i * 4)]);
+            datum.Dirty = false;
+            datum.TileCount = i;
+        }
+
+        private void _updateChunkEdges(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
+        {
+            Span<ushort> indexBuffer = stackalloc ushort[_indicesPerChunk(chunk)];
+            Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk)];
+
+            var i = 0;
+            var chunkSize = grid.Comp.ChunkSize;
+            var chunkOriginScaled = chunk.Indices * chunkSize;
+            var maps = _entityManager.System<SharedMapSystem>();
+
+            for (ushort x = 0; x <= chunkSize; x++)
+            {
+                for (ushort y = 0; y <= chunkSize; y++)
+                {
+                    var gridX = x + chunkOriginScaled.X;
+                    var gridY = y + chunkOriginScaled.Y;
+                    var tile = chunk.GetTile(x, y);
+                    var tileDef = _tileDefinitionManager[tile.TypeId];
+
                     // Edge render
                     for (var nx = -1; nx <= 1; nx++)
                     {

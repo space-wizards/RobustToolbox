@@ -1157,6 +1157,13 @@ namespace Robust.Shared
         public static readonly CVarDef<float> AudioRaycastLength =
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Tickrate for audio calculations.
+        /// OpenAL recommends 30TPS. This is to avoid running raycasts every frame especially for high-refresh rate monitors.
+        /// </summary>
+        public static readonly CVarDef<int> AudioTickRate =
+            CVarDef.Create("audio.tick_rate", 30, CVar.CLIENTONLY);
+
         public static readonly CVarDef<float> AudioZOffset =
             CVarDef.Create("audio.z_offset", -5f, CVar.REPLICATED);
 

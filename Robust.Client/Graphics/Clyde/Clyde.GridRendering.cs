@@ -199,11 +199,11 @@ namespace Robust.Client.Graphics.Clyde
                             var neighborDef = _tileDefinitionManager[neighborTile.TypeId];
 
                             // If it's the same tile then no edge to be drawn.
-                            if (tile.TypeId == neighborTile.TypeId)
+                            if (tile.TypeId == neighborTile.TypeId || neighborDef.EdgeSprites.Count == 0)
                                 continue;
 
                             // Don't draw if the the neighbor tile edges should draw over us (or if we have the same priority)
-                            if (neighborDef.EdgeSprites.Count != 0 && neighborDef.EdgeSpritePriority >= tileDef.EdgeSpritePriority)
+                            if (neighborDef.EdgeSpritePriority >= tileDef.EdgeSpritePriority)
                                 continue;
 
                             var direction = new Vector2i(x, y).AsDirection();
@@ -211,6 +211,8 @@ namespace Robust.Client.Graphics.Clyde
                             // No edge tile
                             if (!tileDef.EdgeSprites.TryGetValue(direction, out var edgePath))
                                 continue;
+
+                            // TODO: copy from above need to get atlas region for neighbor if possible
 
                             var texture = _resourceCache.GetResource<TextureResource>(edgePath);
                             var box = Box2.FromDimensions(neighborIndices, grid.Comp.TileSizeVector);

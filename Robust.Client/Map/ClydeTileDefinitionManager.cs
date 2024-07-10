@@ -30,8 +30,7 @@ namespace Robust.Client.Map
 
         public Texture TileTextureAtlas => _tileTextureAtlas ?? Texture.Transparent;
 
-        private FrozenDictionary<int, Box2[]> _tileRegions = FrozenDictionary<int, Box2[]>.Empty;
-
+        private FrozenDictionary<(int Id, Direction Direction), Box2[]> _tileRegions = FrozenDictionary<(int Id, Direction Direction), Box2[]>.Empty;
 
         public Box2 ErrorTileRegion { get; private set; }
 
@@ -44,8 +43,14 @@ namespace Robust.Client.Map
         /// <inheritdoc />
         public Box2[]? TileAtlasRegion(int tileType)
         {
+            return TileAtlasRegion(tileType, Direction.Invalid);
+        }
+
+        /// <inheritdoc />
+        public Box2[]? TileAtlasRegion(int tileType, Direction direction)
+        {
             // ReSharper disable once CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
-            if (_tileRegions.TryGetValue(tileType, out var region))
+            if (_tileRegions.TryGetValue((tileType, direction), out var region))
             {
                 return region;
             }
@@ -62,7 +67,7 @@ namespace Robust.Client.Map
 
         internal void _genTextureAtlas()
         {
-            var tileRegs = new Dictionary<int, Box2[]>();
+            var tileRegs = new Dictionary<(int Id, Direction Direction), Box2[]>();
             _tileTextureAtlas = null;
 
             var defList = TileDefs.Where(t => t.Sprite != null).ToList();
@@ -73,7 +78,7 @@ namespace Robust.Client.Map
 
             const int tileSize = EyeManager.PixelsPerMeter;
 
-            var tileCount = defList.Select(x => (int)x.Variants).Sum() + 1;
+            var tileCount = defList.Select(x => x.Variants + x.EdgeSprites.Count).Sum() + 1;
 
             var dimensionX = (int) Math.Ceiling(Math.Sqrt(tileCount));
             var dimensionY = (int) Math.Ceiling((float) tileCount / dimensionX);
@@ -140,32 +145,51 @@ namespace Robust.Client.Map
                     regionList[j] = Box2.FromDimensions(
                         point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
                         tileSize / w, tileSize / h);
-                    column++;
-
-                    if (column >= dimensionX)
-                    {
-                        column = 0;
-                        row++;
-                    }
+                    BumpColumn(ref row, ref column, dimensionX);
                 }
 
-                tileRegs.Add(def.TileId, regionList);
+                tileRegs.Add((def.TileId, Direction.Invalid), regionList);
 
                 // Edges
-                for (var x = -1; x <= 1; x++)
+                if (def.EdgeSprites.Count > 0)
                 {
-                    for (var y = -1; y <= 1; y++)
+                    for (var x = -1; x <= 1; x++)
                     {
-                        if (x == 0 && y == 0)
-                            continue;
+                        for (var y = -1; y <= 1; y++)
+                        {
+                            if (x == 0 && y == 0)
+                                continue;
 
-                        // TODO: Add to texture atlas.
+                            var direction = new Vector2i(x, y).AsDirection();
+                            if (!def.EdgeSprites.TryGetValue(direction, out var edge))
+                                continue;
+
+                            // TODO: Copy from above
+                            var edgeList = new Box2[def.EdgeSprites.Count];
+                            edgeList[0] = Box2.FromDimensions(
+                                point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
+                                tileSize / w, tileSize / h);
+
+                            tileRegs.Add((def.TileId, direction), edgeList);
+                            BumpColumn(ref row, ref column, dimensionX);
+                        }
                     }
                 }
             }
 
             _tileRegions = tileRegs.ToFrozenDictionary();
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
+        }
+
+        private void BumpColumn(ref int row, ref int column, int dimensionX)
+        {
+            column++;
+
+            if (column >= dimensionX)
+            {
+                column = 0;
+                row++;
+            }
         }
     }
 

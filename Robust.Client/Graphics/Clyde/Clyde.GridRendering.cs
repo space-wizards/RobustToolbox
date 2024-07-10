@@ -76,7 +76,10 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     DebugTools.Assert(chunk.FilledTiles > 0);
                     if (!data.TryGetValue(chunk.Indices, out var datum))
-                        data[chunk.Indices] = datum = _initChunkBuffers(mapGrid, chunk);
+                    {
+                        data[chunk.Indices] = datum = new MapChunkData();
+                        _initChunkBuffers(mapGrid, chunk, datum);
+                    }
 
                     if (!datum.Dirty)
                         continue;
@@ -96,12 +99,17 @@ namespace Robust.Client.Graphics.Clyde
                                 continue;
 
                             if (!data.TryGetValue(neighborChunk.Indices, out var neighborDatum))
-                                data[chunk.Indices] = neighborDatum = _initChunkBuffers(mapGrid, chunk);
+                            {
+                                data[neighborChunk.Indices] = neighborDatum = new MapChunkData();
+                                _initChunkBuffers(mapGrid, chunk, neighborDatum);
+                            }
 
                             neighborDatum.EdgeDirty = true;
                         }
                     }
                 }
+
+                enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
 
                 // Handle edge sprites.
                 while (enumerator.MoveNext(out var chunk))
@@ -112,8 +120,9 @@ namespace Robust.Client.Graphics.Clyde
                         continue;
 
                     _updateChunkEdges(mapGrid, chunk, datum);
-                    datum.EdgeDirty = false;
                 }
+
+                enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
 
                 // Draw chunks
                 while (enumerator.MoveNext(out var chunk))
@@ -188,9 +197,9 @@ namespace Robust.Client.Graphics.Clyde
             var chunkSize = grid.Comp.ChunkSize;
             var chunkOriginScaled = chunk.Indices * chunkSize;
 
-            for (ushort x = 0; x <= chunkSize; x++)
+            for (ushort x = 0; x < chunkSize; x++)
             {
-                for (ushort y = 0; y <= chunkSize; y++)
+                for (ushort y = 0; y < chunkSize; y++)
                 {
                     var gridX = x + chunkOriginScaled.X;
                     var gridY = y + chunkOriginScaled.Y;
@@ -228,29 +237,34 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            var indexSlice = indexBuffer[..(i * GetQuadBatchIndexCount())];
+            var vertSlice = vertexBuffer[..(i * 4)];
+
             GL.BindVertexArray(datum.VAO);
             CheckGlError();
             datum.EBO.Use();
             datum.VBO.Use();
-            datum.EBO.Reallocate(indexBuffer[..(i * GetQuadBatchIndexCount())]);
-            datum.VBO.Reallocate(vertexBuffer[..(i * 4)]);
-            datum.Dirty = false;
+            datum.EBO.Reallocate(indexSlice);
+            datum.VBO.Reallocate(vertSlice);
+
             datum.TileCount = i;
+            datum.Dirty = false;
         }
 
         private void _updateChunkEdges(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
         {
-            Span<ushort> indexBuffer = stackalloc ushort[_indicesPerChunk(chunk)];
-            Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk)];
+            // Need a buffer that can potentially store all neighbor tiles
+            Span<ushort> indexBuffer = stackalloc ushort[_indicesPerChunk(chunk) * 8];
+            Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk) * 8];
 
             var i = 0;
             var chunkSize = grid.Comp.ChunkSize;
             var chunkOriginScaled = chunk.Indices * chunkSize;
             var maps = _entityManager.System<SharedMapSystem>();
 
-            for (ushort x = 0; x <= chunkSize; x++)
+            for (ushort x = 0; x < chunkSize; x++)
             {
-                for (ushort y = 0; y <= chunkSize; y++)
+                for (ushort y = 0; y < chunkSize; y++)
                 {
                     var gridX = x + chunkOriginScaled.X;
                     var gridY = y + chunkOriginScaled.Y;
@@ -262,20 +276,25 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         for (var ny = -1; ny <= 1; ny++)
                         {
-                            var neighborIndices = new Vector2i(gridX + x, gridY + y);
-                            maps.TryGetTile(grid.Comp, neighborIndices, out var neighborTile);
+                            if (nx == 0 && ny == 0)
+                                continue;
+
+                            var neighborIndices = new Vector2i(gridX + nx, gridY + ny);
+                            if (!maps.TryGetTile(grid.Comp, neighborIndices, out var neighborTile))
+                                continue;
+
                             var neighborDef = _tileDefinitionManager[neighborTile.TypeId];
 
                             // If it's the same tile then no edge to be drawn.
                             if (tile.TypeId == neighborTile.TypeId || neighborDef.EdgeSprites.Count == 0)
                                 continue;
 
-                            // Don't draw if the the neighbor tile edges should draw over us (or if we have the same priority)
-                            if (neighborDef.EdgeSpritePriority >= tileDef.EdgeSpritePriority)
+                            // If neighbor is a lower priority then us then don't draw on our tile.
+                            if (neighborDef.EdgeSpritePriority < tileDef.EdgeSpritePriority)
                                 continue;
 
-                            var direction = new Vector2i(x, y).AsDirection();
-                            var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.TypeId, direction);
+                            var direction = new Vector2i(nx, ny).AsDirection().GetOpposite();
+                            var regionMaybe = _tileDefinitionManager.TileAtlasRegion(neighborTile.TypeId, direction);
 
                             if (regionMaybe == null)
                                 continue;
@@ -297,24 +316,29 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            GL.BindVertexArray(datum.VAO);
+            // We don't save the edge buffers back because we might need to re-use it if a neighbor chunk updates.
+            var indexSlice = indexBuffer[..(i * GetQuadBatchIndexCount())];
+            var vertSlice = vertexBuffer[..(i * 4)];
+
+            GL.BindVertexArray(datum.EdgeVAO);
             CheckGlError();
-            datum.EBO.Use();
-            datum.VBO.Use();
-            datum.EBO.Reallocate(indexBuffer[..(i * GetQuadBatchIndexCount())]);
-            datum.VBO.Reallocate(vertexBuffer[..(i * 4)]);
-            datum.Dirty = false;
-            datum.TileCount = i;
+            datum.EdgeEBO.Use();
+            datum.EdgeVBO.Use();
+            datum.EdgeEBO.Reallocate(indexSlice);
+            datum.EdgeVBO.Reallocate(vertSlice);
+
+            datum.EdgeDirty = false;
         }
 
-        private unsafe MapChunkData _initChunkBuffers(Entity<MapGridComponent> grid, MapChunk chunk)
+        private unsafe void _initChunkBuffers(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
         {
+            var vboSize = _verticesPerChunk(chunk) * sizeof(Vertex2D);
+            var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
+
+            // Base VAO
             var vao = GenVertexArray();
             BindVertexArray(vao);
             CheckGlError();
-
-            var vboSize = _verticesPerChunk(chunk) * sizeof(Vertex2D);
-            var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
 
             var vbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
                 vboSize, $"Grid {grid.Owner} chunk {chunk.Indices} VBO");
@@ -330,12 +354,30 @@ namespace Robust.Client.Graphics.Clyde
             vbo.Use();
             ebo.Use();
 
-            var datum = new MapChunkData(vao, vbo, ebo)
-            {
-                Dirty = true
-            };
+            datum.EBO = ebo;
+            datum.VBO = vbo;
+            datum.VAO = vao;
 
-            return datum;
+            // EdgeVAO
+            var edgeVao = GenVertexArray();
+            BindVertexArray(edgeVao);
+            CheckGlError();
+
+            var edgeVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+                vboSize, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeVBO");
+            var edgeEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
+                eboSize, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeEBO");
+
+            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeVAO");
+            SetupVAOLayout();
+            CheckGlError();
+
+            edgeVbo.Use();
+            edgeEbo.Use();
+
+            datum.EdgeEBO = edgeEbo;
+            datum.EdgeVBO = edgeVbo;
+            datum.EdgeVAO = edgeVao;
         }
 
         private void DeleteChunk(MapChunkData data)
@@ -374,18 +416,20 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class MapChunkData
         {
-            public bool EdgeDirty;
-            public bool Dirty;
-            public readonly uint VAO;
-            public readonly GLBuffer VBO;
-            public readonly GLBuffer EBO;
+            public bool EdgeDirty = true;
+            public bool Dirty = true;
+
+            public uint VAO;
+            public GLBuffer VBO = default!;
+            public GLBuffer EBO = default!;
             public int TileCount;
 
-            public MapChunkData(uint vao, GLBuffer vbo, GLBuffer ebo)
+            public uint EdgeVAO;
+            public GLBuffer EdgeVBO = default!;
+            public GLBuffer EdgeEBO = default!;
+
+            public MapChunkData()
             {
-                VAO = vao;
-                VBO = vbo;
-                EBO = ebo;
             }
         }
     }

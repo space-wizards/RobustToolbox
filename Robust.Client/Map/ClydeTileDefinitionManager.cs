@@ -205,7 +205,7 @@ namespace Robust.Client.Map
 
                             if (angle != Angle.Zero)
                             {
-                                image.Mutate(o => o.Rotate((float)angle.Degrees));
+                                image.Mutate(o => o.Rotate((float)-angle.Degrees));
                             }
 
                             var point = new Vector2i(column * tileSize, row * tileSize);

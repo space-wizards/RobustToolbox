@@ -47,6 +47,7 @@ namespace Robust.Client.Graphics.Clyde
             GLShaderProgram gridProgram = default!;
             var gridOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceGrids);
             var mapSystem = _entityManager.System<SharedMapSystem>();
+            var xformSystem = _entityManager.System<SharedTransformSystem>();
 
             foreach (var mapGrid in _grids)
             {
@@ -67,19 +68,57 @@ namespace Robust.Client.Graphics.Clyde
                     gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
                 }
 
-                var transform = _entityManager.GetComponent<TransformComponent>(mapGrid);
-                gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
+                gridProgram.SetUniform(UniIModelMatrix, xformSystem.GetWorldMatrix(mapGrid));
                 var enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
 
+                // Handle base texture updates.
                 while (enumerator.MoveNext(out var chunk))
                 {
                     DebugTools.Assert(chunk.FilledTiles > 0);
                     if (!data.TryGetValue(chunk.Indices, out var datum))
                         data[chunk.Indices] = datum = _initChunkBuffers(mapGrid, chunk);
 
-                    if (datum.Dirty)
-                        _updateChunkMesh(mapGrid, chunk, datum);
+                    if (!datum.Dirty)
+                        continue;
 
+                    _updateChunkMesh(mapGrid, chunk, datum);
+
+                    // Dirty edge tiles for next step.
+                    datum.EdgeDirty = true;
+
+                    for (var x = -1; x <= 1; x++)
+                    {
+                        for (var y = -1; y <= 1; y++)
+                        {
+                            var neighbor = chunk.Indices + new Vector2i(x, y);
+
+                            if (!mapGrid.Comp.Chunks.TryGetValue(neighbor, out var neighborChunk))
+                                continue;
+
+                            if (!data.TryGetValue(neighborChunk.Indices, out var neighborDatum))
+                                data[chunk.Indices] = neighborDatum = _initChunkBuffers(mapGrid, chunk);
+
+                            neighborDatum.EdgeDirty = true;
+                        }
+                    }
+                }
+
+                // Handle edge sprites.
+                while (enumerator.MoveNext(out var chunk))
+                {
+                    var datum = data[chunk.Indices];
+
+                    if (!datum.EdgeDirty)
+                        continue;
+
+                    // TODO: Edge update.
+                    datum.EdgeDirty = false;
+                }
+
+                // Draw chunks
+                while (enumerator.MoveNext(out var chunk))
+                {
+                    var datum = data[chunk.Indices];
                     DebugTools.Assert(datum.TileCount > 0);
                     if (datum.TileCount == 0)
                         continue;
@@ -207,46 +246,13 @@ namespace Robust.Client.Graphics.Clyde
                                 continue;
 
                             var direction = new Vector2i(x, y).AsDirection();
+                            var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.TypeId, direction);
 
-                            // No edge tile
-                            if (!tileDef.EdgeSprites.TryGetValue(direction, out var edgePath))
+                            if (regionMaybe == null)
                                 continue;
 
-                            // TODO: copy from above need to get atlas region for neighbor if possible
-
-                            var texture = _resourceCache.GetResource<TextureResource>(edgePath);
-                            var box = Box2.FromDimensions(neighborIndices, grid.Comp.TileSizeVector);
-
-                            var angle = Angle.Zero;
-
-                            // If we ever need one for both cardinals and corners then update this.
-                            switch (direction)
-                            {
-                                // Corner sprites
-                                case Direction.SouthEast:
-                                    break;
-                                case Direction.NorthEast:
-                                    angle = new Angle(MathF.PI / 2f);
-                                    break;
-                                case Direction.NorthWest:
-                                    angle = new Angle(MathF.PI);
-                                    break;
-                                case Direction.SouthWest:
-                                    angle = new Angle(MathF.PI * 1.5f);
-                                    break;
-                                // Edge sprites
-                                case Direction.South:
-                                    break;
-                                case Direction.East:
-                                    angle = new Angle(MathF.PI / 2f);
-                                    break;
-                                case Direction.North:
-                                    angle = new Angle(MathF.PI);
-                                    break;
-                                case Direction.West:
-                                    angle = new Angle(MathF.PI * 1.5f);
-                                    break;
-                            }
+                            // TODO: Remove the copy-paste shit from above.
+                            var region = regionMaybe[0];
 
                             var vIdx = i * 4;
                             vertexBuffer[vIdx + 0] = new Vertex2D(gridX, gridY, region.Left, region.Bottom, Color.White);
@@ -257,11 +263,6 @@ namespace Robust.Client.Graphics.Clyde
                             var tIdx = (ushort)(i * 4);
                             QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
                             i += 1;
-
-                            if (angle == Angle.Zero)
-                                args.WorldHandle.DrawTextureRect(texture.Texture, box);
-                            else
-                                args.WorldHandle.DrawTextureRect(texture.Texture, new Box2Rotated(box, angle, box.Center));
                         }
                     }
                 }
@@ -344,6 +345,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class MapChunkData
         {
+            public bool EdgeDirty;
             public bool Dirty;
             public readonly uint VAO;
             public readonly GLBuffer VBO;

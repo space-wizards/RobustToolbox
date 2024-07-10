@@ -19,6 +19,7 @@ using Robust.Shared.Toolshed;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Robust.Client.Map
 {
@@ -86,11 +87,11 @@ namespace Robust.Client.Map
             var imgWidth = dimensionX * tileSize;
             var imgHeight = dimensionY * tileSize;
             var sheet = new Image<Rgba32>(imgWidth, imgHeight);
+            var w = (float) sheet.Width;
+            var h = (float) sheet.Height;
 
             // Add in the missing tile texture sprite as tile texture 0.
             {
-                var w = (float) sheet.Width;
-                var h = (float) sheet.Height;
                 ErrorTileRegion = Box2.FromDimensions(
                     0, (h - EyeManager.PixelsPerMeter) / h,
                     tileSize / w, tileSize / h);
@@ -139,9 +140,6 @@ namespace Robust.Client.Map
                     var box = new UIBox2i(0, 0, tileSize, tileSize).Translated(new Vector2i(j * tileSize, 0));
                     image.Blit(box, sheet, point);
 
-                    var w = (float) sheet.Width;
-                    var h = (float) sheet.Height;
-
                     regionList[j] = Box2.FromDimensions(
                         point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
                         tileSize / w, tileSize / h);
@@ -164,7 +162,57 @@ namespace Robust.Client.Map
                             if (!def.EdgeSprites.TryGetValue(direction, out var edge))
                                 continue;
 
-                            // TODO: Copy from above
+                            using (var stream = _manager.ContentFileRead(edge))
+                            {
+                                image = Image.Load<Rgba32>(stream);
+                            }
+
+                            if (image.Width != tileSize || image.Height != tileSize)
+                            {
+                                throw new NotSupportedException(
+                                    $"Unable to load {path}, due to being unable to use tile textures with a dimension other than {tileSize}x{tileSize}.");
+                            }
+
+                            Angle angle = Angle.Zero;
+
+                            switch (direction)
+                            {
+                                // Corner sprites
+                                case Direction.SouthEast:
+                                    break;
+                                case Direction.NorthEast:
+                                    angle = new Angle(MathF.PI / 2f);
+                                    break;
+                                case Direction.NorthWest:
+                                    angle = new Angle(MathF.PI);
+                                    break;
+                                case Direction.SouthWest:
+                                    angle = new Angle(MathF.PI * 1.5f);
+                                    break;
+                                // Edge sprites
+                                case Direction.South:
+                                    break;
+                                case Direction.East:
+                                    angle = new Angle(MathF.PI / 2f);
+                                    break;
+                                case Direction.North:
+                                    angle = new Angle(MathF.PI);
+                                    break;
+                                case Direction.West:
+                                    angle = new Angle(MathF.PI * 1.5f);
+                                    break;
+                            }
+
+                            if (angle != Angle.Zero)
+                            {
+                                image.Mutate(o => o.Rotate((float)angle.Degrees));
+                            }
+
+                            var point = new Vector2i(column * tileSize, row * tileSize);
+                            var box = new UIBox2i(0, 0, tileSize, tileSize);
+                            image.Blit(box, sheet, point);
+
+                            // If you ever need edge variants then you could just bump this.
                             var edgeList = new Box2[def.EdgeSprites.Count];
                             edgeList[0] = Box2.FromDimensions(
                                 point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,

@@ -129,15 +129,26 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     var datum = data[chunk.Indices];
                     DebugTools.Assert(datum.TileCount > 0);
-                    if (datum.TileCount == 0)
-                        continue;
+                    if (datum.TileCount > 0)
+                    {
+                        BindVertexArray(datum.VAO);
+                        CheckGlError();
 
-                    BindVertexArray(datum.VAO);
-                    CheckGlError();
+                        _debugStats.LastGLDrawCalls += 1;
+                        GL.DrawElements(GetQuadGLPrimitiveType(), datum.TileCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
+                        CheckGlError();
+                    }
 
-                    _debugStats.LastGLDrawCalls += 1;
-                    GL.DrawElements(GetQuadGLPrimitiveType(), datum.TileCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
-                    CheckGlError();
+                    if (datum.EdgeCount > 0)
+                    {
+                        BindVertexArray(datum.EdgeVAO);
+                        CheckGlError();
+
+                        _debugStats.LastGLDrawCalls += 1;
+                        GL.DrawElements(GetQuadGLPrimitiveType(), datum.EdgeCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
+                        CheckGlError();
+                    }
+
                 }
 
                 requiresFlush = false;
@@ -327,6 +338,7 @@ namespace Robust.Client.Graphics.Clyde
             datum.EdgeEBO.Reallocate(indexSlice);
             datum.EdgeVBO.Reallocate(vertSlice);
 
+            datum.EdgeCount = i;
             datum.EdgeDirty = false;
         }
 
@@ -364,9 +376,9 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
 
             var edgeVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
-                vboSize, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeVBO");
+                vboSize * 8, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeVBO");
             var edgeEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
-                eboSize, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeEBO");
+                eboSize * 8, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeEBO");
 
             ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeVAO");
             SetupVAOLayout();
@@ -427,6 +439,7 @@ namespace Robust.Client.Graphics.Clyde
             public uint EdgeVAO;
             public GLBuffer EdgeVBO = default!;
             public GLBuffer EdgeEBO = default!;
+            public int EdgeCount;
 
             public MapChunkData()
             {

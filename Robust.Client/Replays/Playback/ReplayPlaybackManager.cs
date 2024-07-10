@@ -52,6 +52,7 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
     public ReplayData? Replay { get; private set; }
     public NetUserId? Recorder => Replay?.Recorder;
     private int _checkpointMinInterval;
+    private int _replayMaxScrubTime;
     private int _visualEventThreshold;
     public uint? AutoPauseCountdown { get; set; }
     public int? ScrubbingTarget { get; set; }
@@ -94,6 +95,7 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
         _sawmill = _logMan.GetSawmill("replay");
         _metaId = _factory.GetRegistration(typeof(MetaDataComponent)).NetID!.Value;
         _confMan.OnValueChanged(CVars.CheckpointMinInterval, (value) => _checkpointMinInterval = value, true);
+        _confMan.OnValueChanged(CVars.ReplayMaxScrubTime, (value) => _replayMaxScrubTime = value, true);
         _confMan.OnValueChanged(CVars.ReplaySkipThreshold, (value) => _visualEventThreshold = value, true);
         _client.RunLevelChanged += OnRunLevelChanged;
     }

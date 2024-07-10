@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
@@ -143,14 +143,14 @@ namespace Robust.Shared.Map
                 return new Vector2i();
 
             var mapSystem = entityManager.System<SharedMapSystem>();
-            var gridIdOpt = GetGridUid(entityManager);
+            var gridIdOpt = transformSystem.GetGrid(this);
             if (gridIdOpt is { } gridId && gridId.IsValid())
             {
                 var grid = entityManager.GetComponent<MapGridComponent>(gridId);
                 return mapSystem.GetTileRef(gridId, grid, this).GridIndices;
             }
 
-            var vec = ToMapPos(entityManager, transformSystem);
+            var vec = transformSystem.ToMapCoordinates(this);
 
             return new Vector2i((int)MathF.Floor(vec.X), (int)MathF.Floor(vec.Y));
         }
@@ -248,6 +248,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="position">The vector to offset by local to the entity.</param>
         /// <returns>Newly offset coordinates.</returns>
+        [Pure]
         public EntityCoordinates Offset(Vector2 position)
         {
             return new(EntityId, Position + position);
@@ -333,8 +334,8 @@ namespace Robust.Shared.Map
                 return true;
             }
 
-            var mapCoordinates = ToMap(entityManager, transformSystem);
-            var otherMapCoordinates = otherCoordinates.ToMap(entityManager, transformSystem);
+            var mapCoordinates = transformSystem.ToMapCoordinates(this);
+            var otherMapCoordinates = transformSystem.ToMapCoordinates(otherCoordinates);
 
             if (mapCoordinates.MapId != otherMapCoordinates.MapId)
                 return false;

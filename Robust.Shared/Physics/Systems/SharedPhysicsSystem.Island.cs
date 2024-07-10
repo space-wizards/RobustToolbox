@@ -690,7 +690,7 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     /// <param name="island"></param>
     /// <returns></returns>
-    private bool InternalParallel(IslandData island)
+    private static bool InternalParallel(IslandData island)
     {
         // Should lone island most times as well.
         return island.Bodies.Count > 128 || island.Contacts.Count > 128 || island.Joints.Count > 128;
@@ -983,7 +983,7 @@ public abstract partial class SharedPhysicsSystem
             var q = new Quaternion2D(angle);
             var adjustedPosition = positions[i] - Physics.Transform.Mul(q, body.LocalCenter);
 
-            var solvedPosition = parentInvMatrix.Transform(adjustedPosition);
+            var solvedPosition = Vector2.Transform(adjustedPosition, parentInvMatrix);
             solvedPositions[offset + i] = solvedPosition - xform.LocalPosition;
             solvedAngles[offset + i] = angles[i] - worldRot;
         }

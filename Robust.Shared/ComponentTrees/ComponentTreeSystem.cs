@@ -24,6 +24,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     [Dependency] private readonly RecursiveMoveSystem _recursiveMoveSys = default!;
     [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
     [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
     private readonly Queue<ComponentTreeEntry<TComp>> _updateQueue = new();
     private readonly HashSet<EntityUid> _updated = new();
@@ -288,11 +289,9 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
                 return true;
             }, includeMap: false);
 
-        var mapUid = _mapManager.GetMapEntityId(mapId);
-
-        if (TryComp(mapUid, out TTreeComp? mapTreeComp))
+        if (_mapSystem.TryGetMap(mapId, out var mapUid) && TryComp(mapUid, out TTreeComp? mapTreeComp))
         {
-            state.trees.Add((mapUid, mapTreeComp));
+            state.trees.Add((mapUid.Value, mapTreeComp));
         }
 
         return state.trees;
@@ -357,7 +356,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         {
             var (_, treeRot, matrix) = XformSystem.GetWorldPositionRotationInvMatrix(treeUid);
             var relativeAngle = new Angle(-treeRot.Theta).RotateVec(ray.Direction);
-            var treeRay = new Ray(matrix.Transform(ray.Position), relativeAngle);
+            var treeRay = new Ray(Vector2.Transform(ray.Position, matrix), relativeAngle);
             comp.Tree.QueryRay(ref queryState, QueryCallback, treeRay);
             if (returnOnFirstHit && queryState.List.Count > 0)
                 break;

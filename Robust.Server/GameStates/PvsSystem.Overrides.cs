@@ -100,7 +100,13 @@ internal sealed partial class PvsSystem
     /// </summary>
     private bool RecursivelyAddOverride(PvsSession session, EntityUid uid, GameTick fromTick, bool addChildren)
     {
-        var xform = _xformQuery.GetComponent(uid);
+        if (!_xformQuery.TryGetComponent(uid, out var xform))
+        {
+            // Can happen if systems add deleted entities to PVS move event.
+            Log.Error($"Attempted to add non-existent entity {uid} to PVS override for session {session.Session}");
+            return false;
+        }
+
         var parent = xform.ParentUid;
 
         // First we process all parents. This is because while this entity may already have been added

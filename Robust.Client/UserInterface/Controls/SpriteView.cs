@@ -14,9 +14,9 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class SpriteView : Control
     {
-        private SpriteSystem? _sprite;
+        protected SpriteSystem? SpriteSystem;
         private SharedTransformSystem? _transform;
-        private readonly IEntityManager _entMan;
+        protected readonly IEntityManager EntMan;
 
         [ViewVariables]
         public SpriteComponent? Sprite => Entity?.Comp1;
@@ -120,20 +120,26 @@ namespace Robust.Client.UserInterface.Controls
 
         public SpriteView()
         {
-            IoCManager.Resolve(ref _entMan);
+            IoCManager.Resolve(ref EntMan);
+            RectClipContent = true;
+        }
+
+        public SpriteView(IEntityManager entMan)
+        {
+            EntMan = entMan;
             RectClipContent = true;
         }
 
         public SpriteView(EntityUid? uid, IEntityManager entMan)
         {
-            _entMan = entMan;
+            EntMan = entMan;
             RectClipContent = true;
             SetEntity(uid);
         }
 
         public SpriteView(NetEntity uid, IEntityManager entMan)
         {
-            _entMan = entMan;
+            EntMan = entMan;
             RectClipContent = true;
             SetEntity(uid);
         }
@@ -154,8 +160,8 @@ namespace Robust.Client.UserInterface.Controls
             if (Entity?.Owner == uid)
                 return;
 
-            if (!_entMan.TryGetComponent(uid, out SpriteComponent? sprite)
-                || !_entMan.TryGetComponent(uid, out TransformComponent? xform))
+            if (!EntMan.TryGetComponent(uid, out SpriteComponent? sprite)
+                || !EntMan.TryGetComponent(uid, out TransformComponent? xform))
             {
                 Entity = null;
                 NetEnt = null;
@@ -163,7 +169,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             Entity = new(uid.Value, sprite, xform);
-            NetEnt = _entMan.GetNetEntity(uid);
+            NetEnt = EntMan.GetNetEntity(uid);
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
@@ -223,11 +229,11 @@ namespace Robust.Client.UserInterface.Controls
             if (!ResolveEntity(out var uid, out var sprite, out var xform))
                 return;
 
-            _sprite ??= _entMan.System<SpriteSystem>();
-            _transform ??= _entMan.System<TransformSystem>();
+            SpriteSystem ??= EntMan.System<SpriteSystem>();
+            _transform ??= EntMan.System<TransformSystem>();
 
             // Ensure the sprite is animated despite possible not being visible in any viewport.
-            _sprite.ForceUpdate(uid);
+            SpriteSystem.ForceUpdate(uid);
 
             var stretchVec = Stretch switch
             {
@@ -258,13 +264,13 @@ namespace Robust.Client.UserInterface.Controls
             [NotNullWhen(true)] out SpriteComponent? sprite,
             [NotNullWhen(true)] out TransformComponent? xform)
         {
-            if (NetEnt != null && Entity == null && _entMan.TryGetEntity(NetEnt, out var ent))
+            if (NetEnt != null && Entity == null && EntMan.TryGetEntity(NetEnt, out var ent))
                 SetEntity(ent);
 
             if (Entity != null)
             {
                 (uid, sprite, xform) = Entity.Value;
-                return !_entMan.Deleted(uid);
+                return !EntMan.Deleted(uid);
             }
 
             sprite = null;

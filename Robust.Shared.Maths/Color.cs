@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -34,11 +35,6 @@ using JetBrains.Annotations;
 using Robust.Shared.Utility;
 using SysVector3 = System.Numerics.Vector3;
 using SysVector4 = System.Numerics.Vector4;
-
-#if NETCOREAPP
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
-#endif
 
 namespace Robust.Shared.Maths
 {
@@ -50,24 +46,30 @@ namespace Robust.Shared.Maths
     public struct Color : IEquatable<Color>, ISpanFormattable
     {
         /// <summary>
-        ///     The red component of this Color4 structure.
+        ///     The red component of this Color structure.
         /// </summary>
         public float R;
 
         /// <summary>
-        ///     The green component of this Color4 structure.
+        ///     The green component of this Color structure.
         /// </summary>
         public float G;
 
         /// <summary>
-        ///     The blue component of this Color4 structure.
+        ///     The blue component of this Color structure.
         /// </summary>
         public float B;
 
         /// <summary>
-        ///     The alpha component of this Color4 structure.
+        ///     The alpha component of this Color structure.
         /// </summary>
         public float A;
+
+        /// <summary>
+        /// Vector representation, for easy SIMD operations.
+        /// </summary>
+        // ReSharper disable once InconsistentNaming
+        public readonly SysVector4 RGBA => Unsafe.BitCast<Color, SysVector4>(this);
 
         public readonly byte RByte => (byte) (R * byte.MaxValue);
         public readonly byte GByte => (byte) (G * byte.MaxValue);
@@ -75,12 +77,12 @@ namespace Robust.Shared.Maths
         public readonly byte AByte => (byte) (A * byte.MaxValue);
 
         /// <summary>
-        ///     Constructs a new Color4 structure from the specified components.
+        ///     Constructs a new <see cref="Color"/> structure from the specified components.
         /// </summary>
-        /// <param name="r">The red component of the new Color4 structure.</param>
-        /// <param name="g">The green component of the new Color4 structure.</param>
-        /// <param name="b">The blue component of the new Color4 structure.</param>
-        /// <param name="a">The alpha component of the new Color4 structure.</param>
+        /// <param name="r">The red component of the new Color structure.</param>
+        /// <param name="g">The green component of the new Color structure.</param>
+        /// <param name="b">The blue component of the new Color structure.</param>
+        /// <param name="a">The alpha component of the new Color structure.</param>
         public Color(float r, float g, float b, float a = 1)
         {
             R = r;
@@ -90,14 +92,23 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Constructs a new Color4 structure from the specified components.
+        ///     Constructs a new Color structure from the components in a <see cref="SysVector4"/>.
         /// </summary>
-        /// <param name="r">The red component of the new Color4 structure.</param>
-        /// <param name="g">The green component of the new Color4 structure.</param>
-        /// <param name="b">The blue component of the new Color4 structure.</param>
-        /// <param name="a">The alpha component of the new Color4 structure.</param>
+        public Color(in SysVector4 vec)
+        {
+            this = Unsafe.BitCast<SysVector4, Color>(vec);
+        }
+
+        /// <summary>
+        ///     Constructs a new Color structure from the specified components.
+        /// </summary>
+        /// <param name="r">The red component of the new Color structure.</param>
+        /// <param name="g">The green component of the new Color structure.</param>
+        /// <param name="b">The blue component of the new Color structure.</param>
+        /// <param name="a">The alpha component of the new Color structure.</param>
         public Color(byte r, byte g, byte b, byte a = 255)
         {
+            Unsafe.SkipInit(out this);
             R = r / (float) byte.MaxValue;
             G = g / (float) byte.MaxValue;
             B = b / (float) byte.MaxValue;
@@ -124,7 +135,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Compares the specified Color4 structures for equality.
+        ///     Compares the specified Color structures for equality.
         /// </summary>
         /// <param name="left">The left-hand side of the comparison.</param>
         /// <param name="right">The right-hand side of the comparison.</param>
@@ -135,7 +146,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Compares the specified Color4 structures for inequality.
+        ///     Compares the specified Color structures for inequality.
         /// </summary>
         /// <param name="left">The left-hand side of the comparison.</param>
         /// <param name="right">The right-hand side of the comparison.</param>
@@ -146,10 +157,10 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Converts the specified System.Drawing.Color to a Color4 structure.
+        ///     Converts the specified System.Drawing.Color to a Color structure.
         /// </summary>
         /// <param name="color">The System.Drawing.Color to convert.</param>
-        /// <returns>A new Color4 structure containing the converted components.</returns>
+        /// <returns>A new Color structure containing the converted components.</returns>
         public static implicit operator Color(System.Drawing.Color color)
         {
             return new(color.R, color.G, color.B, color.A);
@@ -181,9 +192,9 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Converts the specified Color4 to a System.Drawing.Color structure.
+        ///     Converts the specified Color to a System.Drawing.Color structure.
         /// </summary>
-        /// <param name="color">The Color4 to convert.</param>
+        /// <param name="color">The Color to convert.</param>
         /// <returns>A new System.Drawing.Color structure containing the converted components.</returns>
         public static explicit operator System.Drawing.Color(Color color)
         {
@@ -210,11 +221,11 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Compares whether this Color4 structure is equal to the specified object.
+        ///     Compares whether this Color structure is equal to the specified object.
         /// </summary>
         /// <param name="obj">An object to compare to.</param>
-        /// <returns>True obj is a Color4 structure with the same components as this Color4; false otherwise.</returns>
-        public override readonly bool Equals(object? obj)
+        /// <returns>True obj is a Color structure with the same components as this Color; false otherwise.</returns>
+        public readonly override bool Equals(object? obj)
         {
             if (!(obj is Color))
                 return false;
@@ -223,19 +234,19 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Calculates the hash code for this Color4 structure.
+        ///     Calculates the hash code for this Color structure.
         /// </summary>
-        /// <returns>A System.Int32 containing the hash code of this Color4 structure.</returns>
-        public override readonly int GetHashCode()
+        /// <returns>A System.Int32 containing the hash code of this Color structure.</returns>
+        public readonly override int GetHashCode()
         {
             return ToArgb();
         }
 
         /// <summary>
-        ///     Creates a System.String that describes this Color4 structure.
+        ///     Creates a System.String that describes this Color structure.
         /// </summary>
-        /// <returns>A System.String that describes this Color4 structure.</returns>
-        public override readonly string ToString()
+        /// <returns>A System.String that describes this Color structure.</returns>
+        public readonly override string ToString()
         {
             return $"{{(R, G, B, A) = ({R}, {G}, {B}, {A})}}";
         }
@@ -309,7 +320,6 @@ namespace Robust.Shared.Maths
         public static Color FromSrgb(Color srgb)
         {
             float r, g, b;
-#if NETCOREAPP
             if (srgb.R <= 0.04045f)
                 r = srgb.R / 12.92f;
             else
@@ -324,22 +334,6 @@ namespace Robust.Shared.Maths
                 b = srgb.B / 12.92f;
             else
                 b = MathF.Pow((srgb.B + 0.055f) / (1.0f + 0.055f), 2.4f);
-#else
-            if (srgb.R <= 0.04045f)
-                r = srgb.R / 12.92f;
-            else
-                r = (float) Math.Pow((srgb.R + 0.055f) / (1.0f + 0.055f), 2.4f);
-
-            if (srgb.G <= 0.04045f)
-                g = srgb.G / 12.92f;
-            else
-                g = (float) Math.Pow((srgb.G + 0.055f) / (1.0f + 0.055f), 2.4f);
-
-            if (srgb.B <= 0.04045f)
-                b = srgb.B / 12.92f;
-            else
-                b = (float) Math.Pow((srgb.B + 0.055f) / (1.0f + 0.055f), 2.4f);
-#endif
 
             return new Color(r, g, b, srgb.A);
         }
@@ -355,7 +349,6 @@ namespace Robust.Shared.Maths
         {
             float r, g, b;
 
-#if NETCOREAPP
             if (rgb.R <= 0.0031308)
                 r = 12.92f * rgb.R;
             else
@@ -370,22 +363,6 @@ namespace Robust.Shared.Maths
                 b = 12.92f * rgb.B;
             else
                 b = (1.0f + 0.055f) * MathF.Pow(rgb.B, 1.0f / 2.4f) - 0.055f;
-#else
-            if (rgb.R <= 0.0031308)
-                r = 12.92f * rgb.R;
-            else
-                r = (1.0f + 0.055f) * (float) Math.Pow(rgb.R, 1.0f / 2.4f) - 0.055f;
-
-            if (rgb.G <= 0.0031308)
-                g = 12.92f * rgb.G;
-            else
-                g = (1.0f + 0.055f) * (float) Math.Pow(rgb.G, 1.0f / 2.4f) - 0.055f;
-
-            if (rgb.B <= 0.0031308)
-                b = 12.92f * rgb.B;
-            else
-                b = (1.0f + 0.055f) * (float) Math.Pow(rgb.B, 1.0f / 2.4f) - 0.055f;
-#endif
 
             return new Color(r, g, b, rgb.A);
         }
@@ -471,6 +448,7 @@ namespace Robust.Shared.Maths
         ///     Each has a range of 0.0 to 1.0.
         /// </returns>
         /// <param name="rgb">Color value to convert.</param>
+        [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
         public static Vector4 ToHsl(Color rgb)
         {
             var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));
@@ -582,6 +560,7 @@ namespace Robust.Shared.Maths
         ///     Each has a range of 0.0 to 1.0.
         /// </returns>
         /// <param name="rgb">Color value to convert.</param>
+        [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
         public static Vector4 ToHsv(Color rgb)
         {
             var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));
@@ -770,6 +749,7 @@ namespace Robust.Shared.Maths
         ///     Each has a range of 0.0 to 1.0.
         /// </returns>
         /// <param name="rgb">Color value to convert.</param>
+        [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
         public static Vector4 ToHcy(Color rgb)
         {
             var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));
@@ -828,23 +808,10 @@ namespace Robust.Shared.Maths
         ///     with 0.5 being 50% of both colors, 0.25 being 25% of <paramref name="β" /> and 75%
         ///     <paramref name="α" />.
         /// </param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Color InterpolateBetween(Color α, Color β, float λ)
         {
-            if (Sse.IsSupported && Fma.IsSupported)
-            {
-                var vecA = Unsafe.As<Color, Vector128<float>>(ref α);
-                var vecB = Unsafe.As<Color, Vector128<float>>(ref β);
-
-                vecB = Fma.MultiplyAdd(Sse.Subtract(vecB, vecA), Vector128.Create(λ), vecA);
-
-                return Unsafe.As<Vector128<float>, Color>(ref vecB);
-            }
-            ref var svA = ref Unsafe.As<Color, SysVector4>(ref α);
-            ref var svB = ref Unsafe.As<Color, SysVector4>(ref β);
-
-            var res = SysVector4.Lerp(svA, svB, λ);
-
-            return Unsafe.As<SysVector4, Color>(ref res);
+            return new(SysVector4.Lerp(α.RGBA, β.RGBA, λ));
         }
 
         public static Color? TryFromHex(ReadOnlySpan<char> hexColor)
@@ -1000,13 +967,8 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Component wise multiplication of two colors.
         /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
-        public static Color operator *(Color a, Color b)
-        {
-            return new(a.R * b.R, a.G * b.G, a.B * b.B, a.A * b.A);
-        }
+        public static Color operator *(in Color a, in Color b)
+            => new(a.RGBA * b.RGBA);
 
         public readonly string ToHex()
         {
@@ -1030,18 +992,12 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Compares whether this Color4 structure is equal to the specified Color4.
+        ///     Compares whether this Color structure is equal to the specified Color.
         /// </summary>
-        /// <param name="other">The Color4 structure to compare to.</param>
-        /// <returns>True if both Color4 structures contain the same components; false otherwise.</returns>
+        /// <param name="other">The Color structure to compare to.</param>
+        /// <returns>True if both Color structures contain the same components; false otherwise.</returns>
         public readonly bool Equals(Color other)
-        {
-            return
-                MathHelper.CloseToPercent(R, other.R) &&
-                MathHelper.CloseToPercent(G, other.G) &&
-                MathHelper.CloseToPercent(B, other.B) &&
-                MathHelper.CloseToPercent(A, other.A);
-        }
+            => RGBA == other.RGBA;
 
         [PublicAPI]
         public enum BlendFactor : byte
@@ -1942,7 +1898,7 @@ namespace Robust.Shared.Maths
 
         public readonly string? Name()
         {
-            return DefaultColorsInverted.TryGetValue(this, out var name) ? name : null;
+            return DefaultColorsInverted.GetValueOrDefault(this);
         }
 
         public static bool TryParse(string input, out Color color)

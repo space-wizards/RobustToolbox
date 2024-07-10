@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Maths;
+using Robust.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -107,19 +107,19 @@ namespace Robust.Shared.Utility
         }
 
         [Pure]
-        public static Matrix3 AsMatrix3(this YamlNode node)
+        public static Matrix3x2 AsMatrix3x2(this YamlNode node)
         {
             string raw = AsString(node);
             string[] args = raw.Split(',');
-            if (args.Length != 12)
+            if (args.Length != 6)
             {
-               throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Matrix3), raw));
+               throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Matrix3x2), raw));
             }
-            float[] parsedArgs = new float[12];
-            for(var i = 0; i < 12; i += 1) {
+            float[] parsedArgs = new float[6];
+            for(var i = 0; i < 6; i += 1) {
                 parsedArgs[i] = float.Parse(args[i],CultureInfo.InvariantCulture);
             }
-            return new Matrix3(parsedArgs);
+            return new Matrix3x2(parsedArgs[0], parsedArgs[1], parsedArgs[2], parsedArgs[3], parsedArgs[4], parsedArgs[5]);
         }
 
         [Pure]

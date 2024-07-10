@@ -1,17 +1,20 @@
 # debug related entities
 - type: entityCategory
-  id: debug
+  id: Debug
   name: entity-category-name-debug
   description: entity-category-desc-debug
+  suffix: entity-category-suffix-debug
 
 # entities that spawn other entities
 - type: entityCategory
-  id: spawner
+  id: Spawner
   name: entity-category-name-spawner
   description: entity-category-desc-spawner
 
-# entities that should be hidden from the spawn menu
+# simple category that just exists to hide prototypes in spawn menus
 - type: entityCategory
-  id: hideSpawnMenu
+  id: HideSpawnMenu
   name: entity-category-name-hide
   description: entity-category-desc-hide
+  hideSpawnMenu: true
+  inheritable: false

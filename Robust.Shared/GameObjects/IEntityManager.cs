@@ -96,7 +96,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="coordinates">Coordinates to set position and parent of the newly spawned entity to.</param>
         /// <param name="overrides"><inheritdoc cref="CreateEntityUninitialized(string?, MapCoordinates , ComponentRegistry?, Angle)"/></param>
         /// <returns><inheritdoc cref="CreateEntityUninitialized(string?, MapCoordinates , ComponentRegistry?, Angle)"/></returns>
-        EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
+        EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default);
 
         /// <summary>
         /// Creates an uninitialized entity and puts it on the grid or map at the MapCoordinates provided.
@@ -152,6 +152,11 @@ namespace Robust.Shared.GameObjects
             where T2 : IComponent
             where T3 : IComponent
             where T4 : IComponent;
+
+        /// <summary>
+        /// Tries to QueueDeleteEntity if the entity is not already deleted.
+        /// </summary>
+        public bool TryQueueDeleteEntity(EntityUid? uid);
 
         public void QueueDeleteEntity(EntityUid? uid);
 

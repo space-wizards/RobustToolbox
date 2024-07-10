@@ -34,13 +34,13 @@ namespace Robust.Client.Placement.Modes
                 {
                     var from = ScreenToWorld(new Vector2(a, 0));
                     var to = ScreenToWorld(new Vector2(a, viewportSize.Y));
-                    args.WorldHandle.DrawLine(from, to, new Color(0, 0, 1f));
+                    args.WorldHandle.DrawLine(from, to, new Color(0, 0, 0.3f));
                 }
                 for (var a = gridstart.Y; a < viewportSize.Y; a += SnapSize * EyeManager.PixelsPerMeter)
                 {
                     var from = ScreenToWorld(new Vector2(0, a));
                     var to = ScreenToWorld(new Vector2(viewportSize.X, a));
-                    args.WorldHandle.DrawLine(from, to, new Color(0, 0, 1f));
+                    args.WorldHandle.DrawLine(from, to, new Color(0, 0, 0.3f));
                 }
             }
 

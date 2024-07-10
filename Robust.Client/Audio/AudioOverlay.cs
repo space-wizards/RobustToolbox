@@ -46,7 +46,7 @@ public sealed class AudioOverlay : Overlay
 
         var screenHandle = args.ScreenHandle;
         var output = new StringBuilder();
-        var listenerPos = _entManager.GetComponent<TransformComponent>(localPlayer.Value).MapPosition;
+        var listenerPos = _transform.GetMapCoordinates(_entManager.GetComponent<TransformComponent>(localPlayer.Value));
 
         if (listenerPos.MapId != args.MapId)
             return;

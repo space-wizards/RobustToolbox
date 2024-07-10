@@ -54,7 +54,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
 
-            prototypeManager.RegisterKind(typeof(EntityPrototype));
+            prototypeManager.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             prototypeManager.LoadString(Prototypes);
             prototypeManager.ResolveResults();
 

@@ -23,7 +23,6 @@ namespace Robust.Shared.GameObjects
     public sealed partial class TransformComponent : Component, IComponentDebug
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         // Currently this field just exists for VV. In future, it might become a real field
         [ViewVariables, PublicAPI]
@@ -661,21 +660,25 @@ namespace Robust.Shared.GameObjects
     /// Raised when the Anchor state of the transform is changed.
     /// </summary>
     [ByRefEvent]
-    public readonly struct AnchorStateChangedEvent
+    public readonly struct AnchorStateChangedEvent(
+        EntityUid entity,
+        TransformComponent transform,
+        bool detaching = false)
     {
-        public readonly TransformComponent Transform;
-        public EntityUid Entity => Transform.Owner;
+        public readonly TransformComponent Transform = transform;
+        public EntityUid Entity { get; } = entity;
         public bool Anchored => Transform.Anchored;
 
         /// <summary>
         ///     If true, the entity is being detached to null-space
         /// </summary>
-        public readonly bool Detaching;
+        public readonly bool Detaching = detaching;
 
+        [Obsolete("Use constructor that takes in EntityUid")]
         public AnchorStateChangedEvent(TransformComponent transform, bool detaching = false)
+            : this(transform.Owner, transform, detaching)
         {
-            Detaching = detaching;
-            Transform = transform;
+
         }
     }
 

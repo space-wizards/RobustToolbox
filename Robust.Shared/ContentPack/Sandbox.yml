@@ -438,6 +438,7 @@ Types:
   System.Net:
     DnsEndPoint: { }
     IPAddress: { All: True }
+    IPEndPoint: { All: True }
     HttpStatusCode: { } # Enum
   System.Net.Sockets:
     AddressFamily: { }

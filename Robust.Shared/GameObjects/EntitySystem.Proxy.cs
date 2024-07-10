@@ -705,6 +705,13 @@ public partial class EntitySystem
         EntityManager.QueueDeleteEntity(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.TryQueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryQueueDel(EntityUid? uid)
+    {
+        return EntityManager.TryQueueDeleteEntity(uid);
+    }
+
     #endregion
 
     #region Entity Spawning

@@ -92,7 +92,7 @@ namespace Robust.Shared.Physics.Systems
             // None moved this tick
             if (movedGrids.Count == 0) return;
 
-            var mapBroadphase = _broadphaseQuery.GetComponent(_mapManager.GetMapEntityId(mapId));
+            var mapBroadphase = _broadphaseQuery.GetComponent(_map.GetMapOrInvalid(mapId));
 
             // This is so that if we're on a broadphase that's moving (e.g. a grid) we need to make sure anything
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
@@ -146,7 +146,7 @@ namespace Robust.Shared.Physics.Systems
         [Obsolete("Use the overload with SharedPhysicsMapComponent")]
         internal void FindNewContacts(MapId mapId)
         {
-            if (!TryComp<PhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
+            if (!TryComp<PhysicsMapComponent>(_map.GetMapOrInvalid(mapId), out var physicsMap))
                 return;
 
             FindNewContacts(physicsMap, mapId);
@@ -158,7 +158,7 @@ namespace Robust.Shared.Physics.Systems
         internal void FindNewContacts(PhysicsMapComponent component, MapId mapId)
         {
             var moveBuffer = component.MoveBuffer;
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = _map.GetMapOrInvalid(mapId);
             var movedGrids = Comp<MovedGridsComponent>(mapUid).MovedGrids;
             var gridMoveBuffer = new Dictionary<FixtureProxy, Box2>();
 

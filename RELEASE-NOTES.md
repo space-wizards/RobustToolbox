@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added command usage with types to Toolshed command help.
+* Audio ticks-per-second is now capped at 30 by default and controlled via `audio.tick_rate` cvar.
 
 ### Bugfixes
 

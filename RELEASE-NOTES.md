@@ -35,23 +35,44 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* The `Color` struct's equality methods now check for exact equality. Use `MathHelper.CloseToPercent(Color, Color)` for the previous functionality.
+*None yet*
 
 ### New features
 
-* Added command usage with types to Toolshed command help.
+*None yet*
 
 ### Bugfixes
 
-* Clients connecting to a server now always load prototype uploads after resource uploads, fixing ordering bugs that could cause various errors.
+*None yet*
 
 ### Other
 
-* Added a toolshed.nearby_limit cvar to limit the maximum range of the nearby command. Defaults to 200.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 228.0.0
+
+### Breaking changes
+
+* The `Color` struct's equality methods now check for exact equality. Use `MathHelper.CloseToPercent(Color, Color)` for the previous functionality.
+* Added a toolshed.nearby_limit cvar to limit the maximum range of the nearby command. Defaults to 200.
+
+### New features
+
+* Added command usage with types to Toolshed command help.
+* Add Text property to RichTextLabel.
+* Whitelist System.Net.IPEndPoint.
+* Add event for mass & angular inertia changes.
+* Add SpriteSystem.IsVisible for layers.
+* Add TryQueueDeleteEntity that checks if the entity is already deleted / queuedeleted first.
+
+### Bugfixes
+
+* Clients connecting to a server now always load prototype uploads after resource uploads, fixing ordering bugs that could cause various errors.
 
 
 ## 227.0.0

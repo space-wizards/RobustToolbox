@@ -422,7 +422,7 @@ public sealed class MapLoaderSystem : EntitySystem
     private HashSet<EntityUid> AllocEntities(MapData data, BeforeEntityReadEvent ev)
     {
         _stopwatch.Restart();
-        var mapUid = _mapSystem.GetMap(data.TargetMap);
+        var mapUid = _mapSystem.GetMapOrInvalid(data.TargetMap);
         var pauseTime = mapUid.IsValid() ? _meta.GetPauseTime(mapUid) : TimeSpan.Zero;
         _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), data.MapIsPostInit, pauseTime, null);
         HashSet<EntityUid> deletedPrototypeUids = new();

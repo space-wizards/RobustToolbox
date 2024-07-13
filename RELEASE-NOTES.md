@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Audio ticks-per-second is now capped at 30 by default and controlled via `audio.tick_rate` cvar.
 
 ### Bugfixes
 

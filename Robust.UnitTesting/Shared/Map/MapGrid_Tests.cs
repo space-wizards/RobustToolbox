@@ -52,7 +52,6 @@ namespace Robust.UnitTesting.Shared.Map
         public void BoundsExpansion()
         {
             var sim = SimulationFactory();
-            var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
             var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var transformSystem = sim.Resolve<IEntityManager>().System<SharedTransformSystem>();
@@ -81,7 +80,6 @@ namespace Robust.UnitTesting.Shared.Map
         public void BoundsContract()
         {
             var sim = SimulationFactory();
-            var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
             var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var transformSystem = sim.Resolve<IEntityManager>().System<SharedTransformSystem>();

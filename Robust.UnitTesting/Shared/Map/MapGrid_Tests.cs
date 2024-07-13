@@ -111,10 +111,13 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridOptions = new GridCreateOptions();
+            gridOptions.ChunkSize = 8;
+            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
 
-            var result = grid.GridTileToChunkIndices(new Vector2i(-9, -1));
+            var result = mapSystem.GridTileToChunkIndices(grid.Comp, new Vector2i(-9, -1));
 
             Assert.That(result, Is.EqualTo(new Vector2i(-2, -1)));
         }

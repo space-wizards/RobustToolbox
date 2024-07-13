@@ -33,6 +33,23 @@ public abstract partial class SharedMapSystem
         return Maps[mapId];
     }
 
+    /// <summary>
+    /// Get the entity UID for a map, or <see cref="EntityUid.Invalid"/> if the map doesn't exist.
+    /// </summary>
+    /// <param name="mapId">The ID of the map to look up.</param>
+    /// <returns>
+    /// The entity UID of the map entity with the specific map ID,
+    /// or <see cref="EntityUid.Invalid"/> if the map doesn't exist.
+    /// </returns>
+    /// <seealso cref="GetMap"/>
+    public EntityUid GetMapOrInvalid(MapId? mapId)
+    {
+        if (TryGetMap(mapId, out var uid))
+            return uid.Value;
+
+        return EntityUid.Invalid;
+    }
+
     public bool TryGetMap([NotNullWhen(true)] MapId? mapId, [NotNullWhen(true)] out EntityUid? uid)
     {
         if (mapId == null || !Maps.TryGetValue(mapId.Value, out var map))

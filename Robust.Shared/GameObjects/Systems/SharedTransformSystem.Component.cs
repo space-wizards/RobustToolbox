@@ -246,33 +246,46 @@ public abstract partial class SharedTransformSystem
         component.MatricesDirty = true;
 
         DebugTools.Assert(component._gridUid == uid || !HasComp<MapGridComponent>(uid));
-        if (!component._anchored)
-            return;
-
-        Entity<MapGridComponent>? grid = null;
-
-        // First try find grid via parent:
-        if (component.GridUid == component.ParentUid && TryComp(component.ParentUid, out MapGridComponent? gridComp))
+        if (component._anchored)
         {
-            grid = (component.ParentUid, gridComp);
-        }
-        else
-        {
-            // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordinates)
-            // in that case, we attempt to attach to a grid.
-            var pos = new MapCoordinates(GetWorldPosition(component), component.MapID);
-            if (_mapManager.TryFindGridAt(pos, out var gridUid, out gridComp))
-                grid = (gridUid, gridComp);
+            Entity<MapGridComponent>? grid = null;
+
+            // First try find grid via parent:
+            if (component.GridUid == component.ParentUid && TryComp(component.ParentUid, out MapGridComponent? gridComp))
+            {
+                grid = (component.ParentUid, gridComp);
+            }
+            else
+            {
+                // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordinates)
+                // in that case, we attempt to attach to a grid.
+                var pos = new MapCoordinates(GetWorldPosition(component), component.MapID);
+                if (_mapManager.TryFindGridAt(pos, out var gridUid, out gridComp))
+                {
+                    // This sucks. Transform sucks
+                    // MoveEvent is incredibly expensive and it sucks we have to do this here instead of up the callstack
+                    // but this is a bandaid.
+                    grid = (gridUid, gridComp);
+                    SetParent(uid, component, gridUid);
+                }
+            }
+
+            if (grid == null)
+            {
+                Unanchor(uid, component);
+            }
+            else
+            {
+                if (!AnchorEntity((uid, component), grid))
+                    component._anchored = false;
+            }
         }
 
-        if (grid == null)
+        // TODO: Ideally we wouldn't need this update at all but transform init + spawning is a mess
+        if (_physicsQuery.TryComp(uid, out var physics))
         {
-            Unanchor(uid, component);
-            return;
+            _lookup.UpdatePhysicsBroadphase(uid, component, physics);
         }
-
-        if (!AnchorEntity((uid, component), grid))
-            component._anchored = false;
     }
 
     internal void InitializeGridUid(

@@ -11,6 +11,7 @@ using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 
@@ -30,6 +31,7 @@ namespace Robust.Shared.GameObjects
         private EntityQuery<MapComponent> _mapQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
+        private EntityQuery<PhysicsComponent> _physicsQuery;
         protected EntityQuery<TransformComponent> XformQuery;
 
         public delegate void MoveEventHandler(ref MoveEvent ev);
@@ -57,6 +59,7 @@ namespace Robust.Shared.GameObjects
             _mapQuery = GetEntityQuery<MapComponent>();
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
+            _physicsQuery = GetEntityQuery<PhysicsComponent>();
             XformQuery = GetEntityQuery<TransformComponent>();
 
             SubscribeLocalEvent<TileChangedEvent>(MapManagerOnTileChanged);

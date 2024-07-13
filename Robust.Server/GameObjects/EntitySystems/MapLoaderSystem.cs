@@ -155,7 +155,7 @@ public sealed class MapLoaderSystem : EntitySystem
             result = Deserialize(data);
             _logLoader.Debug($"Loaded map in {sw.Elapsed}");
 
-            var mapEnt = _mapManager.GetMapEntityId(mapId);
+            var mapEnt = _mapSystem.GetMapOrInvalid(mapId);
             var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
             var rootEnts = new List<EntityUid>();
             // aeoeoeieioe content
@@ -217,13 +217,13 @@ public sealed class MapLoaderSystem : EntitySystem
 
     public void SaveMap(MapId mapId, string ymlPath)
     {
-        if (!_mapManager.MapExists(mapId))
+        if (!_mapSystem.TryGetMap(mapId, out var mapUid))
         {
             _logLoader.Error($"Unable to find map {mapId}");
             return;
         }
 
-        Save(_mapManager.GetMapEntityId(mapId), ymlPath);
+        Save(mapUid.Value, ymlPath);
     }
 
     #endregion
@@ -422,7 +422,7 @@ public sealed class MapLoaderSystem : EntitySystem
     private HashSet<EntityUid> AllocEntities(MapData data, BeforeEntityReadEvent ev)
     {
         _stopwatch.Restart();
-        var mapUid = _mapManager.GetMapEntityId(data.TargetMap);
+        var mapUid = _mapSystem.GetMapOrInvalid(data.TargetMap);
         var pauseTime = mapUid.IsValid() ? _meta.GetPauseTime(mapUid) : TimeSpan.Zero;
         _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), data.MapIsPostInit, pauseTime, null);
         HashSet<EntityUid> deletedPrototypeUids = new();

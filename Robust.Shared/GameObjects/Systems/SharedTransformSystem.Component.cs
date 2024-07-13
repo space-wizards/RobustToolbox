@@ -544,7 +544,7 @@ public abstract partial class SharedTransformSystem
 
             if (newParent != null)
             {
-                xform.ChangeMapId(newParent.MapID, XformQuery);
+                ChangeMapId(uid, xform, meta, newParent.MapID);
 
                 if (!xform._gridInitialized)
                     InitializeGridUid(uid, xform);
@@ -557,7 +557,7 @@ public abstract partial class SharedTransformSystem
             }
             else
             {
-                xform.ChangeMapId(MapId.Nullspace, XformQuery);
+                ChangeMapId(uid, xform, meta, MapId.Nullspace);
                 if (!xform._gridInitialized)
                     InitializeGridUid(uid, xform);
                 else
@@ -595,6 +595,22 @@ public abstract partial class SharedTransformSystem
         TransformComponent? oldParent = null)
     {
         SetCoordinates((uid, xform, _metaQuery.GetComponent(uid)), value, rotation, unanchor, newParent, oldParent);
+    }
+
+    private void ChangeMapId(EntityUid uid, TransformComponent xform, MetaDataComponent meta, MapId newMapId)
+    {
+        if (newMapId == xform.MapID)
+            return;
+
+        EntityUid? newUid = newMapId == MapId.Nullspace ? null : _map.GetMap(newMapId);
+
+        //Set Paused state
+        var mapPaused = _map.IsPaused(newMapId);
+        _metaData.SetEntityPaused(uid, mapPaused, meta);
+
+        xform.MapUid = newUid;
+        xform.MapID = newMapId;
+        xform.UpdateChildMapIdsRecursive(newMapId, newUid, mapPaused, XformQuery, _metaQuery, _metaData);
     }
 
     #endregion
@@ -1588,7 +1604,7 @@ public abstract partial class SharedTransformSystem
         }
         else if (pos2 != null)
         {
-            var mapUid = _mapManager.GetMapEntityId(pos2.Value.MapId);
+            var mapUid = _map.GetMapOrInvalid(pos2.Value.MapId);
 
             if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos2.Value.Position, out var targetGrid, out _))
             {
@@ -1611,7 +1627,7 @@ public abstract partial class SharedTransformSystem
         }
         else if (pos1 != null)
         {
-            var mapUid = _mapManager.GetMapEntityId(pos1.Value.MapId);
+            var mapUid = _map.GetMapOrInvalid(pos1.Value.MapId);
 
             if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos1.Value.Position, out var targetGrid, out _))
             {

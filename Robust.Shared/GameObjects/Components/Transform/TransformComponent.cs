@@ -415,25 +415,6 @@ namespace Robust.Shared.GameObjects
             _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(Owner, this, newParent.Owner, newParent);
         }
 
-        internal void ChangeMapId(MapId newMapId, EntityQuery<TransformComponent> xformQuery)
-        {
-            if (newMapId == MapID)
-                return;
-
-            EntityUid? newUid = newMapId == MapId.Nullspace ? null : _mapManager.GetMapEntityId(newMapId);
-
-            //Set Paused state
-            var mapPaused = _mapManager.IsMapPaused(newMapId);
-            var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
-            var metaData = metaEnts.GetComponent(Owner);
-            var metaSystem = _entMan.EntitySysManager.GetEntitySystem<MetaDataSystem>();
-            metaSystem.SetEntityPaused(Owner, mapPaused, metaData);
-
-            MapUid = newUid;
-            MapID = newMapId;
-            UpdateChildMapIdsRecursive(MapID, newUid, mapPaused, xformQuery, metaEnts, metaSystem);
-        }
-
         internal void UpdateChildMapIdsRecursive(
             MapId newMapId,
             EntityUid? newUid,

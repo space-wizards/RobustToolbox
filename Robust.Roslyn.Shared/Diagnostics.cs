@@ -33,6 +33,7 @@ public static class Diagnostics
     public const string IdDataFieldRedundantTag = "RA0027";
     public const string IdMustCallBase = "RA0028";
     public const string IdDataFieldNoVVReadWrite = "RA0029";
+    public const string IdUseNonGenericVariant = "RA0030";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

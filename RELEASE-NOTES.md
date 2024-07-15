@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Fixes large entities causing entity spawn menu to break.
 
 ### New features
 

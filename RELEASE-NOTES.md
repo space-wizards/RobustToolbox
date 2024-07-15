@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Fixes large entities causing entity spawn menu to break.
+* Made PhysicsHull an internal ref struct for some PolygonShape speedup.
 
 ### New features
 

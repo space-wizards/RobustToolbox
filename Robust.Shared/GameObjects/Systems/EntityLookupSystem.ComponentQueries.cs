@@ -494,7 +494,7 @@ public sealed partial class EntityLookupSystem
             }
 
             // Get map entities
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = _map.GetMapOrInvalid(mapId);
             AnyLocalComponentsIntersecting(mapUid, worldAABB, flags, query, ignored);
         }
 
@@ -563,7 +563,7 @@ public sealed partial class EntityLookupSystem
                     return true;
                 }, approx: true, includeMap: false);
 
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = _map.GetMapOrInvalid(mapId);
             AddEntitiesIntersecting(mapUid, intersecting, shape, shapeTransform, flags, query);
 
             AddContained(intersecting, flags, query);
@@ -603,7 +603,7 @@ public sealed partial class EntityLookupSystem
                 }, approx: true, includeMap: false);
 
             // Get map entities
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = _map.GetMapOrInvalid(mapId);
             AddEntitiesIntersecting(mapUid, entities, shape, shapeTransform, flags, query);
 
             AddContained(entities, flags, query);

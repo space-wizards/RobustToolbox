@@ -333,7 +333,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
         }
 
-        private void DrawLightsAndFov(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
+        private void DrawLightsAndFov(SharedMapSystem mapSystem, Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
         {
             if (!_lightManager.Enabled || !eye.DrawLight)
             {
@@ -345,7 +345,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
 
             // If this map has lighting disabled, return
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = mapSystem.GetMapOrInvalid(mapId);
             if (!_entityManager.TryGetComponent<MapComponent>(mapUid, out var map) || !map.LightingEnabled)
             {
                 return;

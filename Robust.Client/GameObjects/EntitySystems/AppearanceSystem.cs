@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Serialization;
 using Robust.Shared.GameStates;
 using Robust.Shared.Utility;
+using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Client.GameObjects
 {
@@ -11,6 +14,7 @@ namespace Robust.Client.GameObjects
     public sealed class AppearanceSystem : SharedAppearanceSystem
     {
         private readonly Queue<(EntityUid uid, AppearanceComponent)> _queuedUpdates = new();
+        [Dependency] private readonly ISerializationManager _serialization = default!;
 
         public override void Initialize()
         {
@@ -74,10 +78,13 @@ namespace Robust.Client.GameObjects
 
             foreach (var (key, value) in data)
             {
+                object? serializationObject;
                 if (value.GetType().IsValueType)
                     newDict[key] = value;
                 else if (value is ICloneable cloneable)
                     newDict[key] = cloneable.Clone();
+                else if ((serializationObject = _serialization.CreateCopy(value)) != null)
+                    newDict[key] = serializationObject;
                 else
                     throw new NotSupportedException("Invalid object in appearance data dictionary. Appearance data must be cloneable");
             }

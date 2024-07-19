@@ -27,7 +27,6 @@ namespace Robust.Shared.Network
                 RegistryValueKind.Binary);
 
             return newId;
-
         }
     }
 

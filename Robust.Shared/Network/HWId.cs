@@ -11,24 +11,23 @@ namespace Robust.Shared.Network
 
         public static byte[] Calc()
         {
-            if (OperatingSystem.IsWindows())
-            {
-                var regKey = Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Space Wizards\Robust", "Hwid", null);
-                if (regKey is byte[] { Length: LengthHwid } bytes)
-                    return bytes;
+            if (!OperatingSystem.IsWindows())
+                return Array.Empty<byte>();
 
-                var newId = new byte[LengthHwid];
-                RandomNumberGenerator.Fill(newId);
-                Registry.SetValue(
-                    @"HKEY_CURRENT_USER\SOFTWARE\Space Wizards\Robust",
-                    "Hwid",
-                    newId,
-                    RegistryValueKind.Binary);
+            var regKey = Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Space Wizards\Robust", "Hwid", null);
+            if (regKey is byte[] { Length: LengthHwid } bytes)
+                return bytes;
 
-                return newId;
-            }
+            var newId = new byte[LengthHwid];
+            RandomNumberGenerator.Fill(newId);
+            Registry.SetValue(
+                @"HKEY_CURRENT_USER\SOFTWARE\Space Wizards\Robust",
+                "Hwid",
+                newId,
+                RegistryValueKind.Binary);
 
-            return Array.Empty<byte>();
+            return newId;
+
         }
     }
 

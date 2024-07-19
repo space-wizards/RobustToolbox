@@ -10,6 +10,30 @@ namespace Robust.UnitTesting.Shared.Utility
     [TestOf(typeof(FormattedMessage))]
     public sealed class FormattedMessage_Test
     {
+        private static (FormattedMessage Message, bool Trimmed)[] _trimMessages = new[]
+        {
+            (FormattedMessage.FromUnformatted("weh"), false),
+            (FormattedMessage.FromUnformatted("weh "), true),
+            (FormattedMessage.Empty, false),
+            (FormattedMessage.FromUnformatted("weh\n"), true),
+        };
+
+        [Test, TestCaseSource(nameof(_trimMessages))]
+        public static void TestTrimEnd((FormattedMessage message, bool shouldTrim) test)
+        {
+            var copy = FormattedMessage.FromUnformatted(test.message.ToString());
+            copy.TrimEnd();
+
+            if (test.shouldTrim)
+            {
+                Assert.That(copy.ToString(), Is.Not.EqualTo(test.message.ToString()));
+            }
+            else
+            {
+                Assert.That(copy.ToString(), Is.EqualTo(test.message.ToString()));
+            }
+        }
+
         [Test]
         public static void TestParseMarkup()
         {

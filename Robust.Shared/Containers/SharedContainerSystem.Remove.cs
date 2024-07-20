@@ -41,7 +41,7 @@ public abstract partial class SharedContainerSystem
             return false;
 
         DebugTools.AssertNotNull(container.Manager);
-        DebugTools.Assert(Exists(toRemove));
+        DebugTools.Assert(Exists(toRemove), "toRemove does not exist");
 
         if (!force && !CanRemove(toRemove, container))
             return false;
@@ -60,11 +60,11 @@ public abstract partial class SharedContainerSystem
             return false;
         }
 
-        DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating || (force && !reparent));
-        DebugTools.Assert(xform.Broadphase == null || !xform.Broadphase.Value.IsValid());
-        DebugTools.Assert(!xform.Anchored);
-        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0);
-        DebugTools.Assert(!TryComp(toRemove, out PhysicsComponent? phys) || (!phys.Awake && !phys.CanCollide));
+        DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating || (force && !reparent), "Entity is terminating");
+        DebugTools.Assert(xform.Broadphase == null || !xform.Broadphase.Value.IsValid(), "broadphase is invalid");
+        DebugTools.Assert(!xform.Anchored || _timing.ApplyingState, "anchor is invalid");
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0x0, "metadata is invalid");
+        DebugTools.Assert(!TryComp(toRemove, out PhysicsComponent? phys) || (!phys.Awake && !phys.CanCollide), "physics is invalid");
 
         // Unset flag (before parent change events are raised).
         meta.Flags &= ~MetaDataFlags.InContainer;
@@ -104,7 +104,7 @@ public abstract partial class SharedContainerSystem
         RaiseLocalEvent(container.Owner, new EntRemovedFromContainerMessage(toRemove, container), true);
         RaiseLocalEvent(toRemove, new EntGotRemovedFromContainerMessage(toRemove, container), false);
 
-        DebugTools.Assert(destination == null || xform.Coordinates.Equals(destination.Value));
+        DebugTools.Assert(destination == null || xform.Coordinates.Equals(destination.Value), "failed to set destination");
 
         Dirty(container.Owner, container.Manager);
         return true;

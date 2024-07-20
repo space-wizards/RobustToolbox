@@ -690,7 +690,7 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     /// <param name="island"></param>
     /// <returns></returns>
-    private bool InternalParallel(IslandData island)
+    private static bool InternalParallel(IslandData island)
     {
         // Should lone island most times as well.
         return island.Bodies.Count > 128 || island.Contacts.Count > 128 || island.Joints.Count > 128;

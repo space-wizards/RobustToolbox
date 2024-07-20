@@ -33,10 +33,7 @@ public class EntityPrototypeView : SpriteView
 
         _currentPrototype = entProto;
         SetEntity(null);
-        if (_ourEntity != null)
-        {
-            EntMan.DeleteEntity(_ourEntity);
-        }
+        EntMan.DeleteEntity(_ourEntity);
 
         if (_currentPrototype != null)
         {
@@ -57,8 +54,6 @@ public class EntityPrototypeView : SpriteView
     protected override void ExitedTree()
     {
         base.ExitedTree();
-
-        if (!EntMan.Deleted(_ourEntity))
-            EntMan.QueueDeleteEntity(_ourEntity);
+        EntMan.TryQueueDeleteEntity(_ourEntity);
     }
 }

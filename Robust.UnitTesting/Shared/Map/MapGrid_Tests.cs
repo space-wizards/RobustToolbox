@@ -31,15 +31,17 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridOptions = new GridCreateOptions();
+            gridOptions.ChunkSize = 8;
+            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
 
-            grid.SetTile(new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
+            mapSystem.SetTile(grid, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
+            var result = mapSystem.GetTileRef(grid.Owner, grid.Comp, new Vector2i(-9, -1));
 
-            var result = grid.GetTileRef(new Vector2i(-9, -1));
-
-            Assert.That(grid.ChunkCount, Is.EqualTo(1));
-            Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
+            Assert.That(grid.Comp.ChunkCount, Is.EqualTo(1));
+            Assert.That(mapSystem.GetMapChunks(grid.Owner, grid.Comp).Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
             Assert.That(result, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9,-1), new Tile(1, (TileRenderFlag)1, 1))));
         }
 
@@ -50,17 +52,19 @@ namespace Robust.UnitTesting.Shared.Map
         public void BoundsExpansion()
         {
             var sim = SimulationFactory();
-            var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
+            var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
+            var transformSystem = sim.Resolve<IEntityManager>().System<SharedTransformSystem>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGrid(mapId, 8);
-            var gridXform = entMan.GetComponent<TransformComponent>(grid.Owner);
-            gridXform.WorldPosition = new Vector2(3, 5);
+            var gridOptions = new GridCreateOptions();
+            gridOptions.ChunkSize = 8;
+            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
+            transformSystem.SetWorldPosition(grid, new Vector2(3, 5));
 
-            grid.SetTile(new Vector2i(-1, -2), new Tile(1));
-            grid.SetTile(new Vector2i(1, 2), new Tile(1));
+            mapSystem.SetTile(grid, new Vector2i(-1, -2), new Tile(1));
+            mapSystem.SetTile(grid, new Vector2i(1, 2), new Tile(1));
 
-            var bounds = gridXform.WorldMatrix.TransformBox(grid.LocalAABB);
+            var bounds = transformSystem.GetWorldMatrix(grid).TransformBox(grid.Comp.LocalAABB);
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));
@@ -76,20 +80,22 @@ namespace Robust.UnitTesting.Shared.Map
         public void BoundsContract()
         {
             var sim = SimulationFactory();
-            var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
+            var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
+            var transformSystem = sim.Resolve<IEntityManager>().System<SharedTransformSystem>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGrid(mapId, 8);
-            var gridXform = entMan.GetComponent<TransformComponent>(grid.Owner);
+            var gridOptions = new GridCreateOptions();
+            gridOptions.ChunkSize = 8;
+            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
 
-            gridXform.WorldPosition = new Vector2(3, 5);
+            transformSystem.SetWorldPosition(grid, new Vector2(3, 5));
 
-            grid.SetTile(new Vector2i(-1, -2), new Tile(1));
-            grid.SetTile(new Vector2i(1, 2), new Tile(1));
+            mapSystem.SetTile(grid, new Vector2i(-1, -2), new Tile(1));
+            mapSystem.SetTile(grid, new Vector2i(1, 2), new Tile(1));
 
-            grid.SetTile(new Vector2i(1, 2), Tile.Empty);
+            mapSystem.SetTile(grid, new Vector2i(1, 2), Tile.Empty);
 
-            var bounds = gridXform.WorldMatrix.TransformBox(grid.LocalAABB);
+            var bounds = transformSystem.GetWorldMatrix(grid).TransformBox(grid.Comp.LocalAABB);
 
             // this is world, so add the grid world pos
             Assert.That(bounds.Bottom, Is.EqualTo(-2+5));
@@ -103,10 +109,13 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridOptions = new GridCreateOptions();
+            gridOptions.ChunkSize = 8;
+            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
 
-            var result = grid.GridTileToChunkIndices(new Vector2i(-9, -1));
+            var result = mapSystem.GridTileToChunkIndices(grid.Comp, new Vector2i(-9, -1));
 
             Assert.That(result, Is.EqualTo(new Vector2i(-2, -1)));
         }
@@ -119,10 +128,13 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridOptions = new GridCreateOptions();
+            gridOptions.ChunkSize = 8;
+            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
 
-            var result = grid.GridTileToLocal(new Vector2i(0, 0)).Position;
+            var result = mapSystem.GridTileToLocal(grid.Owner, grid.Comp, new Vector2i(0, 0)).Position;
 
             Assert.That(result.X, Is.EqualTo(0.5f));
             Assert.That(result.Y, Is.EqualTo(0.5f));
@@ -133,14 +145,17 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridOptions = new GridCreateOptions();
+            gridOptions.ChunkSize = 8;
+            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
 
-            var foundTile = grid.TryGetTileRef(new Vector2i(-9, -1), out var tileRef);
-
+            var foundTile = mapSystem.TryGetTileRef(grid.Owner, grid.Comp, new Vector2i(-9, -1), out var tileRef)
+;
             Assert.That(foundTile, Is.False);
             Assert.That(tileRef, Is.EqualTo(new TileRef()));
-            Assert.That(grid.ChunkCount, Is.EqualTo(0));
+            Assert.That(grid.Comp.ChunkCount, Is.EqualTo(0));
         }
 
         [Test]
@@ -148,16 +163,19 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridOptions = new GridCreateOptions();
+            gridOptions.ChunkSize = 8;
+            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
 
-            grid.SetTile(new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
+            mapSystem.SetTile(grid, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
 
-            var foundTile = grid.TryGetTileRef(new Vector2i(-9, -1), out var tileRef);
+            var foundTile = mapSystem.TryGetTileRef(grid.Owner, grid.Comp, new Vector2i(-9, -1), out var tileRef);
 
             Assert.That(foundTile, Is.True);
-            Assert.That(grid.ChunkCount, Is.EqualTo(1));
-            Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
+            Assert.That(grid.Comp.ChunkCount, Is.EqualTo(1));
+            Assert.That(mapSystem.GetMapChunks(grid.Owner, grid.Comp).Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
             Assert.That(tileRef, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1))));
         }
 
@@ -166,12 +184,15 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridOptions = new GridCreateOptions();
+            gridOptions.ChunkSize = 8;
+            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
 
-            grid.SetTile(new Vector2i(19, 23), new Tile(1));
+            mapSystem.SetTile(grid, new Vector2i(19, 23), new Tile(1));
 
-            var result = grid.CollidesWithGrid(new Vector2i(19, 23));
+            var result = mapSystem.CollidesWithGrid(grid.Owner, grid.Comp, new Vector2i(19, 23));
 
             Assert.That(result, Is.True);
         }
@@ -181,12 +202,15 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGrid(mapId, 8);
+            var gridOptions = new GridCreateOptions();
+            gridOptions.ChunkSize = 8;
+            var grid = mapMan.CreateGridEntity(mapId, gridOptions);
 
-            grid.SetTile(new Vector2i(19, 23), new Tile(1));
+            mapSystem.SetTile(grid, new Vector2i(19, 23), new Tile(1));
 
-            var result = grid.CollidesWithGrid(new Vector2i(19, 24));
+            var result = mapSystem.CollidesWithGrid(grid.Owner, grid.Comp, new Vector2i(19, 24));
 
             Assert.That(result, Is.False);
         }

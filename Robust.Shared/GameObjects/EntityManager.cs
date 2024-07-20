@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Prometheus;
+using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -42,6 +43,7 @@ namespace Robust.Shared.GameObjects
         [IoC.Dependency] private readonly ProfManager _prof = default!;
         [IoC.Dependency] private readonly INetManager _netMan = default!;
         [IoC.Dependency] private readonly IReflectionManager _reflection = default!;
+        [IoC.Dependency] private readonly EntityConsoleHost _entityConsoleHost = default!;
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
@@ -216,6 +218,7 @@ namespace Robust.Shared.GameObjects
             TransformQuery = GetEntityQuery<TransformComponent>();
             _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _actorQuery = GetEntityQuery<ActorComponent>();
+            _entityConsoleHost.Startup();
         }
 
         public virtual void Shutdown()
@@ -227,6 +230,7 @@ namespace Robust.Shared.GameObjects
             ClearComponents();
             ShuttingDown = false;
             Started = false;
+            _entityConsoleHost.Shutdown();
         }
 
         public virtual void Cleanup()
@@ -318,7 +322,7 @@ namespace Robust.Shared.GameObjects
                 return newEntity;
             }
 
-            var mapEnt = _mapManager.GetMapEntityId(coordinates.MapId);
+            var mapEnt = _mapSystem.GetMap(coordinates.MapId);
             if (!TryGetComponent(mapEnt, out TransformComponent? mapXform))
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
@@ -464,6 +468,21 @@ namespace Robust.Shared.GameObjects
             ent.Comp4.LastModifiedTick = CurrentTick;
         }
 
+        public bool TryQueueDeleteEntity(EntityUid? uid)
+        {
+            if (uid == null)
+                return false;
+
+            if (Deleted(uid.Value))
+                return false;
+
+            if (!QueuedDeletionsSet.Add(uid.Value))
+                return false;
+
+            QueueDeleteEntity(uid);
+            return true;
+        }
+
         /// <summary>
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>
@@ -586,7 +605,7 @@ namespace Robust.Shared.GameObjects
                 {
                     try
                     {
-                        LifeShutdown(component);
+                        LifeShutdown(uid, component, _componentFactory.GetIndex(component.GetType()));
                     }
                     catch (Exception e)
                     {

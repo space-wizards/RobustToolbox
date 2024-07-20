@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
@@ -70,7 +69,7 @@ namespace Robust.Shared
         /// <seealso cref="NetMtuExpand"/>
         /// <seealso cref="NetMtuIpv6"/>
         public static readonly CVarDef<int> NetMtu =
-            CVarDef.Create("net.mtu", 900, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu", 700, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum UDP payload size to send by default, for IPv6.
@@ -1158,6 +1157,13 @@ namespace Robust.Shared
         public static readonly CVarDef<float> AudioRaycastLength =
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Tickrate for audio calculations.
+        /// OpenAL recommends 30TPS. This is to avoid running raycasts every frame especially for high-refresh rate monitors.
+        /// </summary>
+        public static readonly CVarDef<int> AudioTickRate =
+            CVarDef.Create("audio.tick_rate", 30, CVar.CLIENTONLY);
+
         public static readonly CVarDef<float> AudioZOffset =
             CVarDef.Create("audio.z_offset", -5f, CVar.REPLICATED);
 
@@ -1374,7 +1380,7 @@ namespace Robust.Shared
         /// the purpose of using an atlas if it gets too small.
         /// </summary>
         public static readonly CVarDef<int> ResRSIAtlasSize =
-            CVarDef.Create("res.rsi_atlas_size", 8192, CVar.CLIENTONLY);
+            CVarDef.Create("res.rsi_atlas_size", 12288, CVar.CLIENTONLY);
 
         // TODO: Currently unimplemented.
         /// <summary>
@@ -1559,6 +1565,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ConCompletionMargin =
             CVarDef.Create("con.completion_margin", 3, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Maximum amount of entries stored by the debug console.
+        /// </summary>
+        public static readonly CVarDef<int> ConMaxEntries =
+            CVarDef.Create("con.max_entries", 3_000, CVar.CLIENTONLY);
 
         /*
          * THREAD
@@ -1753,5 +1765,16 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> LaunchContentBundle =
             CVarDef.Create("launch.content_bundle", false, CVar.CLIENTONLY);
+
+        /*
+         * TOOLSHED
+         */
+
+        /// <summary>
+        ///     The max range that can be passed to the nearby toolshed command.
+        ///     Any higher value will cause an exception.
+        /// </summary>
+        public static readonly CVarDef<int> ToolshedNearbyLimit =
+            CVarDef.Create("toolshed.nearby_limit", 200, CVar.SERVER | CVar.REPLICATED);
     }
 }

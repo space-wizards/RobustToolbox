@@ -494,7 +494,7 @@ public sealed partial class EntityLookupSystem
             }
 
             // Get map entities
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = _map.GetMapOrInvalid(mapId);
             AnyLocalComponentsIntersecting(mapUid, worldAABB, flags, query, ignored);
         }
 
@@ -563,7 +563,7 @@ public sealed partial class EntityLookupSystem
                     return true;
                 }, approx: true, includeMap: false);
 
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = _map.GetMapOrInvalid(mapId);
             AddEntitiesIntersecting(mapUid, intersecting, shape, shapeTransform, flags, query);
 
             AddContained(intersecting, flags, query);
@@ -603,7 +603,7 @@ public sealed partial class EntityLookupSystem
                 }, approx: true, includeMap: false);
 
             // Get map entities
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = _map.GetMapOrInvalid(mapId);
             AddEntitiesIntersecting(mapUid, entities, shape, shapeTransform, flags, query);
 
             AddContained(entities, flags, query);
@@ -614,16 +614,16 @@ public sealed partial class EntityLookupSystem
 
     #region EntityCoordinates
 
-    public void GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, HashSet<Entity<T>> entities) where T : IComponent
+    public void GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         var mapPos = coordinates.ToMap(EntityManager, _transform);
-        GetEntitiesInRange(mapPos, range, entities);
+        GetEntitiesInRange(mapPos, range, entities, flags);
     }
 
-    public HashSet<Entity<T>> GetEntitiesInRange<T>(EntityCoordinates coordinates, float range) where T : IComponent
+    public HashSet<Entity<T>> GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         var entities = new HashSet<Entity<T>>();
-        GetEntitiesInRange(coordinates, range, entities);
+        GetEntitiesInRange(coordinates, range, entities, flags);
         return entities;
     }
 
@@ -735,6 +735,47 @@ public sealed partial class EntityLookupSystem
 
             entities.Add((uid, comp, comp2));
         }
+    }
+
+    #endregion
+
+    #region Local
+
+    /// <summary>
+    /// Gets the entities intersecting the specified broadphase entity using a local AABB.
+    /// </summary>
+    public void GetLocalEntitiesIntersecting<T>(
+        EntityUid gridUid,
+        Vector2i localTile,
+        HashSet<Entity<T>> intersecting,
+        float enlargement = TileEnlargementRadius,
+        LookupFlags flags = DefaultFlags,
+        MapGridComponent? gridComp = null) where T : IComponent
+    {
+        ushort tileSize = 1;
+
+        if (_gridQuery.Resolve(gridUid, ref gridComp))
+        {
+            tileSize = gridComp.TileSize;
+        }
+
+        var localAABB = GetLocalBounds(localTile, tileSize);
+        localAABB = localAABB.Enlarged(TileEnlargementRadius);
+        GetLocalEntitiesIntersecting(gridUid, localAABB, intersecting, flags);
+    }
+
+    /// <summary>
+    /// Gets the entities intersecting the specified broadphase entity using a local AABB.
+    /// </summary>
+    public void GetLocalEntitiesIntersecting<T>(
+        EntityUid gridUid,
+        Box2 localAABB,
+        HashSet<Entity<T>> intersecting,
+        LookupFlags flags = DefaultFlags) where T : IComponent
+    {
+        var query = GetEntityQuery<T>();
+        AddLocalEntitiesIntersecting(gridUid, intersecting, localAABB, flags, query);
+        AddContained(intersecting, flags, query);
     }
 
     #endregion

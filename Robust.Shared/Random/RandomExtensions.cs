@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using Robust.Shared.Collections;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -128,6 +129,9 @@ public static class RandomExtensions
         return minAngle + (maxAngle - minAngle) * random.NextDouble();
     }
 
+    public static Vector2 NextPolarVector2(this System.Random random, float minMagnitude, float maxMagnitude)
+        => random.NextAngle().RotateVec(new Vector2(random.NextFloat(minMagnitude, maxMagnitude), 0));
+
     public static float NextFloat(this IRobustRandom random)
     {
         // This is pretty much the CoreFX implementation.
@@ -140,6 +144,9 @@ public static class RandomExtensions
     {
         return random.Next() * 4.6566128752458E-10f;
     }
+
+    public static float NextFloat(this System.Random random, float minValue, float maxValue)
+        => random.NextFloat() * (maxValue - minValue) + minValue;
 
     /// <summary>
     ///     Have a certain chance to return a boolean.

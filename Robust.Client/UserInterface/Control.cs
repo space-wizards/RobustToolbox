@@ -212,9 +212,18 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Called when this control's visibility in the control tree changed.
+        /// </summary>
+        protected virtual void VisibilityChanged(bool newVisible)
+        {
+        }
+
         private void _propagateVisibilityChanged(bool newVisible)
         {
+            VisibilityChanged(newVisible);
             OnVisibilityChanged?.Invoke(this);
+
             if (!VisibleInTree)
             {
                 UserInterfaceManagerInternal.ControlHidden(this);

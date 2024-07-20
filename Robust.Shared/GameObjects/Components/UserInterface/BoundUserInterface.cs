@@ -21,7 +21,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Additional controls to be disposed when this BUI is disposed.
         /// </summary>
-        internal List<IDisposable>? Disposals;
+        internal List<Action>? Disposals;
 
         /// <summary>
         ///     The last received state object sent from the server.
@@ -88,29 +88,23 @@ namespace Robust.Shared.GameObjects
             UiSystem.SendPredictedUiMessage(this, message);
         }
 
-        ~BoundUserInterface()
-        {
-            Dispose(false);
-        }
-
+#pragma warning disable CA1816
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
+#pragma warning restore CA1816
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                if (Disposals != null)
-                {
-                    foreach (var control in Disposals)
-                    {
-                        control.Dispose();
-                    }
+            if (!disposing)
+                return;
 
-                    Disposals = null;
+            if (Disposals != null)
+            {
+                foreach (var action in Disposals)
+                {
+                    action();
                 }
             }
         }

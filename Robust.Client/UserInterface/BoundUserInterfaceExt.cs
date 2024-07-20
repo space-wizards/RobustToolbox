@@ -11,10 +11,20 @@ public static class BoundUserInterfaceExt
     /// </summary>
     public static T CreateWindow<T>(this BoundUserInterface bui) where T : BaseWindow, new()
     {
-        var window = bui.CreateDisposableControl<T>();
+        var window = CreateRemovableControl<T>(bui);
         window.OpenCentered();
         window.OnClose += bui.Close;
         return window;
+    }
+
+    /// <summary>
+    /// Creates a control for this BUI that will be removed from the UI tree when the BUI is disposed.
+    /// </summary>
+    public static T CreateRemovableControl<T>(this BoundUserInterface bui) where T : Control, new()
+    {
+        var control = new T();
+        AddDisposal(bui, () => control.Orphan());
+        return control;
     }
 
     /// <summary>
@@ -23,11 +33,17 @@ public static class BoundUserInterfaceExt
     /// <param name="bui"></param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
+    [Obsolete("Control disposal is obsolete and should not be used")]
     public static T CreateDisposableControl<T>(this BoundUserInterface bui) where T : Control, IDisposable, new()
     {
         var control = new T();
-        bui.Disposals ??= [];
-        bui.Disposals.Add(control);
+        AddDisposal(bui, () => control.Dispose());
         return control;
+    }
+
+    private static void AddDisposal(this BoundUserInterface bui, Action act)
+    {
+        bui.Disposals ??= [];
+        bui.Disposals.Add(act);
     }
 }

@@ -28,6 +28,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzer.Testing"/>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp"/>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.NUnit"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.NUnit"/>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces"/>
     <PackageReference Include="NUnit"/>
     <PackageReference Include="NUnit3TestAdapter"/>

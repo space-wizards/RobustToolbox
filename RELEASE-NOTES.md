@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix multithreading bug in ParallelTracker that caused the game to crash randomly.
 
 ### Other
 

@@ -35,12 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Fixes large entities causing entity spawn menu to break.
-* Made PhysicsHull an internal ref struct for some PolygonShape speedup.
+*None yet*
 
 ### New features
 
-* Audio ticks-per-second is now capped at 30 by default and controlled via `audio.tick_rate` cvar.
+*None yet*
 
 ### Bugfixes
 
@@ -53,6 +52,21 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 229.0.0
+
+### Breaking changes
+
+* Fixes large entities causing entity spawn menu to break.
+* Made PhysicsHull an internal ref struct for some PolygonShape speedup.
+
+### New features
+
+* Audio ticks-per-second is now capped at 30 by default and controlled via `audio.tick_rate` cvar.
+* Add CreateWindow and CreateDisposableControl helpers for BUIs.
+* Add OnProtoReload virtual method to BUIs that gets called on prototype reloads.
+* Add RemoveData to AppearanceSystem data.
 
 
 ## 228.0.0

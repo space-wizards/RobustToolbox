@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
 
 ### Internal
 

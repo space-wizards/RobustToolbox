@@ -240,7 +240,7 @@ public record struct UnknownCommandError(string Cmd) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup($"Got unknown command {Cmd}.");
+        return FormattedMessage.FromUnformatted($"Got unknown command {Cmd}.");
     }
 
     public string? Expression { get; set; }

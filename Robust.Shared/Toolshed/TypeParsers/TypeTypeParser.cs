@@ -179,9 +179,7 @@ public record struct ExpectedNextType() : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        var msg = new FormattedMessage();
-        msg.AddText($"Expected another type in the generic arguments.");
-        return msg;
+        return FormattedMessage.FromUnformatted("Expected another type in the generic arguments.");
     }
 
     public string? Expression { get; set; }
@@ -193,9 +191,7 @@ public record struct ExpectedGeneric() : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        var msg = new FormattedMessage();
-        msg.AddText($"Expected a generic type, did you forget the angle brackets?");
-        return msg;
+        return FormattedMessage.FromUnformatted("Expected a generic type, did you forget the angle brackets?");
     }
 
     public string? Expression { get; set; }
@@ -207,9 +203,7 @@ public record struct UnknownType(string T) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        var msg = new FormattedMessage();
-        msg.AddText($"The type {T} is not known and cannot be used.");
-        return msg;
+        return FormattedMessage.FromUnformatted($"The type {T} is not known and cannot be used.");
     }
 
     public string? Expression { get; set; }

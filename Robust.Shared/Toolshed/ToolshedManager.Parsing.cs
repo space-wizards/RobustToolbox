@@ -52,11 +52,11 @@ public sealed partial class ToolshedManager
 
     private ITypeParser? GetParserForType(Type t)
     {
-        if (!_consoleTypeParsers.TryGetValue(t, out var parser))
+        if (_consoleTypeParsers.TryGetValue(t, out var parser))
             return parser;
 
         parser = FindParserForType(t);
-        _consoleTypeParsers.Add(t, parser);
+        _consoleTypeParsers.TryAdd(t, parser);
         return parser;
 
     }

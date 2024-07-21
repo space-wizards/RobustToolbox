@@ -76,7 +76,6 @@ internal sealed class TypeTypeParser : TypeParser<Type>
             }
         }
 
-        // Cache suggestions
         _optionsCache = CompletionResult.FromHintOptions(Types.Select(x => new CompletionOption(x.Key)), "C# level type");
     }
 

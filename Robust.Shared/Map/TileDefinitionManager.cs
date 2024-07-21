@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -12,7 +14,7 @@ namespace Robust.Shared.Map
     {
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         protected readonly List<ITileDefinition> TileDefs;
-        private readonly Dictionary<string, ITileDefinition> _tileNames;
+        private FrozenDictionary<string, ITileDefinition> _tileNames = FrozenDictionary<string, ITileDefinition>.Empty;
         private readonly Dictionary<string, List<string>> _awaitingAliases;
 
         /// <summary>
@@ -21,7 +23,6 @@ namespace Robust.Shared.Map
         public TileDefinitionManager()
         {
             TileDefs = new List<ITileDefinition>();
-            _tileNames = new Dictionary<string, ITileDefinition>();
             _awaitingAliases = new();
         }
 
@@ -44,7 +45,9 @@ namespace Robust.Shared.Map
             var id = checked((ushort) TileDefs.Count);
             tileDef.AssignTileId(id);
             TileDefs.Add(tileDef);
-            _tileNames[name] = tileDef;
+            var names = _tileNames.ToDictionary();
+            names[name] = tileDef;
+            _tileNames = names.ToFrozenDictionary();
 
             AliasingHandleDeferred(name);
         }
@@ -71,10 +74,12 @@ namespace Robust.Shared.Map
                 throw new ArgumentException("Another tile definition or alias with the same name has already been registered.", nameof(src));
             }
 
-            if (_tileNames.ContainsKey(dst))
+            if (_tileNames.TryGetValue(dst, out var value))
             {
                 // Simple enough, source to destination.
-                _tileNames[src] = _tileNames[dst];
+                var names = _tileNames.ToDictionary();
+                names[src] = value;
+                _tileNames = names.ToFrozenDictionary();
                 AliasingHandleDeferred(src);
             }
             else

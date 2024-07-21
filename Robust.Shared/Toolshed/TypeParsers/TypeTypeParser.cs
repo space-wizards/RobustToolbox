@@ -220,9 +220,7 @@ internal record struct TypeIsSandboxViolation(Type T) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        var msg = new FormattedMessage();
-        msg.AddText($"The type {T.PrettyName()} is not permitted under sandbox rules.");
-        return msg;
+        return FormattedMessage.FromUnformatted($"The type {T.PrettyName()} is not permitted under sandbox rules.");
     }
 
     public string? Expression { get; set; }

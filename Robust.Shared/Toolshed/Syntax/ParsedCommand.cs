@@ -252,7 +252,7 @@ public record NoImplementationError(string Cmd, Type[] Types, string? SubCommand
 {
     public FormattedMessage DescribeInner()
     {
-        var msg = FormattedMessage.FromMarkup($"Could not find an implementation for {Cmd} given the input type {PipedType?.PrettyName() ?? "void"}.");
+        var msg = FormattedMessage.FromUnformatted($"Could not find an implementation for {Cmd} given the input type {PipedType?.PrettyName() ?? "void"}.");
         msg.PushNewline();
 
         var typeArgs = "";

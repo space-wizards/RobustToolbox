@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
@@ -56,6 +55,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
     };
 
     private readonly HashSet<string> _ambiguousTypes = new();
+    private CompletionResult? _optionsCache;
 
     public override void PostInject()
     {
@@ -75,6 +75,9 @@ internal sealed class TypeTypeParser : TypeParser<Type>
                 }
             }
         }
+
+        // Cache suggestions
+        _optionsCache = CompletionResult.FromHintOptions(Types.Select(x => new CompletionOption(x.Key)), "C# level type");
     }
 
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
@@ -168,8 +171,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
         string? argName)
     {
         // TODO: Suggest generics.
-        var options = Types.Select(x => new CompletionOption(x.Key));
-        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromHintOptions(options, "C# level type"), null));
+        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((_optionsCache, null));
     }
 }
 

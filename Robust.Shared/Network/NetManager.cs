@@ -500,7 +500,6 @@ namespace Robust.Shared.Network
                             break;
 
                         case NetIncomingMessageType.DiscoveryRequest:
-                            // Create a response and write the server name to it
                             NetOutgoingMessage response = peer.Peer.CreateMessage();
                             //TODO Send json structured data which includes something idk to be discovered later
 

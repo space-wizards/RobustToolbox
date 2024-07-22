@@ -502,7 +502,7 @@ namespace Robust.Shared.Network
                         case NetIncomingMessageType.DiscoveryRequest:
                             // Create a response and write the server name to it
                             NetOutgoingMessage response = peer.Peer.CreateMessage();
-                            response.Write(_config.GetCVar(CVars.GameHostName));
+                            //TODO Send json structured data which includes something idk to be discovered later
 
                             // Send the response to the sender of the request
                             peer.Peer.SendDiscoveryResponse(response, msg.SenderEndPoint!);

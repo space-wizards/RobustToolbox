@@ -46,7 +46,7 @@ public sealed class AudioOverlay : Overlay
 
         var screenHandle = args.ScreenHandle;
         var output = new StringBuilder();
-        var listenerPos = _entManager.GetComponent<TransformComponent>(localPlayer.Value).MapPosition;
+        var listenerPos = _transform.GetMapCoordinates(_entManager.GetComponent<TransformComponent>(localPlayer.Value));
 
         if (listenerPos.MapId != args.MapId)
             return;
@@ -74,11 +74,13 @@ public sealed class AudioOverlay : Overlay
             output.Clear();
             output.AppendLine("Audio Source");
             output.AppendLine("Runtime:");
+            output.AppendLine($"- Distance: {_audio.GetAudioDistance(distance.Length()):0.00}");
             output.AppendLine($"- Occlusion: {posOcclusion:0.0000}");
             output.AppendLine("Params:");
+            output.AppendLine($"- RolloffFactor: {comp.RolloffFactor:0.0000}");
             output.AppendLine($"- Volume: {comp.Volume:0.0000}");
-            output.AppendLine($"- Reference distance: {comp.ReferenceDistance}");
-            output.AppendLine($"- Max distance: {comp.MaxDistance}");
+            output.AppendLine($"- Reference distance: {comp.ReferenceDistance:0.00}");
+            output.AppendLine($"- Max distance: {comp.MaxDistance:0.00}");
             var outputText = output.ToString().Trim();
             var dimensions = screenHandle.GetDimensions(_font, outputText, 1f);
             var buffer = new Vector2(3f, 3f);

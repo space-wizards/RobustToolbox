@@ -8,36 +8,51 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [RegisterComponent, NetworkedComponent]
+    [RegisterComponent, NetworkedComponent, Access(typeof(SharedUserInterfaceSystem))]
     public sealed partial class UserInterfaceComponent : Component
     {
-        // TODO: Obviously clean this shit up, I just moved it into shared.
+        /// <summary>
+        /// The currently open interfaces. Used clientside to store the UI.
+        /// </summary>
+        [ViewVariables, Access(Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadWriteExecute)]
+        public readonly Dictionary<Enum, BoundUserInterface> ClientOpenInterfaces = new();
 
-        [ViewVariables] public readonly Dictionary<Enum, BoundUserInterface> OpenInterfaces = new();
-
-        [ViewVariables] public readonly Dictionary<Enum, PlayerBoundUserInterface> Interfaces = new();
-
-        public Dictionary<Enum, PrototypeData> MappedInterfaceData = new();
+        [DataField]
+        internal Dictionary<Enum, InterfaceData> Interfaces = new();
 
         /// <summary>
-        /// Loaded on Init from serialized data.
+        /// Actors that currently have interfaces open.
         /// </summary>
-        [DataField("interfaces")] internal List<PrototypeData> InterfaceData = new();
+        [DataField]
+        public Dictionary<Enum, HashSet<EntityUid>> Actors = new();
+
+        /// <summary>
+        /// Legacy data, new BUIs should be using comp states.
+        /// </summary>
+        public Dictionary<Enum, BoundUserInterfaceState> States = new();
+
+        [Serializable, NetSerializable]
+        internal sealed class UserInterfaceComponentState(
+            Dictionary<Enum, List<NetEntity>> actors,
+            Dictionary<Enum, BoundUserInterfaceState> states)
+            : IComponentState
+        {
+            public Dictionary<Enum, List<NetEntity>> Actors = actors;
+
+            public Dictionary<Enum, BoundUserInterfaceState> States = states;
+        }
     }
 
     [DataDefinition]
-    public sealed partial class PrototypeData
+    public sealed partial class InterfaceData
     {
-        [DataField("key", required: true)]
-        public Enum UiKey { get; private set; } = default!;
-
         [DataField("type", required: true)]
         public string ClientType { get; private set; } = default!;
 
         /// <summary>
         ///     Maximum range before a BUI auto-closes. A non-positive number means there is no limit.
         /// </summary>
-        [DataField("range")]
+        [DataField]
         public float InteractionRange = 2f;
 
         // TODO BUI move to content?
@@ -48,7 +63,7 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         ///     Avoids requiring each system to individually validate client inputs. However, perhaps some BUIs are supposed to be bypass accessibility checks
         /// </remarks>
-        [DataField("requireInputValidation")]
+        [DataField]
         public bool RequireInputValidation = true;
     }
 
@@ -56,18 +71,17 @@ namespace Robust.Shared.GameObjects
     ///     Raised whenever the server receives a BUI message from a client relating to a UI that requires input
     ///     validation.
     /// </summary>
-    public sealed class BoundUserInterfaceMessageAttempt : CancellableEntityEventArgs
+    public sealed class BoundUserInterfaceMessageAttempt(
+        EntityUid actor,
+        EntityUid target,
+        Enum uiKey,
+        BoundUserInterfaceMessage message)
+        : CancellableEntityEventArgs
     {
-        public readonly ICommonSession Sender;
-        public readonly EntityUid Target;
-        public readonly Enum UiKey;
-
-        public BoundUserInterfaceMessageAttempt(ICommonSession sender, EntityUid target, Enum uiKey)
-        {
-            Sender = sender;
-            Target = target;
-            UiKey = uiKey;
-        }
+        public readonly EntityUid Actor = actor;
+        public readonly EntityUid Target = target;
+        public readonly Enum UiKey = uiKey;
+        public readonly BoundUserInterfaceMessage Message = message;
     }
 
     [NetSerializable, Serializable]
@@ -104,7 +118,7 @@ namespace Robust.Shared.GameObjects
         ///     Only set when the message is raised as a directed event.
         /// </summary>
         [NonSerialized]
-        public ICommonSession Session = default!;
+        public EntityUid Actor = default!;
     }
 
     /// <summary>
@@ -121,80 +135,48 @@ namespace Robust.Shared.GameObjects
     }
 
     [NetSerializable, Serializable]
-    internal sealed class UpdateBoundStateMessage : BoundUserInterfaceMessage
-    {
-        public readonly BoundUserInterfaceState State;
-
-        public UpdateBoundStateMessage(BoundUserInterfaceState state)
-        {
-            State = state;
-        }
-    }
-
-    [NetSerializable, Serializable]
-    internal sealed class OpenBoundInterfaceMessage : BoundUserInterfaceMessage
+    public sealed class OpenBoundInterfaceMessage : BoundUserInterfaceMessage
     {
     }
 
     [NetSerializable, Serializable]
-    internal sealed class CloseBoundInterfaceMessage : BoundUserInterfaceMessage
+    public sealed class CloseBoundInterfaceMessage : BoundUserInterfaceMessage
     {
     }
 
     [Serializable, NetSerializable]
-    internal abstract class BaseBoundUIWrapMessage : EntityEventArgs
+    internal abstract class BaseBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
+        : EntityEventArgs
     {
-        public readonly NetEntity Entity;
-        public readonly BoundUserInterfaceMessage Message;
-        public readonly Enum UiKey;
-
-        public BaseBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
-        {
-            Message = message;
-            UiKey = uiKey;
-            Entity = entity;
-        }
+        public readonly NetEntity Entity = entity;
+        public readonly BoundUserInterfaceMessage Message = message;
+        public readonly Enum UiKey = uiKey;
     }
 
     /// <summary>
     /// Helper message raised from client to server.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class BoundUIWrapMessage : BaseBoundUIWrapMessage
-    {
-        public BoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey) : base(entity, message, uiKey)
-        {
-        }
-    }
-
-    /// <summary>
-    /// Helper message raised from client to server.
-    /// </summary>
-    [Serializable, NetSerializable]
-    internal sealed class PredictedBoundUIWrapMessage : BaseBoundUIWrapMessage
-    {
-        public PredictedBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey) : base(entity, message, uiKey)
-        {
-        }
-    }
+    internal sealed class BoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
+        : BaseBoundUIWrapMessage(entity, message, uiKey);
 
     public sealed class BoundUIOpenedEvent : BaseLocalBoundUserInterfaceEvent
     {
-        public BoundUIOpenedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
+        public BoundUIOpenedEvent(Enum uiKey, EntityUid uid, EntityUid actor)
         {
             UiKey = uiKey;
             Entity = uid;
-            Session = session;
+            Actor = actor;
         }
     }
 
     public sealed class BoundUIClosedEvent : BaseLocalBoundUserInterfaceEvent
     {
-        public BoundUIClosedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
+        public BoundUIClosedEvent(Enum uiKey, EntityUid uid, EntityUid actor)
         {
             UiKey = uiKey;
             Entity = uid;
-            Session = session;
+            Actor = actor;
         }
     }
 }

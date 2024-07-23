@@ -68,7 +68,7 @@ namespace Robust.Server.ServerStatus
             if (auth != _watchdogToken)
             {
                 // Holy shit nobody read these logs please.
-                _sawmill.Info(@"Failed auth: ""{0}"" vs ""{1}""", auth, _watchdogToken);
+                _sawmill.Verbose(@"Failed auth: ""{0}"" vs ""{1}""", auth, _watchdogToken);
                 await context.RespondErrorAsync(HttpStatusCode.Unauthorized);
                 return true;
             }
@@ -105,7 +105,7 @@ namespace Robust.Server.ServerStatus
 
             if (auth != _watchdogToken)
             {
-                _sawmill.Warning(
+                _sawmill.Verbose(
                     "received POST /shutdown with invalid authentication token. Ignoring {0}, {1}", auth,
                     _watchdogToken);
                 await context.RespondErrorAsync(HttpStatusCode.Unauthorized);
@@ -157,11 +157,14 @@ namespace Robust.Server.ServerStatus
             try
             {
                 // Passing null as content works so...
-                await _httpClient.PostAsync(new Uri(_baseUri, $"server_api/{_watchdogKey}/ping"), null!);
+                _sawmill.Debug("Sending ping to watchdog...");
+                using var resp = await _httpClient.PostAsync(new Uri(_baseUri, $"server_api/{_watchdogKey}/ping"), null!);
+                resp.EnsureSuccessStatusCode();
+                _sawmill.Debug("Succeeded in sending ping to watchdog");
             }
             catch (HttpRequestException e)
             {
-                _sawmill.Warning("Failed to send ping to watchdog:\n{0}", e);
+                _sawmill.Error("Failed to send ping to watchdog:\n{0}", e);
             }
         }
 

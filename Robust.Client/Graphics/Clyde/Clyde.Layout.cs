@@ -23,9 +23,12 @@ namespace Robust.Client.Graphics.Clyde
             // Texture Coords.
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
-            // Colour Modulation.
-            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 4 * sizeof(float));
+            // Texture Coords (2).
+            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 4 * sizeof(float));
             GL.EnableVertexAttribArray(2);
+            // Colour Modulation.
+            GL.VertexAttribPointer(3, 4, VertexAttribPointerType.Float, false, sizeof(Vertex2D), 6 * sizeof(float));
+            GL.EnableVertexAttribArray(3);
         }
 
         // NOTE: This is:
@@ -37,6 +40,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             public readonly Vector2 Position;
             public readonly Vector2 TextureCoordinates;
+            public readonly Vector2 TextureCoordinates2;
             // Note that this color is in linear space.
             public readonly Color Modulate;
 
@@ -45,6 +49,15 @@ namespace Robust.Client.Graphics.Clyde
             {
                 Position = position;
                 TextureCoordinates = textureCoordinates;
+                Modulate = modulate;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Vertex2D(Vector2 position, Vector2 textureCoordinates, Vector2 textureCoordinates2, Color modulate)
+            {
+                Position = position;
+                TextureCoordinates = textureCoordinates;
+                TextureCoordinates2 = textureCoordinates2;
                 Modulate = modulate;
             }
 
@@ -85,28 +98,34 @@ namespace Robust.Client.Graphics.Clyde
             [FieldOffset(20 * sizeof(float))] public Vector3 ViewMatrixC2;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProjViewMatrices(in Matrix3 projMatrix, in Matrix3 viewMatrix)
+            public ProjViewMatrices(in Matrix3x2 projMatrix, in Matrix3x2 viewMatrix)
             {
-                ProjMatrixC0 = new Vector3(projMatrix.R0C0, projMatrix.R1C0, projMatrix.R2C0);
-                ProjMatrixC1 = new Vector3(projMatrix.R0C1, projMatrix.R1C1, projMatrix.R2C1);
-                ProjMatrixC2 = new Vector3(projMatrix.R0C2, projMatrix.R1C2, projMatrix.R2C2);
+                // We put the rows of the input matrix into the columns of our GPU matrices
+                // this transpose is required, as in C#, we premultiply vectors with matrices
+                // (vM) while GL postmultiplies vectors with matrices (Mv); however, since
+                // the Matrix3x2 data is stored row-major, and GL uses column-major, the
+                // memory layout is the same (or would be, if Matrix3x2 didn't have an
+                // implicit column)
+                ProjMatrixC0 = new Vector3(projMatrix.M11, projMatrix.M12, 0);
+                ProjMatrixC1 = new Vector3(projMatrix.M21, projMatrix.M22, 0);
+                ProjMatrixC2 = new Vector3(projMatrix.M31, projMatrix.M32, 1);
 
-                ViewMatrixC0 = new Vector3(viewMatrix.R0C0, viewMatrix.R1C0, viewMatrix.R2C0);
-                ViewMatrixC1 = new Vector3(viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1);
-                ViewMatrixC2 = new Vector3(viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2);
+                ViewMatrixC0 = new Vector3(viewMatrix.M11, viewMatrix.M12, 0);
+                ViewMatrixC1 = new Vector3(viewMatrix.M21, viewMatrix.M22, 0);
+                ViewMatrixC2 = new Vector3(viewMatrix.M31, viewMatrix.M32, 1);
             }
 
             public void Apply(Clyde clyde, GLShaderProgram program)
             {
-                program.SetUniformMaybe("projectionMatrix", new Matrix3(
-                    ProjMatrixC0.X, ProjMatrixC1.X, ProjMatrixC2.X,
-                    ProjMatrixC0.Y, ProjMatrixC1.Y, ProjMatrixC2.Y,
-                    ProjMatrixC0.Z, ProjMatrixC1.Z, ProjMatrixC2.Z
+                program.SetUniformMaybe("projectionMatrix", new Matrix3x2(
+                    ProjMatrixC0.X, ProjMatrixC0.Y, // Implicit 0
+                    ProjMatrixC1.X, ProjMatrixC1.Y, // Implicit 0
+                    ProjMatrixC2.X, ProjMatrixC2.Y  // Implicit 1
                 ));
-                program.SetUniformMaybe("viewMatrix", new Matrix3(
-                    ViewMatrixC0.X, ViewMatrixC1.X, ViewMatrixC2.X,
-                    ViewMatrixC0.Y, ViewMatrixC1.Y, ViewMatrixC2.Y,
-                    ViewMatrixC0.Z, ViewMatrixC1.Z, ViewMatrixC2.Z
+                program.SetUniformMaybe("viewMatrix", new Matrix3x2(
+                    ViewMatrixC0.X, ViewMatrixC0.Y, // Implicit 0
+                    ViewMatrixC1.X, ViewMatrixC1.Y, // Implicit 0
+                    ViewMatrixC2.X, ViewMatrixC2.Y  // Implicit 1
                 ));
             }
         }

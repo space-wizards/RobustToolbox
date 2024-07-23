@@ -264,6 +264,26 @@ namespace Robust.Shared.Serialization.Manager
             return dataDefinition != null;
         }
 
+        public bool TryGetVariableType(Type type, string variableName, [NotNullWhen(true)] out Type? variableType)
+        {
+            if (!TryGetDefinition(type, out var definition))
+            {
+                variableType = null;
+                return false;
+            }
+            var foundFieldDef = definition.BaseFieldDefinitions.FirstOrDefault(fieldDef => fieldDef?.Attribute is DataFieldAttribute attr && attr.Tag==variableName, null);
+            if(foundFieldDef != null)
+            {
+                variableType = foundFieldDef.BackingField.FieldType;
+                return true;
+            }
+            else
+            {
+                variableType = null;
+                return false;
+            }
+        }
+
         private Type ResolveConcreteType(Type baseType, string typeName)
         {
             var type = ReflectionManager.YamlTypeTagLookup(baseType, typeName);

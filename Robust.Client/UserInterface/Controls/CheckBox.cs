@@ -15,6 +15,36 @@ namespace Robust.Client.UserInterface.Controls
         public Label Label { get; }
         public TextureRect TextureRect { get; }
 
+        /// <summary>
+        /// Should the checkbox be to the left or the right of the label.
+        /// </summary>
+        public bool LeftAlign
+        {
+            get => _leftAlign;
+            set
+            {
+                if (_leftAlign == value)
+                    return;
+
+                _leftAlign = value;
+
+                if (value)
+                {
+                    Label.HorizontalExpand = false;
+                    TextureRect.SetPositionFirst();
+                    Label.SetPositionInParent(1);
+                }
+                else
+                {
+                    Label.HorizontalExpand = true;
+                    Label.SetPositionFirst();
+                    TextureRect.SetPositionInParent(1);
+                }
+            }
+        }
+
+        private bool _leftAlign = true;
+        
         public CheckBox()
         {
             ToggleMode = true;
@@ -29,11 +59,23 @@ namespace Robust.Client.UserInterface.Controls
             TextureRect = new TextureRect
             {
                 StyleClasses = { StyleClassCheckBox },
+                VerticalAlignment = VAlignment.Center,
             };
-            hBox.AddChild(TextureRect);
 
             Label = new Label();
-            hBox.AddChild(Label);
+
+            if (LeftAlign)
+            {
+                Label.HorizontalExpand = false;
+                hBox.AddChild(TextureRect);
+                hBox.AddChild(Label);
+            }
+            else
+            {
+                Label.HorizontalExpand = true;
+                hBox.AddChild(Label);
+                hBox.AddChild(TextureRect);
+            }
         }
 
         protected override void DrawModeChanged()

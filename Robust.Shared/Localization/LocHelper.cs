@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using Linguini.Bundle;
 using Linguini.Bundle.Errors;
+using Linguini.Syntax.Ast;
 using Linguini.Syntax.Parser.Error;
 using Robust.Shared.Collections;
 using Robust.Shared.Utility;
@@ -15,6 +19,24 @@ internal static class LocHelper
         ErrorSpan span = new(self.Row, self.Slice!.Value.Start.Value, self.Slice.Value.End.Value,
             self.Position.Start.Value, self.Position.End.Value);
         return FormatErrors(self.Message, span, resource, newLine);
+    }
+
+    public static bool InsertResourcesAndReport(this FluentBundle bundle, Resource resource,
+        ResPath path, [NotNullWhen(false)] out List<LocError>? errors)
+    {
+        if (!bundle.AddResource(resource, out var parseErrors))
+        {
+            errors = new List<LocError>();
+            foreach (var fluentError in parseErrors)
+            {
+                errors.Add(new LocError(path, fluentError));
+            }
+
+            return false;
+        }
+
+        errors = null;
+        return true;
     }
 
     private static string FormatErrors(string message, ErrorSpan span, ReadOnlyMemory<char> resource, string? newLine)
@@ -67,5 +89,30 @@ internal static class LocHelper
         sb.Append($" {message}");
 
         return sb.ToString();
+    }
+}
+/// <summary>
+///  Wrapper around Fluent Error, that adds path to the list of values.
+///  Work in progress, FluentErrors need to be modified to be more accessible.
+/// </summary>
+internal record LocError
+{
+    public readonly ResPath Path;
+    public readonly FluentError Error;
+
+    /// <summary>
+    /// Basic constructor.
+    /// </summary>
+    /// <param name="path">path of resource being added.</param>
+    /// <param name="fluentError">FluentError encountered.</param>
+    public LocError(ResPath path, FluentError fluentError)
+    {
+        Path = path;
+        Error = fluentError;
+    }
+
+    public override string ToString()
+    {
+        return $"[{Path.CanonPath}]: {Error}";
     }
 }

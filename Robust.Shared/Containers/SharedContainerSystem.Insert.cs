@@ -40,8 +40,8 @@ public abstract partial class SharedContainerSystem
 
         DebugTools.AssertOwner(container.Owner, containerXform);
         DebugTools.AssertOwner(toInsert, physics);
-        DebugTools.Assert(!container.ExpectedEntities.Contains(GetNetEntity(toInsert)));
-        DebugTools.Assert(container.Manager.Containers.ContainsKey(container.ID));
+        DebugTools.Assert(!container.ExpectedEntities.Contains(GetNetEntity(toInsert)), "entity is expected");
+        DebugTools.Assert(container.Manager.Containers.ContainsKey(container.ID), "manager does not own the container");
 
         // If someone is attempting to insert an entity into a container that is getting deleted, then we will
         // automatically delete that entity. I.e., the insertion automatically "succeeds" and both entities get deleted.
@@ -49,14 +49,14 @@ public abstract partial class SharedContainerSystem
 
         if (!TryComp(container.Owner, out MetaDataComponent? ownerMeta))
         {
-            Log.Error($"Attempted to insert an entity {ToPrettyString(toInsert)} into a non-existent entity.");
+            Log.Error($"Attempted to insert an entity {ToPrettyString(toInsert)} into a non-existent entity. Trace: {Environment.StackTrace}");
             QueueDel(toInsert);
             return false;
         }
 
         if (ownerMeta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
-            Log.Error($"Attempted to insert an entity {ToPrettyString(toInsert)} into an entity that is terminating. Entity: {ToPrettyString(container.Owner)}.");
+            Log.Error($"Attempted to insert an entity {ToPrettyString(toInsert)} into an entity that is terminating. Entity: {ToPrettyString(container.Owner)}. Trace: {Environment.StackTrace}");
             QueueDel(toInsert);
             return false;
         }
@@ -67,7 +67,7 @@ public abstract partial class SharedContainerSystem
 
         if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
-            Log.Error($"Attempted to insert a terminating entity {ToPrettyString(uid)} into a container {container.ID} in entity: {ToPrettyString(container.Owner)}.");
+            Log.Error($"Attempted to insert a terminating entity {ToPrettyString(uid)} into a container {container.ID} in entity: {ToPrettyString(container.Owner)}. Trace: {Environment.StackTrace}");
             return false;
         }
 
@@ -82,14 +82,14 @@ public abstract partial class SharedContainerSystem
         }
 
         // Update metadata first, so that parent change events can check IsInContainer.
-        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0, "invalid metadata flags before insertion");
         meta.Flags |= MetaDataFlags.InContainer;
 
         // Remove the entity and any children from broadphases.
         // This is done before changing can collide to avoid unecceary updates.
         // TODO maybe combine with RecursivelyUpdatePhysics to avoid fetching components and iterating parents twice?
         _lookup.RemoveFromEntityTree(toInsert, transform);
-        DebugTools.Assert(transform.Broadphase == null || !transform.Broadphase.Value.IsValid());
+        DebugTools.Assert(transform.Broadphase == null || !transform.Broadphase.Value.IsValid(), "invalid broadphase");
 
         // Avoid unnecessary broadphase updates while unanchoring, changing physics collision, and re-parenting.
         var old = transform.Broadphase;
@@ -111,7 +111,7 @@ public abstract partial class SharedContainerSystem
         transform.Broadphase = old;
 
         // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
-        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0, "invalid metadata flags after insertion");
 
         // Implementation specific insert logic
         container.InternalInsert(toInsert, EntityManager);
@@ -125,14 +125,33 @@ public abstract partial class SharedContainerSystem
         RaiseLocalEvent(toInsert, new EntGotInsertedIntoContainerMessage(toInsert, container), true);
 
         // The sheer number of asserts tells you about how little I trust container and parenting code.
-        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
-        DebugTools.Assert(!transform.Anchored);
-        DebugTools.Assert(transform.LocalPosition == Vector2.Zero);
-        DebugTools.Assert(MathHelper.CloseTo(transform.LocalRotation.Theta, Angle.Zero));
-        DebugTools.Assert(!PhysicsQuery.TryGetComponent(toInsert, out var phys) || (!phys.Awake && !phys.CanCollide));
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0, "invalid metadata flags after events");
+        DebugTools.Assert(!transform.Anchored, "entity is anchored");
+        DebugTools.AssertEqual(transform.LocalPosition, Vector2.Zero);
+        DebugTools.Assert(MathHelper.CloseTo(transform.LocalRotation.Theta, Angle.Zero), "Angle is not zero");
+        DebugTools.Assert(!PhysicsQuery.TryGetComponent(toInsert, out var phys) || (!phys.Awake && !phys.CanCollide), "Invalid physics");
 
         Dirty(container.Owner, container.Manager);
         return true;
+    }
+
+    /// <summary>
+    /// Attempts to insert an entity into a container. If it fails, it will instead drop the entity next to the
+    /// container entity.
+    /// </summary>
+    /// <returns>Whether or not the entity was successfully inserted</returns>
+    public bool InsertOrDrop(Entity<TransformComponent?, MetaDataComponent?, PhysicsComponent?> toInsert,
+        BaseContainer container,
+        TransformComponent? containerXform = null)
+    {
+        if (!Resolve(toInsert.Owner, ref toInsert.Comp1) || !Resolve(container.Owner, ref containerXform))
+            return false;
+
+        if (Insert(toInsert, container, containerXform))
+            return true;
+
+        _transform.DropNextTo(toInsert, (container.Owner, containerXform));
+        return false;
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using System;
+using Robust.Server.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.ViewVariables;
@@ -7,6 +8,7 @@ namespace Robust.Server.GameObjects
 {
     public sealed class VisibilitySystem : EntitySystem
     {
+        [Dependency] private readonly PvsSystem _pvs = default!;
         [Dependency] private readonly IViewVariablesManager _vvManager = default!;
 
         private EntityQuery<TransformComponent> _xformQuery;
@@ -38,12 +40,6 @@ namespace Robust.Server.GameObjects
             EntityManager.EntityInitialized -= OnEntityInit;
         }
 
-        [Obsolete("Use Entity<T> variant")]
-        public void AddLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
-        {
-            AddLayer((uid, component), (ushort)layer, refresh);
-        }
-
         public void AddLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
         {
             ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<VisibilityComponent>(ent.Owner);
@@ -55,13 +51,6 @@ namespace Robust.Server.GameObjects
 
             if (refresh)
                 RefreshVisibility(ent);
-        }
-
-
-        [Obsolete("Use Entity<T> variant")]
-        public void RemoveLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
-        {
-            RemoveLayer((uid, component), (ushort)layer, refresh);
         }
 
         public void RemoveLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
@@ -76,12 +65,6 @@ namespace Robust.Server.GameObjects
 
             if (refresh)
                 RefreshVisibility(ent);
-        }
-
-        [Obsolete("Use Entity<T> variant")]
-        public void SetLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
-        {
-            SetLayer((uid, component), (ushort)layer, refresh);
         }
 
         public void SetLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
@@ -133,6 +116,7 @@ namespace Robust.Server.GameObjects
 
             var xform = _xformQuery.GetComponent(uid);
             meta.VisibilityMask = mask;
+            _pvs.SyncMetadata(meta);
 
             foreach (var child in xform._children)
             {

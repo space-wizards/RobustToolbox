@@ -44,7 +44,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         {
             IoCManager.Resolve<ISerializationManager>().Initialize();
             _prototypes = (PrototypeManager) IoCManager.Resolve<IPrototypeManager>();
-            _prototypes.RegisterKind(typeof(EntityPrototype));
+            _prototypes.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             _prototypes.LoadString(InitialPrototypes);
             _prototypes.ResolveResults();
 
@@ -55,7 +55,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         [Test]
         public void TestHotReload()
         {
-            var id = IoCManager.Resolve<IMapManager>().CreateMap();
+            IoCManager.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var id);
             var entity = _entities.SpawnEntity(DummyId, new MapCoordinates(default, id));
             var entityComponent = IoCManager.Resolve<IEntityManager>().GetComponent<HotReloadTestOneComponent>(entity);
 

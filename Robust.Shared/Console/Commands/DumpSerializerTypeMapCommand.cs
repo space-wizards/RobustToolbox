@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System.IO;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 
@@ -12,11 +12,16 @@ internal sealed class DumpSerializerTypeMapCommand : LocalizedCommands
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        foreach (var (type, index) in _robustSerializer.GetTypeMap().OrderBy(x => x.Value))
-        {
-            shell.WriteLine($"{index}: {type}");
-        }
+        var stream = new MemoryStream();
+        ((RobustSerializer)_robustSerializer).GetHashManifest(stream, true);
+        stream.Position = 0;
 
+        using var streamReader = new StreamReader(stream);
         shell.WriteLine($"Hash: {_robustSerializer.GetSerializableTypesHashString()}");
+        shell.WriteLine("Manifest:");
+        while (streamReader.ReadLine() is { } line)
+        {
+            shell.WriteLine(line);
+        }
     }
 }

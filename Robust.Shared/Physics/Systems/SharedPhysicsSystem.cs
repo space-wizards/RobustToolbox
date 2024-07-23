@@ -13,6 +13,7 @@ using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Threading;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -60,6 +61,12 @@ namespace Robust.Shared.Physics.Systems
 
         private int _substeps;
 
+        /// <summary>
+        /// A variation of <see cref="IGameTiming.CurTime"/> that takes into account the current physics sub-step.
+        /// Useful for some entities that need to interpolate their positions during sub-steps.
+        /// </summary>
+        public TimeSpan? EffectiveCurTime;
+
         public bool MetricsEnabled { get; protected set; }
 
         private EntityQuery<CollideOnAnchorComponent> _collideAnchorQuery;
@@ -85,7 +92,6 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInitialize);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
             SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
-            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<PhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
@@ -145,51 +151,45 @@ namespace Robust.Shared.Physics.Systems
             _substeps = (int)Math.Ceiling(targetMinTickrate / serverTickrate);
         }
 
-        private void OnParentChange(ref EntParentChangedMessage args)
+        internal void OnParentChange(Entity<TransformComponent, MetaDataComponent> ent, EntityUid oldParent, EntityUid? oldMap)
         {
             // We do not have a directed/body subscription, because the entity changing parents may not have a physics component, but one of its children might.
-            var uid = args.Entity;
-            var xform = args.Transform;
+            var (uid, xform, meta) = ent;
 
             // If this entity has yet to be initialized, then we can skip this as equivalent code will get run during
             // init anyways. HOWEVER: it is possible that one of the children of this entity are already post-init, in
             // which case they still need to handle map changes. This frequently happens when clients receives a server
             // state where a known/old entity gets attached to a new, previously unknown, entity. The new entity will be
             // uninitialized but have an initialized child.
-            if (xform.ChildCount == 0 && LifeStage(uid) < EntityLifeStage.Initialized)
+            if (xform.ChildCount == 0 && meta.EntityLifeStage < EntityLifeStage.Initialized)
                 return;
 
             // Is this entity getting recursively detached after it's parent was already detached to null?
-            if (args.OldMapId == MapId.Nullspace && xform.MapID == MapId.Nullspace)
+            if (oldMap == null && xform.MapUid == null)
                 return;
 
-            var body = CompOrNull<PhysicsComponent>(uid);
+            var body = PhysicsQuery.CompOrNull(uid);
 
             // Handle map changes
-            if (args.OldMapId != xform.MapID)
+            if (oldMap != xform.MapUid)
             {
                 // This will also handle broadphase updating & joint clearing.
-                HandleMapChange(uid, xform, body, args.OldMapId, xform.MapID);
+                HandleMapChange(uid, xform, body, oldMap, xform.MapUid);
+                return;
             }
 
-            if (args.OldMapId != xform.MapID)
-                return;
-
             if (body != null)
-                HandleParentChangeVelocity(uid, body, ref args, xform);
+                HandleParentChangeVelocity(uid, body, oldParent, xform);
         }
 
         /// <summary>
         ///     Recursively add/remove from awake bodies, clear joints, remove from move buffer, and update broadphase.
         /// </summary>
-        private void HandleMapChange(EntityUid uid, TransformComponent xform, PhysicsComponent? body, MapId oldMapId, MapId newMapId)
+        private void HandleMapChange(EntityUid uid, TransformComponent xform, PhysicsComponent? body, EntityUid? oldMapId, EntityUid? newMapId)
         {
-            var jointQuery = GetEntityQuery<JointComponent>();
-
-            PhysMapQuery.TryGetComponent(_mapManager.GetMapEntityId(oldMapId), out var oldMap);
-            PhysMapQuery.TryGetComponent(_mapManager.GetMapEntityId(newMapId), out var newMap);
-
-            RecursiveMapUpdate(uid, xform, body, newMap, oldMap, jointQuery);
+            PhysMapQuery.TryGetComponent(oldMapId, out var oldMap);
+            PhysMapQuery.TryGetComponent(newMapId, out var newMap);
+            RecursiveMapUpdate(uid, xform, body, newMap, oldMap);
         }
 
         /// <summary>
@@ -200,8 +200,7 @@ namespace Robust.Shared.Physics.Systems
             TransformComponent xform,
             PhysicsComponent? body,
             PhysicsMapComponent? newMap,
-            PhysicsMapComponent? oldMap,
-            EntityQuery<JointComponent> jointQuery)
+            PhysicsMapComponent? oldMap)
         {
             DebugTools.Assert(!Deleted(uid));
 
@@ -218,16 +217,14 @@ namespace Robust.Shared.Physics.Systems
                     DebugTools.Assert(oldMap?.AwakeBodies.Contains(body) != true);
             }
 
-            if (jointQuery.TryGetComponent(uid, out var joint))
-                _joints.ClearJoints(uid, joint);
-
+            _joints.ClearJoints(uid);
 
             foreach (var child in xform._children)
             {
                 if (_xformQuery.TryGetComponent(child, out var childXform))
                 {
                     PhysicsQuery.TryGetComponent(child, out var childBody);
-                    RecursiveMapUpdate(child, childXform, childBody, newMap, oldMap, jointQuery);
+                    RecursiveMapUpdate(child, childXform, childBody, newMap, oldMap);
                 }
             }
         }
@@ -286,6 +283,7 @@ namespace Robust.Shared.Physics.Systems
         {
             var frameTime = deltaTime / _substeps;
 
+            EffectiveCurTime = _gameTiming.CurTime;
             for (int i = 0; i < _substeps; i++)
             {
                 var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
@@ -325,7 +323,11 @@ namespace Robust.Shared.Physics.Systems
                         FinalStep(comp);
                     }
                 }
+
+                EffectiveCurTime = EffectiveCurTime.Value + TimeSpan.FromSeconds(frameTime);
             }
+
+            EffectiveCurTime = null;
         }
 
         protected virtual void FinalStep(PhysicsMapComponent component)

@@ -56,14 +56,13 @@ namespace Robust.Client.GameStates
         private readonly Dictionary<ushort, (IComponent Component, IComponentState? curState, IComponentState? nextState)> _compStateWork = new();
         private readonly Dictionary<EntityUid, HashSet<Type>> _pendingReapplyNetStates = new();
         private readonly HashSet<NetEntity> _stateEnts = new();
-        private readonly Dictionary<NetEntity, Dictionary<ushort, IComponentState>> _outputData = new();
+        private readonly List<EntityUid> _toDelete = new();
+        private readonly List<IComponent> _toRemove = new();
+        private readonly Dictionary<NetEntity, Dictionary<ushort, IComponentState?>> _outputData = new();
         private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
 
-        private readonly List<NetEntity> _created = new();
-        private readonly List<NetEntity> _detached = new();
-
-        private readonly ObjectPool<Dictionary<ushort, IComponentState>> _compDataPool =
-            new DefaultObjectPool<Dictionary<ushort, IComponentState>>(new DictPolicy<ushort, IComponentState>(), 256);
+        private readonly ObjectPool<Dictionary<ushort, IComponentState?>> _compDataPool =
+            new DefaultObjectPool<Dictionary<ushort, IComponentState?>>(new DictPolicy<ushort, IComponentState?>(), 256);
 
         private uint _metaCompNetId;
 
@@ -130,6 +129,8 @@ namespace Robust.Client.GameStates
 #endif
 
         private bool _resettingPredictedEntities;
+        private readonly List<EntityUid> _brokenEnts = new();
+        private readonly List<(EntityUid, NetEntity)> _toStart = new();
 
         /// <inheritdoc />
         public void Initialize()
@@ -262,7 +263,7 @@ namespace Robust.Client.GameStates
         public void UpdateFullRep(GameState state, bool cloneDelta = false)
             => _processor.UpdateFullRep(state, cloneDelta);
 
-        public Dictionary<NetEntity, Dictionary<ushort, IComponentState>> GetFullRep()
+        public Dictionary<NetEntity, Dictionary<ushort, IComponentState?>> GetFullRep()
             => _processor.GetFullRep();
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
@@ -605,8 +606,12 @@ namespace Robust.Client.GameStates
                         if (_sawmill.Level <= LogLevel.Debug)
                             _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
 
-                        var handleState = new ComponentHandleState(compState, null);
-                        _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
+                        if (compState != null)
+                        {
+                            var handleState = new ComponentHandleState(compState, null);
+                            _entities.EventBus.RaiseComponentEvent(entity, comp, ref handleState);
+                        }
+
                         comp.LastModifiedTick = _timing.LastRealTick;
                     }
                 }
@@ -650,17 +655,14 @@ namespace Robust.Client.GameStates
                             var state = toAddStates[i];
                             var comp = _entityManager.AddComponent(entity, netId, meta);
 
-                            if (_sawmill.Level <= LogLevel.Debug)
-                                _sawmill.Debug($"  A component was removed: {comp.GetType()}");
-
+                        if (state != null)
+                        {
                             var stateEv = new ComponentHandleState(state, null);
-                            _entities.EventBus.RaiseComponentEvent(comp, ref stateEv);
-                            comp.ClearCreationTick(); // don't undo the re-adding.
-                            comp.LastModifiedTick = _timing.LastRealTick;
+                            _entities.EventBus.RaiseComponentEvent(entity, comp, ref stateEv);
                         }
 
-                        toAdd.Clear();
-                        toAddStates.Clear();
+                        comp.ClearCreationTick(); // don't undo the re-adding.
+                        comp.LastModifiedTick = _timing.LastRealTick;
                     }
                 }
 
@@ -693,7 +695,16 @@ namespace Robust.Client.GameStates
 
             foreach (var netEntity in createdEntities)
             {
+#if EXCEPTION_TOLERANCE
+                if (!_entityManager.TryGetEntityData(netEntity, out _, out var meta))
+                {
+                    _sawmill.Error($"Encountered deleted entity while merging implicit data! NetEntity: {netEntity}");
+                    continue;
+                }
+#else
                 var (_, meta) = _entityManager.GetEntityData(netEntity);
+#endif
+
                 var compData = _compDataPool.Get();
                 _outputData.Add(netEntity, compData);
 
@@ -702,7 +713,7 @@ namespace Robust.Client.GameStates
                     DebugTools.Assert(component.NetSyncEnabled);
 
                     var state = _entityManager.GetComponentState(bus, component, null, GameTick.Zero);
-                    DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+                    DebugTools.Assert(state is not IComponentDeltaState);
                     compData.Add(netId, state);
                 }
             }
@@ -726,7 +737,7 @@ namespace Robust.Client.GameStates
         {
             using var _ = _timing.StartStateApplicationArea();
 
-            // TODO repays optimize this.
+            // TODO replays optimize this.
             // This currently just saves game states as they are applied.
             // However this is inefficient and may have redundant data.
             // E.g., we may record states: [10 to 15] [11 to 16] *error* [0 to 18] [18 to 19] [18 to 20] ...
@@ -904,9 +915,22 @@ namespace Robust.Client.GameStates
             {
                 foreach (var (entity, data) in _toApply)
                 {
+#if EXCEPTION_TOLERANCE
+                    try
+                    {
+#endif
                     HandleEntityState(entity, data.NetEntity, data.Meta, _entities.EventBus, data.curState,
-                        data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs);
-
+                            data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs);
+#if EXCEPTION_TOLERANCE
+                    }
+                    catch (Exception e)
+                    {
+                        _sawmill.Error($"Caught exception while applying entity state. Entity: {_entities.ToPrettyString(entity)}. Exception: {e}");
+                        _entityManager.DeleteEntity(entity);
+                        RequestFullState();
+                        continue;
+                    }
+#endif
                     if (!data.EnteringPvs)
                         continue;
 
@@ -945,7 +969,7 @@ namespace Robust.Client.GameStates
             {
                 try
                 {
-                    ProcessDeletions(delSpan, xforms, xformSys);
+                    ProcessDeletions(delSpan, xforms, metas, xformSys);
                 }
                 catch (Exception e)
                 {
@@ -988,6 +1012,7 @@ namespace Robust.Client.GameStates
             }
 
             var xforms = _entities.GetEntityQuery<TransformComponent>();
+            var metas = _entities.GetEntityQuery<MetaDataComponent>();
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
             using var toDelete = new PooledList<EntityUid>();
@@ -1016,12 +1041,12 @@ namespace Robust.Client.GameStates
 
                 // This entity is going to get deleted, but maybe some if its children won't be, so lets detach them to
                 // null. First we will detach the parent in order to reduce the number of broadphase/lookup updates.
-                xformSys.DetachParentToNull(ent, xform);
+                xformSys.DetachEntity(ent, xform);
 
                 // Then detach all children.
                 foreach (var child in xform._children)
                 {
-                    xformSys.DetachParentToNull(child, xforms.GetComponent(child), xform);
+                    xformSys.DetachEntity(child, xforms.Get(child), metas.Get(child), xform);
 
                     if (deleteClientChildren
                         && !deleteClientEntities // don't add duplicates
@@ -1040,9 +1065,9 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private void ProcessDeletions(
-            ReadOnlySpan<NetEntity> delSpan,
+        private void ProcessDeletions(ReadOnlySpan<NetEntity> delSpan,
             EntityQuery<TransformComponent> xforms,
+            EntityQuery<MetaDataComponent> metas,
             SharedTransformSystem xformSys)
         {
             // Processing deletions is non-trivial, because by default deletions will also delete all child entities.
@@ -1069,13 +1094,13 @@ namespace Robust.Client.GameStates
                     continue; // Already deleted? or never sent to us?
 
                 // First, a single recursive map change
-                xformSys.DetachParentToNull(id.Value, xform);
+                xformSys.DetachEntity(id.Value, xform);
 
                 // Then detach all children.
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(child, xforms.GetComponent(child), xform);
+                    xformSys.DetachEntity(child, xforms.Get(child), metas.Get(child), xform);
                 }
 
                 // Finally, delete the entity.
@@ -1145,7 +1170,7 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                if ((meta.Flags & MetaDataFlags.Detached) != 0)
+                if ((meta.Flags & (MetaDataFlags.Detached | MetaDataFlags.Undetachable)) != 0)
                     continue;
 
                 if (lastStateApplied.HasValue)
@@ -1163,13 +1188,13 @@ namespace Robust.Client.GameStates
                     if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
                         metas.TryGetComponent(xform.ParentUid, out var containerMeta) &&
                         (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
-                        containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container, null, true))
+                        containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container))
                     {
                         containerSys.Remove((ent.Value, xform, meta), container, false, true);
                     }
 
                     meta._flags |= MetaDataFlags.Detached;
-                    xformSys.DetachParentToNull(ent.Value, xform);
+                    xformSys.DetachEntity(ent.Value, xform);
                     DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
 
                     if (container != null)
@@ -1182,63 +1207,58 @@ namespace Robust.Client.GameStates
 
         private void InitializeAndStart(Dictionary<NetEntity, EntityState> toCreate)
         {
-            var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
+            _toStart.Clear();
 
-#if EXCEPTION_TOLERANCE
-            using var brokenEnts = new PooledList<EntityUid>();
-#endif
             using (_prof.Group("Initialize Entity"))
             {
+                EntityUid entity = default;
                 foreach (var netEntity in toCreate.Keys)
                 {
-                    var entity = _entityManager.GetEntity(netEntity);
-#if EXCEPTION_TOLERANCE
                     try
                     {
-#endif
-                    _entities.InitializeEntity(entity, metaQuery.GetComponent(entity));
-#if EXCEPTION_TOLERANCE
+                        (entity, var meta) = _entityManager.GetEntityData(netEntity);
+                        _entities.InitializeEntity(entity, meta);
+                        _toStart.Add((entity, netEntity));
                     }
                     catch (Exception e)
                     {
-                        _sawmill.Error($"Server entity threw in Init: ent={_entities.ToPrettyString(entity)}");
+                        _sawmill.Error($"Server entity threw in Init: nent={netEntity}, ent={_entities.ToPrettyString(entity)}");
                         _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
-                        brokenEnts.Add(entity);
-                        toCreate.Remove(netEntity);
-                    }
+                        _toCreate.Remove(netEntity);
+                        _brokenEnts.Add(entity);
+#if !EXCEPTION_TOLERANCE
+                        throw;
 #endif
+                    }
                 }
             }
 
             using (_prof.Group("Start Entity"))
             {
-                foreach (var netEntity in toCreate.Keys)
+                foreach (var (entity, netEntity) in _toStart)
                 {
-                    var entity = _entityManager.GetEntity(netEntity);
-#if EXCEPTION_TOLERANCE
                     try
                     {
-#endif
-                    _entities.StartEntity(entity);
-#if EXCEPTION_TOLERANCE
+                        _entities.StartEntity(entity);
                     }
                     catch (Exception e)
                     {
-                        _sawmill.Error($"Server entity threw in Start: ent={_entityManager.ToPrettyString(entity)}");
+                        _sawmill.Error($"Server entity threw in Start:  nent={netEntity}, ent={_entityManager.ToPrettyString(entity)}");
                         _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
-                        brokenEnts.Add(entity);
-                        toCreate.Remove(netEntity);
-                    }
+                        _toCreate.Remove(netEntity);
+                        _brokenEnts.Add(entity);
+#if !EXCEPTION_TOLERANCE
+                        throw;
 #endif
+                    }
                 }
             }
 
-#if EXCEPTION_TOLERANCE
-            foreach (var entity in brokenEnts)
+            foreach (var entity in _brokenEnts)
             {
                 _entityManager.DeleteEntity(entity);
             }
-#endif
+            _brokenEnts.Clear();
         }
 
         private void HandleEntityState(EntityUid uid, NetEntity netEntity, MetaDataComponent meta, IEventBus bus, EntityState? curState,
@@ -1395,23 +1415,11 @@ namespace Robust.Client.GameStates
 
             foreach (var (comp, cur, next) in _compStateWork.Values)
             {
-                try
-                {
-                    var handleState = new ComponentHandleState(cur, next);
-                    bus.RaiseComponentEvent(comp, ref handleState);
-                }
-#pragma warning disable CS0168 // Variable is declared but never used
-                catch (Exception e)
-#pragma warning restore CS0168 // Variable is declared but never used
-                {
-#if EXCEPTION_TOLERANCE
-                    _sawmill.Error($"Failed to apply comp state: entity={_entities.ToPrettyString(uid)}, comp={comp.GetType()}");
-                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(HandleEntityState)}");
-#else
-                    _sawmill.Error($"Failed to apply comp state: entity={_entities.ToPrettyString(uid)}, comp={comp.GetType()}");
-                    throw;
-#endif
-                }
+                if (cur == null && next == null)
+                    continue;
+
+                var handleState = new ComponentHandleState(cur, next);
+                bus.RaiseComponentEvent(uid, comp, ref handleState);
             }
         }
 
@@ -1480,10 +1488,10 @@ namespace Robust.Client.GameStates
                     _entities.TryGetComponent(xform.ParentUid, out MetaDataComponent? containerMeta) &&
                     (containerMeta.Flags & MetaDataFlags.Detached) == 0)
                 {
-                    containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container, null, true);
+                    containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container);
                 }
 
-                _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(uid, xform);
+                _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachEntity(uid, xform);
 
                 if (container != null)
                     containerSys.AddExpectedEntity(_entities.GetNetEntity(uid), container);
@@ -1562,8 +1570,11 @@ namespace Robust.Client.GameStates
                     _entityManager.AddComponent(uid, comp, meta);
                 }
 
+                if (state == null)
+                    continue;
+
                 var handleState = new ComponentHandleState(state, null);
-                _entityManager.EventBus.RaiseComponentEvent(comp, ref handleState);
+                _entityManager.EventBus.RaiseComponentEvent(uid, comp, ref handleState);
             }
 
             using var toRemove = new PooledList<IComponent>();

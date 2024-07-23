@@ -32,7 +32,7 @@ public sealed partial class GridFixtureSystem
         TransformComponent? xformA = null,
         TransformComponent? xformB = null)
     {
-        var matrix = Matrix3.CreateTransform(offset, rotation);
+        var matrix = Matrix3Helpers.CreateTransform(offset, rotation);
         Merge(gridAUid, gridBUid, matrix, gridA, gridB, xformA, xformB);
     }
 
@@ -45,7 +45,7 @@ public sealed partial class GridFixtureSystem
     public void Merge(
         EntityUid gridAUid,
         EntityUid gridBUid,
-        Matrix3 matrix,
+        Matrix3x2 matrix,
         MapGridComponent? gridA = null,
         MapGridComponent? gridB = null,
         TransformComponent? xformA = null,
@@ -63,7 +63,7 @@ public sealed partial class GridFixtureSystem
 
         while (enumerator.MoveNext(out var tileRef))
         {
-            var offsetTile = matrix.Transform(new Vector2(tileRef.Value.GridIndices.X, tileRef.Value.GridIndices.Y) + gridA.TileSizeHalfVector);
+            var offsetTile = Vector2.Transform(new Vector2(tileRef.Value.GridIndices.X, tileRef.Value.GridIndices.Y) + gridA.TileSizeHalfVector, matrix);
             tiles.Add((offsetTile.Floored(), tileRef.Value.Tile));
         }
 
@@ -87,7 +87,7 @@ public sealed partial class GridFixtureSystem
             if (snapgrid == null || snapgrid.Count == 0)
                 continue;
 
-            var offsetTile = matrix.Transform(new Vector2(tileRef.Value.GridIndices.X, tileRef.Value.GridIndices.Y) + gridA.TileSizeHalfVector);
+            var offsetTile = Vector2.Transform(new Vector2(tileRef.Value.GridIndices.X, tileRef.Value.GridIndices.Y) + gridA.TileSizeHalfVector, matrix);
             var tileIndex = offsetTile.Floored();
 
             for (var j = snapgrid.Count - 1; j >= 0; j--)
@@ -124,7 +124,7 @@ public sealed partial class GridFixtureSystem
                 if (entXform.ParentUid != gridBUid ||
                     !bounds.Contains(entXform.LocalPosition)) continue;
 
-                var newPos = matrix.Transform(entXform.LocalPosition);
+                var newPos = Vector2.Transform(entXform.LocalPosition, matrix);
 
                 _xformSystem.SetCoordinates(ent, entXform, new EntityCoordinates(gridAUid, newPos), entXform.LocalRotation + rotationDiff, oldParent: xformB, newParent: xformA);
             }

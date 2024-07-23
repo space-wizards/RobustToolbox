@@ -75,9 +75,7 @@ public sealed class GridDeleteSingleTileRemoveTestTest : RobustIntegrationTest
         var sys = sEntMan.System<SharedMapSystem>();
         await server.WaitPost(() =>
         {
-            var mapId = mapMan.CreateMap();
-            sMap = mapMan.GetMapEntityId(mapId);
-
+            sMap = sys.CreateMap(out var mapId);
             var comp = mapMan.CreateGridEntity(mapId);
             grid = (comp.Owner, comp);
             sys.SetTile(grid, grid, new Vector2i(0, 0), new Tile(1, (TileRenderFlag)1, 1));
@@ -139,4 +137,3 @@ public sealed class GridDeleteSingleTileRemoveTestTest : RobustIntegrationTest
         Assert.That(cQuery.GetComponent(cEntity.Value).ParentUid, Is.EqualTo(cMap));
     }
 }
-

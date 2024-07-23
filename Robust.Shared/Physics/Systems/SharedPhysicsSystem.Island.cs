@@ -660,13 +660,11 @@ public abstract partial class SharedPhysicsSystem
         });
 
         // Update data sequentially
-        var metaQuery = GetEntityQuery<MetaDataComponent>();
-
         for (var i = 0; i < actualIslands.Length; i++)
         {
             var island = actualIslands[i];
 
-            UpdateBodies(in island, solvedPositions, solvedAngles, linearVelocities, angularVelocities, xformQuery, metaQuery);
+            UpdateBodies(in island, solvedPositions, solvedAngles, linearVelocities, angularVelocities, xformQuery);
             SleepBodies(in island, sleepStatus);
         }
 
@@ -692,7 +690,7 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     /// <param name="island"></param>
     /// <returns></returns>
-    private bool InternalParallel(IslandData island)
+    private static bool InternalParallel(IslandData island)
     {
         // Should lone island most times as well.
         return island.Bodies.Count > 128 || island.Contacts.Count > 128 || island.Joints.Count > 128;
@@ -985,7 +983,7 @@ public abstract partial class SharedPhysicsSystem
             var q = new Quaternion2D(angle);
             var adjustedPosition = positions[i] - Physics.Transform.Mul(q, body.LocalCenter);
 
-            var solvedPosition = parentInvMatrix.Transform(adjustedPosition);
+            var solvedPosition = Vector2.Transform(adjustedPosition, parentInvMatrix);
             solvedPositions[offset + i] = solvedPosition - xform.LocalPosition;
             solvedAngles[offset + i] = angles[i] - worldRot;
         }
@@ -1001,8 +999,7 @@ public abstract partial class SharedPhysicsSystem
         float[] angles,
         Vector2[] linearVelocities,
         float[] angularVelocities,
-        EntityQuery<TransformComponent> xformQuery,
-        EntityQuery<MetaDataComponent> metaQuery)
+        EntityQuery<TransformComponent> xformQuery)
     {
         foreach (var (joint, error) in island.BrokenJoints)
         {
@@ -1035,21 +1032,22 @@ public abstract partial class SharedPhysicsSystem
             }
 
             var linVelocity = linearVelocities[offset + i];
+            var physicsDirtied = false;
 
             if (!float.IsNaN(linVelocity.X) && !float.IsNaN(linVelocity.Y))
             {
-                SetLinearVelocity(uid, linVelocity, false, body: body);
+                physicsDirtied |= SetLinearVelocity(uid, linVelocity, false, body: body);
             }
 
             var angVelocity = angularVelocities[offset + i];
 
             if (!float.IsNaN(angVelocity))
             {
-                SetAngularVelocity(uid, angVelocity, false, body: body);
+                physicsDirtied |= SetAngularVelocity(uid, angVelocity, false, body: body);
             }
 
-            // TODO: Should check if the values update.
-            Dirty(body, metaQuery.GetComponent(uid));
+            if (physicsDirtied)
+                Dirty(uid, body);
         }
     }
 

@@ -30,7 +30,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapManager.CreateMap();
+                entManager.System<SharedMapSystem>().CreateMap(out var mapId);
                 var grid = mapManager.CreateGridEntity(mapId);
 
                 // Should be nothing if grid empty

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Robust.Shared.Collections;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -66,7 +67,7 @@ public sealed partial class EntityLookupSystem
             }
         }
 
-        foreach (var uid in toAdd)
+        foreach (var uid in toAdd.Span)
         {
             intersecting.Add(uid);
         }
@@ -100,7 +101,7 @@ public sealed partial class EntityLookupSystem
                 return true;
             }, approx: true, includeMap: false);
 
-        var mapUid = _mapManager.GetMapEntityId(mapId);
+        var mapUid = _map.GetMapOrInvalid(mapId);
         AddEntitiesIntersecting(mapUid, intersecting, shape, shapeTransform, flags);
         AddContained(intersecting, flags);
     }
@@ -117,7 +118,7 @@ public sealed partial class EntityLookupSystem
             return;
 
         var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
-        var lookupTransform = new Transform(lookupInvMatrix.Transform(shapeTransform.Position),
+        var lookupTransform = new Transform(Vector2.Transform(shapeTransform.Position, lookupInvMatrix),
             shapeTransform.Quaternion2D.Angle - lookupRot);
 
         var localAABB = shape.ComputeAABB(lookupTransform, 0);
@@ -258,7 +259,7 @@ public sealed partial class EntityLookupSystem
 
         if (!state.Found)
         {
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = _map.GetMapOrInvalid(mapId);
             state.Found = AnyEntitiesIntersecting(mapUid, shape, shapeTransform, flags, ignored);
         }
 
@@ -290,7 +291,7 @@ public sealed partial class EntityLookupSystem
         // Transform is in world terms
         // Need to convert both back to lookup-local for AABB.
         var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
-        var lookupTransform = new Transform(lookupInvMatrix.Transform(shapeTransform.Position),
+        var lookupTransform = new Transform(Vector2.Transform(shapeTransform.Position, lookupInvMatrix),
             shapeTransform.Quaternion2D.Angle - lookupRot);
 
         var localAABB = shape.ComputeAABB(lookupTransform, 0);
@@ -472,7 +473,7 @@ public sealed partial class EntityLookupSystem
         if (state.found)
             return true;
 
-        var mapUid = _mapManager.GetMapEntityId(mapId);
+        var mapUid = _map.GetMapOrInvalid(mapId);
         return AnyLocalEntitiesIntersecting(mapUid, worldAABB, flags);
     }
 
@@ -501,7 +502,7 @@ public sealed partial class EntityLookupSystem
             }, approx: true, includeMap: false);
 
         // Get map entities
-        var mapUid = _mapManager.GetMapEntityId(mapId);
+        var mapUid = _map.GetMapOrInvalid(mapId);
         AddLocalEntitiesIntersecting(mapUid, intersecting, worldAABB, flags);
         AddContained(intersecting, flags);
     }
@@ -532,7 +533,7 @@ public sealed partial class EntityLookupSystem
         if (state.found)
             return true;
 
-        var mapUid = _mapManager.GetMapEntityId(mapId);
+        var mapUid = _map.GetMapOrInvalid(mapId);
         return AnyEntitiesIntersecting(mapUid, worldBounds, flags);
     }
 
@@ -543,7 +544,7 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return intersecting;
 
-        var mapUid = _mapManager.GetMapEntityId(mapId);
+        var mapUid = _map.GetMapOrInvalid(mapId);
 
         // Get grid entities
         var shape = new PolygonShape();
@@ -616,7 +617,7 @@ public sealed partial class EntityLookupSystem
             return true;
         }
 
-        var mapUid = _mapManager.GetMapEntityId(mapPos.MapId);
+        var mapUid = _map.GetMapOrInvalid(mapPos.MapId);
         return AnyEntitiesIntersecting(mapUid, circle, Physics.Transform.Empty, flags, uid);
     }
 
@@ -668,7 +669,7 @@ public sealed partial class EntityLookupSystem
                 return true;
             }, approx: true, includeMap: false);
 
-        var mapUid = _mapManager.GetMapEntityId(mapId);
+        var mapUid = _map.GetMapOrInvalid(mapId);
         EntityIntersectingQuery(mapUid, state);
 
         // Remove the entity itself (unless it was passed in).
@@ -745,8 +746,19 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<EntityUid> GetEntitiesInRange(EntityCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
     {
+        var ents = new HashSet<EntityUid>();
+        GetEntitiesInRange(coordinates, range, ents, flags);
+        return ents;
+    }
+
+    public void GetEntitiesInRange(EntityCoordinates coordinates, float range, HashSet<EntityUid> entities, LookupFlags flags = DefaultFlags)
+    {
         var mapPos = coordinates.ToMap(EntityManager, _transform);
-        return GetEntitiesInRange(mapPos, range, flags);
+
+        if (mapPos.MapId == MapId.Nullspace)
+            return;
+
+        GetEntitiesInRange(mapPos.MapId, mapPos.Position, range, entities, flags);
     }
 
     #endregion
@@ -870,7 +882,7 @@ public sealed partial class EntityLookupSystem
                 return true;
             }, approx: true, includeMap: false);
 
-        var mapUid = _mapManager.GetMapEntityId(mapId);
+        var mapUid = _map.GetMapOrInvalid(mapId);
         callback(mapUid, _broadQuery.GetComponent(mapUid));
     }
 
@@ -890,7 +902,7 @@ public sealed partial class EntityLookupSystem
         return GetLocalBounds(tileRef.GridIndices, tileSize);
     }
 
-    public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3? worldMatrix = null, Angle? angle = null)
+    public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3x2? worldMatrix = null, Angle? angle = null)
     {
         var grid = _gridQuery.GetComponent(tileRef.GridUid);
 
@@ -902,7 +914,7 @@ public sealed partial class EntityLookupSystem
         }
 
         var expand = new Vector2(0.5f, 0.5f);
-        var center = worldMatrix.Value.Transform(tileRef.GridIndices + expand) * grid.TileSize;
+        var center = Vector2.Transform(tileRef.GridIndices + expand, worldMatrix.Value) * grid.TileSize;
         var translatedBox = Box2.CenteredAround(center, new Vector2(grid.TileSize, grid.TileSize));
 
         return new Box2Rotated(translatedBox, -angle.Value, center);

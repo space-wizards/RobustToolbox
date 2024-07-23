@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.Player;
+using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -12,6 +14,7 @@ namespace Robust.Server.GameStates;
 public sealed class PvsOverrideSystem : EntitySystem
 {
     [Dependency] private readonly IPlayerManager _player = default!;
+    [Dependency] private readonly IConsoleHost _console = default!;
 
     private readonly HashSet<EntityUid> _hasOverride = new();
 
@@ -28,7 +31,63 @@ public sealed class PvsOverrideSystem : EntitySystem
         SubscribeLocalEvent<MapChangedEvent>(OnMapChanged);
         SubscribeLocalEvent<GridInitializeEvent>(OnGridCreated);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
+
+        // TODO console commands for adding/removing overrides?
+        _console.RegisterCommand(
+            "pvs_override_info",
+            Loc.GetString("cmd-pvs-override-info-desc"),
+            "pvs_override_info",
+            GetPvsInfo,
+            GetCompletion);
     }
+
+    #region Console Commands
+
+    /// <summary>
+    /// Debug command for displaying PVS override information.
+    /// </summary>
+    private void GetPvsInfo(IConsoleShell shell, string argstr, string[] args)
+    {
+        if (args.Length != 1)
+        {
+            shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
+            return;
+        }
+
+        if (!NetEntity.TryParse(args[0], out var nuid) || !TryGetEntity(nuid, out var uid))
+        {
+            shell.WriteError(Loc.GetString("cmd-parse-failure-uid"));
+            return;
+        }
+
+        if (!_hasOverride.Contains(uid.Value))
+        {
+            shell.WriteLine(Loc.GetString("cmd-pvs-override-info-empty", ("nuid", args[0])));
+            return;
+        }
+
+        if (GlobalOverride.Contains(uid.Value) || ForceSend.Contains(uid.Value))
+            shell.WriteLine(Loc.GetString("cmd-pvs-override-info-global", ("nuid", args[0])));
+
+        HashSet<ICommonSession> sessions = new();
+        sessions.UnionWith(SessionOverrides.Where(x => x.Value.Contains(uid.Value)).Select(x => x.Key));
+        sessions.UnionWith(SessionForceSend.Where(x => x.Value.Contains(uid.Value)).Select(x => x.Key));
+        if (sessions.Count == 0)
+            return;
+
+        var clients = string.Join(", ", sessions.Select(x => x.ToString()));
+        shell.WriteLine(Loc.GetString("cmd-pvs-override-info-clients", ("nuid", args[0]), ("clients", clients)));
+    }
+
+    private CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        if (args.Length != 1)
+            return CompletionResult.Empty;
+
+        return CompletionResult.FromHintOptions(CompletionHelper.NetEntities(args[0], EntityManager), "NetEntity");
+    }
+
+    #endregion
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs ev)
     {

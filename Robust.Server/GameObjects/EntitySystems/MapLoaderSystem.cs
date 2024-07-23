@@ -52,7 +52,6 @@ public sealed class MapLoaderSystem : EntitySystem
     private ISawmill _logLoader = default!;
     private ISawmill _logWriter = default!;
 
-    private static readonly MapLoadOptions DefaultLoadOptions = new();
     private const int MapFormatVersion = 6;
     private const int BackwardsVersion = 2;
 
@@ -135,7 +134,7 @@ public sealed class MapLoaderSystem : EntitySystem
     public bool TryLoad(MapId mapId, string path, [NotNullWhen(true)] out IReadOnlyList<EntityUid>? rootUids,
         MapLoadOptions? options = null)
     {
-        options ??= DefaultLoadOptions;
+        options ??= new();
 
         var resPath = new ResPath(path).ToRootedPath();
 
@@ -158,7 +157,7 @@ public sealed class MapLoaderSystem : EntitySystem
             sw.Start();
             result = Deserialize(data);
 
-            _logLoader.Info($"Loaded map {resPath} in {sw.Elapsed}");
+            var mapEnt = _mapSystem.GetMapOrInvalid(mapId);
             var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
             var mapEnt = _mapManager.GetMapEntityId(mapId);
 
@@ -224,13 +223,13 @@ public sealed class MapLoaderSystem : EntitySystem
 
     public void SaveMap(MapId mapId, string ymlPath)
     {
-        if (!_mapManager.MapExists(mapId))
+        if (!_mapSystem.TryGetMap(mapId, out var mapUid))
         {
             _logLoader.Error($"Unable to find map {mapId}");
             return;
         }
 
-        Save(_mapManager.GetMapEntityId(mapId), ymlPath);
+        Save(mapUid.Value, ymlPath);
     }
 
     #endregion
@@ -285,6 +284,9 @@ public sealed class MapLoaderSystem : EntitySystem
 
         // Load the prototype data onto entities, e.g. transform parents, etc.
         LoadEntities(data);
+
+        // Assign MapSaveTileMapComponent to all read grids.
+        SaveGridTileMap(data);
 
         // Build the scene graph / transform hierarchy to know the order to startup entities.
         // This also allows us to swap out the root node up front if necessary.
@@ -426,7 +428,7 @@ public sealed class MapLoaderSystem : EntitySystem
     private HashSet<EntityUid> AllocEntities(MapData data, BeforeEntityReadEvent ev)
     {
         _stopwatch.Restart();
-        var mapUid = _mapManager.GetMapEntityId(data.TargetMap);
+        var mapUid = _mapSystem.GetMapOrInvalid(data.TargetMap);
         var pauseTime = mapUid.IsValid() ? _meta.GetPauseTime(mapUid) : TimeSpan.Zero;
         _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), data.MapIsPostInit, pauseTime, null);
         HashSet<EntityUid> deletedPrototypeUids = new();
@@ -609,6 +611,19 @@ public sealed class MapLoaderSystem : EntitySystem
             meta.LastComponentRemoved = _timing.CurTick;
     }
 
+    private void SaveGridTileMap(MapData mapData)
+    {
+        DebugTools.Assert(_context.TileMap != null);
+
+        foreach (var entity in mapData.EntitiesToDeserialize.Keys)
+        {
+            if (HasComp<MapGridComponent>(entity))
+            {
+                EnsureComp<MapSaveTileMapComponent>(entity).TileMap = _context.TileMap;
+            }
+        }
+    }
+
     private void BuildEntityHierarchy(MapData mapData)
     {
         _stopwatch.Restart();
@@ -675,11 +690,13 @@ public sealed class MapLoaderSystem : EntitySystem
         var xformQuery = GetEntityQuery<TransformComponent>();
         // We just need to cache the old mapuid and point to the new mapuid.
 
-        if (HasComp<MapComponent>(rootNode))
+        if (TryComp(rootNode, out MapComponent? mapComp))
         {
             // If map exists swap out
-            if (_mapManager.MapExists(data.TargetMap))
+            if (_mapSystem.TryGetMap(data.TargetMap, out var existing))
             {
+                data.Options.DoMapInit |= _mapSystem.IsInitialized(data.TargetMap);
+                data.MapIsPaused = _mapSystem.IsPaused(existing.Value);
                 // Map exists but we also have a map file with stuff on it soooo swap out the old map.
                 if (data.Options.LoadMap)
                 {
@@ -692,26 +709,28 @@ public sealed class MapLoaderSystem : EntitySystem
                         data.Options.Rotation = Angle.Zero;
                     }
 
-                    _mapManager.SetMapEntity(data.TargetMap, rootNode);
+                    Del(existing);
                     EnsureComp<LoadedMapComponent>(rootNode);
+
+                    mapComp.MapId = data.TargetMap;
+                    DebugTools.Assert(mapComp.LifeStage < ComponentLifeStage.Initializing);
                 }
                 // Otherwise just ignore the map in the file.
                 else
                 {
                     var oldRootUid = data.Entities[0];
-                    var newRootUid = _mapManager.GetMapEntityId(data.TargetMap);
-                    data.Entities[0] = newRootUid;
+                    data.Entities[0] = existing.Value;
 
                     foreach (var ent in data.Entities)
                     {
-                        if (ent == newRootUid)
+                        if (ent == existing)
                             continue;
 
                         var xform = xformQuery.GetComponent(ent);
 
                         if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
                         {
-                            _transform.SetParent(ent, xform, newRootUid);
+                            _transform.SetParent(ent, xform, existing.Value);
                         }
                     }
 
@@ -720,16 +739,9 @@ public sealed class MapLoaderSystem : EntitySystem
             }
             else
             {
-                // If we're loading a file with a map then swap out the entityuid
-                // TODO: Mapmanager nonsense
-                var AAAAA = _mapManager.CreateMap(data.TargetMap);
-
-                if (!data.MapIsPostInit)
-                {
-                    _mapManager.AddUninitializedMap(data.TargetMap);
-                }
-
-                _mapManager.SetMapEntity(data.TargetMap, rootNode);
+                data.MapIsPaused = !data.MapIsPostInit;
+                mapComp.MapId = data.TargetMap;
+                DebugTools.Assert(mapComp.LifeStage < ComponentLifeStage.Initializing);
                 EnsureComp<LoadedMapComponent>(rootNode);
 
                 // Nothing should have invalid uid except for the root node.
@@ -738,16 +750,14 @@ public sealed class MapLoaderSystem : EntitySystem
         else
         {
             // No map file root, in that case create a new map / get the one we're loading onto.
-            var mapNode = _mapManager.GetMapEntityId(data.TargetMap);
-
-            if (!mapNode.IsValid())
+            if (!_mapSystem.TryGetMap(data.TargetMap, out var mapNode))
             {
                 // Map doesn't exist so we'll start it up now so we can re-attach the preinit entities to it for later.
-                _mapManager.CreateMap(data.TargetMap);
-                _mapManager.AddUninitializedMap(data.TargetMap);
-                mapNode = _mapManager.GetMapEntityId(data.TargetMap);
-                DebugTools.Assert(mapNode.IsValid());
+                mapNode = _mapSystem.CreateMap(data.TargetMap, false);
             }
+
+            data.Options.DoMapInit |= _mapSystem.IsInitialized(data.TargetMap);
+            data.MapIsPaused = _mapSystem.IsPaused(mapNode.Value);
 
             // If anything has an invalid parent (e.g. it's some form of root node) then parent it to the map.
             foreach (var ent in data.Entities)
@@ -760,12 +770,11 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 if (!xform.ParentUid.IsValid())
                 {
-                    _transform.SetParent(ent, xform, mapNode);
+                    _transform.SetParent(ent, xform, mapNode.Value);
                 }
             }
         }
 
-        data.MapIsPaused = _mapManager.IsMapPaused(data.TargetMap);
         _logLoader.Debug($"Swapped out root node in {_stopwatch.Elapsed}");
     }
 
@@ -868,7 +877,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
             if (xformQuery.TryGetComponent(rootEntity, out var xform) && IsRoot(xform, mapQuery) && !HasComp<MapComponent>(rootEntity))
             {
-                _transform.SetLocalPosition(xform, data.Options.TransformMatrix.Transform(xform.LocalPosition));
+                _transform.SetLocalPosition(xform, Vector2.Transform(xform.LocalPosition, data.Options.TransformMatrix));
                 xform.LocalRotation += data.Options.Rotation;
             }
         }
@@ -880,7 +889,7 @@ public sealed class MapLoaderSystem : EntitySystem
             if (xformQuery.TryGetComponent(entity, out var xform) && IsRoot(xform, mapQuery))
             {
                 // Don't want to trigger events
-                xform._localPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
+                xform._localPosition = Vector2.Transform(xform.LocalPosition, data.Options.TransformMatrix);
                 if (!xform.NoLocalRotation)
                     xform._localRotation += data.Options.Rotation;
 
@@ -913,7 +922,7 @@ public sealed class MapLoaderSystem : EntitySystem
         {
             EntityManager.SetLifeStage(metadata, EntityLifeStage.MapInitialized);
         }
-        else if (_mapManager.IsMapInitialized(data.TargetMap))
+        else if (data.Options.DoMapInit)
         {
             _serverEntityManager.RunMapInit(uid, metadata);
         }
@@ -981,7 +990,7 @@ public sealed class MapLoaderSystem : EntitySystem
         // Yes, post-init maps do not have EntityLifeStage >= EntityLifeStage.MapInitialized
         bool postInit;
         if (TryComp(uid, out MapComponent? mapComp))
-            postInit = !mapComp.MapPreInit;
+            postInit = mapComp.MapInitialized;
         else
             postInit = metadata.EntityLifeStage >= EntityLifeStage.MapInitialized;
 
@@ -1014,28 +1023,74 @@ public sealed class MapLoaderSystem : EntitySystem
         var gridQuery = GetEntityQuery<MapGridComponent>();
         var tileDefs = new HashSet<int>();
 
+        Dictionary<int, string>? origTileMap = null;
         foreach (var ent in entities)
         {
             if (!gridQuery.TryGetComponent(ent, out var grid))
                 continue;
 
-            var tileEnumerator = grid.GetAllTilesEnumerator(false);
-
+            var tileEnumerator = _mapSystem.GetAllTilesEnumerator(ent, grid, ignoreEmpty: false);
             while (tileEnumerator.MoveNext(out var tileRef))
             {
                 tileDefs.Add(tileRef.Value.Tile.TypeId);
             }
+
+            if (TryComp(ent, out MapSaveTileMapComponent? saveTileMap))
+                origTileMap ??= saveTileMap.TileMap;
         }
+
+        Dictionary<int, int> tileIdMap;
+        if (origTileMap != null)
+        {
+            tileIdMap = new Dictionary<int, int>();
+
+            // We are re-saving a map, so we have an original tile map we can preserve.
+            foreach (var (origId, prototypeId) in origTileMap)
+            {
+                // Skip removed tile definitions.
+                if (!_tileDefManager.TryGetDefinition(prototypeId, out var definition))
+                    continue;
+
+                tileIdMap.Add(definition.TileId, origId);
+            }
+
+            // Assign new IDs for all new tile types.
+            var nextId = 0;
+            foreach (var tileId in tileDefs)
+            {
+                if (tileIdMap.ContainsKey(tileId))
+                    continue;
+
+                // New tile, assign new ID that isn't taken by original tile map.
+                while (origTileMap.ContainsKey(nextId))
+                {
+                    nextId += 1;
+                }
+
+                tileIdMap.Add(tileId, nextId);
+                nextId += 1;
+            }
+        }
+        else
+        {
+            // Make no-op tile ID map.
+            tileIdMap = tileDefs.ToDictionary(x => x, x => x);
+        }
+
+        DebugTools.Assert(
+            tileIdMap.Count == tileIdMap.Values.Distinct().Count(),
+            "Tile ID map has double mapped values??");
+
+        _context.TileWriteMap = tileIdMap;
 
         var tileMap = new MappingDataNode();
         rootNode.Add("tilemap", tileMap);
-        var ordered = new List<int>(tileDefs);
-        ordered.Sort();
 
-        foreach (var tyleId in ordered)
+        foreach (var (nativeId, mapId) in tileIdMap.OrderBy(x => x.Key))
         {
-            var tileDef = _tileDefManager[tyleId];
-            tileMap.Add(tyleId.ToString(CultureInfo.InvariantCulture), tileDef.ID);
+            tileMap.Add(
+                mapId.ToString(CultureInfo.InvariantCulture),
+                _tileDefManager[nativeId].ID);
         }
     }
 
@@ -1069,17 +1124,17 @@ public sealed class MapLoaderSystem : EntitySystem
         }
     }
 
-    private bool IsSaveable(EntityUid uid, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> transformQuery)
+    private bool IsSaveable(EntityUid uid)
     {
         // Don't serialize things parented to un savable things.
         // For example clothes inside a person.
         while (uid.IsValid())
         {
-            var meta = metaQuery.GetComponent(uid);
+            var meta = MetaData(uid);
 
             if (meta.EntityDeleted || meta.EntityPrototype?.MapSavable == false) break;
 
-            uid = transformQuery.GetComponent(uid).ParentUid;
+            uid = Transform(uid).ParentUid;
         }
 
         // If we manage to get up to the map (root node) then it's saveable.
@@ -1094,7 +1149,7 @@ public sealed class MapLoaderSystem : EntitySystem
         EntityQuery<TransformComponent> transformQuery,
         EntityQuery<MapSaveIdComponent> saveCompQuery)
     {
-        if (!IsSaveable(uid, metaQuery, transformQuery))
+        if (!IsSaveable(uid))
             return;
 
         entities.Add(uid);
@@ -1209,11 +1264,12 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 foreach (var component in EntityManager.GetComponents(entityUid))
                 {
-                    if (component is MapSaveIdComponent)
+                    var compType = component.GetType();
+                    var registration = _factory.GetRegistration(compType);
+                    if (registration.Unsaved)
                         continue;
 
-                    var compType = component.GetType();
-                    var compName = _factory.GetComponentName(compType);
+                    var compName = registration.Name;
                     _context.CurrentComponent = compName;
                     MappingDataNode? compMapping;
                     MappingDataNode? protMapping = null;

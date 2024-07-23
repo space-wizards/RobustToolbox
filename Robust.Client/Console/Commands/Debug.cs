@@ -291,10 +291,9 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class SnapGridGetCell : LocalizedCommands
+    internal sealed class SnapGridGetCell : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
-        [Dependency] private readonly IMapManager _map = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
 
         public override string Command => "sggcell";
 
@@ -320,9 +319,10 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (_map.TryGetGrid(_entManager.GetEntity(gridNet), out var grid))
+            var gridEnt = EntityManager.GetEntity(gridNet);
+            if (EntityManager.TryGetComponent<MapGridComponent>(gridEnt, out var grid))
             {
-                foreach (var entity in grid.GetAnchoredEntities(new Vector2i(
+                foreach (var entity in _map.GetAnchoredEntities(gridEnt, grid, new Vector2i(
                              int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
                              int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture))))
                 {
@@ -426,10 +426,9 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class GridTileCount : LocalizedCommands
+    internal sealed class GridTileCount : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
-        [Dependency] private readonly IMapManager _map = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
 
         public override string Command => "gridtc";
 
@@ -442,15 +441,15 @@ namespace Robust.Client.Console.Commands
             }
 
             if (!NetEntity.TryParse(args[0], out var gridUidNet) ||
-                !_entManager.TryGetEntity(gridUidNet, out var gridUid))
+                !EntityManager.TryGetEntity(gridUidNet, out var gridUid))
             {
                 shell.WriteLine($"{args[0]} is not a valid entity UID.");
                 return;
             }
 
-            if (_map.TryGetGrid(gridUid, out var grid))
+            if (EntityManager.TryGetComponent<MapGridComponent>(gridUid, out var grid))
             {
-                shell.WriteLine(grid.GetAllTiles().Count().ToString());
+                shell.WriteLine(_map.GetAllTiles(gridUid.Value, grid).Count().ToString());
             }
             else
             {
@@ -555,7 +554,7 @@ namespace Robust.Client.Console.Commands
                 if (type != typeof(Control))
                     cname = $"Control > {cname}";
 
-                returnVal.GetOrNew(cname).Add((member.Name, member.GetValue(control)?.ToString() ?? "null"));
+                returnVal.GetOrNew(cname).Add((member.Name, GetMemberValue(member, control, ", ")));
             }
 
             foreach (var (attachedProperty, value) in control.AllAttachedProperties)
@@ -569,6 +568,28 @@ namespace Robust.Client.Console.Commands
                 v.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
             }
             return returnVal;
+        }
+
+        internal static string PropertyValuesString(Control control, string key)
+        {
+            var member = GetAllMembers(control).Find(m => m.Name == key);
+            return GetMemberValue(member, control, "\n", "\"{0}\"");
+        }
+
+        private static string GetMemberValue(MemberInfo? member, Control control, string separator, string
+                wrap = "{0}")
+        {
+            var value = member?.GetValue(control);
+            var o = value switch
+            {
+                ICollection<Control> controls => string.Join(separator,
+                    controls.Select(ctrl => $"{ctrl.Name}({ctrl.GetType()})")),
+                ICollection<string> list => string.Join(separator, list),
+                null => null,
+                _ => value.ToString()
+            };
+            // Convert to quote surrounded string or null with no quotes
+            return o is not null ? string.Format(wrap, o) : "null";
         }
     }
 
@@ -660,12 +681,12 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class ChunkInfoCommand : LocalizedCommands
+    internal sealed class ChunkInfoCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IMapManager _map = default!;
         [Dependency] private readonly IEyeManager _eye = default!;
         [Dependency] private readonly IInputManager _input = default!;
+        [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
         public override string Command => "chunkinfo";
 
@@ -679,8 +700,8 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var mapSystem = _entManager.System<SharedMapSystem>();
-            var chunkIndex = mapSystem.LocalToChunkIndices(gridUid, grid, grid.MapToGrid(mousePos));
+            var mapSystem = EntityManager.System<SharedMapSystem>();
+            var chunkIndex = mapSystem.LocalToChunkIndices(gridUid, grid, _mapSystem.MapToGrid(gridUid, mousePos));
             var chunk = mapSystem.GetOrAddChunk(gridUid, grid, chunkIndex);
 
             shell.WriteLine($"worldBounds: {mapSystem.CalcWorldAABB(gridUid, grid, chunk)} localBounds: {chunk.CachedBounds}");

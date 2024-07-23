@@ -65,7 +65,7 @@ public abstract partial class SharedPhysicsSystem
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
-        Dirty(manager);
+        Dirty(uid, manager);
     }
 
     public void SetPosition(
@@ -91,7 +91,7 @@ public abstract partial class SharedPhysicsSystem
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
-        Dirty(manager);
+        Dirty(uid, manager);
     }
 
     #endregion

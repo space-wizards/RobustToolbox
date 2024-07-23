@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Localization
 
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
-            protoMan.RegisterKind(typeof(EntityPrototype));
+            protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             protoMan.LoadDirectory(new ResPath("/EnginePrototypes"));
             protoMan.ResolveResults();
 

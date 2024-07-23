@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Vec4 = System.Numerics.Vector4;
 
 namespace Robust.Shared.Maths
 {
@@ -526,6 +527,27 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        /// Returns whether two vectors are within <paramref name="percentage"/> of each other
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(Vec4 a, Vec4 b, float percentage = .00001f)
+        {
+            a = Vec4.Abs(a);
+            b = Vec4.Abs(b);
+            var p = new Vec4(percentage);
+            var epsilon = Vec4.Max(Vec4.Max(a, b) * p, p);
+            var delta = Vec4.Abs(a - b);
+            return delta.X <= epsilon.X && delta.Y <= epsilon.Y && delta.Z <= epsilon.Z && delta.W <= epsilon.W;
+        }
+
+        /// <summary>
+        /// Returns whether two colours are within <paramref name="percentage"/> of each other
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(Color a, Color b, float percentage = .00001f)
+            => CloseToPercent(a.RGBA, b.RGBA, percentage);
+
+        /// <summary>
         /// Returns whether two floating point numbers are within <paramref name="percentage"/> of eachother
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -696,6 +718,32 @@ namespace Robust.Shared.Maths
         }
 
         #endregion
+
+        /// <summary>
+        /// Round up (ceiling) a value to a multiple of a known power of two.
+        /// </summary>
+        /// <param name="value">The value to round up.</param>
+        /// <param name="powerOfTwo">
+        /// The power of two to round up to a multiple of. The result is undefined if this is not a power of two.
+        /// </param>
+        /// <remarks>
+        /// The result is undefined if either value is negative.
+        /// </remarks>
+        /// <typeparam name="T">The type of integer to operate on.</typeparam>
+        /// <example>
+        /// <code>
+        /// MathHelper.CeilMultiplyPowerOfTwo(5, 4) // 8
+        /// MathHelper.CeilMultiplyPowerOfTwo(4, 4) // 4
+        /// MathHelper.CeilMultiplyPowerOfTwo(8, 4) // 8
+        /// </code>
+        /// </example>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T CeilMultipleOfPowerOfTwo<T>(T value, T powerOfTwo) where T : IBinaryInteger<T>
+        {
+            var mask = powerOfTwo - T.One;
+            var remainder = value & mask;
+            return remainder == T.Zero ? value : (value | mask) + T.One;
+        }
 
         #endregion Public Members
     }

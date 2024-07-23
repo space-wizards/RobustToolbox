@@ -107,7 +107,7 @@ namespace Robust.Client.GameObjects
                 toDelete.Add(id);
             }
 
-            foreach (var dead in toDelete)
+            foreach (var dead in toDelete.Span)
             {
                 component.Containers.Remove(dead);
             }
@@ -120,7 +120,7 @@ namespace Robust.Client.GameObjects
                 {
                     var type = _serializer.FindSerializedType(typeof(BaseContainer), data.ContainerType);
                     container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type!, inject:false);
-                    InitContainer(container, (uid, component), id);
+                    container.Init(this, id, (uid, component));
                     component.Containers.Add(id, container);
                 }
 
@@ -142,7 +142,7 @@ namespace Robust.Client.GameObjects
                         toRemove.Add(entity);
                 }
 
-                foreach (var entity in toRemove)
+                foreach (var entity in toRemove.Span)
                 {
                     Remove(
                         (entity, TransformQuery.GetComponent(entity), MetaQuery.GetComponent(entity)),
@@ -162,7 +162,7 @@ namespace Robust.Client.GameObjects
                         removedExpected.Add(netEntity);
                 }
 
-                foreach (var entityUid in removedExpected)
+                foreach (var entityUid in removedExpected.Span)
                 {
                     RemoveExpectedEntity(entityUid, out _);
                 }

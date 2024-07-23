@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -37,6 +38,26 @@ namespace Robust.Shared.GameObjects
         /// Gets the number of a specific component.
         /// </summary>
         int Count(Type component);
+
+        /// <summary>
+        /// Adds the specified components from the <see cref="EntityPrototype"/>
+        /// </summary>
+        void AddComponents(EntityUid target, EntityPrototype prototype, bool removeExisting = true);
+
+        /// <summary>
+        /// Adds the specified registry components to the target entity.
+        /// </summary>
+        void AddComponents(EntityUid target, ComponentRegistry registry, bool removeExisting = true);
+
+        /// <summary>
+        /// Removes the specified entity prototype components from the target entity.
+        /// </summary>
+        void RemoveComponents(EntityUid target, EntityPrototype prototype);
+
+        /// <summary>
+        /// Removes the specified registry components from the target entity.
+        /// </summary>
+        void RemoveComponents(EntityUid target, ComponentRegistry registry);
 
         /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
@@ -79,7 +100,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">The component reference type to remove.</typeparam>
         /// <param name="uid">Entity UID to modify.</param>
-        bool RemoveComponent<T>(EntityUid uid, MetaDataComponent? meta = null);
+        bool RemoveComponent<T>(EntityUid uid, MetaDataComponent? meta = null) where T : IComponent;
 
         /// <summary>
         ///     Removes the component with a specified type.
@@ -273,7 +294,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)  where T : IComponent?;
+        bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component) where T : IComponent?;
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -383,7 +404,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="player">The player that is going to receive this state. Null implies that this state is for a replay.</param>
         /// <param name="fromTick">The from tick, which indicates the range of data that must be included for delta-states.</param>
         /// <returns>The component state of the component.</returns>
-        IComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? player, GameTick fromTick);
+        IComponentState? GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? player, GameTick fromTick);
 
         /// <summary>
         ///     Checks if a certain player should get a component state.

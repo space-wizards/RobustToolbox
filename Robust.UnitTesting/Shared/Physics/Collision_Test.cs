@@ -102,8 +102,8 @@ public sealed class Collision_Test
         var fixtures = entManager.System<FixtureSystem>();
         var physics = entManager.System<SharedPhysicsSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
-        var mapId = mapManager.CreateMap();
-        var mapId2 = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
+        var mapId2 = sim.CreateMap().MapId;
 
         var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));

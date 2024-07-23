@@ -24,7 +24,7 @@ internal sealed class PrototypeReloadSystem : EntitySystem
         if (!eventArgs.ByType.TryGetValue(typeof(EntityPrototype), out var set))
             return;
 
-        var query = EntityQueryEnumerator<MetaDataComponent>();
+        var query = AllEntityQuery<MetaDataComponent>();
         while (query.MoveNext(out var uid, out var metadata))
         {
             var id = metadata.EntityPrototype?.ID;

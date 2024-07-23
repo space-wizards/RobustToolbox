@@ -49,6 +49,12 @@ namespace Robust.Server.GameStates
 
         private void OnEntityDirty(Entity<MetaDataComponent> uid)
         {
+            if (uid.Comp.PvsData != default)
+            {
+                ref var meta = ref _metadataMemory.GetRef(uid.Comp.PvsData.Index);
+                meta.LastModifiedTick = uid.Comp.EntityLastModifiedTick;
+            }
+
             if (!_addEntities[_currentIndex].Contains(uid))
                 _dirtyEntities[_currentIndex].Add(uid);
         }
@@ -69,15 +75,15 @@ namespace Robust.Server.GameStates
             return true;
         }
 
-        private void CleanupDirty(ICommonSession[] sessions)
+        private void CleanupDirty()
         {
             using var _ = Histogram.WithLabels("Clean Dirty").NewTimer();
             if (!CullingEnabled)
             {
                 _seenAllEnts.Clear();
-                foreach (var player in sessions)
+                foreach (var player in _sessions)
                 {
-                    _seenAllEnts.Add(player);
+                    _seenAllEnts.Add(player.Session);
                 }
             }
 

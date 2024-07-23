@@ -62,7 +62,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
              await server.WaitAssertion(() =>
              {
-                 mapId = sMapManager.CreateMap();
+                 sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
                  mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
                  entityUid = sEntManager.SpawnEntity(null, mapPos);
@@ -190,7 +190,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
              await server.WaitAssertion(() =>
              {
-                 mapId = sMapManager.CreateMap();
+                 sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
                  mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
                  sEntityUid = sEntManager.SpawnEntity(null, mapPos);
@@ -300,7 +300,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             await server.WaitAssertion(() =>
             {
                 // build the map
-                var mapIdOne = mapManager.CreateMap();
+                sEntManager.System<SharedMapSystem>().CreateMap(out var mapIdOne);
                 Assert.That(mapManager.IsMapInitialized(mapIdOne), Is.True);
 
                 var containerEnt = sEntManager.SpawnEntity(null, new MapCoordinates(1, 1, mapIdOne));
@@ -327,7 +327,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             await server.WaitAssertion(() =>
             {
                 var mapLoader = sEntManager.System<MapLoaderSystem>();
-                var mapIdTwo = mapManager.CreateMap();
+                sEntManager.System<SharedMapSystem>().CreateMap(out var mapIdTwo);
 
                 // load the map
                 mapLoader.Load(mapIdTwo, "container_test.yml");

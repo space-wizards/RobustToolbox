@@ -17,8 +17,8 @@ namespace Robust.Shared.Physics.Controllers;
 
 public sealed class Gravity2DController : VirtualController
 {
-    [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
     private ISawmill _sawmill = default!;
 
@@ -67,12 +67,12 @@ public sealed class Gravity2DController : VirtualController
 
         gravity.Gravity = value;
         WakeBodiesRecursive(uid, GetEntityQuery<TransformComponent>(), GetEntityQuery<PhysicsComponent>());
-        Dirty(gravity);
+        Dirty(uid, gravity);
     }
 
     public void SetGravity(MapId mapId, Vector2 value)
     {
-        var mapUid = _mapManager.GetMapEntityId(mapId);
+        var mapUid = _mapSystem.GetMap(mapId);
         var gravity = EnsureComp<Gravity2DComponent>(mapUid);
 
         if (gravity.Gravity.Equals(value))
@@ -80,7 +80,7 @@ public sealed class Gravity2DController : VirtualController
 
         gravity.Gravity = value;
         WakeBodiesRecursive(mapUid, GetEntityQuery<TransformComponent>(), GetEntityQuery<PhysicsComponent>());
-        Dirty(gravity);
+        Dirty(mapUid, gravity);
     }
 
     private void WakeBodiesRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> bodyQuery)

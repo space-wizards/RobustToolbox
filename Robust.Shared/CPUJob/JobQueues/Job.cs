@@ -18,6 +18,8 @@ namespace Robust.Shared.CPUJob.JobQueues
     /// <typeparam name="T">The type of result this job generates</typeparam>
     public abstract class Job<T> : IJob
     {
+        private readonly ISawmill _sawmill = Logger.GetSawmill("job");
+
         public JobStatus Status { get; private set; } = JobStatus.Pending;
 
         /// <summary>
@@ -184,7 +186,7 @@ namespace Robust.Shared.CPUJob.JobQueues
             {
                 // TODO: Should this be exposed differently?
                 // I feel that people might forget to check whether the job failed.
-                Logger.ErrorS("job", "Job failed on exception:\n{0}", e);
+                _sawmill.Error("Job failed on exception:\n{0}", e);
                 Exception = e;
                 _taskTcs.TrySetException(e);
             }

@@ -54,17 +54,12 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
 
-            prototypeManager.RegisterKind(typeof(EntityPrototype));
+            prototypeManager.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             prototypeManager.LoadString(Prototypes);
             prototypeManager.ResolveResults();
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-
-            var mapManager = IoCManager.Resolve<IMapManager>();
-
-            var mapId = new MapId(1);
-
-            mapManager.CreateMap(mapId);
+            entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
 
             var coordinates = new MapCoordinates(0, 0, mapId);
 

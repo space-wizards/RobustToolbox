@@ -11,8 +11,8 @@ namespace Robust.Shared.Analyzers;
 /// when the type argument T is a certain Type.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public sealed class PreferOtherTypeAttribute(Type type, Type otherType) : Attribute
+public sealed class PreferOtherTypeAttribute(Type genericType, Type replacementType) : Attribute
 {
-    public readonly Type Type = type;
-    public readonly Type OtherType = otherType;
+    public readonly Type GenericArgument = genericType;
+    public readonly Type ReplacementType = replacementType;
 }

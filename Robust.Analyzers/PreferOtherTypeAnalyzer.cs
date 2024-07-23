@@ -35,8 +35,6 @@ public sealed class PreferOtherTypeAnalyzer : DiagnosticAnalyzer
 
     private void AnalyzeField(SyntaxNodeAnalysisContext context)
     {
-        var preferOtherTypeAttribute = context.Compilation.GetTypeByMetadataName(AttributeType);
-
         if (context.Node is not VariableDeclarationSyntax node)
             return;
 
@@ -51,6 +49,8 @@ public sealed class PreferOtherTypeAnalyzer : DiagnosticAnalyzer
         var symbolInfo = context.SemanticModel.GetSymbolInfo(node.Type);
         if (symbolInfo.Symbol?.GetAttributes() is not { } attributes)
             return;
+
+        var preferOtherTypeAttribute = context.Compilation.GetTypeByMetadataName(AttributeType);
 
         foreach (var attribute in attributes)
         {

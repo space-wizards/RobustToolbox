@@ -55,7 +55,7 @@ public sealed class PreferOtherTypeAnalyzerTest
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(12,12): warning RA0031: Use the specific type EntProtoId instead of ProtoId when T is EntityPrototype
+            // /0/Test0.cs(12,12): warning RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
             VerifyCS.Diagnostic().WithSpan(12, 12, 12, 48).WithArguments("EntProtoId", "ProtoId", "EntityPrototype")
         );
     }

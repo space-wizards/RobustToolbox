@@ -16,7 +16,7 @@ public sealed class PreferOtherTypeAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor PreferOtherTypeDescriptor = new(
         Diagnostics.IdPreferOtherType,
         "Use the specific type",
-        "Use the specific type {0} instead of {1} when T is {2}",
+        "Use the specific type {0} instead of {1} when the type argument is {2}",
         "Usage",
         DiagnosticSeverity.Error,
         true,
